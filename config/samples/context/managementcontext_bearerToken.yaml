@@ -1,0 +1,8 @@
+apiVersion: gravitee.io/v1alpha1
+kind: ManagementContext
+metadata:
+  name: dev-mgmt-ctx
+spec:
+  baseUrl: http://localhost:8083
+  auth:
+    bearerToken: xxxx-yyyy-zzzz

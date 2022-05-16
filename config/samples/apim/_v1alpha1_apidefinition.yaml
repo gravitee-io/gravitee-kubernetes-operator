@@ -1,0 +1,6 @@
+apiVersion: gravitee.io/v1alpha1
+kind: ApiDefinition
+metadata:
+  name: apidefinition-sample
+spec:
+  # TODO(user): Add fields here
