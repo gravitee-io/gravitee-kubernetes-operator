@@ -1,0 +1,24 @@
+# permissions for end users to edit managementcontexts.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: managementcontext-editor-role
+rules:
+- apiGroups:
+  - gravitee.io
+  resources:
+  - managementcontexts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gravitee.io
+  resources:
+  - managementcontexts/status
+  verbs:
+  - get
