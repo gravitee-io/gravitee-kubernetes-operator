@@ -1,0 +1,85 @@
+management:
+  type: mongodb
+
+ratelimit:
+  type: mongodb
+
+mongodb-replicaset:
+  enabled: false
+  
+elasticsearch:
+  enabled: false
+
+portal:
+  enabled: false
+
+mongo:
+  servers: |
+    - host: mongodb
+      port: 27017
+
+es:
+  endpoints:
+    - http://elasticsearch-master:9200
+
+gateway:
+  image:
+    repository: graviteeio/apim-gateway
+    pullPolicy: IfNotPresent
+  ingress:
+    hosts:
+      - localhost
+    path: /gateway/?(.*)
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+    tls: false
+  autoscaling:
+    enabled: false
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 1000m
+      memory: 1024Mi
+
+api:
+  image:
+    repository: graviteeio/apim-management-api
+    pullPolicy: IfNotPresent
+  ingress:
+    portal:
+        enabled: false
+    management:
+      tls: false
+      hosts:
+        - localhost
+  autoscaling:
+    enabled: true
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 1000m
+      memory: 1024Mi
+  readinessProbe:
+    initialDelaySeconds: 120
+    timeoutSeconds: 30
+  livenessProbe:
+    initialDelaySeconds: 120
+    timeoutSeconds: 30
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms512m -Xmx512m"
+ui:
+  image:
+    repository: graviteeio/apim-management-ui
+    pullPolicy: IfNotPresent
+  ingress:
+    tls: false
+    hosts:
+      - localhost
+  baseURL: http://localhost:8081/management/organizations/DEFAULT/environments/DEFAULT/
+  autoscaling:
+    enabled: false
