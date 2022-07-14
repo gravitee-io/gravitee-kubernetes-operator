@@ -42,6 +42,11 @@ gateway:
     requests:
       cpu: 1000m
       memory: 1024Mi
+  env:
+    - name: GIO_MIN_MEM
+      value: 768m
+    - name: GIO_MAX_MEM
+      value: 768m
 
 api:
   image:
@@ -70,8 +75,10 @@ api:
     initialDelaySeconds: 120
     timeoutSeconds: 30
   env:
-    - name: JAVA_OPTS
-      value: "-Xms512m -Xmx512m"
+    - name: GIO_MIN_MEM
+      value: 768m
+    - name: GIO_MAX_MEM
+      value: 768m
 ui:
   image:
     repository: graviteeio/apim-management-ui
