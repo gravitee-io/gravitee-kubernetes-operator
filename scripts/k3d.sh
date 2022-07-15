@@ -27,13 +27,30 @@ echo "
 
 curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-echo "
+# check localhost alias for k3d registry before install
+if [[ -z $(grep "$K3D_IMAGES_REGISTRY_NAME" /etc/hosts | awk '{ print $1 }') ]]; then
+    echo "
+        ⛔️ K3d localhost alias is missing in in your /etc/hosts.
+    
+        Please add 127.0.0.1 k3d-graviteeio.docker.localhost in your /etc/hosts
+    "
+    exit 1
+fi
 
-    Initialising a local docker images registry for k3d images (if not present)
+if [[ $(k3d registry list | grep $K3D_IMAGES_REGISTRY_NAME) ]]; then
+    echo "
 
-"
+         k3d images registry already exists.
+    "
+else
+    echo "
 
-k3d registry create ${K3D_IMAGES_REGISTRY_NAME} --port ${K3D_IMAGES_REGISTRY_PORT}
+        Initialising a local docker images registry for k3d images (if not present)
+
+    "
+
+    k3d registry create ${K3D_IMAGES_REGISTRY_NAME} --port ${K3D_IMAGES_REGISTRY_PORT}
+fi
 
 echo "
 
@@ -140,9 +157,11 @@ helm install \
     --set "defaultBackend.image.tag=${NGINX_BACKEND_IMAGE_TAG}" \
     nginx-ingress bitnami/nginx-ingress-controller
 
+
+BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
 helm install \
     --namespace ${K3D_NAMESPACE_NAME} \
-    -f helm/apim-values.yml \
+    -f $BASEDIR/helm/apim-values.yml \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway" \
     --set "api.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api" \
     --set "ui.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui" \
