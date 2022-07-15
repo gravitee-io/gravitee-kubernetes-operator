@@ -1,0 +1,63 @@
+version: 2
+jobs:
+  build-lint:
+    docker:
+      - image: cimg/go:1.18.4
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
+      
+      - run:
+          name: Install Dependencies
+          command: go get
+
+      - save_cache:
+          key: go-mod-v4-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
+      - run:
+          name: Lint
+          command: go fmt ./...
+
+      - run:
+          name: Report likely mistakes in packages
+          command: go vet ./...
+
+  test:
+    docker:
+      - image: cimg/go:1.18.4
+
+    environment:
+      TEST_RESULTS: /tmp/test-results
+
+    steps:
+      - checkout
+      
+      - run:
+          name: Create test results directory
+          command: mkdir -p $TEST_RESULTS
+      
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
+
+      - run:
+          name: Run tests
+          command: go test ./... -v
+
+      - store_test_results:
+          path: /tmp/test-results
+
+workflows:
+  version: 2
+  build-workflow:
+    jobs:
+      - build-lint
+      - test:
+          requires:
+            - build-lint
