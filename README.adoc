@@ -1,0 +1,46 @@
+= Gravitee.io Kubernetes Operator
+
+image:./.assets/gravitee-logo-cyan.svg["Gravitee.io",400]
+
+== Introduction
+
+The Gravitee Kubernetes Operator is a new technical component which has to be deployed into a Kubernetes Cluster.
+It aims to meet several objectives:
+
+*API Management*: 
+
+  * manage CRDs for defining / deploying and publishing APIs, Applications, etc.
+  * act as an Ingress Controller for deploying Ingresses to the API Gateway
+
+*Platform*: 
+
+  * manage CRDs for deploying Gravitee products (APIM, AM, AE, …)
+
+One of the main goal of this new component is also to cover the CICD aspects when it comes to Kubernetes.
+
+== How-to run locally
+To the operator execute the following commands
+
+[source,shell]
+----
+make k3d-apim-init
+
+make install
+
+kubectl get crd 
+#should return apidefinitions.gravitee.io and managementcontexts.gravitee.io
+
+make run
+----
+
+== Try it
+To create a basic api definition run following command
+
+[source,shell]
+----
+kubectl apply -f ./config/samples/apim/basic-example.yml
+
+kubectl get graviteeapis  -o wide
+# NAME                ID                                     ENTRYPOINT   ENDPOINT                       VERSION   ENABLED
+# basic-api-example   ff3549c9-ceb2-36da-87f7-f5e51ba89097   /k8s-basic   https://api.gravitee.io/echo   1.0       true
+----
