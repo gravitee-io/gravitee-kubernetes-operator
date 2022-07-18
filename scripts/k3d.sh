@@ -16,6 +16,7 @@ K3D_LOAD_BALANCER_PORT=9000
 K3D_IMAGES_REGISTRY_NAME="${K3D_CLUSTER_NAME}.docker.localhost"
 K3D_IMAGES_REGISTRY_PORT=12345
 K3D_IMAGES_REGISTRY="${K3D_IMAGES_REGISTRY_NAME}:${K3D_IMAGES_REGISTRY_PORT}"
+K3D_IMAGES_REGISTRY_LOCALHOST="localhost:${K3D_IMAGES_REGISTRY_PORT}"
 
 echo "
 
@@ -27,20 +28,10 @@ echo "
 
 curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-# check localhost alias for k3d registry before install
-if [[ -z $(grep "$K3D_IMAGES_REGISTRY_NAME" /etc/hosts | awk '{ print $1 }') ]]; then
-    echo "
-        ⛔️ K3d localhost alias is missing in in your /etc/hosts.
-    
-        Please add 127.0.0.1 k3d-graviteeio.docker.localhost in your /etc/hosts
-    "
-    exit 1
-fi
-
 if [[ $(k3d registry list | grep $K3D_IMAGES_REGISTRY_NAME) ]]; then
     echo "
 
-         k3d images registry already exists.
+         K3d images registry already exists.
     "
 else
     echo "
@@ -90,13 +81,13 @@ docker tag "graviteeio/apim-gateway:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/g
 docker tag "graviteeio/apim-management-api:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
 docker tag "graviteeio/apim-management-ui:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
 
-docker push "${K3D_IMAGES_REGISTRY}/mongodb:${MONGO_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY}/elasticsearch:${ELASTIC_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY}/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY}/nginx:${NGINX_BACKEND_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/mongodb:${MONGO_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/elasticsearch:${ELASTIC_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/nginx:${NGINX_BACKEND_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
 
 echo "
 
@@ -161,7 +152,7 @@ helm install \
 BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
 helm install \
     --namespace ${K3D_NAMESPACE_NAME} \
-    -f $BASEDIR/helm/apim-values.yml \
+    -f "$BASEDIR/helm/apim-values.yml" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway" \
     --set "api.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api" \
     --set "ui.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui" \
@@ -186,6 +177,6 @@ echo "
     To update APIM components (e.g. APIM Gateway) to use a new docker image run:
 
     > docker tag <image> "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
-    > docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
+    > docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
     > kubectl rollout restart deployment apim-apim3-gateway
 "
