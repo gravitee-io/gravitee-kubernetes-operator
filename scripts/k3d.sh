@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Docker images tags
 NGINX_CONTROLLER_IMAGE_TAG=1.3.0
 NGINX_BACKEND_IMAGE_TAG=1.22.0
