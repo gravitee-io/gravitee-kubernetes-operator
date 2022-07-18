@@ -49,6 +49,10 @@ jobs:
       - helm/install-helm-client
 
       - run:
+          name: Install gotestsum
+          command: go install gotest.tools/gotestsum@latest
+
+      - run:
           name: Start K3d apim USE_EXISTING_CLUSTER
           command: make k3d-apim-init 
 
@@ -58,7 +62,7 @@ jobs:
 
       - run:
           name: Run tests
-          command: USE_EXISTING_CLUSTER=true go test ./... -v
+          command: USE_EXISTING_CLUSTER=true gotestsum --format pkgname --junitfile ${TEST_RESULTS}/gotestsum-report.xml
 
       - store_test_results:
           path: /tmp/test-results
