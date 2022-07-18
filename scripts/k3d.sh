@@ -55,7 +55,7 @@ k3d cluster create --wait \
     -p "${K3D_LOAD_BALANCER_PORT}:80@loadbalancer" \
     --k3s-arg "--disable=traefik@server:*" \
     --registry-use=${K3D_IMAGES_REGISTRY_NAME} \
-    ${K3D_CLUSTER_NAME}
+    ${K3D_CLUSTER_NAME} --verbose
 
 K3D_IMAGES_REGISTRY="k3d-${K3D_IMAGES_REGISTRY}"
 

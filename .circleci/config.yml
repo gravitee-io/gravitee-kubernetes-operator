@@ -1,4 +1,9 @@
-version: 2
+version: 2.1
+
+orbs: 
+  kubernetes: circleci/kubernetes@1.3.0
+  go: circleci/go@1.7.1
+
 jobs:
   build-lint:
     docker:
@@ -7,18 +12,7 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
-      
-      - run:
-          name: Install Dependencies
-          command: go get
-
-      - save_cache:
-          key: go-mod-v4-{{ checksum "go.sum" }}
-          paths:
-            - "/go/pkg/mod"
+      - go/mod-download-cached
 
       - run:
           name: Lint
@@ -29,32 +23,45 @@ jobs:
           command: go vet ./...
 
   test:
-    docker:
-      - image: cimg/go:1.18.4
-
     environment:
       TEST_RESULTS: /tmp/test-results
+    
+    machine:
+      image: ubuntu-2004:2022.04.2
+    
+    resource_class: medium
 
     steps:
       - checkout
-      
+
       - run:
           name: Create test results directory
           command: mkdir -p $TEST_RESULTS
-      
-      - restore_cache:
-          keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
+
+      - go/install:
+          version: '1.18.4'
+
+      - go/load-cache
+
+      - kubernetes/install-kubectl
+
+      - run:
+          name: Start K3d apim USE_EXISTING_CLUSTER
+          command: make k3d-apim-init 
+
+      - run:
+          name: Wait for APIM to be ready
+          command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 60s
 
       - run:
           name: Run tests
-          command: go test ./... -v
+          command: USE_EXISTING_CLUSTER=true go test ./... -v
 
       - store_test_results:
           path: /tmp/test-results
 
 workflows:
-  version: 2
+  version: 2.1
   build-workflow:
     jobs:
       - build-lint
