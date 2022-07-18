@@ -3,6 +3,7 @@ version: 2.1
 orbs: 
   kubernetes: circleci/kubernetes@1.3.0
   go: circleci/go@1.7.1
+  helm: circleci/helm@2.0.1
 
 jobs:
   build-lint:
@@ -27,9 +28,9 @@ jobs:
       TEST_RESULTS: /tmp/test-results
     
     machine:
-      image: ubuntu-2004:2022.04.2
+      image: ubuntu-2204:2022.04.2
     
-    resource_class: medium
+    resource_class: large
 
     steps:
       - checkout
@@ -45,13 +46,15 @@ jobs:
 
       - kubernetes/install-kubectl
 
+      - helm/install-helm-client
+
       - run:
           name: Start K3d apim USE_EXISTING_CLUSTER
           command: make k3d-apim-init 
 
       - run:
           name: Wait for APIM to be ready
-          command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 60s
+          command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 180s
 
       - run:
           name: Run tests
