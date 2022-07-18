@@ -18,11 +18,10 @@ K3D_LOAD_BALANCER_PORT=9000
 K3D_IMAGES_REGISTRY_NAME="${K3D_CLUSTER_NAME}.docker.localhost"
 K3D_IMAGES_REGISTRY_PORT=12345
 K3D_IMAGES_REGISTRY="${K3D_IMAGES_REGISTRY_NAME}:${K3D_IMAGES_REGISTRY_PORT}"
-K3D_IMAGES_REGISTRY_LOCALHOST="localhost:${K3D_IMAGES_REGISTRY_PORT}"
 
 echo "
 
-    Installing the latest version of k3d (if not already present)
+    Installing the latest version of k3d (if not present) ...
 
     See https://k3d.io/
 
@@ -30,24 +29,28 @@ echo "
 
 curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
-if [[ $(k3d registry list | grep $K3D_IMAGES_REGISTRY_NAME) ]]; then
-    echo "
+echo "
 
-         K3d images registry already exists.
+    Initialising a local docker images registry for k3d images (if not present) ...
+"
+
+if k3d registry list | grep -q "${K3D_IMAGES_REGISTRY_NAME}"; then
+    echo "
+         K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
     "
 else
     echo "
-
-        Initialising a local docker images registry for k3d images (if not present)
-
+        Initialising registry ${K3D_IMAGES_REGISTRY_NAME}
     "
 
     k3d registry create ${K3D_IMAGES_REGISTRY_NAME} --port ${K3D_IMAGES_REGISTRY_PORT}
 fi
 
+K3D_IMAGES_REGISTRY="k3d-${K3D_IMAGES_REGISTRY}"
+
 echo "
 
-    Creating a k3d cluster with name ${K3D_CLUSTER_NAME}
+    Creating a K3d cluster with name ${K3D_CLUSTER_NAME}
 
 "
 
@@ -59,11 +62,9 @@ k3d cluster create --wait \
     --registry-use=${K3D_IMAGES_REGISTRY_NAME} \
     ${K3D_CLUSTER_NAME} --verbose
 
-K3D_IMAGES_REGISTRY="k3d-${K3D_IMAGES_REGISTRY}"
-
 echo "
 
-    Registering docker images to ${K3D_IMAGES_REGISTRY}
+    Registering docker images to ${K3D_IMAGES_REGISTRY} ...
 
 "
 
@@ -83,17 +84,17 @@ docker tag "graviteeio/apim-gateway:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/g
 docker tag "graviteeio/apim-management-api:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
 docker tag "graviteeio/apim-management-ui:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
 
-docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/mongodb:${MONGO_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/elasticsearch:${ELASTIC_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/nginx:${NGINX_BACKEND_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
-docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY}/mongodb:${MONGO_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY}/elasticsearch:${ELASTIC_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY}/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY}/nginx:${NGINX_BACKEND_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
+docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
 
 echo "
 
-    Creating Kubernetes namespace ${K3D_NAMESPACE_NAME}
+    Creating Kubernetes namespace ${K3D_NAMESPACE_NAME} ...
 
 "
 
@@ -102,7 +103,7 @@ kubectl config set-context --current --namespace ${K3D_NAMESPACE_NAME}
 
 echo "
 
-    Adding Helm repositories (if not presents)
+    Adding Helm repositories (if not presents) ...
 
 "
 
@@ -179,6 +180,6 @@ echo "
     To update APIM components (e.g. APIM Gateway) to use a new docker image run:
 
     > docker tag <image> "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
-    > docker push "${K3D_IMAGES_REGISTRY_LOCALHOST}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
+    > docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
     > kubectl rollout restart deployment apim-apim3-gateway
 "
