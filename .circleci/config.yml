@@ -16,12 +16,12 @@ jobs:
       - go/mod-download-cached
 
       - run:
-          name: Lint
-          command: go fmt ./...
+          name: Install GolangCi Lint
+          command: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
       - run:
-          name: Report likely mistakes in packages
-          command: go vet ./...
+          name: Run Lint
+          command: golangci-lint run ./...
 
   test:
     environment:
