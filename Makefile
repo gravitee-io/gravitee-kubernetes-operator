@@ -250,3 +250,7 @@ k3d-apim-stop: # Stop exiting APIM node in k3d
 .PHONY: k3d-apim-clean
 k3d-apim-clean: # Clean k3d APIM nodes and remove registry in docker
 	k3d cluster delete graviteeio
+
+.PHONY:
+local-service-account:
+	bash ./scripts/service_account.sh

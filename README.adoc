@@ -27,8 +27,8 @@ make k3d-apim-init
 
 make install
 
+# should return apidefinitions.gravitee.io and managementcontexts.gravitee.io
 kubectl get crd 
-#should return apidefinitions.gravitee.io and managementcontexts.gravitee.io
 
 make run
 ----
@@ -38,9 +38,36 @@ To create a basic api definition run following command
 
 [source,shell]
 ----
-kubectl apply -f ./config/samples/apim/basic-example.yml
+# Create a management context for your APIM instance running on K3D
+kubectl apply -f ./config/samples/context/managementcontext_credentials_k3d.yaml
+
+# Create a basic API definition resource
+kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
 
 kubectl get graviteeapis  -o wide
 # NAME                ID                                     ENTRYPOINT   ENDPOINT                       VERSION   ENABLED
 # basic-api-example   ff3549c9-ceb2-36da-87f7-f5e51ba89097   /k8s-basic   https://api.gravitee.io/echo   1.0       true
+----
+
+== Debugging with a locally running APIM
+To be abble to run the operator against a local instance of both APIM Gateway and APIM Management API you will need to
+  - Attach to a local cluster context
+  - Create a local service account to authenticate the gateway against the local cluster
+  - Run both APIM Gateway and APIM Management API in debug mode
+  - Create a management context pointing to your local APIM management API
+
+[source,shell]
+----
+make install
+
+# should return apidefinitions.gravitee.io and managementcontexts.gravitee.io
+kubectl get crd 
+
+make run # or run using a debugger if you need to debug the operator as well
+
+# Create a management context for APIM
+kubectl apply -f ./config/samples/context/managementcontext_credentials.yaml
+
+# Create a basic API definition resource
+kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
 ----
