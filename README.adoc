@@ -71,3 +71,15 @@ kubectl apply -f ./config/samples/context/managementcontext_credentials.yaml
 # Create a basic API definition resource
 kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
 ----
+
+== Note for Apple Silicon users
+The default version of kustomize installed by the `kustomize` target is not available on
+arm64 platforms.
+
+You can override the version to use setting the `KUSTOMIZE_VERSION` environment variable
+
+[source,shell]
+----
+export KUSTOMIZE_VERSION=v4.5.5
+make kustomize
+----
