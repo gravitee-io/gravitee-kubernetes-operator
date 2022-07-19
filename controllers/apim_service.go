@@ -256,20 +256,25 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 			defer response.Body.Close()
 		}
 
+		if response.StatusCode != 200 {
+			// TODO parse response body as a map and log
+			return fmt.Errorf("An error as occured trying to find API %s, HTTP Status: %d ", apiId, response.StatusCode)
+		}
+
 		body, readErr := ioutil.ReadAll(response.Body)
 		if readErr != nil {
 			log.Error(readErr, "Error")
 		}
 
-		var result map[string]interface{}
-		json.Unmarshal([]byte(body), &result)
+		var result []interface{}
+		err = json.Unmarshal([]byte(body), &result)
 
-		log.Info("Result", "result", result)
 		if err != nil {
-			log.Error(err, "Unable to import the api into the Management API")
+			log.Error(err, "Unable to marshal API definition")
 			return err
 		} else {
-			if response.StatusCode == 404 {
+			if len(result) == 0 {
+				log.Info("No match found for API, switching to creation mode", "apiId", apiId)
 				importHttpMethod = http.MethodPost
 			}
 		}
