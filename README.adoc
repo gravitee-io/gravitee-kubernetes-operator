@@ -1,5 +1,8 @@
 = Gravitee.io Kubernetes Operator
 
+image:https://img.shields.io/badge/License-Apache%202.0-blue.svg["License", link="https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/LICENSE"]
+image:https://dl.circleci.com/status-badge/img/gh/gravitee-io/gravitee-kubernetes-operator/tree/master.svg?style=svg&circle-token=fede14bc30847f9ef01ae44c12c44edbe817c3b0["CircleCI", link="https://app.circleci.com/pipelines/github/gravitee-io/gravitee-kubernetes-operator?branch=master"]
+
 image:./.assets/gravitee-logo-cyan.svg["Gravitee.io",400]
 
 == Introduction
