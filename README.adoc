@@ -33,6 +33,9 @@ make install
 # check that the gravitee.io CRDs are available on your cluster
 kubectl get crd 
 
+# wait for APIM pods to be ready
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 180s
+
 make run
 ----
 
