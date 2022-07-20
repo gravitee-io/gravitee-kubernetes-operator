@@ -3,17 +3,17 @@ package model
 type EndpointStatus int
 
 const (
-	DOWN EndpointStatus = iota
-	TRANSITIONALLY_DOWN
-	TRANSITIONALLY_UP
-	UP
+	Down EndpointStatus = iota
+	TransitionallyDown
+	TransitionallyUp
+	Up
 )
 
 type EndpointType string
 
 const (
-	HTTP_ENDPOINT EndpointType = "http"
-	GRPC                       = "grpc"
+	HttpEndpointType EndpointType = "http"
+	GrpcEndpointType EndpointType = "grpc"
 )
 
 type Endpoint struct {
@@ -68,7 +68,7 @@ type EndpointDiscoveryService struct {
 type DynamicPropertyProvider int
 
 const (
-	HTTP_PROPERTY_PROVIDER DynamicPropertyProvider = iota
+	HttpPropertyProvider DynamicPropertyProvider = iota
 )
 
 type DynamicPropertyService struct {
@@ -104,10 +104,10 @@ type Services struct {
 type LoadBalancerType string
 
 const (
-	ROUND_ROBIN          LoadBalancerType = "ROUND_ROBIN"
-	RANDOM                                = "RANDOM"
-	WEIGHTED_ROUND_ROBIN                  = "WEIGHTED_ROUND_ROBIN"
-	WEIGHTED_RANDOM                       = "WEIGHTED_RANDOM"
+	RoundRobin         LoadBalancerType = "ROUND_ROBIN"
+	Random             LoadBalancerType = "RANDOM"
+	WeightedRoundRobin LoadBalancerType = "WEIGHTED_ROUND_ROBIN"
+	WeightedRandom     LoadBalancerType = "WEIGHTED_RANDOM"
 )
 
 type LoadBalancer struct {

@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const DEFAULT_NAMESPACE = "default"
+const defaultNamespace = "default"
 
 func getManagementContext(ctx context.Context, client client.Client, log logr.Logger, apiDefinition *graviteeiov1alpha1.ApiDefinition) (graviteeiov1alpha1.ManagementContext, error) {
 	contextRef := apiDefinition.Spec.Context
@@ -18,7 +18,7 @@ func getManagementContext(ctx context.Context, client client.Client, log logr.Lo
 	if contextRef.Namespace == "" {
 		log.Info("Context namespace is not specified, using default")
 
-		contextRef.Namespace = DEFAULT_NAMESPACE
+		contextRef.Namespace = defaultNamespace
 	}
 
 	var mgmtContext graviteeiov1alpha1.ManagementContext
