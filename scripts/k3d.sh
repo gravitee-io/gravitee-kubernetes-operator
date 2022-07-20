@@ -7,7 +7,7 @@ NGINX_CONTROLLER_IMAGE_TAG=1.3.0
 NGINX_BACKEND_IMAGE_TAG=1.22.0
 MONGO_IMAGE_TAG=4.4
 ELASTIC_IMAGE_TAG=7.17.5 
-APIM_IMAGE_TAG=3.17.3
+APIM_IMAGE_TAG=latest
 
 # K3d cluster config
 K3D_CLUSTER_NAME=graviteeio
@@ -60,7 +60,7 @@ k3d cluster create --wait \
     -p "${K3D_LOAD_BALANCER_PORT}:80@loadbalancer" \
     --k3s-arg "--disable=traefik@server:*" \
     --registry-use=${K3D_IMAGES_REGISTRY_NAME} \
-    ${K3D_CLUSTER_NAME} --verbose
+    ${K3D_CLUSTER_NAME}
 
 echo "
 
