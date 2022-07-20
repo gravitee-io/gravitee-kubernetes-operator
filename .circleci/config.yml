@@ -55,6 +55,14 @@ jobs:
       - run:
           name: Start APIM using k3d
           command: make k3d-apim-init 
+      
+      - run:
+          name: Deploy Operator
+          command: make k3d-gko-build k3d-gko-push k3d-gko-deploy
+
+      - run: 
+          name: Wait for Operator to be ready 
+          command: kubectl wait -n gko-system --for condition=Available deployments/gko-controller-manager --timeout 60s
 
       - run:
           name: Wait for APIM to be ready
