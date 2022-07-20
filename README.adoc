@@ -30,7 +30,7 @@ make k3d-apim-init
 
 make install
 
-# should return apidefinitions.gravitee.io and managementcontexts.gravitee.io
+# check that the gravitee.io CRDs are available on your cluster
 kubectl get crd 
 
 make run
@@ -63,7 +63,7 @@ To be abble to run the operator against a local instance of both APIM Gateway an
 ----
 make install
 
-# should return apidefinitions.gravitee.io and managementcontexts.gravitee.io
+# check that the gravitee.io CRDs are available on your cluster
 kubectl get crd 
 
 make run # or run using a debugger if you need to debug the operator as well
