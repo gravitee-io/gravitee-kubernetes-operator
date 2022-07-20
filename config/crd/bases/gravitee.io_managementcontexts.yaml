@@ -59,6 +59,10 @@ spec:
                 type: object
               baseUrl:
                 type: string
+              environmentId:
+                type: string
+              organizationId:
+                type: string
             required:
             - auth
             - baseUrl
