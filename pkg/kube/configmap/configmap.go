@@ -63,7 +63,7 @@ func ReadKey(getter Getter, key string, objectKey client.ObjectKey) (string, err
 	return "", errors.Errorf("key \"%s\" not present in ConfigMap %s/%s", key, objectKey.Namespace, objectKey.Name)
 }
 
-// ReadData extracts the contents of the Data field in a given config map
+// ReadData extracts the contents of the Data field in a given config map.
 func ReadData(getter Getter, key client.ObjectKey) (map[string]string, error) {
 	cm, err := getter.GetConfigMap(key)
 	if err != nil {
@@ -72,7 +72,7 @@ func ReadData(getter Getter, key client.ObjectKey) (map[string]string, error) {
 	return cm.Data, nil
 }
 
-// UpdateField updates the sets "key" to the given "value"
+// UpdateField updates the sets "key" to the given "value".
 func UpdateField(getUpdater GetUpdater, objectKey client.ObjectKey, key, value string) error {
 	cm, err := getUpdater.GetConfigMap(objectKey)
 	if err != nil {
@@ -130,7 +130,7 @@ func ReadFileLikeField(getter Getter, objectKey client.ObjectKey, externalKey st
 	return value, nil
 }
 
-// Exists return whether a configmap with the given namespaced name exists
+// Exists return whether a configmap with the given namespaced name exists.
 func Exists(cmGetter Getter, nsName types.NamespacedName) (bool, error) {
 	_, err := cmGetter.GetConfigMap(nsName)
 

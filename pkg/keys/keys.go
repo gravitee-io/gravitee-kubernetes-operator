@@ -1,6 +1,6 @@
 package keys
 
-// Kubernetes Ingresses
+// Kubernetes Ingresses.
 const (
 	IngressLabel                = "gravitee.io/ingress"
 	IngressClassAnnotation      = "kubernetes.io/ingress.class"
@@ -9,7 +9,7 @@ const (
 	IngressFinalizer            = "finalizers.gravitee.io/ingress"
 )
 
-// Gravitee.io CRDs
+// Gravitee.io CRDs.
 const (
 	CrdGroup   = "gravitee.io"
 	CrdVersion = "v1alpha1"
@@ -18,7 +18,7 @@ const (
 	CrdApiDefinitionTemplate = "template"
 )
 
-// Kubernetes Finalizers
+// Kubernetes Finalizers.
 const (
 	ApiDefinitionFinalizer         = "finalizers.gravitee.io/apidefinition"
 	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"

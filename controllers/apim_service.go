@@ -344,7 +344,7 @@ func setRequestAuth(request *http.Request, managementContext graviteeiov1alpha1.
 }
 
 // This function is used to generate all the IDs needed for communicating with the Management API
-// It doesn't override IDs if these one have been defined
+// It doesn't override IDs if these one have been defined.
 func generateIds(apiDefinition *graviteeiov1alpha1.ApiDefinition, envId string, log logr.Logger) {
 
 	// If a CrossID is defined at the API level, reuse it.
@@ -357,29 +357,13 @@ func generateIds(apiDefinition *graviteeiov1alpha1.ApiDefinition, envId string, 
 	plans := apiDefinition.Spec.Plans
 
 	for i, plan := range plans {
-		//var defPlanCrossId string
-
 		if plan.CrossId == "" {
 			plan.CrossId = toUUID(apiDefinition.Spec.CrossId + fmt.Sprint(i))
 		}
-
-		// plan.Id = toUUID(envId + apiDefinition.Spec.Id + defPlanId)
-		//plan.CrossId = toUUID(apiDefinition.Spec.CrossId + defPlanCrossId)
-		// plan.Api = apiDefinition.Spec.Id
-
 		plan.Status = "PUBLISHED"
 	}
 
 	//TODO: manage metadata
-	/*
-		metadata := apiDef["metadata"]
-		if metadata != nil {
-			for _, m := range metadata.([]interface{}) {
-				meta := m.(map[string]interface{})
-				meta["apiId"] = apiId
-			}
-		}
-	*/
 }
 
 func toUUID(decoded string) string {

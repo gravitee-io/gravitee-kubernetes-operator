@@ -27,7 +27,7 @@ type ManagementContextSpec struct {
 	model.Context `json:",inline"`
 }
 
-// ManagementContextStatus defines the observed state of ManagementContext
+// ManagementContextStatus defines the observed state of ManagementContext.
 type ManagementContextStatus struct {
 }
 
@@ -37,7 +37,7 @@ type ManagementContextStatus struct {
 // +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
 // +kubebuilder:printcolumn:name="BaseUrl",type=string,JSONPath=`.spec.baseUrl`
 // +kubebuilder:resource:shortName=graviteecontexts
-// ManagementContext is the Schema for the Management API
+// ManagementContext is the Schema for the Management API.
 type ManagementContext struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -47,7 +47,7 @@ type ManagementContext struct {
 }
 
 // +kubebuilder:object:root=true
-// ManagementContextList contains a list of ManagementContext
+// ManagementContextList contains a list of ManagementContext.
 type ManagementContextList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
