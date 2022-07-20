@@ -22,7 +22,7 @@ It aims to meet several objectives:
 One of the main goal of this new component is also to cover the CICD aspects when it comes to Kubernetes.
 
 == How-to run locally
-To the operator execute the following commands
+To run the operator locally, against an APIM ready K3d cluster, execute the following commands:
 
 [source,shell]
 ----
