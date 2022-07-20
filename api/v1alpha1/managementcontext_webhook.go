@@ -23,16 +23,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
-// log is for logging in this package.
 var managementcontextlog = logf.Log.WithName("managementcontext-resource")
+
+const (
+	defaultOrg = "DEFAULT"
+	defaultEnv = "DEFAULT"
+)
 
 func (r *ManagementContext) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).
 		Complete()
 }
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 //+kubebuilder:webhook:path=/mutate-gravitee-io-v1alpha1-managementcontext,mutating=true,failurePolicy=fail,sideEffects=None,groups=gravitee.io,resources=managementcontexts,verbs=create;update,versions=v1alpha1,name=mmanagementcontext.kb.io,admissionReviewVersions=v1
 
@@ -41,11 +43,14 @@ var _ webhook.Defaulter = &ManagementContext{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *ManagementContext) Default() {
 	managementcontextlog.Info("default", "name", r.Name)
-
-	// TODO(user): fill in your defaulting logic.
+	if r.Spec.Env == "" {
+		r.Spec.Env = defaultEnv
+	}
+	if r.Spec.Org == "" {
+		r.Spec.Org = defaultOrg
+	}
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-gravitee-io-v1alpha1-managementcontext,mutating=false,failurePolicy=fail,sideEffects=None,groups=gravitee.io,resources=managementcontexts,verbs=create;update,versions=v1alpha1,name=vmanagementcontext.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &ManagementContext{}
