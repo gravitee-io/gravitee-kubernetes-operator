@@ -38,6 +38,14 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout
 
 make run
 ----
+== Enabling webhook
+
+To enable webhooks on your cluster, https://cert-manager.io/docs/[cert-manager] needs to be installed
+
+[source,shell]
+----
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/latest/download/cert-manager.yaml
+----
 
 == Try it
 To create a basic api definition run following command
