@@ -48,8 +48,8 @@ type HttpClientSslOptions struct {
 	HostnameVerifier bool        `json:"hostnameVerifier,omitempty"`
 	TrustStore       *TrustStore `json:"trustStore,omitempty"`
 	KeyStore         *KeyStore   `json:"keyStore,omitempty"`
-	//TrustStore       TrustStore `json:"trustStore,omitempty"`
-	//KeyStore         KeyStore   `json:"keyStore,omitempty"`
+	// TrustStore       TrustStore `json:"trustStore,omitempty"`
+	// KeyStore         KeyStore   `json:"keyStore,omitempty"`
 }
 
 type HttpProxy struct {

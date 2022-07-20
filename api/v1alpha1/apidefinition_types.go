@@ -31,7 +31,7 @@ type ApiDefinitionSpec struct {
 	Context *model.ContextRef `json:"contextRef,omitempty"`
 }
 
-// ApiDefinitionStatus defines the observed state of ApiDefinition
+// ApiDefinitionStatus defines the observed state of ApiDefinition.
 type ApiDefinitionStatus struct {
 	ApiID string `json:"apiId"`
 }
@@ -45,7 +45,7 @@ type ApiDefinitionStatus struct {
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`
 // +kubebuilder:printcolumn:name="Enabled",type=boolean,JSONPath=`.spec.enabled`
 // +kubebuilder:resource:shortName=graviteeapis
-// ApiDefinition is the Schema for the apidefinitions API
+// ApiDefinition is the Schema for the apidefinitions API.
 type ApiDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -56,7 +56,7 @@ type ApiDefinition struct {
 }
 
 // +kubebuilder:object:root=true
-// ApiDefinitionList contains a list of ApiDefinition
+// ApiDefinitionList contains a list of ApiDefinition.
 type ApiDefinitionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

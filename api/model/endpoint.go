@@ -74,7 +74,7 @@ const (
 type DynamicPropertyService struct {
 	Schedule string                  `json:"schedule,omitempty"`
 	Provider DynamicPropertyProvider `json:"provider,omitempty"`
-	//Configuration DynamicPropertyProviderConfiguration `json:"configuration,omitempty"`  // needs to be fixed later
+	// Configuration DynamicPropertyProviderConfiguration `json:"configuration,omitempty"`  // needs to be fixed later
 }
 
 func NewDynamicPropertyService() *DynamicPropertyService {

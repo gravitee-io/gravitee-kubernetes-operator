@@ -27,7 +27,7 @@ import (
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-// ManagementContextReconciler reconciles a ManagementContext object
+// ManagementContextReconciler reconciles a ManagementContext object.
 type ManagementContextReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme

@@ -33,7 +33,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
 
-// ApiDefinitionReconciler reconciles a ApiDefinition object
+// ApiDefinitionReconciler reconciles a ApiDefinition object.
 type ApiDefinitionReconciler struct {
 	client.Client
 	Log      logr.Logger

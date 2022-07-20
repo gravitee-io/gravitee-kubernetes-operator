@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-// IngressReconciler watches and reconciles Ingress objects
+// IngressReconciler watches and reconciles Ingress objects.
 type IngressReconciler struct {
 	client.Client
 	Log      logr.Logger
@@ -165,7 +165,7 @@ func (r *IngressReconciler) ingressClassEventFilter() predicate.Predicate {
 	}
 }
 
-// SetupWithManager initializes ingress controller manager
+// SetupWithManager initializes ingress controller manager.
 func (r *IngressReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
