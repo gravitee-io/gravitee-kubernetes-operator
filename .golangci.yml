@@ -149,7 +149,6 @@ linters-settings:
     # Default: false
     exported-fields: false # default false # TODO: enable after fixing false positives
 
-
 linters:
   disable-all: true
   enable:
@@ -179,8 +178,6 @@ linters:
     - exportloopref # checks for pointers to enclosing loop variables
     - forbidigo # Forbids identifiers
     - funlen # Tool for detection of long functions
-    - gochecknoglobals # check that no global variables exist
-    - gochecknoinits # Checks that no init functions are present in Go code
     - gocognit # Computes and checks the cognitive complexity of functions
     - goconst # Finds repeated strings that could be replaced by a constant
     - gocritic # Provides diagnostics that check for bugs, performance and style issues.
@@ -210,7 +207,6 @@ linters:
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
     - stylecheck # Stylecheck is a replacement for golint
     - tenv # tenv is analyzer that detects using os.Setenv instead of t.Setenv since Go1.17
-    - testpackage # linter that makes you use a separate _test package
     - tparallel # tparallel detects inappropriate usage of t.Parallel() method in your Go test codes
     - unconvert # Remove unnecessary type conversions
     - unparam # Reports unused function parameters
@@ -231,6 +227,8 @@ linters:
     #- errchkjson # [don't see profit + I'm against of omitting errors like in the first example https://github.com/breml/errchkjson] Checks types passed to the json encoding functions. Reports unsupported types and optionally reports occasions, where the check for the returned error can be omitted.
     #- forcetypeassert # [replaced by errcheck] finds forced type assertions
     #- gci # Gci controls golang package import order and makes it always deterministic.
+    #- gochecknoglobals # check that no global variables exist
+    #- gochecknoinits # Checks that no init functions are present in Go code
     #- godox # Tool for detection of FIXME, TODO and other comment keywords
     #- goerr113 # [too strict] Golang linter to check the errors handling expressions
     #- gofmt # [replaced by goimports] Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
@@ -243,6 +241,7 @@ linters:
     #- nlreturn # [too strict and mostly code is not more readable] nlreturn checks for a new line before return and branch statements to increase code clarity
     #- paralleltest # [too many false positives] paralleltest detects missing usage of t.Parallel() method in your Go test
     #- tagliatelle # Checks the struct tags.
+    #- testpackage # linter that makes you use a separate _test package
     #- thelper # thelper detects golang test helpers without t.Helper() call and checks the consistency of test helpers
     #- wsl # [too strict and mostly code is not more readable] Whitespace Linter - Forces you to use empty lines!
     ## deprecated
@@ -259,6 +258,9 @@ issues:
   # Default: 3
   max-same-issues: 50
 
+  exclude:
+    - ".*(Id|Api|Url|Http).* should be .*(ID|API|URL|HTTP).*"
+
   exclude-rules:
     - source: "^//\\s*go:generate\\s"
       linters: [ lll ]
@@ -268,6 +270,8 @@ issues:
       linters: [ gocritic ]
     - source: "^\\s+if _, ok := err\\.\\([^.]+\\.InternalError\\); ok {"
       linters: [ errorlint ]
+    - source: "^//"
+      linters: [ lll ]
     - path: "_test\\.go"
       linters:
         - bodyclose
