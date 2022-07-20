@@ -59,6 +59,10 @@ spec:
                 type: object
               baseUrl:
                 type: string
+              env:
+                type: string
+              org:
+                type: string
             required:
             - auth
             - baseUrl

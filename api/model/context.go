@@ -8,6 +8,8 @@ type ContextRef struct {
 
 type Context struct {
 	BaseUrl string `json:"baseUrl"`
+	Env     string `json:"env,omitempty"`
+	Org     string `json:"org,omitempty"`
 	Auth    *Auth  `json:"auth"`
 }
 
