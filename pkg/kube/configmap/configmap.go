@@ -111,7 +111,12 @@ func filelikePropertiesToMap(s string) (map[string]string, error) {
 }
 
 // ReadFileLikeField reads a ConfigMap with file-like properties and returns the value inside one of the fields.
-func ReadFileLikeField(getter Getter, objectKey client.ObjectKey, externalKey string, internalKey string) (string, error) {
+func ReadFileLikeField(
+	getter Getter,
+	objectKey client.ObjectKey,
+	externalKey string,
+	internalKey string,
+) (string, error) {
 	cmData, err := ReadData(getter, objectKey)
 	if err != nil {
 		return "", err

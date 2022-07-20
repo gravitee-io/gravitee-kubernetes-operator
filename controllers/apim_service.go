@@ -27,7 +27,12 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (r *ApiDefinitionReconciler) createApiDefinition(ctx context.Context, apiDefinition *graviteeiov1alpha1.ApiDefinition, orgId string, envId string) error {
+func (r *ApiDefinitionReconciler) createApiDefinition(
+	ctx context.Context,
+	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+	orgId string,
+	envId string,
+) error {
 	log := logr.FromContextOrDiscard(ctx)
 
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
@@ -56,7 +61,12 @@ func (r *ApiDefinitionReconciler) createApiDefinition(ctx context.Context, apiDe
 	return nil
 }
 
-func (r *ApiDefinitionReconciler) updateApiDefinition(ctx context.Context, apiDefinition *graviteeiov1alpha1.ApiDefinition, orgId string, envId string) error {
+func (r *ApiDefinitionReconciler) updateApiDefinition(
+	ctx context.Context,
+	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+	orgId string,
+	envId string,
+) error {
 	log := logr.FromContextOrDiscard(ctx)
 
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
@@ -68,7 +78,12 @@ func (r *ApiDefinitionReconciler) updateApiDefinition(ctx context.Context, apiDe
 	return r.importApiDefinition(ctx, apiDefinition, orgId, envId)
 }
 
-func (r *ApiDefinitionReconciler) importApiDefinition(ctx context.Context, apiDefinition *graviteeiov1alpha1.ApiDefinition, orgId string, envId string) error {
+func (r *ApiDefinitionReconciler) importApiDefinition(
+	ctx context.Context,
+	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+	orgId string,
+	envId string,
+) error {
 	log := logr.FromContextOrDiscard(ctx)
 
 	// Define the API definition context
@@ -82,21 +97,24 @@ func (r *ApiDefinitionReconciler) importApiDefinition(ctx context.Context, apiDe
 	apiJson, err := json.Marshal(apiDefinition.Spec)
 
 	if err != nil {
-		log.Error(err, "Unable to generate json api definition for api '%s' (%s). %s", apiDefinition.Name, apiDefinition.Spec.Id)
+		log.Error(err, "Unable to generate json api definition for api '%s' (%s). %s",
+			apiDefinition.Name, apiDefinition.Spec.Id)
 		return err
 	}
 
 	updated, err := r.updateConfigMap(ctx, apiDefinition, orgId, envId, apiJson, log)
 
 	if err != nil {
-		log.Error(err, "Unable to create or update ConfigMap for API '%s' (%s). %s", apiDefinition.Name, apiDefinition.Spec.Id)
+		log.Error(err, "Unable to create or update ConfigMap for API '%s' (%s). %s",
+			apiDefinition.Name, apiDefinition.Spec.Id)
 		return err
 	}
 
 	if updated {
 		err = r.importToManagementApi(ctx, apiDefinition, orgId, envId, apiJson, log)
 		if err != nil {
-			log.Error(err, "Unable to import API to the Management API '%s' (%s). %s", apiDefinition.Name, apiDefinition.Spec.Id)
+			log.Error(err, "Unable to import API to the Management API '%s' (%s). %s",
+				apiDefinition.Name, apiDefinition.Spec.Id)
 			return err
 		}
 	}
@@ -132,7 +150,8 @@ func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(ctx context.Contex
 
 			// There are existing ingresses wich to the ApiDefinition template, re-schedule deletion
 			if len(ingresses) > 0 {
-				return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime}, fmt.Errorf("Can not delete %s %v depends on it", apiDefinition.Name, ingresses)
+				return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime},
+					fmt.Errorf("Can not delete %s %v depends on it", apiDefinition.Name, ingresses)
 			}
 
 			util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
@@ -186,7 +205,14 @@ func createDefaultPlan(apiDefinition *graviteeiov1alpha1.ApiDefinition, log logr
 	}
 }
 
-func (r *ApiDefinitionReconciler) updateConfigMap(ctx context.Context, apiDefinition *graviteeiov1alpha1.ApiDefinition, orgId string, envId string, apiJson []byte, log logr.Logger) (bool, error) {
+func (r *ApiDefinitionReconciler) updateConfigMap(
+	ctx context.Context,
+	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+	orgId string,
+	envId string,
+	apiJson []byte,
+	log logr.Logger,
+) (bool, error) {
 
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
@@ -241,7 +267,11 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 		client := http.Client{Timeout: time.Duration(5 * time.Second)}
 
 		// Do reconciliation with the Management API
-		request, err := http.NewRequest(http.MethodGet, mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+envId+"/apis?crossId="+apiId, nil)
+		request, err := http.NewRequest(
+			http.MethodGet,
+			mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+envId+"/apis?crossId="+apiId,
+			nil,
+		)
 		setRequestAuth(request, mgmtContextInst)
 		response, err := client.Do(request)
 
@@ -279,7 +309,12 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 			}
 		}
 
-		request, err = http.NewRequest(importHttpMethod, mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+envId+"/apis/import?definitionVersion=2.0.0", bytes.NewBuffer(apiJson))
+		request, err = http.NewRequest(
+			importHttpMethod,
+			mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+
+				orgId+"/environments/"+envId+"/apis/import?definitionVersion=2.0.0",
+			bytes.NewBuffer(apiJson),
+		)
 
 		if err != nil {
 			log.Error(err, "Unable to import the api into the Management API")
@@ -307,15 +342,20 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 	return nil
 }
 
-func (r *ApiDefinitionReconciler) deleteApiDefinition(ctx context.Context, apiDefinition graviteeiov1alpha1.ApiDefinition) error {
-
+func (r *ApiDefinitionReconciler) deleteApiDefinition(
+	ctx context.Context,
+	apiDefinition graviteeiov1alpha1.ApiDefinition,
+) error {
 	r.Log.Info("Deleting API Definition")
 	err := r.deleteApiDefinitionConfigMap(ctx, apiDefinition)
 
 	return err
 }
 
-func (r *ApiDefinitionReconciler) deleteApiDefinitionConfigMap(ctx context.Context, apiDefinition graviteeiov1alpha1.ApiDefinition) error {
+func (r *ApiDefinitionReconciler) deleteApiDefinitionConfigMap(
+	ctx context.Context,
+	apiDefinition graviteeiov1alpha1.ApiDefinition,
+) error {
 	configMap := &v1.ConfigMap{}
 
 	r.Log.Info("Deleting ConfigMap associated to API")
@@ -351,7 +391,8 @@ func generateIds(apiDefinition *graviteeiov1alpha1.ApiDefinition, envId string, 
 	// If not, just generate a new CrossID
 	if apiDefinition.Spec.CrossId == "" {
 		// The ID of the API will be based on the API Name and Namespace to ensure consistency
-		apiDefinition.Spec.CrossId = toUUID(types.NamespacedName{Namespace: apiDefinition.Namespace, Name: apiDefinition.Name}.String())
+		apiDefinition.Spec.CrossId =
+			toUUID(types.NamespacedName{Namespace: apiDefinition.Namespace, Name: apiDefinition.Name}.String())
 	}
 
 	plans := apiDefinition.Spec.Plans
