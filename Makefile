@@ -48,6 +48,9 @@ endif
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+# Image URL to use to push to k3d local registry
+K3D_IMG ?= k3d-graviteeio.docker.localhost:12345/gko:latest
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24
 
@@ -121,6 +124,18 @@ k3d-apim-stop: ## Stop exiting APIM node in k3d
 .PHONY: k3d-apim-clean
 k3d-apim-clean: ## Clean k3d APIM nodes and remove registry in docker
 	k3d cluster delete graviteeio && k3d registry delete k3d-graviteeio.docker.localhost
+
+.PHONY: k3d-gko-build
+k3d-gko-build: ## Build the gko image for k3d deployment
+	$(MAKE) docker-build IMG=$(K3D_IMG)
+
+.PHONY: k3d-gko-push
+k3d-gko-push: ## Push the gko image for k3d deployment
+	$(MAKE) docker-push IMG=$(K3D_IMG)
+
+.PHONY: k3d-gko-deploy
+k3d-gko-deploy: ## Push the gko image for k3d deployment
+	$(MAKE) deploy IMG=$(K3D_IMG)
 
 .PHONY:
 local-service-account: ## Generate a service account token with cluster-admin role and add it to kubeconfig
