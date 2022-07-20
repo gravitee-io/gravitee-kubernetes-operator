@@ -10,8 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"errors"
-
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -39,7 +37,7 @@ func (r *ApiDefinitionReconciler) createApiDefinition(
 	createDefaultPlan(apiDefinition, log)
 
 	// Ensure that IDs have been generated
-	generateIds(apiDefinition, envId, log)
+	generateIds(apiDefinition)
 
 	// Import the API Definition:
 	// * Create the ConfigMap for the Gateway
@@ -73,7 +71,7 @@ func (r *ApiDefinitionReconciler) updateApiDefinition(
 	createDefaultPlan(apiDefinition, log)
 
 	// Ensure that IDs have been generated
-	generateIds(apiDefinition, envId, log)
+	generateIds(apiDefinition)
 
 	return r.importApiDefinition(ctx, apiDefinition, orgId, envId)
 }
@@ -151,7 +149,7 @@ func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(ctx context.Contex
 			// There are existing ingresses wich to the ApiDefinition template, re-schedule deletion
 			if len(ingresses) > 0 {
 				return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime},
-					fmt.Errorf("Can not delete %s %v depends on it", apiDefinition.Name, ingresses)
+					fmt.Errorf("can not delete %s %v depends on it", apiDefinition.Name, ingresses)
 			}
 
 			util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
@@ -213,7 +211,6 @@ func (r *ApiDefinitionReconciler) updateConfigMap(
 	apiJson []byte,
 	log logr.Logger,
 ) (bool, error) {
-
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
 
@@ -248,11 +245,18 @@ func (r *ApiDefinitionReconciler) updateConfigMap(
 		log.Info("Creating configmap for api.", "id", apiDefinition.Spec.Id, "name", apiDefinition.Name)
 		err = r.Create(ctx, cm)
 	}
-
-	return true, nil
+	return true, err
 }
 
-func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, apiDefinition *graviteeiov1alpha1.ApiDefinition, orgId string, envId string, apiJson []byte, log logr.Logger) error {
+func (r *ApiDefinitionReconciler) importToManagementApi(
+	ctx context.Context,
+	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+	orgId string,
+	envId string,
+	apiJson []byte,
+	log logr.Logger,
+) error {
+	const timeout = 5
 	apiId := apiDefinition.Status.ApiID
 	apiName := apiDefinition.Spec.Name
 
@@ -264,7 +268,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 		}
 
 		// Call management side to push api also.
-		client := http.Client{Timeout: time.Duration(5 * time.Second)}
+		client := http.Client{Timeout: timeout * time.Second}
 
 		// Do reconciliation with the Management API
 		request, err := http.NewRequest(
@@ -288,7 +292,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 
 		if response.StatusCode != http.StatusOK {
 			// TODO parse response body as a map and log
-			return fmt.Errorf("An error as occured trying to find API %s, Http Status: %d ", apiId, response.StatusCode)
+			return fmt.Errorf("an error as occured trying to find API %s, HTTP Status: %d ", apiId, response.StatusCode)
 		}
 
 		body, readErr := ioutil.ReadAll(response.Body)
@@ -297,23 +301,19 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 		}
 
 		var result []interface{}
-		err = json.Unmarshal([]byte(body), &result)
+		err = json.Unmarshal(body, &result)
 
 		if err != nil {
 			log.Error(err, "Unable to marshal API definition")
 			return err
-		} else {
-			if len(result) == 0 {
-				log.Info("No match found for API, switching to creation mode", "apiId", apiId)
-				importHttpMethod = http.MethodPost
-			}
+		} else if len(result) == 0 {
+			log.Info("No match found for API, switching to creation mode", "apiId", apiId)
+			importHttpMethod = http.MethodPost
 		}
 
-		request, err = http.NewRequest(
-			importHttpMethod,
-			mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+
-				orgId+"/environments/"+envId+"/apis/import?definitionVersion=2.0.0",
-			bytes.NewBuffer(apiJson),
+		request, err = http.NewRequestWithContext(
+			ctx, importHttpMethod, mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+
+				envId+"/apis/import?definitionVersion=2.0.0", bytes.NewBuffer(apiJson),
 		)
 
 		if err != nil {
@@ -323,22 +323,25 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 
 		request.Header.Add("Content-Type", "application/json")
 		setRequestAuth(request, mgmtContextInst)
-
 		response, err = client.Do(request)
 
 		if err != nil {
 			log.Error(err, "Unable to import the api into the Management API", apiName, apiId, err)
 			return err
-		} else if response.StatusCode < 200 || response.StatusCode > 299 {
-			log.Error(nil, "Unable to import the api into the Management API", apiName, apiId)
-			return errors.New(fmt.Sprintf("Management has returned a %d code", response.StatusCode))
-		} else {
-			log.Error(nil, "Api has been pushed to the Management API", apiName, apiId)
 		}
+
+		if response.StatusCode < 200 || response.StatusCode > 299 {
+			log.Error(nil, "Unable to import the api into the Management API", apiName, apiId)
+			return fmt.Errorf("management has returned a %d code", response.StatusCode)
+		}
+
+		if response.Body != nil {
+			defer response.Body.Close()
+		}
+		log.Info("Api has been pushed to the Management API", apiName, apiId)
 	} else {
 		log.Info("No management context associated to the API, skipping import to Management API")
 	}
-
 	return nil
 }
 
@@ -385,8 +388,7 @@ func setRequestAuth(request *http.Request, managementContext graviteeiov1alpha1.
 
 // This function is used to generate all the IDs needed for communicating with the Management API
 // It doesn't override IDs if these one have been defined.
-func generateIds(apiDefinition *graviteeiov1alpha1.ApiDefinition, envId string, log logr.Logger) {
-
+func generateIds(apiDefinition *graviteeiov1alpha1.ApiDefinition) {
 	// If a CrossID is defined at the API level, reuse it.
 	// If not, just generate a new CrossID
 	if apiDefinition.Spec.CrossId == "" {
