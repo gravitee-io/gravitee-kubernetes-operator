@@ -11,7 +11,12 @@ import (
 
 const defaultNamespace = "default"
 
-func getManagementContext(ctx context.Context, client client.Client, log logr.Logger, apiDefinition *graviteeiov1alpha1.ApiDefinition) (graviteeiov1alpha1.ManagementContext, error) {
+func getManagementContext(
+	ctx context.Context,
+	client client.Client,
+	log logr.Logger,
+	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+) (graviteeiov1alpha1.ManagementContext, error) {
 	contextRef := apiDefinition.Spec.Context
 
 	// If namespace is not specified in contextRef, use default namespace

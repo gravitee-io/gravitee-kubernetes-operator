@@ -99,12 +99,15 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 // Transform the ingress as an API Definition as per https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
-func (r *IngressReconciler) mergeApiDefitinion(log logr.Logger, template *v1alpha1.ApiDefinition, ingress *netV1.Ingress) error {
+func (r *IngressReconciler) mergeApiDefitinion(
+	log logr.Logger,
+	template *v1alpha1.ApiDefinition,
+	ingress *netV1.Ingress,
+) error {
 	log.Info("Merge Ingress with API Definition")
 
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
-
 			// Create an API Definition from the template
 			api := &v1alpha1.ApiDefinition{
 				ObjectMeta: metav1.ObjectMeta{
