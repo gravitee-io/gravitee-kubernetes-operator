@@ -7,7 +7,7 @@ image:./.assets/gravitee-logo-cyan.svg["Gravitee.io",400]
 
 == Introduction
 
-The Gravitee Kubernetes Operator is a new technical component which has to be deployed into a Kubernetes Cluster.
+The Gravitee Kubernetes Operator (GKO) is a new technical component which has to be deployed into a Kubernetes Cluster.
 It aims to meet several objectives:
 
 *API Management*: 
@@ -73,6 +73,16 @@ kubectl apply -f ./config/samples/context/managementcontext_credentials.yaml
 
 # Create a basic API definition resource
 kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
+----
+
+== Deploying GKO as a k3d deployment
+
+This will publish your docker image to the k3d cluster registry and deploy the operator
+in a dedicated `gko-system` namespace
+
+[source,shell]
+----
+make k3d-gko-build k3d-gko-push k3d-gko-deploy
 ----
 
 == Note for Apple Silicon users
