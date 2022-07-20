@@ -1,18 +1,19 @@
 package model
 
 type HttpProxyType string
+type SOCKSType string
 
 const (
-	HTTP   HttpProxyType = "HTTP"
-	SOCKS4               = "SOCKS4"
-	SOCKS5               = "SOCKS5"
+	Http   HttpProxyType = "HTTP"
+	Socks4 SOCKSType     = "SOCKS4"
+	Socks5 SOCKSType     = "SOCKS5"
 )
 
 type ProtocolVersion string
 
 const (
-	HTTP_1_1 ProtocolVersion = "HTTP_1_1"
-	HTTP_2                   = "HTTP_2"
+	Http1 ProtocolVersion = "HTTP_1_1"
+	Http2 ProtocolVersion = "HTTP_2"
 )
 
 type HttpClientOptions struct {
@@ -39,7 +40,7 @@ func NewHttpClientOptions() *HttpClientOptions {
 		UseCompression:           true,
 		FollowRedirects:          false,
 		ClearTextUpgrade:         true,
-		Version:                  HTTP_1_1,
+		Version:                  Http1,
 	}
 }
 
@@ -48,8 +49,6 @@ type HttpClientSslOptions struct {
 	HostnameVerifier bool        `json:"hostnameVerifier,omitempty"`
 	TrustStore       *TrustStore `json:"trustStore,omitempty"`
 	KeyStore         *KeyStore   `json:"keyStore,omitempty"`
-	// TrustStore       TrustStore `json:"trustStore,omitempty"`
-	// KeyStore         KeyStore   `json:"keyStore,omitempty"`
 }
 
 type HttpProxy struct {
@@ -112,10 +111,10 @@ type LoggingMode struct {
 }
 
 var (
-	NO_LOGGING_MODE = LoggingMode{false, false}
-	CLIENT          = LoggingMode{true, false}
-	PROXY           = LoggingMode{false, true}
-	CLIENT_PROXY    = LoggingMode{true, true}
+	NoLoggingMode   = LoggingMode{false, false}
+	ClientMode      = LoggingMode{true, false}
+	ProxyMode       = LoggingMode{false, true}
+	ClientProxyMode = LoggingMode{true, true}
 )
 
 type LoggingScope struct {
@@ -124,10 +123,10 @@ type LoggingScope struct {
 }
 
 var (
-	NO_LOGGING_SCOPE = LoggingScope{false, false}
-	REQUEST          = LoggingScope{true, false}
-	RESPONSE         = LoggingScope{false, true}
-	REQUEST_RESPONSE = LoggingScope{true, true}
+	NoLoggingScope              = LoggingScope{false, false}
+	RequestLoggingScope         = LoggingScope{true, false}
+	ResponseLoggingScope        = LoggingScope{false, true}
+	RequestResponseLoggingScope = LoggingScope{true, true}
 )
 
 type LoggingContent struct {
@@ -136,10 +135,10 @@ type LoggingContent struct {
 }
 
 var (
-	NO_LOGGING_CONTENT = LoggingContent{false, false}
-	HEADERS            = LoggingContent{true, false}
-	PAYLOADS           = LoggingContent{false, true}
-	HEADERS_PAYLOADS   = LoggingContent{true, true}
+	NoLoggingContent              = LoggingContent{false, false}
+	HeadersLoggingContent         = LoggingContent{true, false}
+	PayloadsLoggingContent        = LoggingContent{false, true}
+	HeadersPayloadsLoggingContent = LoggingContent{true, true}
 )
 
 type Logging struct {
@@ -151,9 +150,9 @@ type Logging struct {
 
 func NewLogging() *Logging {
 	return &Logging{
-		Mode:    NO_LOGGING_MODE,
-		Scope:   NO_LOGGING_SCOPE,
-		Content: NO_LOGGING_CONTENT,
+		Mode:    NoLoggingMode,
+		Scope:   NoLoggingScope,
+		Content: NoLoggingContent,
 	}
 }
 

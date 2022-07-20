@@ -50,7 +50,7 @@ type DefinitionVersion string
 
 const (
 	V1 DefinitionVersion = "1.0.0"
-	V2                   = "2.0.0"
+	V2 DefinitionVersion = "2.0.0"
 )
 
 // +kubebuilder:validation:Enum=CREATED;PUBLISHED;UNPUBLISHED;DEPRECATED;ARCHIVED;

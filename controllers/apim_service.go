@@ -258,7 +258,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 
 		if response.StatusCode != 200 {
 			// TODO parse response body as a map and log
-			return fmt.Errorf("An error as occured trying to find API %s, HTTP Status: %d ", apiId, response.StatusCode)
+			return fmt.Errorf("An error as occured trying to find API %s, Http Status: %d ", apiId, response.StatusCode)
 		}
 
 		body, readErr := ioutil.ReadAll(response.Body)
