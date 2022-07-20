@@ -97,11 +97,12 @@ func CreateOrUpdate(getUpdateCreator GetUpdateCreator, cm corev1.ConfigMap) erro
 
 // filelikePropertiesToMap converts a file-like field in a ConfigMap to a map[string]string.
 func filelikePropertiesToMap(s string) (map[string]string, error) {
+	expectedPairLength := 2
 	keyValPairs := map[string]string{}
 	s = strings.TrimRight(s, lineSeparator)
 	for _, keyValPair := range strings.Split(s, lineSeparator) {
 		splittedPair := strings.Split(keyValPair, keyValueSeparator)
-		if len(splittedPair) != 2 {
+		if len(splittedPair) != expectedPairLength {
 			return nil, errors.Errorf("%s is not a valid key-value pair", keyValPair)
 		}
 		keyValPairs[splittedPair[0]] = splittedPair[1]
