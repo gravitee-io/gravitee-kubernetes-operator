@@ -83,10 +83,10 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if instance.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
 		log.Info("Creating a new APIDefinition template", "template", instance.Name)
 
-		res, err := r.importApiDefinitionTemplate(ctx, instance, req.Namespace)
-		if err != nil {
-			log.Error(err, "Failed to sync template")
-			return res, err
+		res, importErr := r.importApiDefinitionTemplate(ctx, instance, req.Namespace)
+		if importErr != nil {
+			log.Error(importErr, "Failed to sync template")
+			return res, importErr
 		}
 
 		return ctrl.Result{}, nil
@@ -96,15 +96,14 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	_, err = util.CreateOrUpdate(ctx, r.Client, instance, func() error {
 		if !instance.ObjectMeta.DeletionTimestamp.IsZero() {
-			err := r.deleteApiDefinition(ctx, *instance)
+			err = r.deleteApiDefinition(ctx, *instance)
 			return err
 		}
 
 		if instance.Status.ApiID == "" {
 			return r.createApiDefinition(ctx, instance, orgId, envId)
-		} else {
-			return r.updateApiDefinition(ctx, instance, orgId, envId)
 		}
+		return r.updateApiDefinition(ctx, instance, orgId, envId)
 	})
 
 	if err == nil {

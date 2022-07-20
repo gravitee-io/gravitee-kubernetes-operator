@@ -15,7 +15,7 @@ func (in *GenericStringMap) DeepCopyInto(out *GenericStringMap) {
 	// controller-gen cannot handle the interface{} type of an aliased Unstructured,
 	// thus we write our own DeepCopyInto function.
 	if out != nil {
-		casted := unstructured.Unstructured(in.Unstructured)
+		casted := in.Unstructured
 		deepCopy := casted.DeepCopy()
 		out.Object = deepCopy.Object
 	}
@@ -32,6 +32,6 @@ func (in *GenericStringMap) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (in *GenericStringMap) MarshalJSON() (data []byte, err error) {
+func (in *GenericStringMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(in.Object)
 }
