@@ -132,7 +132,7 @@ func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(ctx context.Contex
 
 			// There are existing ingresses wich to the ApiDefinition template, re-schedule deletion
 			if len(ingresses) > 0 {
-				return ctrl.Result{RequeueAfter: time.Second * 5}, fmt.Errorf("Can not delete %s %v depends on it", apiDefinition.Name, ingresses)
+				return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime}, fmt.Errorf("Can not delete %s %v depends on it", apiDefinition.Name, ingresses)
 			}
 
 			util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
@@ -256,7 +256,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(ctx context.Context, api
 			defer response.Body.Close()
 		}
 
-		if response.StatusCode != 200 {
+		if response.StatusCode != http.StatusOK {
 			// TODO parse response body as a map and log
 			return fmt.Errorf("An error as occured trying to find API %s, Http Status: %d ", apiId, response.StatusCode)
 		}
