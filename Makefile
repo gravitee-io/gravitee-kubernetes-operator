@@ -106,6 +106,26 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
 
+.PHONY: k3d-apim-init
+k3d-apim-init: ## Init APIM locally using k3d
+	bash ./scripts/k3d.sh 
+
+.PHONY: k3d-apim-start
+k3d-apim-start: ## Start exiting APIM node in k3d
+	k3d cluster start graviteeio 
+
+.PHONY: k3d-apim-stop
+k3d-apim-stop: ## Stop exiting APIM node in k3d
+	k3d cluster stop graviteeio
+
+.PHONY: k3d-apim-clean
+k3d-apim-clean: ## Clean k3d APIM nodes and remove registry in docker
+	k3d cluster delete graviteeio && k3d registry delete k3d-graviteeio.docker.localhost
+
+.PHONY:
+local-service-account: ## Generate a service account token with cluster-admin role and add it to kubeconfig
+	bash ./scripts/service_account.sh
+
 ##@ Build
 
 .PHONY: build
@@ -234,23 +254,3 @@ catalog-build: opm ## Build a catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
-
-.PHONY: k3d-apim-init
-k3d-apim-init: # Init APIM locally using k3d
-	bash ./scripts/k3d.sh 
-
-.PHONY: k3d-apim-start
-k3d-apim-start: # Start exiting APIM node in k3d
-	k3d cluster start graviteeio 
-
-.PHONY: k3d-apim-stop
-k3d-apim-stop: # Stop exiting APIM node in k3d
-	k3d cluster stop graviteeio
-
-.PHONY: k3d-apim-clean
-k3d-apim-clean: # Clean k3d APIM nodes and remove registry in docker
-	k3d cluster delete graviteeio
-
-.PHONY: local-service-account
-local-service-account:
-	bash ./scripts/service_account.sh
