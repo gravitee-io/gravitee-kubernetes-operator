@@ -29,14 +29,19 @@ type HttpClientOptions struct {
 	Version                  ProtocolVersion `json:"version,omitempty"`
 }
 
+const idleTimeout = 60000
+const readTimeout = 10000
+const connectTimeout = 5000
+const maxConcurrentConnections = 100
+
 func NewHttpClientOptions() *HttpClientOptions {
 	return &HttpClientOptions{
-		IdleTimeout:              60000,
-		ConnectTimeout:           5000,
+		IdleTimeout:              idleTimeout,
+		ConnectTimeout:           connectTimeout,
 		KeepAlive:                true,
-		ReadTimeout:              10000,
+		ReadTimeout:              readTimeout,
 		Pipelining:               false,
-		MaxConcurrentConnections: 100,
+		MaxConcurrentConnections: maxConcurrentConnections,
 		UseCompression:           true,
 		FollowRedirects:          false,
 		ClearTextUpgrade:         true,
@@ -168,10 +173,13 @@ type Failover struct {
 	Cases        []FailoverCase `json:"cases,omitempty"`
 }
 
+const maxAttempts = 1
+const retryTimeout = 10000
+
 func NewFailover() *Failover {
 	return &Failover{
-		MaxAttempts:  1,
-		RetryTimeout: 10000,
+		MaxAttempts:  maxAttempts,
+		RetryTimeout: retryTimeout,
 		Cases:        []FailoverCase{TIMEOUT},
 	}
 }

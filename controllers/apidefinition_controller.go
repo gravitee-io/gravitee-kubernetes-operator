@@ -33,6 +33,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
 
+const RequeueAfterTime = 5
+
 // ApiDefinitionReconciler reconciles a ApiDefinition object.
 type ApiDefinitionReconciler struct {
 	client.Client
@@ -108,7 +110,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	if err == nil {
 		log.Info("ApiDefinition has been reconcilied")
 	} else {
-		requeueAfter = time.Second * 5
+		requeueAfter = time.Second * RequeueAfterTime
 	}
 
 	// Should we keep this re-queuing strategy ?
