@@ -85,11 +85,7 @@ func (r *IngressReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	err = r.mergeApiDefitinion(log, template, instance)
-	if err != nil {
-		log.Error(err, "Unable to merge the ingress with API Definition")
-		return ctrl.Result{}, err
-	}
+	r.mergeApiDefitinion(log, template, instance)
 
 	// TODO: templating
 	// TODO: transform
@@ -103,7 +99,7 @@ func (r *IngressReconciler) mergeApiDefitinion(
 	log logr.Logger,
 	template *v1alpha1.ApiDefinition,
 	ingress *netV1.Ingress,
-) error {
+) {
 	log.Info("Merge Ingress with API Definition")
 
 	for _, rule := range ingress.Spec.Rules {
@@ -141,8 +137,6 @@ func (r *IngressReconciler) mergeApiDefitinion(
 			}
 		}
 	}
-
-	return nil
 }
 
 func (r *IngressReconciler) ingressClassEventFilter() predicate.Predicate {
