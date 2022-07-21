@@ -14,7 +14,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	uuid "github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid" // nolint:gomodguard // to replace with google implementation
 	v1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -122,42 +122,43 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 
 // This function is applied to all ingresses which are using the ApiDefinition template
 // As per Kubernetes Finalizers (https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
-func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(ctx context.Context, apiDefinition *graviteeiov1alpha1.ApiDefinition, namespace string) (ctrl.Result, error) {
-
+func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(
+	ctx context.Context,
+	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+	namespace string,
+) (ctrl.Result, error) {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
 	// deletion by populating .metadata.deletionTimestamp
 	if !apiDefinition.DeletionTimestamp.IsZero() {
-		if util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer) {
-			ingressList := netv1.IngressList{}
-
-			// Retrieves the ingresses from the namespace
-			err := r.List(ctx, &ingressList, client.InNamespace(namespace))
-			if err != nil {
-				if !kerrors.IsNotFound(err) {
-					return ctrl.Result{}, err
-				}
-			}
-
-			var ingresses []string
-
-			for _, ingress := range ingressList.Items {
-				if ingress.GetAnnotations()[keys.IngressTemplateAnnotation] == apiDefinition.Name {
-					ingresses = append(ingresses, ingress.GetName())
-				}
-			}
-
-			// There are existing ingresses wich to the ApiDefinition template, re-schedule deletion
-			if len(ingresses) > 0 {
-				return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime},
-					fmt.Errorf("can not delete %s %v depends on it", apiDefinition.Name, ingresses)
-			}
-
-			util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
-
-			return ctrl.Result{}, r.Update(ctx, apiDefinition)
+		if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer) {
+			return ctrl.Result{}, nil
 		}
 
-		return ctrl.Result{}, nil
+		ingressList := netv1.IngressList{}
+
+		// Retrieves the ingresses from the namespace
+		err := r.List(ctx, &ingressList, client.InNamespace(namespace))
+		if err != nil && !kerrors.IsNotFound(err) {
+			return ctrl.Result{}, err
+		}
+
+		var ingresses []string
+
+		for _, ingress := range ingressList.Items {
+			if ingress.GetAnnotations()[keys.IngressTemplateAnnotation] == apiDefinition.Name {
+				ingresses = append(ingresses, ingress.GetName())
+			}
+		}
+
+		// There are existing ingresses wich to the ApiDefinition template, re-schedule deletion
+		if len(ingresses) > 0 {
+			return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime},
+				fmt.Errorf("can not delete %s %v depends on it", apiDefinition.Name, ingresses)
+		}
+
+		util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
+
+		return ctrl.Result{}, r.Update(ctx, apiDefinition)
 	}
 
 	// Adding or updating a new ApiDefinition template
@@ -175,13 +176,6 @@ func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(ctx context.Contex
 
 	if err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	// Then look if one of the ingress is refering to the ApiDefinition template
-	for _, ingress := range ingressList.Items {
-		if ingress.GetAnnotations()[keys.IngressTemplateAnnotation] == apiDefinition.Name {
-			// Notify the gravitee ingress controller of an ingress to update (see ingress_controller.go)
-		}
 	}
 
 	return ctrl.Result{}, nil
