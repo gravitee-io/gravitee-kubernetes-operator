@@ -260,89 +260,121 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	apiId := apiDefinition.Status.ApiID
 	apiName := apiDefinition.Spec.Name
 
-	if apiDefinition.Spec.Context != nil {
-		mgmtContextInst, err := getManagementContext(ctx, r.Client, log, apiDefinition)
-
-		if err != nil {
-			return err
-		}
-
-		// Call management side to push api also.
-		client := http.Client{Timeout: timeout * time.Second}
-
-		// Do reconciliation with the Management API
-		request, err := http.NewRequest(
-			http.MethodGet,
-			mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+envId+"/apis?crossId="+apiId,
-			nil,
-		)
-		setRequestAuth(request, mgmtContextInst)
-		response, err := client.Do(request)
-
-		// If the API does not exist (ie. 404) it should be a POST
-		importHttpMethod := http.MethodPut
-
-		if err != nil {
-			log.Error(err, "Error")
-		}
-
-		if response.Body != nil {
-			defer response.Body.Close()
-		}
-
-		if response.StatusCode != http.StatusOK {
-			// TODO parse response body as a map and log
-			return fmt.Errorf("an error as occured trying to find API %s, HTTP Status: %d ", apiId, response.StatusCode)
-		}
-
-		body, readErr := ioutil.ReadAll(response.Body)
-		if readErr != nil {
-			log.Error(readErr, "Error")
-		}
-
-		var result []interface{}
-		err = json.Unmarshal(body, &result)
-
-		if err != nil {
-			log.Error(err, "Unable to marshal API definition")
-			return err
-		} else if len(result) == 0 {
-			log.Info("No match found for API, switching to creation mode", "apiId", apiId)
-			importHttpMethod = http.MethodPost
-		}
-
-		request, err = http.NewRequestWithContext(
-			ctx, importHttpMethod, mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+
-				envId+"/apis/import?definitionVersion=2.0.0", bytes.NewBuffer(apiJson),
-		)
-
-		if err != nil {
-			log.Error(err, "Unable to import the api into the Management API")
-			return err
-		}
-
-		request.Header.Add("Content-Type", "application/json")
-		setRequestAuth(request, mgmtContextInst)
-		response, err = client.Do(request)
-
-		if err != nil {
-			log.Error(err, "Unable to import the api into the Management API", apiName, apiId, err)
-			return err
-		}
-
-		if response.StatusCode < 200 || response.StatusCode > 299 {
-			log.Error(nil, "Unable to import the api into the Management API", apiName, apiId)
-			return fmt.Errorf("management has returned a %d code", response.StatusCode)
-		}
-
-		if response.Body != nil {
-			defer response.Body.Close()
-		}
-		log.Info("Api has been pushed to the Management API", apiName, apiId)
-	} else {
+	if apiDefinition.Spec.Context == nil {
 		log.Info("No management context associated to the API, skipping import to Management API")
+		return nil
 	}
+
+	mgmtContextInst, err := getManagementContext(ctx, r.Client, log, apiDefinition)
+
+	if err != nil {
+		return err
+	}
+
+	// Call management side to push api also.
+	client := http.Client{Timeout: timeout * time.Second}
+
+	findApiResp, findApiErr := r.findApisByCrossId(ctx, mgmtContextInst, orgId, envId, apiId, client)
+
+	if findApiResp.Body != nil {
+		defer findApiResp.Body.Close()
+	}
+
+	if findApiErr != nil {
+		return err
+	}
+
+	if findApiResp.StatusCode != http.StatusOK {
+		// TODO parse response body as a map and log
+		return fmt.Errorf("an error as occured trying to find API %s, HTTP Status: %d ", apiId, findApiResp.StatusCode)
+	}
+
+	body, readErr := ioutil.ReadAll(findApiResp.Body)
+	if readErr != nil {
+		log.Error(readErr, "Error")
+	}
+
+	// If the API does not exist (ie. 404) it should be a POST
+	importHttpMethod := http.MethodPut
+	var result []interface{}
+	err = json.Unmarshal(body, &result)
+
+	if err != nil {
+		log.Error(err, "Unable to marshal API definition")
+		return err
+	}
+
+	if len(result) == 0 {
+		log.Info("No match found for API, switching to creation mode", "apiId", apiId)
+		importHttpMethod = http.MethodPost
+	}
+
+	importResp, importErr := r.importApi(ctx, importHttpMethod, mgmtContextInst, orgId, envId, apiJson, client)
+
+	if importResp.Body != nil {
+		defer importResp.Body.Close()
+	}
+
+	if importErr != nil {
+		log.Error(importErr, "Unable to import the api into the Management API", apiName, apiId, importErr)
+		return importErr
+	}
+
+	if importResp.StatusCode < 200 || importResp.StatusCode > 299 {
+		log.Error(nil, "Unable to import the api into the Management API", apiName, apiId)
+		return fmt.Errorf("management has returned a %d code", importResp.StatusCode)
+	}
+
+	log.Info("Api has been pushed to the Management API", apiName, apiId)
 	return nil
+}
+
+func (r *ApiDefinitionReconciler) importApi(
+	ctx context.Context,
+	importHttpMethod string,
+	mgmtContextInst graviteeiov1alpha1.ManagementContext,
+	orgId string,
+	envId string,
+	apiJson []byte,
+	client http.Client,
+) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(
+		ctx, importHttpMethod, mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+
+			envId+"/apis/import?definitionVersion=2.0.0", bytes.NewBuffer(apiJson),
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to import the api into the Management API")
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	setRequestAuth(req, mgmtContextInst)
+	resp, err := client.Do(req)
+	return resp, err
+}
+
+func (r *ApiDefinitionReconciler) findApisByCrossId(
+	ctx context.Context,
+	mgmtContextInst graviteeiov1alpha1.ManagementContext,
+	orgId string,
+	envId string,
+	apiId string,
+	client http.Client,
+) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+envId+"/apis?crossId="+apiId,
+		nil,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("an error as occured while trying to create new findApisByCrossId request")
+	}
+
+	setRequestAuth(req, mgmtContextInst)
+	resp, err := client.Do(req)
+	return resp, err
 }
 
 func (r *ApiDefinitionReconciler) deleteApiDefinition(
