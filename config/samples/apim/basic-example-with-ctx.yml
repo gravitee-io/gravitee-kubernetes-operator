@@ -18,7 +18,7 @@ kind: ApiDefinition
 metadata:
   name: basic-api-example
 spec:
-  name: "K8s Basic Example"
+  name: "K8s Basic"
   contextRef: 
     name: "dev-mgmt-ctx"
     namespace: "apim-dev"
