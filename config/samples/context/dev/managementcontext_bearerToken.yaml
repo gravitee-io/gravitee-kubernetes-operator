@@ -1,0 +1,9 @@
+apiVersion: gravitee.io/v1alpha1
+kind: ManagementContext
+metadata:
+  name: dev-mgmt-ctx
+spec:
+  baseUrl:  http://localhost:9000
+  auth:
+    # TODO: replace with your generate bearer token
+    bearerToken: xxxx-yyyy-zzzz 
