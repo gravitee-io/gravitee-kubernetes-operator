@@ -58,10 +58,17 @@ spec:
                     type: object
                 type: object
               baseUrl:
+                pattern: ^http(s?):\/\/.+$
+                type: string
+              environmentId:
+                type: string
+              organizationId:
                 type: string
             required:
             - auth
             - baseUrl
+            - environmentId
+            - organizationId
             type: object
           status:
             description: ManagementContextStatus defines the observed state of ManagementContext

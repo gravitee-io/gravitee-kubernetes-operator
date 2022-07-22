@@ -7,8 +7,14 @@ type ContextRef struct {
 }
 
 type Context struct {
+	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
 	BaseUrl string `json:"baseUrl"`
-	Auth    *Auth  `json:"auth"`
+	// +kubebuilder:validation:Required
+	OrgId string `json:"organizationId"`
+	// +kubebuilder:validation:Required
+	EnvId string `json:"environmentId"`
+	// +kubebuilder:validation:Required
+	Auth *Auth `json:"auth"`
 }
 
 type Auth struct {
@@ -17,6 +23,8 @@ type Auth struct {
 }
 
 type BasicAuth struct {
+	// +kubebuilder:validation:Required
 	Username string `json:"username,omitempty"`
+	// +kubebuilder:validation:Required
 	Password string `json:"password,omitempty"`
 }
