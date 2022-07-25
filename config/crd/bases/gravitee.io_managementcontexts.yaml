@@ -27,7 +27,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ManagementContext is the Schema for the Management API
+        description: ManagementContext is the Schema for the Management API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -71,7 +71,7 @@ spec:
             - organizationId
             type: object
           status:
-            description: ManagementContextStatus defines the observed state of ManagementContext
+            description: ManagementContextStatus defines the observed state of ManagementContext.
             type: object
         type: object
     served: true

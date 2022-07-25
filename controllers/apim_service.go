@@ -3,7 +3,6 @@ package controllers
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,9 +10,9 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
-	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	uuid "github.com/satori/go.uuid" // nolint:gomodguard // to replace with google implementation
 	v1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,9 +26,7 @@ import (
 
 func (r *ApiDefinitionReconciler) createApiDefinition(
 	ctx context.Context,
-	apiDefinition *graviteeiov1alpha1.ApiDefinition,
-	orgId string,
-	envId string,
+	apiDefinition *gio.ApiDefinition,
 ) error {
 	log := log.FromContext(ctx)
 
@@ -37,12 +34,12 @@ func (r *ApiDefinitionReconciler) createApiDefinition(
 	createDefaultPlan(ctx, apiDefinition)
 
 	// Ensure that IDs have been generated
-	generateIds(apiDefinition)
+	internal.GenerateIds(apiDefinition)
 
 	// Import the API Definition:
 	// * Create the ConfigMap for the Gateway
 	// * Call the Management API if a ManagementContext is defined
-	err := r.importApiDefinition(ctx, apiDefinition, orgId, envId)
+	err := r.importApiDefinition(ctx, apiDefinition)
 	if err != nil {
 		log.Error(err, "Unexpected error while importing the API Definition")
 		return err
@@ -61,24 +58,20 @@ func (r *ApiDefinitionReconciler) createApiDefinition(
 
 func (r *ApiDefinitionReconciler) updateApiDefinition(
 	ctx context.Context,
-	apiDefinition *graviteeiov1alpha1.ApiDefinition,
-	orgId string,
-	envId string,
+	apiDefinition *gio.ApiDefinition,
 ) error {
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
 	createDefaultPlan(ctx, apiDefinition)
 
 	// Ensure that IDs have been generated
-	generateIds(apiDefinition)
+	internal.GenerateIds(apiDefinition)
 
-	return r.importApiDefinition(ctx, apiDefinition, orgId, envId)
+	return r.importApiDefinition(ctx, apiDefinition)
 }
 
 func (r *ApiDefinitionReconciler) importApiDefinition(
 	ctx context.Context,
-	apiDefinition *graviteeiov1alpha1.ApiDefinition,
-	orgId string,
-	envId string,
+	apiDefinition *gio.ApiDefinition,
 ) error {
 	log := log.FromContext(ctx)
 
@@ -98,7 +91,7 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 		return err
 	}
 
-	updated, err := r.updateConfigMap(ctx, apiDefinition, orgId, envId, apiJson)
+	updated, err := r.updateConfigMap(ctx, apiDefinition, apiJson)
 
 	if err != nil {
 		log.Error(err, "Unable to create or update ConfigMap for API '%s' (%s). %s",
@@ -107,7 +100,7 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 	}
 
 	if updated {
-		err = r.importToManagementApi(ctx, apiDefinition, orgId, envId, apiJson)
+		err = r.importToManagementApi(ctx, apiDefinition, apiJson)
 		if err != nil {
 			log.Error(err, "Unable to import API to the Management API '%s' (%s). %s",
 				apiDefinition.Name, apiDefinition.Spec.Id)
@@ -122,7 +115,7 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 // As per Kubernetes Finalizers (https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(
 	ctx context.Context,
-	apiDefinition *graviteeiov1alpha1.ApiDefinition,
+	apiDefinition *gio.ApiDefinition,
 	namespace string,
 ) (ctrl.Result, error) {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
@@ -180,7 +173,7 @@ func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(
 }
 
 // Add a default keyless plan to the api definition if no plan is defined.
-func createDefaultPlan(ctx context.Context, api *graviteeiov1alpha1.ApiDefinition) {
+func createDefaultPlan(ctx context.Context, api *gio.ApiDefinition) {
 	log := log.FromContext(ctx)
 
 	plans := api.Spec.Plans
@@ -199,9 +192,7 @@ func createDefaultPlan(ctx context.Context, api *graviteeiov1alpha1.ApiDefinitio
 
 func (r *ApiDefinitionReconciler) updateConfigMap(
 	ctx context.Context,
-	apiDefinition *graviteeiov1alpha1.ApiDefinition,
-	orgId string,
-	envId string,
+	apiDefinition *gio.ApiDefinition,
 	apiJson []byte,
 ) (bool, error) {
 	log := log.FromContext(ctx)
@@ -220,12 +211,20 @@ func (r *ApiDefinitionReconciler) updateConfigMap(
 	cm.Data = map[string]string{
 		"definition":        string(apiJson),
 		"definitionVersion": apiDefinition.ResourceVersion,
-		"organizationId":    orgId,
-		"environmentId":     envId,
+	}
+
+	apimCtx, err := internal.GetApimContext(ctx, r.Client, apiDefinition)
+	if client.IgnoreNotFound(err) != nil {
+		log.Error(err, "An error has occured trying to find an APIM context")
+	}
+
+	if apimCtx != nil {
+		cm.Data["organizationId"] = apimCtx.Spec.OrgId
+		cm.Data["environmentId"] = apimCtx.Spec.EnvId
 	}
 
 	currentapiDefinition := &v1.ConfigMap{}
-	err := r.Get(ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentapiDefinition)
+	err = r.Get(ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentapiDefinition)
 
 	if err == nil {
 		if currentapiDefinition.Data["definitionVersion"] != apiDefinition.ResourceVersion {
@@ -245,23 +244,21 @@ func (r *ApiDefinitionReconciler) updateConfigMap(
 
 func (r *ApiDefinitionReconciler) importToManagementApi(
 	ctx context.Context,
-	apiDefinition *graviteeiov1alpha1.ApiDefinition,
-	orgId string,
-	envId string,
+	apiDefinition *gio.ApiDefinition,
 	apiJson []byte,
 ) error {
 	const timeout = 5
 	apiId := apiDefinition.Status.ApiID
 	apiName := apiDefinition.Spec.Name
 
-	log := log.FromContext(ctx)
+	log := log.FromContext(ctx).WithValues("apiId", apiId)
 
 	if apiDefinition.Spec.Context == nil {
 		log.Info("No management context associated to the API, skipping import to Management API")
 		return nil
 	}
 
-	mgmtContextInst, err := getManagementContext(ctx, r.Client, log, apiDefinition)
+	apimCtx, err := internal.GetApimContext(ctx, r.Client, apiDefinition)
 
 	if err != nil {
 		return err
@@ -270,14 +267,14 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	// Call management side to push api also.
 	client := http.Client{Timeout: timeout * time.Second}
 
-	findApiResp, findApiErr := r.findApisByCrossId(ctx, mgmtContextInst, orgId, envId, apiId, client)
+	findApiResp, findApiErr := r.findApisByCrossId(ctx, apimCtx, apiId, client)
 
 	if findApiResp.Body != nil {
 		defer findApiResp.Body.Close()
 	}
 
 	if findApiErr != nil {
-		return err
+		return findApiErr
 	}
 
 	if findApiResp.StatusCode != http.StatusOK {
@@ -301,19 +298,19 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	}
 
 	if len(result) == 0 {
-		log.Info("No match found for API, switching to creation mode", "apiId", apiId)
+		log.Info("No match found for API, switching to creation mode")
 		importHttpMethod = http.MethodPost
 	}
 
-	importResp, importErr := r.importApi(ctx, importHttpMethod, mgmtContextInst, orgId, envId, apiJson, client)
-
-	if importResp.Body != nil {
-		defer importResp.Body.Close()
-	}
+	importResp, importErr := r.importApi(ctx, importHttpMethod, apimCtx, apiJson, client)
 
 	if importErr != nil {
 		log.Error(importErr, "Unable to import the api into the Management API", apiName, apiId, importErr)
 		return importErr
+	}
+
+	if importResp.Body != nil {
+		defer importResp.Body.Close()
 	}
 
 	if importResp.StatusCode < 200 || importResp.StatusCode > 299 {
@@ -328,39 +325,33 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 func (r *ApiDefinitionReconciler) importApi(
 	ctx context.Context,
 	importHttpMethod string,
-	mgmtContextInst graviteeiov1alpha1.ManagementContext,
-	orgId string,
-	envId string,
+	apimCtx *gio.ManagementContext,
 	apiJson []byte,
 	client http.Client,
 ) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(
-		ctx, importHttpMethod, mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+
-			envId+"/apis/import?definitionVersion=2.0.0", bytes.NewBuffer(apiJson),
-	)
+	url := internal.BuildApimUrl(apimCtx, "/apis/import?definitionVersion=2.0.0")
+	req, err := http.NewRequestWithContext(ctx, importHttpMethod, url, bytes.NewBuffer(apiJson))
 
 	if err != nil {
 		return nil, fmt.Errorf("unable to import the api into the Management API")
 	}
 
 	req.Header.Add("Content-Type", "application/json")
-	setRequestAuth(req, mgmtContextInst)
+	internal.SetApimAuth(apimCtx, req)
 	resp, err := client.Do(req)
 	return resp, err
 }
 
 func (r *ApiDefinitionReconciler) findApisByCrossId(
 	ctx context.Context,
-	mgmtContextInst graviteeiov1alpha1.ManagementContext,
-	orgId string,
-	envId string,
+	apimCtx *gio.ManagementContext,
 	apiId string,
 	client http.Client,
 ) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		mgmtContextInst.Spec.BaseUrl+"/management/organizations/"+orgId+"/environments/"+envId+"/apis?crossId="+apiId,
+		internal.BuildApimUrl(apimCtx, "/apis?crossId="+apiId),
 		nil,
 	)
 
@@ -368,14 +359,14 @@ func (r *ApiDefinitionReconciler) findApisByCrossId(
 		return nil, fmt.Errorf("an error as occured while trying to create new findApisByCrossId request")
 	}
 
-	setRequestAuth(req, mgmtContextInst)
+	internal.SetApimAuth(apimCtx, req)
 	resp, err := client.Do(req)
 	return resp, err
 }
 
 func (r *ApiDefinitionReconciler) deleteApiDefinition(
 	ctx context.Context,
-	apiDefinition graviteeiov1alpha1.ApiDefinition,
+	apiDefinition gio.ApiDefinition,
 ) error {
 	r.Log.Info("Deleting API Definition")
 	err := r.deleteApiDefinitionConfigMap(ctx, apiDefinition)
@@ -385,7 +376,7 @@ func (r *ApiDefinitionReconciler) deleteApiDefinition(
 
 func (r *ApiDefinitionReconciler) deleteApiDefinitionConfigMap(
 	ctx context.Context,
-	apiDefinition graviteeiov1alpha1.ApiDefinition,
+	apiDefinition gio.ApiDefinition,
 ) error {
 	configMap := &v1.ConfigMap{}
 
@@ -397,47 +388,4 @@ func (r *ApiDefinitionReconciler) deleteApiDefinitionConfigMap(
 	}
 
 	return err
-}
-
-func setRequestAuth(request *http.Request, managementContext graviteeiov1alpha1.ManagementContext) {
-	if managementContext.Spec.Auth != nil {
-		bearerToken := managementContext.Spec.Auth.BearerToken
-		if bearerToken != "" {
-			request.Header.Add("Authorization", "Bearer "+bearerToken)
-		} else if managementContext.Spec.Auth.Credentials != nil {
-			username := managementContext.Spec.Auth.Credentials.Username
-			password := managementContext.Spec.Auth.Credentials.Password
-			if username != "" {
-				request.SetBasicAuth(username, password)
-			}
-		}
-	}
-}
-
-// This function is used to generate all the IDs needed for communicating with the Management API
-// It doesn't override IDs if these one have been defined.
-func generateIds(apiDefinition *graviteeiov1alpha1.ApiDefinition) {
-	// If a CrossID is defined at the API level, reuse it.
-	// If not, just generate a new CrossID
-	if apiDefinition.Spec.CrossId == "" {
-		// The ID of the API will be based on the API Name and Namespace to ensure consistency
-		apiDefinition.Spec.CrossId =
-			toUUID(types.NamespacedName{Namespace: apiDefinition.Namespace, Name: apiDefinition.Name}.String())
-	}
-
-	plans := apiDefinition.Spec.Plans
-
-	for i, plan := range plans {
-		if plan.CrossId == "" {
-			plan.CrossId = toUUID(apiDefinition.Spec.CrossId + fmt.Sprint(i))
-		}
-		plan.Status = "PUBLISHED"
-	}
-
-	//TODO: manage metadata
-}
-
-func toUUID(decoded string) string {
-	encoded := base64.RawStdEncoding.EncodeToString([]byte(decoded))
-	return uuid.NewV3(uuid.NamespaceURL, encoded).String()
 }
