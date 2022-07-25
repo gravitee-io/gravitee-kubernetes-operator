@@ -39,6 +39,14 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout
 make run
 ----
 
+Note: the k3d registry host used to share images between your host and your k3d cluster is defined as `k3d-graviteeio.docker.localhost`. On most linux / macos platforms `*.localhost`` should resolve to 127.0.0.1. If it is not the case on your device you will
+need to add the current entry in your `/etc/hosts` file
+
+[source,shell]
+----
+127.0.0.1 k3d-graviteeio.docker.localhost
+----
+
 == Try it
 To create a basic api definition run following command
 
@@ -57,10 +65,11 @@ kubectl get graviteeapis  -o wide
 
 == Debugging with a locally running APIM
 To be abble to run the operator against a local instance of both APIM Gateway and APIM Management API you will need to
-  - Attach to a local cluster context
-  - Create a local service account to authenticate the gateway against the local cluster
-  - Run both APIM Gateway and APIM Management API in debug mode
-  - Create a management context pointing to your local APIM management API
+
+* Attach to a local cluster context
+* Create a local service account to authenticate the gateway against the local cluster
+* Run both APIM Gateway and APIM Management API in debug mode
+* Create a management context pointing to your local APIM management API
 
 [source,shell]
 ----
@@ -68,6 +77,10 @@ make install
 
 # check that the gravitee.io CRDs are available on your cluster
 kubectl get crd 
+
+# create a service account token with 'cluster-admin' role on current context and 
+# use this token to authenticate against the current cluster
+make service-account
 
 make run # or run using a debugger if you need to debug the operator as well
 
