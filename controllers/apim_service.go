@@ -269,12 +269,12 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 
 	findApiResp, findApiErr := r.findApisByCrossId(ctx, apimCtx, apiId, client)
 
-	if findApiResp.Body != nil {
-		defer findApiResp.Body.Close()
-	}
-
 	if findApiErr != nil {
 		return findApiErr
+	}
+
+	if findApiResp.Body != nil {
+		defer findApiResp.Body.Close()
 	}
 
 	if findApiResp.StatusCode != http.StatusOK {
