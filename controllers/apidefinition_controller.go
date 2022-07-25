@@ -78,9 +78,6 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	orgId := "DEFAULT"
-	envId := "DEFAULT"
-
 	if instance.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
 		log.Info("Creating a new APIDefinition template", "template", instance.Name)
 
@@ -102,9 +99,9 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 
 		if instance.Status.ApiID == "" {
-			return r.createApiDefinition(ctx, instance, orgId, envId)
+			return r.createApiDefinition(ctx, instance)
 		}
-		return r.updateApiDefinition(ctx, instance, orgId, envId)
+		return r.updateApiDefinition(ctx, instance)
 	})
 
 	if err == nil {
