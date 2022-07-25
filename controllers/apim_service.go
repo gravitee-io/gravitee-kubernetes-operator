@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -23,6 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func (r *ApiDefinitionReconciler) createApiDefinition(
@@ -31,10 +31,10 @@ func (r *ApiDefinitionReconciler) createApiDefinition(
 	orgId string,
 	envId string,
 ) error {
-	log := logr.FromContextOrDiscard(ctx)
+	log := log.FromContext(ctx)
 
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
-	createDefaultPlan(apiDefinition, log)
+	createDefaultPlan(ctx, apiDefinition)
 
 	// Ensure that IDs have been generated
 	generateIds(apiDefinition)
@@ -65,10 +65,8 @@ func (r *ApiDefinitionReconciler) updateApiDefinition(
 	orgId string,
 	envId string,
 ) error {
-	log := logr.FromContextOrDiscard(ctx)
-
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
-	createDefaultPlan(apiDefinition, log)
+	createDefaultPlan(ctx, apiDefinition)
 
 	// Ensure that IDs have been generated
 	generateIds(apiDefinition)
@@ -82,7 +80,7 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 	orgId string,
 	envId string,
 ) error {
-	log := logr.FromContextOrDiscard(ctx)
+	log := log.FromContext(ctx)
 
 	// Define the API definition context
 	apiDefinition.Spec.DefinitionContext = &model.DefinitionContext{
@@ -100,7 +98,7 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 		return err
 	}
 
-	updated, err := r.updateConfigMap(ctx, apiDefinition, orgId, envId, apiJson, log)
+	updated, err := r.updateConfigMap(ctx, apiDefinition, orgId, envId, apiJson)
 
 	if err != nil {
 		log.Error(err, "Unable to create or update ConfigMap for API '%s' (%s). %s",
@@ -109,7 +107,7 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 	}
 
 	if updated {
-		err = r.importToManagementApi(ctx, apiDefinition, orgId, envId, apiJson, log)
+		err = r.importToManagementApi(ctx, apiDefinition, orgId, envId, apiJson)
 		if err != nil {
 			log.Error(err, "Unable to import API to the Management API '%s' (%s). %s",
 				apiDefinition.Name, apiDefinition.Spec.Id)
@@ -182,12 +180,14 @@ func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(
 }
 
 // Add a default keyless plan to the api definition if no plan is defined.
-func createDefaultPlan(apiDefinition *graviteeiov1alpha1.ApiDefinition, log logr.Logger) {
-	plans := apiDefinition.Spec.Plans
+func createDefaultPlan(ctx context.Context, api *graviteeiov1alpha1.ApiDefinition) {
+	log := log.FromContext(ctx)
+
+	plans := api.Spec.Plans
 
 	if len(plans) == 0 {
 		log.Info("Define default plan for API")
-		apiDefinition.Spec.Plans = []*model.Plan{
+		api.Spec.Plans = []*model.Plan{
 			{
 				Name:     "Free",
 				Security: "KEY_LESS",
@@ -203,8 +203,9 @@ func (r *ApiDefinitionReconciler) updateConfigMap(
 	orgId string,
 	envId string,
 	apiJson []byte,
-	log logr.Logger,
 ) (bool, error) {
+	log := log.FromContext(ctx)
+
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
 
@@ -248,11 +249,12 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	orgId string,
 	envId string,
 	apiJson []byte,
-	log logr.Logger,
 ) error {
 	const timeout = 5
 	apiId := apiDefinition.Status.ApiID
 	apiName := apiDefinition.Spec.Name
+
+	log := log.FromContext(ctx)
 
 	if apiDefinition.Spec.Context == nil {
 		log.Info("No management context associated to the API, skipping import to Management API")
