@@ -142,7 +142,7 @@ k3d-gko-deploy: ## Push the gko image for k3d deployment
 	$(MAKE) deploy IMG=$(K3D_IMG)
 
 .PHONY:
-local-service-account: ## Generate a service account token with cluster-admin role and add it to kubeconfig
+service-account: ## Generate a service account token with cluster-admin role and add it to kubeconfig
 	bash ./scripts/service_account.sh
 
 ##@ Build
