@@ -9,16 +9,12 @@ jobs:
   build-lint:
     docker:
       - image: cimg/go:1.18.4
-
     steps:
       - checkout
-
       - go/mod-download-cached
-
       - run:
           name: Install GolangCi Lint
           command: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
       - run:
           name: Run Lint
           command: golangci-lint run ./...
@@ -26,60 +22,47 @@ jobs:
   test:
     environment:
       TEST_RESULTS: /tmp/test-results
-    
     machine:
       image: ubuntu-2204:2022.04.2
-    
     resource_class: large
-
     steps:
       - checkout
-
       - run:
           name: Create test results directory
           command: mkdir -p $TEST_RESULTS
-
       - go/install:
           version: '1.18.4'
-
       - go/load-cache
-
       - kubernetes/install-kubectl
-
       - helm/install-helm-client
-
       - run:
           name: Install gotestsum
           command: go install gotest.tools/gotestsum@latest
-
       - run:
           name: Start APIM using k3d
           command: make k3d-apim-init 
-      
       - run:
           name: Deploy Operator
           command: make k3d-gko-build k3d-gko-push k3d-gko-deploy
-
       - run: 
           name: Wait for Operator to be ready 
           command: kubectl wait -n gko-system --for condition=Available deployments/gko-controller-manager --timeout 60s
-
       - run:
           name: Wait for APIM to be ready
           command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 180s
-
       - run:
           name: Run tests
           command: USE_EXISTING_CLUSTER=true gotestsum --format pkgname --junitfile ${TEST_RESULTS}/gotestsum-report.xml
-
       - store_test_results:
           path: /tmp/test-results
 
 workflows:
-  version: 2.1
+
   build-workflow:
     jobs:
-      - build-lint
+      - build-lint:
+          name: Build & lint
       - test:
+          name: Test
           requires:
-            - build-lint
+            - Build & lint
