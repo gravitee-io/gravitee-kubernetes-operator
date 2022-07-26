@@ -33,13 +33,19 @@ func (r *ApiDefinitionReconciler) createApiDefinition(
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
 	createDefaultPlan(ctx, apiDefinition)
 
+	apimCtx, err := internal.GetApimContext(ctx, r.Client, apiDefinition)
+	if client.IgnoreNotFound(err) != nil {
+		return fmt.Errorf("An error has occured while trying to find a management context %s", err)
+	}
+
 	// Ensure that IDs have been generated
-	internal.GenerateIds(apiDefinition)
+	internal.GenerateIds(apimCtx, apiDefinition)
+	internal.SetDeployedAt(apiDefinition)
 
 	// Import the API Definition:
 	// * Create the ConfigMap for the Gateway
 	// * Call the Management API if a ManagementContext is defined
-	err := r.importApiDefinition(ctx, apiDefinition)
+	err = r.importApiDefinition(ctx, apiDefinition)
 	if err != nil {
 		log.Error(err, "Unexpected error while importing the API Definition")
 		return err
@@ -63,8 +69,14 @@ func (r *ApiDefinitionReconciler) updateApiDefinition(
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
 	createDefaultPlan(ctx, apiDefinition)
 
+	apimCtx, err := internal.GetApimContext(ctx, r.Client, apiDefinition)
+	if client.IgnoreNotFound(err) != nil {
+		return fmt.Errorf("An error has occured while trying to find a management context %s", err)
+	}
+
 	// Ensure that IDs have been generated
-	internal.GenerateIds(apiDefinition)
+	internal.GenerateIds(apimCtx, apiDefinition)
+	internal.SetDeployedAt(apiDefinition)
 
 	return r.importApiDefinition(ctx, apiDefinition)
 }
@@ -182,7 +194,7 @@ func createDefaultPlan(ctx context.Context, api *gio.ApiDefinition) {
 		log.Info("Define default plan for API")
 		api.Spec.Plans = []*model.Plan{
 			{
-				Name:     "Free",
+				Name:     "GKO DEFAULT",
 				Security: "KEY_LESS",
 				Status:   "PUBLISHED",
 			},

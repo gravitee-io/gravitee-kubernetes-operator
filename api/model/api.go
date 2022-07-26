@@ -14,12 +14,14 @@ type Api struct {
 	Name    string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
 	// +kubebuilder:default:=DEFAULT
-	FlowMode          FlowMode          `json:"flow_mode,omitempty"`
+	FlowMode FlowMode `json:"flow_mode,omitempty"`
+	// +kubebuilder:default:=`2.0.0`
 	DefinitionVersion DefinitionVersion `json:"gravitee,omitempty"`
-	LifecycleState    LifecycleState    `json:"lifecycle_state,omitempty"`
-	Proxy             *Proxy            `json:"proxy,omitempty"`
-	Services          *Services         `json:"services,omitempty"`
-	Resources         []*Resource       `json:"resources,omitempty"`
+	// +kubebuilder:default:=`CREATED`
+	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
+	Proxy          *Proxy         `json:"proxy,omitempty"`
+	Services       *Services      `json:"services,omitempty"`
+	Resources      []*Resource    `json:"resources,omitempty"`
 	//	Paths             map[string][]interface{}                `json:"paths,omitempty"` // Different from Java
 	Flows             []Flow                                  `json:"flows,omitempty"`
 	Properties        []*Property                             `json:"properties,omitempty"`

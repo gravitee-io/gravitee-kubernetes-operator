@@ -2,7 +2,7 @@ package internal
 
 import (
 	"encoding/base64"
-	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid" // nolint:gomodguard // to replace with google implementation
 	"k8s.io/apimachinery/pkg/types"
@@ -10,9 +10,11 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
+const separator = "/"
+
 // This function is used to generate all the IDs needed for communicating with the Management API
 // It doesn't override IDs if these one have been defined.
-func GenerateIds(api *gio.ApiDefinition) {
+func GenerateIds(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) {
 	// If a CrossID is defined at the API level, reuse it.
 	// If not, just generate a new CrossID
 	if api.Spec.CrossId == "" {
@@ -20,16 +22,31 @@ func GenerateIds(api *gio.ApiDefinition) {
 		api.Spec.CrossId = toUUID(getNamespacedName(api))
 	}
 
+	if api.Spec.Id == "" {
+		api.Spec.Id = generateApiId(apimCtx, api)
+	}
+
 	plans := api.Spec.Plans
 
-	for i, plan := range plans {
+	for _, plan := range plans {
 		if plan.CrossId == "" {
-			plan.CrossId = toUUID(api.Spec.CrossId + fmt.Sprint(i))
+			plan.CrossId = toUUID(api.Spec.Id + separator + plan.Name)
 		}
 		plan.Status = "PUBLISHED"
 	}
 
 	//TODO: manage metadata
+}
+
+func SetDeployedAt(api *gio.ApiDefinition) {
+	api.Spec.DeployedAt = uint64(time.Now().UTC().UnixMilli())
+}
+
+func generateApiId(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) string {
+	if apimCtx != nil {
+		return toUUID(apimCtx.Spec.EnvId + separator + api.Spec.CrossId)
+	}
+	return uuid.NewV4().String()
 }
 
 func getNamespacedName(api *gio.ApiDefinition) string {
