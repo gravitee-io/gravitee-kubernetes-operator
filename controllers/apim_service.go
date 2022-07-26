@@ -37,7 +37,7 @@ func (r *ApiDefinitionReconciler) createApiDefinition(
 
 	apimCtx, err := internal.GetApimContext(ctx, r.Client, apiDefinition)
 	if client.IgnoreNotFound(err) != nil {
-		return fmt.Errorf("An error has occured while trying to find a management context %s", err)
+		return fmt.Errorf("an error has occured while trying to find a management context %w", err)
 	}
 
 	// Ensure that IDs have been generated
@@ -73,7 +73,7 @@ func (r *ApiDefinitionReconciler) updateApiDefinition(
 
 	apimCtx, err := internal.GetApimContext(ctx, r.Client, apiDefinition)
 	if client.IgnoreNotFound(err) != nil {
-		return fmt.Errorf("An error has occured while trying to find a management context %s", err)
+		return fmt.Errorf("an error has occured while trying to find a management context %w", err)
 	}
 
 	// Ensure that IDs have been generated
@@ -87,7 +87,7 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 	ctx context.Context,
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	log := log.FromContext(ctx)
+	log := log.FromContext(ctx).WithValues("api.name", apiDefinition.Name, "api.id", apiDefinition.Spec.Id)
 
 	// Define the API definition context
 	apiDefinition.Spec.DefinitionContext = &model.DefinitionContext{
@@ -100,24 +100,21 @@ func (r *ApiDefinitionReconciler) importApiDefinition(
 	apiJson, err := json.Marshal(apiDefinition.Spec)
 
 	if err != nil {
-		log.Error(err, "Unable to generate json api definition for api '%s' (%s). %s",
-			apiDefinition.Name, apiDefinition.Spec.Id)
+		log.Error(err, "Unable to marshall API definition as JSON")
 		return err
 	}
 
 	updated, err := r.updateConfigMap(ctx, apiDefinition, apiJson)
 
 	if err != nil {
-		log.Error(err, "Unable to create or update ConfigMap for API '%s' (%s). %s",
-			apiDefinition.Name, apiDefinition.Spec.Id)
+		log.Error(err, "Unable to create or update ConfigMap from API")
 		return err
 	}
 
 	if updated {
 		err = r.importToManagementApi(ctx, apiDefinition, apiJson)
 		if err != nil {
-			log.Error(err, "Unable to import API to the Management API '%s' (%s). %s",
-				apiDefinition.Name, apiDefinition.Spec.Id)
+			log.Error(err, "Unable to import to the Management API")
 			return err
 		}
 	}
@@ -157,8 +154,8 @@ func (r *ApiDefinitionReconciler) importApiDefinitionTemplate(
 
 		// There are existing ingresses wich to the ApiDefinition template, re-schedule deletion
 		if len(ingresses) > 0 {
-			return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime},
-				fmt.Errorf("can not delete %s %v depends on it", apiDefinition.Name, ingresses)
+			err = fmt.Errorf("can not delete %s %v depends on it", apiDefinition.Name, ingresses)
+			return ctrl.Result{RequeueAfter: time.Second * RequeueAfterTime}, err
 		}
 
 		util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
@@ -264,7 +261,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	apiId := apiDefinition.Status.ApiID
 	apiName := apiDefinition.Spec.Name
 
-	log := log.FromContext(ctx).WithValues("apiId", apiId).WithValues("API.Name", apiName, "API.ID", apiId)
+	log := log.FromContext(ctx).WithValues("apiId", apiId).WithValues("api.name", apiName, "api.crossId", apiId)
 
 	if apiDefinition.Spec.Context == nil {
 		log.Info("No management context associated to the API, skipping import to Management API")
@@ -311,7 +308,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	}
 
 	if len(result) == 0 {
-		log.Info("No match found for API, switching to creation mode")
+		log.Info("No match found for API, switching to creation mode", "crossId", apiId)
 		importHttpMethod = http.MethodPost
 	}
 
