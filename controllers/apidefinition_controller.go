@@ -59,7 +59,7 @@ type ApiDefinitionReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithValues("req.NamespacedName", req.NamespacedName)
+	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
 	// Fetch the ApiDefinition instance
 	instance := &graviteeiov1alpha1.ApiDefinition{}
