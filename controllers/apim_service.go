@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+const requestTimeout = 5
+
 func (r *ApiDefinitionReconciler) createApiDefinition(
 	ctx context.Context,
 	apiDefinition *gio.ApiDefinition,
@@ -259,7 +261,6 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	apiDefinition *gio.ApiDefinition,
 	apiJson []byte,
 ) error {
-	const timeout = 5
 	apiId := apiDefinition.Status.ApiID
 	apiName := apiDefinition.Spec.Name
 
@@ -277,7 +278,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	}
 
 	// Call management side to push api also.
-	client := http.Client{Timeout: timeout * time.Second}
+	client := http.Client{Timeout: requestTimeout * time.Second}
 
 	findApiResp, findApiErr := r.findApisByCrossId(ctx, apimCtx, apiId, client)
 
