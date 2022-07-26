@@ -178,6 +178,7 @@ spec:
                   type: object
                 type: array
               gravitee:
+                default: 2.0.0
                 type: string
               id:
                 description: io.gravitee.definition.model.Api
@@ -187,6 +188,7 @@ spec:
                   type: string
                 type: array
               lifecycle_state:
+                default: CREATED
                 enum:
                 - CREATED
                 - PUBLISHED
