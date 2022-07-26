@@ -263,7 +263,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	apiId := apiDefinition.Status.ApiID
 	apiName := apiDefinition.Spec.Name
 
-	log := log.FromContext(ctx).WithValues("apiId", apiId)
+	log := log.FromContext(ctx).WithValues("apiId", apiId).WithValues("API.Name", apiName, "API.ID", apiId)
 
 	if apiDefinition.Spec.Context == nil {
 		log.Info("No management context associated to the API, skipping import to Management API")
@@ -296,7 +296,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 
 	body, readErr := ioutil.ReadAll(findApiResp.Body)
 	if readErr != nil {
-		log.Error(readErr, "Error")
+		log.Error(readErr, "Unable to read apis response body")
 	}
 
 	// If the API does not exist (ie. 404) it should be a POST
@@ -317,7 +317,7 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	importResp, importErr := r.importApi(ctx, importHttpMethod, apimCtx, apiJson, client)
 
 	if importErr != nil {
-		log.Error(importErr, "Unable to import the api into the Management API", apiName, apiId, importErr)
+		log.Error(importErr, "Unable to import the api into the Management API")
 		return importErr
 	}
 
@@ -326,11 +326,11 @@ func (r *ApiDefinitionReconciler) importToManagementApi(
 	}
 
 	if importResp.StatusCode < 200 || importResp.StatusCode > 299 {
-		log.Error(nil, "Unable to import the api into the Management API", apiName, apiId)
+		log.Error(nil, "Unable to import the api into the Management API")
 		return fmt.Errorf("management has returned a %d code", importResp.StatusCode)
 	}
 
-	log.Info("Api has been pushed to the Management API", apiName, apiId)
+	log.Info("Api has been pushed to the Management API")
 	return nil
 }
 
