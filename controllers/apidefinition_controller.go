@@ -30,10 +30,12 @@ import (
 
 	"github.com/go-logr/logr"
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	apis "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/internal/delegates/apis"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
 
-const RequeueAfterTime = 5
+const requeueAfterTime = 5
 
 // ApiDefinitionReconciler reconciles a ApiDefinition object.
 type ApiDefinitionReconciler struct {
@@ -63,6 +65,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	// Fetch the ApiDefinition instance
 	instance := &graviteeiov1alpha1.ApiDefinition{}
+	requeueAfter := time.Second * requeueAfterTime
 
 	err := r.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
@@ -78,36 +81,35 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if instance.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
-		log.Info("Creating a new APIDefinition template", "template", instance.Name)
+	delegate := apis.NewDelegate(ctx, r.Client)
 
-		res, importErr := r.importApiDefinitionTemplate(ctx, instance, req.Namespace)
+	if instance.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
+		log.Info("Creating a new API Definition template", "template", instance.Name)
+
+		requeue, importErr := delegate.ImportApiDefinitionTemplate(instance, req.Namespace)
 		if importErr != nil {
 			log.Error(importErr, "Failed to sync template")
-			return res, importErr
+			return ctrl.Result{}, importErr
 		}
 
-		return ctrl.Result{}, nil
+		if requeue {
+			return ctrl.Result{RequeueAfter: requeueAfter}, nil
+		}
 	}
-
-	var requeueAfter time.Duration
 
 	_, err = util.CreateOrUpdate(ctx, r.Client, instance, func() error {
 		if !instance.ObjectMeta.DeletionTimestamp.IsZero() {
-			err = r.deleteApiDefinition(ctx, *instance)
-			return err
+			return delegate.Delete(instance)
 		}
-
 		if instance.Status.ApiID == "" {
-			return r.createApiDefinition(ctx, instance)
+			return delegate.Create(instance)
 		}
-		return r.updateApiDefinition(ctx, instance)
+		return delegate.Update(instance)
 	})
 
 	if err == nil {
 		log.Info("ApiDefinition has been reconcilied")
-	} else {
-		requeueAfter = time.Second * RequeueAfterTime
+		return ctrl.Result{}, nil
 	}
 
 	// Should we keep this re-queuing strategy ?
