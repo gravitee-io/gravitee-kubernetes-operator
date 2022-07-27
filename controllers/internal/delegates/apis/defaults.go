@@ -1,4 +1,4 @@
-package internal
+package apis
 
 import (
 	"encoding/base64"
@@ -14,7 +14,7 @@ const separator = "/"
 
 // This function is used to generate all the IDs needed for communicating with the Management API
 // It doesn't override IDs if these one have been defined.
-func GenerateIds(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) {
+func generateIds(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) {
 	// If a CrossID is defined at the API level, reuse it.
 	// If not, just generate a new CrossID
 	if api.Spec.CrossId == "" {
@@ -38,7 +38,7 @@ func GenerateIds(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) {
 	//TODO: manage metadata
 }
 
-func SetDeployedAt(api *gio.ApiDefinition) {
+func setDeployedAt(api *gio.ApiDefinition) {
 	api.Spec.DeployedAt = uint64(time.Now().UTC().UnixMilli())
 }
 
