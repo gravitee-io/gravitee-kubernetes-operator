@@ -207,6 +207,7 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOTESTSUM ?= $(LOCALBIN)/gotestsum
+CRDOC ?= $(LOCALBIN)/crdoc
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
@@ -232,6 +233,14 @@ $(ENVTEST): $(LOCALBIN)
 gotestsum: $(GOTESTSUM) ## Download gotestsum locally if necessary.
 $(GOTESTSUM): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@latest
+.PHONY: crdoc
+crdoc: $(CRDOC)
+$(CRDOC): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install fybrik.io/crdoc@latest
+
+.PHONY: reference
+reference: crdoc
+	$(CRDOC) --resources config/crd/bases --output docs/api/reference.md
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
