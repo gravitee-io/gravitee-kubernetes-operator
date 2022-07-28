@@ -4,9 +4,34 @@ orbs:
   kubernetes: circleci/kubernetes@1.3.1
   go: circleci/go@1.7.1
   helm: circleci/helm@2.0.1
+  keeper: gravitee-io/keeper@0.6.2
+
+executors:
+  azure-cli:
+    parameters:
+      resource_class:
+        description: The resource class
+        type: enum
+        enum: ["small", "medium", "large", "xlarge"]
+        default: "medium"
+    docker:
+      # Version can be found here https://docs.microsoft.com/en-us/cli/azure/release-notes-azure-cli
+      # be careful when updating the version as it looks it is not following semver
+      - image: mcr.microsoft.com/azure-cli:2.34.1
+    resource_class: <<parameters.resource_class>>
+
+commands:
+  get-docker-img:
+    steps:
+      - run:
+          name: Get docker image name & tag
+          command: |
+            export VERSION=${CIRCLE_BRANCH}-latest
+            export IMG=graviteeio.azurecr.io/gko:${VERSION}
+            echo "export IMG=$IMG" >> $BASH_ENV
 
 jobs:
-  build-lint:
+  lint:
     docker:
       - image: cimg/go:1.18.4
     steps:
@@ -19,7 +44,22 @@ jobs:
           name: Run Lint
           command: golangci-lint run ./...
 
-  test:
+  unit-test:
+    docker:
+      - image: cimg/go:1.18.4
+    steps:
+      - checkout
+      - go/load-cache
+      - run:
+          name: Install gotestsum
+          command: make gotestsum
+      - run:
+          name: Run test
+          command: make test-ci
+      - store_test_results:
+          path: /tmp/test-results
+
+  e2e-test:
     environment:
       TEST_RESULTS: /tmp/test-results
     machine:
@@ -37,7 +77,7 @@ jobs:
       - helm/install-helm-client
       - run:
           name: Install gotestsum
-          command: go install gotest.tools/gotestsum@latest
+          command: make gotestsum
       - run:
           name: Start APIM using k3d
           command: make k3d-apim-init 
@@ -52,17 +92,121 @@ jobs:
           command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 180s
       - run:
           name: Run tests
-          command: USE_EXISTING_CLUSTER=true gotestsum --format pkgname --junitfile ${TEST_RESULTS}/gotestsum-report.xml
+          command: USE_EXISTING_CLUSTER=true ./bin/gotestsum --format pkgname --junitfile ${TEST_RESULTS}/gotestsum-report.xml
       - store_test_results:
           path: /tmp/test-results
 
-workflows:
+  build-and-publish-image-to-azure-registry:
+    docker:
+      - image: cimg/go:1.18.4
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          var-name: AZURE_DOCKER_REGISTRY_USERNAME
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - go/mod-download-cached
+      - get-docker-img
+      - run:
+          name: Docker login
+          command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
+      - run:
+          name: Docker Build
+          command: make docker-build
+      - run:
+          name: Docker Push
+          command: make docker-push
+      - run:
+          name: Prepare gko for k8s deployment
+          command: make build-kustomize-default
+      - persist_to_workspace:
+          root: .
+          paths:
+            - gko-config-default.yml
 
+  deploy-on-k8s:
+    parameters:
+      clusterName:
+        type: enum
+        enum: ["apim-preprod"]
+        description: name of the Azure k8s cluster
+    executor:
+      name: azure-cli
+      resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
+          var-name: AZURE_APPLICATION_ID
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
+          var-name: AZURE_TENANT
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
+          var-name: AZURE_APPLICATION_SECRET
+      - kubernetes/install-kubectl
+      - helm/install-helm-client
+      - when:
+          condition:
+            equal: [ apim-preprod, << parameters.clusterName >> ]
+          steps: 
+            - run:
+                name: Get k8s context from Azure
+                command: |
+                  az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
+                  az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
+      - get-docker-img
+      - run:
+          name: Kubectl apply
+          command: kubectl apply -f gko-config-default.yml
+      # - run:
+      #     name: deploy
+      #     command: kubectl 
+
+workflows:
   build-workflow:
     jobs:
-      - build-lint:
-          name: Build & lint
-      - test:
-          name: Test
+      - lint:
+          name: Lint
+      - unit-test:
+          name: Unit test
           requires:
-            - Build & lint
+            - Lint
+      - e2e-test:
+          name: E2e Test
+          requires:
+            - Unit test
+          filters:
+            branches:
+              only:
+              # TODO: Uncomment when we have e2e test
+              #  - master
+               - /.*-run-e2e.*/ 
+               - work-on-ci-like-master
+
+  release:
+    jobs:
+      - build-and-publish-image-to-azure-registry:
+          name: Build & Publish docker image to Azure registry
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+               - master
+               - work-on-ci-like-master
+      - deploy-on-k8s:
+          name: Deploy on APIM k8s cluster
+          context: cicd-orchestrator
+          requires:
+            - Build & Publish docker image to Azure registry
+          filters:
+            branches:
+              only:
+               - master
+               - work-on-ci-like-master
+          clusterName: apim-preprod

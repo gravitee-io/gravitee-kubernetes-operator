@@ -25,3 +25,6 @@ testbin/*
 *.swo
 *~
 __debug_bin
+
+# Build files by Makefile
+gko-config-default.yml
