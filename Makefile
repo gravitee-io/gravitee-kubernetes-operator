@@ -111,7 +111,11 @@ lint-fix: ## Fix (trivial) issues found by golangci
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
+  	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" ${GOTESTSUM} --format pkgname ./... -coverprofile cover.out
+
+.PHONY: test-ci
+test: manifests generate fmt vet envtest ## Run tests for ci.
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" ${GOTESTSUM} --format pkgname --junitfile ${TEST_RESULTS}/gotestsum-report.xml ./... -coverprofile cover.out
 
 .PHONY: k3d-apim-init
 k3d-apim-init: ## Init APIM locally using k3d
@@ -156,7 +160,7 @@ run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
+docker-build: ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 .PHONY: docker-push
@@ -178,6 +182,11 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
+build-kustomize-default: manifests kustomize ## Prepare controlle for k8s deployment
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default >> gko-config-default.yml
+
+.PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
@@ -197,6 +206,7 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOTESTSUM ?= $(LOCALBIN)/gotestsum
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
@@ -218,6 +228,11 @@ envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
+.PHONY: gotestsum
+gotestsum: $(GOTESTSUM) ## Download gotestsum locally if necessary.
+$(GOTESTSUM): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@latest
+
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
 	operator-sdk generate kustomize manifests -q
@@ -227,7 +242,7 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	docker build -f Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
