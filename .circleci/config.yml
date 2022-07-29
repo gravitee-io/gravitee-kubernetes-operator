@@ -116,10 +116,14 @@ jobs:
           command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
       - run:
           name: Docker Build
-          command: make docker-build
+          command: |
+            echo Building docker image "$IMG"
+            make docker-build
       - run:
           name: Docker Push
-          command: make docker-push
+          command: |
+            echo Pushing docker image "$IMG"
+            make docker-push
       - run:
           name: Prepare gko for k8s deployment
           command: make build-kustomize-default
