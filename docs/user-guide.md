@@ -44,6 +44,7 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: basic-api-example
+  namespace: apim-blue
 spec:
   name: gko-example
   contextRef: 
