@@ -32,7 +32,7 @@ func (d *Delegate) Create(
 	ctxDelegate := gioCtx.NewDelegate(d.ctx, d.cli)
 	apimCtx, err := ctxDelegate.Get(api)
 	if client.IgnoreNotFound(err) != nil {
-		d.log.Error(err, "Management context will be discarded in further operations")
+		d.log.Info("Management context will be ignored for further operations (not found)")
 	}
 
 	// Ensure that IDs have been generated
