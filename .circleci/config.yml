@@ -43,6 +43,16 @@ jobs:
       - run:
           name: Run Lint
           command: golangci-lint run ./...
+      - run:
+          name: Check that make generate has been executed
+          command: |
+            make generate
+            git diff --quiet HEAD
+      - run:
+          name: Check that make manifests have been executed
+          command: |
+            make manifests
+            git diff --quiet HEAD
 
   unit-test:
     docker:
