@@ -97,14 +97,6 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-.PHONY: fmt
-fmt: ## Run go fmt against code.
-	go fmt ./...
-
-.PHONY: vet
-vet: ## Run go vet against code.
-	go vet ./...
-
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Fix (trivial) issues found by golangci-lint
 	$(GOLANGCILINT) run ./... --fix
@@ -113,13 +105,11 @@ lint-fix: golangci-lint ## Fix (trivial) issues found by golangci-lint
 lint: golangci-lint ## Run golangci-lint and fail on error
 	$(GOLANGCILINT) run ./...
 
+GOTESTARGS ?= ""
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-  	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" ${GOTESTSUM} --format pkgname ./... -coverprofile cover.out
-
-.PHONY: test-ci
-test: manifests generate fmt vet envtest ## Run tests for ci.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" ${GOTESTSUM} --format pkgname --junitfile ${TEST_RESULTS}/gotestsum-report.xml ./... -coverprofile cover.out
+test: manifests generate ## Run tests.
+	kubectl config use-context k3d-graviteeio
+	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GOTESTSUM) $(GOTESTARGS) ./... -coverprofile cover.out
 
 .PHONY: k3d-apim-init
 k3d-apim-init: ## Init APIM locally using k3d
@@ -151,16 +141,17 @@ k3d-gko-deploy: ## Push the gko image for k3d deployment
 
 .PHONY:
 service-account: ## Generate a service account token with cluster-admin role and add it to kubeconfig
+	kubectl config use-context k3d-graviteeio
 	bash ./scripts/service_account.sh
 
 ##@ Build
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
+build: generate ## Build manager binary.
 	go build -o bin/manager main.go
 
 .PHONY: run
-run: manifests generate fmt vet ## Run a controller from your host.
+run: manifests generate ## Run a controller from your host.
 	go run ./main.go
 
 .PHONY: docker-build
@@ -217,6 +208,7 @@ KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/k
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
+	find $(LOCALBIN) -name kustomize -delete
 	curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(LOCALBIN)
 
 .PHONY: controller-gen

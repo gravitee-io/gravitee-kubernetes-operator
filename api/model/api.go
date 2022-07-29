@@ -11,7 +11,9 @@ type Api struct {
 	// io.gravitee.definition.model.Api
 	Id      string `json:"id,omitempty"`
 	CrossId string `json:"crossId,omitempty"`
-	Name    string `json:"name,omitempty"`
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
+	// +kubebuilder:validation:Required
 	Version string `json:"version,omitempty"`
 	// +kubebuilder:default:=DEFAULT
 	FlowMode FlowMode `json:"flow_mode,omitempty"`
@@ -19,9 +21,10 @@ type Api struct {
 	DefinitionVersion DefinitionVersion `json:"gravitee,omitempty"`
 	// +kubebuilder:default:=`CREATED`
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
-	Proxy          *Proxy         `json:"proxy,omitempty"`
-	Services       *Services      `json:"services,omitempty"`
-	Resources      []*Resource    `json:"resources,omitempty"`
+	// +kubebuilder:validation:Required
+	Proxy     *Proxy      `json:"proxy,omitempty"`
+	Services  *Services   `json:"services,omitempty"`
+	Resources []*Resource `json:"resources,omitempty"`
 	//	Paths             map[string][]interface{}                `json:"paths,omitempty"` // Different from Java
 	Flows             []Flow                                  `json:"flows,omitempty"`
 	Properties        []*Property                             `json:"properties,omitempty"`
