@@ -2,12 +2,15 @@
 
 set -e
 
-# Docker images tags
+# APIM Images
+APIM_IMAGE_REGISTRY="${APIM_IMAGE_REGISTRY:-graviteeio}"
+APIM_IMAGE_TAG="${APIM_IMAGE_TAG:-latest}"
+
+# Docker dependencies images tags
 NGINX_CONTROLLER_IMAGE_TAG=1.3.0
 NGINX_BACKEND_IMAGE_TAG=1.22.0
 MONGO_IMAGE_TAG=4.4
 ELASTIC_IMAGE_TAG=7.17.5 
-APIM_IMAGE_TAG=latest
 
 # K3d cluster config
 K3D_CLUSTER_NAME=graviteeio
@@ -68,21 +71,21 @@ echo "
 
 "
 
-docker pull docker.io/bitnami/mongodb:${MONGO_IMAGE_TAG}
-docker pull docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_IMAGE_TAG}
-docker pull docker.io/bitnami/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}
-docker pull docker.io/bitnami/nginx:${NGINX_BACKEND_IMAGE_TAG}
-docker pull graviteeio/apim-gateway:${APIM_IMAGE_TAG}
-docker pull graviteeio/apim-management-api:${APIM_IMAGE_TAG}
-docker pull graviteeio/apim-management-ui:${APIM_IMAGE_TAG}
+docker pull "docker.io/bitnami/mongodb:${MONGO_IMAGE_TAG}"
+docker pull "docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_IMAGE_TAG}"
+docker pull "docker.io/bitnami/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}"
+docker pull "docker.io/bitnami/nginx:${NGINX_BACKEND_IMAGE_TAG}"
+docker pull "${APIM_IMAGE_REGISTRY}/apim-gateway:${APIM_IMAGE_TAG}"
+docker pull "${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}"
+docker pull "${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}"
 
 docker tag "docker.io/bitnami/mongodb:${MONGO_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/mongodb:${MONGO_IMAGE_TAG}"
 docker tag "docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/elasticsearch:${ELASTIC_IMAGE_TAG}"
 docker tag "docker.io/bitnami/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/nginx-ingress-controller:${NGINX_CONTROLLER_IMAGE_TAG}"
 docker tag "docker.io/bitnami/nginx:${NGINX_BACKEND_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/nginx:${NGINX_BACKEND_IMAGE_TAG}"
-docker tag "graviteeio/apim-gateway:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
-docker tag "graviteeio/apim-management-api:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
-docker tag "graviteeio/apim-management-ui:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
+docker tag "${APIM_IMAGE_REGISTRY}/apim-gateway:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
+docker tag "${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api:${APIM_IMAGE_TAG}"
+docker tag "${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}" "${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui:${APIM_IMAGE_TAG}"
 
 docker push "${K3D_IMAGES_REGISTRY}/mongodb:${MONGO_IMAGE_TAG}"
 docker push "${K3D_IMAGES_REGISTRY}/elasticsearch:${ELASTIC_IMAGE_TAG}"

@@ -54,57 +54,49 @@ jobs:
             make manifests
             git diff --quiet HEAD
 
-  unit-test:
-    docker:
-      - image: cimg/go:1.18.4
-    steps:
-      - checkout
-      - go/load-cache
-      - run:
-          name: Install gotestsum
-          command: make gotestsum
-      - run:
-          name: Run test
-          command: make test-ci
-      - store_test_results:
-          path: /tmp/test-results
-
-  e2e-test:
-    environment:
-      TEST_RESULTS: /tmp/test-results
+  test:
     machine:
       image: ubuntu-2204:2022.04.2
     resource_class: large
     steps:
       - checkout
-      - run:
-          name: Create test results directory
-          command: mkdir -p $TEST_RESULTS
       - go/install:
           version: '1.18.4'
       - go/load-cache
       - kubernetes/install-kubectl
       - helm/install-helm-client
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          var-name: AZURE_DOCKER_REGISTRY_USERNAME
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - run:
+          name: Create junit reports directory
+          command: mkdir -p "/tmp/junit/reports"
+      - run:
+          name: Docker login
+          command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
       - run:
           name: Install gotestsum
           command: make gotestsum
       - run:
           name: Start APIM using k3d
-          command: make k3d-apim-init 
-      - run:
-          name: Deploy Operator
-          command: make k3d-gko-build k3d-gko-push k3d-gko-deploy
-      - run: 
-          name: Wait for Operator to be ready 
-          command: kubectl wait -n gko-system --for condition=Available deployments/gko-controller-manager --timeout 60s
+          command: |
+            export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
+            export APIM_IMAGE_TAG=master-latest
+            make k3d-apim-init
       - run:
           name: Wait for APIM to be ready
-          command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 180s
+          command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 300s
+      - run:
+          name: Install CRDs 
+          command: make install
       - run:
           name: Run tests
-          command: USE_EXISTING_CLUSTER=true ./bin/gotestsum --format pkgname --junitfile ${TEST_RESULTS}/gotestsum-report.xml
+          command: GOTESTARGS="--junitfile=/tmp/junit/reports/junit.xml" make test
       - store_test_results:
-          path: /tmp/test-results
+          path: /tmp/junit
 
   login-to-azure:
     executor:
@@ -170,27 +162,53 @@ jobs:
           name: Deploy controller to the K8s cluster specified in ~/.kube/config
           command: make deploy
 
+  deploy-on-k8s:
+    parameters:
+      clusterName:
+        type: enum
+        enum: ["apim-preprod"]
+        description: name of the Azure k8s cluster
+    executor:
+      name: azure-cli
+      resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
+          var-name: AZURE_APPLICATION_ID
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
+          var-name: AZURE_TENANT
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
+          var-name: AZURE_APPLICATION_SECRET
+      - kubernetes/install-kubectl
+      - helm/install-helm-client
+      - when:
+          condition:
+            equal: [ apim-preprod, << parameters.clusterName >> ]
+          steps: 
+            - run:
+                name: Get k8s context from Azure
+                command: |
+                  az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
+                  az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
+      - get-docker-img
+      - run:
+          name: Kubectl apply
+          command: kubectl apply -f gko-config-default.yml
 
 workflows:
-  build-workflow:
+  pull_requests:
     jobs:
       - lint:
           name: Lint
-      - unit-test:
-          name: Unit test
+      - test:
+          name: Test
+          context: cicd-orchestrator
           requires:
             - Lint
-      - e2e-test:
-          name: E2e Test
-          requires:
-            - Unit test
-          filters:
-            branches:
-              only:
-              # TODO: Uncomment when we have e2e test
-              #  - master
-               - /.*-run-e2e.*/ 
-               - work-on-ci-like-master
 
   release:
     jobs:
