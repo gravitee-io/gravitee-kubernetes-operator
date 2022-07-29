@@ -106,8 +106,12 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: lint-fix
-lint-fix: ## Fix (trivial) issues found by golangci
-	golangci-lint run ./... --fix
+lint-fix: golangci-lint ## Fix (trivial) issues found by golangci-lint
+	$(GOLANGCILINT) run ./... --fix
+
+.PHONY: lint
+lint: golangci-lint ## Run golangci-lint and fail on error
+	$(GOLANGCILINT) run ./...
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
@@ -208,6 +212,7 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOTESTSUM ?= $(LOCALBIN)/gotestsum
 CRDOC ?= $(LOCALBIN)/crdoc
+GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
@@ -233,6 +238,7 @@ $(ENVTEST): $(LOCALBIN)
 gotestsum: $(GOTESTSUM) ## Download gotestsum locally if necessary.
 $(GOTESTSUM): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@latest
+
 .PHONY: crdoc
 crdoc: $(CRDOC)
 $(CRDOC): $(LOCALBIN)
@@ -241,6 +247,11 @@ $(CRDOC): $(LOCALBIN)
 .PHONY: reference
 reference: crdoc
 	$(CRDOC) --resources config/crd/bases --output docs/api/reference.md
+
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCILINT)
+$(GOLANGCILINT): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
