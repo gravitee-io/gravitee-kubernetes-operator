@@ -18,7 +18,7 @@ kind: ApiDefinition
 metadata:
   name: basic-api-example
 spec:
-  name: "K8s Basic"
+  name: "K8s Basic Example With Management Context"
   contextRef: 
     name: "dev-mgmt-ctx"
     namespace: "apim-dev"
@@ -26,7 +26,7 @@ spec:
   description: "Basic api managed by Gravitee Kubernetes Operator"
   proxy:
     virtual_hosts:
-      - path: "/k8s-basic"
+      - path: "/k8s-basic-with-ctx"
     groups:
       - endpoints:
           - name: "Default"
