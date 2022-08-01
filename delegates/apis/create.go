@@ -5,7 +5,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	gioCtx "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/internal/delegates/context"
+	gioCtx "github.com/gravitee-io/gravitee-kubernetes-operator/delegates/context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
@@ -57,7 +57,7 @@ func (d *Delegate) Create(
 	}
 
 	if updated {
-		err = d.importToManagementApi(api, apimCtx, apiJson)
+		err = d.importToManagementApi(api, apiJson)
 		if err != nil {
 			d.log.Error(err, "Unable to import to the Management API")
 			return err

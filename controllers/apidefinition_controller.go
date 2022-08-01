@@ -30,7 +30,8 @@ import (
 
 	"github.com/go-logr/logr"
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apis "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/internal/delegates/apis"
+	apis "github.com/gravitee-io/gravitee-kubernetes-operator/delegates/apis"
+	gioCtx "github.com/gravitee-io/gravitee-kubernetes-operator/delegates/context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
@@ -63,11 +64,11 @@ type ApiDefinitionReconciler struct {
 func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
-	// Fetch the ApiDefinition instance
-	instance := &graviteeiov1alpha1.ApiDefinition{}
+	// Fetch the ApiDefinition apiDefinition
+	apiDefinition := &graviteeiov1alpha1.ApiDefinition{}
 	requeueAfter := time.Second * requeueAfterTime
 
-	err := r.Get(ctx, req.NamespacedName, instance)
+	err := r.Get(ctx, req.NamespacedName, apiDefinition)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -81,12 +82,18 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	delegate := apis.NewDelegate(ctx, r.Client)
+	ctxDelegate := gioCtx.NewDelegate(ctx, r.Client)
+	apimCtx, err := ctxDelegate.Get(apiDefinition)
+	if client.IgnoreNotFound(err) != nil {
+		log.Info("Management context will be ignored for further operations (not found)")
+	}
 
-	if instance.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
-		log.Info("Creating a new API Definition template", "template", instance.Name)
+	delegate := apis.NewDelegate(ctx, apimCtx, r.Client)
 
-		requeue, importErr := delegate.ImportApiDefinitionTemplate(instance, req.Namespace)
+	if apiDefinition.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
+		log.Info("Creating a new API Definition template", "template", apiDefinition.Name)
+
+		requeue, importErr := delegate.ImportApiDefinitionTemplate(apiDefinition, req.Namespace)
 		if importErr != nil {
 			log.Error(importErr, "Failed to sync template")
 			return ctrl.Result{}, importErr
@@ -97,14 +104,14 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	_, err = util.CreateOrUpdate(ctx, r.Client, instance, func() error {
-		if !instance.ObjectMeta.DeletionTimestamp.IsZero() {
-			return delegate.Delete(instance)
+	_, err = util.CreateOrUpdate(ctx, r.Client, apiDefinition, func() error {
+		if !apiDefinition.ObjectMeta.DeletionTimestamp.IsZero() {
+			return delegate.Delete(apiDefinition)
 		}
-		if instance.Status.ApiID == "" {
-			return delegate.Create(instance)
+		if apiDefinition.Status.ApiID == "" {
+			return delegate.Create(apiDefinition)
 		}
-		return delegate.Update(instance)
+		return delegate.Update(apiDefinition)
 	})
 
 	if err == nil {
