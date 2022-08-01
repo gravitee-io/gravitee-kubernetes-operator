@@ -96,7 +96,40 @@ jobs:
       - store_test_results:
           path: /tmp/test-results
 
-  build-and-publish-image-to-azure-registry:
+  login-to-azure:
+    executor:
+      name: azure-cli
+      resource_class: small
+    parameters:
+      clusterName:
+        type: enum
+        enum: ["apim-preprod"]
+        description: Name of the Azure k8s cluster
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
+          var-name: AZURE_SP
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
+          var-name: AZURE_TENANT
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
+          var-name: AZURE_SP_PASSWORD
+      - when:
+          condition:
+            equal: [ apim-preprod, << parameters.clusterName >> ]
+          steps: 
+            - run:
+                name: Get ~/.kube/config from Azure
+                command: |
+                  az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
+                  az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - .kube/config
+
+  build-and-publish-deploy-gko-image:
     docker:
       - image: cimg/go:1.18.4
     steps:
@@ -107,10 +140,13 @@ jobs:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - checkout
+      - attach_workspace:
+          at: ~/
       - setup_remote_docker:
           docker_layer_caching: true
       - go/mod-download-cached
       - get-docker-img
+      - kubernetes/install-kubectl
       - run:
           name: Docker login
           command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
@@ -121,52 +157,9 @@ jobs:
           name: Docker Push
           command: make docker-push
       - run:
-          name: Prepare gko for k8s deployment
-          command: make build-kustomize-default
-      - persist_to_workspace:
-          root: .
-          paths:
-            - gko-config-default.yml
+          name: Deploy controller to the K8s cluster specified in ~/.kube/config
+          command: make deploy
 
-  deploy-on-k8s:
-    parameters:
-      clusterName:
-        type: enum
-        enum: ["apim-preprod"]
-        description: name of the Azure k8s cluster
-    executor:
-      name: azure-cli
-      resource_class: small
-    steps:
-      - attach_workspace:
-          at: .
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
-          var-name: AZURE_APPLICATION_ID
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
-          var-name: AZURE_TENANT
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
-          var-name: AZURE_APPLICATION_SECRET
-      - kubernetes/install-kubectl
-      - helm/install-helm-client
-      - when:
-          condition:
-            equal: [ apim-preprod, << parameters.clusterName >> ]
-          steps: 
-            - run:
-                name: Get k8s context from Azure
-                command: |
-                  az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
-                  az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
-      - get-docker-img
-      - run:
-          name: Kubectl apply
-          command: kubectl apply -f gko-config-default.yml
-      # - run:
-      #     name: deploy
-      #     command: kubectl 
 
 workflows:
   build-workflow:
@@ -191,22 +184,17 @@ workflows:
 
   release:
     jobs:
-      - build-and-publish-image-to-azure-registry:
-          name: Build & Publish docker image to Azure registry
+      - login-to-azure:
+          name: Login to azure and get ~/.kube/config
           context: cicd-orchestrator
-          filters:
-            branches:
-              only:
-               - master
-               - work-on-ci-like-master
-      - deploy-on-k8s:
-          name: Deploy on APIM k8s cluster
+          clusterName: apim-preprod
+      - build-and-publish-deploy-gko-image:
+          name: Build & Publish docker image to Azure registry and deploy it to k8s
           context: cicd-orchestrator
           requires:
-            - Build & Publish docker image to Azure registry
+            - Login to azure and get ~/.kube/config
           filters:
             branches:
               only:
                - master
                - work-on-ci-like-master
-          clusterName: apim-preprod
