@@ -1,6 +1,7 @@
 package apim
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -48,4 +49,33 @@ func (client *Client) FindByCrossId(
 	}
 
 	return apis, err
+}
+
+func (client *Client) Import(
+	importHttpMethod string,
+	apiJson []byte,
+) error {
+	url := client.buildUrl("/apis/import?definitionVersion=2.0.0")
+	req, err := http.NewRequestWithContext(client.ctx, importHttpMethod, url, bytes.NewBuffer(apiJson))
+
+	if err != nil {
+		return fmt.Errorf("unable to import the api into the Management API")
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.http.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("management has returned a %d code", resp.StatusCode)
+	}
+
+	return err
 }
