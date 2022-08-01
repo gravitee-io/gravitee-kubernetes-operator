@@ -14,6 +14,7 @@ import (
 
 type Delegate struct {
 	ctx        context.Context
+	apimCtx    *gio.ManagementContext
 	apimClient *apim.Client
 	cli        client.Client
 	log        logr.Logger
@@ -30,6 +31,6 @@ func NewDelegate(ctx context.Context, apimCtx *gio.ManagementContext, client cli
 	}
 
 	return &Delegate{
-		ctx, apimClient, client, log,
+		ctx, apimCtx, apimClient, client, log,
 	}
 }

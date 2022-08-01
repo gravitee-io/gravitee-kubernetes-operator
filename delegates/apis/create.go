@@ -5,13 +5,11 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	gioCtx "github.com/gravitee-io/gravitee-kubernetes-operator/delegates/context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -29,14 +27,8 @@ func (d *Delegate) Create(
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
 	d.addPlan(api)
 
-	ctxDelegate := gioCtx.NewDelegate(d.ctx, d.cli)
-	apimCtx, err := ctxDelegate.Get(api)
-	if client.IgnoreNotFound(err) != nil {
-		d.log.Info("Management context will be ignored for further operations (not found)")
-	}
-
 	// Ensure that IDs have been generated
-	generateIds(apimCtx, api)
+	generateIds(api)
 	setDeployedAt(api)
 
 	api.Spec.DefinitionContext = &model.DefinitionContext{
@@ -50,7 +42,7 @@ func (d *Delegate) Create(
 		return err
 	}
 
-	updated, err := d.updateConfigMap(api, apimCtx, apiJson)
+	updated, err := d.updateConfigMap(api, apiJson)
 	if err != nil {
 		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 		return err
@@ -93,7 +85,6 @@ func (d *Delegate) addPlan(api *gio.ApiDefinition) {
 
 func (d *Delegate) updateConfigMap(
 	api *gio.ApiDefinition,
-	apimCtx *gio.ManagementContext,
 	apiJson []byte,
 ) (bool, error) {
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
@@ -112,9 +103,9 @@ func (d *Delegate) updateConfigMap(
 		"definitionVersion": api.ResourceVersion,
 	}
 
-	if apimCtx != nil {
-		cm.Data["organizationId"] = apimCtx.Spec.OrgId
-		cm.Data["environmentId"] = apimCtx.Spec.EnvId
+	if d.apimCtx != nil {
+		cm.Data["organizationId"] = d.apimCtx.Spec.OrgId
+		cm.Data["environmentId"] = d.apimCtx.Spec.EnvId
 	}
 
 	currentapiDefinition := &v1.ConfigMap{}

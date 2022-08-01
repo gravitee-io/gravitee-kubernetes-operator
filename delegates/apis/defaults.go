@@ -14,7 +14,7 @@ const separator = "/"
 
 // This function is used to generate all the IDs needed for communicating with the Management API
 // It doesn't override IDs if these one have been defined.
-func generateIds(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) {
+func generateIds(api *gio.ApiDefinition) {
 	// If a CrossID is defined at the API level, reuse it.
 	// If not, just generate a new CrossID
 	if api.Spec.CrossId == "" {
@@ -23,7 +23,7 @@ func generateIds(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) {
 	}
 
 	if api.Spec.Id == "" {
-		api.Spec.Id = generateApiId(apimCtx, api)
+		api.Spec.Id = generateApiId(api)
 	}
 
 	plans := api.Spec.Plans
@@ -42,11 +42,8 @@ func setDeployedAt(api *gio.ApiDefinition) {
 	api.Spec.DeployedAt = uint64(time.Now().UTC().UnixMilli())
 }
 
-func generateApiId(apimCtx *gio.ManagementContext, api *gio.ApiDefinition) string {
-	if apimCtx != nil {
-		return toUUID(apimCtx.Spec.EnvId + separator + api.Spec.CrossId)
-	}
-	return uuid.NewV4().String()
+func generateApiId(api *gio.ApiDefinition) string {
+	return toUUID(api.Spec.CrossId)
 }
 
 func getNamespacedName(api *gio.ApiDefinition) string {
