@@ -216,6 +216,11 @@ workflows:
           name: Login to azure and get ~/.kube/config
           context: cicd-orchestrator
           clusterName: apim-preprod
+          filters:
+            branches:
+              only:
+               - master
+               - work-on-ci-like-master
       - build-and-publish-deploy-gko-image:
           name: Build & Publish docker image to Azure registry and deploy it to k8s
           context: cicd-orchestrator
