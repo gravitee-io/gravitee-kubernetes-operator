@@ -17,12 +17,10 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
@@ -42,26 +40,13 @@ var _ = Describe("API Definition Controller", func() {
 		namespace = "default"
 
 		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
+		interval = time.Millisecond * 500
 	)
 
-	var ctx = context.Background()
-
+	ctx := context.Background()
+	httpClient := http.Client{Timeout: 5 * time.Second}
 	gvk := gio.GroupVersion.WithKind("ApiDefinition")
 	decode := scheme.Codecs.UniversalDecoder().Decode
-
-	cli := retryablehttp.NewClient()
-	cli.RetryWaitMin = 2 * time.Second
-	cli.RetryMax = 5
-	cli.CheckRetry = func(ctx context.Context, res *http.Response, err error) (bool, error) {
-		if err != nil {
-			return true, err
-		}
-		if res.StatusCode != 200 {
-			return true, errors.New(http.StatusText(http.StatusNotFound))
-		}
-		return false, nil
-	}
 
 	AfterEach(func() {
 		// Delete the API definition
@@ -98,11 +83,14 @@ var _ = Describe("API Definition Controller", func() {
 			api, ok := decoded.(*gio.ApiDefinition)
 			Expect(ok).To(BeTrue())
 
+			By("Create an API definition resource referencing the management context")
+
 			Expect(k8sClient.Create(ctx, api)).Should(Succeed())
+
+			By("Get created resource and expect to find it")
 
 			apiLookupKey := types.NamespacedName{Name: api.Name, Namespace: namespace}
 			createdApi := new(gio.ApiDefinition)
-
 			Eventually(func() bool {
 				err = k8sClient.Get(ctx, apiLookupKey, createdApi)
 				return err == nil
@@ -110,9 +98,12 @@ var _ = Describe("API Definition Controller", func() {
 
 			Expect(createdApi.Spec.Name).Should(Equal(apiName))
 
-			res, err := cli.Get(endpoint)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(res.StatusCode).To(Equal(200))
+			By("Call gateway endpoint and expect the API to be available")
+
+			Eventually(func() bool {
+				res, callErr := httpClient.Get(endpoint)
+				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
 		})
 
 		It("Should create an API Definition", func() {
@@ -123,7 +114,8 @@ var _ = Describe("API Definition Controller", func() {
 			const apiName = "K8s Basic Example With Management Context"
 			const endpoint = "http://localhost:9000/gateway/k8s-basic-with-ctx"
 
-			// Create the management context
+			By("Create a management context to synchronize with the REST API")
+
 			crdMgmtContext, err := ioutil.ReadFile(apimCtxSample)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -136,7 +128,8 @@ var _ = Describe("API Definition Controller", func() {
 			mgmtContext.Namespace = namespace
 			Expect(k8sClient.Create(ctx, mgmtContext)).Should(Succeed())
 
-			// Create the API definition
+			By("Create an API definition resource referencing the management context")
+
 			crdApiDefinition, err := ioutil.ReadFile(apiSample)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -150,10 +143,10 @@ var _ = Describe("API Definition Controller", func() {
 
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
-			// Check the API is available in k8s
+			By("Get created resource and expect to find it")
+
 			apiLookupKey := types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 			createdApi := new(gio.ApiDefinition)
-
 			Eventually(func() bool {
 				err = k8sClient.Get(ctx, apiLookupKey, createdApi)
 				return err == nil
@@ -161,19 +154,20 @@ var _ = Describe("API Definition Controller", func() {
 
 			Expect(createdApi.Spec.Name).Should(Equal(apiName))
 
-			// Call gateway to check the API is available
-			res, err := cli.Get(endpoint)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(res.StatusCode).To(Equal(200))
-
-			// Call apim rest api to check the API is available
-			httpClient := http.Client{Timeout: 5 * time.Second}
-			apimClient := apim.NewClient(ctx, mgmtContext, httpClient)
+			By("Call gateway endpoint and expect the API to be available")
 
 			Eventually(func() bool {
-				apis, err := apimClient.FindByCrossId(createdApi.Status.ApiID)
-				return err == nil && len(apis) == 1
-			}).Should(BeTrue())
+				res, callErr := httpClient.Get(endpoint)
+				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
+
+			By("Call rest API and expect one API matching status cross ID")
+
+			apimClient := apim.NewClient(ctx, mgmtContext, httpClient)
+			Eventually(func() bool {
+				apis, apisErr := apimClient.FindByCrossId(createdApi.Status.ApiID)
+				return apisErr == nil && len(apis) == 1
+			}, timeout, interval).Should(BeTrue())
 
 			apis, err := apimClient.FindByCrossId(createdApi.Status.ApiID)
 			Expect(err).ToNot(HaveOccurred())
