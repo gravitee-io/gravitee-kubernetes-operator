@@ -65,18 +65,20 @@ var _ = Describe("API Definition Controller", func() {
 		ctx := context.Background()
 
 		// Delete the API definition
-		err := k8sClient.DeleteAllOf(ctx, new(gio.ApiDefinition), &client.DeleteAllOfOptions{
-			ListOptions:   client.ListOptions{Namespace: namespace},
-			DeleteOptions: client.DeleteOptions{},
-		})
-		Expect(err).ToNot(HaveOccurred())
+		Eventually(func() error {
+			return k8sClient.DeleteAllOf(ctx, new(gio.ApiDefinition), &client.DeleteAllOfOptions{
+				ListOptions:   client.ListOptions{Namespace: namespace},
+				DeleteOptions: client.DeleteOptions{},
+			})
+		}).ShouldNot(HaveOccurred())
 
-		// Delete the ManagementContext
-		err = k8sClient.DeleteAllOf(ctx, new(gio.ManagementContext), &client.DeleteAllOfOptions{
-			ListOptions:   client.ListOptions{Namespace: namespace},
-			DeleteOptions: client.DeleteOptions{},
-		})
-		Expect(err).ToNot(HaveOccurred())
+		// Delete the ManagementContext})
+		Eventually(func() error {
+			return k8sClient.DeleteAllOf(ctx, new(gio.ManagementContext), &client.DeleteAllOfOptions{
+				ListOptions:   client.ListOptions{Namespace: namespace},
+				DeleteOptions: client.DeleteOptions{},
+			})
+		}).ShouldNot(HaveOccurred())
 	})
 
 	Context("API definition Resource", func() {
