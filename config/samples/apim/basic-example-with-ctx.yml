@@ -21,7 +21,7 @@ spec:
   name: "K8s Basic Example With Management Context"
   contextRef: 
     name: "dev-mgmt-ctx"
-    namespace: "apim-dev"
+    namespace: "default"
   version: "1.1"
   description: "Basic api managed by Gravitee Kubernetes Operator"
   proxy:

@@ -45,6 +45,8 @@ var _ = Describe("API Definition Controller", func() {
 		interval = time.Millisecond * 250
 	)
 
+	var ctx = context.Background()
+
 	gvk := gio.GroupVersion.WithKind("ApiDefinition")
 	decode := scheme.Codecs.UniversalDecoder().Decode
 
@@ -62,8 +64,6 @@ var _ = Describe("API Definition Controller", func() {
 	}
 
 	AfterEach(func() {
-		ctx := context.Background()
-
 		// Delete the API definition
 		Eventually(func() error {
 			return k8sClient.DeleteAllOf(ctx, new(gio.ApiDefinition), &client.DeleteAllOfOptions{
@@ -87,9 +87,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			const sample = "../config/samples/apim/basic-example.yml"
 			const apiName = "K8s Basic Example"
-			const apiUrl = "http://localhost:9000/gateway/k8s-basic"
-
-			ctx := context.Background()
+			const endpoint = "http://localhost:9000/gateway/k8s-basic"
 
 			crd, err := ioutil.ReadFile(sample)
 			Expect(err).ToNot(HaveOccurred())
@@ -99,8 +97,6 @@ var _ = Describe("API Definition Controller", func() {
 
 			api, ok := decoded.(*gio.ApiDefinition)
 			Expect(ok).To(BeTrue())
-
-			api.Namespace = namespace
 
 			Expect(k8sClient.Create(ctx, api)).Should(Succeed())
 
@@ -114,7 +110,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			Expect(createdApi.Spec.Name).Should(Equal(apiName))
 
-			res, err := cli.Get(apiUrl)
+			res, err := cli.Get(endpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(res.StatusCode).To(Equal(200))
 		})
@@ -125,9 +121,7 @@ var _ = Describe("API Definition Controller", func() {
 			const apimCtxSample = "../config/samples/context/dev/managementcontext_credentials.yaml"
 			const apiSample = "../config/samples/apim/basic-example-with-ctx.yml"
 			const apiName = "K8s Basic Example With Management Context"
-			const apiUrl = "http://localhost:9000/gateway/k8s-basic-with-ctx"
-
-			ctx := context.Background()
+			const endpoint = "http://localhost:9000/gateway/k8s-basic-with-ctx"
 
 			// Create the management context
 			crdMgmtContext, err := ioutil.ReadFile(apimCtxSample)
@@ -168,7 +162,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(createdApi.Spec.Name).Should(Equal(apiName))
 
 			// Call gateway to check the API is available
-			res, err := cli.Get(apiUrl)
+			res, err := cli.Get(endpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(res.StatusCode).To(Equal(200))
 
