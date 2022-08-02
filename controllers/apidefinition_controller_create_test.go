@@ -57,7 +57,7 @@ var _ = Describe("API Definition Controller", func() {
 			})
 		}).ShouldNot(HaveOccurred())
 
-		// Delete the ManagementContext})
+		// Delete the ManagementContext
 		Eventually(func() error {
 			return k8sClient.DeleteAllOf(ctx, new(gio.ManagementContext), &client.DeleteAllOfOptions{
 				ListOptions:   client.ListOptions{Namespace: namespace},
