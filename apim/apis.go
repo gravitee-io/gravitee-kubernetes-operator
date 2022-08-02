@@ -21,7 +21,7 @@ func (client *Client) FindByCrossId(
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("an error as occurred while trying to create new findApisByCrossId request")
+		return nil, fmt.Errorf("unable to look for apis matching cross id %s (%w)", crossId, err)
 	}
 
 	resp, err := client.http.Do(req)
