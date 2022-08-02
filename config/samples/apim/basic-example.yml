@@ -17,6 +17,7 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: basic-api-example
+  namespace: default
 spec:
   name: "K8s Basic Example"
   version: "1.0"
