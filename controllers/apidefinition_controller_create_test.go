@@ -17,18 +17,17 @@ package controllers
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
 // +kubebuilder:docs-gen:collapse=Imports
@@ -45,8 +44,6 @@ var _ = Describe("API Definition Controller", func() {
 
 	ctx := context.Background()
 	httpClient := http.Client{Timeout: 5 * time.Second}
-	gvk := gio.GroupVersion.WithKind("ApiDefinition")
-	decode := scheme.Codecs.UniversalDecoder().Decode
 
 	AfterEach(func() {
 		// Delete the API definition
@@ -71,19 +68,13 @@ var _ = Describe("API Definition Controller", func() {
 			By("Without a management context")
 
 			const sample = "../config/samples/apim/basic-example.yml"
-			const apiName = "K8s Basic Example"
-			const endpoint = "http://localhost:9000/gateway/k8s-basic"
 
-			crd, err := ioutil.ReadFile(sample)
+			api, err := test.NewApiDefinition(sample)
 			Expect(err).ToNot(HaveOccurred())
 
-			decoded, _, err := decode(crd, &gvk, new(gio.ApiDefinition))
-			Expect(err).ToNot(HaveOccurred())
+			expectedApiName := api.Spec.Name
 
-			api, ok := decoded.(*gio.ApiDefinition)
-			Expect(ok).To(BeTrue())
-
-			By("Create an API definition resource referencing the management context")
+			By("Create an API definition resource without a management context")
 
 			Expect(k8sClient.Create(ctx, api)).Should(Succeed())
 
@@ -96,7 +87,9 @@ var _ = Describe("API Definition Controller", func() {
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
 
-			Expect(createdApi.Spec.Name).Should(Equal(apiName))
+			var endpoint = test.GatewayUrl + createdApi.Spec.Proxy.VirtualHosts[0].Path
+
+			Expect(createdApi.Spec.Name).Should(Equal(expectedApiName))
 
 			By("Call gateway endpoint and expect the API to be available")
 
@@ -109,35 +102,21 @@ var _ = Describe("API Definition Controller", func() {
 		It("Should create an API Definition", func() {
 			By("With a management context")
 
-			const apimCtxSample = "../config/samples/context/dev/managementcontext_credentials.yaml"
+			const mgmtContextSample = "../config/samples/context/dev/managementcontext_credentials.yaml"
 			const apiSample = "../config/samples/apim/basic-example-with-ctx.yml"
-			const apiName = "K8s Basic Example With Management Context"
-			const endpoint = "http://localhost:9000/gateway/k8s-basic-with-ctx"
 
 			By("Create a management context to synchronize with the REST API")
 
-			crdMgmtContext, err := ioutil.ReadFile(apimCtxSample)
+			mgmtContext, err := test.NewManagementContext(mgmtContextSample)
 			Expect(err).ToNot(HaveOccurred())
-
-			decodedMgmtContext, _, err := decode(crdMgmtContext, &gvk, new(gio.ManagementContext))
-			Expect(err).ToNot(HaveOccurred())
-
-			mgmtContext, ok := decodedMgmtContext.(*gio.ManagementContext)
-			Expect(ok).To(BeTrue())
-
-			mgmtContext.Namespace = namespace
 			Expect(k8sClient.Create(ctx, mgmtContext)).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
 
-			crdApiDefinition, err := ioutil.ReadFile(apiSample)
+			apiDefinition, err := test.NewApiDefinition(apiSample)
 			Expect(err).ToNot(HaveOccurred())
 
-			decodedApiDefinition, _, err := decode(crdApiDefinition, &gvk, new(gio.ApiDefinition))
-			Expect(err).ToNot(HaveOccurred())
-
-			apiDefinition, ok := decodedApiDefinition.(*gio.ApiDefinition)
-			Expect(ok).To(BeTrue())
+			expectedApiName := apiDefinition.Spec.Name
 
 			apiDefinition.Namespace = namespace
 
@@ -152,9 +131,11 @@ var _ = Describe("API Definition Controller", func() {
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
 
-			Expect(createdApi.Spec.Name).Should(Equal(apiName))
+			Expect(createdApi.Spec.Name).Should(Equal(expectedApiName))
 
 			By("Call gateway endpoint and expect the API to be available")
+
+			var endpoint = test.GatewayUrl + createdApi.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpoint)
@@ -165,11 +146,11 @@ var _ = Describe("API Definition Controller", func() {
 
 			apimClient := apim.NewClient(ctx, mgmtContext, httpClient)
 			Eventually(func() bool {
-				apis, apisErr := apimClient.FindByCrossId(createdApi.Status.ApiID)
+				apis, apisErr := apimClient.FindByCrossId(createdApi.Status.CrossID)
 				return apisErr == nil && len(apis) == 1
 			}, timeout, interval).Should(BeTrue())
 
-			apis, err := apimClient.FindByCrossId(createdApi.Status.ApiID)
+			apis, err := apimClient.FindByCrossId(createdApi.Status.CrossID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(len(apis)).To(Equal(1))
 		})

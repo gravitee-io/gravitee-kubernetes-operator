@@ -33,20 +33,20 @@ func (d *Delegate) updateConfigMap(
 		cm.Data["environmentId"] = d.apimCtx.Spec.EnvId
 	}
 
-	currentapiDefinition := &v1.ConfigMap{}
-	err := d.cli.Get(d.ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentapiDefinition)
+	currentApiDefinition := &v1.ConfigMap{}
+	err := d.cli.Get(d.ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentApiDefinition)
 
 	if err == nil {
-		if currentapiDefinition.Data["definitionVersion"] != api.ResourceVersion {
+		if currentApiDefinition.Data["definitionVersion"] != api.ResourceVersion {
 			d.log.Info("Updating ConfigMap", "id", api.Spec.Id)
-			// Only update the confimap if resource version has changed (means api definition has changed).
+			// Only update the config map if resource version has changed (means api definition has changed).
 			err = d.cli.Update(d.ctx, cm)
 		} else {
 			d.log.Info("No change detected on api. Skipped.", "id", api.Spec.Id)
 			return false, nil
 		}
 	} else {
-		d.log.Info("Creating configmap for api.", "id", api.Spec.Id, "name", api.Name)
+		d.log.Info("Creating config map for api.", "id", api.Spec.Id, "name", api.Name)
 		err = d.cli.Create(d.ctx, cm)
 	}
 	return true, err

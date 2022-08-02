@@ -17,19 +17,16 @@ package controllers
 
 import (
 	"context"
-	"errors"
-	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
 // +kubebuilder:docs-gen:collapse=Imports
@@ -38,29 +35,14 @@ var _ = Describe("API Definition Controller", func() {
 
 	// Define utility constants for object names and testing timeouts/durations and intervals.
 	const (
-		namespace = "apim-dev"
+		namespace = "default"
 
 		timeout  = time.Second * 10
 		interval = time.Millisecond * 250
 	)
 
-	var ctx = context.Background()
-
-	gvk := gio.GroupVersion.WithKind("ApiDefinition")
-	decode := scheme.Codecs.UniversalDecoder().Decode
-
-	httpClient := retryablehttp.NewClient()
-	httpClient.RetryWaitMin = 2 * time.Second
-	httpClient.RetryMax = 5
-	httpClient.CheckRetry = func(ctx context.Context, res *http.Response, err error) (bool, error) {
-		if err != nil {
-			return true, err
-		}
-		if res.StatusCode != 200 {
-			return true, errors.New(http.StatusText(http.StatusNotFound))
-		}
-		return false, nil
-	}
+	ctx := context.Background()
+	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	AfterEach(func() {
 		// Delete the API definition
@@ -82,59 +64,50 @@ var _ = Describe("API Definition Controller", func() {
 
 	Context("API definition Resource", func() {
 
-		var apiDefinition *gio.ApiDefinition
-		BeforeEach(func() {
-			// Create the API definition
+		It("Should update an API Definition", func() {
+			By("Create an API definition resource without a management context")
 			const apiDefinitionSample = "../config/samples/apim/basic-example.yml"
 
-			apiDefinitionCrd, err := ioutil.ReadFile(apiDefinitionSample)
+			apiDefinitionFixture, err := test.NewApiDefinition(apiDefinitionSample)
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinitionDecoded, _, err := decode(apiDefinitionCrd, &gvk, new(gio.ApiDefinition))
-			Expect(err).ToNot(HaveOccurred())
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			apiDefinition, ok := apiDefinitionDecoded.(*gio.ApiDefinition)
-			Expect(ok).To(BeTrue())
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			createdApiDefinition := new(gio.ApiDefinition)
 
-			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			apiLookupKey := types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
-			createdApi := new(gio.ApiDefinition)
-			Eventually(func() bool {
-				err = k8sClient.Get(ctx, apiLookupKey, createdApi)
-				return err == nil
-			}, timeout, interval).Should(BeTrue())
-		})
-
-		It("Should update an API Definition", func() {
-			By("Without a management context")
+			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
-			const endpointInitial = "http://localhost:9000/gateway/k8s-basic"
-			response, err := httpClient.Get(endpointInitial)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(response.StatusCode).To(Equal(200))
+			var endpointInitial = test.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			// Update the API definition context path
-
-			apiDefinition.Spec.Proxy.VirtualHosts[0].Path = "/k8s-basic-updated"
-			apiDefinition.Spec.Proxy.Groups[0].Endpoints[0].Target = "https://api.gravitee.io/whattimeisit"
-
-			Expect(k8sClient.Update(ctx, apiDefinition)).Should(Succeed())
-
-			var apiDefinitionUpdated = gio.ApiDefinition{}
-			apiLookupKey := types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, &apiDefinitionUpdated)
-				return err == nil
+				res, callErr := httpClient.Get(endpointInitial)
+				return callErr == nil && res.StatusCode == 200
 			}, timeout, interval).Should(BeTrue())
 
-			Expect(apiDefinitionUpdated.Spec.Proxy.VirtualHosts[0].Path).To(Equal("/k8s-basic-updated"))
+			By("Update the context path in API definition and expect no error")
 
-			const endpointUpdated = "http://localhost:9000/gateway/k8s-basic-updated"
-			response, err = httpClient.Get(endpointUpdated)
+			updatedApiDefinition := createdApiDefinition.DeepCopy()
+
+			expectedPath := updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path + "-updated"
+			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
+
+			err = k8sClient.Update(ctx, updatedApiDefinition)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(response.StatusCode).To(Equal(200))
+
+			By("Call updated API definition URL and expect no error")
+
+			var endpointUpdated = test.GatewayUrl + expectedPath
+
+			Eventually(func() bool {
+				res, callErr := httpClient.Get(endpointUpdated)
+				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })

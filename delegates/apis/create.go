@@ -51,7 +51,8 @@ func (d *Delegate) Create(
 		}
 	}
 
-	api.Status.ApiID = api.Spec.CrossId
+	api.Status.CrossID = api.Spec.CrossId
+	api.Status.ID = api.Spec.Id
 
 	err = d.cli.Status().Update(d.ctx, api)
 	if err != nil {
