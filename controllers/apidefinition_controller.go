@@ -115,7 +115,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	})
 
 	if err == nil {
-		log.Info("ApiDefinition has been reconcilied")
+		log.Info("ApiDefinition has been reconciled")
 		return ctrl.Result{}, nil
 	}
 
