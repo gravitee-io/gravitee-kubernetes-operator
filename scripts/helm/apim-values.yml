@@ -47,6 +47,11 @@ gateway:
       value: 768m
     - name: GIO_MAX_MEM
       value: 768m
+  deployment:
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 0
 
 api:
   image:
@@ -79,6 +84,12 @@ api:
       value: 768m
     - name: GIO_MAX_MEM
       value: 768m
+  deployment:
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 0
+
 ui:
   image:
     repository: graviteeio/apim-management-ui
@@ -90,3 +101,8 @@ ui:
   baseURL: http://localhost:8081/management/organizations/DEFAULT/environments/DEFAULT/
   autoscaling:
     enabled: false
+  deployment:
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 0
