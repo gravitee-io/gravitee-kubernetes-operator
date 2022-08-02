@@ -17,7 +17,7 @@ func (d *Delegate) importToManagementApi(
 	api *gio.ApiDefinition,
 	apiJson []byte,
 ) error {
-	apiId := api.Status.ApiID
+	apiId := api.Status.CrossID
 	apiName := api.Spec.Name
 
 	log := d.log.WithValues("apiId", apiId).WithValues("api.name", apiName, "api.crossId", apiId)

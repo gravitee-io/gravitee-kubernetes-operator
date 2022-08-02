@@ -944,10 +944,13 @@ spec:
           status:
             description: ApiDefinitionStatus defines the observed state of ApiDefinition.
             properties:
-              apiId:
+              crossId:
+                type: string
+              id:
                 type: string
             required:
-            - apiId
+            - crossId
+            - id
             type: object
         type: object
     served: true

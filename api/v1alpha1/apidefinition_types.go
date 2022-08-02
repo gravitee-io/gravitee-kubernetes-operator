@@ -33,7 +33,8 @@ type ApiDefinitionSpec struct {
 
 // ApiDefinitionStatus defines the observed state of ApiDefinition.
 type ApiDefinitionStatus struct {
-	ApiID string `json:"apiId"`
+	ID      string `json:"id"`
+	CrossID string `json:"crossId"`
 }
 
 // +kubebuilder:object:root=true

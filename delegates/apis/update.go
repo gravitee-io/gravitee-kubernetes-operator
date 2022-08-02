@@ -7,12 +7,15 @@ import (
 )
 
 func (d *Delegate) Update(api *gio.ApiDefinition) error {
-
 	apiJson, err := json.Marshal(api.Spec)
 	if err != nil {
 		d.log.Error(err, "Unable to marshall API definition as JSON")
 		return err
 	}
+
+	d.addPlan(api)
+	setIds(api)
+	setDeployedAt(api)
 
 	_, err = d.updateConfigMap(api, apiJson)
 	if err != nil {

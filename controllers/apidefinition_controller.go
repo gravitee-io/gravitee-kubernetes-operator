@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
-	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apis "github.com/gravitee-io/gravitee-kubernetes-operator/delegates/apis"
 	gioCtx "github.com/gravitee-io/gravitee-kubernetes-operator/delegates/context"
 
@@ -65,7 +65,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
 	// Fetch the ApiDefinition apiDefinition
-	apiDefinition := &graviteeiov1alpha1.ApiDefinition{}
+	apiDefinition := &gio.ApiDefinition{}
 	requeueAfter := time.Second * requeueAfterTime
 
 	err := r.Get(ctx, req.NamespacedName, apiDefinition)
@@ -74,26 +74,27 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			log.Info("APIDefinition resource not found. Ignoring since object must be deleted")
+			log.Info("API Definition resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		log.Error(err, "Failed to get APIDefinition")
+		log.Error(err, "Failed to get AP IDefinition")
 		return ctrl.Result{}, err
 	}
 
 	ctxDelegate := gioCtx.NewDelegate(ctx, r.Client)
-	apimCtx, err := ctxDelegate.Get(apiDefinition)
+	managementContext, err := ctxDelegate.Get(apiDefinition)
+
 	if client.IgnoreNotFound(err) != nil {
 		log.Info("Management context will be ignored for further operations (not found)")
 	}
 
-	delegate := apis.NewDelegate(ctx, apimCtx, r.Client)
+	apisDelegate := apis.NewDelegate(ctx, managementContext, r.Client)
 
 	if apiDefinition.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
 		log.Info("Creating a new API Definition template", "template", apiDefinition.Name)
 
-		requeue, importErr := delegate.ImportApiDefinitionTemplate(apiDefinition, req.Namespace)
+		requeue, importErr := apisDelegate.ImportApiDefinitionTemplate(apiDefinition, req.Namespace)
 		if importErr != nil {
 			log.Error(importErr, "Failed to sync template")
 			return ctrl.Result{}, importErr
@@ -106,12 +107,12 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	_, err = util.CreateOrUpdate(ctx, r.Client, apiDefinition, func() error {
 		if !apiDefinition.ObjectMeta.DeletionTimestamp.IsZero() {
-			return delegate.Delete(apiDefinition)
+			return apisDelegate.Delete(apiDefinition)
 		}
-		if apiDefinition.Status.ApiID == "" {
-			return delegate.Create(apiDefinition)
+		if apiDefinition.Status.CrossID == "" {
+			return apisDelegate.Create(apiDefinition)
 		}
-		return delegate.Update(apiDefinition)
+		return apisDelegate.Update(apiDefinition)
 	})
 
 	if err == nil {
@@ -126,7 +127,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *ApiDefinitionReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&graviteeiov1alpha1.ApiDefinition{}).
+		For(&gio.ApiDefinition{}).
 		//		Owns(&v1.Secret{}).
 		Complete(r)
 }

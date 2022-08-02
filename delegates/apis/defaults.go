@@ -23,7 +23,7 @@ func generateIds(api *gio.ApiDefinition) {
 	}
 
 	if api.Spec.Id == "" {
-		api.Spec.Id = generateApiId(api)
+		api.Spec.Id = uuid.NewV4().String()
 	}
 
 	plans := api.Spec.Plans
@@ -38,12 +38,20 @@ func generateIds(api *gio.ApiDefinition) {
 	//TODO: manage metadata
 }
 
-func setDeployedAt(api *gio.ApiDefinition) {
-	api.Spec.DeployedAt = uint64(time.Now().UTC().UnixMilli())
+func setIds(api *gio.ApiDefinition) {
+	api.Spec.CrossId = api.Status.CrossID
+	api.Spec.Id = api.Status.ID
+
+	plans := api.Spec.Plans
+	for _, plan := range plans {
+		if plan.CrossId == "" {
+			plan.CrossId = toUUID(api.Spec.Id + separator + plan.Name)
+		}
+	}
 }
 
-func generateApiId(api *gio.ApiDefinition) string {
-	return toUUID(api.Spec.CrossId)
+func setDeployedAt(api *gio.ApiDefinition) {
+	api.Spec.DeployedAt = uint64(time.Now().UTC().UnixMilli())
 }
 
 func getNamespacedName(api *gio.ApiDefinition) string {
