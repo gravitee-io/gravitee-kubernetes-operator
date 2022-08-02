@@ -170,6 +170,11 @@ var _ = Describe("API Definition Controller", func() {
 			httpClient := http.Client{Timeout: 5 * time.Second}
 			apimClient := apim.NewClient(ctx, mgmtContext, httpClient)
 
+			Eventually(func() bool {
+				apis, err := apimClient.FindByCrossId(createdApi.Status.ApiID)
+				return err == nil && len(apis) == 1
+			}).Should(BeTrue())
+
 			apis, err := apimClient.FindByCrossId(createdApi.Status.ApiID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(len(apis)).To(Equal(1))
