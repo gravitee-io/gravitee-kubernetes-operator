@@ -33,8 +33,9 @@ type ApiDefinitionSpec struct {
 
 // ApiDefinitionStatus defines the observed state of ApiDefinition.
 type ApiDefinitionStatus struct {
-	ID      string `json:"id"`
-	CrossID string `json:"crossId"`
+	ID         string `json:"id"`
+	CrossID    string `json:"crossId"`
+	Generation int64  `json:"generation"`
 }
 
 // +kubebuilder:object:root=true
@@ -54,6 +55,18 @@ type ApiDefinition struct {
 	Enabled bool                `json:"enabled,omitempty"`
 	Spec    ApiDefinitionSpec   `json:"spec,omitempty"`
 	Status  ApiDefinitionStatus `json:"status,omitempty"`
+}
+
+func (api *ApiDefinition) IsBeingDeleted() bool {
+	return !api.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (api *ApiDefinition) IsBeingUpdated() bool {
+	return api.Status.Generation != api.ObjectMeta.Generation
+}
+
+func (api *ApiDefinition) IsBeingCreated() bool {
+	return api.Status.CrossID == ""
 }
 
 // +kubebuilder:object:root=true

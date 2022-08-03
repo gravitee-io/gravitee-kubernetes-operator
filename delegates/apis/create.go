@@ -19,6 +19,8 @@ const (
 func (d *Delegate) Create(
 	api *gio.ApiDefinition,
 ) error {
+	// Be careful to update object hash before any mutation
+
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
 	d.addPlan(api)
 
@@ -53,10 +55,11 @@ func (d *Delegate) Create(
 
 	api.Status.CrossID = api.Spec.CrossId
 	api.Status.ID = api.Spec.Id
+	api.Status.Generation = api.ObjectMeta.Generation
 
 	err = d.cli.Status().Update(d.ctx, api)
 	if err != nil {
-		d.log.Error(err, "Unexpected error while updating status")
+		d.log.Error(err, "Unexpected error while updating API definition status")
 		return err
 	}
 
