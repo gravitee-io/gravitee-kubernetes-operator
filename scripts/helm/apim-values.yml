@@ -47,6 +47,10 @@ gateway:
       value: 768m
     - name: GIO_MAX_MEM
       value: 768m
+  services:
+    sync:
+      kubernetes:
+        enabled: true
   deployment:
     strategy:
       type: RollingUpdate
