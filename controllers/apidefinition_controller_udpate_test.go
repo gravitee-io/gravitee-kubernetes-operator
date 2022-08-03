@@ -44,35 +44,29 @@ var _ = Describe("API Definition Controller", func() {
 	ctx := context.Background()
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
-	AfterEach(func() {
-		// Delete the API definition
-		Eventually(func() error {
-			return k8sClient.DeleteAllOf(ctx, new(gio.ApiDefinition), &client.DeleteAllOfOptions{
-				ListOptions:   client.ListOptions{Namespace: namespace},
-				DeleteOptions: client.DeleteOptions{},
-			})
-		}).ShouldNot(HaveOccurred())
+	Context("With basic ApiDefinition", func() {
+		var apiDefinitionFixture *gio.ApiDefinition
 
-		// Delete the ManagementContext
-		Eventually(func() error {
-			return k8sClient.DeleteAllOf(ctx, new(gio.ManagementContext), &client.DeleteAllOfOptions{
-				ListOptions:   client.ListOptions{Namespace: namespace},
-				DeleteOptions: client.DeleteOptions{},
-			})
-		}).ShouldNot(HaveOccurred())
-	})
+		BeforeEach(func() {
+			By("Create an API definition resource without a management context")
 
-	Context("API definition Resource", func() {
+			apiDefinition, err := test.NewApiDefinition("../config/samples/apim/basic-example.yml")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
+
+			apiDefinitionFixture = apiDefinition
+		})
+
+		AfterEach(func() {
+			Eventually(func() error {
+				return k8sClient.Delete(ctx, apiDefinitionFixture, &client.DeleteAllOfOptions{
+					ListOptions:   client.ListOptions{Namespace: namespace},
+					DeleteOptions: client.DeleteOptions{},
+				})
+			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
 
 		It("Should update an API Definition", func() {
-			By("Create an API definition resource without a management context")
-			const apiDefinitionSample = "../config/samples/apim/basic-example.yml"
-
-			apiDefinitionFixture, err := test.NewApiDefinition(apiDefinitionSample)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
-
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			createdApiDefinition := new(gio.ApiDefinition)
 
@@ -92,12 +86,16 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Update the context path in API definition and expect no error")
 
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
 			expectedPath := updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path + "-updated"
 			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
 
-			err = k8sClient.Update(ctx, updatedApiDefinition)
+			err := k8sClient.Update(ctx, updatedApiDefinition)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect no error")
