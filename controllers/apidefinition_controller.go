@@ -77,14 +77,17 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	ctxDelegate := gioCtx.NewDelegate(ctx, r.Client)
-	managementContext, err := ctxDelegate.Get(apiDefinition)
+	apisDelegate := apis.NewDelegate(ctx, r.Client)
 
-	if client.IgnoreNotFound(err) != nil {
-		log.Error(err, "And error has occurred while trying to retrieve management context")
+	if apiDefinition.Spec.Context != nil {
+		ctxDelegate := gioCtx.NewDelegate(ctx, r.Client)
+		managementContext, ctxErr := ctxDelegate.Get(apiDefinition.Spec.Context)
+		if ctxErr != nil {
+			log.Error(ctxErr, "And error has occurred while trying to retrieve management context")
+		}
+
+		apisDelegate.SetManagementContext(managementContext)
 	}
-
-	apisDelegate := apis.NewDelegate(ctx, managementContext, r.Client)
 
 	if apiDefinition.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
 		log.Info("Creating a new API Definition template", "template", apiDefinition.Name)

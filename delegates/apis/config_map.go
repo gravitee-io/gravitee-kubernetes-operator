@@ -28,9 +28,9 @@ func (d *Delegate) updateConfigMap(
 		"definitionVersion": api.ResourceVersion,
 	}
 
-	if d.apimCtx != nil {
-		cm.Data["organizationId"] = d.apimCtx.Spec.OrgId
-		cm.Data["environmentId"] = d.apimCtx.Spec.EnvId
+	if d.managementContext != nil {
+		cm.Data["organizationId"] = d.managementContext.Spec.OrgId
+		cm.Data["environmentId"] = d.managementContext.Spec.EnvId
 	}
 
 	currentApiDefinition := &v1.ConfigMap{}
