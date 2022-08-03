@@ -60,9 +60,7 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		AfterEach(func() {
-			Eventually(func() error {
-				return k8sClient.Delete(ctx, apiDefinitionFixture)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
@@ -103,44 +101,24 @@ var _ = Describe("API Definition Controller", func() {
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
-			By("Create a management context to synchronize with the REST API")
-
 			const managementContextSample = "../config/samples/context/dev/managementcontext_credentials.yaml"
 			managementContext, err := test.NewManagementContext(managementContextSample)
-
 			Expect(err).ToNot(HaveOccurred())
-			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
-
-			By("Create an API definition resource referencing the management context")
 
 			const apiSample = "../config/samples/apim/basic-example-with-ctx.yml"
 			apiDefinition, err := test.NewApiDefinition(apiSample)
-
 			Expect(err).ToNot(HaveOccurred())
-			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
 			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
-			}, timeout, interval).Should(Succeed())
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
-			}, timeout, interval).Should(Succeed())
 		})
 
 		AfterEach(func() {
-			Eventually(func() error {
-				return k8sClient.Delete(ctx, apiDefinitionFixture)
-			}, timeout, interval).Should(Succeed())
+			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			Eventually(func() error {
-				return k8sClient.Delete(ctx, managementContextFixture)
-			}, timeout, interval).Should(Succeed())
+			Expect(k8sClient.Delete(ctx, managementContextFixture)).Should(Succeed())
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
@@ -152,20 +130,31 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should create an API Definition", func() {
+			By("Create a management context to synchronize with the REST API")
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+
+			By("Create an API definition resource referencing the management context")
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
+
 			By("Get created resource and expect to find it")
 
-			createdApi := new(gio.ApiDefinition)
+			managementContext := new(gio.ManagementContext)
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+			}, timeout, interval).Should(Succeed())
+
+			apiDefinition := new(gio.ApiDefinition)
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApi)
-				return err == nil
+				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+				return err == nil && apiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
-			Expect(createdApi.Spec.Name).Should(Equal(expectedApiName))
+			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
 
 			By("Call gateway endpoint and expect the API to be available")
 
-			var endpoint = test.GatewayUrl + createdApi.Spec.Proxy.VirtualHosts[0].Path
+			var endpoint = test.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpoint)
@@ -176,11 +165,11 @@ var _ = Describe("API Definition Controller", func() {
 
 			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
-				apis, apisErr := apimClient.FindByCrossId(createdApi.Status.CrossID)
-				return apisErr == nil && len(apis) == 1
+				apis, apisErr := apimClient.FindByCrossId(apiDefinition.Status.CrossID)
+				return apisErr == nil && len(apis) == 1 && apis[0].Id == apiDefinition.Status.ID
 			}, timeout, interval).Should(BeTrue())
 
-			apis, err := apimClient.FindByCrossId(createdApi.Status.CrossID)
+			apis, err := apimClient.FindByCrossId(apiDefinition.Status.CrossID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(len(apis)).To(Equal(1))
 		})

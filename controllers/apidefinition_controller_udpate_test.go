@@ -59,9 +59,7 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		AfterEach(func() {
-			Eventually(func() error {
-				return k8sClient.Delete(ctx, apiDefinitionFixture)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
