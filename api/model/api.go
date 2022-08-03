@@ -6,7 +6,7 @@ type Api struct {
 	Enabled           bool               `json:"enabled,omitempty"`
 	Description       string             `json:"description,omitempty"`
 	DeployedAt        uint64             `json:"deployedAt,omitempty"`
-	DefinitionContext *DefinitionContext `json:"definitionContext,omitempty"`
+	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 
 	// io.gravitee.definition.model.Api
 	Id      string `json:"id,omitempty"`
