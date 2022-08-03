@@ -13,24 +13,28 @@ import (
 )
 
 type Delegate struct {
-	ctx        context.Context
-	apimCtx    *gio.ManagementContext
-	apimClient *apim.Client
-	cli        client.Client
-	log        logr.Logger
+	ctx               context.Context
+	managementContext *gio.ManagementContext
+	apimClient        *apim.Client
+	cli               client.Client
+	log               logr.Logger
 }
 
-func NewDelegate(ctx context.Context, apimCtx *gio.ManagementContext, client client.Client) *Delegate {
+func NewDelegate(ctx context.Context, client client.Client) *Delegate {
 	log := log.FromContext(ctx)
 
-	var apimClient *apim.Client
-
-	if apimCtx != nil {
-		httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second}
-		apimClient = apim.NewClient(ctx, apimCtx, httpClient)
-	}
-
 	return &Delegate{
-		ctx, apimCtx, apimClient, client, log,
+		ctx, nil, nil, client, log,
 	}
+}
+
+func (d *Delegate) SetManagementContext(managementContext *gio.ManagementContext) {
+	if managementContext == nil {
+		return
+	}
+
+	d.managementContext = managementContext
+
+	httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second}
+	d.apimClient = apim.NewClient(d.ctx, d.managementContext, httpClient)
 }
