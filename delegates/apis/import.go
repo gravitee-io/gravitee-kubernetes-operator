@@ -17,17 +17,21 @@ func (d *Delegate) importToManagementApi(
 	api *gio.ApiDefinition,
 	apiJson []byte,
 ) error {
-	apiId := api.Status.CrossID
+	crossId := api.Status.CrossID
 	apiName := api.Spec.Name
 
-	log := d.log.WithValues("apiId", apiId).WithValues("api.name", apiName, "api.crossId", apiId)
+	log := d.log.WithValues("apiId", crossId).WithValues("api.name", apiName, "api.crossId", crossId)
 
 	if d.apimClient == nil {
 		log.Info("No management context associated to the API, skipping import to Management API")
 		return nil
 	}
 
-	apis, findApiErr := d.apimClient.FindByCrossId(apiId)
+	if crossId == "" {
+		return fmt.Errorf("crossId should have been set before import to Management API")
+	}
+
+	apis, findApiErr := d.apimClient.FindByCrossId(crossId)
 
 	if findApiErr != nil {
 		return findApiErr
@@ -37,9 +41,10 @@ func (d *Delegate) importToManagementApi(
 	importHttpMethod := http.MethodPut
 
 	if len(apis) == 0 {
-		log.Info("No match found for API, switching to creation mode", "crossId", apiId)
+		log.Info("No match found for API, switching to creation mode", "crossId", crossId)
 		importHttpMethod = http.MethodPost
 	}
+	log.Info("Match found for API, switching to creation mode", "crossId", crossId, "apis", apis)
 
 	importErr := d.apimClient.Import(importHttpMethod, apiJson)
 

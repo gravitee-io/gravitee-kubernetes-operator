@@ -28,6 +28,10 @@ func (d *Delegate) Create(
 	generateIds(api)
 	setDeployedAt(api)
 
+	api.Status.CrossID = api.Spec.CrossId
+	api.Status.ID = api.Spec.Id
+	api.Status.Generation = api.ObjectMeta.Generation
+
 	api.Spec.DefinitionContext = &model.DefinitionContext{
 		Origin: origin,
 		Mode:   mode,
@@ -52,10 +56,6 @@ func (d *Delegate) Create(
 			return err
 		}
 	}
-
-	api.Status.CrossID = api.Spec.CrossId
-	api.Status.ID = api.Spec.Id
-	api.Status.Generation = api.ObjectMeta.Generation
 
 	err = d.cli.Status().Update(d.ctx, api)
 	if err != nil {
