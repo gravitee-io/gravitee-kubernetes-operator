@@ -23,7 +23,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/apim"
@@ -48,6 +47,8 @@ var _ = Describe("API Definition Controller", func() {
 	Context("With basic ApiDefinition", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
 
+		var apiLookupKey types.NamespacedName
+
 		BeforeEach(func() {
 			By("Without a management context")
 
@@ -55,15 +56,17 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = apiDefinition
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 		})
 
 		AfterEach(func() {
 			Eventually(func() error {
-				return k8sClient.Delete(ctx, apiDefinitionFixture, &client.DeleteAllOfOptions{
-					ListOptions:   client.ListOptions{Namespace: namespace},
-					DeleteOptions: client.DeleteOptions{},
-				})
+				return k8sClient.Delete(ctx, apiDefinitionFixture)
 			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 
 		It("Should create an API Definition", func() {
@@ -73,7 +76,6 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Get created resource and expect to find it")
 
-			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			createdApi := new(gio.ApiDefinition)
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, apiLookupKey, createdApi)
@@ -97,42 +99,61 @@ var _ = Describe("API Definition Controller", func() {
 	Context("With basic ApiDefinition & ManagementContext", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
 		var managementContextFixture *gio.ManagementContext
+		var apiLookupKey types.NamespacedName
+		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := test.NewManagementContext("../config/samples/context/dev/managementcontext_credentials.yaml")
+
+			const managementContextSample = "../config/samples/context/dev/managementcontext_credentials.yaml"
+			managementContext, err := test.NewManagementContext(managementContextSample)
+
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
-			apiDefinition, err := test.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
+
+			const apiSample = "../config/samples/apim/basic-example-with-ctx.yml"
+			apiDefinition, err := test.NewApiDefinition(apiSample)
+
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
 			managementContextFixture = managementContext
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+			}, timeout, interval).Should(Succeed())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
+			}, timeout, interval).Should(Succeed())
 		})
 
 		AfterEach(func() {
 			Eventually(func() error {
-				return k8sClient.Delete(ctx, apiDefinitionFixture, &client.DeleteAllOfOptions{
-					ListOptions:   client.ListOptions{Namespace: namespace},
-					DeleteOptions: client.DeleteOptions{},
-				})
-			}, timeout, interval).ShouldNot(HaveOccurred())
+				return k8sClient.Delete(ctx, apiDefinitionFixture)
+			}, timeout, interval).Should(Succeed())
 
 			Eventually(func() error {
-				return k8sClient.Delete(ctx, managementContextFixture, &client.DeleteAllOfOptions{
-					ListOptions:   client.ListOptions{Namespace: namespace},
-					DeleteOptions: client.DeleteOptions{},
-				})
-			}, timeout, interval).ShouldNot(HaveOccurred())
+				return k8sClient.Delete(ctx, managementContextFixture)
+			}, timeout, interval).Should(Succeed())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+			}, timeout, interval).ShouldNot(Succeed())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 
 		It("Should create an API Definition", func() {
 			By("Get created resource and expect to find it")
 
-			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			createdApi := new(gio.ApiDefinition)
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, apiLookupKey, createdApi)

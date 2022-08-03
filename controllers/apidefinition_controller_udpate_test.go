@@ -23,7 +23,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
@@ -46,6 +45,7 @@ var _ = Describe("API Definition Controller", func() {
 
 	Context("With basic ApiDefinition", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
+		var apiLookupKey types.NamespacedName
 
 		BeforeEach(func() {
 			By("Create an API definition resource without a management context")
@@ -55,19 +55,20 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 		})
 
 		AfterEach(func() {
 			Eventually(func() error {
-				return k8sClient.Delete(ctx, apiDefinitionFixture, &client.DeleteAllOfOptions{
-					ListOptions:   client.ListOptions{Namespace: namespace},
-					DeleteOptions: client.DeleteOptions{},
-				})
+				return k8sClient.Delete(ctx, apiDefinitionFixture)
 			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 
 		It("Should update an API Definition", func() {
-			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			createdApiDefinition := new(gio.ApiDefinition)
 
 			Eventually(func() error {
