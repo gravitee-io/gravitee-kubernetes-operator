@@ -45,50 +45,44 @@ var _ = Describe("API Definition Controller", func() {
 	ctx := context.Background()
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
-	AfterEach(func() {
-		// Delete the API definition
-		Eventually(func() error {
-			return k8sClient.DeleteAllOf(ctx, new(gio.ApiDefinition), &client.DeleteAllOfOptions{
-				ListOptions:   client.ListOptions{Namespace: namespace},
-				DeleteOptions: client.DeleteOptions{},
-			})
-		}).ShouldNot(HaveOccurred())
+	Context("With basic ApiDefinition", func() {
+		var apiDefinitionFixture *gio.ApiDefinition
 
-		// Delete the ManagementContext
-		Eventually(func() error {
-			return k8sClient.DeleteAllOf(ctx, new(gio.ManagementContext), &client.DeleteAllOfOptions{
-				ListOptions:   client.ListOptions{Namespace: namespace},
-				DeleteOptions: client.DeleteOptions{},
-			})
-		}).ShouldNot(HaveOccurred())
-	})
-
-	Context("API definition Resource", func() {
-		It("Should create an API Definition", func() {
+		BeforeEach(func() {
 			By("Without a management context")
 
-			const sample = "../config/samples/apim/basic-example.yml"
-
-			api, err := test.NewApiDefinition(sample)
+			apiDefinition, err := test.NewApiDefinition("../config/samples/apim/basic-example.yml")
 			Expect(err).ToNot(HaveOccurred())
 
-			expectedApiName := api.Spec.Name
+			apiDefinitionFixture = apiDefinition
+		})
 
+		AfterEach(func() {
+			Eventually(func() error {
+				return k8sClient.Delete(ctx, apiDefinitionFixture, &client.DeleteAllOfOptions{
+					ListOptions:   client.ListOptions{Namespace: namespace},
+					DeleteOptions: client.DeleteOptions{},
+				})
+			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
+
+		It("Should create an API Definition", func() {
 			By("Create an API definition resource without a management context")
 
-			Expect(k8sClient.Create(ctx, api)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			By("Get created resource and expect to find it")
 
-			apiLookupKey := types.NamespacedName{Name: api.Name, Namespace: namespace}
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			createdApi := new(gio.ApiDefinition)
 			Eventually(func() bool {
-				err = k8sClient.Get(ctx, apiLookupKey, createdApi)
+				err := k8sClient.Get(ctx, apiLookupKey, createdApi)
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
 
 			var endpoint = test.GatewayUrl + createdApi.Spec.Proxy.VirtualHosts[0].Path
 
+			expectedApiName := apiDefinitionFixture.Spec.Name
 			Expect(createdApi.Spec.Name).Should(Equal(expectedApiName))
 
 			By("Call gateway endpoint and expect the API to be available")
@@ -98,39 +92,54 @@ var _ = Describe("API Definition Controller", func() {
 				return callErr == nil && res.StatusCode == 200
 			}, timeout, interval).Should(BeTrue())
 		})
+	})
 
-		It("Should create an API Definition", func() {
-			By("With a management context")
+	Context("With basic ApiDefinition & ManagementContext", func() {
+		var apiDefinitionFixture *gio.ApiDefinition
+		var managementContextFixture *gio.ManagementContext
 
-			const mgmtContextSample = "../config/samples/context/dev/managementcontext_credentials.yaml"
-			const apiSample = "../config/samples/apim/basic-example-with-ctx.yml"
-
+		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-
-			mgmtContext, err := test.NewManagementContext(mgmtContextSample)
+			managementContext, err := test.NewManagementContext("../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(k8sClient.Create(ctx, mgmtContext)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
-
-			apiDefinition, err := test.NewApiDefinition(apiSample)
+			apiDefinition, err := test.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
-
-			expectedApiName := apiDefinition.Spec.Name
-
-			apiDefinition.Namespace = namespace
-
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
+			apiDefinitionFixture = apiDefinition
+			managementContextFixture = managementContext
+		})
+
+		AfterEach(func() {
+			Eventually(func() error {
+				return k8sClient.Delete(ctx, apiDefinitionFixture, &client.DeleteAllOfOptions{
+					ListOptions:   client.ListOptions{Namespace: namespace},
+					DeleteOptions: client.DeleteOptions{},
+				})
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Eventually(func() error {
+				return k8sClient.Delete(ctx, managementContextFixture, &client.DeleteAllOfOptions{
+					ListOptions:   client.ListOptions{Namespace: namespace},
+					DeleteOptions: client.DeleteOptions{},
+				})
+			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
+
+		It("Should create an API Definition", func() {
 			By("Get created resource and expect to find it")
 
-			apiLookupKey := types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			createdApi := new(gio.ApiDefinition)
 			Eventually(func() bool {
-				err = k8sClient.Get(ctx, apiLookupKey, createdApi)
+				err := k8sClient.Get(ctx, apiLookupKey, createdApi)
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
 
+			expectedApiName := apiDefinitionFixture.Spec.Name
 			Expect(createdApi.Spec.Name).Should(Equal(expectedApiName))
 
 			By("Call gateway endpoint and expect the API to be available")
@@ -144,7 +153,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID")
 
-			apimClient := apim.NewClient(ctx, mgmtContext, httpClient)
+			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
 				apis, apisErr := apimClient.FindByCrossId(createdApi.Status.CrossID)
 				return apisErr == nil && len(apis) == 1
