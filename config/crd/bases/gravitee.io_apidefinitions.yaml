@@ -946,10 +946,14 @@ spec:
             properties:
               crossId:
                 type: string
+              generation:
+                format: int64
+                type: integer
               id:
                 type: string
             required:
             - crossId
+            - generation
             - id
             type: object
         type: object

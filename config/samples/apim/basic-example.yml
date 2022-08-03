@@ -21,7 +21,7 @@ metadata:
 spec:
   name: "K8s Basic Example"
   version: "1.0"
-  description: "Basic api managed by Gravitee Kubernetes Operator"
+  description: "Basic api managed by Gravitee Kubernetes Operator u2"
   proxy:
     virtual_hosts:
       - path: "/k8s-basic"

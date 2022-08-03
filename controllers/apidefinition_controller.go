@@ -25,7 +25,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
@@ -64,20 +63,16 @@ type ApiDefinitionReconciler struct {
 func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
-	// Fetch the ApiDefinition apiDefinition
+	// Fetch the Api Definition apiDefinition
 	apiDefinition := &gio.ApiDefinition{}
 	requeueAfter := time.Second * requeueAfterTime
 
 	err := r.Get(ctx, req.NamespacedName, apiDefinition)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
 			log.Info("API Definition resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
 		log.Error(err, "Failed to get AP IDefinition")
 		return ctrl.Result{}, err
 	}
@@ -86,7 +81,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	managementContext, err := ctxDelegate.Get(apiDefinition)
 
 	if client.IgnoreNotFound(err) != nil {
-		log.Info("Management context will be ignored for further operations (not found)")
+		log.Error(err, "And error has occurred while trying to retrieve management context")
 	}
 
 	apisDelegate := apis.NewDelegate(ctx, managementContext, r.Client)
@@ -105,18 +100,10 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	_, err = util.CreateOrUpdate(ctx, r.Client, apiDefinition, func() error {
-		if !apiDefinition.ObjectMeta.DeletionTimestamp.IsZero() {
-			return apisDelegate.Delete(apiDefinition)
-		}
-		if apiDefinition.Status.CrossID == "" {
-			return apisDelegate.Create(apiDefinition)
-		}
-		return apisDelegate.Update(apiDefinition)
-	})
+	err = apisDelegate.Handle(apiDefinition)
 
 	if err == nil {
-		log.Info("ApiDefinition has been reconciled")
+		log.Info("API Definition has been reconciled")
 		return ctrl.Result{}, nil
 	}
 
