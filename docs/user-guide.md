@@ -64,7 +64,33 @@ spec:
 
 ### Update your API
 
-> TODO (not implemented)
+> ⚠️ Consider that the above creation steps are done
+
+Simple update of the API name, path and endpoint target
+
+```shell
+echo """
+apiVersion: gravitee.io/v1alpha1
+kind: ApiDefinition
+metadata:
+  name: basic-api-example
+  namespace: apim-blue
+spec:
+  name: gko-example-updated
+  contextRef: 
+    name: apim-blue-context
+    namespace: apim-blue
+  version: "1.0.0"
+  description: "Basic api managed by Gravitee Kubernetes Operator"
+  proxy:
+    virtual_hosts:
+      - path: "/k8s-basic-updated"
+    groups:
+      - endpoints:
+          - name: "Default"
+            target: "https://api.gravitee.io/whattimeisit"
+""" | kubectl apply -f -
+```
 
 ### Delete your API
 
