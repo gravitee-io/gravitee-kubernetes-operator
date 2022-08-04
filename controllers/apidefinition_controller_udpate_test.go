@@ -55,7 +55,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 		})
 
 		AfterEach(func() {
@@ -69,9 +69,10 @@ var _ = Describe("API Definition Controller", func() {
 		It("Should update an API Definition", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
-			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+				return err == nil && createdApiDefinition.Status.CrossID != ""
+			}, timeout, interval).Should(BeTrue())
 
 			By("Call initial API definition URL and expect no error")
 
@@ -84,10 +85,6 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Update the context path in API definition and expect no error")
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
