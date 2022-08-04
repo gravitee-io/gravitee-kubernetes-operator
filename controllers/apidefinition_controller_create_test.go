@@ -38,7 +38,7 @@ var _ = Describe("API Definition Controller", func() {
 		namespace = "default"
 
 		timeout  = time.Second * 10
-		interval = time.Millisecond * 500
+		interval = time.Millisecond * 250
 	)
 
 	ctx := context.Background()
@@ -74,16 +74,16 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Get created resource and expect to find it")
 
-			createdApi := new(gio.ApiDefinition)
+			apiDefinition := new(gio.ApiDefinition)
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApi)
-				return err == nil
+				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+				return err == nil && apiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
 
-			var endpoint = test.GatewayUrl + createdApi.Spec.Proxy.VirtualHosts[0].Path
+			var endpoint = test.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
-			Expect(createdApi.Spec.Name).Should(Equal(expectedApiName))
+			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
 
 			By("Call gateway endpoint and expect the API to be available")
 
@@ -101,12 +101,11 @@ var _ = Describe("API Definition Controller", func() {
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
-			const managementContextSample = "../config/samples/context/dev/managementcontext_credentials.yaml"
-			managementContext, err := test.NewManagementContext(managementContextSample)
+			managementContext, err := test.NewManagementContext(
+				"../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 
-			const apiSample = "../config/samples/apim/basic-example-with-ctx.yml"
-			apiDefinition, err := test.NewApiDefinition(apiSample)
+			apiDefinition, err := test.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = apiDefinition
