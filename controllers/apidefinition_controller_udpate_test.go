@@ -17,6 +17,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
@@ -101,6 +103,99 @@ var _ = Describe("API Definition Controller", func() {
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpointUpdated)
 				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
+		})
+	})
+
+	Context("With basic ApiDefinition & ManagementContext", func() {
+		var managementContextFixture *gio.ManagementContext
+		var apiDefinitionFixture *gio.ApiDefinition
+		var apiLookupKey types.NamespacedName
+		var contextLookupKey types.NamespacedName
+
+		BeforeEach(func() {
+			By("Create a management context to synchronize with the REST API")
+
+			managementContext, err := test.NewManagementContext(
+				"../config/samples/context/dev/managementcontext_credentials.yaml")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
+
+			By("Create an API definition resource without a management context")
+
+			apiDefinition, err := test.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
+
+			apiDefinitionFixture = apiDefinition
+			managementContextFixture = managementContext
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+		})
+
+		AfterEach(func() {
+			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
+
+			Expect(k8sClient.Delete(ctx, managementContextFixture)).Should(Succeed())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+			}, timeout, interval).ShouldNot(Succeed())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
+			}, timeout, interval).ShouldNot(Succeed())
+		})
+
+		It("Should update an API Definition", func() {
+			createdApiDefinition := new(gio.ApiDefinition)
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+				return err == nil && createdApiDefinition.Status.CrossID != ""
+			}, timeout, interval).Should(BeTrue())
+
+			By("Call initial API definition URL and expect no error")
+
+			// Check created api is callable
+			var endpointInitial = test.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+
+			Eventually(func() bool {
+				res, callErr := httpClient.Get(endpointInitial)
+				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
+
+			By("Update the context path in API definition and expect no error")
+
+			updatedApiDefinition := createdApiDefinition.DeepCopy()
+
+			expectedPath := updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path + "-updated"
+			expectedName := updatedApiDefinition.Spec.Name + "-updated"
+			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
+			updatedApiDefinition.Spec.Name = expectedName
+
+			err := k8sClient.Update(ctx, updatedApiDefinition)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Call updated API definition URL and expect no error")
+
+			var endpointUpdated = test.GatewayUrl + expectedPath
+
+			Eventually(func() bool {
+				res, callErr := httpClient.Get(endpointUpdated)
+				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
+
+			By("Call rest API and expect one API matching status cross ID & updated name")
+
+			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
+			Eventually(func() bool {
+				apis, apisErr := apimClient.FindByCrossId(updatedApiDefinition.Status.CrossID)
+				fmt.Println(apis)
+				return apisErr == nil &&
+					len(apis) == 1 &&
+					apis[0].Id == updatedApiDefinition.Status.ID &&
+					apis[0].Name == expectedName
 			}, timeout, interval).Should(BeTrue())
 		})
 	})
