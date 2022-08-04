@@ -6,7 +6,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (d *Delegate) Delete(
+func (d *Delegate) delete(
 	api *gio.ApiDefinition,
 ) error {
 	d.log.Info("Deleting API Definition")
@@ -21,10 +21,10 @@ func (d *Delegate) deleteConfigMap(
 	configMap := &v1.ConfigMap{}
 
 	d.log.Info("Deleting ConfigMap associated to API")
-	err := d.cli.Get(d.ctx, types.NamespacedName{Name: api.Name, Namespace: api.Namespace}, configMap)
+	err := d.k8sClient.Get(d.ctx, types.NamespacedName{Name: api.Name, Namespace: api.Namespace}, configMap)
 
 	if err != nil {
-		err = d.cli.Delete(d.ctx, configMap)
+		err = d.k8sClient.Delete(d.ctx, configMap)
 	}
 
 	return err

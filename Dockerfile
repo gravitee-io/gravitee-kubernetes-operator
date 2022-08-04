@@ -12,8 +12,7 @@ RUN go mod download
 # Copy the go source
 COPY main.go main.go
 COPY api/ api/
-COPY delegates/ delegates/
-COPY apim/ apim/
+COPY internal/ internal/
 COPY controllers/ controllers/
 COPY pkg/ pkg/
 

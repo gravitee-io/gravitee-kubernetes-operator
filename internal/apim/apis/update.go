@@ -6,7 +6,7 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-func (d *Delegate) Update(api *gio.ApiDefinition) error {
+func (d *Delegate) update(api *gio.ApiDefinition) error {
 	d.addPlan(api)
 	setIds(api)
 	setDeployedAt(api)
@@ -25,7 +25,7 @@ func (d *Delegate) Update(api *gio.ApiDefinition) error {
 
 	api.Status.Generation = api.ObjectMeta.Generation
 
-	err = d.cli.Status().Update(d.ctx, api)
+	err = d.k8sClient.Status().Update(d.ctx, api)
 	if err != nil {
 		d.log.Error(err, "Unexpected error while updating API definition status")
 		return err

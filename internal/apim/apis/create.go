@@ -16,7 +16,7 @@ const (
 	mode                  = "fully_managed"
 )
 
-func (d *Delegate) Create(
+func (d *Delegate) create(
 	api *gio.ApiDefinition,
 ) error {
 	// Be careful to update object hash before any mutation
@@ -57,7 +57,7 @@ func (d *Delegate) Create(
 		}
 	}
 
-	err = d.cli.Status().Update(d.ctx, api)
+	err = d.k8sClient.Status().Update(d.ctx, api)
 	if err != nil {
 		d.log.Error(err, "Unexpected error while updating API definition status")
 		return err

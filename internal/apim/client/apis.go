@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
 )
 
 func (client *Client) FindByCrossId(
