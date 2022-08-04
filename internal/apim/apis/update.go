@@ -17,10 +17,18 @@ func (d *Delegate) update(api *gio.ApiDefinition) error {
 		return err
 	}
 
-	_, err = d.updateConfigMap(api, apiJson)
+	updated, err := d.updateConfigMap(api, apiJson)
 	if err != nil {
 		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 		return err
+	}
+
+	if updated {
+		err = d.importToManagementApi(api, apiJson)
+		if err != nil {
+			d.log.Error(err, "Unable to import to the Management API")
+			return err
+		}
 	}
 
 	api.Status.Generation = api.ObjectMeta.Generation
