@@ -35,6 +35,13 @@ curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 echo "
 
     Initialising a local docker images registry for k3d images (if not present) ...
+
+    /!\ Warning /!\  
+
+    Assuming that host "${K3D_IMAGES_REGISTRY_NAME}" points to 127.0.0.1
+
+    You might needd to edit your /etc/hosts file before going further.
+
 "
 
 if k3d registry list | grep -q "${K3D_IMAGES_REGISTRY_NAME}"; then
