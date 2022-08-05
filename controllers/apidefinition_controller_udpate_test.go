@@ -17,7 +17,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -190,12 +189,10 @@ var _ = Describe("API Definition Controller", func() {
 
 			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
-				apis, apisErr := apimClient.FindByCrossId(updatedApiDefinition.Status.CrossID)
-				fmt.Println(apis)
-				return apisErr == nil &&
-					len(apis) == 1 &&
-					apis[0].Id == updatedApiDefinition.Status.ID &&
-					apis[0].Name == expectedName
+				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
+				return apiErr == nil &&
+					api.Id == updatedApiDefinition.Status.ID &&
+					api.Name == expectedName
 			}, timeout, interval).Should(BeTrue())
 		})
 	})

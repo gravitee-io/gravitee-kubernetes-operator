@@ -7,12 +7,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
 )
 
-func (client *Client) FindByCrossId(
+func (client *Client) GetByCrossId(
 	crossId string,
-) ([]model.Api, error) {
+) (*model.Api, error) {
 	req, err := http.NewRequestWithContext(
 		client.ctx,
 		http.MethodGet,
@@ -20,7 +21,7 @@ func (client *Client) FindByCrossId(
 		nil,
 	)
 
-	if err != nil {
+	if err != nil && crossId == "" {
 		return nil, fmt.Errorf("unable to look for apis matching cross id %s (%w)", crossId, err)
 	}
 
@@ -48,7 +49,15 @@ func (client *Client) FindByCrossId(
 		return nil, err
 	}
 
-	return apis, err
+	if len(apis) == 0 {
+		return nil, &clienterror.CrossIdNotFoundError{CrossId: crossId}
+	}
+
+	if len(apis) > 1 {
+		return nil, &clienterror.CrossIdMultipleFoundError{CrossId: crossId, Apis: apis}
+	}
+
+	return &apis[0], nil
 }
 
 func (client *Client) Import(

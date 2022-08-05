@@ -1,9 +1,11 @@
 package apis
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -14,11 +16,11 @@ import (
 )
 
 func (d *Delegate) importToManagementApi(
-	api *gio.ApiDefinition,
+	apiDefinition *gio.ApiDefinition,
 	apiJson []byte,
 ) error {
-	crossId := api.Status.CrossID
-	apiName := api.Spec.Name
+	crossId := apiDefinition.Status.CrossID
+	apiName := apiDefinition.Spec.Name
 
 	log := d.log.WithValues("apiId", crossId).WithValues("api.name", apiName, "api.crossId", crossId)
 
@@ -31,20 +33,24 @@ func (d *Delegate) importToManagementApi(
 		return fmt.Errorf("crossId should have been set before import to Management API")
 	}
 
-	apis, findApiErr := d.apimClient.FindByCrossId(crossId)
-
-	if findApiErr != nil {
-		return findApiErr
-	}
+	api, findApiErr := d.apimClient.GetByCrossId(crossId)
 
 	// If the API does not exist (ie. 404) it should be a POST
 	importHttpMethod := http.MethodPut
 
-	if len(apis) == 0 {
-		log.Info("No match found for API, switching to creation mode", "crossId", crossId)
-		importHttpMethod = http.MethodPost
+	if findApiErr != nil {
+		var crossIdNotFoundError *clienterror.CrossIdNotFoundError
+
+		switch {
+		case errors.As(findApiErr, &crossIdNotFoundError):
+			log.Info("No match found for API, switching to creation mode", "crossId", crossId)
+			importHttpMethod = http.MethodPost
+		default:
+			return findApiErr
+		}
 	}
-	log.Info("Match found for API, switching to creation mode", "crossId", crossId, "apis", apis)
+
+	log.Info("Match found for API, switching to creation mode", "crossId", crossId, "apis", api)
 
 	importErr := d.apimClient.Import(importHttpMethod, apiJson)
 

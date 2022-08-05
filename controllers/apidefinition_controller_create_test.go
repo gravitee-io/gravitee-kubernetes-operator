@@ -164,13 +164,9 @@ var _ = Describe("API Definition Controller", func() {
 
 			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
-				apis, apisErr := apimClient.FindByCrossId(apiDefinition.Status.CrossID)
-				return apisErr == nil && len(apis) == 1 && apis[0].Id == apiDefinition.Status.ID
+				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
+				return apiErr == nil && api.Id == apiDefinition.Status.ID
 			}, timeout, interval).Should(BeTrue())
-
-			apis, err := apimClient.FindByCrossId(apiDefinition.Status.CrossID)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(len(apis)).To(Equal(1))
 		})
 	})
 })
