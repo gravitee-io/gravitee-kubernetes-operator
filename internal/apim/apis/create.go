@@ -43,7 +43,7 @@ func (d *Delegate) create(
 		return err
 	}
 
-	updated, err := d.updateConfigMap(api, apiJson)
+	updated, err := d.saveConfigMap(api, apiJson)
 	if err != nil {
 		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 		return err

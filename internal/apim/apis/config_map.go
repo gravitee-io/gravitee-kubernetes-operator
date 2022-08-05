@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (d *Delegate) updateConfigMap(
+func (d *Delegate) saveConfigMap(
 	api *gio.ApiDefinition,
 	apiJson []byte,
 ) (bool, error) {
