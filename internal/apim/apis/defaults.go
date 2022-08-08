@@ -2,7 +2,6 @@ package apis
 
 import (
 	"encoding/base64"
-	"time"
 
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 	"k8s.io/apimachinery/pkg/types"
@@ -48,10 +47,6 @@ func setIds(api *gio.ApiDefinition) {
 			plan.CrossId = toUUID(api.Spec.Id + separator + plan.Name)
 		}
 	}
-}
-
-func setDeployedAt(api *gio.ApiDefinition) {
-	api.Spec.DeployedAt = uint64(time.Now().UTC().UnixMilli())
 }
 
 func getNamespacedName(api *gio.ApiDefinition) string {
