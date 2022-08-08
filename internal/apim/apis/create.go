@@ -26,7 +26,6 @@ func (d *Delegate) create(
 
 	// Ensure that IDs have been generated
 	generateIds(api)
-	setDeployedAt(api)
 
 	api.Status.CrossID = api.Spec.CrossId
 	api.Status.ID = api.Spec.Id

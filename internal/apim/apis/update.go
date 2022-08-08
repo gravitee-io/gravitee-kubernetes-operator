@@ -9,7 +9,6 @@ import (
 func (d *Delegate) update(api *gio.ApiDefinition) error {
 	d.addPlan(api)
 	setIds(api)
-	setDeployedAt(api)
 
 	apiJson, err := json.Marshal(api.Spec)
 	if err != nil {
