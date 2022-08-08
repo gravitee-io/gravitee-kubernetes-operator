@@ -51,3 +51,18 @@ func (d *Delegate) saveConfigMap(
 	}
 	return true, err
 }
+
+func (d *Delegate) deleteConfigMap(
+	api *gio.ApiDefinition,
+) error {
+	configMap := &v1.ConfigMap{}
+
+	d.log.Info("Deleting ConfigMap associated to API")
+	err := d.k8sClient.Get(d.ctx, types.NamespacedName{Name: api.Name, Namespace: api.Namespace}, configMap)
+
+	if err != nil {
+		err = d.k8sClient.Delete(d.ctx, configMap)
+	}
+
+	return err
+}
