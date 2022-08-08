@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	uuid "github.com/satori/go.uuid" // nolint:gomodguard // to replace with google implementation
+	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
 
 var decode = scheme.Codecs.UniversalDecoder().Decode

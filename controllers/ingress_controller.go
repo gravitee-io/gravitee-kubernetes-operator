@@ -110,7 +110,7 @@ func (r *IngressReconciler) mergeApiDefitinion(
 					Name:      ingress.Name,
 					Namespace: ingress.Namespace,
 				},
-				Enabled: true, // nolint:govet //ignore govet error for the moment as this function needs to be reworked
+				Enabled: true, //nolint:govet //ignore govet error for the moment as this function needs to be reworked
 				Spec:    *template.Spec.DeepCopy(),
 			}
 
