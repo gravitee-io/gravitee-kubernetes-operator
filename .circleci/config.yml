@@ -33,7 +33,7 @@ commands:
 jobs:
   lint:
     docker:
-      - image: cimg/go:1.18.4
+      - image: cimg/go:1.19.0
     steps:
       - checkout
       - go/mod-download-cached
@@ -134,7 +134,7 @@ jobs:
 
   build-and-publish-deploy-gko-image:
     docker:
-      - image: cimg/go:1.18.4
+      - image: cimg/go:1.19.0
     steps:
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
