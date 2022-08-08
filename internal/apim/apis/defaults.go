@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"time"
 
-	uuid "github.com/satori/go.uuid" // nolint:gomodguard // to replace with google implementation
+	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 	"k8s.io/apimachinery/pkg/types"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
