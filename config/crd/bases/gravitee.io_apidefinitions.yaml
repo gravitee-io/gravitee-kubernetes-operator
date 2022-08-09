@@ -928,6 +928,12 @@ spec:
                         type: array
                     type: object
                 type: object
+              state:
+                default: STARTED
+                enum:
+                - STARTED
+                - STOPPED
+                type: string
               tags:
                 items:
                   type: string

@@ -88,3 +88,29 @@ func (client *Client) Import(
 
 	return err
 }
+
+func (client *Client) UpdateApiState(
+	apiId string,
+	action model.Action,
+) error {
+	url := client.buildUrl("/apis/" + apiId + "?action=" + string(action))
+	req, err := http.NewRequestWithContext(client.ctx, http.MethodPost, url, nil)
+	if err != nil {
+		return fmt.Errorf("unable to update the api state into the Management API. Action: %s", action)
+	}
+
+	resp, err := client.http.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("management has returned a %d code", resp.StatusCode)
+	}
+
+	return err
+}
