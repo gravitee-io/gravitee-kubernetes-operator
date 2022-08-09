@@ -4,6 +4,7 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -52,16 +53,19 @@ func (d *Delegate) saveConfigMap(
 	return true, err
 }
 
-func (d *Delegate) deleteConfigMap(
-	api *gio.ApiDefinition,
-) error {
-	configMap := &v1.ConfigMap{}
+func (d *Delegate) deleteConfigMap(apiNamespace string, apiName string) error {
+	configMap := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      apiName,
+			Namespace: apiNamespace,
+		},
+	}
 
-	d.log.Info("Deleting ConfigMap associated to API")
-	err := d.k8sClient.Get(d.ctx, types.NamespacedName{Name: api.Name, Namespace: api.Namespace}, configMap)
+	d.log.Info("Deleting ConfigMap associated to API if exist")
+	err := d.k8sClient.Delete(d.ctx, configMap)
 
-	if err != nil {
-		err = d.k8sClient.Delete(d.ctx, configMap)
+	if errors.IsNotFound(err) {
+		return nil
 	}
 
 	return err

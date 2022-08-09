@@ -8,7 +8,7 @@ func (d *Delegate) delete(
 	api *gio.ApiDefinition,
 ) error {
 	d.log.Info("Deleting API Definition")
-	err := d.deleteConfigMap(api)
+	err := d.deleteConfigMap(api.Namespace, api.Name)
 
 	return err
 }

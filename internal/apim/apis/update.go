@@ -3,6 +3,9 @@ package apis
 import (
 	"encoding/json"
 
+	apimclientmodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
@@ -16,16 +19,38 @@ func (d *Delegate) update(api *gio.ApiDefinition) error {
 		return err
 	}
 
-	updated, err := d.saveConfigMap(api, apiJson)
+	// Handle Gateway with ConfigMap
+	switch {
+	case api.Spec.State == model.StateStopped:
+		err = d.deleteConfigMap(api.Namespace, api.Name)
+		if err != nil {
+			d.log.Error(err, "Unable to delete ConfigMap from API definition")
+			return err
+		}
+	default:
+		_, err = d.saveConfigMap(api, apiJson)
+		if err != nil {
+			d.log.Error(err, "Unable to save ConfigMap from API definition")
+			return err
+		}
+	}
+
+	// Handle Management with rest-api Import
+	err = d.importToManagementApi(api, apiJson)
 	if err != nil {
-		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
+		d.log.Error(err, "Unable to import to the Management API")
 		return err
 	}
 
-	if updated {
-		err = d.importToManagementApi(api, apiJson)
+	if api.Spec.State != "" && d.apimClient != nil {
+		stateToAction := map[model.State]apimclientmodel.Action{
+			model.StateStarted: apimclientmodel.ActionStart,
+			model.StateStopped: apimclientmodel.ActionStop,
+		}
+
+		err = d.apimClient.UpdateApiState(api.Status.ID, stateToAction[api.Spec.State])
 		if err != nil {
-			d.log.Error(err, "Unable to import to the Management API")
+			d.log.Error(err, "Unable to update api state to the Management API")
 			return err
 		}
 	}
