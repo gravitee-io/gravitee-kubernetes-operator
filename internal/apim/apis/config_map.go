@@ -13,9 +13,9 @@ import (
 func (d *Delegate) saveConfigMap(
 	api *gio.ApiDefinition,
 	apiJson []byte,
-) (bool, error) {
+) error {
 	if api.Spec.State == model.StateStopped {
-		return true, nil
+		return nil
 	}
 
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
@@ -49,13 +49,13 @@ func (d *Delegate) saveConfigMap(
 			err = d.k8sClient.Update(d.ctx, cm)
 		} else {
 			d.log.Info("No change detected on api. Skipped.", "id", api.Spec.Id)
-			return false, nil
+			return nil
 		}
 	} else {
 		d.log.Info("Creating config map for api.", "id", api.Spec.Id, "name", api.Name)
 		err = d.k8sClient.Create(d.ctx, cm)
 	}
-	return true, err
+	return err
 }
 
 func (d *Delegate) deleteConfigMap(apiNamespace string, apiName string) error {

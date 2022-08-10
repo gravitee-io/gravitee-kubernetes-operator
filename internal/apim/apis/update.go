@@ -26,7 +26,7 @@ func (d *Delegate) update(api *gio.ApiDefinition) error {
 			return err
 		}
 	default:
-		_, err = d.saveConfigMap(api, apiJson)
+		err = d.saveConfigMap(api, apiJson)
 		if err != nil {
 			d.log.Error(err, "Unable to save ConfigMap from API definition")
 			return err
