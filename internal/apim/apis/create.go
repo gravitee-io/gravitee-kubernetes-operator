@@ -26,15 +26,11 @@ func (d *Delegate) create(
 
 	// Ensure that IDs have been generated
 	generateIds(api)
+	setOrigin(api)
 
 	api.Status.CrossID = api.Spec.CrossId
 	api.Status.ID = api.Spec.Id
 	api.Status.Generation = api.ObjectMeta.Generation
-
-	api.Spec.DefinitionContext = &model.DefinitionContext{
-		Origin: origin,
-		Mode:   mode,
-	}
 
 	apiJson, err := json.Marshal(api.Spec)
 	if err != nil {
