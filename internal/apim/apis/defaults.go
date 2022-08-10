@@ -2,6 +2,7 @@ package apis
 
 import (
 	"encoding/base64"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation

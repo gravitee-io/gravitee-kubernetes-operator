@@ -2,6 +2,7 @@ package apis
 
 import (
 	"encoding/json"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
