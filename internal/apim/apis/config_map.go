@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
@@ -13,6 +14,10 @@ func (d *Delegate) saveConfigMap(
 	api *gio.ApiDefinition,
 	apiJson []byte,
 ) (bool, error) {
+	if api.Spec.State == model.StateStopped {
+		return true, nil
+	}
+
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
 

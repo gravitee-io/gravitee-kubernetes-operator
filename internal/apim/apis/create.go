@@ -29,6 +29,7 @@ func (d *Delegate) create(
 
 	api.Status.CrossID = api.Spec.CrossId
 	api.Status.ID = api.Spec.Id
+	api.Status.State = model.StateStarted // API is considered started by default and updated later if needed
 	api.Status.Generation = api.ObjectMeta.Generation
 
 	api.Spec.DefinitionContext = &model.DefinitionContext{
@@ -42,18 +43,22 @@ func (d *Delegate) create(
 		return err
 	}
 
-	updated, err := d.saveConfigMap(api, apiJson)
+	_, err = d.saveConfigMap(api, apiJson)
 	if err != nil {
 		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 		return err
 	}
 
-	if updated {
-		err = d.importToManagementApi(api, apiJson)
-		if err != nil {
-			d.log.Error(err, "Unable to import to the Management API")
-			return err
-		}
+	err = d.importToManagementApi(api, apiJson)
+	if err != nil {
+		d.log.Error(err, "Unable to import to the Management API")
+		return err
+	}
+
+	err = d.updateApiState(api)
+	if err != nil {
+		d.log.Error(err, "Unable to update api state to the Management API")
+		return err
 	}
 
 	apiToUpdate := api.DeepCopy()

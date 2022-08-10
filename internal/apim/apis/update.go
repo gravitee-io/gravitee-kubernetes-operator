@@ -3,8 +3,6 @@ package apis
 import (
 	"encoding/json"
 
-	apimclientmodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
@@ -42,17 +40,10 @@ func (d *Delegate) update(api *gio.ApiDefinition) error {
 		return err
 	}
 
-	if api.Spec.State != "" && d.apimClient != nil {
-		stateToAction := map[model.State]apimclientmodel.Action{
-			model.StateStarted: apimclientmodel.ActionStart,
-			model.StateStopped: apimclientmodel.ActionStop,
-		}
-
-		err = d.apimClient.UpdateApiState(api.Status.ID, stateToAction[api.Spec.State])
-		if err != nil {
-			d.log.Error(err, "Unable to update api state to the Management API")
-			return err
-		}
+	err = d.updateApiState(api)
+	if err != nil {
+		d.log.Error(err, "Unable to update api state to the Management API")
+		return err
 	}
 
 	api.Status.Generation = api.ObjectMeta.Generation
