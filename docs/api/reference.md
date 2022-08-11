@@ -107,7 +107,7 @@ APIDefinition represents the configuration for a single proxied API and it's ver
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecdefinitioncontext">definitionContext</a></b></td>
+        <td><b><a href="#apidefinitionspecdefinition_context">definition_context</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -259,6 +259,16 @@ APIDefinition represents the configuration for a single proxied API and it's ver
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: STARTED, STOPPED<br/>
+            <i>Default</i>: STARTED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>tags</b></td>
         <td>[]string</td>
         <td>
@@ -320,7 +330,7 @@ The context is specifying the namespace and the name of a ManagementContext used
 </table>
 
 
-### ApiDefinition.spec.definitionContext
+### ApiDefinition.spec.definition_context
 <sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
 
 
@@ -3437,10 +3447,35 @@ ApiDefinitionStatus defines the observed state of ApiDefinition.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>apiId</b></td>
+        <td><b>crossId</b></td>
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>generation</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: STARTED, STOPPED<br/>
         </td>
         <td>true</td>
       </tr></tbody>
