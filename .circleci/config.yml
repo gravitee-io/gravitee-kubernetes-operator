@@ -53,6 +53,11 @@ jobs:
           command: |
             make manifests
             git diff --quiet HEAD
+      - run:
+          name: Check that make reference have been executed
+          command: |
+            make reference
+            git diff --quiet HEAD
 
   test:
     machine:
