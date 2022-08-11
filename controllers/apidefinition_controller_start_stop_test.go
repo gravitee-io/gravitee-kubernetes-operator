@@ -12,7 +12,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-// +kubebuilder:docs-gen:collapse=Apache License
 package controllers
 
 import (
@@ -29,8 +28,6 @@ import (
 	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
-
-// +kubebuilder:docs-gen:collapse=Imports
 
 var _ = Describe("API Definition Controller", func() {
 
