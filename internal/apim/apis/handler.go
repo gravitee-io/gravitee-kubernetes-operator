@@ -1,22 +1,30 @@
 package apis
 
-import gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+import (
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+)
 
-func (d *Delegate) Handle(api *gio.ApiDefinition) error {
-	log := d.log.WithValues("name", api.Name)
-	if api.IsBeingDeleted() {
-		log.Info("Updating API definition")
-		return d.delete(api)
+func (d *Delegate) Handle(apiDefinition *gio.ApiDefinition) error {
+	log := d.log.WithValues("name", apiDefinition.Name)
+
+	if !apiDefinition.HasFinalizer() {
+		log.Info("Add Finalizer to API definition")
+		return d.finalizer(apiDefinition)
 	}
 
-	if api.IsBeingCreated() {
+	if apiDefinition.IsBeingDeleted() {
+		log.Info("Deleting API definition")
+		return d.delete(apiDefinition)
+	}
+
+	if apiDefinition.IsBeingCreated() {
 		log.Info("Creating API definition")
-		return d.create(api)
+		return d.create(apiDefinition)
 	}
 
-	if api.IsBeingUpdated() {
+	if apiDefinition.IsBeingUpdated() {
 		log.Info("Updating API definition")
-		return d.update(api)
+		return d.update(apiDefinition)
 	}
 	return nil
 }

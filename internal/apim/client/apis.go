@@ -114,3 +114,28 @@ func (client *Client) UpdateApiState(
 
 	return err
 }
+
+func (client *Client) DeleteApi(
+	apiId string,
+) error {
+	url := client.buildUrl("/apis/" + apiId)
+	req, err := http.NewRequestWithContext(client.ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return fmt.Errorf("unable to delete the api into the Management API")
+	}
+
+	resp, err := client.http.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("management has returned a %d code", resp.StatusCode)
+	}
+
+	return err
+}

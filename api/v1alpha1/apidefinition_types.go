@@ -18,7 +18,9 @@ package v1alpha1
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // APIDefinition represents the configuration for a single proxied API and it's versions.
@@ -56,6 +58,10 @@ type ApiDefinition struct {
 	Enabled bool                `json:"enabled,omitempty"`
 	Spec    ApiDefinitionSpec   `json:"spec,omitempty"`
 	Status  ApiDefinitionStatus `json:"status,omitempty"`
+}
+
+func (api *ApiDefinition) HasFinalizer() bool {
+	return util.ContainsFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
 }
 
 func (api *ApiDefinition) IsBeingDeleted() bool {

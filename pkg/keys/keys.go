@@ -21,6 +21,6 @@ const (
 
 // Kubernetes Finalizers.
 const (
-	ApiDefinitionFinalizer         = "finalizers.gravitee.io/apidefinition"
+	ApiDefinitionDeletionFinalizer = "finalizers.gravitee.io/apidefinitiondeletion"
 	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
 )
