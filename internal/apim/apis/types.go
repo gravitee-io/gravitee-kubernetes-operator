@@ -38,3 +38,7 @@ func (d *Delegate) SetManagementContext(managementContext *gio.ManagementContext
 	httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second}
 	d.apimClient = apim.NewClient(d.ctx, d.managementContext, httpClient)
 }
+
+func (d *Delegate) IsConnectedToManagementApi() bool {
+	return d.apimClient != nil
+}

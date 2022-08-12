@@ -1,11 +1,8 @@
 package apis
 
 import (
-	"errors"
 	"fmt"
-	"net/http"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -14,54 +11,6 @@ import (
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
-
-func (d *Delegate) importToManagementApi(
-	apiDefinition *gio.ApiDefinition,
-	apiJson []byte,
-) error {
-	crossId := apiDefinition.Status.CrossID
-	apiName := apiDefinition.Spec.Name
-
-	log := d.log.WithValues("apiId", crossId).WithValues("api.name", apiName, "api.crossId", crossId)
-
-	if d.apimClient == nil {
-		log.Info("No management context associated to the API, skipping import to Management API")
-		return nil
-	}
-
-	if crossId == "" {
-		return fmt.Errorf("crossId should have been set before import to Management API")
-	}
-
-	api, findApiErr := d.apimClient.GetByCrossId(crossId)
-
-	// If the API does not exist (ie. 404) it should be a POST
-	importHttpMethod := http.MethodPut
-
-	if findApiErr != nil {
-		var crossIdNotFoundError *clienterror.CrossIdNotFoundError
-
-		switch {
-		case errors.As(findApiErr, &crossIdNotFoundError):
-			log.Info("No match found for API, switching to creation mode", "crossId", crossId)
-			importHttpMethod = http.MethodPost
-		default:
-			return findApiErr
-		}
-	}
-
-	log.Info("Match found for API, switching to creation mode", "crossId", crossId, "apis", api)
-
-	importErr := d.apimClient.Import(importHttpMethod, apiJson)
-
-	if importErr != nil {
-		log.Error(importErr, "Unable to import the api into the Management API")
-		return importErr
-	}
-
-	log.Info("Api has been pushed to the Management API")
-	return nil
-}
 
 // This function is applied to all ingresses which are using the ApiDefinition template
 // As per Kubernetes Finalizers (https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
