@@ -16,7 +16,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -120,7 +119,6 @@ var _ = Describe("API Definition Controller", func() {
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
 
-				fmt.Println(api)
 				return apiErr == nil &&
 					api.Id == updatedApiDefinition.Status.ID &&
 					api.State == "STOPPED"
