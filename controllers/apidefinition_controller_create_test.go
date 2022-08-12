@@ -21,14 +21,13 @@ import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
+	. "github.com/onsi/gomega" //nolint:gomodguard // to replace with google implementation
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apis"
 	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
@@ -220,8 +219,8 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Init existing api in management api")
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
-			existingApiSpec.Id = uuid.NewV4().String()
-			existingApiSpec.CrossId = apis.ToUUID(
+			existingApiSpec.Id = utils.NewUUID()
+			existingApiSpec.CrossId = utils.ToUUID(
 				types.NamespacedName{Namespace: apiDefinitionFixture.Namespace, Name: apiDefinitionFixture.Name}.String())
 			existingApiSpec.DefinitionContext = &model.DefinitionContext{
 				Origin: origin,
@@ -229,7 +228,7 @@ var _ = Describe("API Definition Controller", func() {
 			}
 			existingApiSpec.Plans = []*model.Plan{
 				{
-					Id:       apis.ToUUID(existingApiSpec.Id + "/" + "G.K.O. Default"),
+					Id:       utils.ToUUID(existingApiSpec.Id + "/" + "G.K.O. Default"),
 					Name:     "G.K.O. Default",
 					Security: "KEY_LESS",
 					Status:   "PUBLISHED",
