@@ -1,6 +1,8 @@
 package apis
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimclientmodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
@@ -15,7 +17,7 @@ func (d *Delegate) updateApiState(
 	apiDefinition *gio.ApiDefinition,
 ) error {
 	// Check if Management context is provided
-	if d.apimClient == nil {
+	if !d.IsConnectedToManagementApi() {
 		return nil
 	}
 
@@ -29,6 +31,8 @@ func (d *Delegate) updateApiState(
 		d.log.Error(err, "Unable to update api state to the Management API")
 		return err
 	}
+
+	d.log.Info(fmt.Sprintf("API state updated to \"%s\" to the Management API ", apiDefinition.Spec.State))
 
 	apiDefinition.Status.State = apiDefinition.Spec.State
 	return nil

@@ -60,7 +60,20 @@ func (client *Client) GetByCrossId(
 	return &apis[0], nil
 }
 
-func (client *Client) Import(
+func (client *Client) CreateApi(
+	apiJson []byte,
+) error {
+	return importApi(client, http.MethodPost, apiJson)
+}
+
+func (client *Client) UpdateApi(
+	apiJson []byte,
+) error {
+	return importApi(client, http.MethodPut, apiJson)
+}
+
+func importApi(
+	client *Client,
 	importHttpMethod string,
 	apiJson []byte,
 ) error {

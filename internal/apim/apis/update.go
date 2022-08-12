@@ -9,7 +9,8 @@ import (
 
 func (d *Delegate) update(api *gio.ApiDefinition) error {
 	d.addPlan(api)
-	setIds(api)
+
+	setSpecIdsFromStatus(api)
 
 	apiJson, err := json.Marshal(api.Spec)
 	if err != nil {
@@ -33,11 +34,14 @@ func (d *Delegate) update(api *gio.ApiDefinition) error {
 		}
 	}
 
-	// Handle Management with rest-api Import
-	err = d.importToManagementApi(api, apiJson)
-	if err != nil {
-		d.log.Error(err, "Unable to import to the Management API")
-		return err
+	if d.IsConnectedToManagementApi() {
+		err = d.apimClient.UpdateApi(apiJson)
+		if err != nil {
+			d.log.Error(err, "Unable to update API to the Management API")
+			return err
+		}
+
+		d.log.Info("Api has been update to the Management API")
 	}
 
 	err = d.updateApiState(api)
@@ -46,8 +50,8 @@ func (d *Delegate) update(api *gio.ApiDefinition) error {
 		return err
 	}
 
+	// Updated succeed, update Generation & Status
 	api.Status.Generation = api.ObjectMeta.Generation
-
 	err = d.k8sClient.Status().Update(d.ctx, api)
 	if err != nil {
 		d.log.Error(err, "Unexpected error while updating API definition status")

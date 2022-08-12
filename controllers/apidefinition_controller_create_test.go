@@ -16,15 +16,18 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apis"
 	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
@@ -34,6 +37,8 @@ var _ = Describe("API Definition Controller", func() {
 	// Define utility constants for object names and testing timeouts/durations and intervals.
 	const (
 		namespace = "default"
+		origin    = "kubernetes"
+		mode      = "fully_managed"
 
 		timeout  = time.Second * 10
 		interval = time.Millisecond * 250
@@ -207,6 +212,71 @@ var _ = Describe("API Definition Controller", func() {
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == apiDefinition.Status.ID && api.State == "STOPPED"
+			}, timeout, interval).Should(BeTrue())
+		})
+
+		It("Should create an API Definition with existing api in Management Api", func() {
+			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
+
+			By("Init existing api in management api")
+			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
+			existingApiSpec.Id = uuid.NewV4().String()
+			existingApiSpec.CrossId = apis.ToUUID(
+				types.NamespacedName{Namespace: apiDefinitionFixture.Namespace, Name: apiDefinitionFixture.Name}.String())
+			existingApiSpec.DefinitionContext = &model.DefinitionContext{
+				Origin: origin,
+				Mode:   mode,
+			}
+			existingApiSpec.Plans = []*model.Plan{
+				{
+					Id:       apis.ToUUID(existingApiSpec.Id + "/" + "G.K.O. Default"),
+					Name:     "G.K.O. Default",
+					Security: "KEY_LESS",
+					Status:   "PUBLISHED",
+				},
+			}
+			apiJson, err := json.Marshal(existingApiSpec)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = apimClient.CreateApi(apiJson)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Create a management context to synchronize with the REST API")
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+
+			By("Create an API definition resource referencing the management context")
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
+
+			By("Get created resource and expect to find it")
+
+			managementContext := new(gio.ManagementContext)
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+			}, timeout, interval).Should(Succeed())
+
+			apiDefinition := new(gio.ApiDefinition)
+			Eventually(func() bool {
+				k8sErr := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+				return k8sErr == nil && apiDefinition.Status.CrossID != ""
+			}, timeout, interval).Should(BeTrue())
+
+			expectedApiName := apiDefinitionFixture.Spec.Name
+			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
+
+			By("Call gateway endpoint and expect the API to be available")
+
+			var endpoint = test.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
+
+			Eventually(func() bool {
+				res, callErr := httpClient.Get(endpoint)
+				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
+
+			By("Call rest API and expect one API matching status cross ID")
+
+			Eventually(func() bool {
+				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
+				return apiErr == nil && api.Id == apiDefinition.Status.ID
 			}, timeout, interval).Should(BeTrue())
 		})
 

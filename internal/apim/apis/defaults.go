@@ -11,49 +11,36 @@ import (
 
 const separator = "/"
 
-// This function is used to generate all the IDs needed for communicating with the Management API
-// It doesn't override IDs if these one have been defined.
-func generateIds(api *gio.ApiDefinition) {
+// Return Spec CrossId or generate a new one from api Name & Namespace.
+func RetrieveCrossId(api *gio.ApiDefinition) string {
 	// If a CrossID is defined at the API level, reuse it.
 	// If not, just generate a new CrossID
 	if api.Spec.CrossId == "" {
 		// The ID of the API will be based on the API Name and Namespace to ensure consistency
-		api.Spec.CrossId = toUUID(getNamespacedName(api))
+		return ToUUID(types.NamespacedName{Namespace: api.Namespace, Name: api.Name}.String())
 	}
 
-	if api.Spec.Id == "" {
-		api.Spec.Id = uuid.NewV4().String()
-	}
-
-	plans := api.Spec.Plans
-
-	for _, plan := range plans {
-		if plan.CrossId == "" {
-			plan.CrossId = toUUID(api.Spec.Id + separator + plan.Name)
-		}
-		plan.Status = "PUBLISHED"
-	}
-
-	//TODO: manage metadata
+	return api.Spec.CrossId
 }
 
-func setIds(api *gio.ApiDefinition) {
+// Generate UUID.
+func generateId() string {
+	return uuid.NewV4().String()
+}
+
+func setSpecIdsFromStatus(api *gio.ApiDefinition) {
 	api.Spec.CrossId = api.Status.CrossID
 	api.Spec.Id = api.Status.ID
 
 	plans := api.Spec.Plans
 	for _, plan := range plans {
 		if plan.CrossId == "" {
-			plan.CrossId = toUUID(api.Spec.Id + separator + plan.Name)
+			plan.CrossId = ToUUID(api.Spec.Id + separator + plan.Name)
 		}
 	}
 }
 
-func getNamespacedName(api *gio.ApiDefinition) string {
-	return types.NamespacedName{Namespace: api.Namespace, Name: api.Name}.String()
-}
-
-func toUUID(decoded string) string {
+func ToUUID(decoded string) string {
 	encoded := base64.RawStdEncoding.EncodeToString([]byte(decoded))
 	return uuid.NewV3(uuid.NamespaceURL, encoded).String()
 }
