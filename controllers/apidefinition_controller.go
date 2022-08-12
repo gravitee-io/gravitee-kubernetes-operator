@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -63,6 +64,9 @@ type ApiDefinitionReconciler struct {
 func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
+	log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
+	defer log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
+
 	// Fetch the Api Definition apiDefinition
 	apiDefinition := &gio.ApiDefinition{}
 	requeueAfter := time.Second * requeueAfterTime
@@ -73,7 +77,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			log.Info("API Definition resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
-		log.Error(err, "Failed to get AP IDefinition")
+		log.Error(err, "Failed to get API Definition")
 		return ctrl.Result{}, err
 	}
 
