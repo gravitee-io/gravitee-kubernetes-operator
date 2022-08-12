@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
@@ -114,7 +114,7 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Call rest API and expect DELETED api")
-			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(createdApiDefinition.Status.CrossID)
 

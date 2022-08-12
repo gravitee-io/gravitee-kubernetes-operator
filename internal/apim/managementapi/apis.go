@@ -1,4 +1,4 @@
-package apim
+package managementapi
 
 import (
 	"bytes"
@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/clienterror"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
 )
 
 func (client *Client) GetByCrossId(

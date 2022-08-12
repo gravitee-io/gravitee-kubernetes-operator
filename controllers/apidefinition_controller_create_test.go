@@ -21,12 +21,12 @@ import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega" //nolint:gomodguard // to replace with google implementation
+	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
@@ -164,7 +164,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID")
 
-			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == apiDefinition.Status.ID
@@ -207,7 +207,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID and state STOPPED")
 
-			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == apiDefinition.Status.ID && api.State == "STOPPED"
@@ -215,7 +215,7 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should create an API Definition with existing api in Management Api", func() {
-			apimClient := apim.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
 
 			By("Init existing api in management api")
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
