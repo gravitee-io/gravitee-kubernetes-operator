@@ -8,6 +8,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
 const (
@@ -26,7 +27,7 @@ func (d *Delegate) create(
 	apiDefinition.Status.State = model.StateStarted // API is considered started by default and updated later if needed
 
 	// Generate new Id or use existing one if is found in Management API
-	apiDefinition.Status.ID = generateId()
+	apiDefinition.Status.ID = utils.NewUUID()
 	if d.IsConnectedToManagementApi() {
 		api, findApiErr := d.apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 		var crossIdNotFoundError *clienterror.CrossIdNotFoundError
