@@ -6,6 +6,7 @@ import (
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
@@ -28,19 +29,34 @@ func generateId() string {
 	return uuid.NewV4().String()
 }
 
-func setSpecIdsFromStatus(api *gio.ApiDefinition) {
-	api.Spec.CrossId = api.Status.CrossID
-	api.Spec.Id = api.Status.ID
+func ToUUID(decoded string) string {
+	encoded := base64.RawStdEncoding.EncodeToString([]byte(decoded))
+	return uuid.NewV3(uuid.NamespaceURL, encoded).String()
+}
 
+// Add a default keyless plan to the api definition if no plan is defined.
+func (d *Delegate) addDefaultPlan(api *gio.ApiDefinition) {
 	plans := api.Spec.Plans
+
+	if len(plans) == 0 {
+		d.log.Info("Define default plan for API")
+		api.Spec.Plans = []*model.Plan{
+			{
+				Name:     defaultPlanName,
+				Security: defaultPlanSecurity,
+				Status:   defaultPlanStatus,
+			},
+		}
+	}
+}
+
+// For each plan, generate a CrossId from Api Id & Plan Name if not defined.
+func (d *Delegate) retrievePlansCrossId(api *gio.ApiDefinition) {
+	plans := api.Spec.Plans
+
 	for _, plan := range plans {
 		if plan.CrossId == "" {
 			plan.CrossId = ToUUID(api.Spec.Id + separator + plan.Name)
 		}
 	}
-}
-
-func ToUUID(decoded string) string {
-	encoded := base64.RawStdEncoding.EncodeToString([]byte(decoded))
-	return uuid.NewV3(uuid.NamespaceURL, encoded).String()
 }

@@ -14,7 +14,7 @@ func (d *Delegate) delete(
 		return nil
 	}
 
-	if d.apimClient != nil {
+	if d.IsConnectedToManagementApi() {
 		d.log.Info("Delete API definition into Management API")
 		err := d.apimClient.DeleteApi(apiDefinition.Status.ID)
 		if err != nil {

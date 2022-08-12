@@ -22,8 +22,6 @@ const (
 func (d *Delegate) create(
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	// Be careful to update object hash before any mutation
-
 	apiDefinition.Status.CrossID = RetrieveCrossId(apiDefinition)
 	apiDefinition.Status.State = model.StateStarted // API is considered started by default and updated later if needed
 
@@ -49,11 +47,13 @@ func (d *Delegate) create(
 		}
 	}
 
-	// Add required fields to the API definition
+	// Add required fields to the API definition spec
+	// ⚠️ This filed should not be added in ApiDefinition resource
 	apiDefinition.Spec.Id = apiDefinition.Status.ID
 	apiDefinition.Spec.CrossId = apiDefinition.Status.CrossID
-	// // Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
-	d.addPlan(apiDefinition)
+	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
+	d.addDefaultPlan(apiDefinition)
+	d.retrievePlansCrossId(apiDefinition)
 	apiDefinition.Spec.DefinitionContext = &model.DefinitionContext{
 		Origin: origin,
 		Mode:   mode,
@@ -97,20 +97,4 @@ func (d *Delegate) create(
 	}
 
 	return nil
-}
-
-// Add a default keyless plan to the api definition if no plan is defined.
-func (d *Delegate) addPlan(api *gio.ApiDefinition) {
-	plans := api.Spec.Plans
-
-	if len(plans) == 0 {
-		d.log.Info("Define default plan for API")
-		api.Spec.Plans = []*model.Plan{
-			{
-				Name:     defaultPlanName,
-				Security: defaultPlanSecurity,
-				Status:   defaultPlanStatus,
-			},
-		}
-	}
 }
