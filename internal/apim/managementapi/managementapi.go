@@ -1,4 +1,4 @@
-package apim
+package managementapi
 
 import (
 	"context"

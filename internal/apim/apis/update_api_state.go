@@ -5,12 +5,12 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apimclientmodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
+	managementapimodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
 )
 
-var stateToAction = map[model.State]apimclientmodel.Action{
-	model.StateStarted: apimclientmodel.ActionStart,
-	model.StateStopped: apimclientmodel.ActionStop,
+var stateToAction = map[model.State]managementapimodel.Action{
+	model.StateStarted: managementapimodel.ActionStart,
+	model.StateStopped: managementapimodel.ActionStop,
 }
 
 func (d *Delegate) updateApiState(

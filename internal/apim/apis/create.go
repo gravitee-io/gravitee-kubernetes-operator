@@ -7,17 +7,16 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/clienterror"
+	managementapierror "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
 const (
-	requestTimeoutSeconds = 5
-	defaultPlanSecurity   = "KEY_LESS"
-	defaultPlanStatus     = "PUBLISHED"
-	defaultPlanName       = "G.K.O. Default"
-	origin                = "kubernetes"
-	mode                  = "fully_managed"
+	defaultPlanSecurity = "KEY_LESS"
+	defaultPlanStatus   = "PUBLISHED"
+	defaultPlanName     = "G.K.O. Default"
+	origin              = "kubernetes"
+	mode                = "fully_managed"
 )
 
 func (d *Delegate) create(
@@ -30,7 +29,7 @@ func (d *Delegate) create(
 	apiDefinition.Status.ID = utils.NewUUID()
 	if d.IsConnectedToManagementApi() {
 		api, findApiErr := d.apimClient.GetByCrossId(apiDefinition.Status.CrossID)
-		var crossIdNotFoundError *clienterror.CrossIdNotFoundError
+		var crossIdNotFoundError *managementapierror.CrossIdNotFoundError
 
 		switch {
 		case findApiErr != nil && errors.As(findApiErr, &crossIdNotFoundError):

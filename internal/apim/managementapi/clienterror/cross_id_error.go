@@ -3,7 +3,7 @@ package clienterror
 import (
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
 )
 
 type CrossIdNotFoundError struct {
