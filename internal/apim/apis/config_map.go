@@ -21,6 +21,18 @@ func (d *Delegate) saveConfigMap(
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
 
+	// Set OwnerReference on configmap to be able to delete it when API is deleted.
+	// 📝 ConfigMap should be in same namespace as ApiDefinition.
+	newOwnerReferences := []metav1.OwnerReference{
+		{
+			Kind:       api.Kind,
+			Name:       api.Name,
+			APIVersion: api.APIVersion,
+			UID:        api.UID,
+		},
+	}
+	cm.SetOwnerReferences(newOwnerReferences)
+
 	cm.Namespace = api.Namespace
 	cm.Name = api.Name
 	cm.CreationTimestamp = metav1.Now()
