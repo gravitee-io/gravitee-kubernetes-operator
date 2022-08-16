@@ -237,7 +237,7 @@ var _ = Describe("API Definition Controller", func() {
 			apiJson, err := json.Marshal(existingApiSpec)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = apimClient.CreateApi(apiJson)
+			_, err = apimClient.CreateApi(apiJson)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Create a management context to synchronize with the REST API")

@@ -72,10 +72,11 @@ func (d *Delegate) create(
 	}
 
 	if d.IsConnectedToManagementApi() {
-		err = d.apimClient.CreateApi(apiJson)
-		if err != nil {
-			d.log.Error(err, "Unable to create API to the Management API")
-			return err
+		_, mgmtErr := d.apimClient.CreateApi(apiJson)
+
+		if mgmtErr != nil {
+			d.log.Error(mgmtErr, "Unable to create API to the Management API")
+			return mgmtErr
 		}
 
 		d.log.Info("Api has been created to the Management API")

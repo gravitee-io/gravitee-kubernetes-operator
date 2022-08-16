@@ -62,33 +62,34 @@ func (client *Client) GetByCrossId(
 
 func (client *Client) CreateApi(
 	apiJson []byte,
-) error {
+) (*model.Api, error) {
 	return importApi(client, http.MethodPost, apiJson)
 }
 
 func (client *Client) UpdateApi(
 	apiJson []byte,
 ) error {
-	return importApi(client, http.MethodPut, apiJson)
+	_, err := importApi(client, http.MethodPut, apiJson)
+	return err
 }
 
 func importApi(
 	client *Client,
 	importHttpMethod string,
 	apiJson []byte,
-) error {
+) (*model.Api, error) {
 	url := client.buildUrl("/apis/import?definitionVersion=2.0.0")
 	req, err := http.NewRequestWithContext(client.ctx, importHttpMethod, url, bytes.NewBuffer(apiJson))
 
 	if err != nil {
-		return fmt.Errorf("unable to import the api into the Management API")
+		return nil, fmt.Errorf("unable to import the api into the Management API")
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.http.Do(req)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if resp.Body != nil {
@@ -96,10 +97,22 @@ func importApi(
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("management has returned a %d code", resp.StatusCode)
+		return nil, fmt.Errorf("management has returned a %d code", resp.StatusCode)
 	}
 
-	return err
+	body, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	var api model.Api
+
+	err = json.Unmarshal(body, &api)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api, nil
 }
 
 func (client *Client) UpdateApiState(
