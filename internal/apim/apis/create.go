@@ -59,19 +59,18 @@ func (d *Delegate) create(
 		Mode:   mode,
 	}
 
-	apiJson, err := json.Marshal(apiDefinition.Spec)
-	if err != nil {
-		d.log.Error(err, "Unable to marshall API definition as JSON")
-		return err
-	}
-
-	err = d.saveConfigMap(apiDefinition, apiJson)
+	err := d.saveConfigMap(apiDefinition)
 	if err != nil {
 		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 		return err
 	}
 
 	if d.IsConnectedToManagementApi() {
+		apiJson, marshalErr := json.Marshal(apiDefinition.Spec)
+		if marshalErr != nil {
+			d.log.Error(marshalErr, "Unable to marshall API definition as JSON")
+			return marshalErr
+		}
 		_, mgmtErr := d.apimClient.CreateApi(apiJson)
 
 		if mgmtErr != nil {
