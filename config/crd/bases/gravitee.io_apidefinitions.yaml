@@ -84,9 +84,6 @@ spec:
                 type: integer
               description:
                 type: string
-              enabled:
-                default: true
-                type: boolean
               flow_mode:
                 default: DEFAULT
                 enum:
