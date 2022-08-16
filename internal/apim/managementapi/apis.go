@@ -13,7 +13,7 @@ import (
 
 func (client *Client) GetByCrossId(
 	crossId string,
-) (*model.Api, error) {
+) (*model.ApiListItem, error) {
 	req, err := http.NewRequestWithContext(
 		client.ctx,
 		http.MethodGet,
@@ -42,7 +42,7 @@ func (client *Client) GetByCrossId(
 		return nil, readErr
 	}
 
-	var apis []model.Api
+	var apis []model.ApiListItem
 
 	err = json.Unmarshal(body, &apis)
 	if err != nil {
@@ -62,7 +62,7 @@ func (client *Client) GetByCrossId(
 
 func (client *Client) CreateApi(
 	apiJson []byte,
-) (*model.Api, error) {
+) (*model.ApiEntity, error) {
 	return importApi(client, http.MethodPost, apiJson)
 }
 
@@ -77,7 +77,7 @@ func importApi(
 	client *Client,
 	importHttpMethod string,
 	apiJson []byte,
-) (*model.Api, error) {
+) (*model.ApiEntity, error) {
 	url := client.buildUrl("/apis/import?definitionVersion=2.0.0")
 	req, err := http.NewRequestWithContext(client.ctx, importHttpMethod, url, bytes.NewBuffer(apiJson))
 
@@ -105,7 +105,7 @@ func importApi(
 		return nil, readErr
 	}
 
-	var api model.Api
+	var api model.ApiEntity
 
 	err = json.Unmarshal(body, &api)
 	if err != nil {

@@ -16,7 +16,7 @@ func (e *CrossIdNotFoundError) Error() string {
 
 type CrossIdMultipleFoundError struct {
 	CrossId string
-	Apis    []model.Api
+	Apis    []model.ApiListItem
 }
 
 func (e *CrossIdMultipleFoundError) Error() string {
