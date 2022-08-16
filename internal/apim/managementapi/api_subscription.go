@@ -53,3 +53,47 @@ func (client *Client) SubscribeToPlan(
 
 	return &subscription, nil
 }
+
+func (client *Client) GetSubscriptionApiKey(
+	apiId string,
+	subscriptionId string,
+) ([]model.ApiKeyEntity, error) {
+	req, err := http.NewRequestWithContext(
+		client.ctx,
+		http.MethodGet,
+		client.buildUrl("/apis/"+apiId+"/subscriptions/"+subscriptionId+"/apikeys"),
+		nil,
+	)
+
+	if err != nil && apiId == "" {
+		return nil, fmt.Errorf(
+			"unable to look for apikey matching apiId=%s and subscriptionId=%s (%w)",
+			apiId, subscriptionId, err)
+	}
+	resp, err := client.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("an error as occurred while performing GetSubscriptionApiKey request")
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(
+			"an error as occurred trying to get apikey matching apiId=%s and subscriptionId=%s, HTTP Status: %d ",
+			apiId, subscriptionId, resp.StatusCode)
+	}
+
+	body, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	var apiKeys []model.ApiKeyEntity
+
+	err = json.Unmarshal(body, &apiKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiKeys, nil
+}
