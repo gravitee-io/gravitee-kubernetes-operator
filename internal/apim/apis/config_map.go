@@ -1,6 +1,8 @@
 package apis
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -11,11 +13,16 @@ import (
 )
 
 func (d *Delegate) saveConfigMap(
-	api *gio.ApiDefinition,
-	apiJson []byte,
+	apiDefinition *gio.ApiDefinition,
 ) error {
-	if api.Spec.State == model.StateStopped {
+	if apiDefinition.Spec.State == model.StateStopped {
 		return nil
+	}
+
+	apiJson, err := json.Marshal(apiDefinition.Spec)
+	if err != nil {
+		d.log.Error(err, "Unable to marshall API definition as JSON")
+		return err
 	}
 
 	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
@@ -25,16 +32,16 @@ func (d *Delegate) saveConfigMap(
 	// 📝 ConfigMap should be in same namespace as ApiDefinition.
 	newOwnerReferences := []metav1.OwnerReference{
 		{
-			Kind:       api.Kind,
-			Name:       api.Name,
-			APIVersion: api.APIVersion,
-			UID:        api.UID,
+			Kind:       apiDefinition.Kind,
+			Name:       apiDefinition.Name,
+			APIVersion: apiDefinition.APIVersion,
+			UID:        apiDefinition.UID,
 		},
 	}
 	cm.SetOwnerReferences(newOwnerReferences)
 
-	cm.Namespace = api.Namespace
-	cm.Name = api.Name
+	cm.Namespace = apiDefinition.Namespace
+	cm.Name = apiDefinition.Name
 	cm.CreationTimestamp = metav1.Now()
 	cm.Labels = map[string]string{
 		"managed-by": keys.CrdGroup,
@@ -43,7 +50,7 @@ func (d *Delegate) saveConfigMap(
 
 	cm.Data = map[string]string{
 		"definition":        string(apiJson),
-		"definitionVersion": api.ResourceVersion,
+		"definitionVersion": apiDefinition.ResourceVersion,
 	}
 
 	if d.managementContext != nil {
@@ -52,19 +59,19 @@ func (d *Delegate) saveConfigMap(
 	}
 
 	currentApiDefinition := &v1.ConfigMap{}
-	err := d.k8sClient.Get(d.ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentApiDefinition)
+	err = d.k8sClient.Get(d.ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentApiDefinition)
 
 	if err == nil {
-		if currentApiDefinition.Data["definitionVersion"] != api.ResourceVersion {
-			d.log.Info("Updating ConfigMap", "id", api.Spec.Id)
+		if currentApiDefinition.Data["definitionVersion"] != apiDefinition.ResourceVersion {
+			d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.Id)
 			// Only update the config map if resource version has changed (means api definition has changed).
 			err = d.k8sClient.Update(d.ctx, cm)
 		} else {
-			d.log.Info("No change detected on api. Skipped.", "id", api.Spec.Id)
+			d.log.Info("No change detected on api. Skipped.", "id", apiDefinition.Spec.Id)
 			return nil
 		}
 	} else {
-		d.log.Info("Creating config map for api.", "id", api.Spec.Id, "name", api.Name)
+		d.log.Info("Creating config map for api.", "id", apiDefinition.Spec.Id, "name", apiDefinition.Name)
 		err = d.k8sClient.Create(d.ctx, cm)
 	}
 	return err
