@@ -130,15 +130,6 @@ APIDefinition represents the configuration for a single proxied API and it's ver
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>flow_mode</b></td>
         <td>enum</td>
         <td>
