@@ -27,7 +27,7 @@ func (client *Client) GetByCrossId(
 
 	resp, err := client.http.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("an error as occurred while performing findApisByCrossId request")
+		return nil, fmt.Errorf("an error as occurred while performing GetByCrossId request")
 	}
 
 	defer resp.Body.Close()
@@ -58,6 +58,47 @@ func (client *Client) GetByCrossId(
 	}
 
 	return &apis[0], nil
+}
+
+func (client *Client) GetApiById(
+	apiId string,
+) (*model.ApiEntity, error) {
+	req, err := http.NewRequestWithContext(
+		client.ctx,
+		http.MethodGet,
+		client.buildUrl("/apis/"+apiId),
+		nil,
+	)
+
+	if err != nil && apiId == "" {
+		return nil, fmt.Errorf("unable to look for apis matching id %s (%w)", apiId, err)
+	}
+	resp, err := client.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("an error as occurred while performing GetApiById request")
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(
+			"an error as occurred trying to get API matching id %s, HTTP Status: %d ",
+			apiId, resp.StatusCode)
+	}
+
+	body, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	var api model.ApiEntity
+
+	err = json.Unmarshal(body, &api)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api, nil
 }
 
 func (client *Client) CreateApi(
