@@ -1,12 +1,20 @@
 package model
 
-type Api struct {
+type ApiEntity struct {
 	Id                string  `json:"id"`
 	Name              string  `json:"name"`
 	State             string  `json:"state"`
 	Visibility        string  `json:"visibility"`
 	ApiLifecycleState string  `json:"lifecycle_state"`
 	Plans             []*Plan `json:"plans"`
+}
+
+type ApiListItem struct {
+	Id                string `json:"id"`
+	Name              string `json:"name"`
+	State             string `json:"state"`
+	Visibility        string `json:"visibility"`
+	ApiLifecycleState string `json:"lifecycle_state"`
 }
 
 type Action string
