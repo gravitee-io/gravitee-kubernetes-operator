@@ -86,17 +86,21 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		})
 
 		AfterAll(func() {
-			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
+			err := k8sClient.Delete(ctx, apiDefinitionFixture)
+			if err != nil {
+				// wait deleted only if not already deleted
+				Eventually(func() error {
+					return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+				}, timeout, interval).ShouldNot(Succeed())
+			}
 
-			Expect(k8sClient.Delete(ctx, managementContextFixture)).Should(Succeed())
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
-			}, timeout, interval).ShouldNot(Succeed())
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
-			}, timeout, interval).ShouldNot(Succeed())
+			err = k8sClient.Delete(ctx, managementContextFixture)
+			if err != nil {
+				// wait deleted only if not already deleted
+				Eventually(func() error {
+					return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
+				}, timeout, interval).ShouldNot(Succeed())
+			}
 		})
 
 		It("Should return unauthorize without subscription", func() {
@@ -185,6 +189,31 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Eventually(func() bool {
 				res, callErr := getWithGioApiKey(&httpClient, gatewayEndpoint, apiKey)
 				return callErr == nil && res.StatusCode == 200
+			}, timeout, interval).Should(BeTrue())
+		})
+
+		It("Should delete ApiDefinition resource", func() {
+			By("Delete the ApiDefinition resource")
+			err := k8sClient.Delete(ctx, apiDefinitionFixture)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Call deleted API definition URL and expect 404")
+			Eventually(func() bool {
+				res, callErr := httpClient.Get(gatewayEndpoint)
+				return callErr == nil && res.StatusCode == 404
+			}, timeout, interval).Should(BeTrue())
+
+			By("Get the API definition from ManagementApi and expect deleted state")
+
+			Eventually(func() bool {
+				api, apiErr := mgmtClient.GetApiById(savedApiDefinition.Status.ID)
+
+				return apiErr == nil &&
+					api.State == "STOPPED" &&
+					api.ApiLifecycleState == "UNPUBLISHED" &&
+					api.Visibility == "PRIVATE" &&
+					api.Plans[0].Status == "CLOSED" &&
+					api.Plans[1].Status == "CLOSED"
 			}, timeout, interval).Should(BeTrue())
 		})
 	})
