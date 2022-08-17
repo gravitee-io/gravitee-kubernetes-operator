@@ -28,7 +28,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
-var _ = Describe("API Definition Controller", func() {
+var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 	// Define utility constants for object names and testing timeouts/durations and intervals.
 	const (
@@ -41,7 +41,7 @@ var _ = Describe("API Definition Controller", func() {
 	ctx := context.Background()
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
-	Context("With ApiDefinition using ApiKey plan", func() {
+	Context("Checking ApiKey plan and subscription", Ordered, func() {
 		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 
@@ -52,7 +52,7 @@ var _ = Describe("API Definition Controller", func() {
 
 		var mgmtClient *managementapi.Client
 
-		BeforeEach(func() {
+		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
 			managementContext, err := test.NewManagementContext(
 				"../config/samples/context/dev/managementcontext_credentials.yaml")
@@ -79,7 +79,7 @@ var _ = Describe("API Definition Controller", func() {
 			mgmtClient = managementapi.NewClient(ctx, managementContextFixture, httpClient)
 		})
 
-		AfterEach(func() {
+		AfterAll(func() {
 			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			Expect(k8sClient.Delete(ctx, managementContextFixture)).Should(Succeed())
