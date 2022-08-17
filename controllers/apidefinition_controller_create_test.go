@@ -228,7 +228,7 @@ var _ = Describe("API Definition Controller", func() {
 			}
 			existingApiSpec.Plans = []*model.Plan{
 				{
-					Id:       utils.ToUUID(existingApiSpec.Id + "/" + "G.K.O. Default"),
+					Id:       utils.NewUUID(),
 					Name:     "G.K.O. Default",
 					Security: "KEY_LESS",
 					Status:   "PUBLISHED",
