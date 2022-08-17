@@ -15,40 +15,43 @@ func (d *Delegate) update(apiDefinition *gio.ApiDefinition) error {
 	d.addDefaultPlan(apiDefinition)
 	d.retrievePlansCrossId(apiDefinition)
 
-	apiJson, err := json.Marshal(apiDefinition.Spec)
-	if err != nil {
-		d.log.Error(err, "Unable to marshall API definition as JSON")
-		return err
-	}
-
-	// Handle Gateway with ConfigMap
-	// Delete ConfigMap if api is stopped or save it
-	switch {
-	case apiDefinition.Spec.State == model.StateStopped:
-		err = d.deleteConfigMap(apiDefinition.Namespace, apiDefinition.Name)
-		if err != nil {
-			d.log.Error(err, "Unable to delete ConfigMap from API definition")
-			return err
-		}
-	default:
-		err = d.saveConfigMap(apiDefinition)
-		if err != nil {
-			d.log.Error(err, "Unable to save ConfigMap from API definition")
-			return err
-		}
-	}
-
 	if d.IsConnectedToManagementApi() {
-		err = d.apimClient.UpdateApi(apiJson)
+		apiJson, err := json.Marshal(apiDefinition.Spec)
+		if err != nil {
+			d.log.Error(err, "Unable to marshall API definition as JSON")
+			return err
+		}
+
+		mgmtApi, err := d.apimClient.UpdateApi(apiJson)
 		if err != nil {
 			d.log.Error(err, "Unable to update API to the Management API")
 			return err
 		}
 
 		d.log.Info("Api has been update to the Management API")
+
+		// Get Plan Id from the Management API to send it to the Gateway. (Used by the Gateway to find subscription)
+		retrieveMgmtPlanIds(apiDefinition, mgmtApi)
 	}
 
-	err = d.updateApiState(apiDefinition)
+	// Handle Gateway with ConfigMap
+	// Delete ConfigMap if api is stopped or save it
+	switch {
+	case apiDefinition.Spec.State == model.StateStopped:
+		err := d.deleteConfigMap(apiDefinition.Namespace, apiDefinition.Name)
+		if err != nil {
+			d.log.Error(err, "Unable to delete ConfigMap from API definition")
+			return err
+		}
+	default:
+		err := d.saveConfigMap(apiDefinition)
+		if err != nil {
+			d.log.Error(err, "Unable to save ConfigMap from API definition")
+			return err
+		}
+	}
+
+	err := d.updateApiState(apiDefinition)
 	if err != nil {
 		d.log.Error(err, "Unable to update api state to the Management API")
 		return err

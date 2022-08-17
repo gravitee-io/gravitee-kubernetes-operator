@@ -107,7 +107,7 @@ var _ = Describe("API Definition Controller", func() {
 			err := k8sClient.Delete(ctx, apiDefinitionFixture)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("Call updated API definition URL and expect 404")
+			By("Call deleted API definition URL and expect 404")
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(gatewayEndpoint)
 				return callErr == nil && res.StatusCode == 404

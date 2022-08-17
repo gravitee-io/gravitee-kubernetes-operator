@@ -109,9 +109,8 @@ func (client *Client) CreateApi(
 
 func (client *Client) UpdateApi(
 	apiJson []byte,
-) error {
-	_, err := importApi(client, http.MethodPut, apiJson)
-	return err
+) (*model.ApiEntity, error) {
+	return importApi(client, http.MethodPut, apiJson)
 }
 
 func importApi(

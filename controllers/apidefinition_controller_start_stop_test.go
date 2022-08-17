@@ -103,7 +103,6 @@ var _ = Describe("API Definition Controller", func() {
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
 			updatedApiDefinition.Spec.State = "STOPPED"
-			// updatedApiDefinition.Generation = updatedApiDefinition.Generation + 1
 
 			err := k8sClient.Update(ctx, updatedApiDefinition)
 			Expect(err).ToNot(HaveOccurred())
