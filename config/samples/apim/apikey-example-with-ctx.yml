@@ -17,6 +17,7 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: apikey-example-with-ctx
+  namespace: "default"
 spec:
   name: "K8s ApiKey Example"
   contextRef: 
@@ -30,7 +31,7 @@ spec:
       security: API_KEY
   proxy:
     virtual_hosts:
-      - path: "/k8s-apikey"
+      - path: "/k8s-apikey-with-ctx"
     groups:
       - name: default-group
         endpoints:

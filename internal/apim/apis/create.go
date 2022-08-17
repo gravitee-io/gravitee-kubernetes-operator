@@ -59,19 +59,13 @@ func (d *Delegate) create(
 		Mode:   mode,
 	}
 
-	err := d.saveConfigMap(apiDefinition)
-	if err != nil {
-		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
-		return err
-	}
-
 	if d.IsConnectedToManagementApi() {
 		apiJson, marshalErr := json.Marshal(apiDefinition.Spec)
 		if marshalErr != nil {
 			d.log.Error(marshalErr, "Unable to marshall API definition as JSON")
 			return marshalErr
 		}
-		_, mgmtErr := d.apimClient.CreateApi(apiJson)
+		mgmtApi, mgmtErr := d.apimClient.CreateApi(apiJson)
 
 		if mgmtErr != nil {
 			d.log.Error(mgmtErr, "Unable to create API to the Management API")
@@ -79,6 +73,15 @@ func (d *Delegate) create(
 		}
 
 		d.log.Info("Api has been created to the Management API")
+
+		// Get Plan Id from the Management API to send it to the Gateway. (Used by the Gateway to find subscription)
+		retrieveMgmtPlanIds(apiDefinition, mgmtApi)
+	}
+
+	err := d.saveConfigMap(apiDefinition)
+	if err != nil {
+		d.log.Error(err, "Unable to create or update ConfigMap from API definition")
+		return err
 	}
 
 	err = d.updateApiState(apiDefinition)

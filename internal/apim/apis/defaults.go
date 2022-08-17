@@ -5,6 +5,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	managementapimodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
@@ -45,6 +46,18 @@ func (d *Delegate) retrievePlansCrossId(api *gio.ApiDefinition) {
 	for _, plan := range plans {
 		if plan.CrossId == "" {
 			plan.CrossId = utils.ToUUID(api.Spec.Id + separator + plan.Name)
+		}
+	}
+}
+
+func retrieveMgmtPlanIds(apiDefinition *gio.ApiDefinition, mgmtApi *managementapimodel.ApiEntity) {
+	plans := apiDefinition.Spec.Plans
+
+	for _, plan := range plans {
+		for _, mgmtPlan := range mgmtApi.Plans {
+			if plan.CrossId == mgmtPlan.CrossId {
+				plan.Id = mgmtPlan.Id
+			}
 		}
 	}
 }
