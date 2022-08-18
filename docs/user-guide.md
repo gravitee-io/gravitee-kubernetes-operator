@@ -62,6 +62,35 @@ spec:
 """ | kubectl apply -f -
 ```
 
+### Start and Stop your API
+By dafault the API will start automatically but if you want to stop it later (or just create API definition in stop mode) you can set the "state" property to "STOPPED"
+```shell
+echo """
+apiVersion: gravitee.io/v1alpha1
+kind: ApiDefinition
+metadata:
+  name: basic-api-example
+  namespace: apim-blue
+spec:
+  name: gko-example
+  contextRef: 
+    name: apim-blue-context
+    namespace: apim-blue
+  version: "1.0.0"
+  description: "Basic api managed by Gravitee Kubernetes Operator"
+  state: "STOPPED"
+  proxy:
+    virtual_hosts:
+      - path: "/k8s-basic"
+    groups:
+      - endpoints:
+          - name: "Default"
+            target: "https://api.gravitee.io/echo"
+""" | kubectl apply -f -
+```
+changing back the state to "STARTED", will re-start the API again.
+
+
 ### Update your API
 
 > ⚠️ Consider that the above creation steps are done
