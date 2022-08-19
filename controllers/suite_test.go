@@ -17,10 +17,12 @@ limitations under the License.
 package controllers
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
+	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -92,4 +94,13 @@ var _ = AfterSuite(func() {
 	gexec.KillAndWait(5 * time.Second)
 	// err := testEnv.Stop()
 	// Expect(err).ToNot(HaveOccurred())
+})
+
+var _ = ReportAfterEach(func(specReport ginkgotypes.SpecReport) {
+	// Smoke test to check there was no unwanted error in the operator's logs. masked by a reconcile for example
+	Expect(
+		strings.Contains(specReport.CapturedGinkgoWriterOutput, "\tERROR\t"),
+	).To(
+		BeFalse(), "[Smoke Test] There are errors in the operator logs",
+	)
 })
