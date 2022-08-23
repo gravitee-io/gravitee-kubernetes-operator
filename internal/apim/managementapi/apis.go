@@ -80,6 +80,10 @@ func (client *Client) GetApiById(
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, &clienterror.ApiNotFoundError{ApiId: apiId}
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
 			"an error as occurred trying to get API matching id %s, HTTP Status: %d ",
@@ -199,7 +203,11 @@ func (client *Client) DeleteApi(
 		defer resp.Body.Close()
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+	if resp.StatusCode == http.StatusNotFound {
+		return &clienterror.ApiNotFoundError{ApiId: apiId}
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("management has returned a %d code", resp.StatusCode)
 	}
 
