@@ -64,7 +64,7 @@ To create a basic api definition run following command
 [source,shell]
 ----
 # Create a management context for your APIM instance running on K3D
-kubectl apply -f ./config/samples/context/managementcontext_credentials_k3d.yaml
+kubectl apply -f ./config/samples/context/k3d/managementcontext_credentials_k3d.yaml
 
 # Create a basic API definition resource
 kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
@@ -87,16 +87,16 @@ To be abble to run the operator against a local instance of both APIM Gateway an
 make install
 
 # check that the gravitee.io CRDs are available on your cluster
-kubectl get crd 
+kubectl get crd
 
-# create a service account token with 'cluster-admin' role on current context and 
+# create a service account token with 'cluster-admin' role on current context and
 # use this token to authenticate against the current cluster
 make service-account
 
 make run # or run using a debugger if you need to debug the operator as well
 
 # Create a management context for APIM
-kubectl apply -f ./config/samples/context/managementcontext_credentials.yaml
+kubectl apply -f ./config/samples/context/debug/managementcontext_credentials.yaml
 
 # Create a basic API definition resource
 kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
