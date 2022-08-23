@@ -3,7 +3,7 @@ package managementapi
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
@@ -35,7 +35,7 @@ func (client *Client) SearchApplications(
 		return nil, fmt.Errorf("an error as occurred trying to find applications, HTTP Status: %d ", resp.StatusCode)
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, readErr
 	}

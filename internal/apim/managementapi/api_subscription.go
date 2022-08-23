@@ -3,7 +3,7 @@ package managementapi
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
@@ -40,7 +40,7 @@ func (client *Client) SubscribeToPlan(
 			apiId, applicationId, planId, resp.StatusCode)
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, readErr
 	}
@@ -83,7 +83,7 @@ func (client *Client) GetSubscriptionApiKey(
 			apiId, subscriptionId, resp.StatusCode)
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, readErr
 	}

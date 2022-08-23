@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
@@ -41,7 +41,7 @@ func (client *Client) GetByCrossId(
 		return nil, fmt.Errorf("an error as occurred trying to find API %s, HTTP Status: %d ", crossId, resp.StatusCode)
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, readErr
 	}
@@ -98,7 +98,7 @@ func (client *Client) GetApiById(
 		)
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, readErr
 	}
@@ -158,7 +158,7 @@ func importApi(
 		return nil, fmt.Errorf("an error as occurred trying to import API definition, HTTP Status: %d ", resp.StatusCode)
 	}
 
-	body, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, readErr
 	}
