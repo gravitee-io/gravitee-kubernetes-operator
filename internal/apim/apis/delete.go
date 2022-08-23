@@ -2,8 +2,11 @@ package apis
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	managementapierror "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"errors"
 )
 
 func (d *Delegate) delete(
@@ -14,10 +17,14 @@ func (d *Delegate) delete(
 		return nil
 	}
 
+	var apiNotFoundError *managementapierror.ApiNotFoundError
 	if d.IsConnectedToManagementApi() {
 		d.log.Info("Delete API definition into Management API")
 		err := d.apimClient.DeleteApi(apiDefinition.Status.ID)
-		if err != nil {
+		if errors.As(err, &apiNotFoundError) {
+			d.log.Info("The API has already been deleted", "id", apiDefinition.Status.ID)
+		}
+		if err != nil && !errors.As(err, &apiNotFoundError) {
 			d.log.Error(err, "Unable to delete API definition into Management API")
 			return err
 		}

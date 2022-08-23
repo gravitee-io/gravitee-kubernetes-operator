@@ -1,10 +1,9 @@
 /*
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +15,11 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
+
+	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -206,14 +208,9 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Get the API definition from ManagementApi and expect deleted state")
 
 			Eventually(func() bool {
-				api, apiErr := mgmtClient.GetApiById(savedApiDefinition.Status.ID)
-
-				return apiErr == nil &&
-					api.State == "STOPPED" &&
-					api.ApiLifecycleState == "UNPUBLISHED" &&
-					api.Visibility == "PRIVATE" &&
-					api.Plans[0].Status == "CLOSED" &&
-					api.Plans[1].Status == "CLOSED"
+				_, apiErr := mgmtClient.GetApiById(savedApiDefinition.Status.ID)
+				var apiNotFoundError *clientError.ApiNotFoundError
+				return apiErr != nil && errors.As(apiErr, &apiNotFoundError)
 			}, timeout, interval).Should(BeTrue())
 		})
 	})
