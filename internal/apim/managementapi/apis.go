@@ -184,7 +184,7 @@ func (client *Client) UpdateApiState(
 func (client *Client) DeleteApi(
 	apiId string,
 ) error {
-	url := client.buildUrl("/apis/" + apiId)
+	url := client.buildUrl("/apis/" + apiId + "?closePlans=true")
 	req, err := http.NewRequestWithContext(client.ctx, http.MethodDelete, url, nil)
 	if err != nil {
 		return fmt.Errorf("unable to delete the api into the Management API")
