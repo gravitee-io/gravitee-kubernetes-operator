@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"k8s.io/client-go/kubernetes/scheme"
 
@@ -13,7 +13,7 @@ import (
 var decode = scheme.Codecs.UniversalDecoder().Decode
 
 func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio.ApiDefinition, error) {
-	crd, err := ioutil.ReadFile(path)
+	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio
 }
 
 func NewManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
-	crd, err := ioutil.ReadFile(path)
+	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
