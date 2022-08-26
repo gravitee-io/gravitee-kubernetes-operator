@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers
+package managementcontext
 
 import (
 	"context"
@@ -27,8 +27,8 @@ import (
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-// ManagementContextReconciler reconciles a ManagementContext object.
-type ManagementContextReconciler struct {
+// Reconciler reconciles a ManagementContext object.
+type Reconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
@@ -46,7 +46,7 @@ type ManagementContextReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
-func (r *ManagementContextReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("ManagementContext", req.NamespacedName)
 
 	// Fetch the ApiDefinition instance
@@ -62,7 +62,7 @@ func (r *ManagementContextReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *ManagementContextReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&graviteeiov1alpha1.ManagementContext{}).
 		Complete(r)

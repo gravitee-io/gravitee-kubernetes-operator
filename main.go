@@ -34,6 +34,7 @@ import (
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -88,7 +89,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
 		os.Exit(1)
 	}
-	if err = (&controllers.ManagementContextReconciler{
+	if err = (&managementcontext.Reconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
