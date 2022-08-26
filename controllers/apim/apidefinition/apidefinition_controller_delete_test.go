@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package controllers
+package apidefinition
 
 import (
 	"context"
@@ -52,12 +52,12 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 			managementContext, err := test.NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+				"../../../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := test.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := test.NewApiDefinition("../../../config/samples/apim/basic-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 

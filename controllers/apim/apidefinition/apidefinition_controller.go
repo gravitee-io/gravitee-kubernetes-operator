@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package apidefinition
 
 import (
 	"context"
@@ -38,8 +38,8 @@ import (
 
 const requeueAfterTime = 5
 
-// ApiDefinitionReconciler reconciles a ApiDefinition object.
-type ApiDefinitionReconciler struct {
+// Reconciler reconciles a ApiDefinition object.
+type Reconciler struct {
 	client.Client
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
@@ -61,7 +61,7 @@ type ApiDefinitionReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
-func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
 	log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
@@ -119,7 +119,7 @@ func (r *ApiDefinitionReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *ApiDefinitionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ApiDefinition{}).
 		//		Owns(&v1.Secret{}).
