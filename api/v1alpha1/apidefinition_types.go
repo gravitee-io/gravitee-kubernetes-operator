@@ -44,10 +44,11 @@ type ApiDefinitionStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-// +kubebuilder:printcolumn:name="ID",type=string,JSONPath=`.status.apiId`
-// +kubebuilder:printcolumn:name="Entrypoint",type=string,JSONPath=`.spec.proxy.virtual_hosts[0].path`
-// +kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.spec.proxy.groups[0].endpoints[0].target`
-// +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="API state (STARTED or STOPPED)."
+// +kubebuilder:printcolumn:name="Entrypoint",type=string,JSONPath=`.spec.proxy.virtual_hosts[*].path`,description="API entrypoint."
+// +kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.spec.proxy.groups[*].endpoints[*].target`,description="API endpoint."
+// +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
+// +kubebuilder:printcolumn:name="ManagementContext",type=string,JSONPath=`.spec.contextRef.name`,description="Management context name."
 // +kubebuilder:resource:shortName=graviteeapis
 // ApiDefinition is the Schema for the apidefinitions API.
 type ApiDefinition struct {

@@ -18,17 +18,25 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.apiId
-      name: ID
+    - description: API state (STARTED or STOPPED).
+      jsonPath: .status.state
+      name: State
       type: string
-    - jsonPath: .spec.proxy.virtual_hosts[0].path
+    - description: API entrypoint.
+      jsonPath: .spec.proxy.virtual_hosts[*].path
       name: Entrypoint
       type: string
-    - jsonPath: .spec.proxy.groups[0].endpoints[0].target
+    - description: API endpoint.
+      jsonPath: .spec.proxy.groups[*].endpoints[*].target
       name: Endpoint
       type: string
-    - jsonPath: .spec.version
+    - description: API version.
+      jsonPath: .spec.version
       name: Version
+      type: string
+    - description: Management context name.
+      jsonPath: .spec.contextRef.name
+      name: ManagementContext
       type: string
     name: v1alpha1
     schema:
