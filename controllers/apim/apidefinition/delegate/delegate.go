@@ -1,4 +1,4 @@
-package apis
+package delegate
 
 import (
 	"context"
@@ -9,11 +9,16 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	k8s "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const (
 	requestTimeoutSeconds = 5
+	separator             = "/"
+	defaultPlanSecurity   = "KEY_LESS"
+	defaultPlanStatus     = "PUBLISHED"
+	defaultPlanName       = "G.K.O. Default"
+	origin                = "kubernetes"
+	mode                  = "fully_managed"
 )
 
 type Delegate struct {
@@ -24,9 +29,7 @@ type Delegate struct {
 	log               logr.Logger
 }
 
-func NewDelegate(ctx context.Context, client k8s.Client) *Delegate {
-	log := log.FromContext(ctx)
-
+func NewDelegate(ctx context.Context, client k8s.Client, log logr.Logger) *Delegate {
 	return &Delegate{
 		ctx, nil, nil, client, log,
 	}

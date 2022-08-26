@@ -30,7 +30,7 @@ import (
 
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	gioApis "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apis"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/delegate"
 	gioCtx "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -80,8 +80,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Error(err, "Failed to get API Definition")
 		return ctrl.Result{}, err
 	}
+	log = log.WithValues("apiDefinitionName", apiDefinition.Name)
 
-	apisDelegate := gioApis.NewDelegate(ctx, r.Client)
+	// Ini Delegate and set management context if defined
+	apisDelegate := delegate.NewDelegate(ctx, r.Client, log)
 
 	if apiDefinition.Spec.Context != nil {
 		managementContextDelegate := gioCtx.NewDelegate(ctx, r.Client)
@@ -107,7 +109,24 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
-	err = apisDelegate.Handle(apiDefinition)
+	// Executes delegate actions
+	switch {
+	case !apiDefinition.HasFinalizer():
+		log.Info("Add Finalizer to API definition")
+		err = apisDelegate.Finalizer(apiDefinition)
+
+	case apiDefinition.IsBeingDeleted():
+		log.Info("Deleting API definition")
+		err = apisDelegate.Delete(apiDefinition)
+
+	case apiDefinition.IsBeingCreated():
+		log.Info("Creating API definition")
+		err = apisDelegate.Create(apiDefinition)
+
+	case apiDefinition.IsBeingUpdated():
+		log.Info("Updating API definition")
+		err = apisDelegate.Update(apiDefinition)
+	}
 
 	if err == nil {
 		log.Info("API Definition has been reconciled")

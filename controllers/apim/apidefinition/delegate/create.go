@@ -1,4 +1,4 @@
-package apis
+package delegate
 
 import (
 	"encoding/json"
@@ -11,18 +11,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
-const (
-	defaultPlanSecurity = "KEY_LESS"
-	defaultPlanStatus   = "PUBLISHED"
-	defaultPlanName     = "G.K.O. Default"
-	origin              = "kubernetes"
-	mode                = "fully_managed"
-)
-
-func (d *Delegate) create(
+func (d *Delegate) Create(
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	apiDefinition.Status.CrossID = RetrieveCrossId(apiDefinition)
+	apiDefinition.Status.CrossID = retrieveCrossId(apiDefinition)
 	apiDefinition.Status.State = model.StateStarted // API is considered started by default and updated later if needed
 
 	// Generate new Id or use existing one if is found in Management API
@@ -52,8 +44,8 @@ func (d *Delegate) create(
 	apiDefinition.Spec.Id = apiDefinition.Status.ID
 	apiDefinition.Spec.CrossId = apiDefinition.Status.CrossID
 	// Plan is not required from the CRD, but is expected by the Gateway, so we must create at least one
-	d.addDefaultPlan(apiDefinition)
-	d.retrievePlansCrossId(apiDefinition)
+	addDefaultPlan(apiDefinition)
+	retrievePlansCrossId(apiDefinition)
 	apiDefinition.Spec.DefinitionContext = &model.DefinitionContext{
 		Origin: origin,
 		Mode:   mode,

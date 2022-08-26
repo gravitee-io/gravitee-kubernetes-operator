@@ -1,4 +1,4 @@
-package apis
+package delegate
 
 import (
 	"k8s.io/apimachinery/pkg/types"
@@ -9,10 +9,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
-const separator = "/"
-
 // Return Spec CrossId or generate a new one from api Name & Namespace.
-func RetrieveCrossId(api *gio.ApiDefinition) string {
+func retrieveCrossId(api *gio.ApiDefinition) string {
 	// If a CrossID is defined at the API level, reuse it.
 	// If not, just generate a new CrossID
 	if api.Spec.CrossId == "" {
@@ -24,11 +22,10 @@ func RetrieveCrossId(api *gio.ApiDefinition) string {
 }
 
 // Add a default keyless plan to the api definition if no plan is defined.
-func (d *Delegate) addDefaultPlan(api *gio.ApiDefinition) {
+func addDefaultPlan(api *gio.ApiDefinition) {
 	plans := api.Spec.Plans
 
 	if len(plans) == 0 {
-		d.log.Info("Define default plan for API")
 		api.Spec.Plans = []*model.Plan{
 			{
 				Name:     defaultPlanName,
@@ -40,7 +37,7 @@ func (d *Delegate) addDefaultPlan(api *gio.ApiDefinition) {
 }
 
 // For each plan, generate a CrossId from Api Id & Plan Name if not defined.
-func (d *Delegate) retrievePlansCrossId(api *gio.ApiDefinition) {
+func retrievePlansCrossId(api *gio.ApiDefinition) {
 	plans := api.Spec.Plans
 
 	for _, plan := range plans {
@@ -50,6 +47,7 @@ func (d *Delegate) retrievePlansCrossId(api *gio.ApiDefinition) {
 	}
 }
 
+// Retrieve the plan ids from the management apiEntity.
 func retrieveMgmtPlanIds(apiDefinition *gio.ApiDefinition, mgmtApi *managementapimodel.ApiEntity) {
 	plans := apiDefinition.Spec.Plans
 

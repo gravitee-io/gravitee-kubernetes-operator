@@ -1,4 +1,4 @@
-package apis
+package delegate
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -9,7 +9,7 @@ import (
 	"errors"
 )
 
-func (d *Delegate) delete(
+func (d *Delegate) Delete(
 	apiDefinition *gio.ApiDefinition,
 ) error {
 	// Do nothing if finalizer is already removed

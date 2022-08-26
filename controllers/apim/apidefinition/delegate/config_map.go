@@ -1,4 +1,4 @@
-package apis
+package delegate
 
 import (
 	"encoding/json"

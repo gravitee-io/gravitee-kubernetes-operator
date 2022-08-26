@@ -1,4 +1,4 @@
-package apis
+package delegate
 
 import (
 	"encoding/json"
@@ -7,13 +7,13 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-func (d *Delegate) update(apiDefinition *gio.ApiDefinition) error {
+func (d *Delegate) Update(apiDefinition *gio.ApiDefinition) error {
 	// Add required fields to the API definition spec
 	// ⚠️ This filed should not be added in ApiDefinition resource
 	apiDefinition.Spec.CrossId = apiDefinition.Status.CrossID
 	apiDefinition.Spec.Id = apiDefinition.Status.ID
-	d.addDefaultPlan(apiDefinition)
-	d.retrievePlansCrossId(apiDefinition)
+	addDefaultPlan(apiDefinition)
+	retrievePlansCrossId(apiDefinition)
 
 	if d.IsConnectedToManagementApi() {
 		apiJson, err := json.Marshal(apiDefinition.Spec)
