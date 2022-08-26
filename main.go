@@ -33,6 +33,7 @@ import (
 
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -80,7 +81,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.ApiDefinitionReconciler{
+	if err = (&apidefinition.Reconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package apidefinition
 
 import (
 	"strings"
@@ -71,7 +71,7 @@ var _ = BeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&ApiDefinitionReconciler{
+	err = (&Reconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
 	}).SetupWithManager(k8sManager)
