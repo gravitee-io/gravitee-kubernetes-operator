@@ -1,4 +1,4 @@
-package delegate
+package internal
 
 import (
 	"k8s.io/apimachinery/pkg/types"
