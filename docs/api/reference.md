@@ -52,13 +52,6 @@ ApiDefinition is the Schema for the apidefinitions API.
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
       </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#apidefinitionspec">spec</a></b></td>
         <td>object</td>
         <td>
