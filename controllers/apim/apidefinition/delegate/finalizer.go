@@ -1,4 +1,4 @@
-package apis
+package delegate
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -6,10 +6,9 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) finalizer(
+func (d *Delegate) Finalizer(
 	apiDefinition *gio.ApiDefinition,
 ) error {
 	util.AddFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
-
 	return d.k8sClient.Update(d.ctx, apiDefinition)
 }
