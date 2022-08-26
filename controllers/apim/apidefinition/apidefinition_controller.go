@@ -31,7 +31,7 @@ import (
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/delegate"
-	gioCtx "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/context"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
@@ -86,8 +86,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	apisDelegate := delegate.NewDelegate(ctx, r.Client, log)
 
 	if apiDefinition.Spec.Context != nil {
-		managementContextDelegate := gioCtx.NewDelegate(ctx, r.Client)
-		managementContext, ctxErr := managementContextDelegate.Get(apiDefinition.Spec.Context)
+		managementContext, ctxErr := managementcontext.Get(ctx, r.Client, log, apiDefinition.Spec.Context)
 		if ctxErr != nil {
 			log.Error(ctxErr, "And error has occurred while trying to retrieve management context")
 		}
