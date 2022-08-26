@@ -48,16 +48,14 @@ type ApiDefinitionStatus struct {
 // +kubebuilder:printcolumn:name="Entrypoint",type=string,JSONPath=`.spec.proxy.virtual_hosts[0].path`
 // +kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.spec.proxy.groups[0].endpoints[0].target`
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`
-// +kubebuilder:printcolumn:name="Enabled",type=boolean,JSONPath=`.spec.enabled`
 // +kubebuilder:resource:shortName=graviteeapis
 // ApiDefinition is the Schema for the apidefinitions API.
 type ApiDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Enabled bool                `json:"enabled,omitempty"`
-	Spec    ApiDefinitionSpec   `json:"spec,omitempty"`
-	Status  ApiDefinitionStatus `json:"status,omitempty"`
+	Spec   ApiDefinitionSpec   `json:"spec,omitempty"`
+	Status ApiDefinitionStatus `json:"status,omitempty"`
 }
 
 func (api *ApiDefinition) HasFinalizer() bool {
