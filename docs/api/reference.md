@@ -3462,6 +3462,15 @@ ApiDefinitionStatus defines the observed state of ApiDefinition.
             <i>Enum</i>: STARTED, STOPPED<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>processingStatus</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: Completed, Failed, Reconciling<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 

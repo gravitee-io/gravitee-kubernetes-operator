@@ -22,3 +22,11 @@ type CrossIdMultipleFoundError struct {
 func (e *CrossIdMultipleFoundError) Error() string {
 	return fmt.Sprintf("Multiple APIs found for CrossId %s. (%d APIs found)", e.CrossId, len(e.Apis))
 }
+
+type CrossIdUnauthorizedError struct {
+	CrossId string
+}
+
+func (e CrossIdUnauthorizedError) Error() string {
+	return "Unauthorized error for CrossId " + e.CrossId
+}

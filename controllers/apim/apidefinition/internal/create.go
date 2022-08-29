@@ -82,8 +82,9 @@ func (d *Delegate) Create(
 		return err
 	}
 
-	// Creation succeed, update Generation & Status
+	// Creation succeed, update Status
 	apiDefinition.Status.Generation = apiDefinition.ObjectMeta.Generation
+	apiDefinition.Status.ProcessingStatus = gio.ProcessingStatusCompleted
 	err = d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy())
 
 	if err != nil {
