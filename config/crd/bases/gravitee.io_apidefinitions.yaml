@@ -36,7 +36,11 @@ spec:
       type: string
     - description: Management context name.
       jsonPath: .spec.contextRef.name
-      name: ManagementContext
+      name: Management Context
+      type: string
+    - description: Api definition processing status.
+      jsonPath: .status.processingStatus
+      name: Processing Status
       type: string
     name: v1alpha1
     schema:
@@ -956,6 +960,12 @@ spec:
                 format: int64
                 type: integer
               id:
+                type: string
+              processingStatus:
+                enum:
+                - Completed
+                - Failed
+                - Reconciling
                 type: string
               state:
                 enum:

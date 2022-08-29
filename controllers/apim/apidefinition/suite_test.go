@@ -97,10 +97,19 @@ var _ = AfterSuite(func() {
 })
 
 var _ = ReportAfterEach(func(specReport ginkgotypes.SpecReport) {
-	// Smoke test to check there was no unwanted error in the operator's logs. masked by a reconcile for example
-	Expect(
-		strings.Contains(specReport.CapturedGinkgoWriterOutput, "\tERROR\t"),
-	).To(
-		BeFalse(), "[Smoke Test] There are errors in the operator logs",
-	)
+	enableDSmokeExpect := true
+	for _, label := range specReport.Labels() {
+		if label == "DisableSmokeExpect" {
+			enableDSmokeExpect = false
+		}
+	}
+
+	if enableDSmokeExpect {
+		// Smoke test to check there was no unwanted error in the operator's logs. masked by a reconcile for example
+		Expect(
+			strings.Contains(specReport.CapturedGinkgoWriterOutput, "\tERROR\t"),
+		).To(
+			BeFalse(), "[Smoke Test] There are errors in the operator logs",
+		)
+	}
 })

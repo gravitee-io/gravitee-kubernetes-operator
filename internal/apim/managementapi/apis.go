@@ -32,8 +32,12 @@ func (client *Client) GetByCrossId(
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		// TODO parse response body as a map and log
+	switch resp.StatusCode {
+	case http.StatusOK:
+		break
+	case http.StatusUnauthorized:
+		return nil, &clienterror.CrossIdUnauthorizedError{CrossId: crossId}
+	default:
 		return nil, fmt.Errorf("an error as occurred trying to find API %s, HTTP Status: %d ", crossId, resp.StatusCode)
 	}
 
@@ -80,14 +84,18 @@ func (client *Client) GetApiById(
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusNotFound {
+	switch resp.StatusCode {
+	case http.StatusOK:
+		break
+	case http.StatusUnauthorized:
+		return nil, &clienterror.ApiUnauthorizedError{ApiId: apiId}
+	case http.StatusNotFound:
 		return nil, &clienterror.ApiNotFoundError{ApiId: apiId}
-	}
-
-	if resp.StatusCode != http.StatusOK {
+	default:
 		return nil, fmt.Errorf(
 			"an error as occurred trying to get API matching id %s, HTTP Status: %d ",
-			apiId, resp.StatusCode)
+			apiId, resp.StatusCode,
+		)
 	}
 
 	body, readErr := ioutil.ReadAll(resp.Body)
@@ -140,8 +148,14 @@ func importApi(
 		defer resp.Body.Close()
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("management has returned a %d code", resp.StatusCode)
+	switch resp.StatusCode {
+	case http.StatusCreated:
+	case http.StatusOK:
+		break
+	case http.StatusUnauthorized:
+		return nil, clienterror.ApiUnauthorizedError{}
+	default:
+		return nil, fmt.Errorf("an error as occurred trying to import API definition, HTTP Status: %d ", resp.StatusCode)
 	}
 
 	body, readErr := ioutil.ReadAll(resp.Body)
@@ -178,11 +192,19 @@ func (client *Client) UpdateApiState(
 		defer resp.Body.Close()
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("management has returned a %d code", resp.StatusCode)
+	switch resp.StatusCode {
+	case http.StatusNoContent:
+		return nil
+	case http.StatusUnauthorized:
+		return &clienterror.ApiUnauthorizedError{ApiId: apiId}
+	case http.StatusNotFound:
+		return &clienterror.ApiNotFoundError{ApiId: apiId}
+	default:
+		return fmt.Errorf(
+			"an error as occurred trying to update API state matching id %s, HTTP Status: %d ",
+			apiId, resp.StatusCode,
+		)
 	}
-
-	return err
 }
 
 func (client *Client) DeleteApi(
@@ -203,13 +225,17 @@ func (client *Client) DeleteApi(
 		defer resp.Body.Close()
 	}
 
-	if resp.StatusCode == http.StatusNotFound {
+	switch resp.StatusCode {
+	case http.StatusNoContent:
+		return nil
+	case http.StatusUnauthorized:
+		return &clienterror.ApiUnauthorizedError{ApiId: apiId}
+	case http.StatusNotFound:
 		return &clienterror.ApiNotFoundError{ApiId: apiId}
+	default:
+		return fmt.Errorf(
+			"an error as occurred trying to delete API matching id %s, HTTP Status: %d ",
+			apiId, resp.StatusCode,
+		)
 	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("management has returned a %d code", resp.StatusCode)
-	}
-
-	return err
 }

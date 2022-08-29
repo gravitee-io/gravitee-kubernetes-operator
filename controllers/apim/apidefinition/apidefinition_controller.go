@@ -132,8 +132,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	// Should we keep this re-queuing strategy ?
-	return ctrl.Result{RequeueAfter: requeueAfter}, err
+	err = apisDelegate.UpdateStatusAndReturnError(apiDefinition, err)
+
+	if internal.IsRecoverableError(err) {
+		return ctrl.Result{RequeueAfter: requeueAfter}, nil
+	}
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.

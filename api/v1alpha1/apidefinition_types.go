@@ -35,10 +35,11 @@ type ApiDefinitionSpec struct {
 
 // ApiDefinitionStatus defines the observed state of ApiDefinition.
 type ApiDefinitionStatus struct {
-	ID         string      `json:"id"`
-	CrossID    string      `json:"crossId"`
-	State      model.State `json:"state"`
-	Generation int64       `json:"generation"`
+	ID               string           `json:"id"`
+	CrossID          string           `json:"crossId"`
+	State            model.State      `json:"state"`
+	ProcessingStatus ProcessingStatus `json:"processingStatus,omitempty"`
+	Generation       int64            `json:"generation"`
 }
 
 // +kubebuilder:object:root=true
@@ -48,7 +49,8 @@ type ApiDefinitionStatus struct {
 // +kubebuilder:printcolumn:name="Entrypoint",type=string,JSONPath=`.spec.proxy.virtual_hosts[*].path`,description="API entrypoint."
 // +kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.spec.proxy.groups[*].endpoints[*].target`,description="API endpoint."
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
-// +kubebuilder:printcolumn:name="ManagementContext",type=string,JSONPath=`.spec.contextRef.name`,description="Management context name."
+// +kubebuilder:printcolumn:name="Management Context",type=string,JSONPath=`.spec.contextRef.name`,description="Management context name."
+// +kubebuilder:printcolumn:name="Processing Status",type=string,JSONPath=`.status.processingStatus`,description="Api definition processing status."
 // +kubebuilder:resource:shortName=graviteeapis
 // ApiDefinition is the Schema for the apidefinitions API.
 type ApiDefinition struct {
@@ -58,6 +60,15 @@ type ApiDefinition struct {
 	Spec   ApiDefinitionSpec   `json:"spec,omitempty"`
 	Status ApiDefinitionStatus `json:"status,omitempty"`
 }
+
+// +kubebuilder:validation:Enum=Completed;Failed;Reconciling;
+type ProcessingStatus string
+
+const (
+	ProcessingStatusCompleted   ProcessingStatus = "Completed"
+	ProcessingStatusFailed      ProcessingStatus = "Failed"
+	ProcessingStatusReconciling ProcessingStatus = "Reconciling"
+)
 
 func (api *ApiDefinition) HasFinalizer() bool {
 	return util.ContainsFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
