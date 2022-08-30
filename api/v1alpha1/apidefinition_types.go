@@ -79,7 +79,7 @@ func (api *ApiDefinition) IsBeingDeleted() bool {
 }
 
 func (api *ApiDefinition) IsBeingUpdated() bool {
-	return api.Status.Generation != api.ObjectMeta.Generation
+	return api.Status.Generation != api.ObjectMeta.Generation || api.Status.ProcessingStatus == ProcessingStatusReconciling
 }
 
 func (api *ApiDefinition) IsBeingCreated() bool {
