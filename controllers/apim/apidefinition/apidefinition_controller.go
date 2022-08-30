@@ -46,11 +46,11 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get
+//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions,verbs=get;list;watch;create;update;patch;delete;deletecollection
 //+kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups="",resources=secrets,verbs=get
 //+kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
