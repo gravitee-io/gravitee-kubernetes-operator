@@ -89,6 +89,8 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			err = k8sClient.Update(ctx, managementContextRight)
 			Expect(err).ToNot(HaveOccurred())
 
+			By("Check events")
+			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"Failed"}))
 		})
 
 		It("Should requeue reconcile with bad ManagementContext BaseUrl", func() {
@@ -119,6 +121,9 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			err = k8sClient.Update(ctx, managementContextRight)
 			Expect(err).ToNot(HaveOccurred())
+
+			By("Check events")
+			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"Reconciling"}))
 
 			// TODO: fix it
 			// By("Check API definition processing status")
