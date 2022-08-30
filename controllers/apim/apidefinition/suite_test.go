@@ -17,6 +17,7 @@ limitations under the License.
 package apidefinition
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +25,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
+	k8sErr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,11 +44,17 @@ import (
 
 var k8sClient client.Client
 var k8sManager ctrl.Manager
+var ctx = context.Background()
 
+// Define utility constants for object names and testing timeouts/durations and intervals.
 const (
 	metricsAddr = ":10000"
 	probeAddr   = ":10001"
 	managerPort = 10002
+
+	namespace = "default"
+	timeout   = time.Second * 10
+	interval  = time.Millisecond * 250
 )
 
 func TestAPIs(t *testing.T) {
@@ -113,3 +122,32 @@ var _ = ReportAfterEach(func(specReport ginkgotypes.SpecReport) {
 		)
 	}
 })
+
+func cleanupApiDefinitionAndManagementContext(
+	apiDefinition *gio.ApiDefinition,
+	managementContext *gio.ManagementContext,
+) {
+	cleanupApiDefinition(apiDefinition)
+
+	contextLookupKey := types.NamespacedName{Name: managementContext.Name, Namespace: managementContext.Namespace}
+
+	err := k8sClient.Delete(ctx, managementContext)
+	if !k8sErr.IsNotFound(err) {
+		// wait deleted only if not already deleted
+		Eventually(func() error {
+			return k8sClient.Get(ctx, contextLookupKey, managementContext)
+		}, timeout, interval).ShouldNot(Succeed())
+	}
+}
+
+func cleanupApiDefinition(apiDefinition *gio.ApiDefinition) {
+	apiLookupKey := types.NamespacedName{Name: apiDefinition.Name, Namespace: apiDefinition.Namespace}
+
+	err := k8sClient.Delete(ctx, apiDefinition)
+	if !k8sErr.IsNotFound(err) {
+		// wait deleted only if not already deleted
+		Eventually(func() error {
+			return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+		}, timeout, interval).ShouldNot(Succeed())
+	}
+}

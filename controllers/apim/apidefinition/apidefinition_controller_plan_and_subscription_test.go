@@ -14,7 +14,6 @@ limitations under the License.
 package apidefinition
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -35,15 +34,6 @@ import (
 
 var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
-	// Define utility constants for object names and testing timeouts/durations and intervals.
-	const (
-		namespace = "default"
-
-		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
-	)
-
-	ctx := context.Background()
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("Checking ApiKey plan and subscription", Ordered, func() {
@@ -53,7 +43,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		var savedApiDefinition *gio.ApiDefinition
 
 		var apiLookupKey types.NamespacedName
-		var contextLookupKey types.NamespacedName
 
 		var gatewayEndpoint string
 		var mgmtClient *managementapi.Client
@@ -73,7 +62,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiDefinitionFixture = apiDefinition
 			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
 			savedApiDefinition = new(gio.ApiDefinition)
@@ -88,21 +76,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		})
 
 		AfterAll(func() {
-			err := k8sClient.Delete(ctx, apiDefinitionFixture)
-			if err != nil {
-				// wait deleted only if not already deleted
-				Eventually(func() error {
-					return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
-				}, timeout, interval).ShouldNot(Succeed())
-			}
-
-			err = k8sClient.Delete(ctx, managementContextFixture)
-			if err != nil {
-				// wait deleted only if not already deleted
-				Eventually(func() error {
-					return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
-				}, timeout, interval).ShouldNot(Succeed())
-			}
+			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should return unauthorize without subscription", func() {
