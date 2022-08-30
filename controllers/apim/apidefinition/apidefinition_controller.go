@@ -125,6 +125,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	case apiDefinition.IsBeingUpdated():
 		log.Info("Updating API definition")
 		err = apisDelegate.Update(apiDefinition)
+	default:
+		log.Info("No action to perform")
 	}
 
 	if err == nil {

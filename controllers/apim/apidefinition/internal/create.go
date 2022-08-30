@@ -88,7 +88,7 @@ func (d *Delegate) Create(
 	err = d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy())
 
 	if err != nil {
-		d.log.Error(err, "Unexpected error while updating API definition status")
+		d.log.Error(err, "Unable to update API definition status")
 		return err
 	}
 
