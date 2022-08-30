@@ -25,6 +25,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -80,9 +81,14 @@ var _ = BeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
+	err = addEventIndexes()
+
+	Expect(err).ToNot(HaveOccurred())
+
 	err = (&Reconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("apidefinition_controller"),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
@@ -140,6 +146,20 @@ func cleanupApiDefinitionAndManagementContext(
 	}
 }
 
+// Add filed indexes for event to be able to filter on it.
+func addEventIndexes() error {
+	err := k8sManager.GetFieldIndexer().IndexField(
+		ctx,
+		&v1.Event{},
+		"involvedObject.name",
+		func(rawObj client.Object) []string {
+			event, _ := rawObj.(*v1.Event)
+			return []string{event.InvolvedObject.Name}
+		},
+	)
+	return err
+}
+
 func cleanupApiDefinition(apiDefinition *gio.ApiDefinition) {
 	apiLookupKey := types.NamespacedName{Name: apiDefinition.Name, Namespace: apiDefinition.Namespace}
 
@@ -150,4 +170,23 @@ func cleanupApiDefinition(apiDefinition *gio.ApiDefinition) {
 			return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 		}, timeout, interval).ShouldNot(Succeed())
 	}
+}
+
+func getEventsReason(apiDefinition *gio.ApiDefinition) []string {
+	eventsReason := []string{}
+
+	events := &v1.EventList{}
+
+	err := k8sClient.List(
+		ctx,
+		events,
+		&client.ListOptions{Namespace: apiDefinition.GetNamespace()},
+		client.MatchingFields{"involvedObject.name": apiDefinition.GetName()},
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	for _, event := range events.Items {
+		eventsReason = append(eventsReason, event.Reason)
+	}
+	return eventsReason
 }

@@ -106,6 +106,13 @@ var _ = Describe("API Definition Controller", func() {
 					Namespace: createdApiDefinition.Namespace,
 				}, cm)
 			}, timeout, interval).ShouldNot(Succeed())
+
+			By("Check events")
+			Expect(
+				getEventsReason(apiDefinitionFixture),
+			).Should(
+				ContainElements([]string{"Deleted", "Deleting"}),
+			)
 		})
 
 		It("Should detect when API has already been deleted", func() {

@@ -86,6 +86,13 @@ var _ = Describe("API Definition Controller", func() {
 				res, callErr := httpClient.Get(endpointUpdated)
 				return callErr == nil && res.StatusCode == 200
 			}, timeout, interval).Should(BeTrue())
+
+			By("Check events")
+			Expect(
+				getEventsReason(apiDefinitionFixture),
+			).Should(
+				ContainElements([]string{"Updated", "Updating"}),
+			)
 		})
 	})
 

@@ -147,6 +147,13 @@ var _ = Describe("API Definition Controller", func() {
 				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == apiDefinition.Status.ID
 			}, timeout, interval).Should(BeTrue())
+
+			By("Check events")
+			Expect(
+				getEventsReason(apiDefinition),
+			).Should(
+				ContainElements([]string{"Created", "Creating", "AddedFinalizer"}),
+			)
 		})
 
 		It("Should create a STOPPED API Definition", func() {

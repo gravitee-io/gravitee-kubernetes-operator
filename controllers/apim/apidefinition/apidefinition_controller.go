@@ -32,6 +32,7 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
@@ -61,6 +62,7 @@ type Reconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
+//nolint:funlen // We prefer to have a long function with visible intentions than several functions making it more complex to understand
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
@@ -84,11 +86,20 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	// Ini Delegate and set management context if defined
 	apisDelegate := internal.NewDelegate(ctx, r.Client, log)
+	event := utils.NewEvent(r.Recorder)
 
 	if apiDefinition.Spec.Context != nil {
 		managementContext, ctxErr := managementcontext.Get(ctx, r.Client, log, apiDefinition.Spec.Context)
 		if ctxErr != nil {
-			log.Error(ctxErr, "And error has occurred while trying to retrieve management context")
+			log.Error(ctxErr, "And error has occurred while trying to retrieve ManagementContext")
+			event.NormalEvent(
+				apiDefinition,
+				"ManagementContextUnLiked",
+				fmt.Sprintf(
+					"An error has occurred while trying to retrieve ManagementContext %s[%s]",
+					apiDefinition.Spec.Context.Name, apiDefinition.Spec.Context.Namespace,
+				),
+			)
 		}
 
 		apisDelegate.SetManagementContext(managementContext)
@@ -113,18 +124,25 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	case !apiDefinition.HasFinalizer():
 		log.Info("Add Finalizer to API definition")
 		err = apisDelegate.Finalizer(apiDefinition)
+		event.NormalEvent(apiDefinition, "AddedFinalizer", "Added Finalizer for the API definition")
 
 	case apiDefinition.IsBeingDeleted():
 		log.Info("Deleting API definition")
+		event.NormalEvent(apiDefinition, "Deleting", "Deleting API definition")
 		err = apisDelegate.Delete(apiDefinition)
+		event.NormalEvent(apiDefinition, "Deleted", "Deleted API definition")
 
 	case apiDefinition.IsBeingCreated():
 		log.Info("Creating API definition")
+		event.NormalEvent(apiDefinition, "Creating", "Creating API definition")
 		err = apisDelegate.Create(apiDefinition)
+		event.NormalEvent(apiDefinition, "Created", "Created API definition")
 
 	case apiDefinition.IsBeingUpdated():
 		log.Info("Updating API definition")
+		event.NormalEvent(apiDefinition, "Updating", "Updating API definition")
 		err = apisDelegate.Update(apiDefinition)
+		event.NormalEvent(apiDefinition, "Updated", "Updated API definition")
 	default:
 		log.Info("No action to perform")
 	}
@@ -134,7 +152,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
+	// Error handling
 	err = apisDelegate.UpdateStatusAndReturnError(apiDefinition, err)
+	event.WarningEvent(apiDefinition, string(apiDefinition.Status.ProcessingStatus), err.Error())
 
 	if internal.IsRecoverableError(err) {
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
