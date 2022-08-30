@@ -82,6 +82,9 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 				return k8sErr == nil && savedApiDefinition.Status.ProcessingStatus == gio.ProcessingStatusFailed
 			}, timeout, interval).Should(BeTrue())
 
+			By("Check events")
+			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"Failed"}))
+
 			By("Set right credentials in ManagementContext")
 			managementContextRight := managementContextBad.DeepCopy()
 			managementContextRight.Spec = managementContextFixture.Spec
@@ -89,8 +92,21 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			err = k8sClient.Update(ctx, managementContextRight)
 			Expect(err).ToNot(HaveOccurred())
 
+			By("Update the API definition")
+			// TODO: find a way to reconcile the API definition when management context is updated ?
+			apiDefinition = savedApiDefinition.DeepCopy()
+			apiDefinition.Spec.Name = "new-name-v2"
+			err = k8sClient.Update(ctx, apiDefinition)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Check API definition processing status")
+			Eventually(func() bool {
+				k8sErr := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
+				return k8sErr == nil && savedApiDefinition.Status.ProcessingStatus == gio.ProcessingStatusCompleted
+			}, timeout, interval).Should(BeTrue())
+
 			By("Check events")
-			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"Failed"}))
+			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"Updated"}))
 		})
 
 		It("Should requeue reconcile with bad ManagementContext BaseUrl", func() {
@@ -125,13 +141,11 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			By("Check events")
 			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"Reconciling"}))
 
-			// TODO: fix it
-			// By("Check API definition processing status")
-			// Eventually(func() bool {
-			// 	k8sErr := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
-			// 	fmt.Println(savedApiDefinition.Status.ProcessingStatus)
-			// 	return k8sErr == nil && savedApiDefinition.Status.ProcessingStatus == gio.ProcessingStatusCompleted
-			// }, timeout, interval).Should(BeTrue())
+			By("Check API definition processing status")
+			Eventually(func() bool {
+				k8sErr := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
+				return k8sErr == nil && savedApiDefinition.Status.ProcessingStatus == gio.ProcessingStatusCompleted
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })
