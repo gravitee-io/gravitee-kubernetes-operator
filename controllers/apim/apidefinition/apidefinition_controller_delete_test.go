@@ -24,6 +24,7 @@ import (
 	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -124,8 +125,12 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Expect that the ConfigMap has been deleted")
+			cm := &v1.ConfigMap{}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      createdApiDefinition.Name,
+					Namespace: createdApiDefinition.Namespace,
+				}, cm)
 			}, timeout, interval).ShouldNot(Succeed())
 		})
 
@@ -157,8 +162,12 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Expect that the ConfigMap has been deleted")
+			cm := &v1.ConfigMap{}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      createdApiDefinition.Name,
+					Namespace: createdApiDefinition.Namespace,
+				}, cm)
 			}, timeout, interval).ShouldNot(Succeed())
 		})
 	})
