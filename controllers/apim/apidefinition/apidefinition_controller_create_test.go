@@ -15,7 +15,6 @@ limitations under the License.
 package apidefinition
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -32,18 +31,11 @@ import (
 )
 
 var _ = Describe("API Definition Controller", func() {
-
-	// Define utility constants for object names and testing timeouts/durations and intervals.
 	const (
-		namespace = "default"
-		origin    = "kubernetes"
-		mode      = "fully_managed"
-
-		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
+		origin = "kubernetes"
+		mode   = "fully_managed"
 	)
 
-	ctx := context.Background()
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("With basic ApiDefinition", func() {
@@ -62,11 +54,7 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		AfterEach(func() {
-			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
-			}, timeout, interval).ShouldNot(Succeed())
+			cleanupApiDefinition(apiDefinitionFixture)
 		})
 
 		It("Should create an API Definition", func() {
@@ -117,17 +105,7 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		AfterEach(func() {
-			Expect(k8sClient.Delete(ctx, apiDefinitionFixture)).Should(Succeed())
-
-			Expect(k8sClient.Delete(ctx, managementContextFixture)).Should(Succeed())
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
-			}, timeout, interval).ShouldNot(Succeed())
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
-			}, timeout, interval).ShouldNot(Succeed())
+			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should create an API Definition", func() {

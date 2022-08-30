@@ -14,12 +14,8 @@ limitations under the License.
 package apidefinition
 
 import (
-	"context"
-	"time"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	k8sErr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -28,16 +24,6 @@ import (
 
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
 
-	// Define utility constants for object names and testing timeouts/durations and intervals.
-	const (
-		namespace = "default"
-
-		timeout  = time.Second * 10
-		interval = time.Millisecond * 250
-	)
-
-	ctx := context.Background()
-
 	Context("With basic ApiDefinition & ManagementContext", func() {
 		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
@@ -45,7 +31,6 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 		var savedApiDefinition *gio.ApiDefinition
 
 		var apiLookupKey types.NamespacedName
-		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
@@ -62,7 +47,6 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiDefinitionFixture = apiDefinition
 			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
 			savedApiDefinition = new(gio.ApiDefinition)
@@ -73,21 +57,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 		})
 
 		AfterEach(func() {
-			err := k8sClient.Delete(ctx, apiDefinitionFixture)
-			if !k8sErr.IsNotFound(err) {
-				// wait deleted only if not already deleted
-				Eventually(func() error {
-					return k8sClient.Get(ctx, apiLookupKey, apiDefinitionFixture)
-				}, timeout, interval).ShouldNot(Succeed())
-			}
-
-			err = k8sClient.Delete(ctx, managementContextFixture)
-			if !k8sErr.IsNotFound(err) {
-				// wait deleted only if not already deleted
-				Eventually(func() error {
-					return k8sClient.Get(ctx, contextLookupKey, managementContextFixture)
-				}, timeout, interval).ShouldNot(Succeed())
-			}
+			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should not requeue reconcile with 401 error", func() {
