@@ -62,6 +62,7 @@ type Reconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
+//
 //nolint:funlen // We prefer to have a long function with visible intentions than several functions making it more complex to understand
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
