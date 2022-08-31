@@ -6,6 +6,8 @@ import (
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	managementapierror "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	k8sUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type NonRecoverableError struct {
@@ -23,9 +25,12 @@ func IsRecoverableError(err error) bool {
 func (d *Delegate) UpdateStatusAndReturnError(apiDefinition *gio.ApiDefinition, reconcileErr error) error {
 	reconcileErr = wrapError(reconcileErr)
 
-	processingStatus := gio.ProcessingStatusFailed
-	if IsRecoverableError(reconcileErr) {
-		processingStatus = gio.ProcessingStatusReconciling
+	processingStatus := gio.ProcessingStatusReconciling
+	if !IsRecoverableError(reconcileErr) {
+		processingStatus = gio.ProcessingStatusFailed
+
+		// Remove finalizer when API definition is failed. To allow the user to remove it.
+		k8sUtil.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
 	}
 
 	apiDefinition.Status.ProcessingStatus = processingStatus

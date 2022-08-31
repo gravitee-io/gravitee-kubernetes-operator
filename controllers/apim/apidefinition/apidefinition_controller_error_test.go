@@ -17,8 +17,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
+	k8sUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
@@ -102,7 +104,9 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			By("Check API definition processing status")
 			Eventually(func() bool {
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
-				return k8sErr == nil && savedApiDefinition.Status.ProcessingStatus == gio.ProcessingStatusCompleted
+				return k8sErr == nil &&
+					savedApiDefinition.Status.ProcessingStatus == gio.ProcessingStatusCompleted &&
+					k8sUtil.ContainsFinalizer(savedApiDefinition, keys.ApiDefinitionDeletionFinalizer)
 			}, timeout, interval).Should(BeTrue())
 
 			By("Check events")
