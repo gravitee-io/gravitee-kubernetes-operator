@@ -182,6 +182,8 @@ workflows:
           name: Login to azure and get ~/.kube/config
           context: cicd-orchestrator
           clusterName: apim-preprod
+          requires:
+            - Test
           filters:
             branches:
               only:
