@@ -168,43 +168,6 @@ jobs:
           name: Deploy controller to the K8s cluster specified in ~/.kube/config
           command: make deploy
 
-  deploy-on-k8s:
-    parameters:
-      clusterName:
-        type: enum
-        enum: ["apim-preprod"]
-        description: name of the Azure k8s cluster
-    executor:
-      name: azure-cli
-      resource_class: small
-    steps:
-      - attach_workspace:
-          at: .
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
-          var-name: AZURE_APPLICATION_ID
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
-          var-name: AZURE_TENANT
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
-          var-name: AZURE_APPLICATION_SECRET
-      - kubernetes/install-kubectl
-      - helm/install-helm-client
-      - when:
-          condition:
-            equal: [ apim-preprod, << parameters.clusterName >> ]
-          steps: 
-            - run:
-                name: Get k8s context from Azure
-                command: |
-                  az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
-                  az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
-      - get-docker-img
-      - run:
-          name: Kubectl apply
-          command: kubectl apply -f gko-config-default.yml
-
 workflows:
   pull_requests:
     jobs:
@@ -215,9 +178,6 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Lint
-
-  release:
-    jobs:
       - login-to-azure:
           name: Login to azure and get ~/.kube/config
           context: cicd-orchestrator
