@@ -98,12 +98,15 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: lint-fix
-lint-fix: golangci-lint ## Fix (trivial) issues found by golangci-lint
+lint-fix: golangci-lint commitlint addlicense ## Fix (trivial) issues found by golangci-lint
 	$(GOLANGCILINT) run ./... --fix
+	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
 
 .PHONY: lint
-lint: golangci-lint commitlint ## Run golangci-lint and fail on error
-	$(GOLANGCILINT) run ./... && $(COMMITLINT) lint
+lint: golangci-lint commitlint addlicense ## Run golangci-lint and fail on error
+	$(GOLANGCILINT) run ./...
+	$(COMMITLINT) lint
+	$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
 
 GOTESTARGS ?= ""
 .PHONY: test
@@ -200,6 +203,7 @@ GOTESTSUM ?= $(LOCALBIN)/gotestsum
 CRDOC ?= $(LOCALBIN)/crdoc
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 COMMITLINT ?= $(LOCALBIN)/commitlint
+ADDLICENSE ?= $(LOCALBIN)/addlicense
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
@@ -246,6 +250,10 @@ commitlint: $(COMMITLINT)
 $(COMMITLINT): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install github.com/conventionalcommit/commitlint@latest
 
+.PHONY: addlicense
+addlicense: $(ADDLICENSE)
+$(ADDLICENSE): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install github.com/google/addlicense@latest
 	
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
