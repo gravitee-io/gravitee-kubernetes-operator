@@ -14,7 +14,7 @@
 
 ## Synchronizing your API CRDs with an existing management API
 
-The following example assumes that a management API has been deployed in a namespace called `apim-blue`, and connects to the management API using the default in memory credentials. 
+The following example assumes that a management API has been deployed in a namespace called `apim-blue`, and connects to the management API using the default in memory credentials.
 
 ### Creating a Management Context
 
@@ -63,7 +63,9 @@ spec:
 ```
 
 ### Start and Stop your API
+
 By dafault the API will start automatically but if you want to stop it later (or just create API definition in stop mode) you can set the "state" property to "STOPPED"
+
 ```shell
 echo """
 apiVersion: gravitee.io/v1alpha1
@@ -88,8 +90,8 @@ spec:
             target: "https://api.gravitee.io/echo"
 """ | kubectl apply -f -
 ```
-changing back the state to "STARTED", will re-start the API again.
 
+changing back the state to "STARTED", will re-start the API again.
 
 ### Update your API
 
@@ -123,7 +125,13 @@ spec:
 
 ### Delete your API
 
-> TODO (not implemented)
+> ⚠️ Consider that the above creation steps are done
+
+Simple delete of the API definition
+
+```shell
+kubectl -n apim-blue delete apidefinitions.gravitee.io basic-api-example 
+```
 
 ## Installation
 
@@ -164,7 +172,7 @@ spec:
       password: 406185a0-9adb-4097-b0bd-eb5cf13a7c6e
 ```
 
-If you want to target another environment on the same API instance, just add another 
+If you want to target another environment on the same API instance, just add another
 management context targeting this environment (e.g. staging)
 
 This time, we use a bearerToken to authenticate the requests (the token must have been generated beforehand for the admin account)
@@ -204,4 +212,38 @@ spec:
       - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
+```
+
+### ApiDefinition Lifecycle
+
+The ApiDefiniton has a "Processing Status" field that allows to see the status of the resource in the cluster.
+
+Here are the possible values for status:
+
+| Status | Description |
+| --- | --- |
+| [None] | The ApiDefinition has been created but not processed yet |
+| Completed | The API definition has been successfully created or updated |
+| Reconciling | The operator has encountered a recoverable error. A retry will performed each 5 seconds until the cluster retry limit is reached|
+| Failed | The operator has encountered an unrecoverable error. These are errors that require manual action to correct. No retry will be performed |
+
+During each action performed by the operator events are added to the resource. It is possible to see them with :
+
+> ⚠️ Consider that the above creation steps are done
+```shell
+k describe -n default apidefinitions.gravitee.io basic-api-example
+```
+
+Exemple : 
+```
+
+Name:         basic-api-example
+Namespace:    default
+[...]
+Events:
+  Type    Reason          Age   From                      Message
+  ----    ------          ----  ----                      -------
+  Normal  AddedFinalizer  73s   apidefinition-controller  Added Finalizer for the API definition
+  Normal  Creating        73s   apidefinition-controller  Creating API definition
+  Normal  Created         72s   apidefinition-controller  Created API definition
 ```
