@@ -254,7 +254,12 @@ $(COMMITLINT): $(LOCALBIN)
 addlicense: $(ADDLICENSE)
 $(ADDLICENSE): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install github.com/google/addlicense@latest
-	
+
+.PHONY: bundle-standalone
+bundle-standalone: manifests kustomize ## bundles all operator resources as a single bundle.yml file
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default > bundle.yml
+
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
 	operator-sdk generate kustomize manifests -q
@@ -263,8 +268,8 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 	operator-sdk bundle validate ./bundle
 
 .PHONY: bundle-build
-bundle-build: ## Build the bundle image.
-	docker build -f Dockerfile -t $(BUNDLE_IMG) .
+bundle-build: bundle ## Build the bundle image.
+	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
