@@ -281,3 +281,6 @@ issues:
         - gosec
         - noctx
         - wrapcheck
+    - path: "\\.go"
+      linters:
+        - typecheck
