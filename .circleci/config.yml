@@ -5,6 +5,7 @@ orbs:
   go: circleci/go@1.7.1
   helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.2
+  gravitee: gravitee-io/gravitee@2.1
 
 executors:
   azure-cli:
@@ -168,34 +169,86 @@ jobs:
           name: Deploy controller to the K8s cluster specified in ~/.kube/config
           command: make deploy
 
+  semantic-release:
+    docker:
+      - image: cimg/go:1.19.0-node
+    environment:
+      GITHUB_TOKEN: "keeper://TIlcGPFq4rN5GvgnZb9hng/field/password"
+      GIT_AUTHOR_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
+      GIT_AUTHOR_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
+      GIT_COMMITTER_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
+      GIT_COMMITTER_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
+    steps:
+      - checkout
+      - gravitee/install-semantic-release
+      - run:
+          name: "Setup Semantic Release"
+          command: |
+            echo '{
+                    "tagFormat": "${version}",
+                    "plugins": [
+                      "@semantic-release/commit-analyzer",
+                      "@semantic-release/release-notes-generator",
+                      "@semantic-release/changelog",
+
+                      "@semantic-release/github",
+                      [
+                        "@semantic-release/git",
+                        {
+                          "assets": ["**/pom.xml", "CHANGELOG.md"],
+                          "message": "chore(release): ${nextRelease.version} [skip ci]"
+                        }
+                      ]
+                    ]
+                  }
+                  ' > .releaserc.json
+      - attach_workspace:
+          at: .
+      - keeper/exec:
+          step-name: "Run Semantic Release"
+          command: |
+            npx semantic-release
+
 workflows:
-  pull_requests:
+  # pull_requests:
+  #   jobs:
+  #     - lint:
+  #         name: Lint
+  #     - test:
+  #         name: Test
+  #         context: cicd-orchestrator
+  #         requires:
+  #           - Lint
+  #     - login-to-azure:
+  #         name: Login to azure and get ~/.kube/config
+  #         context: cicd-orchestrator
+  #         clusterName: apim-preprod
+  #         requires:
+  #           - Test
+  #         filters:
+  #           branches:
+  #             only:
+  #              - master
+  #              - work-on-ci-like-master
+  #     - build-and-publish-deploy-gko-image:
+  #         name: Build & Publish docker image to Azure registry and deploy it to k8s
+  #         context: cicd-orchestrator
+  #         requires:
+  #           - Login to azure and get ~/.kube/config
+  #         filters:
+  #           branches:
+  #             only:
+  #              - master
+  #              - work-on-ci-like-master
+
+  release:
     jobs:
-      - lint:
-          name: Lint
-      - test:
-          name: Test
+      - semantic-release:
+          name: Semantic Release
           context: cicd-orchestrator
-          requires:
-            - Lint
-      - login-to-azure:
-          name: Login to azure and get ~/.kube/config
-          context: cicd-orchestrator
-          clusterName: apim-preprod
-          requires:
-            - Test
           filters:
             branches:
               only:
-               - master
-               - work-on-ci-like-master
-      - build-and-publish-deploy-gko-image:
-          name: Build & Publish docker image to Azure registry and deploy it to k8s
-          context: cicd-orchestrator
-          requires:
-            - Login to azure and get ~/.kube/config
-          filters:
-            branches:
-              only:
-               - master
-               - work-on-ci-like-master
+              #  - master
+               - work-on-release
+    
