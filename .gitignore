@@ -29,3 +29,7 @@ __debug_bin
 
 # Build files by Makefile
 gko-config-default.yml
+
+# K8S OLM 
+cache/
+bundle/
