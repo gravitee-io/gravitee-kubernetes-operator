@@ -102,8 +102,8 @@ lint-fix: golangci-lint ## Fix (trivial) issues found by golangci-lint
 	$(GOLANGCILINT) run ./... --fix
 
 .PHONY: lint
-lint: golangci-lint ## Run golangci-lint and fail on error
-	$(GOLANGCILINT) run ./...
+lint: golangci-lint commitlint ## Run golangci-lint and fail on error
+	$(GOLANGCILINT) run ./... && $(COMMITLINT) lint
 
 GOTESTARGS ?= ""
 .PHONY: test
@@ -199,6 +199,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOTESTSUM ?= $(LOCALBIN)/gotestsum
 CRDOC ?= $(LOCALBIN)/crdoc
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
+COMMITLINT ?= $(LOCALBIN)/commitlint
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
@@ -240,6 +241,12 @@ golangci-lint: $(GOLANGCILINT)
 $(GOLANGCILINT): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
+.PHONY: commitlint
+commitlint: $(COMMITLINT)
+$(COMMITLINT): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install github.com/conventionalcommit/commitlint@latest
+
+	
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
 	operator-sdk generate kustomize manifests -q
