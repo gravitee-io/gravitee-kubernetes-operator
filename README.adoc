@@ -21,6 +21,12 @@ It aims to meet several objectives:
 
 One of the main goal of this new component is also to cover the CICD aspects when it comes to Kubernetes.
 
+== Initialize you env
+
+- Install docker
+- Install kubctl
+- Install the operator-sdk `brew install operator-sdk`
+
 == How-to run locally
 To run the operator locally, against an APIM ready K3d cluster, execute the following commands:
 
