@@ -23,6 +23,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -64,26 +65,25 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 //
-//nolint:funlen // We prefer to have a long function with visible intentions than several functions making it more complex to understand
+//nolint:funlen,gocognit // We prefer to have a long function with visible intentions than several functions making it more complex to understand
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
 	log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
 	defer log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
 
-	// Fetch the Api Definition apiDefinition
-	apiDefinition := &gio.ApiDefinition{}
 	requeueAfter := time.Second * requeueAfterTime
 
-	err := r.Get(ctx, req.NamespacedName, apiDefinition)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("API Definition resource not found. Ignoring since object must be deleted")
-			return ctrl.Result{}, nil
-		}
+	// Fetch the Api Definition apiDefinition
+	apiDefinition, err := r.getApiDefinition(ctx, req.NamespacedName)
+	if errors.IsNotFound(err) {
+		log.Info("API Definition resource not found. Ignoring since object must be deleted")
+		return ctrl.Result{}, nil
+	} else if err != nil {
 		log.Error(err, "Failed to get API Definition")
 		return ctrl.Result{}, err
 	}
+
 	log = log.WithValues("apiDefinitionName", apiDefinition.Name)
 
 	// Ini Delegate and set management context if defined
@@ -126,24 +126,36 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	case !apiDefinition.HasFinalizer():
 		log.Info("Add Finalizer to API definition")
 		err = apisDelegate.Finalizer(apiDefinition)
+		if err != nil {
+			break
+		}
 		event.NormalEvent(apiDefinition, "AddedFinalizer", "Added Finalizer for the API definition")
 
 	case apiDefinition.IsBeingDeleted():
 		log.Info("Deleting API definition")
 		event.NormalEvent(apiDefinition, "Deleting", "Deleting API definition")
 		err = apisDelegate.Delete(apiDefinition)
+		if err != nil {
+			break
+		}
 		event.NormalEvent(apiDefinition, "Deleted", "Deleted API definition")
 
 	case apiDefinition.IsBeingCreated():
 		log.Info("Creating API definition")
 		event.NormalEvent(apiDefinition, "Creating", "Creating API definition")
 		err = apisDelegate.Create(apiDefinition)
+		if err != nil {
+			break
+		}
 		event.NormalEvent(apiDefinition, "Created", "Created API definition")
 
 	case apiDefinition.IsBeingUpdated():
 		log.Info("Updating API definition")
 		event.NormalEvent(apiDefinition, "Updating", "Updating API definition")
 		err = apisDelegate.Update(apiDefinition)
+		if err != nil {
+			break
+		}
 		event.NormalEvent(apiDefinition, "Updated", "Updated API definition")
 	default:
 		log.Info("No action to perform")
@@ -170,4 +182,16 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&gio.ApiDefinition{}).
 		//		Owns(&v1.Secret{}).
 		Complete(r)
+}
+
+func (r *Reconciler) getApiDefinition(
+	ctx context.Context,
+	namespacedName types.NamespacedName,
+) (*gio.ApiDefinition, error) {
+	apiDefinition := &gio.ApiDefinition{}
+	err := r.Get(ctx, namespacedName, apiDefinition)
+	if err != nil {
+		return nil, err
+	}
+	return apiDefinition, nil
 }
