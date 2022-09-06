@@ -1,0 +1,4 @@
+
+settings:
+  body-max-line-length:
+    argument: 120
