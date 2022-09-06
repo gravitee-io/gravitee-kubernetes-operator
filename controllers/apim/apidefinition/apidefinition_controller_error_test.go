@@ -100,6 +100,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Check events")
 			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"Failed"}))
+			Expect(getEventsReason(apiDefinitionFixture)).ShouldNot(ContainElements([]string{"Updated"}))
 
 			By("Set right credentials in ManagementContext")
 			managementContextRight := managementContextBad.DeepCopy()
