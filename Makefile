@@ -107,7 +107,7 @@ lint: golangci-lint ## Run golangci-lint and fail on error
 
 GOTESTARGS ?= ""
 .PHONY: test
-test: manifests generate ## Run tests.
+test: manifests generate install## Run tests.
 	kubectl config use-context k3d-graviteeio
 	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GOTESTSUM) $(GOTESTARGS) ./... -timeout 60s -coverprofile cover.out
 
