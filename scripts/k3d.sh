@@ -22,6 +22,9 @@ K3D_IMAGES_REGISTRY_NAME="${K3D_CLUSTER_NAME}.docker.localhost"
 K3D_IMAGES_REGISTRY_PORT=12345
 K3D_IMAGES_REGISTRY="${K3D_IMAGES_REGISTRY_NAME}:${K3D_IMAGES_REGISTRY_PORT}"
 
+# APIM config
+APIM_GATEWAY_CONFIG_MAP_NAME=apim-gateway-env-source
+
 echo "
 
     Installing the latest version of k3d (if not present) ...
@@ -161,12 +164,15 @@ helm install \
     --set "defaultBackend.image.tag=${NGINX_BACKEND_IMAGE_TAG}" \
     nginx-ingress bitnami/nginx-ingress-controller
 
+kubectl create configmap ${APIM_GATEWAY_CONFIG_MAP_NAME} \
+    --from-literal=gravitee_services_sync_kubernetes_enabled=true
 
 BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
 helm install \
     --namespace ${K3D_NAMESPACE_NAME} \
     -f "$BASEDIR/helm/apim-values.yml" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway" \
+    --set "gateway.deployment.envFrom[0].configMapRef.name=${APIM_GATEWAY_CONFIG_MAP_NAME}" \
     --set "api.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api" \
     --set "ui.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui" \
     --set "gateway.image.tag=${APIM_IMAGE_TAG}" \
