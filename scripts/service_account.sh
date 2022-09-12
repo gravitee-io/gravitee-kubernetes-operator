@@ -14,7 +14,7 @@
 # limitations under the License.
 
 
-SERVICE_ACCOUNT_NAME=kubeconfig-sa
+SERVICE_ACCOUNT_NAME=gravitee-sa
 SERVICE_ACCOUNT_NAMESPACE=kube-system
 CLUSTER_ROLE_BINDING_NAME=add-on-cluster-admin
 
@@ -43,17 +43,33 @@ else
     "
 fi
 
-kubectl -n "${SERVICE_ACCOUNT_NAMESPACE}" create serviceaccount ${SERVICE_ACCOUNT_NAME} > /dev/null 2>&1 
+kubectl -n "${SERVICE_ACCOUNT_NAMESPACE}" create serviceaccount ${SERVICE_ACCOUNT_NAME}
 
-kubectl create clusterrolebinding "${CLUSTER_ROLE_BINDING_NAME}" --clusterrole=cluster-admin --serviceaccount=${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME} > /dev/null 2>&1
+kubectl create clusterrolebinding "${CLUSTER_ROLE_BINDING_NAME}" --clusterrole=cluster-admin --serviceaccount=${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}
 
-TOKEN_NAME=$(kubectl -n ${SERVICE_ACCOUNT_NAMESPACE} get serviceaccount/${SERVICE_ACCOUNT_NAME} -o jsonpath='{.secrets[0].name}')
+cat << EOF | kubectl create -f -
 
-TOKEN=$(kubectl -n ${SERVICE_ACCOUNT_NAMESPACE} get secret ${TOKEN_NAME} -o jsonpath='{.data.token}'| base64 --decode)
+apiVersion: v1
+
+kind: Secret
+
+metadata:
+
+  name: ${SERVICE_ACCOUNT_NAME}
+  namespace: ${SERVICE_ACCOUNT_NAMESPACE}
+  annotations:
+    kubernetes.io/service-account.name: ${SERVICE_ACCOUNT_NAME}
+
+type: kubernetes.io/service-account-token
+
+EOF
+
+TOKEN=$(kubectl get secrets -n ${SERVICE_ACCOUNT_NAMESPACE} -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SERVICE_ACCOUNT_NAME}')].data.token}"|base64 --decode)
 
 kubectl config set-credentials ${SERVICE_ACCOUNT_NAME} --token="${TOKEN}"
-kubectl config set-context --current --user=${SERVICE_ACCOUNT_NAME}
+kubectl config set-context --current --user="${SERVICE_ACCOUNT_NAME}"
 
 echo "
     You are now authenticated against ${KUBE_CONTEXT} as ${SERVICE_ACCOUNT_NAME}
 "
+
