@@ -44,6 +44,7 @@ type Plan struct {
 	Name     string           `json:"name"`
 	Security PlanSecurityType `json:"security"`
 	Status   PlanStatus       `json:"status"`
+	Api      string           `json:"api"`
 }
 
 type PlanSecurityType string
