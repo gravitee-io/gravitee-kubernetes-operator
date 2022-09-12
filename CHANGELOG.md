@@ -1,3 +1,16 @@
+# [0.1.0-alpha.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.0.0...0.1.0-alpha.1) (2022-09-12)
+
+
+### Bug Fixes
+
+* add missing API key in the API definition payload ([efe3d22](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/efe3d22c099a91b5c2aab735e22b35e655486aae))
+* do not send success event when action throw error ([63ea629](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/63ea6292c78106954c6004a6257115d8c92d2425))
+
+
+### Features
+
+* force first gko release 🚀 ([6f044fd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/6f044fdb74d012ec20755ef88812dc3c9b2e6f82))
+
 # 0.0.0 (2022-09-02)
 
 
