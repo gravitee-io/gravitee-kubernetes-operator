@@ -62,6 +62,18 @@ spec:
 """ | kubectl apply -f -
 ```
 
+### Use APIM export endpoint to create your API Definition from an existing API
+
+Since version 3.20, an endpoint has been added to the management API to export an API as an API Definition resource.
+
+This allows to easily create an API Definition from a given environment by calling the endpoint and piping the result to
+some kubectl command e.g:
+
+
+```shell
+curl -s -H "Authorization: Bearer $TOKEN" "https://apim-blue-api.team-gko.gravitee.xyz/management/organizations/DEFAULT/environments/DEFAULT/apis/$API_ID/crd" | kubectl apply -f -
+```
+
 ### Start and Stop your API
 
 By dafault the API will start automatically but if you want to stop it later (or just create API definition in stop mode) you can set the "state" property to "STOPPED"
