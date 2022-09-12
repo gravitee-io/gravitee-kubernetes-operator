@@ -69,6 +69,7 @@ func retrieveMgmtPlanIds(apiDefinition *gio.ApiDefinition, mgmtApi *managementap
 		for _, mgmtPlan := range mgmtApi.Plans {
 			if plan.CrossId == mgmtPlan.CrossId {
 				plan.Id = mgmtPlan.Id
+				plan.Api = mgmtPlan.Api
 			}
 		}
 	}
