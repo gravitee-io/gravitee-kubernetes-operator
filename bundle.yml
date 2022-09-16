@@ -1373,7 +1373,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: graviteeio.azurecr.io/gko:0.1.0-alpha.1
+        image: graviteeio/gko:0.1.0-alpha.2
         imagePullPolicy: Always
         livenessProbe:
           httpGet:

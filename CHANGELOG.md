@@ -1,3 +1,10 @@
+# [0.1.0-alpha.2](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.1...0.1.0-alpha.2) (2022-09-16)
+
+
+### Bug Fixes
+
+* manually create public alpha release ([151f637](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/151f637afa0478bd3398aaa6406803ac5c561893))
+
 # [0.1.0-alpha.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.0.0...0.1.0-alpha.1) (2022-09-12)
 
 
