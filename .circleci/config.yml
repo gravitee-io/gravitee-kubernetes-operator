@@ -33,7 +33,7 @@ jobs:
           command: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - run:
           name: Run Lint
-          command: golangci-lint run ./...
+          command: make lint
       - run:
           name: Check that make generate has been executed
           command: |

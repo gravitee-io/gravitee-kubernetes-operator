@@ -98,7 +98,7 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: lint-fix
-lint-fix: golangci-lint commitlint addlicense ## Fix (trivial) issues found by golangci-lint
+lint-fix: golangci-lint addlicense ## Fix (trivial) issues found by golangci-lint
 	$(GOLANGCILINT) run ./... --fix
 	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
 
