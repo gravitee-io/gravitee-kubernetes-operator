@@ -103,9 +103,19 @@ lint-fix: golangci-lint addlicense ## Fix (trivial) issues found by golangci-lin
 	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
 
 .PHONY: lint
-lint: golangci-lint commitlint addlicense ## Run golangci-lint and fail on error
-	$(GOLANGCILINT) run ./...
-	$(COMMITLINT) lint
+lint: lint-commitlint lint-go lint-license ## Run all lint and fail on error
+
+.PHONY: lint-commitlint
+lint-commitlint:  ## Run commitlint and fail on error
+	npm i -g @commitlint/config-conventional @commitlint/cli
+	commitlint -x @commitlint/config-conventional --edit
+
+.PHONY: lint-go
+lint-go: golangci-lint ## Run golangci-lint and fail on error
+	$(GOLANGCILINT) run ./... 
+
+.PHONY: lint-license
+lint-license: addlicense ## Run addlicense lint and fail on error
 	$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
 
 GOTESTARGS ?= ""
@@ -202,7 +212,6 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOTESTSUM ?= $(LOCALBIN)/gotestsum
 CRDOC ?= $(LOCALBIN)/crdoc
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
-COMMITLINT ?= $(LOCALBIN)/commitlint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
 
 ## Tool Versions
@@ -244,11 +253,6 @@ reference: crdoc
 golangci-lint: $(GOLANGCILINT)
 $(GOLANGCILINT): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-
-.PHONY: commitlint
-commitlint: $(COMMITLINT)
-$(COMMITLINT): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install github.com/conventionalcommit/commitlint@latest
 
 .PHONY: addlicense
 addlicense: $(ADDLICENSE)

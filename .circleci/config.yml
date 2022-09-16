@@ -24,7 +24,7 @@ executors:
 jobs:
   lint:
     docker:
-      - image: cimg/go:1.19.1
+      - image: cimg/go:1.19.1-node
     steps:
       - checkout
       - go/mod-download-cached
@@ -32,8 +32,16 @@ jobs:
           name: Install GolangCi Lint
           command: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - run:
-          name: Run Lint
-          command: make lint
+          name: Lint Go sources
+          command: make lint-go
+      - run:
+          name: Lint licensing
+          command: make lint-license
+      - run:
+          name: Lint commits
+          command: |
+            npm i @commitlint/config-conventional @commitlint/cli
+            node_modules/.bin/commitlint -x @commitlint/config-conventional --from $(git describe --tags --abbrev=0)
       - run:
           name: Check that make generate has been executed
           command: |
@@ -190,7 +198,7 @@ jobs:
                       [
                         "@semantic-release/exec",
                         {
-                          "prepareCmd": "IMG=graviteeio/gko:${nextRelease.version} BUNDLE_IMG=graviteeio/gko-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push"                        
+                          "prepareCmd": "IMG=graviteeio/gko:${nextRelease.version} BUNDLE_IMG=graviteeio/gko-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push lint-fix"                        
                         }
                       ],
                       [
