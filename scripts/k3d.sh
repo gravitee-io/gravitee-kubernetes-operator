@@ -18,7 +18,7 @@ set -e
 
 # APIM Images
 APIM_IMAGE_REGISTRY="${APIM_IMAGE_REGISTRY:-graviteeio}"
-APIM_IMAGE_TAG="${APIM_IMAGE_TAG:-latest}"
+APIM_IMAGE_TAG="${APIM_IMAGE_TAG:-3.19}"
 
 # Docker dependencies images tags
 NGINX_CONTROLLER_IMAGE_TAG=1.3.0
