@@ -21,16 +21,6 @@ executors:
       - image: mcr.microsoft.com/azure-cli:2.39.0
     resource_class: <<parameters.resource_class>>
 
-commands:
-  get-docker-img:
-    steps:
-      - run:
-          name: Get docker image name & tag
-          command: |
-            export VERSION=${CIRCLE_BRANCH}-latest
-            export IMG=graviteeio.azurecr.io/gko:${VERSION}
-            echo "export IMG=$IMG" >> $BASH_ENV
-
 jobs:
   lint:
     docker:
@@ -164,19 +154,15 @@ jobs:
       GIT_AUTHOR_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
       GIT_COMMITTER_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
       GIT_COMMITTER_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
+      DOCKERHUB_BOT_USER_NAME: "keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login"
+      DOCKERHUB_BOT_USER_TOKEN: "keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password"
     steps:
       - checkout
       - gravitee/install-semantic-release
       - setup_remote_docker
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
-          var-name: AZURE_DOCKER_REGISTRY_USERNAME
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
-          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
           name: Docker login
-          command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
+          command: docker login --username="${DOCKERHUB_BOT_USER_NAME}" -p="${DOCKERHUB_BOT_USER_TOKEN}"
       - run:
           name: Install operator SDK 
           command: |
@@ -200,7 +186,7 @@ jobs:
                       [
                         "@semantic-release/exec",
                         {
-                          "prepareCmd": "IMG=graviteeio.azurecr.io/gko:${nextRelease.version} BUNDLE_IMG=graviteeio.azurecr.io/gko-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push"                        
+                          "prepareCmd": "IMG=graviteeio/gko:${nextRelease.version} BUNDLE_IMG=graviteeio/gko-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push"                        
                         }
                       ],
                       [
