@@ -51,16 +51,16 @@ gateway:
     enabled: false
   resources:
     limits:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 500m
+      memory: 2048Mi
     requests:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 500m
+      memory: 2048Mi
   env:
     - name: GIO_MIN_MEM
-      value: 768m
+      value: 1024m
     - name: GIO_MAX_MEM
-      value: 768m
+      value: 1024m
   services:
     sync:
       kubernetes:
@@ -86,11 +86,11 @@ api:
     enabled: false
   resources:
     limits:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 500m
+      memory: 2048Mi
     requests:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 500m
+      memory: 2048Mi
   readinessProbe:
     initialDelaySeconds: 120
     timeoutSeconds: 30
@@ -99,9 +99,9 @@ api:
     timeoutSeconds: 30
   env:
     - name: GIO_MIN_MEM
-      value: 768m
+      value: 1024m
     - name: GIO_MAX_MEM
-      value: 768m
+      value: 1024m
   deployment:
     strategy:
       type: RollingUpdate
