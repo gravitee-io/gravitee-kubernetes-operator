@@ -54,7 +54,7 @@ const (
 	managerPort = 10002
 
 	namespace = "default"
-	timeout   = time.Second * 10
+	timeout   = time.Second * 30
 	interval  = time.Millisecond * 250
 )
 
