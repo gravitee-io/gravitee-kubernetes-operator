@@ -156,6 +156,10 @@ helm install \
     --set readinessProbe.periodSeconds=30 \
     --set readinessProbe.timeoutSeconds=30 \
     --set livenessProbe.timeoutSeconds=30 \
+    --set resources.limits.memory=2048Mi \
+    --set resources.requests.memory=2048Mi \
+    --set resources.limits.cpu=2000m \
+    --set resources.requests.cpu=2000m \
     mongodb bitnami/mongodb
 
 helm install \
