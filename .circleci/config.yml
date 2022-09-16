@@ -254,16 +254,16 @@ workflows:
     jobs:
       - lint:
           name: Lint
-      - test:
-          name: Test
-          context: cicd-orchestrator
-          requires:
-            - Lint
+      # - test:
+      #     name: Test
+      #     context: cicd-orchestrator
+      #     requires:
+      #       - Lint
       - semantic-release:
           name: Semantic Release
           context: cicd-orchestrator
           requires:
-            - Test
+            - Lint
       - login-to-azure:
           name: K8s login on devs-preprod and get ~/.kube/config
           context: cicd-orchestrator
