@@ -1,9 +1,0 @@
-{
-  "extends": [
-    "config:base",
-    "schedule:earlyMondays",
-    ":semanticCommitTypeAll(chore)"
-  ],
-  "prConcurrentLimit": 3,
-  "rebaseWhen": "conflicted"
-}
