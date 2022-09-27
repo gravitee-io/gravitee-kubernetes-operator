@@ -2,10 +2,7 @@ version: 2.1
 
 orbs: 
   kubernetes: circleci/kubernetes@1.3.1
-  go: circleci/go@1.7.1
-  helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.2
-  gravitee: gravitee-io/gravitee@2.1
 
 executors:
   azure-cli:
@@ -22,84 +19,6 @@ executors:
     resource_class: <<parameters.resource_class>>
 
 jobs:
-  lint:
-    docker:
-      - image: cimg/go:1.19.1-node
-    steps:
-      - checkout
-      - go/mod-download-cached
-      - run:
-          name: Install GolangCi Lint
-          command: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      - run:
-          name: Lint Go sources
-          command: make lint-go
-      - run:
-          name: Lint licensing
-          command: make lint-license
-      - run:
-          name: Lint commits
-          command: |
-            npm i @commitlint/config-conventional @commitlint/cli
-            node_modules/.bin/commitlint -x @commitlint/config-conventional --from $(git describe --tags --abbrev=0)
-      - run:
-          name: Check that make generate has been executed
-          command: |
-            make generate
-            git diff --quiet HEAD
-      - run:
-          name: Check that make manifests have been executed
-          command: |
-            make manifests
-            git diff --quiet HEAD
-      - run:
-          name: Check that make reference have been executed
-          command: |
-            make reference
-            git diff --quiet HEAD
-
-  test:
-    machine:
-      image: ubuntu-2204:2022.04.2
-      docker_layer_caching: true
-    resource_class: large
-    steps:
-      - checkout
-      - go/install:
-          version: '1.18.4'
-      - go/load-cache
-      - kubernetes/install-kubectl
-      - helm/install-helm-client
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
-          var-name: AZURE_DOCKER_REGISTRY_USERNAME
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
-          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
-      - run:
-          name: Create junit reports directory
-          command: mkdir -p "/tmp/junit/reports"
-      - run:
-          name: Docker login
-          command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
-      - run:
-          name: Install gotestsum
-          command: make gotestsum
-      - run:
-          name: Start APIM using k3d
-          command: |
-            export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=master-latest
-            make k3d-apim-init
-      - run:
-          name: Wait for APIM to be ready
-          command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 300s
-      - run:
-          name: Run tests
-          command: GOTESTARGS="--junitfile=/tmp/junit/reports/junit.xml" make test
-      - store_test_results:
-          path: /tmp/junit
-
   login-to-azure:
     executor:
       name: azure-cli
@@ -107,7 +26,7 @@ jobs:
     parameters:
       clusterName:
         type: enum
-        enum: ["apim-preprod", "devs-preprod"]
+        enum: ["apim-preprod"]
         description: Name of the Azure k8s cluster
     steps:
       - keeper/env-export:
@@ -128,165 +47,26 @@ jobs:
                 command: |
                   az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
                   az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
-      - when:
-          condition:
-            equal: [ devs-preprod, << parameters.clusterName >> ]
-          steps: 
-            - run:
-                name: Get ~/.kube/config from Azure
-                command: |
-                  az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
-                  az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
       - persist_to_workspace:
           root: ~/
           paths:
             - .kube/config
 
-  deploy-gko-image:
-    docker:
-      - image: cimg/go:1.19.1
-    steps:
-      - attach_workspace:
-          at: ~/
-      - kubernetes/install-kubectl
-      - run:
-          name: Deploy controller to the K8s cluster specified in ~/.kube/config
-          command: kubectl apply -f ~/bundle.yml
-
-  semantic-release:
-    docker:
-      - image: cimg/go:1.19.1-node
-    environment:
-      GITHUB_TOKEN: "keeper://TIlcGPFq4rN5GvgnZb9hng/field/password"
-      GIT_AUTHOR_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
-      GIT_AUTHOR_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
-      GIT_COMMITTER_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
-      GIT_COMMITTER_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
-    steps:
-      - checkout
-      - gravitee/install-semantic-release
-      - setup_remote_docker
-      - keeper/env-export:
-            secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login
-            var-name: DOCKERHUB_BOT_USER_NAME
-      - keeper/env-export:
-            secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password
-            var-name: DOCKERHUB_BOT_USER_TOKEN
-      - run:
-          name: Docker login
-          command: docker login --username="${DOCKERHUB_BOT_USER_NAME}" -p="${DOCKERHUB_BOT_USER_TOKEN}"
-      - run:
-          name: Install operator SDK 
-          command: |
-            export OPERATOR_SDK_RELEASE_VERSION=v1.23.0
-            export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
-            export OS=$(uname | awk '{print tolower($0)}')
-            export DOWNLOAD_URL=https://github.com/operator-framework/operator-sdk/releases/latest/download
-            export BINARY=operator-sdk_${OS}_${ARCH}
-            curl -OJL ${DOWNLOAD_URL}/${BINARY}
-            chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
-      - run:
-          name: "Setup Semantic Release"
-          command: |
-            echo '{
-                    "branches": [{"name": "alpha", "prerelease": true}, "master"],
-                    "tagFormat": "${version}",
-                    "plugins": [
-                      "@semantic-release/commit-analyzer",
-                      "@semantic-release/release-notes-generator",
-                      "@semantic-release/changelog",
-                      [
-                        "@semantic-release/exec",
-                        {
-                          "prepareCmd": "IMG=graviteeio/gko:${nextRelease.version} BUNDLE_IMG=graviteeio/gko-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push lint-fix"                        
-                        }
-                      ],
-                      [
-                        "@semantic-release/github",
-                        {
-                          "assets": [
-                            {"path": "bundle.yml", "label": "Operator resources bundle"}
-                          ]
-                        }
-                      ],
-                      [
-                        "@semantic-release/git",
-                        {
-                          "assets": ["CHANGELOG.md", "bundle.yml"],
-                          "message": "chore(release): ${nextRelease.version} [skip ci]"
-                        }
-                      ]
-                    ]
-                  }
-                  ' > .releaserc.json
-      - keeper/exec:
-          step-name: "Run Semantic Release"
-          command: |
-            npx semantic-release
-      - persist_to_workspace:
-          root: .
-          paths:
-            - "bundle.yml"
 
 workflows:
   pull_requests:
-    # Trigger on all branches except `main`
-    when:
-      and:
-        - not:
-            equal: [master, << pipeline.git.branch >>]
-        - not:
-            equal: [alpha, << pipeline.git.branch >>]
-    jobs:
-      - lint:
-          name: Lint
-      - test:
-          name: Test
-          context: cicd-orchestrator
-          requires:
-            - Lint
-
-  release:
     when:
       or:
-        - equal: [master, << pipeline.git.branch >>]
-        - equal: [alpha, << pipeline.git.branch >>]
+       - equal: [master, << pipeline.git.branch >>]
+       - equal: [ci-hands-on, << pipeline.git.branch >>]
     jobs:
-      - lint:
-          name: Lint
-      # - test:
-      #     name: Test
-      #     context: cicd-orchestrator
-      #     requires:
-      #       - Lint
-      - semantic-release:
-          name: Semantic Release
-          context: cicd-orchestrator
-          requires:
-            - Lint
       - login-to-azure:
-          name: K8s login on devs-preprod and get ~/.kube/config
-          context: cicd-orchestrator
-          clusterName: devs-preprod
-          requires:
-            - Semantic Release
-          filters:
-            branches:
-              only:
-                - master
-      - login-to-azure:
-          name: K8s login on apim-preprod and get ~/.kube/config
+          name: Login to K8S
           context: cicd-orchestrator
           clusterName: apim-preprod
           requires:
             - Semantic Release
-          filters:
-            branches:
-              only:
-               - alpha
-      - deploy-gko-image:
-          name: Deploy operator to k8s
-          context: cicd-orchestrator
-          requires:
-            - K8s login on devs-preprod and get ~/.kube/config
-            - K8s login on apim-preprod and get ~/.kube/config
+      - run:
+          name: Deploy Resources
+          command: kubectl apply -f ./crds --recursive -n gko-hands-on
+
