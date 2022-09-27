@@ -59,7 +59,9 @@ jobs:
       - kubernetes/install-kubectl
       - run:
           name: "Install CRDs"
-          command: kubectl apply -f ./crds --recursive -n gko-hands-on
+          command: |
+            kubectl config use-context gravitee-apim-preprod-aks-cluster
+            kubectl apply -f ./crds --recursive -n gko-hands-on
 
 
 workflows:
