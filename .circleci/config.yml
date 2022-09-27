@@ -51,6 +51,15 @@ jobs:
           root: ~/
           paths:
             - .kube/config
+  apply-resources:
+    docker:
+      - image: 'cimg/base:stable'
+    steps:
+      - checkout
+      - kubernetes/install-kubectl
+      - run:
+          name: "Install CRDs"
+          command: kubectl apply -f ./crds --recursive -n gko-hands-on
 
 
 workflows:
@@ -66,7 +75,5 @@ workflows:
           clusterName: apim-preprod
           requires:
             - Semantic Release
-      - run:
-          name: Deploy Resources
-          command: kubectl apply -f ./crds --recursive -n gko-hands-on
+      - apply-resources
 
