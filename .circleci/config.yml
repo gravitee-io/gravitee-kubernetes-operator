@@ -73,7 +73,10 @@ workflows:
           name: Login to K8S
           context: cicd-orchestrator
           clusterName: apim-preprod
+      - apply-resources:
+          name: Deploy CRDs on K8S
+          context: cicd-orchestrator
           requires:
-            - Semantic Release
-      - apply-resources
+            - Login to K8S 
+
 
