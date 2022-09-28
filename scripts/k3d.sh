@@ -74,6 +74,15 @@ K3D_IMAGES_REGISTRY="k3d-${K3D_IMAGES_REGISTRY}"
 
 echo "
 
+    Deleting K3d cluster ${K3D_CLUSTER_NAME} (if present) ...
+
+"
+
+k3d cluster list | grep ${K3D_CLUSTER_NAME} && k3d cluster delete ${K3D_CLUSTER_NAME}
+
+
+echo "
+
     Creating a K3d cluster with name ${K3D_CLUSTER_NAME}
 
 "
@@ -179,18 +188,49 @@ helm install \
     --set "defaultBackend.image.tag=${NGINX_BACKEND_IMAGE_TAG}" \
     nginx-ingress bitnami/nginx-ingress-controller
 
-BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
 helm install \
     --namespace ${K3D_NAMESPACE_NAME} \
-    -f "$BASEDIR/helm/apim-values.yml" \
+    --set "portal.enabled=false" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway" \
     --set "gateway.services.sync.kubernetes.enabled=true" \
+    --set "gateway.ingress.hosts[0]=localhost" \
+    --set "gateway.ingress.path=/gateway/?(.*)" \
+    --set "gateway.ingress.tls=false" \
+    --set "gateway.ingress.annotations.'nginx\.ingress\.kubernetes\.io/rewrite-target'=/\$1" \
+    --set "gateway.autoscaling.enabled=false" \
+    --set "api.ingress.management.hosts[0]=localhost" \
+    --set "api.ingress.management.tls=false" \
+    --set "api.portal.enabled=false" \
+    --set "api.resources.requests.memory=2048Mi" \
+    --set "api.resources.limits.memory=2048Mi" \
+    --set "api.resources.requests.cpu=1500m" \
+    --set "api.resources.limits.cpu=1500m" \
+    --set "gateway.resources.requests.memory=2048Mi" \
+    --set "gateway.resources.limits.memory=2048Mi" \
+    --set "gateway.env[0].name=GIO_MIN_MEM" \
+    --set "gateway.env[0].value=1024m" \
+    --set "gateway.env[1].name=GIO_MAX_MEM" \
+    --set "gateway.env[1].value=1024m" \
+    --set "api.env[0].name=GIO_MIN_MEM" \
+    --set "api.env[0].value=1024m" \
+    --set "api.env[1].name=GIO_MAX_MEM" \
+    --set "api.env[1].value=1024m" \
+    --set "api.startupProbe.initialDelaySeconds=5" \
+    --set "api.startupProbe.timeoutSeconds=10" \
+    --set "ui.ingress.hosts[0]=localhost" \
+    --set "ui.ingress.tls=false" \
+    --set "ui.autoscaling.enabled=false" \
     --set "api.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-api" \
     --set "ui.image.repository=${K3D_IMAGES_REGISTRY}/graviteeio/apim-management-ui" \
     --set "gateway.image.tag=${APIM_IMAGE_TAG}" \
     --set "api.image.tag=${APIM_IMAGE_TAG}" \
     --set "ui.image.tag=${APIM_IMAGE_TAG}" \
     --set "ui.baseURL=http://localhost:${K3D_LOAD_BALANCER_PORT}/management/organizations/DEFAULT/environments/DEFAULT/" \
+    --set "elasticsearch.enabled=false" \
+    --set "es.endpoints[0]=http://elasticsearch-master:9200" \
+    --set "mongo.dbhost=mongodb" \
+    --set "mongodb-replicaset=false" \
+    --set "mongo.rsEnabled=false" \
     apim graviteeio/apim3
 
 echo "
