@@ -198,7 +198,7 @@ jobs:
                       [
                         "@semantic-release/exec",
                         {
-                          "prepareCmd": "IMG=graviteeio/gko:${nextRelease.version} BUNDLE_IMG=graviteeio/gko-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push lint-fix"                        
+                          "prepareCmd": "IMG=graviteeio/kubernetes-operator:${nextRelease.version} BUNDLE_IMG=graviteeio/kubernetes-operator-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push lint-fix"                        
                         }
                       ],
                       [
