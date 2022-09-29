@@ -2,6 +2,7 @@
   "extends": [
     "config:base",
     "schedule:earlyMondays",
+    ":semanticCommits",
     ":semanticCommitTypeAll(chore)"
   ],
   "prConcurrentLimit": 3,
