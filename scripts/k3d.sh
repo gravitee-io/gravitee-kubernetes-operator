@@ -235,7 +235,7 @@ helm install \
 
 echo "
 
-    APIM should be ready in a few minutes ...
+    APIM containers are starting ...
 
     Version: ${APIM_IMAGE_TAG}
 
@@ -251,3 +251,11 @@ echo "
     > docker push "${K3D_IMAGES_REGISTRY}/graviteeio/apim-gateway:${APIM_IMAGE_TAG}"
     > kubectl rollout restart deployment apim-apim3-gateway
 "
+
+echo "
+    Waiting for APIM to be ready ...
+    
+    Press ctrl+c to exit this script without waiting ...
+"
+
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s
