@@ -1,3 +1,10 @@
+# [0.1.0-alpha.4](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.3...0.1.0-alpha.4) (2022-09-30)
+
+
+### Bug Fixes
+
+* add semantic commits option to renovate ([0bc758c](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0bc758c32ffce2fab7a1fe71d2f5ae9a8aa0cbbd))
+
 # [0.1.0-alpha.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.2...0.1.0-alpha.3) (2022-09-30)
 
 

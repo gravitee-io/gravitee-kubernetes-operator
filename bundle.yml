@@ -1373,7 +1373,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: graviteeio/kubernetes-operator:0.1.0-alpha.3
+        image: graviteeio/kubernetes-operator:0.1.0-alpha.4
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
