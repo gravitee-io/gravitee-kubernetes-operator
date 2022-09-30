@@ -1,3 +1,10 @@
+# [0.1.0-alpha.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.2...0.1.0-alpha.3) (2022-09-30)
+
+
+### Bug Fixes
+
+* rename public docker images ([3b83499](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3b8349944ae043aa5b1acdc2f270411af9d8c25d))
+
 # [0.1.0-alpha.2](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.1...0.1.0-alpha.2) (2022-09-16)
 
 
