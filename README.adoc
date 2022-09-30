@@ -22,10 +22,11 @@ It aims to meet several objectives:
 
 One of the main goal of this new component is also to cover the CICD aspects when it comes to Kubernetes.
 
-== Initialize you env
+== Initialize you environment
 
 - Install docker
 - Install kubctl
+- Install helm
 - Install the operator-sdk `brew install operator-sdk`
 
 == How-to run locally
@@ -33,36 +34,20 @@ To run the operator locally, against an APIM ready K3d cluster, execute the foll
 
 [source,shell]
 ----
+# Initialize APIM locally using k3d
 make k3d-apim-init
 
+# Install CRDs into the K8s cluster specified in ~/.kube/config
 make install
 
-# check that the gravitee.io CRDs are available on your cluster
+# Check that the gravitee.io CRDs are available on your cluster
 kubectl get crd 
 
-# wait for APIM pods to be ready
+# Wait for APIM pods to be ready
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 180s
 
+# Run a controller from your host
 make run
-----
-
-Note: the k3d registry host used to share images between your host and your k3d cluster is defined as `k3d-graviteeio.docker.localhost`. On most linux / macos platforms `*.localhost`` should resolve to 127.0.0.1. If it is not the case on your device you will
-need to add the current entry in your `/etc/hosts` file
-
-[source,shell]
-----
-127.0.0.1 k3d-graviteeio.docker.localhost
-----
-
-
-== Test & Lint
-
-To run `make lint` & `make install` install this golang package:
-
-[source,shell]
-----
-go install gotest.tools/gotestsum@latest
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 ----
 
 == Try it
@@ -81,34 +66,6 @@ kubectl get graviteeapis  -o wide
 # basic-api-example   ff3549c9-ceb2-36da-87f7-f5e51ba89097   /k8s-basic   https://api.gravitee.io/echo   1.0       true
 ----
 
-== Debugging with a locally running APIM
-To be abble to run the operator against a local instance of both APIM Gateway and APIM Management API you will need to
-
-* Attach to a local cluster context
-* Create a local service account to authenticate the gateway against the local cluster
-* Run both APIM Gateway and APIM Management API in debug mode
-* Create a management context pointing to your local APIM management API
-
-[source,shell]
-----
-make install
-
-# check that the gravitee.io CRDs are available on your cluster
-kubectl get crd
-
-# create a service account token with 'cluster-admin' role on current context and
-# use this token to authenticate against the current cluster
-make service-account
-
-make run # or run using a debugger if you need to debug the operator as well
-
-# Create a management context for APIM
-kubectl apply -f ./config/samples/context/debug/managementcontext_credentials.yaml
-
-# Create a basic API definition resource
-kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
-----
-
 == Deploying GKO as a k3d deployment
 
 This will publish your docker image to the k3d cluster registry and deploy the operator
@@ -119,7 +76,44 @@ in a dedicated `gko-system` namespace
 make k3d-gko-build k3d-gko-push k3d-gko-deploy
 ----
 
-== Note for Apple Silicon users
+== Contributing
+
+=== Debugging with a locally running APIM
+To be abble to run the operator against a local instance of both APIM Gateway and APIM Management API you will need to
+
+* Attach to a local cluster context
+* Create a local service account to authenticate the gateway against the local cluster
+* Run both APIM Gateway and APIM Management API in debug mode
+* Create a management context pointing to your local APIM management API
+
+[source,shell]
+----
+# create a service account token with 'cluster-admin' role on current context and
+# use this token to authenticate against the current cluster
+make service-account
+
+make run # or run using a debugger if you need to debug the operator as well
+
+# Create the debug management context for APIM
+kubectl apply -f ./config/samples/context/debug/managementcontext_credentials.yaml
+
+# Create a basic API definition resource
+kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
+----
+
+=== Test & Lint
+
+To run `make lint` & `make install` install this golang package:
+
+[source,shell]
+----
+go install gotest.tools/gotestsum@latest
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+----
+
+== Troubleshooting
+
+=== Note for Apple Silicon users
 The default version of kustomize installed by the `kustomize` target is not available on
 arm64 platforms.
 
@@ -129,4 +123,14 @@ You can override the version to use setting the `KUSTOMIZE_VERSION` environment 
 ----
 export KUSTOMIZE_VERSION=v4.5.5
 make kustomize
+----
+
+=== Local docker image registry
+
+The k3d registry host used to share images between your host and your k3d cluster is defined as `k3d-graviteeio.docker.localhost`. On most linux / macos platforms `*.localhost`` should resolve to 127.0.0.1. If it is not the case on your device you will
+need to add the current entry in your `/etc/hosts` file
+
+[source,shell]
+----
+127.0.0.1 k3d-graviteeio.docker.localhost
 ----
