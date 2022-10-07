@@ -262,8 +262,8 @@ workflows:
       - semantic-release:
           name: Semantic Release
           context: cicd-orchestrator
-          requires:
-            - Lint
+          # requires:
+          #   - Lint
       - login-to-azure:
           name: K8s login on devs-preprod and get ~/.kube/config
           context: cicd-orchestrator
