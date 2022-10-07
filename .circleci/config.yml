@@ -252,8 +252,8 @@ workflows:
         - equal: [master, << pipeline.git.branch >>]
         - equal: [alpha, << pipeline.git.branch >>]
     jobs:
-      - lint:
-          name: Lint
+      # - lint:
+      #     name: Lint
       # - test:
       #     name: Test
       #     context: cicd-orchestrator
