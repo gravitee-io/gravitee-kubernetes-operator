@@ -1,3 +1,20 @@
+# [0.1.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.0.0...0.1.0) (2022-10-07)
+
+
+### Bug Fixes
+
+* add missing API key in the API definition payload ([efe3d22](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/efe3d22c099a91b5c2aab735e22b35e655486aae))
+* add semantic commits option to renovate ([0bc758c](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0bc758c32ffce2fab7a1fe71d2f5ae9a8aa0cbbd))
+* do not send success event when action throw error ([63ea629](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/63ea6292c78106954c6004a6257115d8c92d2425))
+* manually create public alpha release ([151f637](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/151f637afa0478bd3398aaa6406803ac5c561893))
+* rename public docker images ([3b83499](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3b8349944ae043aa5b1acdc2f270411af9d8c25d))
+
+
+### Features
+
+* force first gko release 🚀 ([6f044fd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/6f044fdb74d012ec20755ef88812dc3c9b2e6f82))
+* update read me ([37053e5](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/37053e58ebfc96eb8f0cbf21cd4d55755438b4ef))
+
 # [0.1.0-alpha.5](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.4...0.1.0-alpha.5) (2022-09-30)
 
 
