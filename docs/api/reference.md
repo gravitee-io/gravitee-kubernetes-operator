@@ -1356,15 +1356,8 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>accessControlAllowCredentials</b></td>
+        <td><b>allowCredentials</b></td>
         <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>accessControlMaxAge</b></td>
-        <td>integer</td>
         <td>
           <br/>
         </td>
@@ -1377,52 +1370,47 @@ The context is specifying the namespace and the name of a ManagementContext used
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>errorStatusCode</b></td>
+        <td><b>maxAge</b></td>
         <td>integer</td>
         <td>
           <br/>
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>allowHeaders</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>allowMethods</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>allowOrigin</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>exposeHeaders</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>runPolicies</b></td>
         <td>boolean</td>
         <td>
           <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>accessControlAllowHeaders</b></td>
-        <td>[]string</td>
-        <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>accessControlAllowMethods</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>accessControlAllowOrigin</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>accessControlAllowOriginRegex</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>accessControlExposeHeaders</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr></tbody>

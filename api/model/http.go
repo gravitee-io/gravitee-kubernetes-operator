@@ -218,16 +218,15 @@ type Proxy struct {
 type HttpMethod string
 
 type Cors struct {
-	Enabled                       bool     `json:"enabled"` // Java
-	AccessControlAllowOrigin      []string `json:"accessControlAllowOrigin,omitempty"`
-	AccessControlAllowOriginRegex []string `json:"accessControlAllowOriginRegex,omitempty"`
-	AccessControlExposeHeaders    []string `json:"accessControlExposeHeaders,omitempty"`
-	AccessControlMaxAge           int      `json:"accessControlMaxAge"`
-	AccessControlAllowCredentials bool     `json:"accessControlAllowCredentials"`
-	AccessControlAllowMethods     []string `json:"accessControlAllowMethods,omitempty"`
-	AccessControlAllowHeaders     []string `json:"accessControlAllowHeaders,omitempty"`
-	ErrorStatusCode               int      `json:"errorStatusCode"`
-	RunPolicies                   bool     `json:"runPolicies"` // java
+	Enabled                       bool     `json:"enabled"`
+	AccessControlAllowOrigin      []string `json:"allowOrigin,omitempty"`
+	AccessControlExposeHeaders    []string `json:"exposeHeaders,omitempty"`
+	AccessControlMaxAge           int      `json:"maxAge"`
+	AccessControlAllowCredentials bool     `json:"allowCredentials"`
+	AccessControlAllowMethods     []string `json:"allowMethods,omitempty"`
+	AccessControlAllowHeaders     []string `json:"allowHeaders,omitempty"`
+	// +kubebuilder:default:=false
+	RunPolicies bool `json:"runPolicies,omitempty"`
 }
 
 type Plugin struct {
