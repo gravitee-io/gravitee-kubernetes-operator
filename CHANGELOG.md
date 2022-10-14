@@ -1,3 +1,10 @@
+# [0.1.0-alpha.6](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.5...0.1.0-alpha.6) (2022-10-14)
+
+
+### Bug Fixes
+
+* add base href for k3d uri ([79757d0](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/79757d07e7502409855aa4053f9456ade0b625e2))
+
 # [0.1.0-alpha.5](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.4...0.1.0-alpha.5) (2022-09-30)
 
 
