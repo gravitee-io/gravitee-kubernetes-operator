@@ -29,6 +29,13 @@
 * force first gko release 🚀 ([6f044fd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/6f044fdb74d012ec20755ef88812dc3c9b2e6f82))
 * update read me ([37053e5](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/37053e58ebfc96eb8f0cbf21cd4d55755438b4ef))
 
+# [0.1.0-alpha.6](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.5...0.1.0-alpha.6) (2022-10-14)
+
+
+### Bug Fixes
+
+* add base href for k3d uri ([79757d0](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/79757d07e7502409855aa4053f9456ade0b625e2))
+
 # [0.1.0-alpha.5](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.4...0.1.0-alpha.5) (2022-09-30)
 
 
