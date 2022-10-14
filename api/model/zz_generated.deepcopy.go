@@ -242,11 +242,6 @@ func (in *Cors) DeepCopyInto(out *Cors) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.AccessControlAllowOriginRegex != nil {
-		in, out := &in.AccessControlAllowOriginRegex, &out.AccessControlAllowOriginRegex
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.AccessControlExposeHeaders != nil {
 		in, out := &in.AccessControlExposeHeaders, &out.AccessControlExposeHeaders
 		*out = make([]string, len(*in))

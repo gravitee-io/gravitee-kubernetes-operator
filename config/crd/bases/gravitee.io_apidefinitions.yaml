@@ -437,42 +437,35 @@ spec:
                 properties:
                   cors:
                     properties:
-                      accessControlAllowCredentials:
+                      allowCredentials:
                         type: boolean
-                      accessControlAllowHeaders:
+                      allowHeaders:
                         items:
                           type: string
                         type: array
-                      accessControlAllowMethods:
+                      allowMethods:
                         items:
                           type: string
                         type: array
-                      accessControlAllowOrigin:
+                      allowOrigin:
                         items:
                           type: string
                         type: array
-                      accessControlAllowOriginRegex:
-                        items:
-                          type: string
-                        type: array
-                      accessControlExposeHeaders:
-                        items:
-                          type: string
-                        type: array
-                      accessControlMaxAge:
-                        type: integer
                       enabled:
                         type: boolean
-                      errorStatusCode:
+                      exposeHeaders:
+                        items:
+                          type: string
+                        type: array
+                      maxAge:
                         type: integer
                       runPolicies:
+                        default: false
                         type: boolean
                     required:
-                    - accessControlAllowCredentials
-                    - accessControlMaxAge
+                    - allowCredentials
                     - enabled
-                    - errorStatusCode
-                    - runPolicies
+                    - maxAge
                     type: object
                   failover:
                     properties:
