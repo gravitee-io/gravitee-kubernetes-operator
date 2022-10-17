@@ -5,7 +5,7 @@ orbs:
   go: circleci/go@1.7.1
   helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.2
-  gravitee: gravitee-io/gravitee@2.1.15
+  gravitee: gravitee-io/gravitee@2.1.16
 
 executors:
   azure-cli:
