@@ -1,3 +1,10 @@
+# [0.1.0-alpha.7](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.6...0.1.0-alpha.7) (2022-10-17)
+
+
+### Bug Fixes
+
+* rename cors fields to match v3 definition ([2278a16](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/2278a16707d002c7012efa17e7f2c873cdfaa44d))
+
 # [0.1.0-alpha.6](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.5...0.1.0-alpha.6) (2022-10-14)
 
 
