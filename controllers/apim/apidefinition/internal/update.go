@@ -16,67 +16,95 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
+	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 )
 
-func (d *Delegate) Update(apiDefinition *gio.ApiDefinition) error {
-	// Add required fields to the API definition spec
-	// ⚠️ This filed should not be added in ApiDefinition resource
-	apiDefinition.Spec.CrossId = apiDefinition.Status.CrossID
+//nolint:gocognit
+func (d *Delegate) CreateOrUpdate(
+	apiDefinition *gio.ApiDefinition,
+) error {
+	updating := apiDefinition.Status.CrossID != ""
+
+	apiDefinition.Status.CrossID = getOrGenerateCrossId(apiDefinition)
+	apiDefinition.Status.ID = getOrGenerateId(apiDefinition)
 	apiDefinition.Spec.Id = apiDefinition.Status.ID
+	apiDefinition.Spec.CrossId = apiDefinition.Status.CrossID
+
+	// TODO Check if Management context is provided and don't add default plan if it is the case ?
 	addDefaultPlan(apiDefinition)
-	retrievePlansCrossId(apiDefinition)
+
+	// TODO do we really need to do this for plans or should it be done by the management api ?
+	generateEmptyPlanCrossIds(apiDefinition)
+
+	apiDefinition.Spec.DefinitionContext = &model.DefinitionContext{
+		Origin: origin,
+		Mode:   mode,
+	}
 
 	if d.IsConnectedToManagementApi() {
-		apiJson, err := json.Marshal(apiDefinition.Spec)
-		if err != nil {
-			d.log.Error(err, "Unable to marshall API definition as JSON")
-			return err
+		apiJson, marshalErr := json.Marshal(apiDefinition.Spec)
+		if marshalErr != nil {
+			d.log.Error(marshalErr, "Unable to marshall API definition as JSON")
+			return marshalErr
 		}
 
-		mgmtApi, err := d.apimClient.UpdateApi(apiJson)
-		if err != nil {
-			d.log.Error(err, "Unable to update API to the Management API")
-			return err
+		_, findErr := d.apimClient.GetByCrossId(apiDefinition.Status.CrossID)
+
+		var notFoundError *clienterror.CrossIdNotFoundError
+		if findErr != nil && !errors.As(findErr, &notFoundError) {
+			return findErr
 		}
 
-		d.log.Info("Api has been update to the Management API")
+		importMethod := http.MethodPost
+		if findErr == nil {
+			importMethod = http.MethodPut
+		}
+
+		mgmtApi, mgmtErr := d.apimClient.ImportApi(importMethod, apiJson)
+		if mgmtErr != nil {
+			d.log.Error(mgmtErr, "Unable to create API to the Management API")
+			return mgmtErr
+		}
+
+		d.log.Info("Api has been created to the Management API")
 
 		// Get Plan Id from the Management API to send it to the Gateway. (Used by the Gateway to find subscription)
 		retrieveMgmtPlanIds(apiDefinition, mgmtApi)
+		apiDefinition.Spec.Id = mgmtApi.Id
 	}
 
-	// Handle Gateway with ConfigMap
-	// Delete ConfigMap if api is stopped or save it
-	switch {
-	case apiDefinition.Spec.State == model.StateStopped:
-		err := d.deleteConfigMap(apiDefinition.Namespace, apiDefinition.Name)
-		if err != nil {
+	if updating || apiDefinition.Spec.State == model.StateStopped {
+		if err := d.updateApiState(apiDefinition); err != nil {
+			d.log.Error(err, "Unable to update api state to the Management API")
+			return err
+		}
+	}
+
+	if apiDefinition.Spec.State == model.StateStopped {
+		if err := d.deleteConfigMap(apiDefinition.Namespace, apiDefinition.Name); err != nil {
 			d.log.Error(err, "Unable to delete ConfigMap from API definition")
 			return err
 		}
-	default:
-		err := d.saveConfigMap(apiDefinition)
-		if err != nil {
-			d.log.Error(err, "Unable to save ConfigMap from API definition")
+	} else {
+		if err := d.saveConfigMap(apiDefinition); err != nil {
+			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 			return err
 		}
 	}
 
-	err := d.updateApiState(apiDefinition)
-	if err != nil {
-		d.log.Error(err, "Unable to update api state to the Management API")
-		return err
-	}
-
-	// Updated succeed, update Status
+	// Creation succeeded, update Status
 	apiDefinition.Status.Generation = apiDefinition.ObjectMeta.Generation
 	apiDefinition.Status.ProcessingStatus = gio.ProcessingStatusCompleted
-	err = d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy())
-	if err != nil {
-		d.log.Error(err, "Unexpected error while updating API definition status")
+	apiDefinition.Status.State = apiDefinition.Spec.State
+	apiDefinition.Status.ID = apiDefinition.Spec.Id
+
+	if err := d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy()); err != nil {
+		d.log.Error(err, "Unable to update API definition status")
 		return err
 	}
 
