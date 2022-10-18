@@ -64,6 +64,8 @@ func wrapError(err error) error {
 	switch {
 	case errors.As(err, new(managementapierror.ApiUnauthorizedError)):
 		return NonRecoverableError{cause: err}
+	case errors.As(err, new(managementapierror.CrossIdUnauthorizedError)):
+		return NonRecoverableError{cause: err}
 	default:
 		return err
 	}

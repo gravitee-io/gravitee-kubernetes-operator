@@ -50,7 +50,7 @@ func (client *Client) GetByCrossId(
 	case http.StatusOK:
 		break
 	case http.StatusUnauthorized:
-		return nil, &clienterror.CrossIdUnauthorizedError{CrossId: crossId}
+		return nil, clienterror.CrossIdUnauthorizedError{CrossId: crossId}
 	default:
 		return nil, fmt.Errorf("an error as occurred trying to find API %s, HTTP Status: %d ", crossId, resp.StatusCode)
 	}
@@ -127,20 +127,7 @@ func (client *Client) GetApiById(
 	return &api, nil
 }
 
-func (client *Client) CreateApi(
-	apiJson []byte,
-) (*model.ApiEntity, error) {
-	return importApi(client, http.MethodPost, apiJson)
-}
-
-func (client *Client) UpdateApi(
-	apiJson []byte,
-) (*model.ApiEntity, error) {
-	return importApi(client, http.MethodPut, apiJson)
-}
-
-func importApi(
-	client *Client,
+func (client *Client) ImportApi(
 	importHttpMethod string,
 	apiJson []byte,
 ) (*model.ApiEntity, error) {

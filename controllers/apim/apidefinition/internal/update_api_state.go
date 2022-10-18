@@ -35,7 +35,7 @@ func (d *Delegate) updateApiState(
 		return nil
 	}
 
-	// Do noting if state not change
+	// Do noting if state did not change
 	if apiDefinition.Spec.State == apiDefinition.Status.State {
 		return nil
 	}
@@ -48,6 +48,5 @@ func (d *Delegate) updateApiState(
 
 	d.log.Info(fmt.Sprintf("API state updated to \"%s\" to the Management API ", apiDefinition.Spec.State))
 
-	apiDefinition.Status.State = apiDefinition.Spec.State
 	return nil
 }
