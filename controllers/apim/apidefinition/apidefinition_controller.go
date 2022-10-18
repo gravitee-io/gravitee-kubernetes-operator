@@ -143,7 +143,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	case apiDefinition.IsBeingCreated():
 		log.Info("Creating API definition")
 		event.NormalEvent(apiDefinition, "Creating", "Creating API definition")
-		err = apisDelegate.Create(apiDefinition)
+		err = apisDelegate.CreateOrUpdate(apiDefinition)
 		if err != nil {
 			break
 		}
@@ -152,7 +152,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	case apiDefinition.IsBeingUpdated():
 		log.Info("Updating API definition")
 		event.NormalEvent(apiDefinition, "Updating", "Updating API definition")
-		err = apisDelegate.Update(apiDefinition)
+		err = apisDelegate.CreateOrUpdate(apiDefinition)
 		if err != nil {
 			break
 		}
@@ -165,6 +165,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.Info("API Definition has been reconciled")
 		return ctrl.Result{}, nil
 	}
+
+	log.Error(err, "API Definition has not been reconciled")
 
 	// Error handling
 	err = apisDelegate.UpdateStatusAndReturnError(apiDefinition, err)
