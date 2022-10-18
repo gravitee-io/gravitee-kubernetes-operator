@@ -132,7 +132,8 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			// Wait for the ApiDefinition to be updated
 			Eventually(func() bool {
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
-				return k8sErr == nil && updatedApiDefinition.Status.Generation == savedApiDefinition.Status.Generation+1
+				return k8sErr == nil &&
+					updatedApiDefinition.Status.Generation == savedApiDefinition.Status.Generation+1
 			}, timeout, interval).Should(BeTrue())
 
 			// Update savedApiDefinition & global var with last Get
