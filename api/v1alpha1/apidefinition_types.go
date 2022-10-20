@@ -35,11 +35,11 @@ type ApiDefinitionSpec struct {
 
 // ApiDefinitionStatus defines the observed state of ApiDefinition.
 type ApiDefinitionStatus struct {
-	ID               string           `json:"id"`
-	CrossID          string           `json:"crossId"`
-	State            model.State      `json:"state"`
-	ProcessingStatus ProcessingStatus `json:"processingStatus,omitempty"`
-	Generation       int64            `json:"generation"`
+	ID                 string           `json:"id"`
+	CrossID            string           `json:"crossId"`
+	State              model.State      `json:"state"`
+	ProcessingStatus   ProcessingStatus `json:"processingStatus,omitempty"`
+	ObservedGeneration int64            `json:"generation"`
 }
 
 // +kubebuilder:object:root=true
@@ -79,11 +79,19 @@ func (api *ApiDefinition) IsBeingDeleted() bool {
 }
 
 func (api *ApiDefinition) IsBeingUpdated() bool {
-	return api.Status.Generation != api.ObjectMeta.Generation || api.Status.ProcessingStatus == ProcessingStatusReconciling
+	return api.hasNewGeneration() || api.isReconciling()
 }
 
 func (api *ApiDefinition) IsBeingCreated() bool {
 	return api.Status.CrossID == ""
+}
+
+func (api *ApiDefinition) hasNewGeneration() bool {
+	return api.Status.ObservedGeneration != api.ObjectMeta.Generation
+}
+
+func (api *ApiDefinition) isReconciling() bool {
+	return api.Status.ProcessingStatus == ProcessingStatusReconciling
 }
 
 // +kubebuilder:object:root=true
