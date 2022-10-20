@@ -20,7 +20,7 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) Finalizer(
+func (d *Delegate) AddDeletionFinalizer(
 	apiDefinition *gio.ApiDefinition,
 ) error {
 	util.AddFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
