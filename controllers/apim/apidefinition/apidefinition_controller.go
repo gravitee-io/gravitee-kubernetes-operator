@@ -125,7 +125,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	switch {
 	case !apiDefinition.HasFinalizer():
 		log.Info("Add Finalizer to API definition")
-		err = apisDelegate.Finalizer(apiDefinition)
+		err = apisDelegate.AddDeletionFinalizer(apiDefinition)
 		if err != nil {
 			break
 		}
