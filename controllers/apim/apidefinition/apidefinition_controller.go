@@ -123,7 +123,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	// Executes delegate actions
 	switch {
-	case !apiDefinition.HasFinalizer():
+	case !apiDefinition.HasDeletionFinalizer():
 		log.Info("Add Finalizer to API definition")
 		err = apisDelegate.AddDeletionFinalizer(apiDefinition)
 		if err != nil {
