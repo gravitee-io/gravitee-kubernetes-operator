@@ -38,7 +38,6 @@ func (d *Delegate) CreateOrUpdate(
 	// TODO Check if Management context is provided and don't add default plan if it is the case ?
 	addDefaultPlan(apiDefinition)
 
-	// TODO do we really need to do this for plans or should it be done by the management api ?
 	generateEmptyPlanCrossIds(apiDefinition)
 
 	apiDefinition.Spec.DefinitionContext = &model.DefinitionContext{
@@ -75,6 +74,8 @@ func (d *Delegate) CreateOrUpdate(
 
 		// Get Plan Id from the Management API to send it to the Gateway. (Used by the Gateway to find subscription)
 		retrieveMgmtPlanIds(apiDefinition, mgmtApi)
+
+		// Make sure status ID will match APIM ID (could be different if APIM generated it)
 		apiDefinition.Spec.Id = mgmtApi.Id
 	}
 
