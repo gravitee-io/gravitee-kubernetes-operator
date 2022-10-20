@@ -133,7 +133,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Eventually(func() bool {
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
 				return k8sErr == nil &&
-					updatedApiDefinition.Status.Generation == savedApiDefinition.Status.Generation+1
+					updatedApiDefinition.Status.ObservedGeneration == savedApiDefinition.Status.ObservedGeneration+1
 			}, timeout, interval).Should(BeTrue())
 
 			// Update savedApiDefinition & global var with last Get
@@ -157,7 +157,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Eventually(func() bool {
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
 				return k8sErr == nil &&
-					updatedApiDefinition.Status.Generation == savedApiDefinition.Status.Generation+1
+					updatedApiDefinition.Status.ObservedGeneration == savedApiDefinition.Status.ObservedGeneration+1
 			}, timeout, interval).Should(BeTrue())
 
 			// Update savedApiDefinition & global var with last Get
