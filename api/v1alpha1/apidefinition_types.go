@@ -70,7 +70,7 @@ const (
 	ProcessingStatusReconciling ProcessingStatus = "Reconciling"
 )
 
-func (api *ApiDefinition) HasFinalizer() bool {
+func (api *ApiDefinition) HasDeletionFinalizer() bool {
 	return util.ContainsFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
 }
 
