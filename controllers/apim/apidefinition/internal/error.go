@@ -50,7 +50,7 @@ func (d *Delegate) UpdateStatusAndReturnError(apiDefinition *gio.ApiDefinition, 
 	apiDefinition.Status.ProcessingStatus = processingStatus
 
 	// Updated succeed, update Generation & Status
-	apiDefinition.Status.Generation = apiDefinition.ObjectMeta.Generation
+	apiDefinition.Status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
 	err := d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy())
 	if err != nil {
 		d.log.Info("Unexpected error while updating API definition status.", "err", err)
