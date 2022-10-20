@@ -1,3 +1,10 @@
+# [0.1.0-alpha.8](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.7...0.1.0-alpha.8) (2022-10-20)
+
+
+### Bug Fixes
+
+* merge create and update of api definition ([19e9dd3](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/19e9dd35448e373d3f3173a3c6ef456d5ec27ae2))
+
 # [0.1.0-alpha.7](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.6...0.1.0-alpha.7) (2022-10-17)
 
 
