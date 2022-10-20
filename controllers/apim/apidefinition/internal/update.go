@@ -98,7 +98,7 @@ func (d *Delegate) CreateOrUpdate(
 	}
 
 	// Creation succeeded, update Status
-	apiDefinition.Status.Generation = apiDefinition.ObjectMeta.Generation
+	apiDefinition.Status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
 	apiDefinition.Status.ProcessingStatus = gio.ProcessingStatusCompleted
 	apiDefinition.Status.State = apiDefinition.Spec.State
 	apiDefinition.Status.ID = apiDefinition.Spec.Id
