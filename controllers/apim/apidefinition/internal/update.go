@@ -45,7 +45,7 @@ func (d *Delegate) CreateOrUpdate(
 		Mode:   mode,
 	}
 
-	if d.IsConnectedToManagementApi() {
+	if d.HasManagementContext() {
 		apiJson, marshalErr := json.Marshal(apiDefinition.Spec)
 		if marshalErr != nil {
 			d.log.Error(marshalErr, "Unable to marshall API definition as JSON")

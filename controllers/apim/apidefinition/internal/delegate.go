@@ -60,6 +60,6 @@ func (d *Delegate) SetManagementContext(managementContext *gio.ManagementContext
 	d.apimClient = managementapi.NewClient(d.ctx, d.managementContext, httpClient)
 }
 
-func (d *Delegate) IsConnectedToManagementApi() bool {
-	return d.apimClient != nil
+func (d *Delegate) HasManagementContext() bool {
+	return d.managementContext != nil
 }

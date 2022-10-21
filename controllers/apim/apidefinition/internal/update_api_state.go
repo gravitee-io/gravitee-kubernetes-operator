@@ -31,7 +31,7 @@ func (d *Delegate) updateApiState(
 	apiDefinition *gio.ApiDefinition,
 ) error {
 	// Check if Management context is provided
-	if !d.IsConnectedToManagementApi() {
+	if !d.HasManagementContext() {
 		return nil
 	}
 
