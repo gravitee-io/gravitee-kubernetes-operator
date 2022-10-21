@@ -50,7 +50,7 @@ func (client *Client) GetByCrossId(
 	case http.StatusOK:
 		break
 	case http.StatusUnauthorized:
-		return nil, clienterror.CrossIdUnauthorizedError{CrossId: crossId}
+		return nil, clienterror.NewUnauthorizedCrossIdRequestError(crossId)
 	default:
 		return nil, fmt.Errorf("an error as occurred trying to find API %s, HTTP Status: %d ", crossId, resp.StatusCode)
 	}
@@ -68,11 +68,11 @@ func (client *Client) GetByCrossId(
 	}
 
 	if len(apis) == 0 {
-		return nil, &clienterror.CrossIdNotFoundError{CrossId: crossId}
+		return nil, clienterror.NewCrossIdNotFoundError(crossId)
 	}
 
 	if len(apis) > 1 {
-		return nil, &clienterror.CrossIdMultipleFoundError{CrossId: crossId, Apis: apis}
+		return nil, clienterror.NewAmbiguousCrossIdError(crossId, len(apis))
 	}
 
 	return &apis[0], nil
@@ -102,9 +102,9 @@ func (client *Client) GetApiById(
 	case http.StatusOK:
 		break
 	case http.StatusUnauthorized:
-		return nil, &clienterror.ApiUnauthorizedError{ApiId: apiId}
+		return nil, clienterror.NewUnauthorizedApiRequestError(apiId)
 	case http.StatusNotFound:
-		return nil, &clienterror.ApiNotFoundError{ApiId: apiId}
+		return nil, clienterror.NewApiNotFoundError(apiId)
 	default:
 		return nil, fmt.Errorf(
 			"an error as occurred trying to get API matching id %s, HTTP Status: %d ",
@@ -154,7 +154,7 @@ func (client *Client) ImportApi(
 	case http.StatusOK:
 		break
 	case http.StatusUnauthorized:
-		return nil, clienterror.ApiUnauthorizedError{}
+		return nil, clienterror.UnauthorizedError{}
 	default:
 		return nil, fmt.Errorf("an error as occurred trying to import API definition, HTTP Status: %d ", resp.StatusCode)
 	}
@@ -197,9 +197,9 @@ func (client *Client) UpdateApiState(
 	case http.StatusNoContent:
 		return nil
 	case http.StatusUnauthorized:
-		return &clienterror.ApiUnauthorizedError{ApiId: apiId}
+		return clienterror.NewUnauthorizedApiRequestError(apiId)
 	case http.StatusNotFound:
-		return &clienterror.ApiNotFoundError{ApiId: apiId}
+		return clienterror.NewApiNotFoundError(apiId)
 	default:
 		return fmt.Errorf(
 			"an error as occurred trying to update API state matching id %s, HTTP Status: %d ",
@@ -230,9 +230,9 @@ func (client *Client) DeleteApi(
 	case http.StatusNoContent:
 		return nil
 	case http.StatusUnauthorized:
-		return &clienterror.ApiUnauthorizedError{ApiId: apiId}
+		return clienterror.NewUnauthorizedApiRequestError(apiId)
 	case http.StatusNotFound:
-		return &clienterror.ApiNotFoundError{ApiId: apiId}
+		return clienterror.NewApiNotFoundError(apiId)
 	default:
 		return fmt.Errorf(
 			"an error as occurred trying to delete API matching id %s, HTTP Status: %d ",

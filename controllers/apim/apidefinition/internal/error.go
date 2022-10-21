@@ -62,9 +62,7 @@ func (d *Delegate) UpdateStatusAndReturnError(apiDefinition *gio.ApiDefinition, 
 // Wraps the error in a NonRecoverableError if it's not recoverable.
 func wrapError(err error) error {
 	switch {
-	case errors.As(err, new(managementapierror.ApiUnauthorizedError)):
-		return NonRecoverableError{cause: err}
-	case errors.As(err, new(managementapierror.CrossIdUnauthorizedError)):
+	case managementapierror.IsUnauthorized(err):
 		return NonRecoverableError{cause: err}
 	default:
 		return err
