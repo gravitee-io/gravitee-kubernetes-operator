@@ -32,7 +32,7 @@ func (d *Delegate) Delete(
 	}
 
 	var apiNotFoundError *managementapierror.ApiNotFoundError
-	if d.IsConnectedToManagementApi() && apiDefinition.Status.ID != "" {
+	if d.HasManagementContext() && apiDefinition.Status.ID != "" {
 		d.log.Info("Delete API definition into Management API")
 		err := d.apimClient.DeleteApi(apiDefinition.Status.ID)
 		if errors.As(err, &apiNotFoundError) {
