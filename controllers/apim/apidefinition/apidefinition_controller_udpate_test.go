@@ -35,6 +35,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
@@ -184,6 +185,64 @@ var _ = Describe("API Definition Controller", func() {
 				return apiErr == nil &&
 					api.Id == updatedApiDefinition.Status.ID &&
 					api.Name == expectedName
+			}, timeout, interval).Should(BeTrue())
+		})
+	})
+
+	Context("With basic ApiDefinition & ManagementContext adding context ref on update", func() {
+		var managementContextFixture *gio.ManagementContext
+		var apiDefinitionFixture *gio.ApiDefinition
+		var apiLookupKey types.NamespacedName
+
+		BeforeEach(func() {
+			By("Create a management context to synchronize with the REST API")
+
+			managementContext, err := test.NewManagementContext(
+				"../../../config/samples/context/dev/managementcontext_credentials.yaml")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
+
+			By("Create an API definition resource without a management context")
+
+			apiDefinition, err := test.NewApiDefinition("../../../config/samples/apim/basic-example.yml")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
+
+			apiDefinitionFixture = apiDefinition
+			managementContextFixture = managementContext
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+		})
+
+		AfterEach(func() {
+			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
+		})
+
+		It("Should update an API Definition, adding a management context", func() {
+			createdApiDefinition := new(gio.ApiDefinition)
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+				return err == nil && createdApiDefinition.Status.CrossID != ""
+			}, timeout, interval).Should(BeTrue())
+
+			By("Updating the context ref in API definition, expecting no error")
+
+			updatedApiDefinition := createdApiDefinition.DeepCopy()
+
+			updatedApiDefinition.Spec.Context = &model.ContextRef{
+				Name:      managementContextFixture.Name,
+				Namespace: managementContextFixture.Namespace,
+			}
+
+			err := k8sClient.Update(ctx, updatedApiDefinition)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Calling rest API, expecting one API matching status ID")
+
+			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			Eventually(func() bool {
+				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
+				return apiErr == nil && api.Id == updatedApiDefinition.Status.ID
 			}, timeout, interval).Should(BeTrue())
 		})
 	})
