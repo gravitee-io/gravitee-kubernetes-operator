@@ -92,9 +92,6 @@ jobs:
             export APIM_IMAGE_TAG=master-latest
             make k3d-apim-init
       - run:
-          name: Wait for APIM to be ready
-          command: kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 300s
-      - run:
           name: Run tests
           command: GOTESTARGS="--junitfile=/tmp/junit/reports/junit.xml" make test
       - store_test_results:
