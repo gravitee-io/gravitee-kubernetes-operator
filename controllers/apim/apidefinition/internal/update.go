@@ -16,7 +16,6 @@ package internal
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -52,8 +51,7 @@ func (d *Delegate) CreateOrUpdate(
 
 		_, findErr := d.apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 
-		var notFoundError *clienterror.CrossIdNotFoundError
-		if findErr != nil && !errors.As(findErr, &notFoundError) {
+		if findErr != nil && !clienterror.IsNotFound(findErr) {
 			return findErr
 		}
 

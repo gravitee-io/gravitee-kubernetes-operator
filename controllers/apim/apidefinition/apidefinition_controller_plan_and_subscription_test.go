@@ -28,7 +28,6 @@ limitations under the License.
 package apidefinition
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -198,8 +197,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			Eventually(func() bool {
 				_, apiErr := mgmtClient.GetApiById(savedApiDefinition.Status.ID)
-				var apiNotFoundError *clientError.ApiNotFoundError
-				return apiErr != nil && errors.As(apiErr, &apiNotFoundError)
+				return apiErr != nil && clientError.IsNotFound(apiErr)
 			}, timeout, interval).Should(BeTrue())
 		})
 	})

@@ -14,14 +14,26 @@
 
 package clienterror
 
-type ApiUnauthorizedError struct {
-	ApiId string
+import (
+	"errors"
+	"strconv"
+)
+
+type IllegalStateError struct {
+	message string
 }
 
-func (e ApiUnauthorizedError) Error() string {
-	msg := "Unauthorized error"
-	if e.ApiId != "" {
-		msg += " for API " + e.ApiId
+func (e IllegalStateError) Error() string {
+	if e.message == "" {
+		return "ILLEGAL STATE"
 	}
-	return msg
+	return e.message
+}
+
+func NewAmbiguousCrossIdError(crossId string, count int) IllegalStateError {
+	return IllegalStateError{message: "Expected one API with CrossId " + crossId + "but found " + strconv.Itoa(count)}
+}
+
+func IsIllegalState(err error) bool {
+	return errors.As(err, &IllegalStateError{})
 }

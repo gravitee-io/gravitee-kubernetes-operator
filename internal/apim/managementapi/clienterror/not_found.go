@@ -14,33 +14,27 @@
 
 package clienterror
 
-import (
-	"fmt"
+import "errors"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
-)
-
-type CrossIdNotFoundError struct {
-	CrossId string
+type NotFoundError struct {
+	message string
 }
 
-func (e *CrossIdNotFoundError) Error() string {
-	return "No API found for CrossId " + e.CrossId
+func (e NotFoundError) Error() string {
+	if e.message == "" {
+		return "NOT FOUND"
+	}
+	return e.message
 }
 
-type CrossIdMultipleFoundError struct {
-	CrossId string
-	Apis    []model.ApiListItem
+func NewCrossIdNotFoundError(crossId string) NotFoundError {
+	return NotFoundError{message: "No API found for CrossId " + crossId}
 }
 
-func (e *CrossIdMultipleFoundError) Error() string {
-	return fmt.Sprintf("Multiple APIs found for CrossId %s. (%d APIs found)", e.CrossId, len(e.Apis))
+func NewApiNotFoundError(apiId string) NotFoundError {
+	return NotFoundError{message: "No API found for API " + apiId}
 }
 
-type CrossIdUnauthorizedError struct {
-	CrossId string
-}
-
-func (e CrossIdUnauthorizedError) Error() string {
-	return "Unauthorized error for CrossId " + e.CrossId
+func IsNotFound(err error) bool {
+	return errors.As(err, &NotFoundError{})
 }

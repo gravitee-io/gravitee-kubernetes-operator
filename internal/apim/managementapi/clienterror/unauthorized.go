@@ -14,10 +14,27 @@
 
 package clienterror
 
-type ApiNotFoundError struct {
-	ApiId string
+import "errors"
+
+type UnauthorizedError struct {
+	message string
 }
 
-func (e *ApiNotFoundError) Error() string {
-	return "No API found for ApiId " + e.ApiId
+func (e UnauthorizedError) Error() string {
+	if e.message == "" {
+		return "UNAUTHORIZED"
+	}
+	return e.message
+}
+
+func NewUnauthorizedCrossIdRequestError(crossId string) UnauthorizedError {
+	return UnauthorizedError{message: "Unauthorized error for CrossId " + crossId}
+}
+
+func NewUnauthorizedApiRequestError(apiId string) UnauthorizedError {
+	return UnauthorizedError{message: "Unauthorized error for API " + apiId}
+}
+
+func IsUnauthorized(err error) bool {
+	return errors.As(err, &UnauthorizedError{})
 }
