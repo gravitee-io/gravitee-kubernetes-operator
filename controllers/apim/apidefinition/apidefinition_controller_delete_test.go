@@ -31,8 +31,6 @@ import (
 	"net/http"
 	"time"
 
-	"errors"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	. "github.com/onsi/ginkgo/v2"
@@ -107,9 +105,8 @@ var _ = Describe("API Definition Controller", func() {
 			By("Call rest API and expect DELETED api")
 			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
-				_, apiErr := apimClient.GetApiById(createdApiDefinition.Status.CrossID)
-				var apiNotFoundError *clientError.ApiNotFoundError
-				return apiErr != nil && errors.As(apiErr, &apiNotFoundError)
+				_, apiErr := apimClient.GetApiById(createdApiDefinition.Status.ID)
+				return apiErr != nil && clientError.IsNotFound(apiErr)
 			}, timeout, interval).Should(BeTrue())
 
 			By("Expect that the ConfigMap has been deleted")
