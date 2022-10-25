@@ -1,3 +1,10 @@
+# [0.1.0-alpha.9](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.8...0.1.0-alpha.9) (2022-10-25)
+
+
+### Bug Fixes
+
+* import api with life cycle state ([7427457](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/7427457a1ba4abf81b2e19dc61f8fc6152987469))
+
 # [0.1.0-alpha.8](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.7...0.1.0-alpha.8) (2022-10-20)
 
 
