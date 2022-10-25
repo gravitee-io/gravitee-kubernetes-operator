@@ -17,6 +17,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
@@ -24,12 +25,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 )
 
-//nolint:gocognit
 func (d *Delegate) CreateOrUpdate(
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	updating := apiDefinition.Status.CrossID != ""
-
 	apiDefinition.Status.CrossID = getOrGenerateCrossId(apiDefinition)
 	apiDefinition.Status.ID = getOrGenerateId(apiDefinition)
 	apiDefinition.Spec.Id = apiDefinition.Status.ID
@@ -70,20 +68,13 @@ func (d *Delegate) CreateOrUpdate(
 			return mgmtErr
 		}
 
-		d.log.Info("Api has been created to the Management API")
+		d.log.Info(fmt.Sprintf("Api has been %s to the Management API", importMethod))
 
 		// Get Plan Id from the Management API to send it to the Gateway. (Used by the Gateway to find subscription)
 		retrieveMgmtPlanIds(apiDefinition, mgmtApi)
 
 		// Make sure status ID will match APIM ID (could be different if APIM generated it)
 		apiDefinition.Spec.Id = mgmtApi.Id
-	}
-
-	if updating || apiDefinition.Spec.State == model.StateStopped {
-		if err := d.updateApiState(apiDefinition); err != nil {
-			d.log.Error(err, "Unable to update api state to the Management API")
-			return err
-		}
 	}
 
 	if apiDefinition.Spec.State == model.StateStopped {
