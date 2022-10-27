@@ -32,7 +32,8 @@ type Api struct {
 	// +kubebuilder:default:=`2.0.0`
 	DefinitionVersion DefinitionVersion `json:"gravitee,omitempty"`
 	// +kubebuilder:default:=`STARTED`
-	State State `json:"state,omitempty"`
+	// +kubebuilder:validation:Enum=STARTED;STOPPED;
+	State string `json:"state,omitempty"`
 	// +kubebuilder:default:=`CREATED`
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
 	// +kubebuilder:validation:Required
@@ -75,12 +76,9 @@ const (
 // +kubebuilder:validation:Enum=CREATED;PUBLISHED;UNPUBLISHED;DEPRECATED;ARCHIVED;
 type LifecycleState string
 
-// +kubebuilder:validation:Enum=STARTED;STOPPED;
-type State string
-
 const (
-	StateStarted State = "STARTED"
-	StateStopped State = "STOPPED"
+	StateStarted string = "STARTED"
+	StateStopped string = "STOPPED"
 )
 
 type Resource struct {
