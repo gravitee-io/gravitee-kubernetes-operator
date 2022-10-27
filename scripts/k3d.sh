@@ -36,6 +36,9 @@ K3D_IMAGES_REGISTRY_NAME="${K3D_CLUSTER_NAME}.docker.localhost"
 K3D_IMAGES_REGISTRY_PORT=12345
 K3D_IMAGES_REGISTRY="${K3D_IMAGES_REGISTRY_NAME}:${K3D_IMAGES_REGISTRY_PORT}"
 
+# APIM credentials
+APIM_CONTEXT_SECRET_NAME=apim-context-credentials
+
 echo "
 
     Installing the latest version of k3d (if not present) ...
@@ -133,6 +136,23 @@ echo "
 
 kubectl create namespace ${K3D_NAMESPACE_NAME}
 kubectl config set-context --current --namespace ${K3D_NAMESPACE_NAME}
+
+echo "
+
+    Storing APIM context credentials as a secret ...
+
+    The following declaration can be used in your managament context to reference this secret:
+
+    secretRef:
+        name: ${APIM_CONTEXT_SECRET_NAME}
+        namespace: ${K3D_NAMESPACE_NAME}
+        
+"
+
+kubectl create secret generic ${APIM_CONTEXT_SECRET_NAME} \
+    -n ${K3D_NAMESPACE_NAME} \
+    --from-literal=username=admin \
+    --from-literal=password=admin
 
 echo "
 
