@@ -973,15 +973,11 @@ spec:
                 - Reconciling
                 type: string
               state:
-                enum:
-                - STARTED
-                - STOPPED
                 type: string
             required:
             - crossId
             - generation
             - id
-            - state
             type: object
         type: object
     served: true
