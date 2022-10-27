@@ -64,17 +64,16 @@ type HttpEndpoint struct {
 	EndpointType EndpointType   `json:"type,omitempty"`
 	Inherit      bool           `json:"inherit,omitempty"`
 
-	HttpProxy            *HttpProxy                  `json:"httpProxy,omitempty"`
-	HttpClientOptions    *HttpClientOptions          `json:"httpClientOptions,omitempty"`
-	HttpClientSslOptions *HttpClientSslOptions       `json:"httpClientSslOptions,omitempty"`
-	Headers              map[string]string           `json:"headers,omitempty"`
+	HttpProxy            *HttpProxy                  `json:"proxy,omitempty"`
+	HttpClientOptions    *HttpClientOptions          `json:"http,omitempty"`
+	HttpClientSslOptions *HttpClientSslOptions       `json:"ssl,omitempty"`
+	Headers              []HttpHeader                `json:"headers,omitempty"`
 	HealthCheck          *EndpointHealthCheckService `json:"healthCheck,omitempty"`
 }
 
 type EndpointDiscoveryService struct {
 	Name          string            `json:"name,omitempty"`
 	Enabled       bool              `json:"enabled,omitempty"`
-	Service       *Service          `json:"-,omitempty"`
 	Provider      string            `json:"provider,omitempty"`
 	Configuration *GenericStringMap `json:"configuration,omitempty"`
 }
@@ -109,7 +108,6 @@ func NewService() *Service {
 }
 
 type Services struct {
-	Services                 map[Service]*Service      `json:"-"`
 	EndpointDiscoveryService *EndpointDiscoveryService `json:"discovery,omitempty"`
 	HealthCheckService       *HealthCheckService       `json:"health-check,omitempty"`
 	DynamicPropertyService   *DynamicPropertyService   `json:"dynamic-property,omitempty"`
