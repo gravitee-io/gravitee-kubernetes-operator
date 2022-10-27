@@ -176,11 +176,7 @@ func NewLogging() *Logging {
 	}
 }
 
-type FailoverCase int
-
-const (
-	TIMEOUT FailoverCase = iota
-)
+type FailoverCase string
 
 type Failover struct {
 	MaxAttempts  int            `json:"maxAttempts,omitempty"`
@@ -195,7 +191,7 @@ func NewFailover() *Failover {
 	return &Failover{
 		MaxAttempts:  maxAttempts,
 		RetryTimeout: retryTimeout,
-		Cases:        []FailoverCase{TIMEOUT},
+		Cases:        []FailoverCase{},
 	}
 }
 

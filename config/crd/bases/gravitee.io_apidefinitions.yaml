@@ -471,7 +471,7 @@ spec:
                     properties:
                       cases:
                         items:
-                          type: integer
+                          type: string
                         type: array
                       maxAttempts:
                         type: integer
