@@ -17,6 +17,8 @@
 package v1alpha1
 
 import (
+	"net/http"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -56,4 +58,43 @@ type ManagementContextList struct {
 
 func init() {
 	SchemeBuilder.Register(&ManagementContext{}, &ManagementContextList{})
+}
+
+func (ctx *ManagementContext) HasAuthentication() bool {
+	return ctx.Spec.Auth != nil
+}
+
+func (ctx *ManagementContext) HasSecretRef() bool {
+	if !ctx.HasAuthentication() {
+		return false
+	}
+
+	return ctx.Spec.Auth.SecretRef != nil
+}
+
+func (ctx *ManagementContext) Authenticate(req *http.Request) {
+	if !ctx.HasAuthentication() {
+		return
+	}
+
+	bearerToken := ctx.Spec.Auth.BearerToken
+	basicAuth := ctx.Spec.Auth.Credentials
+
+	if bearerToken != "" {
+		setBearerToken(req, bearerToken)
+	} else if basicAuth != nil {
+		setBasicAuth(req, basicAuth)
+	}
+}
+
+func setBearerToken(request *http.Request, token string) {
+	if token != "" {
+		request.Header.Add("Authorization", "Bearer "+token)
+	}
+}
+
+func setBasicAuth(request *http.Request, auth *model.BasicAuth) {
+	if auth != nil && auth.Username != "" {
+		request.SetBasicAuth(auth.Username, auth.Password)
+	}
 }
