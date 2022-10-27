@@ -45,7 +45,7 @@ func newAuthenticatedRoundTripper(
 }
 
 func (t *AuthenticatedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	t.apimCtx.Spec.Authenticate(req)
+	t.apimCtx.Authenticate(req)
 	return t.transport.RoundTrip(req)
 }
 

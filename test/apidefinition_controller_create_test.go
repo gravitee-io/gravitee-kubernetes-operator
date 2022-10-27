@@ -104,7 +104,7 @@ var _ = Describe("API Definition Controller", func() {
 
 		BeforeEach(func() {
 			managementContext, err := NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+				"../config/samples/context/dev/managementcontext_secretRef.yaml")
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")

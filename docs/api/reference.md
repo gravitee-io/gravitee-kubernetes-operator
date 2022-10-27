@@ -3558,6 +3558,13 @@ ManagementContext represents the configuration for a Management API.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthsecretref">secretRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -3587,6 +3594,40 @@ ManagementContext represents the configuration for a Management API.
         <td>false</td>
       </tr><tr>
         <td><b>username</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.secretRef
+<sup><sup>[↩ Parent](#managementcontextspecauth)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
         <td>string</td>
         <td>
           <br/>
