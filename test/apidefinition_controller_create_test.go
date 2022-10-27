@@ -25,7 +25,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package apidefinition
+package test
 
 import (
 	"encoding/json"
@@ -40,7 +40,6 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -59,7 +58,7 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Without a management context")
 
-			apiDefinition, err := test.NewApiDefinition("../../../config/samples/apim/basic-example.yml")
+			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example.yml")
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = apiDefinition
@@ -83,7 +82,7 @@ var _ = Describe("API Definition Controller", func() {
 				return err == nil && apiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
 
-			var endpoint = test.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var endpoint = GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
 			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
@@ -104,11 +103,11 @@ var _ = Describe("API Definition Controller", func() {
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
-			managementContext, err := test.NewManagementContext(
-				"../../../config/samples/context/dev/managementcontext_credentials.yaml")
+			managementContext, err := NewManagementContext(
+				"../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinition, err := test.NewApiDefinition("../../../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = apiDefinition
@@ -146,7 +145,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call gateway endpoint and expect the API to be available")
 
-			var endpoint = test.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var endpoint = GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpoint)
@@ -196,7 +195,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call gateway endpoint and expect the API not to be available")
 
-			var endpoint = test.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var endpoint = GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpoint)
@@ -262,7 +261,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call gateway endpoint and expect the API to be available")
 
-			var endpoint = test.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var endpoint = GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpoint)
