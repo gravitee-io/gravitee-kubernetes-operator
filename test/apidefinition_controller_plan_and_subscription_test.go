@@ -25,7 +25,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package apidefinition
+package test
 
 import (
 	"net/http"
@@ -42,7 +42,6 @@ import (
 	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	managementapimodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
 var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
@@ -62,13 +61,13 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := test.NewManagementContext(
-				"../../../config/samples/context/dev/managementcontext_credentials.yaml")
+			managementContext, err := NewManagementContext(
+				"../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := test.NewApiDefinition("../../../config/samples/apim/apikey-example-with-ctx.yml")
+			apiDefinition, err := NewApiDefinition("../config/samples/apim/apikey-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -83,7 +82,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				return k8sErr == nil && savedApiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
 
-			gatewayEndpoint = test.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			gatewayEndpoint = GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 			mgmtClient = managementapi.NewClient(ctx, managementContextFixture, httpClient)
 
 		})
@@ -137,7 +136,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			// Update savedApiDefinition & global var with last Get
 			savedApiDefinition = updatedApiDefinition.DeepCopy()
-			gatewayEndpoint = test.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			gatewayEndpoint = GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			By("Update ApiDefinition add ApiKey plan")
 
