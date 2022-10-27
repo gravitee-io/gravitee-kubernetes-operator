@@ -37,7 +37,7 @@ type ApiDefinitionSpec struct {
 type ApiDefinitionStatus struct {
 	ID                 string           `json:"id"`
 	CrossID            string           `json:"crossId"`
-	State              model.State      `json:"state"`
+	State              string           `json:"state,omitempty"`
 	ProcessingStatus   ProcessingStatus `json:"processingStatus,omitempty"`
 	ObservedGeneration int64            `json:"generation"`
 }

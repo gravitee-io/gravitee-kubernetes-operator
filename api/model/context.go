@@ -17,7 +17,6 @@ package model
 
 import (
 	"net/http"
-	"strings"
 )
 
 type ContextRef struct {
@@ -46,16 +45,6 @@ type BasicAuth struct {
 	Username string `json:"username,omitempty"`
 	// +kubebuilder:validation:Required
 	Password string `json:"password,omitempty"`
-}
-
-func (ctx Context) BuildUrl(path string) string {
-	orgId, envId := ctx.OrgId, ctx.EnvId
-	baseUrl := strings.TrimSuffix(ctx.BaseUrl, "/")
-	url := baseUrl + "/management/organizations/" + orgId
-	if envId != "" {
-		url = url + "/environments/" + envId
-	}
-	return url + path
 }
 
 func (ctx Context) Authenticate(req *http.Request) {
