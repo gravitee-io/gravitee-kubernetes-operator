@@ -707,6 +707,8 @@ spec:
                               type: object
                             health-check:
                               properties:
+                                enabled:
+                                  type: boolean
                                 schedule:
                                   type: string
                                 steps:
@@ -876,6 +878,8 @@ spec:
                     type: object
                   health-check:
                     properties:
+                      enabled:
+                        type: boolean
                       schedule:
                         type: string
                       steps:
