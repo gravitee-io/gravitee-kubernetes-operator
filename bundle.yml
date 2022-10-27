@@ -973,15 +973,11 @@ spec:
                 - Reconciling
                 type: string
               state:
-                enum:
-                - STARTED
-                - STOPPED
                 type: string
             required:
             - crossId
             - generation
             - id
-            - state
             type: object
         type: object
     served: true
@@ -1366,7 +1362,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: graviteeio/kubernetes-operator:0.1.0-alpha.9
+        image: graviteeio/kubernetes-operator:0.1.0-alpha.10
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
