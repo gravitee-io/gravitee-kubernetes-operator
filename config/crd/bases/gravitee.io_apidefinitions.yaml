@@ -490,9 +490,14 @@ spec:
                               backup:
                                 type: boolean
                               headers:
-                                additionalProperties:
-                                  type: string
-                                type: object
+                                items:
+                                  properties:
+                                    name:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                type: array
                               healthCheck:
                                 properties:
                                   inherit:
@@ -546,7 +551,7 @@ spec:
                                       type: object
                                     type: array
                                 type: object
-                              httpClientOptions:
+                              http:
                                 properties:
                                   clearTextUpgrade:
                                     type: boolean
@@ -572,24 +577,12 @@ spec:
                                   version:
                                     type: string
                                 type: object
-                              httpClientSslOptions:
-                                properties:
-                                  hostnameVerifier:
-                                    type: boolean
-                                  keyStore:
-                                    properties:
-                                      type:
-                                        type: integer
-                                    type: object
-                                  trustAll:
-                                    type: boolean
-                                  trustStore:
-                                    properties:
-                                      type:
-                                        type: integer
-                                    type: object
-                                type: object
-                              httpProxy:
+                              inherit:
+                                type: boolean
+                              name:
+                                description: From Endpoint
+                                type: string
+                              proxy:
                                 properties:
                                   enabled:
                                     type: boolean
@@ -606,11 +599,23 @@ spec:
                                   username:
                                     type: string
                                 type: object
-                              inherit:
-                                type: boolean
-                              name:
-                                description: From Endpoint
-                                type: string
+                              ssl:
+                                properties:
+                                  hostnameVerifier:
+                                    type: boolean
+                                  keyStore:
+                                    properties:
+                                      type:
+                                        type: string
+                                    type: object
+                                  trustAll:
+                                    type: boolean
+                                  trustStore:
+                                    properties:
+                                      type:
+                                        type: string
+                                    type: object
+                                type: object
                               target:
                                 type: string
                               tenants:
@@ -681,13 +686,6 @@ spec:
                           properties:
                             discovery:
                               properties:
-                                '-':
-                                  properties:
-                                    enabled:
-                                      type: boolean
-                                    name:
-                                      type: string
-                                  type: object
                                 configuration:
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
@@ -765,14 +763,14 @@ spec:
                             keyStore:
                               properties:
                                 type:
-                                  type: integer
+                                  type: string
                               type: object
                             trustAll:
                               type: boolean
                             trustStore:
                               properties:
                                 type:
-                                  type: integer
+                                  type: string
                               type: object
                           type: object
                       type: object
@@ -852,13 +850,6 @@ spec:
                 properties:
                   discovery:
                     properties:
-                      '-':
-                        properties:
-                          enabled:
-                            type: boolean
-                          name:
-                            type: string
-                        type: object
                       configuration:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true

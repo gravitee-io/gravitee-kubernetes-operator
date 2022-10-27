@@ -14,10 +14,10 @@
 
 package model
 
-type KeyStoreType int
+type KeyStoreType string
 
 const (
-	PEM KeyStoreType = iota
+	PEM KeyStoreType = "PEM"
 	PKCS12
 	JKS
 )
