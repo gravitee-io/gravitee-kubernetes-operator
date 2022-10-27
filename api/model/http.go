@@ -116,6 +116,7 @@ func NewStep() *Step {
 }
 
 type HealthCheckService struct {
+	Enabled  bool    `json:"enabled,omitempty"`
 	Steps    []*Step `json:"steps,omitempty"`
 	Schedule string  `json:"schedule,omitempty"`
 }
