@@ -25,17 +25,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package apidefinition
+package test
 
 import (
+	"net/http"
+	"time"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 	k8sUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	managementApi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
 )
 
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
@@ -50,13 +53,13 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := test.NewManagementContext(
-				"../../../config/samples/context/dev/managementcontext_credentials.yaml")
+			managementContext, err := NewManagementContext(
+				"../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := test.NewApiDefinition("../../../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -109,12 +112,12 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			err = k8sClient.Update(ctx, managementContextRight)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("Update the API definition")
-			// TODO: find a way to reconcile the API definition when management context is updated ?
-			apiDefinition = savedApiDefinition.DeepCopy()
-			apiDefinition.Spec.Name = "new-name-v2"
-			err = k8sClient.Update(ctx, apiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			httpClient := http.Client{Timeout: 5 * time.Second}
+			apimClient := managementApi.NewClient(ctx, managementContextFixture, httpClient)
+			Eventually(func() bool {
+				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
+				return apiErr == nil && api.Name == "new-name" && api.Id == apiDefinition.Status.ID
+			}, timeout, interval).Should(BeTrue())
 
 			By("Check API definition processing status")
 			Eventually(func() bool {

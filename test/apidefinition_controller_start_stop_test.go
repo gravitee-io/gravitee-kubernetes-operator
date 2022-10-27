@@ -25,21 +25,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package apidefinition
+package test
 
 import (
 	"net/http"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
-	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test"
+	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -53,13 +50,13 @@ var _ = Describe("API Definition Controller", func() {
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := test.NewManagementContext(
-				"../../../config/samples/context/dev/managementcontext_credentials.yaml")
+			managementContext, err := NewManagementContext(
+				"../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := test.NewApiDefinition("../../../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -72,7 +69,7 @@ var _ = Describe("API Definition Controller", func() {
 			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
-		It("Should Delete an API Definition", func() {
+		It("Should Stop an API Definition", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
 			// Expect the API Definition is Ready
@@ -84,83 +81,37 @@ var _ = Describe("API Definition Controller", func() {
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
-			var gatewayEndpoint = test.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var gatewayEndpoint = GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(gatewayEndpoint)
 				return callErr == nil && res.StatusCode == 200
 			}, timeout, interval).Should(BeTrue())
 
-			By("Delete the API Definition")
+			By("Stop the API by define state to STOPPED")
 
-			err := k8sClient.Delete(ctx, apiDefinitionFixture)
+			updatedApiDefinition := createdApiDefinition.DeepCopy()
+
+			updatedApiDefinition.Spec.State = "STOPPED"
+
+			err := k8sClient.Update(ctx, updatedApiDefinition)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("Call deleted API definition URL and expect 404")
+			By("Call updated API definition URL and expect 404")
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(gatewayEndpoint)
 				return callErr == nil && res.StatusCode == 404
 			}, timeout, interval).Should(BeTrue())
 
-			By("Call rest API and expect DELETED api")
+			By("Call rest API and expect STOPPED state")
 			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {
-				_, apiErr := apimClient.GetApiById(createdApiDefinition.Status.ID)
-				return apiErr != nil && clientError.IsNotFound(apiErr)
+				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
+
+				return apiErr == nil &&
+					api.Id == updatedApiDefinition.Status.ID &&
+					api.State == "STOPPED"
 			}, timeout, interval).Should(BeTrue())
-
-			By("Expect that the ConfigMap has been deleted")
-			cm := &v1.ConfigMap{}
-			Eventually(func() error {
-				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      createdApiDefinition.Name,
-					Namespace: createdApiDefinition.Namespace,
-				}, cm)
-			}, timeout, interval).ShouldNot(Succeed())
-
-			By("Check events")
-			Expect(
-				getEventsReason(apiDefinitionFixture),
-			).Should(
-				ContainElements([]string{"Deleted", "Deleting"}),
-			)
-		})
-
-		It("Should detect when API has already been deleted", func() {
-			createdApiDefinition := new(gio.ApiDefinition)
-			managementClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
-
-			// Expect the API Definition is Ready
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-				return err == nil && createdApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
-
-			By("Call initial API definition URL and expect no error")
-			// Check created api is callable
-			var gatewayEndpoint = test.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
-
-			Eventually(func() bool {
-				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
-
-			By("Delete the API calling directly the REST API")
-			deleteErr := managementClient.DeleteApi(createdApiDefinition.Status.ID)
-			Expect(deleteErr).ToNot(HaveOccurred())
-
-			By("Delete the API Definition")
-			err := k8sClient.Delete(ctx, apiDefinitionFixture)
-			Expect(err).ToNot(HaveOccurred())
-
-			By("Expect that the ConfigMap has been deleted")
-			cm := &v1.ConfigMap{}
-			Eventually(func() error {
-				return k8sClient.Get(ctx, types.NamespacedName{
-					Name:      createdApiDefinition.Name,
-					Namespace: createdApiDefinition.Namespace,
-				}, cm)
-			}, timeout, interval).ShouldNot(Succeed())
 		})
 	})
 })
