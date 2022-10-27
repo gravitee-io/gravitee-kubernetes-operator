@@ -1,3 +1,10 @@
+# [0.1.0-alpha.10](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.9...0.1.0-alpha.10) (2022-10-27)
+
+
+### Bug Fixes
+
+* reconcile api resources on context updates ([43276ce](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/43276ce640bf2774b99d5edbd381e637c94cb908))
+
 # [0.1.0-alpha.9](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.8...0.1.0-alpha.9) (2022-10-25)
 
 
