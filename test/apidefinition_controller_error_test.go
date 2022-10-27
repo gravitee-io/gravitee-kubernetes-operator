@@ -112,6 +112,8 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			err = k8sClient.Update(ctx, managementContextRight)
 			Expect(err).ToNot(HaveOccurred())
 
+			By("Check that API definition has been reconciled on ManagementContext update")
+
 			httpClient := http.Client{Timeout: 5 * time.Second}
 			apimClient := managementApi.NewClient(ctx, managementContextFixture, httpClient)
 			Eventually(func() bool {

@@ -17,14 +17,17 @@ package managementapi
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 type Client struct {
-	ctx      context.Context
-	buildUrl func(string) string
-	http     http.Client
+	ctx     context.Context
+	baseUrl string
+	orgUrl  string
+	envUrl  string
+	http    http.Client
 }
 
 type AuthenticatedRoundTripper struct {
@@ -47,11 +50,14 @@ func (t *AuthenticatedRoundTripper) RoundTrip(req *http.Request) (*http.Response
 }
 
 func NewClient(ctx context.Context, apimCtx *gio.ManagementContext, httpCli http.Client) *Client {
-	buildUrl := apimCtx.Spec.BuildUrl
+	baseUrl := strings.TrimSuffix(apimCtx.Spec.BaseUrl, "/")
+	orgUrl := baseUrl + "/management/organizations/" + apimCtx.Spec.OrgId
+	envUrl := orgUrl + "/environments/" + apimCtx.Spec.EnvId
+
 	authRoundTripper := newAuthenticatedRoundTripper(apimCtx, http.DefaultTransport)
 	httpCli.Transport = authRoundTripper
 
 	return &Client{
-		ctx, buildUrl, httpCli,
+		ctx, baseUrl, orgUrl, envUrl, httpCli,
 	}
 }
