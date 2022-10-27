@@ -19,12 +19,13 @@ package managementcontext
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 // Reconciler reconciles a ManagementContext object.
@@ -49,8 +50,7 @@ type Reconciler struct {
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("ManagementContext", req.NamespacedName)
 
-	// Fetch the ApiDefinition instance
-	instance := &graviteeiov1alpha1.ManagementContext{}
+	instance := &gio.ManagementContext{}
 
 	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -58,12 +58,56 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	log.Info("Reconciling ManagementContext instance")
 
+	// Update API resources that reference this context and are in a failed state
+	apis, err := r.listFailedApiDefinitionResources(ctx, instance.Name, instance.Namespace)
+	if err != nil {
+		log.Error(err, "unable to list API definitions resources, skipping update")
+		return ctrl.Result{}, nil
+	}
+
+	for i := range apis {
+		api := apis[i]
+
+		api.Status.ProcessingStatus = gio.ProcessingStatusReconciling
+
+		if err = r.Status().Update(ctx, &api); err != nil {
+			log.Error(err, "unable to update API definition status, skipping update")
+		}
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *Reconciler) listFailedApiDefinitionResources(
+	ctx context.Context, contextName, contextNamespace string,
+) ([]gio.ApiDefinition, error) {
+	log := log.FromContext(ctx)
+	statusFailed := string(gio.ProcessingStatusFailed)
+	apiDefinitionList := &gio.ApiDefinitionList{}
+
+	contextNameFilter := &client.ListOptions{
+		FieldSelector: fields.SelectorFromSet(fields.Set{"spec.contextRef.name": contextName}),
+	}
+
+	contextNamespaceFilter := &client.ListOptions{
+		FieldSelector: fields.SelectorFromSet(fields.Set{"spec.contextRef.namespace": contextNamespace}),
+	}
+
+	statusFilter := &client.ListOptions{
+		FieldSelector: fields.SelectorFromSet(fields.Set{"status.processingStatus": statusFailed}),
+	}
+
+	if err := r.Client.List(ctx, apiDefinitionList, contextNameFilter, contextNamespaceFilter, statusFilter); err != nil {
+		log.Error(err, "unable to list API definitions, skipping update")
+		return nil, err
+	}
+
+	return apiDefinitionList.Items, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&graviteeiov1alpha1.ManagementContext{}).
+		For(&gio.ManagementContext{}).
 		Complete(r)
 }

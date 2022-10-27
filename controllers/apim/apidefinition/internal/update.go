@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (d *Delegate) CreateOrUpdate(
@@ -88,10 +89,21 @@ func (d *Delegate) CreateOrUpdate(
 	}
 
 	// Creation succeeded, update Status
-	apiDefinition.Status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
-	apiDefinition.Status.ProcessingStatus = gio.ProcessingStatusCompleted
-	apiDefinition.Status.State = apiDefinition.Spec.State
-	apiDefinition.Status.ID = apiDefinition.Spec.Id
+	status := apiDefinition.Status.DeepCopy()
+	status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
+	status.ProcessingStatus = gio.ProcessingStatusCompleted
+	status.State = apiDefinition.Spec.State
+	status.ID = apiDefinition.Spec.Id
+
+	// If reconcile is triggered by a management context update, the status update may result in a conflict error
+	// For this reason, we need to fetch the last resource version before updating the status
+	namespacedName := types.NamespacedName{Namespace: apiDefinition.Namespace, Name: apiDefinition.Name}
+	if err := d.k8sClient.Get(d.ctx, namespacedName, apiDefinition); err != nil {
+		d.log.Error(err, "Unable to update API definition status (Failed to refresh api definition resource version")
+		return err
+	}
+
+	apiDefinition.Status = *status
 
 	if err := d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy()); err != nil {
 		d.log.Error(err, "Unable to update API definition status")

@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
@@ -28,10 +29,11 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
@@ -48,7 +50,7 @@ const managerPort = 9443
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(graviteeiov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(gio.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -77,8 +79,16 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 	})
+
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
+		os.Exit(1)
+	}
+
+	err = indexApiDefinitionFields(mgr)
+
+	if err != nil {
+		setupLog.Error(err, "unable to start manager (Indexing fields in API definition)")
 		os.Exit(1)
 	}
 
@@ -120,4 +130,43 @@ func main() {
 		setupLog.Error(startErr, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func indexApiDefinitionFields(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	err := cache.IndexField(ctx, &gio.ApiDefinition{}, "spec.contextRef.name", func(obj client.Object) []string {
+		api, ok := obj.(*gio.ApiDefinition)
+		if !ok || api.Spec.Context == nil {
+			return []string{}
+		}
+		return []string{api.Spec.Context.Name}
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "spec.contextRef.namespace", func(obj client.Object) []string {
+		api, ok := obj.(*gio.ApiDefinition)
+		if !ok || api.Spec.Context == nil {
+			return []string{}
+		}
+		return []string{api.Spec.Context.Namespace}
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "status.processingStatus", func(obj client.Object) []string {
+		api, ok := obj.(*gio.ApiDefinition)
+		if !ok {
+			return []string{}
+		}
+		return []string{string(api.Status.ProcessingStatus)}
+	})
+
+	return err
 }
