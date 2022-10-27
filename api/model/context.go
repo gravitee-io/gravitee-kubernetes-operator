@@ -15,10 +15,6 @@
 // +kubebuilder:object:generate=true
 package model
 
-import (
-	"net/http"
-)
-
 type ContextRef struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace,omitempty"`
@@ -38,6 +34,7 @@ type Context struct {
 type Auth struct {
 	BearerToken string     `json:"bearerToken,omitempty"`
 	Credentials *BasicAuth `json:"credentials,omitempty"`
+	SecretRef   *SecretRef `json:"secretRef,omitempty"`
 }
 
 type BasicAuth struct {
@@ -47,23 +44,7 @@ type BasicAuth struct {
 	Password string `json:"password,omitempty"`
 }
 
-func (ctx Context) Authenticate(req *http.Request) {
-	if ctx.Auth == nil {
-		return
-	}
-
-	bearerToken := ctx.Auth.BearerToken
-	if bearerToken != "" {
-		req.Header.Add("Authorization", "Bearer "+bearerToken)
-	} else if ctx.Auth.Credentials != nil {
-		username := ctx.Auth.Credentials.Username
-		password := ctx.Auth.Credentials.Password
-		setBasicAuth(req, username, password)
-	}
-}
-
-func setBasicAuth(request *http.Request, username, password string) {
-	if username != "" {
-		request.SetBasicAuth(username, password)
-	}
+type SecretRef struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace,omitempty"`
 }
