@@ -38,12 +38,11 @@ import (
 
 	model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
-var _ = FDescribe("API Definition Controller", func() {
+var _ = Describe("API Definition Controller", func() {
 	const (
 		origin = "kubernetes"
 		mode   = "fully_managed"
@@ -59,7 +58,7 @@ var _ = FDescribe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Without a management context")
 
-			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/basic-example.yml")
+			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiFile)
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = apiDefinition
@@ -97,18 +96,17 @@ var _ = FDescribe("API Definition Controller", func() {
 		})
 	})
 
-	FContext("With basic ApiDefinition & ManagementContext", func() {
+	Context("With basic ApiDefinition & ManagementContext", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
 		var managementContextFixture *gio.ManagementContext
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
-			managementContext, err := internal.NewManagementContext(
-				"../config/samples/context/dev/managementcontext_secretRef.yaml")
+			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiWithContextFile)
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = apiDefinition
@@ -155,7 +153,9 @@ var _ = FDescribe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID")
 
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == apiDefinition.Status.ID
@@ -205,7 +205,9 @@ var _ = FDescribe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID and state STOPPED")
 
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == apiDefinition.Status.ID && api.State == "STOPPED"
@@ -213,7 +215,8 @@ var _ = FDescribe("API Definition Controller", func() {
 		})
 
 		It("Should create an API Definition with existing api in Management Api", func() {
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
 
 			By("Init existing api in management api")
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
