@@ -1435,7 +1435,7 @@ The context is specifying the namespace and the name of a ManagementContext used
     </thead>
     <tbody><tr>
         <td><b>cases</b></td>
-        <td>[]integer</td>
+        <td>[]string</td>
         <td>
           <br/>
         </td>
@@ -1567,8 +1567,8 @@ The context is specifying the namespace and the name of a ManagementContext used
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>headers</b></td>
-        <td>map[string]string</td>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexheadersindex">headers</a></b></td>
+        <td>[]object</td>
         <td>
           <br/>
         </td>
@@ -1581,21 +1581,7 @@ The context is specifying the namespace and the name of a ManagementContext used
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhttpclientoptions">httpClientOptions</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhttpclientssloptions">httpClientSslOptions</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhttpproxy">httpProxy</a></b></td>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhttp">http</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -1613,6 +1599,20 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>string</td>
         <td>
           From Endpoint<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexproxy">proxy</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexssl">ssl</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1639,6 +1639,40 @@ The context is specifying the namespace and the name of a ManagementContext used
       </tr><tr>
         <td><b>weight</b></td>
         <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].headers[index]
+<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -1847,7 +1881,7 @@ The context is specifying the namespace and the name of a ManagementContext used
 </table>
 
 
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].httpClientOptions
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].http
 <sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
 
 
@@ -1943,109 +1977,7 @@ The context is specifying the namespace and the name of a ManagementContext used
 </table>
 
 
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].httpClientSslOptions
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>hostnameVerifier</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhttpclientssloptionskeystore">keyStore</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>trustAll</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhttpclientssloptionstruststore">trustStore</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].httpClientSslOptions.keyStore
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhttpclientssloptions)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>type</b></td>
-        <td>integer</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].httpClientSslOptions.trustStore
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhttpclientssloptions)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>type</b></td>
-        <td>integer</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].httpProxy
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].proxy
 <sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
 
 
@@ -2105,6 +2037,108 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>false</td>
       </tr><tr>
         <td><b>username</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].ssl
+<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>hostnameVerifier</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexsslkeystore">keyStore</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>trustAll</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexssltruststore">trustStore</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].ssl.keyStore
+<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexssl)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].ssl.trustStore
+<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexssl)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -2364,13 +2398,6 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexservicesdiscovery-">-</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
@@ -2393,40 +2420,6 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>false</td>
       </tr><tr>
         <td><b>provider</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.groups[index].services.discovery.-
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexservicesdiscovery)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -2487,6 +2480,13 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
         <td>
@@ -2729,7 +2729,7 @@ The context is specifying the namespace and the name of a ManagementContext used
     </thead>
     <tbody><tr>
         <td><b>type</b></td>
-        <td>integer</td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -2756,7 +2756,7 @@ The context is specifying the namespace and the name of a ManagementContext used
     </thead>
     <tbody><tr>
         <td><b>type</b></td>
-        <td>integer</td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -3103,13 +3103,6 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionspecservicesdiscovery-">-</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
@@ -3132,40 +3125,6 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>false</td>
       </tr><tr>
         <td><b>provider</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.services.discovery.-
-<sup><sup>[↩ Parent](#apidefinitionspecservicesdiscovery)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -3226,6 +3185,13 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
         <td>
