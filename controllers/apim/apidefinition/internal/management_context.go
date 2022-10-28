@@ -42,7 +42,8 @@ func (d *Delegate) ResolveContext(
 	if apimContext.HasSecretRef() {
 		secret := new(coreV1.Secret)
 		secretName := apimContext.Spec.Auth.SecretRef.Name
-		secretNameSpace := apimContext.Spec.Auth.SecretRef.Namespace
+		secretNameSpace := getSecretNamespace(apimContext)
+
 		secretKey := types.NamespacedName{Name: secretName, Namespace: secretNameSpace}
 
 		if err := d.k8sClient.Get(d.ctx, secretKey, secret); err != nil {
@@ -61,4 +62,11 @@ func (d *Delegate) ResolveContext(
 	}
 
 	return apimContext, nil
+}
+
+func getSecretNamespace(apimContext *gio.ManagementContext) string {
+	if apimContext.Spec.Auth.SecretRef.Namespace != "" {
+		return apimContext.Spec.Auth.SecretRef.Namespace
+	}
+	return apimContext.Namespace
 }
