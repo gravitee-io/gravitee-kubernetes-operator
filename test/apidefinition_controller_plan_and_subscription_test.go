@@ -62,13 +62,15 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := internal.NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+
+			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
 			Expect(err).ToNot(HaveOccurred())
+
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/apikey-example-with-ctx.yml")
+
+			apiDefinition, err := internal.NewApiDefinition(internal.ApiKeyApiWithContextFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -77,6 +79,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
+
 			savedApiDefinition = new(gio.ApiDefinition)
 			Eventually(func() bool {
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
@@ -84,7 +87,9 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			}, timeout, interval).Should(BeTrue())
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
-			mgmtClient = managementapi.NewClient(ctx, managementContextFixture, httpClient)
+
+			mgmtClient, err = internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
 
 		})
 
