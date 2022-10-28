@@ -1,3 +1,12 @@
+# [0.1.0-alpha.11](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.10...0.1.0-alpha.11) (2022-10-28)
+
+
+### Bug Fixes
+
+* add enabled in health check model ([bbe475a](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/bbe475adee1023f7f8fd603342ea69bdc8f84ca7))
+* align endpoint mapping with apim ([565d745](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/565d745b27a81c7ccf06cf682a0f7511e93a0666))
+* change fail over data type ([71346fa](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/71346fa278f3cf18efffe6e05aab7853369fe998))
+
 # [0.1.0-alpha.10](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.9...0.1.0-alpha.10) (2022-10-27)
 
 
