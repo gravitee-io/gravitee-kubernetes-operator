@@ -1032,6 +1032,15 @@ spec:
                       username:
                         type: string
                     type: object
+                  secretRef:
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
                 type: object
               baseUrl:
                 pattern: ^http(s?):\/\/.+$
@@ -1357,7 +1366,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: graviteeio/kubernetes-operator:0.1.0-alpha.11
+        image: graviteeio/kubernetes-operator:0.1.0-alpha.12
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
