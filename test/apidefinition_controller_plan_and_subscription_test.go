@@ -32,6 +32,7 @@ import (
 	"time"
 
 	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -61,13 +62,13 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := NewManagementContext(
+			managementContext, err := internal.NewManagementContext(
 				"../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/apikey-example-with-ctx.yml")
+			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/apikey-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -82,7 +83,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				return k8sErr == nil && savedApiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
 
-			gatewayEndpoint = GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 			mgmtClient = managementapi.NewClient(ctx, managementContextFixture, httpClient)
 
 		})
@@ -136,7 +137,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			// Update savedApiDefinition & global var with last Get
 			savedApiDefinition = updatedApiDefinition.DeepCopy()
-			gatewayEndpoint = GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			By("Update ApiDefinition add ApiKey plan")
 
