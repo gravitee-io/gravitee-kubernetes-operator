@@ -20,11 +20,17 @@ import (
 
 	"k8s.io/client-go/kubernetes/scheme"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
 
 var decode = scheme.Codecs.UniversalDecoder().Decode
+
+type ApiWithContext struct {
+	Api     *gio.ApiDefinition
+	Context *gio.ManagementContext
+}
 
 func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio.ApiDefinition, error) {
 	crd, err := os.ReadFile(path)
@@ -52,7 +58,39 @@ func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio
 	return api, nil
 }
 
-func NewManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
+func NewApiWithRandomContext(
+	apiPath string, contextPath string, transforms ...func(*ApiWithContext),
+) (*ApiWithContext, error) {
+	api, err := NewApiDefinition(apiPath)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, err := newManagementContext(contextPath, func(ctx *gio.ManagementContext) {
+		ctx.Name += "-" + uuid.NewV4().String()[:7]
+		api.Spec.Context = &model.ContextRef{
+			Name:      ctx.Name,
+			Namespace: ctx.Namespace,
+		}
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	apiWithContext := &ApiWithContext{
+		Api:     api,
+		Context: ctx,
+	}
+
+	for _, transform := range transforms {
+		transform(apiWithContext)
+	}
+
+	return apiWithContext, nil
+}
+
+func newManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

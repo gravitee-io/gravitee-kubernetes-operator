@@ -63,15 +63,18 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.ApiKeyApiWithContextFile, internal.ContextWithSecretFile,
+			)
 			Expect(err).ToNot(HaveOccurred())
+
+			managementContext := apiWithContext.Context
 
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
 
-			apiDefinition, err := internal.NewApiDefinition(internal.ApiKeyApiWithContextFile)
-			Expect(err).ToNot(HaveOccurred())
+			apiDefinition := apiWithContext.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition

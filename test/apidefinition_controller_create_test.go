@@ -103,14 +103,15 @@ var _ = Describe("API Definition Controller", func() {
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
-			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.BasicApiWithContextFile, internal.ContextWithSecretFile,
+			)
+
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiWithContextFile)
-			Expect(err).ToNot(HaveOccurred())
+			apiDefinitionFixture = apiWithContext.Api
+			managementContextFixture = apiWithContext.Context
 
-			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
 		})
