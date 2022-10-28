@@ -1,3 +1,10 @@
+# [0.1.0-alpha.12](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.11...0.1.0-alpha.12) (2022-10-28)
+
+
+### Bug Fixes
+
+* reference secret in context ([b54d9a7](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/b54d9a721d28002c83fe2b72d8bbe04acfc87cba))
+
 # [0.1.0-alpha.11](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.10...0.1.0-alpha.11) (2022-10-28)
 
 
