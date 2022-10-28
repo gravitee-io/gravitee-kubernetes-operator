@@ -124,9 +124,10 @@ test: manifests generate install## Run tests.
 	kubectl config use-context k3d-graviteeio
 	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GOTESTSUM) $(GOTESTARGS) ./... -timeout 380s -coverprofile cover.out
 
+K3DARGS ?= ""
 .PHONY: k3d-apim-init
 k3d-apim-init: ## Init APIM locally using k3d
-	bash ./scripts/k3d.sh 
+	npx zx ./scripts/k3d.mjs $(K3DARGS)
 
 .PHONY: k3d-apim-start
 k3d-apim-start: ## Start exiting APIM node in k3d
