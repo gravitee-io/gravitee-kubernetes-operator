@@ -14,16 +14,20 @@
 
 package internal
 
-import "time"
+import (
+	"context"
+	"net/http"
 
-const (
-	GatewayUrl               = "http://localhost:9000/gateway"
-	SamplesPath              = "../config/samples"
-	ContextWithSecretFile    = SamplesPath + "/context/dev/managementcontext_secretRef.yaml"
-	BasicApiFile             = SamplesPath + "/apim/basic-example.yml"
-	BasicApiWithContextFile  = SamplesPath + "/apim/basic-example-with-ctx.yml"
-	ApiKeyApiWithContextFile = SamplesPath + "/apim/apikey-example-with-ctx.yml"
-
-	contextWithCredentialsFile = SamplesPath + "/context/dev/managementcontext_credentials.yaml"
-	apimClientTimeout          = 5 * time.Second
+	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 )
+
+func NewApimClient(ctx context.Context) (*apim.Client, error) {
+	httpClient := http.Client{Timeout: apimClientTimeout}
+
+	context, err := NewManagementContext(contextWithCredentialsFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return apim.NewClient(ctx, context, httpClient), nil
+}

@@ -31,7 +31,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
@@ -53,13 +52,12 @@ var _ = Describe("API Definition Controller", func() {
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := internal.NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiWithContextFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -103,7 +101,10 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Call rest API and expect DELETED api")
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				_, apiErr := apimClient.GetApiById(createdApiDefinition.Status.ID)
 				return apiErr != nil && clientError.IsNotFound(apiErr)
@@ -128,11 +129,12 @@ var _ = Describe("API Definition Controller", func() {
 
 		It("Should detect when API has already been deleted", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
-			managementClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			managementClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
 
 			// Expect the API Definition is Ready
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+				err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
 				return err == nil && createdApiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
 
@@ -150,7 +152,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(deleteErr).ToNot(HaveOccurred())
 
 			By("Delete the API Definition")
-			err := k8sClient.Delete(ctx, apiDefinitionFixture)
+			err = k8sClient.Delete(ctx, apiDefinitionFixture)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Expect that the ConfigMap has been deleted")
