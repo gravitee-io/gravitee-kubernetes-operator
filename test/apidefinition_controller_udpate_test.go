@@ -37,7 +37,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
@@ -52,7 +51,7 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create an API definition resource without a management context")
 
-			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/basic-example.yml")
+			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -118,14 +117,13 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			managementContext, err := internal.NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource without a management context")
 
-			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiWithContextFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -179,7 +177,9 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID & updated name")
 
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
 				return apiErr == nil &&
@@ -197,14 +197,13 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			managementContext, err := internal.NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource without a management context")
 
-			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/basic-example.yml")
+			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiWithContextFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -239,7 +238,9 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Calling rest API, expecting one API matching status ID")
 
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == updatedApiDefinition.Status.ID
