@@ -37,6 +37,7 @@ import (
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -50,13 +51,13 @@ var _ = Describe("API Definition Controller", func() {
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := NewManagementContext(
+			managementContext, err := internal.NewManagementContext(
 				"../config/samples/context/dev/managementcontext_credentials.yaml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
+			apiDefinition, err := internal.NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -81,7 +82,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
-			var gatewayEndpoint = GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var gatewayEndpoint = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(gatewayEndpoint)
