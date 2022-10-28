@@ -1,3 +1,17 @@
+## [0.1.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0...0.1.1) (2022-10-28)
+
+
+### Bug Fixes
+
+* add base href for k3d uri ([cbeb8c1](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/cbeb8c123e4ccbe45762b03c8b56c758805df8cc))
+* add enabled in health check model ([c3098e3](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/c3098e3dd7e375c72697a14b64b6b0aaf3d94dd0))
+* align endpoint mapping with apim ([568c879](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/568c8795a22345334a01273d115de7609043fac4))
+* change fail over data type ([0fbe2bd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0fbe2bdd607fc431b92e428f94954e08a4fbe2a0))
+* import api with life cycle state ([5293ddd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/5293dddf5aee6f7373f3013e9bbeba7525ffd77c))
+* merge create and update of api definition ([1e677f0](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1e677f0de588eb4a37b1f59fd8ba384fcfbc6b52))
+* reconcile api resources on context updates ([c820c14](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/c820c1472d050e3676f3ff5823d1d530f31b5852))
+* rename cors fields to match v3 definition ([3ebd4d0](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3ebd4d0cd3ee6f545f51e27e6fd087bfa618f7d5))
+
 # [0.1.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.0.0...0.1.0) (2022-10-07)
 
 
