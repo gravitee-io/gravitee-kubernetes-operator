@@ -126,7 +126,7 @@ test: manifests generate install ## Run tests.
 
 .PHONY: k3d-apim-init
 k3d-apim-init: ## Init APIM locally using k3d
-	bash ./scripts/k3d.sh 
+	npx zx ./scripts/k3d.mjs 
 
 .PHONY: k3d-apim-start
 k3d-apim-start: ## Start exiting APIM node in k3d
