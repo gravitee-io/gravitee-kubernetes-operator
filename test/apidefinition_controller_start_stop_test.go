@@ -50,14 +50,19 @@ var _ = Describe("API Definition Controller", func() {
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := internal.NewManagementContext(internal.ContextWithSecretFile)
+
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.BasicApiWithContextFile, internal.ContextWithSecretFile,
+			)
+
 			Expect(err).ToNot(HaveOccurred())
+
+			managementContext := apiWithContext.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiWithContextFile)
 
-			Expect(err).ToNot(HaveOccurred())
+			apiDefinition := apiWithContext.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
