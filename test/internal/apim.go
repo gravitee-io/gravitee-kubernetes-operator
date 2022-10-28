@@ -24,7 +24,7 @@ import (
 func NewApimClient(ctx context.Context) (*apim.Client, error) {
 	httpClient := http.Client{Timeout: apimClientTimeout}
 
-	context, err := NewManagementContext(contextWithCredentialsFile)
+	context, err := newManagementContext(contextWithCredentialsFile)
 	if err != nil {
 		return nil, err
 	}
