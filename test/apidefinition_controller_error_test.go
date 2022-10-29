@@ -77,10 +77,6 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			}, timeout, interval).Should(BeTrue())
 		})
 
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
-		})
-
 		It("Should not requeue reconcile with 401 error", func() {
 
 			By("Set bad credentials in ManagementContext")

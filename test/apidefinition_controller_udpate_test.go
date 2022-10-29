@@ -59,10 +59,6 @@ var _ = Describe("API Definition Controller", func() {
 			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 		})
 
-		AfterEach(func() {
-			cleanupApiDefinition(apiDefinitionFixture)
-		})
-
 		It("Should update an API Definition", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
@@ -110,7 +106,6 @@ var _ = Describe("API Definition Controller", func() {
 	})
 
 	Context("With basic ApiDefinition & ManagementContext", func() {
-		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
 
@@ -132,12 +127,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should update an API Definition", func() {
@@ -218,10 +208,6 @@ var _ = Describe("API Definition Controller", func() {
 			apiDefinitionFixture = apiDefinition
 			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should update an API Definition, adding a management context", func() {
