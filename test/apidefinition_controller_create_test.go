@@ -65,10 +65,6 @@ var _ = Describe("API Definition Controller", func() {
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 		})
 
-		AfterEach(func() {
-			cleanupApiDefinition(apiDefinitionFixture)
-		})
-
 		It("Should create an API Definition", func() {
 			By("Create an API definition resource without a management context")
 
@@ -114,10 +110,6 @@ var _ = Describe("API Definition Controller", func() {
 
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should create an API Definition", func() {
