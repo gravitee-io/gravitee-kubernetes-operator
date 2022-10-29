@@ -50,7 +50,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("Checking ApiKey plan and subscription", Ordered, func() {
-		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 
 		var savedApiDefinition *gio.ApiDefinition
@@ -78,7 +77,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
@@ -94,10 +92,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			mgmtClient, err = internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-		})
-
-		AfterAll(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should return unauthorize without subscription", func() {
