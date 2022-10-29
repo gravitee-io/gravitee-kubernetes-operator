@@ -96,6 +96,7 @@ jobs:
           command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
       - store_test_results:
           path: /tmp/junit/reports
+      - go/save-cache
 
   login-to-azure:
     executor:
