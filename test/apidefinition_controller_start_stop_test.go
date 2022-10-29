@@ -44,7 +44,6 @@ var _ = Describe("API Definition Controller", func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("With Started basic ApiDefinition & ManagementContext", func() {
-		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
 
@@ -66,12 +65,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should Stop an API Definition", func() {
