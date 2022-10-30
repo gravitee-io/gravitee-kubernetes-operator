@@ -85,15 +85,51 @@ jobs:
       - run:
           name: Install ginkgo
           command: make ginkgo
+      - restore_cache:
+          keys:
+            - k3d-registry.docker
+      - run:
+          name: Prepare k3d images registry
+          command: |
+            if [ -f k3d-registry.image.tar ]; then  
+              docker load -i k3d-registry.image.tar
+              tar -xf k3d-registry.volume.tar
+              docker run --name k3d-graviteeio.docker.localhost \
+                --net=bridge \
+                -h k3d-graviteeio.docker.localhost \
+                -p 12345:12345 \
+                -e REGISTRY_HTTP_ADDR=:12345 \
+                -v $(pwd)/var/lib/registry:/var/lib/registry  \
+                -d gko/k3d-registry:latest
+              echo "export K3D_PULL=apim" >> $BASH_ENV
+            else 
+              echo "No registry archive found. All images will be pulled from network."
+              echo "export K3D_PULL=all" >> $BASH_ENV
+            fi
       - run:
           name: Start APIM using k3d
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
             export APIM_IMAGE_TAG=master-latest
-            make k3d-apim-init
+            K3DARGS="--pull=${K3D_PULL}" make k3d-apim-init
       - run:
           name: Run tests
           command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
+      - run:
+          name: Archive k3d registry image and volume for caching
+          command: |
+            if [ -f k3d-registry.image.tar ]; then 
+              echo "K3d registry already saved on disk. Nothing to do"
+            else
+              docker commit k3d-graviteeio.docker.localhost gko/k3d-registry:latest
+              docker save -o k3d-registry.image.tar gko/k3d-registry:latest
+              docker run --rm --volumes-from $(docker ps -aqf "name=graviteeio.docker.localhost") -v $(pwd):/backup alpine tar cf /backup/k3d-registry.volume.tar /var/lib/registry
+            fi
+      - save_cache:
+          paths:
+            - k3d-registry.image.tar
+            - k3d-registry.volume.tar
+          key: k3d-registry.docker
       - store_test_results:
           path: /tmp/junit/reports
       - go/save-cache
