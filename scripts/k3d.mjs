@@ -29,7 +29,7 @@ async function time(fn) {
   await fn();
   const end = Date.now();
   green(`
-    Done in ${(end - start) / 1000}s
+  Done in ${(end - start) / 1000}s
   `);
 }
 
@@ -70,9 +70,9 @@ green("Starting k3d cluster with APIM dependencies...");
 
 blue(`
 
-    Installing the latest version of k3d (if not present) ...
+  ☸ Installing the latest version of k3d (if not present) ...
 
-    See https://k3d.io/
+  See https://k3d.io/
 `);
 
 await time(installK3d);
@@ -87,7 +87,7 @@ async function installK3d() {
 
 blue(`
 
-    Initializing a local docker images registry for k3d images (if not present) ...
+  🐳 Initializing a local docker images registry for k3d images (if not present) ...
 `);
 
 await time(initRegistry);
@@ -98,13 +98,13 @@ async function initRegistry() {
 
     magenta(`
   
-          K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
-      `);
+    K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
+    `);
   } catch (error) {
     magenta(`
   
-          Initializing registry ${K3D_IMAGES_REGISTRY_NAME}
-      `);
+    Initializing registry ${K3D_IMAGES_REGISTRY_NAME}
+    `);
 
     await $`k3d registry create ${K3D_IMAGES_REGISTRY_NAME} --port ${K3D_IMAGES_REGISTRY_PORT}`;
   }
@@ -114,11 +114,11 @@ async function initRegistry() {
 
 yellow(`
 
-    /!\ Warning /!\  
+  ⚠️ WARNING ⚠️ 
 
-    Assuming that host "${K3D_IMAGES_REGISTRY_NAME}" points to 127.0.0.1
+  Assuming that host "${K3D_IMAGES_REGISTRY_NAME}" points to 127.0.0.1
 
-    You might need to edit your /etc/hosts file before going further.
+  You might need to edit your /etc/hosts file before going further.
 `);
 
 await time(initCluster);
@@ -126,42 +126,22 @@ await time(initCluster);
 async function initCluster() {
   blue(`
 
-  Deleting K3d cluster ${K3D_CLUSTER_NAME} (if present) ...
+  ☸ Deleting K3d cluster ${K3D_CLUSTER_NAME} (if present) ...
 `);
-
-  try {
-    magenta(`
-
-      K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
-    `);
-
-    await $`k3d registry list | grep -q "${K3D_IMAGES_REGISTRY_NAME}"`;
-  } catch (error) {
-    magenta(`
-
-      Initializing registry ${K3D_IMAGES_REGISTRY_NAME}
-    `);
-
-    await $`k3d registry create ${K3D_IMAGES_REGISTRY_NAME} --port ${K3D_IMAGES_REGISTRY_PORT}`;
-  }
 
   try {
     await $`k3d cluster list| grep -q "${K3D_CLUSTER_NAME}"`;
     await $`k3d cluster delete ${K3D_CLUSTER_NAME}`;
-    magenta(`
-
-      Cluster ${K3D_CLUSTER_NAME} has been deleted
-    `);
   } catch (error) {
     magenta(`
 
-      no K3d cluster with name ${K3D_CLUSTER_NAME}
+    No K3d cluster with name ${K3D_CLUSTER_NAME}
     `);
   }
 
   blue(`
 
-  Creating a K3d cluster with name ${K3D_CLUSTER_NAME}
+  ☸ Creating a K3d cluster with name ${K3D_CLUSTER_NAME}
   `);
 
   await $`k3d cluster create --wait \
@@ -177,7 +157,7 @@ async function initCluster() {
 if (pullMode !== "none") {
   blue(`
 
-    Registering docker images to ${K3D_IMAGES_REGISTRY} ...
+  🐳 Registering docker images to ${K3D_IMAGES_REGISTRY} ...
 `);
 
   await time(registerImages);
@@ -222,21 +202,21 @@ async function registerImages() {
 
   const images = pullMode === "all" ? allImages : apimImages;
 
+  $.quote = $NoQuote;
+
   magenta(`
       
-              Pulling docker images ...
+    Pulling docker images ...
       `);
 
   await Promise.all(
-    Array.from(images.keys()).map((image) => $`docker pull ${image}`)
+    Array.from(images.keys()).map((image) => $`docker pull ${image} > /dev/null`)
   );
 
   magenta(`
       
-              Tagging docker images ...
+    Tagging docker images ...
       `);
-
-  $.quote = $NoQuote;
 
   await Promise.all(
     Array.from(images.entries()).map(
@@ -246,11 +226,11 @@ async function registerImages() {
 
   magenta(`
       
-              Pushing docker images to ${K3D_IMAGES_REGISTRY}
+    Pushing docker images to ${K3D_IMAGES_REGISTRY}
       `);
 
   await Promise.all(
-    Array.from(images.values()).map((tag) => $`docker push ${tag}`)
+    Array.from(images.values()).map((tag) => $`docker push ${tag}  > /dev/null`)
   );
 
   $.quote = $Quote;
@@ -258,7 +238,7 @@ async function registerImages() {
 
 blue(`
 
-    Creating Kubernetes namespace ${K3D_NAMESPACE_NAME} ...
+  ☸ Creating Kubernetes namespace ${K3D_NAMESPACE_NAME} ...
 `);
 
 await time(createNamespace);
@@ -270,13 +250,13 @@ async function createNamespace() {
 
 blue(`
 
-    Storing APIM context credentials as a secret ...
+  ☸ Storing APIM context credentials as a secret ...
 
-    The following declaration can be used in your management context to reference this secret:
+  The following declaration can be used in your management context to reference this secret:
 
-    secretRef:
-        name: ${APIM_CONTEXT_SECRET_NAME}
-        namespace: ${K3D_NAMESPACE_NAME}
+  secretRef:
+      name: ${APIM_CONTEXT_SECRET_NAME}
+      namespace: ${K3D_NAMESPACE_NAME}
 `);
 
 await time(createSecret);
@@ -291,7 +271,7 @@ async function createSecret() {
 
 blue(`
 
-    Adding Helm repositories (if not presents) ...
+  ⎈ Adding Helm repositories (if not presents) ...
 `);
 
 await time(addHelmRepos);
@@ -303,13 +283,13 @@ async function addHelmRepos() {
 }
 
 blue(`
-    Installing components in namespace ${K3D_NAMESPACE_NAME}
+  ⎈ Installing components in namespace ${K3D_NAMESPACE_NAME}
 
-        Mongodb         ${MONGO_IMAGE_TAG}
-        Elasticsearch   ${ELASTIC_IMAGE_TAG}
-        Nginx ingress   ${NGINX_CONTROLLER_IMAGE_TAG}           
-        Nginx backend   ${NGINX_BACKEND_IMAGE_TAG}
-        Gravitee APIM   ${APIM_IMAGE_TAG}
+      Mongodb         ${MONGO_IMAGE_TAG}
+      Elasticsearch   ${ELASTIC_IMAGE_TAG}
+      Nginx ingress   ${NGINX_CONTROLLER_IMAGE_TAG}           
+      Nginx backend   ${NGINX_BACKEND_IMAGE_TAG}
+      Gravitee APIM   ${APIM_IMAGE_TAG}
 
 `);
 
@@ -361,7 +341,7 @@ helm install \
     --set "mongo.dbhost=mongodb" \
     --set "mongodb-replicaset=false" \
     --set "mongo.rsEnabled=false" \
-    apim graviteeio/apim3
+    apim graviteeio/apim3 > /dev/null
 `;
 
 const helmInstallMongo = $`
@@ -378,7 +358,7 @@ helm install \
     --set resources.requests.memory=2048Mi \
     --set resources.limits.cpu=2000m \
     --set resources.requests.cpu=2000m \
-    mongodb bitnami/mongodb
+    mongodb bitnami/mongodb > /dev/null
 `;
 
 const helmInstallElastic = $`
@@ -387,7 +367,7 @@ helm install \
     --set replicas=1 \
     --set "image=${K3D_IMAGES_REGISTRY}/elasticsearch" \
     --set "imageTag=${ELASTIC_IMAGE_TAG}" \
-    elastic elastic/elasticsearch
+    elastic elastic/elasticsearch > /dev/null
 `;
 
 const helmInstallNginxIngress = $`
@@ -399,7 +379,7 @@ helm install \
     --set "defaultBackend.image.repository=nginx" \
     --set "image.tag=${NGINX_CONTROLLER_IMAGE_TAG}" \
     --set "defaultBackend.image.tag=${NGINX_BACKEND_IMAGE_TAG}" \
-    nginx-ingress bitnami/nginx-ingress-controller
+    nginx-ingress bitnami/nginx-ingress-controller > /dev/null
 `;
 
 await time(helmInstall);
@@ -448,5 +428,5 @@ async function waitForApim() {
 
 green(`
 
-Cluster is ready!
+🚀 Cluster is ready!
 `);
