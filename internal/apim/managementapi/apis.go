@@ -155,6 +155,8 @@ func (client *Client) ImportApi(
 		break
 	case http.StatusUnauthorized:
 		return nil, clienterror.UnauthorizedError{}
+	case http.StatusBadRequest:
+		return nil, clienterror.NewBadRequestError(resp)
 	default:
 		return nil, fmt.Errorf("an error as occurred trying to import API definition, HTTP Status: %d ", resp.StatusCode)
 	}
