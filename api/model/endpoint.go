@@ -73,7 +73,7 @@ type HttpEndpoint struct {
 
 type EndpointDiscoveryService struct {
 	Name          string            `json:"name,omitempty"`
-	Enabled       bool              `json:"enabled,omitempty"`
+	Enabled       bool              `json:"enabled"`
 	Provider      string            `json:"provider,omitempty"`
 	Configuration *GenericStringMap `json:"configuration,omitempty"`
 }

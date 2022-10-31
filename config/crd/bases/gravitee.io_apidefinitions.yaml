@@ -695,6 +695,8 @@ spec:
                                   type: string
                                 provider:
                                   type: string
+                              required:
+                              - enabled
                               type: object
                             dynamic-property:
                               properties:
@@ -859,6 +861,8 @@ spec:
                         type: string
                       provider:
                         type: string
+                    required:
+                    - enabled
                     type: object
                   dynamic-property:
                     properties:
