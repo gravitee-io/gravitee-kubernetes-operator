@@ -2398,15 +2398,15 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
+        <td><b>configuration</b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>
@@ -3103,15 +3103,15 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
+        <td><b>configuration</b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>
