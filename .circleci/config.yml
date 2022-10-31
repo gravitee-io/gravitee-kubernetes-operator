@@ -66,7 +66,7 @@ jobs:
     steps:
       - checkout
       - go/install:
-          version: '1.18.4'
+          version: '1.19.2'
       - go/load-cache
       - kubernetes/install-kubectl
       - helm/install-helm-client
