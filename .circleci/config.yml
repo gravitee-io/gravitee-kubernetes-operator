@@ -83,8 +83,8 @@ jobs:
           name: Docker login
           command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
       - run:
-          name: Install gotestsum
-          command: make gotestsum
+          name: Install ginkgo
+          command: make ginkgo
       - run:
           name: Start APIM using k3d
           command: |
@@ -93,9 +93,9 @@ jobs:
             make k3d-apim-init
       - run:
           name: Run tests
-          command: GOTESTARGS="--junitfile=/tmp/junit/reports/junit.xml" make test
+          command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
       - store_test_results:
-          path: /tmp/junit
+          path: /tmp/junit/reports
 
   login-to-azure:
     executor:
