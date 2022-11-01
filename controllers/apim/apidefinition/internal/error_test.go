@@ -16,50 +16,22 @@ package internal
 
 import (
 	"fmt"
-	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 )
 
-func Test_wrapError(t *testing.T) {
-	tests := []struct {
-		name     string
-		err      error
-		expected bool
-	}{
-		{
-			"Should be recoverable with raw error",
-			fmt.Errorf("raw error"),
-			true,
+var _ = Describe("Errors", func() {
+	DescribeTable("wrap error",
+		func(given error, expected bool) {
+			Expect(IsRecoverableError(wrapError(given))).To(Equal(expected))
 		},
-		{
-			"Should be recoverable with not found error",
-			clienterror.NewCrossIdNotFoundError("cross-id"),
-			true,
-		},
-		{
-			"Should be recoverable with illegal state error",
-			clienterror.NewAmbiguousCrossIdError("cross-id", 2),
-			true,
-		},
-		{
-			"Should not be recoverable with unauthorized api request error",
-			clienterror.NewUnauthorizedApiRequestError("api-id"),
-			false,
-		},
-		{
-			"Should not be recoverable with unauthorized cross ID request error",
-			clienterror.NewUnauthorizedCrossIdRequestError("cross-id"),
-			false,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			given := IsRecoverableError(wrapError(test.err))
-			if given != test.expected {
-				t.Fail()
-				t.Logf("Expected %t to be %t", given, test.expected)
-			}
-		})
-	}
-}
+		Entry("With raw error", fmt.Errorf("raw error"), true),
+		Entry("With not found error", clienterror.NewCrossIdNotFoundError("cross-id"), true),
+		Entry("With illegal state error", clienterror.NewAmbiguousCrossIdError("cross-id", 2), true),
+		Entry("With unauthorized api request error", clienterror.NewUnauthorizedApiRequestError("api-id"), false),
+		Entry("With unauthorized cross ID request error", clienterror.NewUnauthorizedCrossIdRequestError("api-id"), false),
+	)
+})

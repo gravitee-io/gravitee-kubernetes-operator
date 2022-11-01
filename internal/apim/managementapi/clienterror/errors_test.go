@@ -16,114 +16,38 @@ package clienterror
 
 import (
 	"fmt"
-	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func Test_IsUnauthorizedError(t *testing.T) {
-	tests := []struct {
-		name     string
-		err      error
-		expected bool
-	}{
-		{
-			"Should not be unauthorized with raw error",
-			fmt.Errorf("raw error"),
-			false,
+var _ = Describe("Client Errors", func() {
+	DescribeTable("Is Unauthorized",
+		func(given error, expected bool) {
+			Expect(IsUnauthorized(given)).To(Equal(expected))
 		},
-		{
-			"Should not be unauthorized with nil error",
-			nil,
-			false,
-		},
-		{
-			"Should be unauthorized with unauthorized API error",
-			NewUnauthorizedApiRequestError("api-id"),
-			true,
-		},
-		{
-			"Should be unauthorized with unauthorized crossId error",
-			NewUnauthorizedCrossIdRequestError("cross-id"),
-			true,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			given := IsUnauthorized(test.err)
-			if given != test.expected {
-				t.Fail()
-				t.Logf("Expected %t to be %t", given, test.expected)
-			}
-		})
-	}
-}
+		Entry("With raw error", fmt.Errorf("raw error"), false),
+		Entry("With nil error", nil, false),
+		Entry("With unauthorized API error", NewUnauthorizedApiRequestError("api-id"), true),
+		Entry("With unauthorized cross ID error", NewUnauthorizedCrossIdRequestError("cross-id"), true),
+	)
 
-func Test_IsNotFoundError(t *testing.T) {
-	tests := []struct {
-		name     string
-		err      error
-		expected bool
-	}{
-		{
-			"Should not be not found with raw error",
-			fmt.Errorf("raw error"),
-			false,
+	DescribeTable("Is Not Found",
+		func(given error, expected bool) {
+			Expect(IsNotFound(given)).To(Equal(expected))
 		},
-		{
-			"Should not be not found with nil error",
-			nil,
-			false,
-		},
-		{
-			"Should be not found with API error",
-			NewApiNotFoundError("api-id"),
-			true,
-		},
-		{
-			"Should be not found with crossId error",
-			NewCrossIdNotFoundError("cross-id"),
-			true,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			given := IsNotFound(test.err)
-			if given != test.expected {
-				t.Fail()
-				t.Logf("Expected %t to be %t", given, test.expected)
-			}
-		})
-	}
-}
+		Entry("With raw error", fmt.Errorf("raw error"), false),
+		Entry("With nil error", nil, false),
+		Entry("With API not found error", NewApiNotFoundError("api-id"), true),
+		Entry("With cross ID not found error", NewCrossIdNotFoundError("cross-id"), true),
+	)
 
-func Test_IsIllegalStateError(t *testing.T) {
-	tests := []struct {
-		name     string
-		err      error
-		expected bool
-	}{
-		{
-			"Should not be illegal state error with raw error",
-			fmt.Errorf("raw error"),
-			false,
+	DescribeTable("Is Illegal State",
+		func(given error, expected bool) {
+			Expect(IsIllegalState(given)).To(Equal(expected))
 		},
-		{
-			"Should not be illegal state error not found with nil error",
-			nil,
-			false,
-		},
-		{
-			"Should be illegal state error with ambiguous crossId error",
-			NewAmbiguousCrossIdError("cross-id", 2),
-			true,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			given := IsIllegalState(test.err)
-			if given != test.expected {
-				t.Fail()
-				t.Logf("Expected %t to be %t", given, test.expected)
-			}
-		})
-	}
-}
+		Entry("With raw error", fmt.Errorf("raw error"), false),
+		Entry("With nil error", nil, false),
+		Entry("With ambiguous cross ID error", NewAmbiguousCrossIdError("cross-id", 2), true),
+	)
+})
