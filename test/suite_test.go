@@ -45,7 +45,7 @@ import (
 
 var k8sClient client.Client
 var k8sManager ctrl.Manager
-var ctx = context.Background()
+var ctx context.Context
 
 // Define utility constants for object names and testing timeouts/durations and intervals.
 const (
@@ -64,7 +64,9 @@ func TestAPIs(t *testing.T) {
 	RunSpecs(t, "GKO Controllers Suite")
 }
 
-var _ = BeforeSuite(func() {
+var _ = SynchronizedBeforeSuite(func() {
+	By("Setting up the test environment")
+
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	err := gio.AddToScheme(scheme.Scheme)
@@ -137,17 +139,24 @@ var _ = BeforeSuite(func() {
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
-	k8sClient = k8sManager.GetClient()
-
-	Expect(k8sClient).ToNot(BeNil())
-
+}, func() {
+	//+kubebuilder:scaffold:scheme
+	err := gio.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+	cli, err := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme.Scheme})
+	Expect(err).ToNot(HaveOccurred())
+	k8sClient = cli
+	ctx = context.Background()
 })
 
-var _ = AfterSuite(func() {
-	By("tearing down the test environment")
+var _ = SynchronizedAfterSuite(func() {
+	By("Tearing down the test environment")
+
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
 	gexec.KillAndWait(5 * time.Second)
+}, func() {
+
 })
 
 var _ = ReportAfterEach(func(specReport ginkgotypes.SpecReport) {
