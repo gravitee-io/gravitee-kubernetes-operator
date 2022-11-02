@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +12,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: apidefinition-sample
+  name: with-disabled-hc
+  namespace: default
 spec:
-  # TODO(user): Add fields here
+  name: "With disabled health check"
+  version: "1.0"
+  description: "API with disabled health check"
+  services:
+    health-check:
+      enabled: false
+      schedule: "*/1 * * * * *"
+  proxy:
+    virtual_hosts:
+      - path: "/with-disabled-hc"
+    groups:
+      - endpoints:
+          - name: "Default"
+            target: "https://api.gravitee.io/echo"
