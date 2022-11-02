@@ -2484,8 +2484,10 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
@@ -3189,8 +3191,10 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
