@@ -100,7 +100,7 @@ var _ = Describe("Create", func() {
 
 		BeforeEach(func() {
 			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiWithContextFile, internal.ContextWithSecretFile,
+				internal.BasicApiFile, internal.ContextWithSecretFile,
 			)
 
 			Expect(err).ToNot(HaveOccurred())
@@ -334,5 +334,6 @@ var _ = Describe("Create", func() {
 		Entry("should import with disabled health check", internal.ApiWithDisabledHCFile),
 		Entry("should import with logging", internal.ApiWithLoggingFile),
 		Entry("should import with endpoint groups", internal.ApiWithEndpointGroupsFile),
+		Entry("should import with service discovery", internal.ApiWithServiceDiscoveryFile),
 	)
 })
