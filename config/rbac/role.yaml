@@ -30,6 +30,8 @@ rules:
   - secrets
   verbs:
   - get
+  - list
+  - watch
 - apiGroups:
   - gravitee.io
   resources:
