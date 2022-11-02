@@ -2791,126 +2791,30 @@ The context is specifying the namespace and the name of a ManagementContext used
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxyloggingcontent">content</a></b></td>
-        <td>object</td>
+        <td><b>content</b></td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: NONE, HEADERS, PAYLOADS, HEADERS_PAYLOADS<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxyloggingmode">mode</a></b></td>
-        <td>object</td>
+        <td><b>mode</b></td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: NONE, CLIENT, PROXY, CLIENT_PROXY<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxyloggingscope">scope</a></b></td>
-        <td>object</td>
+        <td><b>scope</b></td>
+        <td>enum</td>
         <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.logging.content
-<sup><sup>[↩ Parent](#apidefinitionspecproxylogging)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>headers</b></td>
-        <td>boolean</td>
-        <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>payloads</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.logging.mode
-<sup><sup>[↩ Parent](#apidefinitionspecproxylogging)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>client</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>proxy</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.logging.scope
-<sup><sup>[↩ Parent](#apidefinitionspecproxylogging)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>request</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>response</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
+            <i>Enum</i>: NONE, REQUEST, RESPONSE, REQUEST_RESPONSE<br/>
         </td>
         <td>false</td>
       </tr></tbody>
