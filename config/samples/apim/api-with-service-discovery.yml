@@ -16,30 +16,31 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: apikey-example
+  name: with-service-discovery
+  namespace: default
 spec:
-  name: "K8s OAuth2 Example"
+  name: "With service-discovery"
   version: "1.0"
-  description: "Api managed by Gravitee Kubernetes Operator with OAuth2 plan"
-  resources:
-    - name: "am-demo"
-      type: oauth2-am-resource
-      configuration:
-        version: V3_X
-        serverURL: "https://am-nightly-gateway.cloud.gravitee.io"
-        securityDomain: "test-jh"
-        clientId: "localjh"
-        clientSecret: "localjh"
-  plans:
-    - name: "OAuth2"
-      description: "Oauth2 plan"
-      security: OAUTH2
-      securityDefinition: '{"oauthResource":"am-demo"}'
+  description: "API with service-discovery"
   proxy:
     virtual_hosts:
-      - path: "/k8s-oauth2"
+      - path: "/with-service-discovery"
     groups:
-      - name: default-group
-        endpoints:
-          - name: "Default"
-            target: "https://api.gravitee.io/echo"
+    - name: "default"
+      endpoints:
+      - backup: false
+        name: "Default"
+        weight: 1
+        type: "http"
+        target: "https://api.gravitee.io/echo"
+      load_balancing:
+        type: "ROUND_ROBIN"
+      services:
+        discovery:
+          enabled: true
+          provider: "consul-service-discovery"
+          configuration:
+            url: "http://localhost:8500"
+            trustStoreType: "NONE"
+            keyStoreType: "NONE"
+            service: "test"
