@@ -116,7 +116,8 @@ func NewStep() *Step {
 }
 
 type HealthCheckService struct {
-	Enabled  bool    `json:"enabled,omitempty"`
+	// +kubebuilder:default:=false
+	Enabled  bool    `json:"enabled"`
 	Steps    []*Step `json:"steps,omitempty"`
 	Schedule string  `json:"schedule,omitempty"`
 }
