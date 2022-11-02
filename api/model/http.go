@@ -126,40 +126,34 @@ func NewHealthCheckService() *HealthCheckService {
 	return &HealthCheckService{Schedule: "health-check"}
 }
 
-type LoggingMode struct {
-	Client bool `json:"client,omitempty"`
-	Proxy  bool `json:"proxy,omitempty"`
-}
+// +kubebuilder:validation:Enum=NONE;CLIENT;PROXY;CLIENT_PROXY
+type LoggingMode string
 
-var (
-	NoLoggingMode   = LoggingMode{false, false}
-	ClientMode      = LoggingMode{true, false}
-	ProxyMode       = LoggingMode{false, true}
-	ClientProxyMode = LoggingMode{true, true}
+const (
+	NoLoggingMode   = "NONE"
+	ClientMode      = "CLIENT"
+	ProxyMode       = "PROXY"
+	ClientProxyMode = "CLIENT_PROXY"
 )
 
-type LoggingScope struct {
-	Request  bool `json:"request,omitempty"`
-	Response bool `json:"response,omitempty"`
-}
+// +kubebuilder:validation:Enum=NONE;REQUEST;RESPONSE;REQUEST_RESPONSE
+type LoggingScope string
 
-var (
-	NoLoggingScope              = LoggingScope{false, false}
-	RequestLoggingScope         = LoggingScope{true, false}
-	ResponseLoggingScope        = LoggingScope{false, true}
-	RequestResponseLoggingScope = LoggingScope{true, true}
+const (
+	NoLoggingScope              = "NONE"
+	RequestLoggingScope         = "REQUEST"
+	ResponseLoggingScope        = "RESPONSE"
+	RequestResponseLoggingScope = "REQUEST_RESPONSE"
 )
 
-type LoggingContent struct {
-	Headers  bool `json:"headers,omitempty"`
-	Payloads bool `json:"payloads,omitempty"`
-}
+// +kubebuilder:validation:Enum=NONE;HEADERS;PAYLOADS;HEADERS_PAYLOADS
+type LoggingContent string
 
-var (
-	NoLoggingContent              = LoggingContent{false, false}
-	HeadersLoggingContent         = LoggingContent{true, false}
-	PayloadsLoggingContent        = LoggingContent{false, true}
-	HeadersPayloadsLoggingContent = LoggingContent{true, true}
+const (
+	NoLoggingContent              = "NONE"
+	HeadersLoggingContent         = "HEADERS"
+	PayloadsLoggingContent        = "PAYLOADS"
+	HeadersPayloadsLoggingContent = "HEADERS_PAYLOADS"
 )
 
 type Logging struct {
