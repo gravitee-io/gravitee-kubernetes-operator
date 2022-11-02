@@ -708,6 +708,7 @@ spec:
                             health-check:
                               properties:
                                 enabled:
+                                  default: false
                                   type: boolean
                                 schedule:
                                   type: string
@@ -756,6 +757,8 @@ spec:
                                         type: object
                                     type: object
                                   type: array
+                              required:
+                              - enabled
                               type: object
                           type: object
                         ssl:
@@ -874,6 +877,7 @@ spec:
                   health-check:
                     properties:
                       enabled:
+                        default: false
                         type: boolean
                       schedule:
                         type: string
@@ -922,6 +926,8 @@ spec:
                               type: object
                           type: object
                         type: array
+                    required:
+                    - enabled
                     type: object
                 type: object
               state:
