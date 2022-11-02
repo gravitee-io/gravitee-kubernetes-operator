@@ -1,3 +1,10 @@
+# [0.1.0-alpha.13](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.12...0.1.0-alpha.13) (2022-11-02)
+
+
+### Bug Fixes
+
+* add rbac marker for secret lists ([4bd7456](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/4bd7456472aabe98aad95a7e14260dba42363a23))
+
 # [0.1.0-alpha.12](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.11...0.1.0-alpha.12) (2022-10-28)
 
 
