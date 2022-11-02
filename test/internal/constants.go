@@ -17,17 +17,17 @@ package internal
 import "time"
 
 const (
-	GatewayUrl                = "http://localhost:9000/gateway"
-	SamplesPath               = "../config/samples"
-	ContextWithSecretFile     = SamplesPath + "/context/dev/managementcontext_secretRef.yaml"
-	BasicApiFile              = SamplesPath + "/apim/basic-example.yml"
-	BasicApiWithContextFile   = SamplesPath + "/apim/basic-example-with-ctx.yml"
-	ApiWithDisabledHCFile     = SamplesPath + "/apim/api-with-health-check-disabled.yml"
-	ApiWithHCFile             = SamplesPath + "/apim/api-with-health-check.yml"
-	ApiWithEndpointGroupsFile = SamplesPath + "/apim/api-with-endpoint-groups.yml"
-	ApiWithLoggingFile        = SamplesPath + "/apim/api-with-logging.yml"
-	ApiKeyApiWithContextFile  = SamplesPath + "/apim/apikey-example-with-ctx.yml"
+	GatewayUrl                  = "http://localhost:9000/gateway"
+	SamplesPath                 = "../config/samples"
+	ContextWithSecretFile       = SamplesPath + "/context/dev/management-context-with-secret-ref.yaml"
+	BasicApiFile                = SamplesPath + "/apim/basic-api.yml"
+	ApiWithDisabledHCFile       = SamplesPath + "/apim/api-with-health-check-disabled.yml"
+	ApiWithHCFile               = SamplesPath + "/apim/api-with-health-check.yml"
+	ApiWithServiceDiscoveryFile = SamplesPath + "/apim/api-with-service-discovery.yml"
+	ApiWithEndpointGroupsFile   = SamplesPath + "/apim/api-with-endpoint-groups.yml"
+	ApiWithLoggingFile          = SamplesPath + "/apim/api-with-logging.yml"
+	ApiWithApiKeyPlanFile       = SamplesPath + "/apim/api-with-api-key-plan.yml"
 
-	contextWithCredentialsFile = SamplesPath + "/context/dev/managementcontext_credentials.yaml"
+	contextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yaml"
 	apimClientTimeout          = 5 * time.Second
 )

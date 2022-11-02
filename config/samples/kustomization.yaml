@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-apiVersion: gravitee.io/v1alpha1
-kind: ApiDefinition
-metadata:
-  name: devportal-example
-spec:
-  name: "K8s DevPortal Example"
-  version: "1.0"
-  description: "Api managed by Gravitee Kubernetes Operator and published to DevPortal"
-  lifecycle_state: PUBLISHED
-  proxy:
-    virtual_hosts:
-      - path: "/k8s-devportal"
-    groups:
-      - endpoints:
-          - name: "Default"
-            target: "https://api.gravitee.io/echo"
+
+## Append samples you want in your CSV to this file as resources ##
+resources:
+- apim/basic-api.yml
+- context/dev/management-context-with-secret-ref.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
