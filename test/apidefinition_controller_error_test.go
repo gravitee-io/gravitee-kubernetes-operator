@@ -52,7 +52,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			By("Create a management context to synchronize with the REST API")
 
 			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiWithContextFile, internal.ContextWithSecretFile,
+				internal.BasicApiFile, internal.ContextWithSecretFile,
 			)
 
 			Expect(err).ToNot(HaveOccurred())

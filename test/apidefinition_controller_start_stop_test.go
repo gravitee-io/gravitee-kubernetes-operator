@@ -51,7 +51,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Create a management context to synchronize with the REST API")
 
 			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiWithContextFile, internal.ContextWithSecretFile,
+				internal.BasicApiFile, internal.ContextWithSecretFile,
 			)
 
 			Expect(err).ToNot(HaveOccurred())
