@@ -18,6 +18,8 @@ package test
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -58,6 +60,8 @@ const (
 	interval  = time.Millisecond * 250
 )
 
+var startOperator = true
+
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
@@ -65,6 +69,11 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = SynchronizedBeforeSuite(func() {
+	if !startOperator {
+		fmt.Fprintln(GinkgoWriter, "Assuming the operator has been deployed before running tests")
+		return
+	}
+
 	By("Setting up the test environment")
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
@@ -208,4 +217,10 @@ func getEventsReason(apiDefinition *gio.ApiDefinition) []string {
 		eventsReason = append(eventsReason, event.Reason)
 	}
 	return eventsReason
+}
+
+func init() {
+	if os.Getenv("ENV") == "ci" {
+		startOperator = false
+	}
 }
