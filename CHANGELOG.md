@@ -1,3 +1,12 @@
+# [0.1.0-alpha.14](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.13...0.1.0-alpha.14) (2022-11-03)
+
+
+### Bug Fixes
+
+* import api with disabled health check ([a874ac6](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/a874ac68908f91890956e1077f5a447f68b36cc4))
+* import API with logging ([7179561](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/7179561e64a2114c93031c2326b9b6a0227044c3))
+* import api with several endpoint groups ([c4032eb](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/c4032eb4090057c6d4aac0ab4cc9b2711db0033a))
+
 # [0.1.0-alpha.13](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.0-alpha.12...0.1.0-alpha.13) (2022-11-02)
 
 
