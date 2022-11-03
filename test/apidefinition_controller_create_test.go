@@ -99,9 +99,7 @@ var _ = Describe("Create", func() {
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiFile, internal.ContextWithSecretFile,
-			)
+			apiWithContext, err := internal.NewApiWithRandomContext(internal.BasicApiFile)
 
 			Expect(err).ToNot(HaveOccurred())
 
@@ -277,9 +275,7 @@ var _ = Describe("Create", func() {
 
 	DescribeTable("a featured API spec with a management context",
 		func(specFile string) {
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				specFile, internal.ContextWithSecretFile,
-			)
+			apiWithContext, err := internal.NewApiWithRandomContext(specFile)
 
 			Expect(err).ToNot(HaveOccurred())
 

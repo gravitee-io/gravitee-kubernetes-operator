@@ -59,8 +59,10 @@ func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio
 }
 
 func NewApiWithRandomContext(
-	apiPath string, contextPath string, transforms ...func(*ApiWithContext),
+	apiPath string, transforms ...func(*ApiWithContext),
 ) (*ApiWithContext, error) {
+	contextPath := getManagementContextPath()
+
 	api, err := NewApiDefinition(apiPath)
 	if err != nil {
 		return nil, err
@@ -112,6 +114,13 @@ func newManagementContext(path string, transforms ...func(*gio.ManagementContext
 	}
 
 	return ctx, nil
+}
+
+func getManagementContextPath() string {
+	if RunInCluster {
+		return ciContextWithSecretFile
+	}
+	return devContextWithSecretFile
 }
 
 func addRandomSuffixes(api *gio.ApiDefinition) {

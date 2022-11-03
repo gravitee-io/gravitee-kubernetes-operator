@@ -19,7 +19,6 @@ import "time"
 const (
 	GatewayUrl                  = "http://localhost:9000/gateway"
 	SamplesPath                 = "../config/samples"
-	ContextWithSecretFile       = SamplesPath + "/context/dev/management-context-with-secret-ref.yaml"
 	BasicApiFile                = SamplesPath + "/apim/basic-api.yml"
 	ApiWithDisabledHCFile       = SamplesPath + "/apim/api-with-health-check-disabled.yml"
 	ApiWithHCFile               = SamplesPath + "/apim/api-with-health-check.yml"
@@ -29,6 +28,10 @@ const (
 	ApiWithLoggingFile          = SamplesPath + "/apim/api-with-logging.yml"
 	ApiWithApiKeyPlanFile       = SamplesPath + "/apim/api-with-api-key-plan.yml"
 
+	ciContextWithSecretFile    = SamplesPath + "/context/k3d/management-context-with-secret-ref.yaml"
+	devContextWithSecretFile   = SamplesPath + "/context/dev/management-context-with-secret-ref.yaml"
 	contextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yaml"
 	apimClientTimeout          = 5 * time.Second
 )
+
+var RunInCluster = false

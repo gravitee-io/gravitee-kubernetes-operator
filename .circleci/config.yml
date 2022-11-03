@@ -92,8 +92,14 @@ jobs:
             export APIM_IMAGE_TAG=master-latest
             make k3d-apim-init
       - run:
+          name: Deploy Operator bundle
+          command: make k3d-gko-deploy
+      - run:
           name: Run tests
-          command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
+          command: |
+            export KUBECONFIG=$HOME/.kube/config
+            export ENV=ci
+            GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
       - store_test_results:
           path: /tmp/junit/reports
 

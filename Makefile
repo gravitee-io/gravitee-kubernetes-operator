@@ -120,7 +120,7 @@ lint-license: addlicense ## Run addlicense lint and fail on error
 
 GOTESTARGS ?= ""
 .PHONY: test
-test: manifests generate install ## Run tests.
+test: manifests generate install ## Run tests with the operator running locally
 	kubectl config use-context k3d-graviteeio
 	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GINKGO) $(GOTESTARGS) --timeout 380s --cover --coverprofile=cover.out ./...
 
@@ -149,7 +149,7 @@ k3d-gko-push: ## Push the gko image for k3d deployment
 	$(MAKE) docker-push IMG=$(K3D_IMG)
 
 .PHONY: k3d-gko-deploy
-k3d-gko-deploy: ## Push the gko image for k3d deployment
+k3d-gko-deploy: k3d-gko-build k3d-gko-push ## Push the gko image for k3d deployment
 	$(MAKE) deploy IMG=$(K3D_IMG)
 
 .PHONY:

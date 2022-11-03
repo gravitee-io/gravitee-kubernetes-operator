@@ -39,6 +39,7 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -60,8 +61,6 @@ const (
 	interval  = time.Millisecond * 250
 )
 
-var startOperator = true
-
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
@@ -69,7 +68,7 @@ func TestAPIs(t *testing.T) {
 }
 
 var _ = SynchronizedBeforeSuite(func() {
-	if !startOperator {
+	if internal.RunInCluster {
 		fmt.Fprintln(GinkgoWriter, "Assuming the operator has been deployed before running tests")
 		return
 	}
@@ -220,7 +219,5 @@ func getEventsReason(apiDefinition *gio.ApiDefinition) []string {
 }
 
 func init() {
-	if os.Getenv("ENV") == "ci" {
-		startOperator = false
-	}
+	internal.RunInCluster = os.Getenv("ENV") == "ci"
 }
