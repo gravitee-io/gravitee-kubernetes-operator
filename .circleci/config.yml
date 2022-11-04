@@ -86,13 +86,16 @@ jobs:
           name: Install ginkgo
           command: make ginkgo
       - run:
-          name: Start APIM using k3d
+          name: Start test cluster
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
             export APIM_IMAGE_TAG=master-latest
             make k3d-apim-init
       - run:
-          name: Deploy Operator bundle
+          name: Install cert-manager on test cluster
+          command: kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml 
+      - run:
+          name: Deploy operator on test cluster
           command: make k3d-gko-deploy
       - run:
           name: Run tests

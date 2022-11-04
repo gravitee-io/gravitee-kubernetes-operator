@@ -60,25 +60,25 @@ func init() {
 	SchemeBuilder.Register(&ManagementContext{}, &ManagementContextList{})
 }
 
-func (ctx *ManagementContext) HasAuthentication() bool {
-	return ctx.Spec.Auth != nil
+func (r *ManagementContext) HasAuthentication() bool {
+	return r.Spec.Auth != nil
 }
 
-func (ctx *ManagementContext) HasSecretRef() bool {
-	if !ctx.HasAuthentication() {
+func (r *ManagementContext) HasSecretRef() bool {
+	if !r.HasAuthentication() {
 		return false
 	}
 
-	return ctx.Spec.Auth.SecretRef != nil
+	return r.Spec.Auth.SecretRef != nil
 }
 
-func (ctx *ManagementContext) Authenticate(req *http.Request) {
-	if !ctx.HasAuthentication() {
+func (r *ManagementContext) Authenticate(req *http.Request) {
+	if !r.HasAuthentication() {
 		return
 	}
 
-	bearerToken := ctx.Spec.Auth.BearerToken
-	basicAuth := ctx.Spec.Auth.Credentials
+	bearerToken := r.Spec.Auth.BearerToken
+	basicAuth := r.Spec.Auth.Credentials
 
 	if bearerToken != "" {
 		setBearerToken(req, bearerToken)
