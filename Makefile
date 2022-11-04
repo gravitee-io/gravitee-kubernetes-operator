@@ -122,7 +122,7 @@ GOTESTARGS ?= ""
 .PHONY: test
 test: manifests generate install ## Run tests.
 	kubectl config use-context k3d-graviteeio
-	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GINKGO) $(GOTESTARGS) -timeout 380s --cover --coverprofile=cover.out ./...
+	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GINKGO) $(GOTESTARGS) --timeout 380s --cover --coverprofile=cover.out ./...
 
 .PHONY: k3d-apim-init
 k3d-apim-init: ## Init APIM locally using k3d
