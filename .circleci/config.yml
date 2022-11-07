@@ -219,40 +219,6 @@ jobs:
             export BINARY=operator-sdk_${OS}_${ARCH}
             curl -OJL ${DOWNLOAD_URL}/${BINARY}
             chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
-      - run:
-          name: "Setup Semantic Release"
-          command: |
-            echo '{
-                    "branches": [{"name": "alpha", "prerelease": true}, "master"],
-                    "tagFormat": "${version}",
-                    "plugins": [
-                      "@semantic-release/commit-analyzer",
-                      "@semantic-release/release-notes-generator",
-                      "@semantic-release/changelog",
-                      [
-                        "@semantic-release/exec",
-                        {
-                          "prepareCmd": "IMG=graviteeio/kubernetes-operator:${nextRelease.version} BUNDLE_IMG=graviteeio/kubernetes-operator-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push lint-fix"                        
-                        }
-                      ],
-                      [
-                        "@semantic-release/github",
-                        {
-                          "assets": [
-                            {"path": "bundle.yml", "label": "Operator resources bundle"}
-                          ]
-                        }
-                      ],
-                      [
-                        "@semantic-release/git",
-                        {
-                          "assets": ["CHANGELOG.md", "bundle.yml"],
-                          "message": "chore(release): ${nextRelease.version} [skip ci]"
-                        }
-                      ]
-                    ]
-                  }
-                  ' > .releaserc.json
       - keeper/exec:
           step-name: "Run Semantic Release"
           command: |
