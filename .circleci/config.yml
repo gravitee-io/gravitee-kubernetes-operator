@@ -271,9 +271,12 @@ workflows:
 
   release:
     when:
-      or:
-        - equal: [master, << pipeline.git.branch >>]
-        - equal: [alpha, << pipeline.git.branch >>]
+      and:
+        - or:
+          - equal: [ master, << pipeline.git.branch >> ]
+          - equal: [ alpha, << pipeline.git.branch >> ]
+        - not:
+            equal: [ << pipeline.git.revision >>, << pipeline.git.base_revision >> ]
     jobs:
       - lint:
           name: Lint
