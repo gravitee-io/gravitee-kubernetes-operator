@@ -276,6 +276,12 @@ workflows:
           - equal: [ master, << pipeline.git.branch >> ]
           - equal: [ alpha, << pipeline.git.branch >> ]
         - not:
+            # If the revision is unchanged since last job we are most likely
+            # opening a PR from alpha to master to release, and we don't want
+            # the workflow to execute
+            # WARNING: this means that adding a commit to alpha while the PR is opened
+            # will trigger a failing job. This does not prevent us from merging the PR
+            # but there will be a failing step
             equal: [ << pipeline.git.revision >>, << pipeline.git.base_revision >> ]
     jobs:
       - lint:
