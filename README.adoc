@@ -127,6 +127,20 @@ go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 When committing your contributions, please follow link:https://www.conventionalcommits.org/en/v1.0.0/[conventional commits^] and semantic release best practices.
 
+=== Release process
+
+/!\ All new changes should be committed to the `alpha` branch. A prerelease is automatically created on `alpha` like `0.2.0-alpha.1`.
+
+To create a new release, we need to merge `alpha` into `master`. 
+A github action do the job. 
+
+Go in the `Actions` tab and select the `Trigger Release` workflow. Run it with the following parameters:
+
+* `Source branch`: `alpha`
+* `Target branch`: `master`
+
+A new release is automatically created on `master` and a new tag is pushed. When a new tag is pushed, a github action `Sync Branches` is triggered to rebase `alpha` on `master`.
+
 == Troubleshooting
 
 === Note for Apple Silicon users
