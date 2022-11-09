@@ -247,7 +247,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":kubernetes: Gravitee Kubernetes Operator - Version ${CIRCLE_TAG} has been released! 🎉"
+                    "text": ":kubernetes: Gravitee Kubernetes Operator - [Version ${CIRCLE_TAG}](https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/latest) has been released! 🎉"
                   }
                 }
               ]
