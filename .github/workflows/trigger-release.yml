@@ -44,11 +44,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SOURCE_BRANCH: ${{ github.event.inputs.source_branch }}
           TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
-          PR_TITLE: "chore: merge ${{ github.event.inputs.source_branch }} into ${{ github.event.inputs.target_branch }}"
-          PR_BODY: "⚠️ This pull request has been created to trigger a release on ${{ github.event.inputs.target_branch }} an will merge automatically."
         run: |
           git checkout ${TARGET_BRANCH}
           git checkout ${SOURCE_BRANCH}
+          
           has_diff=$( git diff --quiet --exit-code ${SOURCE_BRANCH} ${TARGET_BRANCH} ; echo $? )
           if [[ "${has_diff}" == "0" ]]; then
             echo "no diff between ${SOURCE_BRANCH} and ${DEPLOY_TARGET}, aborting step ..."
@@ -60,8 +59,8 @@ jobs:
           
           echo "🚀 Creating pull request from ${SOURCE_BRANCH} to ${TARGET_BRANCH}"
 
-          PR_TITLE="ci: merge ${SOURCE_BRANCH} into ${TARGET_BRANCH}"
-          PR_BODY="This pull request has been created to trigger a release on ${TARGET_BRANCH} an should merge automatically"
+          PR_TITLE="chore: merge ${SOURCE_BRANCH} into ${TARGET_BRANCH}"
+          PR_BODY="⚠️ This pull request has been created to trigger a release on ${TARGET_BRANCH} an should merge automatically"
 
           pr_url=$( gh pr create --base ${TARGET_BRANCH} --head ${SOURCE_BRANCH} --title "${PR_TITLE}" --body "${PR_BODY}" --no-maintainer-edit )
 
