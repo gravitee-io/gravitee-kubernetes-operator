@@ -186,7 +186,12 @@ jobs:
       - kubernetes/install-kubectl
       - run:
           name: Deploy controller to the K8s cluster specified in ~/.kube/config
-          command: kubectl apply -f ~/bundle.yml
+          command: |
+            if [ -s bundle.yml ]; then 
+              kubectl apply -f ~/bundle.yml
+            else 
+              echo "No bundle.yml in current revision. Skipping deployment"
+            fi
 
   semantic-release:
     docker:
@@ -224,6 +229,11 @@ jobs:
           step-name: "Run Semantic Release"
           command: |
             npx semantic-release
+            if [ ! -z bundle.yml ]; then
+              # ensure bundle.yml exists
+              touch bundle.yml
+            fi
+          
       - persist_to_workspace:
           root: .
           paths:
