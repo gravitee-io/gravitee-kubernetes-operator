@@ -36,7 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -44,29 +44,28 @@ var _ = Describe("API Definition Controller", func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("With Started basic ApiDefinition & ManagementContext", func() {
-		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.BasicApiFile, internal.ContextWithSecretFile,
+			)
+
 			Expect(err).ToNot(HaveOccurred())
+
+			managementContext := apiWithContext.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
-			Expect(err).ToNot(HaveOccurred())
+
+			apiDefinition := apiWithContext.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should Stop an API Definition", func() {
@@ -81,7 +80,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
-			var gatewayEndpoint = GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var gatewayEndpoint = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(gatewayEndpoint)
@@ -104,7 +103,10 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Call rest API and expect STOPPED state")
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
 

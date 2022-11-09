@@ -26,8 +26,6 @@ import (
 	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
-	k8sErr "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,7 +45,7 @@ import (
 
 var k8sClient client.Client
 var k8sManager ctrl.Manager
-var ctx = context.Background()
+var ctx context.Context
 
 // Define utility constants for object names and testing timeouts/durations and intervals.
 const (
@@ -66,7 +64,9 @@ func TestAPIs(t *testing.T) {
 	RunSpecs(t, "GKO Controllers Suite")
 }
 
-var _ = BeforeSuite(func() {
+var _ = SynchronizedBeforeSuite(func() {
+	By("Setting up the test environment")
+
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	err := gio.AddToScheme(scheme.Scheme)
@@ -139,17 +139,24 @@ var _ = BeforeSuite(func() {
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
-	k8sClient = k8sManager.GetClient()
-
-	Expect(k8sClient).ToNot(BeNil())
-
+}, func() {
+	//+kubebuilder:scaffold:scheme
+	err := gio.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+	cli, err := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme.Scheme})
+	Expect(err).ToNot(HaveOccurred())
+	k8sClient = cli
+	ctx = context.Background()
 })
 
-var _ = AfterSuite(func() {
-	By("tearing down the test environment")
+var _ = SynchronizedAfterSuite(func() {
+	By("Tearing down the test environment")
+
+	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
+	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
 	gexec.KillAndWait(5 * time.Second)
-	// err := testEnv.Stop()
-	// Expect(err).ToNot(HaveOccurred())
+}, func() {
+
 })
 
 var _ = ReportAfterEach(func(specReport ginkgotypes.SpecReport) {
@@ -170,23 +177,6 @@ var _ = ReportAfterEach(func(specReport ginkgotypes.SpecReport) {
 	}
 })
 
-func cleanupApiDefinitionAndManagementContext(
-	apiDefinition *gio.ApiDefinition,
-	managementContext *gio.ManagementContext,
-) {
-	cleanupApiDefinition(apiDefinition)
-
-	contextLookupKey := types.NamespacedName{Name: managementContext.Name, Namespace: managementContext.Namespace}
-
-	err := k8sClient.Delete(ctx, managementContext)
-	if !k8sErr.IsNotFound(err) {
-		// wait deleted only if not already deleted
-		Eventually(func() error {
-			return k8sClient.Get(ctx, contextLookupKey, managementContext)
-		}, timeout, interval).ShouldNot(Succeed())
-	}
-}
-
 // Add filed indexes for event to be able to filter on it.
 func addEventIndexes() error {
 	err := k8sManager.GetFieldIndexer().IndexField(
@@ -199,18 +189,6 @@ func addEventIndexes() error {
 		},
 	)
 	return err
-}
-
-func cleanupApiDefinition(apiDefinition *gio.ApiDefinition) {
-	apiLookupKey := types.NamespacedName{Name: apiDefinition.Name, Namespace: apiDefinition.Namespace}
-
-	err := k8sClient.Delete(ctx, apiDefinition)
-	if !k8sErr.IsNotFound(err) {
-		// wait deleted only if not already deleted
-		Eventually(func() error {
-			return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-		}, timeout, interval).ShouldNot(Succeed())
-	}
 }
 
 func getEventsReason(apiDefinition *gio.ApiDefinition) []string {

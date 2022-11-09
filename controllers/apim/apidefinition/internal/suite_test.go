@@ -12,8 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package internal
 
-const (
-	GatewayUrl = "http://localhost:9000/gateway"
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
+
+func TestErrors(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "API definition internal")
+}

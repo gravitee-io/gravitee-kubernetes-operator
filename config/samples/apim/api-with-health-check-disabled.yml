@@ -16,15 +16,19 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: devportal-example
+  name: with-disabled-hc
+  namespace: default
 spec:
-  name: "K8s DevPortal Example"
+  name: "With disabled health check"
   version: "1.0"
-  description: "Api managed by Gravitee Kubernetes Operator and published to DevPortal"
-  lifecycle_state: PUBLISHED
+  description: "API with disabled health check"
+  services:
+    health-check:
+      enabled: false
+      schedule: "*/1 * * * * *"
   proxy:
     virtual_hosts:
-      - path: "/k8s-devportal"
+      - path: "/with-disabled-hc"
     groups:
       - endpoints:
           - name: "Default"

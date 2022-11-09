@@ -28,17 +28,14 @@ limitations under the License.
 package test
 
 import (
-	"net/http"
-	"time"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 	k8sUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementApi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
@@ -53,14 +50,19 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.BasicApiFile, internal.ContextWithSecretFile,
+			)
+
 			Expect(err).ToNot(HaveOccurred())
+
+			managementContext := apiWithContext.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
-			Expect(err).ToNot(HaveOccurred())
+
+			apiDefinition := apiWithContext.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
@@ -75,15 +77,12 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			}, timeout, interval).Should(BeTrue())
 		})
 
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
-		})
-
 		It("Should not requeue reconcile with 401 error", func() {
 
 			By("Set bad credentials in ManagementContext")
 			managementContextBad := managementContextFixture.DeepCopy()
-			managementContextBad.Spec.Auth.Credentials.Username = "bad-username"
+			managementContextBad.Spec.Auth.SecretRef = nil
+			managementContextBad.Spec.Auth.BearerToken = "bad-token"
 
 			err := k8sClient.Update(ctx, managementContextBad)
 			Expect(err).ToNot(HaveOccurred())
@@ -114,8 +113,9 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Check that API definition has been reconciled on ManagementContext update")
 
-			httpClient := http.Client{Timeout: 5 * time.Second}
-			apimClient := managementApi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
 				return apiErr == nil && api.Name == "new-name" && api.Id == apiDefinition.Status.ID

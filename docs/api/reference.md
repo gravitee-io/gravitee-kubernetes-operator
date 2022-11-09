@@ -2398,15 +2398,15 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
+        <td><b>configuration</b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>
@@ -2484,8 +2484,10 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
@@ -2789,126 +2791,30 @@ The context is specifying the namespace and the name of a ManagementContext used
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxyloggingcontent">content</a></b></td>
-        <td>object</td>
+        <td><b>content</b></td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: NONE, HEADERS, PAYLOADS, HEADERS_PAYLOADS<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxyloggingmode">mode</a></b></td>
-        <td>object</td>
+        <td><b>mode</b></td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: NONE, CLIENT, PROXY, CLIENT_PROXY<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxyloggingscope">scope</a></b></td>
-        <td>object</td>
+        <td><b>scope</b></td>
+        <td>enum</td>
         <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.logging.content
-<sup><sup>[↩ Parent](#apidefinitionspecproxylogging)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>headers</b></td>
-        <td>boolean</td>
-        <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>payloads</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.logging.mode
-<sup><sup>[↩ Parent](#apidefinitionspecproxylogging)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>client</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>proxy</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.proxy.logging.scope
-<sup><sup>[↩ Parent](#apidefinitionspecproxylogging)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>request</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>response</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
+            <i>Enum</i>: NONE, REQUEST, RESPONSE, REQUEST_RESPONSE<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3103,15 +3009,15 @@ The context is specifying the namespace and the name of a ManagementContext used
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
+        <td><b>configuration</b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>
@@ -3189,8 +3095,10 @@ The context is specifying the namespace and the name of a ManagementContext used
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
@@ -3558,6 +3466,13 @@ ManagementContext represents the configuration for a Management API.
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthsecretref">secretRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -3587,6 +3502,40 @@ ManagementContext represents the configuration for a Management API.
         <td>false</td>
       </tr><tr>
         <td><b>username</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.secretRef
+<sup><sup>[↩ Parent](#managementcontextspecauth)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
         <td>string</td>
         <td>
           <br/>

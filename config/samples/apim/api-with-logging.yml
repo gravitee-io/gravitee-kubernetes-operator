@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,10 +12,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: apidefinition-sample
+  name: with-logging
+  namespace: default
 spec:
-  # TODO(user): Add fields here
+  name: "With logging"
+  version: "1.0"
+  description: "API with logging"
+  proxy:
+    logging:
+        mode: "CLIENT_PROXY"
+        content: "HEADERS_PAYLOADS"
+        scope: "REQUEST_RESPONSE"
+    virtual_hosts:
+      - path: "/with-logging"
+    groups:
+      - endpoints:
+          - name: "Default"
+            target: "https://api.gravitee.io/echo"

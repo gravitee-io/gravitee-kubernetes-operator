@@ -120,13 +120,14 @@ lint-license: addlicense ## Run addlicense lint and fail on error
 
 GOTESTARGS ?= ""
 .PHONY: test
-test: manifests generate install## Run tests.
+test: manifests generate install ## Run tests.
 	kubectl config use-context k3d-graviteeio
-	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GOTESTSUM) $(GOTESTARGS) ./... -timeout 380s -coverprofile cover.out
+	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GINKGO) $(GOTESTARGS) --timeout 380s --cover --coverprofile=cover.out ./...
 
+K3DARGS ?= ""
 .PHONY: k3d-apim-init
 k3d-apim-init: ## Init APIM locally using k3d
-	bash ./scripts/k3d.sh 
+	npx zx ./scripts/k3d.mjs $(K3DARGS)
 
 .PHONY: k3d-apim-start
 k3d-apim-start: ## Start exiting APIM node in k3d
@@ -209,7 +210,7 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
-GOTESTSUM ?= $(LOCALBIN)/gotestsum
+GINKGO ?= $(LOCALBIN)/ginkgo
 CRDOC ?= $(LOCALBIN)/crdoc
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
@@ -235,10 +236,10 @@ envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
-.PHONY: gotestsum
-gotestsum: $(GOTESTSUM) ## Download gotestsum locally if necessary.
-$(GOTESTSUM): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@latest
+.PHONY: ginkgo
+ginkgo: $(GINKGO) ## Download ginkgo cli locally if necessary.
+$(GINKGO): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install github.com/onsi/ginkgo/v2/ginkgo@latest
 
 .PHONY: crdoc
 crdoc: $(CRDOC)

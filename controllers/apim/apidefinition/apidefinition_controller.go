@@ -32,7 +32,6 @@ import (
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -48,7 +47,7 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
-//+kubebuilder:rbac:groups="",resources=secrets,verbs=get
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions,verbs=get;list;watch;create;update;patch;delete;deletecollection
 //+kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions/status,verbs=get;update;patch
@@ -91,7 +90,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	event := utils.NewEvent(r.Recorder)
 
 	if apiDefinition.Spec.Context != nil {
-		managementContext, ctxErr := managementcontext.Get(ctx, r.Client, log, apiDefinition.Spec.Context)
+		managementContext, ctxErr := apisDelegate.ResolveContext(apiDefinition.Spec.Context)
+
 		if ctxErr != nil {
 			log.Error(ctxErr, "And error has occurred while trying to retrieve ManagementContext")
 			event.NormalEvent(

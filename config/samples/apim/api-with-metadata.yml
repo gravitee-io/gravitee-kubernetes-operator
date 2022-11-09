@@ -16,30 +16,21 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: flow-example
+  name: with-metadata
+  namespace: default
 spec:
-  name: "K8s Flow Example"
+  name: "With metadata"
   version: "1.0"
-  description: "Api managed by Gravitee Kubernetes Operator with plan flow"
-  plans:
-    - name: "Keyless"
-      description: "Keyless plan"
-      security: KEY_LESS
-      flows:
-        - pre:
-            - name: "Transform Headers"
-              description: "Add 'X-Test' request header"
-              policy: transform-headers
-              configuration:
-                addHeaders:
-                  - name: "X-Test"
-                    value: "MyHeaderValue"
-                scope: REQUEST
+  description: "API with metadata"
   proxy:
     virtual_hosts:
-      - path: "/k8s-flow"
+      - path: "/with-metadata"
     groups:
-      - name: default-group
-        endpoints:
+      - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
+  metadata:
+  - key: "build-version"
+    name: "build-version"
+    format: "STRING"
+    value: "0.0.1"

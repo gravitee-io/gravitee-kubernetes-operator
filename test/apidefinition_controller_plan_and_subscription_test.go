@@ -32,6 +32,7 @@ import (
 	"time"
 
 	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -49,7 +50,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("Checking ApiKey plan and subscription", Ordered, func() {
-		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 
 		var savedApiDefinition *gio.ApiDefinition
@@ -61,34 +61,37 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
-			managementContext, err := NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.ApiWithApiKeyPlanFile, internal.ContextWithSecretFile,
+			)
 			Expect(err).ToNot(HaveOccurred())
+
+			managementContext := apiWithContext.Context
+
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/apikey-example-with-ctx.yml")
-			Expect(err).ToNot(HaveOccurred())
+
+			apiDefinition := apiWithContext.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
+
 			savedApiDefinition = new(gio.ApiDefinition)
 			Eventually(func() bool {
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
 				return k8sErr == nil && savedApiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
 
-			gatewayEndpoint = GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
-			mgmtClient = managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-		})
+			mgmtClient, err = internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
 
-		AfterAll(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should return unauthorize without subscription", func() {
@@ -136,7 +139,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			// Update savedApiDefinition & global var with last Get
 			savedApiDefinition = updatedApiDefinition.DeepCopy()
-			gatewayEndpoint = GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			By("Update ApiDefinition add ApiKey plan")
 

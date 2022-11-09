@@ -695,6 +695,8 @@ spec:
                                   type: string
                                 provider:
                                   type: string
+                              required:
+                              - enabled
                               type: object
                             dynamic-property:
                               properties:
@@ -706,6 +708,7 @@ spec:
                             health-check:
                               properties:
                                 enabled:
+                                  default: false
                                   type: boolean
                                 schedule:
                                   type: string
@@ -754,6 +757,8 @@ spec:
                                         type: object
                                     type: object
                                   type: array
+                              required:
+                              - enabled
                               type: object
                           type: object
                         ssl:
@@ -780,26 +785,26 @@ spec:
                       condition:
                         type: string
                       content:
-                        properties:
-                          headers:
-                            type: boolean
-                          payloads:
-                            type: boolean
-                        type: object
+                        enum:
+                        - NONE
+                        - HEADERS
+                        - PAYLOADS
+                        - HEADERS_PAYLOADS
+                        type: string
                       mode:
-                        properties:
-                          client:
-                            type: boolean
-                          proxy:
-                            type: boolean
-                        type: object
+                        enum:
+                        - NONE
+                        - CLIENT
+                        - PROXY
+                        - CLIENT_PROXY
+                        type: string
                       scope:
-                        properties:
-                          request:
-                            type: boolean
-                          response:
-                            type: boolean
-                        type: object
+                        enum:
+                        - NONE
+                        - REQUEST
+                        - RESPONSE
+                        - REQUEST_RESPONSE
+                        type: string
                     type: object
                   preserve_host:
                     type: boolean
@@ -859,6 +864,8 @@ spec:
                         type: string
                       provider:
                         type: string
+                    required:
+                    - enabled
                     type: object
                   dynamic-property:
                     properties:
@@ -870,6 +877,7 @@ spec:
                   health-check:
                     properties:
                       enabled:
+                        default: false
                         type: boolean
                       schedule:
                         type: string
@@ -918,6 +926,8 @@ spec:
                               type: object
                           type: object
                         type: array
+                    required:
+                    - enabled
                     type: object
                 type: object
               state:

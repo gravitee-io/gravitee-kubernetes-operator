@@ -6,6 +6,7 @@ orbs:
   helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.2
   gravitee: gravitee-io/gravitee@2.1.16
+  slack: circleci/slack@4.10.1
 
 executors:
   azure-cli:
@@ -24,7 +25,7 @@ executors:
 jobs:
   lint:
     docker:
-      - image: cimg/go:1.19.2-node
+      - image: cimg/go:1.19.3-node
     steps:
       - checkout
       - go/mod-download-cached
@@ -66,7 +67,7 @@ jobs:
     steps:
       - checkout
       - go/install:
-          version: '1.18.4'
+          version: '1.19.2'
       - go/load-cache
       - kubernetes/install-kubectl
       - helm/install-helm-client
@@ -83,19 +84,56 @@ jobs:
           name: Docker login
           command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
       - run:
-          name: Install gotestsum
-          command: make gotestsum
+          name: Install ginkgo
+          command: make ginkgo
+      - restore_cache:
+          keys:
+            - k3d-registry-docker-v1
+      - run:
+          name: Prepare k3d images registry
+          command: |
+            if [ -f k3d-registry.image.tar ]; then  
+              docker load -i k3d-registry.image.tar
+              tar -xf k3d-registry.volume.tar
+              docker run --name k3d-graviteeio.docker.localhost \
+                --net=bridge \
+                -h k3d-graviteeio.docker.localhost \
+                -p 12345:12345 \
+                -e REGISTRY_HTTP_ADDR=:12345 \
+                -v $(pwd)/var/lib/registry:/var/lib/registry  \
+                -d gko/k3d-registry:latest
+              echo "export K3D_PULL=apim" >> $BASH_ENV
+            else 
+              echo "No registry archive found. All images will be pulled from network."
+              echo "export K3D_PULL=all" >> $BASH_ENV
+            fi
       - run:
           name: Start APIM using k3d
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
             export APIM_IMAGE_TAG=master-latest
-            make k3d-apim-init
+            K3DARGS="--pull=${K3D_PULL}" make k3d-apim-init
       - run:
           name: Run tests
-          command: GOTESTARGS="--junitfile=/tmp/junit/reports/junit.xml" make test
+          command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
+      - run:
+          name: Archive k3d registry image and volume for caching
+          command: |
+            if [ -f k3d-registry.image.tar ]; then 
+              echo "K3d registry already saved on disk. Nothing to do"
+            else
+              docker commit k3d-graviteeio.docker.localhost gko/k3d-registry:latest
+              docker save -o k3d-registry.image.tar gko/k3d-registry:latest
+              docker run --rm --volumes-from $(docker ps -aqf "name=graviteeio.docker.localhost") -v $(pwd):/backup alpine tar cf /backup/k3d-registry.volume.tar /var/lib/registry
+            fi
+      - save_cache:
+          paths:
+            - k3d-registry.image.tar
+            - k3d-registry.volume.tar
+          key: k3d-registry-docker-v1
       - store_test_results:
-          path: /tmp/junit
+          path: /tmp/junit/reports
+      - go/save-cache
 
   login-to-azure:
     executor:
@@ -141,7 +179,7 @@ jobs:
 
   deploy-gko-image:
     docker:
-      - image: cimg/go:1.19.2
+      - image: cimg/go:1.19.3
     steps:
       - attach_workspace:
           at: ~/
@@ -152,7 +190,7 @@ jobs:
 
   semantic-release:
     docker:
-      - image: cimg/go:1.19.2-node
+      - image: cimg/go:1.19.3-node
     environment:
       GITHUB_TOKEN: "keeper://TIlcGPFq4rN5GvgnZb9hng/field/password"
       GIT_AUTHOR_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
@@ -182,40 +220,6 @@ jobs:
             export BINARY=operator-sdk_${OS}_${ARCH}
             curl -OJL ${DOWNLOAD_URL}/${BINARY}
             chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
-      - run:
-          name: "Setup Semantic Release"
-          command: |
-            echo '{
-                    "branches": [{"name": "alpha", "prerelease": true}, "master"],
-                    "tagFormat": "${version}",
-                    "plugins": [
-                      "@semantic-release/commit-analyzer",
-                      "@semantic-release/release-notes-generator",
-                      "@semantic-release/changelog",
-                      [
-                        "@semantic-release/exec",
-                        {
-                          "prepareCmd": "IMG=graviteeio/kubernetes-operator:${nextRelease.version} BUNDLE_IMG=graviteeio/kubernetes-operator-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push lint-fix"                        
-                        }
-                      ],
-                      [
-                        "@semantic-release/github",
-                        {
-                          "assets": [
-                            {"path": "bundle.yml", "label": "Operator resources bundle"}
-                          ]
-                        }
-                      ],
-                      [
-                        "@semantic-release/git",
-                        {
-                          "assets": ["CHANGELOG.md", "bundle.yml"],
-                          "message": "chore(release): ${nextRelease.version} [skip ci]"
-                        }
-                      ]
-                    ]
-                  }
-                  ' > .releaserc.json
       - keeper/exec:
           step-name: "Run Semantic Release"
           command: |
@@ -225,9 +229,31 @@ jobs:
           paths:
             - "bundle.yml"
 
+  notify-release-slack:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+    - keeper/env-export:
+        secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+        var-name: SLACK_ACCESS_TOKEN
+    - slack/notify:
+        channel: C02NGT20S4W
+        event: always
+        custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":kubernetes: Gravitee Kubernetes Operator - Version ${CIRCLE_TAG} has been released! 🎉"
+                  }
+                }
+              ]
+            }
 workflows:
   pull_requests:
-    # Trigger on all branches except `main`
     when:
       and:
         - not:
@@ -245,22 +271,25 @@ workflows:
 
   release:
     when:
-      or:
-        - equal: [master, << pipeline.git.branch >>]
-        - equal: [alpha, << pipeline.git.branch >>]
+      and:
+        - or:
+          - equal: [ master, << pipeline.git.branch >> ]
+          - equal: [ alpha, << pipeline.git.branch >> ]
+        - not:
+            equal: [ << pipeline.git.revision >>, << pipeline.git.base_revision >> ]
     jobs:
-      # - lint:
-      #     name: Lint
-      # - test:
-      #     name: Test
-      #     context: cicd-orchestrator
-      #     requires:
-      #       - Lint
+      - lint:
+          name: Lint
+      - test:
+          name: Test
+          context: cicd-orchestrator
+          requires:
+            - Lint
       - semantic-release:
           name: Semantic Release
           context: cicd-orchestrator
-          # requires:
-          #   - Lint
+          requires:
+            - Test
       - login-to-azure:
           name: K8s login on devs-preprod and get ~/.kube/config
           context: cicd-orchestrator
@@ -287,3 +316,15 @@ workflows:
           requires:
             - K8s login on devs-preprod and get ~/.kube/config
             - K8s login on apim-preprod and get ~/.kube/config
+
+  notify-release: 
+    jobs:
+      - notify-release-slack:
+          name: Notify gravitee-release-alerts slack channel
+          context: cicd-orchestrator
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /\d+\.\d+\.\d+/
+

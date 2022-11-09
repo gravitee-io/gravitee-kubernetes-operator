@@ -37,7 +37,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -51,16 +51,12 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create an API definition resource without a management context")
 
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example.yml")
+			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiFile)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
 			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinition(apiDefinitionFixture)
 		})
 
 		It("Should update an API Definition", func() {
@@ -74,7 +70,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
-			var endpointInitial = GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var endpointInitial = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpointInitial)
@@ -93,7 +89,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call updated API definition URL and expect no error")
 
-			var endpointUpdated = GatewayUrl + expectedPath
+			var endpointUpdated = internal.GatewayUrl + expectedPath
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpointUpdated)
@@ -110,31 +106,28 @@ var _ = Describe("API Definition Controller", func() {
 	})
 
 	Context("With basic ApiDefinition & ManagementContext", func() {
-		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			managementContext, err := NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.BasicApiFile, internal.ContextWithSecretFile,
+			)
+
 			Expect(err).ToNot(HaveOccurred())
+
+			managementContext := apiWithContext.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			By("Create an API definition resource without a management context")
+			By("Create an API definition resource stared by default")
 
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example-with-ctx.yml")
-			Expect(err).ToNot(HaveOccurred())
+			apiDefinition := apiWithContext.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should update an API Definition", func() {
@@ -148,7 +141,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
-			var endpointInitial = GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var endpointInitial = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpointInitial)
@@ -169,7 +162,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call updated API definition URL and expect no error")
 
-			var endpointUpdated = GatewayUrl + expectedPath
+			var endpointUpdated = internal.GatewayUrl + expectedPath
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpointUpdated)
@@ -178,7 +171,9 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID & updated name")
 
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
 				return apiErr == nil &&
@@ -196,24 +191,23 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			managementContext, err := NewManagementContext(
-				"../config/samples/context/dev/managementcontext_credentials.yaml")
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				internal.BasicApiFile, internal.ContextWithSecretFile,
+			)
+
 			Expect(err).ToNot(HaveOccurred())
+
+			managementContext := apiWithContext.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			By("Create an API definition resource without a management context")
+			By("Create an API definition resource stared by default")
 
-			apiDefinition, err := NewApiDefinition("../config/samples/apim/basic-example.yml")
-			Expect(err).ToNot(HaveOccurred())
+			apiDefinition := apiWithContext.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
 			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-		})
-
-		AfterEach(func() {
-			cleanupApiDefinitionAndManagementContext(apiDefinitionFixture, managementContextFixture)
 		})
 
 		It("Should update an API Definition, adding a management context", func() {
@@ -238,7 +232,9 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Calling rest API, expecting one API matching status ID")
 
-			apimClient := managementapi.NewClient(ctx, managementContextFixture, httpClient)
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
 			Eventually(func() bool {
 				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
 				return apiErr == nil && api.Id == updatedApiDefinition.Status.ID

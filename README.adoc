@@ -38,6 +38,7 @@ The GKO API reference documentation is available https://github.com/gravitee-io/
 * Install link:https://www.docker.com/[Docker^]
 * Install link:https://kubernetes.io/docs/tasks/tools/#kubectl[kubectl^]
 * Install link:https://helm.sh/docs/intro/install/[Helm^]
+* Install link:https://nodejs.org/en/download/[NodeJs^]
 * Install the operator-sdk: `brew install operator-sdk`
 
 == How to run locally
@@ -54,9 +55,6 @@ make install
 
 # Check that the Gravitee CRDs are available on your cluster
 kubectl get crd
-
-# Wait for APIM pods to become ready
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout 180s
 
 # Run a controller from your host
 make run
@@ -93,7 +91,7 @@ make k3d-gko-build k3d-gko-push k3d-gko-deploy
 
 === Debugging with a locally running APIM
 
-To be abble to run the operator against a local instance of both an APIM Gateway and an APIM Management API, you will need to:
+To be able to run the operator against a local instance of both an APIM Gateway and an APIM Management API, you will need to:
 
 * Attach to a local cluster context.
 * Create a local service account to authenticate the gateway against the local cluster.
