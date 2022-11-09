@@ -276,6 +276,7 @@ workflows:
           - equal: [ master, << pipeline.git.branch >> ]
           - equal: [ alpha, << pipeline.git.branch >> ]
         - not:
+            # Workflow will not run when we open a pull request from alpha to master to trigger a release
             equal: [ << pipeline.git.revision >>, << pipeline.git.base_revision >> ]
     jobs:
       - lint:
