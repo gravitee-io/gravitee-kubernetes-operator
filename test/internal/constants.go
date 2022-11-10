@@ -32,6 +32,7 @@ const (
 	ApiWithOAuth2GenericResource  = SamplesPath + "/apim/api-with-oauth2-generic-resource.yml"
 	ApiWithLDAPAuthProviderFile   = SamplesPath + "/apim/api-with-ldap-auth-provider.yml"
 	ApiWithInlineAuthProviderFile = SamplesPath + "/apim/api-with-inline-auth-provider.yml"
+	ApiWithHTTPAuthProviderFile   = SamplesPath + "/apim/api-with-http-auth-provider.yml"
 
 	contextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yaml"
 	apimClientTimeout          = 5 * time.Second
