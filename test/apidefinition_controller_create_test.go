@@ -336,5 +336,6 @@ var _ = Describe("Create", func() {
 		Entry("should import with endpoint groups", internal.ApiWithEndpointGroupsFile),
 		Entry("should import with service discovery", internal.ApiWithServiceDiscoveryFile),
 		Entry("should import with cache resource", internal.ApiWithCacheResource),
+		Entry("should import with oauth2 generic resource", internal.ApiWithOAuth2GenericResource),
 	)
 })
