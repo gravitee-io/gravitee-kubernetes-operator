@@ -29,6 +29,7 @@ const (
 	ApiWithLoggingFile            = SamplesPath + "/apim/api-with-logging.yml"
 	ApiWithApiKeyPlanFile         = SamplesPath + "/apim/api-with-api-key-plan.yml"
 	ApiWithCacheResource          = SamplesPath + "/apim/api-with-cache-resource.yml"
+	ApiWithCacheRedisResourceFile = SamplesPath + "/apim/api-with-cache-redis-resource.yml"
 	ApiWithOAuth2GenericResource  = SamplesPath + "/apim/api-with-oauth2-generic-resource.yml"
 	ApiWithLDAPAuthProviderFile   = SamplesPath + "/apim/api-with-ldap-auth-provider.yml"
 	ApiWithInlineAuthProviderFile = SamplesPath + "/apim/api-with-inline-auth-provider.yml"
