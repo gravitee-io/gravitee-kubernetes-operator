@@ -276,7 +276,7 @@ var _ = Describe("Create", func() {
 	})
 
 	DescribeTable("a featured API spec with a management context",
-		func(specFile string) {
+		func(specFile string, expectedGatewayStatusCode int) {
 			apiWithContext, err := internal.NewApiWithRandomContext(
 				specFile, internal.ContextWithSecretFile,
 			)
@@ -317,7 +317,7 @@ var _ = Describe("Create", func() {
 
 			Eventually(func() bool {
 				res, callErr := httpClient.Get(endpoint)
-				return callErr == nil && res.StatusCode == 200
+				return callErr == nil && res.StatusCode == expectedGatewayStatusCode
 			}, timeout, interval).Should(BeTrue())
 
 			By("Calling rest API, expecting one API to match status cross ID")
@@ -330,12 +330,13 @@ var _ = Describe("Create", func() {
 				return apiErr == nil && api.Id == apiDefinition.Status.ID
 			}, timeout, interval).Should(BeTrue())
 		},
-		Entry("should import with health check", internal.ApiWithHCFile),
-		Entry("should import with disabled health check", internal.ApiWithDisabledHCFile),
-		Entry("should import with logging", internal.ApiWithLoggingFile),
-		Entry("should import with endpoint groups", internal.ApiWithEndpointGroupsFile),
-		Entry("should import with service discovery", internal.ApiWithServiceDiscoveryFile),
-		Entry("should import with cache resource", internal.ApiWithCacheResource),
-		Entry("should import with oauth2 generic resource", internal.ApiWithOAuth2GenericResource),
+		Entry("should import with health check", internal.ApiWithHCFile, 200),
+		Entry("should import with disabled health check", internal.ApiWithDisabledHCFile, 200),
+		Entry("should import with logging", internal.ApiWithLoggingFile, 200),
+		Entry("should import with endpoint groups", internal.ApiWithEndpointGroupsFile, 200),
+		Entry("should import with service discovery", internal.ApiWithServiceDiscoveryFile, 200),
+		Entry("should import with cache resource", internal.ApiWithCacheResource, 200),
+		Entry("should import with oauth2 generic resource", internal.ApiWithOAuth2GenericResource, 200),
+		Entry("should import with LDAP auth provider", internal.ApiWithLDAPAuthProviderFile, 401),
 	)
 })

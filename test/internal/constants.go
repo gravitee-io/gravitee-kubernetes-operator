@@ -30,7 +30,7 @@ const (
 	ApiWithApiKeyPlanFile        = SamplesPath + "/apim/api-with-api-key-plan.yml"
 	ApiWithCacheResource         = SamplesPath + "/apim/api-with-cache-resource.yml"
 	ApiWithOAuth2GenericResource = SamplesPath + "/apim/api-with-oauth2-generic-resource.yml"
-
-	contextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yaml"
-	apimClientTimeout          = 5 * time.Second
+	ApiWithLDAPAuthProviderFile  = SamplesPath + "/apim/api-with-ldap-auth-provider.yml"
+	contextWithCredentialsFile   = SamplesPath + "/context/dev/management-context-with-credentials.yaml"
+	apimClientTimeout            = 5 * time.Second
 )
