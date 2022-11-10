@@ -337,6 +337,8 @@ var _ = Describe("Create", func() {
 		Entry("should import with service discovery", internal.ApiWithServiceDiscoveryFile, 200),
 		Entry("should import with cache resource", internal.ApiWithCacheResource, 200),
 		Entry("should import with oauth2 generic resource", internal.ApiWithOAuth2GenericResource, 200),
+		Entry("should import with keycloak adapter resource", internal.ApiWithKeycloakAdapterFile, 200),
+
 		Entry("should import with LDAP auth provider", internal.ApiWithLDAPAuthProviderFile, 401),
 	)
 })
