@@ -3,8 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-cache-resource"
-    annotations: {}
-    labels: {}
+    namespace: default
 spec:
     name: "with-cache"
     version: "1"
@@ -60,7 +59,7 @@ spec:
     path_mappings: []
     proxy:
         virtual_hosts:
-            - path: "/with-cache-k8s/"
+            - path: "/with-cache/"
         strip_context_path: false
         preserve_host: false
         groups:
