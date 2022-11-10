@@ -28,6 +28,7 @@ const (
 	ApiWithEndpointGroupsFile   = SamplesPath + "/apim/api-with-endpoint-groups.yml"
 	ApiWithLoggingFile          = SamplesPath + "/apim/api-with-logging.yml"
 	ApiWithApiKeyPlanFile       = SamplesPath + "/apim/api-with-api-key-plan.yml"
+	ApiWithCacheResource        = SamplesPath + "/apim/api-with-cache-resource.yml"
 
 	contextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yaml"
 	apimClientTimeout          = 5 * time.Second
