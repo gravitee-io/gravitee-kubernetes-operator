@@ -33,7 +33,7 @@ type ApiDefinitionSpec struct {
 
 	// The contextRef refers to the namespace and the name of a ManagementContext used for
 	// synchronizing API definitions with a Gravitee API Management instance.
-	Context *model.ContextRef `json:"contextRef,omitempty"`
+	Context *model.NamespacedName `json:"contextRef,omitempty"`
 }
 
 // ApiDefinitionStatus defines the observed state of API Definition.

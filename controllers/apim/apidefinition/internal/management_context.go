@@ -28,7 +28,7 @@ const (
 )
 
 func (d *Delegate) ResolveContext(
-	contextRef *model.ContextRef,
+	contextRef *model.NamespacedName,
 ) (*gio.ManagementContext, error) {
 	apimContext := new(gio.ManagementContext)
 	ns := types.NamespacedName{Name: contextRef.Name, Namespace: contextRef.Namespace}

@@ -91,7 +91,7 @@ func (in *ApiDefinitionSpec) DeepCopyInto(out *ApiDefinitionSpec) {
 	in.Api.DeepCopyInto(&out.Api)
 	if in.Context != nil {
 		in, out := &in.Context, &out.Context
-		*out = new(model.ContextRef)
+		*out = new(model.NamespacedName)
 		**out = **in
 	}
 }

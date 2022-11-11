@@ -27,7 +27,7 @@ import (
 	graviteeiov1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-// ApiResourceReconciler reconciles a ApiResource object
+// ApiResourceReconciler reconciles a ApiResource object.
 type ApiResourceReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme

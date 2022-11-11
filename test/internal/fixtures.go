@@ -68,7 +68,7 @@ func NewApiWithRandomContext(
 
 	ctx, err := newManagementContext(contextPath, func(ctx *gio.ManagementContext) {
 		ctx.Name += "-" + uuid.NewV4().String()[:7]
-		api.Spec.Context = &model.ContextRef{
+		api.Spec.Context = &model.NamespacedName{
 			Name:      ctx.Name,
 			Namespace: ctx.Namespace,
 		}

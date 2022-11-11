@@ -15,11 +15,6 @@
 // +kubebuilder:object:generate=true
 package model
 
-type ContextRef struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace,omitempty"`
-}
-
 type Context struct {
 	// The URL of a management API instance
 	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
@@ -38,12 +33,13 @@ type Context struct {
 }
 
 type Auth struct {
-	// The bearer token used to authenticate against the API Management instance (must be generated from an admin account)
+	// The bearer token used to authenticate against the API Management instance
+	// (must be generated from an admin account)
 	BearerToken string `json:"bearerToken,omitempty"`
 	// The Basic credentials used to authenticate against the API Management instance.
 	Credentials *BasicAuth `json:"credentials,omitempty"`
 	// A secret reference holding either a bearer token or the user name and password used for basic authentication
-	SecretRef *SecretRef `json:"secretRef,omitempty"`
+	SecretRef *NamespacedName `json:"secretRef,omitempty"`
 }
 
 type BasicAuth struct {
@@ -51,9 +47,4 @@ type BasicAuth struct {
 	Username string `json:"username,omitempty"`
 	// +kubebuilder:validation:Required
 	Password string `json:"password,omitempty"`
-}
-
-type SecretRef struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace,omitempty"`
 }

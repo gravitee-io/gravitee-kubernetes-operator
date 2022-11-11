@@ -222,7 +222,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
-			updatedApiDefinition.Spec.Context = &model.ContextRef{
+			updatedApiDefinition.Spec.Context = &model.NamespacedName{
 				Name:      managementContextFixture.Name,
 				Namespace: managementContextFixture.Namespace,
 			}
