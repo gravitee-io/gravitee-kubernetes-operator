@@ -16,4 +16,5 @@
 resources:
 - apim/basic-api.yml
 - context/dev/management-context-with-secret-ref.yaml
+- _v1alpha1_apiresource.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
