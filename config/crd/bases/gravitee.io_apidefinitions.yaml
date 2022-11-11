@@ -833,6 +833,15 @@ spec:
                       type: boolean
                     name:
                       type: string
+                    ref:
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      required:
+                      - name
+                      type: object
                     type:
                       type: string
                   type: object

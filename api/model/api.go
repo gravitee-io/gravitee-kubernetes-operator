@@ -41,7 +41,7 @@ type Api struct {
 	// +kubebuilder:validation:Required
 	Proxy             *Proxy                                  `json:"proxy,omitempty"`
 	Services          *Services                               `json:"services,omitempty"`
-	Resources         []*Resource                             `json:"resources,omitempty"`
+	Resources         []*ResourceOrRef                        `json:"resources,omitempty"`
 	Flows             []Flow                                  `json:"flows,omitempty"`
 	Properties        []*Property                             `json:"properties,omitempty"`
 	Tags              []string                                `json:"tags,omitempty"`
@@ -87,6 +87,15 @@ type Resource struct {
 	Name          string            `json:"name,omitempty"`
 	ResourceType  string            `json:"type,omitempty"`
 	Configuration *GenericStringMap `json:"configuration,omitempty"`
+}
+
+type ResourceOrRef struct {
+	*Resource `json:",inline"`
+	Ref       *NamespacedName `json:"ref,omitempty"`
+}
+
+func (r *ResourceOrRef) IsRef() bool {
+	return r.Ref != nil
 }
 
 func NewResource() *Resource {

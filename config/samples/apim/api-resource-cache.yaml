@@ -1,0 +1,13 @@
+apiVersion: gravitee.io/v1alpha1
+kind: ApiResource
+metadata:
+  name: reusable-resource-cache
+  namespace: default
+spec:
+  name: "cache-resource"
+  type: "cache"
+  enabled: true
+  configuration:
+      timeToIdleSeconds: 0
+      timeToLiveSeconds: 0
+      maxEntriesLocalHeap: 1000

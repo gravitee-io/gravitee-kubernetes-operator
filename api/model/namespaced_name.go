@@ -14,7 +14,13 @@
 
 package model
 
+import "k8s.io/apimachinery/pkg/types"
+
 type NamespacedName struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace,omitempty"`
+}
+
+func (n NamespacedName) ToK8sType() types.NamespacedName {
+	return types.NamespacedName{Namespace: n.Namespace, Name: n.Name}
 }

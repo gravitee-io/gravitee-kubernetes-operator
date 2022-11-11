@@ -62,6 +62,32 @@ rules:
 - apiGroups:
   - gravitee.io
   resources:
+  - apiresources
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apiresources/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apiresources/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - gravitee.io
+  resources:
   - managementcontexts
   verbs:
   - create
