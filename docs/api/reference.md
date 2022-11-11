@@ -10,6 +10,8 @@ Resource Types:
 
 - [ApiDefinition](#apidefinition)
 
+- [ApiResource](#apiresource)
+
 - [ManagementContext](#managementcontext)
 
 
@@ -2900,7 +2902,48 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionspecresourcesindexref">ref</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.resources[index].ref
+<sup><sup>[↩ Parent](#apidefinitionspecresourcesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -3329,6 +3372,107 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td>string</td>
         <td>
           The state of the API. Can be either STARTED or STOPPED.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## ApiResource
+<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>gravitee.io/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ApiResource</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#apiresourcespec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ApiResourceSpec defines the desired state of ApiResource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiResource.spec
+<sup><sup>[↩ Parent](#apiresource)</sup></sup>
+
+
+
+ApiResourceSpec defines the desired state of ApiResource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
