@@ -345,4 +345,117 @@ var _ = Describe("Create", func() {
 		Entry("should import with inline auth provider", internal.ApiWithInlineAuthProviderFile, 401),
 		Entry("should import with HTTP auth provider", internal.ApiWithHTTPAuthProviderFile, 401),
 	)
+
+	DescribeTable("a featured API spec with a management context and a resource ref",
+		func(resourceFile, specFile string, expectedGatewayStatusCode int) {
+			apiResource, err := internal.NewApiResource(resourceFile)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Creating a reusable resource to reference in the API")
+
+			Expect(k8sClient.Create(ctx, apiResource)).Should(Succeed())
+
+			apiWithContext, err := internal.NewApiWithRandomContext(
+				specFile, internal.ContextWithSecretFile,
+			)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			apiDefinitionFixture := apiWithContext.Api
+			managementContextFixture := apiWithContext.Context
+
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+
+			By("Creating a management context to synchronize with the REST API")
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+
+			By("Creating an API definition resource referencing the management context")
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
+
+			By("Getting created resource")
+
+			managementContext := new(gio.ManagementContext)
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+			}, timeout, interval).Should(Succeed())
+
+			apiDefinition := new(gio.ApiDefinition)
+			Eventually(func() bool {
+				err = k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+				return err == nil && apiDefinition.Status.CrossID != ""
+			}, timeout, interval).Should(BeTrue())
+
+			expectedApiName := apiDefinitionFixture.Spec.Name
+			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
+
+			By("Calling gateway endpoint, expecting the API to be available")
+
+			var endpoint = internal.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
+
+			Eventually(func() bool {
+				res, callErr := httpClient.Get(endpoint)
+				return callErr == nil && res.StatusCode == expectedGatewayStatusCode
+			}, timeout, interval).Should(BeTrue())
+
+			By("Calling rest API, expecting one API to match status cross ID")
+
+			apimClient, err := internal.NewApimClient(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(func() bool {
+				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
+				return apiErr == nil && api.Id == apiDefinition.Status.ID
+			}, timeout, interval).Should(BeTrue())
+		},
+		Entry(
+			"should import with cache resource ref",
+			internal.ApiResourceCacheFile,
+			internal.ApiWithCacheResourceRefFile,
+			200,
+		),
+		Entry(
+			"should import with cache redis resource ref",
+			internal.ApiResourceCacheRedisFile,
+			internal.ApiWithCacheRedisResourceRefFile,
+			200,
+		),
+		Entry(
+			"should import with oauth2 generic resource ref",
+			internal.ApiResourceOauth2GenericFile,
+			internal.ApiWithOAuth2GenericResourceRefFile,
+			200,
+		),
+		Entry(
+			"should import with oauth2 am resource ref",
+			internal.ApiResourceOauth2AMFile,
+			internal.ApiWithOauth2AmResourceRefFile,
+			200,
+		),
+		Entry(
+			"should import with keycloak adapter resource ref",
+			internal.ApiResourceKeycloakAdapterFile,
+			internal.ApiWithKeycloakAdapterRefFile,
+			200,
+		),
+		Entry(
+			"should import with LDAP auth provider ref",
+			internal.ApiResourceLDAPAuthProviderFile,
+			internal.ApiWithLDAPAuthProviderRefFile,
+			401,
+		),
+		Entry(
+			"should import with inline auth provider ref",
+			internal.ApiResourceInlineAuthProviderFile,
+			internal.ApiWithInlineAuthProviderRefFile,
+			401,
+		),
+		Entry(
+			"should import with HTTP auth provider ref",
+			internal.ApiResourceHTTPAuthProviderFile,
+			internal.ApiWithHTTPAuthProviderRefFile,
+			401,
+		),
+	)
 })

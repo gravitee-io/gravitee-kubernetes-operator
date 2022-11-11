@@ -58,6 +58,30 @@ func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio
 	return api, nil
 }
 
+func NewApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.ApiResource, error) {
+	crd, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := gio.GroupVersion.WithKind("ApiResource")
+	decoded, _, err := decode(crd, &gvk, new(gio.ApiResource))
+	if err != nil {
+		return nil, err
+	}
+
+	resource, ok := decoded.(*gio.ApiResource)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of API CRD")
+	}
+
+	for _, transform := range transforms {
+		transform(resource)
+	}
+
+	return resource, nil
+}
+
 func NewApiWithRandomContext(
 	apiPath string, contextPath string, transforms ...func(*ApiWithContext),
 ) (*ApiWithContext, error) {
@@ -67,7 +91,7 @@ func NewApiWithRandomContext(
 	}
 
 	ctx, err := newManagementContext(contextPath, func(ctx *gio.ManagementContext) {
-		ctx.Name += "-" + uuid.NewV4().String()[:7]
+		ctx.Name += randomSuffix()
 		api.Spec.Context = &model.NamespacedName{
 			Name:      ctx.Name,
 			Namespace: ctx.Namespace,
@@ -115,8 +139,12 @@ func newManagementContext(path string, transforms ...func(*gio.ManagementContext
 }
 
 func addRandomSuffixes(api *gio.ApiDefinition) {
-	suffix := "-" + uuid.NewV4().String()[:7]
+	suffix := randomSuffix()
 	api.Name += suffix
 	api.Spec.Name += suffix
 	api.Spec.Proxy.VirtualHosts[0].Path += suffix
+}
+
+func randomSuffix() string {
+	return "-" + uuid.NewV4().String()[:7]
 }
