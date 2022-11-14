@@ -224,7 +224,6 @@ spec:
                   - format
                   - key
                   - name
-                  - value
                   type: object
                 type: array
               name:

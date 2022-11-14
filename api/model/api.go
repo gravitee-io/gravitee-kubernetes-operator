@@ -107,7 +107,7 @@ type Metadata struct {
 	Key          string         `json:"key"`
 	Name         string         `json:"name"`
 	Format       MetadataFormat `json:"format"`
-	Value        string         `json:"value"`
+	Value        string         `json:"value,omitempty"`
 	DefaultValue string         `json:"defaultValue,omitempty"`
 }
 
