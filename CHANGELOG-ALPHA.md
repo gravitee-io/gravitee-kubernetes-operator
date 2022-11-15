@@ -1,3 +1,10 @@
+## [0.2.1-alpha.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.2.0...0.2.1-alpha.1) (2022-11-15)
+
+
+### Bug Fixes
+
+* make metadata value optional ([737aa3d](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/737aa3dd31124c99ea9df6d1d13256a6dd76a024))
+
 # [0.2.0-alpha.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.1...0.2.0-alpha.1) (2022-11-09)
 
 
