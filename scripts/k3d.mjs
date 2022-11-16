@@ -363,6 +363,7 @@ helm install \
 
 const helmInstallElastic = $`
 helm install \
+    --version "7.17.1" \
     --namespace ${K3D_NAMESPACE_NAME} \
     --set replicas=1 \
     --set "image=${K3D_IMAGES_REGISTRY}/elasticsearch" \
