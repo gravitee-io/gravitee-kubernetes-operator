@@ -3,9 +3,8 @@ module github.com/gravitee-io/gravitee-kubernetes-operator
 go 1.19
 
 require (
-	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/ginkgo/v2 v2.4.0
-	github.com/onsi/gomega v1.23.0
+	github.com/onsi/ginkgo/v2 v2.5.0
+	github.com/onsi/gomega v1.24.0
 	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.4
 	sigs.k8s.io/controller-runtime v0.13.1
@@ -64,7 +63,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
