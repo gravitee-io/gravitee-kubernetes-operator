@@ -57,11 +57,15 @@ var _ = Describe("Create", func() {
 
 		BeforeEach(func() {
 			By("Initializing the API definition fixture")
+			fixtureGenerator := internal.NewFixtureGenerator()
 
-			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiFile)
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api: internal.BasicApiFile,
+			})
+
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinitionFixture = apiDefinition
+			apiDefinitionFixture = fixtures.Api
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 		})
 
@@ -99,9 +103,12 @@ var _ = Describe("Create", func() {
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiFile, internal.ContextWithSecretFile,
-			)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
+			})
 
 			Expect(err).ToNot(HaveOccurred())
 
@@ -277,9 +284,12 @@ var _ = Describe("Create", func() {
 
 	DescribeTable("a featured API spec with a management context",
 		func(specFile string, expectedGatewayStatusCode int) {
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				specFile, internal.ContextWithSecretFile,
-			)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     specFile,
+				Context: internal.ContextWithSecretFile,
+			})
 
 			Expect(err).ToNot(HaveOccurred())
 
@@ -348,22 +358,22 @@ var _ = Describe("Create", func() {
 
 	DescribeTable("a featured API spec with a management context and a resource ref",
 		func(resourceFile, specFile string, expectedGatewayStatusCode int) {
-			apiResource, err := internal.NewApiResource(resourceFile)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:      specFile,
+				Context:  internal.ContextWithSecretFile,
+				Resource: resourceFile,
+			})
 
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Creating a reusable resource to reference in the API")
 
-			Expect(k8sClient.Create(ctx, apiResource)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
 
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				specFile, internal.ContextWithSecretFile,
-			)
-
-			Expect(err).ToNot(HaveOccurred())
-
-			apiDefinitionFixture := apiWithContext.Api
-			managementContextFixture := apiWithContext.Context
+			apiDefinitionFixture := fixtures.Api
+			managementContextFixture := fixtures.Context
 
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
@@ -386,9 +396,6 @@ var _ = Describe("Create", func() {
 				err = k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 				return err == nil && apiDefinition.Status.CrossID != ""
 			}, timeout, interval).Should(BeTrue())
-
-			expectedApiName := apiDefinitionFixture.Spec.Name
-			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
 
 			By("Calling gateway endpoint, expecting the API to be available")
 

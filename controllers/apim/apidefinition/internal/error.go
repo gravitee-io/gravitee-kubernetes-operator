@@ -21,6 +21,7 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	managementapierror "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"k8s.io/client-go/util/retry"
 	k8sUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -47,11 +48,11 @@ func (d *Delegate) UpdateStatusAndReturnError(apiDefinition *gio.ApiDefinition, 
 		k8sUtil.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
 	}
 
-	apiDefinition.Status.ProcessingStatus = processingStatus
-
-	// Updated succeed, update Generation & Status
-	apiDefinition.Status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
-	err := d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy())
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		apiDefinition.Status.ProcessingStatus = processingStatus
+		apiDefinition.Status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
+		return d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy())
+	})
 	if err != nil {
 		d.log.Info("Unexpected error while updating API definition status.", "err", err)
 		return err

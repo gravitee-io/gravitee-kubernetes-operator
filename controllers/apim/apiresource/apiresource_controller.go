@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -50,9 +51,59 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if instance.IsBeingDeleted() {
+		return ctrl.Result{}, nil
+	}
+
 	log.Info("Reconciling ApiResource instance")
 
+	// Update API resources that reference this resource
+	apis, err := r.listApiResourcesWithReference(ctx, instance.Name, instance.Namespace)
+	if err != nil {
+		log.Error(err, "unable to list API definitions resources, skipping update")
+		return ctrl.Result{}, nil
+	}
+
+	for i := range apis {
+		if retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			api := apis[i]
+			api.Status.ProcessingStatus = gio.ProcessingStatusReconciling
+			log.Info("updating API definition", "api", api.Name)
+			return r.Status().Update(ctx, &api)
+		}); retryErr != nil {
+			log.Error(retryErr, "unable to update API definition status, skipping update")
+		}
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *Reconciler) listApiResourcesWithReference(
+	ctx context.Context, resourceName, resourceNamespace string,
+) ([]gio.ApiDefinition, error) {
+	log := log.FromContext(ctx)
+
+	apiDefinitionList := &gio.ApiDefinitionList{}
+	results := make([]gio.ApiDefinition, 0)
+
+	if err := r.Client.List(ctx, apiDefinitionList); err != nil {
+		log.Error(err, "unable to list API definitions, skipping update")
+		return nil, err
+	}
+
+	for _, api := range apiDefinitionList.Items {
+		if api.Spec.Resources == nil {
+			continue
+		}
+
+		for _, resource := range api.Spec.Resources {
+			if resource.IsMatchingRef(resourceName, resourceNamespace) {
+				results = append(results, api)
+			}
+		}
+	}
+
+	return results, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -41,6 +41,10 @@ type ApiResource struct {
 	Status ApiResourceStatus `json:"status,omitempty"`
 }
 
+func (res *ApiResource) IsBeingDeleted() bool {
+	return !res.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
 //+kubebuilder:object:root=true
 
 type ApiResourceList struct {

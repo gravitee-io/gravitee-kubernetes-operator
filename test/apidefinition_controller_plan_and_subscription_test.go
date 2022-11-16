@@ -62,9 +62,13 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.ApiWithApiKeyPlanFile, internal.ContextWithSecretFile,
-			)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.ApiWithApiKeyPlanFile,
+				Context: internal.ContextWithSecretFile,
+			})
+
 			Expect(err).ToNot(HaveOccurred())
 
 			managementContext := apiWithContext.Context

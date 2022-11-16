@@ -121,10 +121,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
-	if resourcesErr := apisDelegate.ResolveResources(apiDefinition); resourcesErr != nil {
-		return ctrl.Result{}, resourcesErr
-	}
-
 	// Executes delegate actions
 	switch {
 	case !apiDefinition.HasDeletionFinalizer():
