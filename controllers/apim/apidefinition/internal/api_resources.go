@@ -48,7 +48,7 @@ func (d *Delegate) resolveIfRef(resourceOrRef *model.ResourceOrRef) error {
 		return err
 	}
 
-	*resourceOrRef = model.ResourceOrRef{Resource: resource.Spec.Resource, Ref: resourceOrRef.Ref}
+	resourceOrRef.Resource = resource.Spec.Resource
 
 	return nil
 }

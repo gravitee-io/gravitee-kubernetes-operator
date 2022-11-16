@@ -15,12 +15,13 @@
 package model
 
 type ApiEntity struct {
-	Id                string  `json:"id"`
-	Name              string  `json:"name"`
-	State             string  `json:"state"`
-	Visibility        string  `json:"visibility"`
-	ApiLifecycleState string  `json:"lifecycle_state"`
-	Plans             []*Plan `json:"plans"`
+	Id                string      `json:"id"`
+	Name              string      `json:"name"`
+	State             string      `json:"state"`
+	Visibility        string      `json:"visibility"`
+	ApiLifecycleState string      `json:"lifecycle_state"`
+	Plans             []*Plan     `json:"plans"`
+	Resources         []*Resource `json:"resources,omitempty"`
 }
 
 type ApiListItem struct {
@@ -45,6 +46,12 @@ type Plan struct {
 	Security PlanSecurityType `json:"security"`
 	Status   PlanStatus       `json:"status"`
 	Api      string           `json:"api"`
+}
+
+type Resource struct {
+	Enabled      bool   `json:"enabled"`
+	Name         string `json:"name,omitempty"`
+	ResourceType string `json:"type,omitempty"`
 }
 
 type PlanSecurityType string

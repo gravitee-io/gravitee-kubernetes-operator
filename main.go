@@ -177,5 +177,9 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 		return []string{string(api.Status.ProcessingStatus)}
 	})
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

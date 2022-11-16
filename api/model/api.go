@@ -83,19 +83,24 @@ const (
 )
 
 type Resource struct {
-	Enabled       bool              `json:"enabled,omitempty"`
+	// +kubebuilder:validation:Optional
+	Enabled       bool              `json:"enabled"`
 	Name          string            `json:"name,omitempty"`
 	ResourceType  string            `json:"type,omitempty"`
 	Configuration *GenericStringMap `json:"configuration,omitempty"`
 }
 
 type ResourceOrRef struct {
-	*Resource `json:",inline"`
+	*Resource `json:",omitempty,inline"`
 	Ref       *NamespacedName `json:"ref,omitempty"`
 }
 
 func (r *ResourceOrRef) IsRef() bool {
 	return r.Ref != nil
+}
+
+func (r *ResourceOrRef) IsMatchingRef(name, namespace string) bool {
+	return r.IsRef() && r.Ref.Name == name && r.Ref.Namespace == namespace
 }
 
 func NewResource() *Resource {
