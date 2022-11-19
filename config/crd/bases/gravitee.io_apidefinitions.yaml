@@ -60,13 +60,14 @@ spec:
           metadata:
             type: object
           spec:
-            description: APIDefinition represents the configuration for a single proxied
-              API and it's versions.
+            description: The API definition is the main resource handled by the Kubernetes
+              Operator Most of the configuration properties defined here are already
+              documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
             properties:
               contextRef:
-                description: The context is specifying the namespace and the name
-                  of a ManagementContext used for managing the APIDefinition from
-                  the ManagementAPI
+                description: The contextRef refers to the namespace and the name of
+                  a ManagementContext used for synchronizing API definitions with
+                  a Gravitee API Management instance.
                 properties:
                   name:
                     type: string
@@ -78,6 +79,9 @@ spec:
               crossId:
                 type: string
               definition_context:
+                description: The definition context is used to inform a management
+                  API instance that this API definition is managed using a kubernetes
+                  operator
                 properties:
                   mode:
                     default: fully_managed
@@ -98,8 +102,6 @@ spec:
                 - BEST_MATCH
                 type: string
               flows:
-                description: Paths             map[string][]interface{}                `json:"paths,omitempty"`
-                  // Different from Java
                 items:
                   properties:
                     condition:
@@ -949,22 +951,31 @@ spec:
                 type: string
             type: object
           status:
-            description: ApiDefinitionStatus defines the observed state of ApiDefinition.
+            description: ApiDefinitionStatus defines the observed state of API Definition.
             properties:
               crossId:
+                description: The cross ID of the API definition. Similar to the ID
+                  but does not change across environments.
                 type: string
               generation:
+                description: The observed generation is used internally, together
+                  with the processing status, to determine if the API definition is
+                  being updated or created.
                 format: int64
                 type: integer
               id:
+                description: The ID of the API definition in the Gravitee API Management
+                  instance (if a management context has been configured).
                 type: string
               processingStatus:
+                description: The processing status of the API definition.
                 enum:
                 - Completed
                 - Failed
                 - Reconciling
                 type: string
               state:
+                description: The state of the API. Can be either STARTED or STOPPED.
                 type: string
             required:
             - crossId

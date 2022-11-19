@@ -42,14 +42,22 @@ spec:
           metadata:
             type: object
           spec:
-            description: ManagementContext represents the configuration for a Management
-              API.
+            description: ManagementContext represents the configuration for a specific
+              environment of a Management API instance.
             properties:
               auth:
+                description: Auth defines the authentication method used to connect
+                  to the API Management. Can be either basic authentication credentials,
+                  a bearer token or a reference to a kubernetes secret holding one
+                  of these two configurations.
                 properties:
                   bearerToken:
+                    description: The bearer token used to authenticate against the
+                      API Management instance (must be generated from an admin account)
                     type: string
                   credentials:
+                    description: The Basic credentials used to authenticate against
+                      the API Management instance.
                     properties:
                       password:
                         type: string
@@ -57,6 +65,8 @@ spec:
                         type: string
                     type: object
                   secretRef:
+                    description: A secret reference holding either a bearer token
+                      or the user name and password used for basic authentication
                     properties:
                       name:
                         type: string
@@ -67,11 +77,16 @@ spec:
                     type: object
                 type: object
               baseUrl:
+                description: The URL of a management API instance
                 pattern: ^http(s?):\/\/.+$
                 type: string
               environmentId:
+                description: An existing environment id targeted by the context within
+                  the organization.
                 type: string
               organizationId:
+                description: An existing organization id targeted by the context on
+                  the management API instance.
                 type: string
             required:
             - auth
