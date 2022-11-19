@@ -23,23 +23,32 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// APIDefinition represents the configuration for a single proxied API and it's versions.
+// The API definition is the main resource handled by the Kubernetes Operator
+// Most of the configuration properties defined here are already documented
+// in the APIM Console API Reference.
+// See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
 // +kubebuilder:object:generate=true
 type ApiDefinitionSpec struct {
 	model.Api `json:",inline"`
 
-	// The context is specifying the namespace and the name of a ManagementContext used for
-	// managing the APIDefinition from the ManagementAPI
+	// The contextRef refers to the namespace and the name of a ManagementContext used for
+	// synchronizing API definitions with a Gravitee API Management instance.
 	Context *model.ContextRef `json:"contextRef,omitempty"`
 }
 
-// ApiDefinitionStatus defines the observed state of ApiDefinition.
+// ApiDefinitionStatus defines the observed state of API Definition.
 type ApiDefinitionStatus struct {
-	ID                 string           `json:"id"`
-	CrossID            string           `json:"crossId"`
-	State              string           `json:"state,omitempty"`
-	ProcessingStatus   ProcessingStatus `json:"processingStatus,omitempty"`
-	ObservedGeneration int64            `json:"generation"`
+	// The ID of the API definition in the Gravitee API Management instance (if a management context has been configured).
+	ID string `json:"id"`
+	// The cross ID of the API definition. Similar to the ID but does not change across environments.
+	CrossID string `json:"crossId"`
+	// The state of the API. Can be either STARTED or STOPPED.
+	State string `json:"state,omitempty"`
+	// The processing status of the API definition.
+	ProcessingStatus ProcessingStatus `json:"processingStatus,omitempty"`
+	// The observed generation is used internally, together with the processing status,
+	// to determine if the API definition is being updated or created.
+	ObservedGeneration int64 `json:"generation"`
 }
 
 // +kubebuilder:object:root=true

@@ -16,8 +16,10 @@
 package model
 
 type Api struct {
-	Description       string             `json:"description,omitempty"`
-	DeployedAt        uint64             `json:"deployedAt,omitempty"`
+	Description string `json:"description,omitempty"`
+	DeployedAt  uint64 `json:"deployedAt,omitempty"`
+	// The definition context is used to inform a management API instance that this API definition
+	// is managed using a kubernetes operator
 	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 
 	// io.gravitee.definition.model.Api
@@ -37,10 +39,9 @@ type Api struct {
 	// +kubebuilder:default:=`CREATED`
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
 	// +kubebuilder:validation:Required
-	Proxy     *Proxy      `json:"proxy,omitempty"`
-	Services  *Services   `json:"services,omitempty"`
-	Resources []*Resource `json:"resources,omitempty"`
-	//	Paths             map[string][]interface{}                `json:"paths,omitempty"` // Different from Java
+	Proxy             *Proxy                                  `json:"proxy,omitempty"`
+	Services          *Services                               `json:"services,omitempty"`
+	Resources         []*Resource                             `json:"resources,omitempty"`
 	Flows             []Flow                                  `json:"flows,omitempty"`
 	Properties        []*Property                             `json:"properties,omitempty"`
 	Tags              []string                                `json:"tags,omitempty"`
