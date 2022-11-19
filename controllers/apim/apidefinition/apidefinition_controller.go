@@ -96,7 +96,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			log.Error(ctxErr, "And error has occurred while trying to retrieve ManagementContext")
 			event.NormalEvent(
 				apiDefinition,
-				"ManagementContextUnLiked",
+				"ManagementContextUnlinked",
 				fmt.Sprintf(
 					"An error has occurred while trying to retrieve ManagementContext %s[%s]",
 					apiDefinition.Spec.Context.Name, apiDefinition.Spec.Context.Namespace,
