@@ -458,7 +458,7 @@ var _ = Describe("Create", func() {
 			"should import with HTTP auth provider ref",
 			internal.ApiResourceHTTPAuthProviderFile,
 			internal.ApiWithHTTPAuthProviderRefFile,
-			401,
+			200,
 		),
 	)
 })

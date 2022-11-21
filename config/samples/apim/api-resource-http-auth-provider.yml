@@ -8,6 +8,9 @@ spec:
   type: "auth-provider-http-resource"
   enabled: true
   configuration:
-      method: "POST"
+      method: "GET"
       condition: "{#authResponse.status == 200}"
-      url: "http://authorization-server.com/basic"
+      url: "http://httpbin.org/basic-auth/admin/admin"
+      headers:
+      - name: "Authorization"
+        value: "Basic YWRtaW46YWRtaW4="
