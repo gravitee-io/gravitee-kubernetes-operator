@@ -1,3 +1,10 @@
+# [0.3.0-alpha.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.2.1-alpha.1...0.3.0-alpha.1) (2022-11-21)
+
+
+### Features
+
+* reference api resource from name and namespace ([ac749ca](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ac749caf7796ffcf9e7f44a532a28e20d56809bf))
+
 ## [0.2.1-alpha.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.2.0...0.2.1-alpha.1) (2022-11-15)
 
 
