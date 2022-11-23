@@ -71,8 +71,4 @@ jobs:
             exit 1
           fi
 
-          echo "🚀 Merging pull request ${pr_url} using a merge commit ..."
-
-          gh pr merge ${pr_url} --admin --merge --subject "${PR_TITLE}"
-
-          echo "Pull request merged 🚀"
+          echo "Pull request created. Please approve to continue ${pr_url} 🚀"
