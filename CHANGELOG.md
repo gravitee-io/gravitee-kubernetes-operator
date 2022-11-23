@@ -1,3 +1,15 @@
+# [0.3.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.2.0...0.3.0) (2022-11-23)
+
+
+### Bug Fixes
+
+* make metadata value optional ([737aa3d](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/737aa3dd31124c99ea9df6d1d13256a6dd76a024))
+
+
+### Features
+
+* reference api resource from name and namespace ([ac749ca](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ac749caf7796ffcf9e7f44a532a28e20d56809bf))
+
 # [0.2.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.1.1...0.2.0) (2022-11-09)
 
 
