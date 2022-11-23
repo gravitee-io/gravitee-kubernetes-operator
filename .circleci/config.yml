@@ -19,7 +19,7 @@ executors:
     docker:
       # Version can be found here https://docs.microsoft.com/en-us/cli/azure/release-notes-azure-cli
       # be careful when updating the version as it looks it is not following semver
-      - image: mcr.microsoft.com/azure-cli:2.41.0
+      - image: mcr.microsoft.com/azure-cli:2.42.0
     resource_class: <<parameters.resource_class>>
 
 jobs:
@@ -186,7 +186,12 @@ jobs:
       - kubernetes/install-kubectl
       - run:
           name: Deploy controller to the K8s cluster specified in ~/.kube/config
-          command: kubectl apply -f ~/bundle.yml
+          command: |
+            if [ -s bundle.yml ]; then 
+              kubectl apply -f ~/bundle.yml
+            else 
+              echo "No bundle.yml in current revision. Skipping deployment"
+            fi
 
   semantic-release:
     docker:
@@ -224,6 +229,11 @@ jobs:
           step-name: "Run Semantic Release"
           command: |
             npx semantic-release
+            if [ ! -z bundle.yml ]; then
+              # ensure bundle.yml exists
+              touch bundle.yml
+            fi
+          
       - persist_to_workspace:
           root: .
           paths:
@@ -247,7 +257,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":kubernetes: Gravitee Kubernetes Operator - Version ${CIRCLE_TAG} has been released! 🎉"
+                    "text": ":kubernetes: Gravitee Kubernetes Operator - [Version ${CIRCLE_TAG}](https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/latest) has been released! 🎉"
                   }
                 }
               ]
@@ -276,6 +286,7 @@ workflows:
           - equal: [ master, << pipeline.git.branch >> ]
           - equal: [ alpha, << pipeline.git.branch >> ]
         - not:
+            # Workflow will not run when we open a pull request from alpha to master to trigger a release
             equal: [ << pipeline.git.revision >>, << pipeline.git.base_revision >> ]
     jobs:
       - lint:

@@ -51,9 +51,12 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiFile, internal.ContextWithSecretFile,
-			)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
+			})
 
 			Expect(err).ToNot(HaveOccurred())
 

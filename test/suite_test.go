@@ -36,6 +36,7 @@ import (
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	//+kubebuilder:scaffold:imports
 )
@@ -102,6 +103,13 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&apiresource.Reconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+	}).SetupWithManager(k8sManager)
+
+	Expect(err).ToNot(HaveOccurred())
+
 	cache := k8sManager.GetCache()
 
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "spec.contextRef.name", func(obj client.Object) []string {
@@ -154,6 +162,7 @@ var _ = SynchronizedAfterSuite(func() {
 
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
+	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 

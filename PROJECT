@@ -23,4 +23,12 @@ resources:
   kind: ManagementContext
   path: github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: gravitee.io
+  kind: ApiResource
+  path: github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1
+  version: v1alpha1
 version: "3"

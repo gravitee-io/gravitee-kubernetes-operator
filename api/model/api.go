@@ -16,8 +16,10 @@
 package model
 
 type Api struct {
-	Description       string             `json:"description,omitempty"`
-	DeployedAt        uint64             `json:"deployedAt,omitempty"`
+	Description string `json:"description,omitempty"`
+	DeployedAt  uint64 `json:"deployedAt,omitempty"`
+	// The definition context is used to inform a management API instance that this API definition
+	// is managed using a kubernetes operator
 	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 
 	// io.gravitee.definition.model.Api
@@ -37,10 +39,9 @@ type Api struct {
 	// +kubebuilder:default:=`CREATED`
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
 	// +kubebuilder:validation:Required
-	Proxy     *Proxy      `json:"proxy,omitempty"`
-	Services  *Services   `json:"services,omitempty"`
-	Resources []*Resource `json:"resources,omitempty"`
-	//	Paths             map[string][]interface{}                `json:"paths,omitempty"` // Different from Java
+	Proxy             *Proxy                                  `json:"proxy,omitempty"`
+	Services          *Services                               `json:"services,omitempty"`
+	Resources         []*ResourceOrRef                        `json:"resources,omitempty"`
 	Flows             []Flow                                  `json:"flows,omitempty"`
 	Properties        []*Property                             `json:"properties,omitempty"`
 	Tags              []string                                `json:"tags,omitempty"`
@@ -82,10 +83,24 @@ const (
 )
 
 type Resource struct {
-	Enabled       bool              `json:"enabled,omitempty"`
+	// +kubebuilder:validation:Optional
+	Enabled       bool              `json:"enabled"`
 	Name          string            `json:"name,omitempty"`
 	ResourceType  string            `json:"type,omitempty"`
 	Configuration *GenericStringMap `json:"configuration,omitempty"`
+}
+
+type ResourceOrRef struct {
+	*Resource `json:",omitempty,inline"`
+	Ref       *NamespacedName `json:"ref,omitempty"`
+}
+
+func (r *ResourceOrRef) IsRef() bool {
+	return r.Ref != nil
+}
+
+func (r *ResourceOrRef) IsMatchingRef(name, namespace string) bool {
+	return r.IsRef() && r.Ref.Name == name && r.Ref.Namespace == namespace
 }
 
 func NewResource() *Resource {
@@ -107,7 +122,7 @@ type Metadata struct {
 	Key          string         `json:"key"`
 	Name         string         `json:"name"`
 	Format       MetadataFormat `json:"format"`
-	Value        string         `json:"value"`
+	Value        string         `json:"value,omitempty"`
 	DefaultValue string         `json:"defaultValue,omitempty"`
 }
 

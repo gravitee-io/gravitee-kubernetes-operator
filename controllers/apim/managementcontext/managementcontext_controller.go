@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -70,8 +71,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 		api.Status.ProcessingStatus = gio.ProcessingStatusReconciling
 
-		if err = r.Status().Update(ctx, &api); err != nil {
-			log.Error(err, "unable to update API definition status, skipping update")
+		if retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			return r.Status().Update(ctx, &api)
+		}); retryErr != nil {
+			log.Error(retryErr, "unable to update API definition status, skipping update")
 		}
 	}
 

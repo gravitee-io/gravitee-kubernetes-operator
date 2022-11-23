@@ -1,0 +1,20 @@
+# permissions for end users to view apiresources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apiresource-viewer-role
+rules:
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apiresources
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apiresources/status
+  verbs:
+  - get

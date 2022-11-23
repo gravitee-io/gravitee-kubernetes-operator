@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ManagementContext represents the configuration for a Management API.
+// ManagementContext represents the configuration for a specific environment of a Management API instance.
 // +kubebuilder:object:generate=true
 type ManagementContextSpec struct {
 	model.Context `json:",inline"`

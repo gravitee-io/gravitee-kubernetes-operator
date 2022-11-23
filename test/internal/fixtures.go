@@ -27,12 +27,119 @@ import (
 
 var decode = scheme.Codecs.UniversalDecoder().Decode
 
-type ApiWithContext struct {
-	Api     *gio.ApiDefinition
-	Context *gio.ManagementContext
+type Fixtures struct {
+	Api      *gio.ApiDefinition
+	Context  *gio.ManagementContext
+	Resource *gio.ApiResource
 }
 
-func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio.ApiDefinition, error) {
+type FixtureFiles struct {
+	Api      string
+	Context  string
+	Resource string
+}
+
+type FixtureGenerator struct {
+	suffix string
+}
+
+func NewFixtureGenerator() *FixtureGenerator {
+	return &FixtureGenerator{
+		suffix: randomSuffix(),
+	}
+}
+
+func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*Fixtures)) (*Fixtures, error) {
+	fixtures := &Fixtures{}
+
+	if files.Api != "" {
+		api, err := f.NewApiDefinition(files.Api)
+		if err != nil {
+			return nil, err
+		}
+		fixtures.Api = api
+	}
+
+	if files.Context != "" {
+		ctx, err := f.NewManagementContext(files.Context)
+		if err != nil {
+			return nil, err
+		}
+		fixtures.Context = ctx
+	}
+
+	if files.Resource != "" {
+		resource, err := f.NewApiResource(files.Resource)
+		if err != nil {
+			return nil, err
+		}
+		fixtures.Resource = resource
+	}
+
+	if fixtures.Context != nil {
+		fixtures.Api.Spec.Context = &model.NamespacedName{
+			Name:      fixtures.Context.Name,
+			Namespace: fixtures.Context.Namespace,
+		}
+	}
+
+	if fixtures.Resource != nil {
+		fixtures.Api.Spec.Resources = []*model.ResourceOrRef{
+			{
+				Ref: &model.NamespacedName{
+					Name:      fixtures.Resource.Name,
+					Namespace: fixtures.Resource.Namespace,
+				},
+			},
+		}
+	}
+
+	for _, transform := range transforms {
+		transform(fixtures)
+	}
+
+	return fixtures, nil
+}
+
+func (f *FixtureGenerator) NewApiDefinition(
+	path string, transforms ...func(*gio.ApiDefinition),
+) (*gio.ApiDefinition, error) {
+	api, err := newApiDefinition(path, transforms...)
+	if err != nil {
+		return nil, err
+	}
+
+	api.Name += f.suffix
+	api.Spec.Name += f.suffix
+	api.Spec.Proxy.VirtualHosts[0].Path += f.suffix
+
+	return api, nil
+}
+
+func (f *FixtureGenerator) NewManagementContext(
+	path string, transforms ...func(*gio.ManagementContext),
+) (*gio.ManagementContext, error) {
+	ctx, err := newManagementContext(path, transforms...)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.Name += f.suffix
+
+	return ctx, nil
+}
+
+func (f *FixtureGenerator) NewApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.ApiResource, error) {
+	resource, err := newApiResource(path, transforms...)
+	if err != nil {
+		return nil, err
+	}
+	resource.Name += f.suffix
+
+	return resource, nil
+}
+
+func newApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio.ApiDefinition, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -53,41 +160,31 @@ func NewApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio
 		transform(api)
 	}
 
-	addRandomSuffixes(api)
-
 	return api, nil
 }
 
-func NewApiWithRandomContext(
-	apiPath string, contextPath string, transforms ...func(*ApiWithContext),
-) (*ApiWithContext, error) {
-	api, err := NewApiDefinition(apiPath)
+func newApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.ApiResource, error) {
+	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, err := newManagementContext(contextPath, func(ctx *gio.ManagementContext) {
-		ctx.Name += "-" + uuid.NewV4().String()[:7]
-		api.Spec.Context = &model.ContextRef{
-			Name:      ctx.Name,
-			Namespace: ctx.Namespace,
-		}
-	})
-
+	gvk := gio.GroupVersion.WithKind("ApiResource")
+	decoded, _, err := decode(crd, &gvk, new(gio.ApiResource))
 	if err != nil {
 		return nil, err
 	}
 
-	apiWithContext := &ApiWithContext{
-		Api:     api,
-		Context: ctx,
+	resource, ok := decoded.(*gio.ApiResource)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of API CRD")
 	}
 
 	for _, transform := range transforms {
-		transform(apiWithContext)
+		transform(resource)
 	}
 
-	return apiWithContext, nil
+	return resource, nil
 }
 
 func newManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
@@ -114,9 +211,6 @@ func newManagementContext(path string, transforms ...func(*gio.ManagementContext
 	return ctx, nil
 }
 
-func addRandomSuffixes(api *gio.ApiDefinition) {
-	suffix := "-" + uuid.NewV4().String()[:7]
-	api.Name += suffix
-	api.Spec.Name += suffix
-	api.Spec.Proxy.VirtualHosts[0].Path += suffix
+func randomSuffix() string {
+	return "-" + uuid.NewV4().String()[:7]
 }

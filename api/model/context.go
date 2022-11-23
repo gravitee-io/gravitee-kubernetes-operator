@@ -15,26 +15,31 @@
 // +kubebuilder:object:generate=true
 package model
 
-type ContextRef struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace,omitempty"`
-}
-
 type Context struct {
+	// The URL of a management API instance
 	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
 	BaseUrl string `json:"baseUrl"`
+	// An existing organization id targeted by the context on the management API instance.
 	// +kubebuilder:validation:Required
 	OrgId string `json:"organizationId"`
+	// An existing environment id targeted by the context within the organization.
 	// +kubebuilder:validation:Required
 	EnvId string `json:"environmentId"`
+	// Auth defines the authentication method used to connect to the API Management.
+	// Can be either basic authentication credentials, a bearer token
+	// or a reference to a kubernetes secret holding one of these two configurations.
 	// +kubebuilder:validation:Required
 	Auth *Auth `json:"auth"`
 }
 
 type Auth struct {
-	BearerToken string     `json:"bearerToken,omitempty"`
+	// The bearer token used to authenticate against the API Management instance
+	// (must be generated from an admin account)
+	BearerToken string `json:"bearerToken,omitempty"`
+	// The Basic credentials used to authenticate against the API Management instance.
 	Credentials *BasicAuth `json:"credentials,omitempty"`
-	SecretRef   *SecretRef `json:"secretRef,omitempty"`
+	// A secret reference holding either a bearer token or the user name and password used for basic authentication
+	SecretRef *NamespacedName `json:"secretRef,omitempty"`
 }
 
 type BasicAuth struct {
@@ -42,9 +47,4 @@ type BasicAuth struct {
 	Username string `json:"username,omitempty"`
 	// +kubebuilder:validation:Required
 	Password string `json:"password,omitempty"`
-}
-
-type SecretRef struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace,omitempty"`
 }

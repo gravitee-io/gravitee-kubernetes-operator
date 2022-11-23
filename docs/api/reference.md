@@ -10,6 +10,8 @@ Resource Types:
 
 - [ApiDefinition](#apidefinition)
 
+- [ApiResource](#apiresource)
+
 - [ManagementContext](#managementcontext)
 
 
@@ -55,14 +57,14 @@ ApiDefinition is the Schema for the apidefinitions API.
         <td><b><a href="#apidefinitionspec">spec</a></b></td>
         <td>object</td>
         <td>
-          APIDefinition represents the configuration for a single proxied API and it's versions.<br/>
+          The API definition is the main resource handled by the Kubernetes Operator Most of the configuration properties defined here are already documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionstatus">status</a></b></td>
         <td>object</td>
         <td>
-          ApiDefinitionStatus defines the observed state of ApiDefinition.<br/>
+          ApiDefinitionStatus defines the observed state of API Definition.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -74,7 +76,7 @@ ApiDefinition is the Schema for the apidefinitions API.
 
 
 
-APIDefinition represents the configuration for a single proxied API and it's versions.
+The API definition is the main resource handled by the Kubernetes Operator Most of the configuration properties defined here are already documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
 
 <table>
     <thead>
@@ -89,7 +91,7 @@ APIDefinition represents the configuration for a single proxied API and it's ver
         <td><b><a href="#apidefinitionspeccontextref">contextRef</a></b></td>
         <td>object</td>
         <td>
-          The context is specifying the namespace and the name of a ManagementContext used for managing the APIDefinition from the ManagementAPI<br/>
+          The contextRef refers to the namespace and the name of a ManagementContext used for synchronizing API definitions with a Gravitee API Management instance.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -103,7 +105,7 @@ APIDefinition represents the configuration for a single proxied API and it's ver
         <td><b><a href="#apidefinitionspecdefinition_context">definition_context</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -136,7 +138,7 @@ APIDefinition represents the configuration for a single proxied API and it's ver
         <td><b><a href="#apidefinitionspecflowsindex">flows</a></b></td>
         <td>[]object</td>
         <td>
-          Paths             map[string][]interface{}                `json:"paths,omitempty"` // Different from Java<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -285,7 +287,7 @@ APIDefinition represents the configuration for a single proxied API and it's ver
 
 
 
-The context is specifying the namespace and the name of a ManagementContext used for managing the APIDefinition from the ManagementAPI
+The contextRef refers to the namespace and the name of a ManagementContext used for synchronizing API definitions with a Gravitee API Management instance.
 
 <table>
     <thead>
@@ -319,7 +321,7 @@ The context is specifying the namespace and the name of a ManagementContext used
 
 
 
-
+The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator
 
 <table>
     <thead>
@@ -663,14 +665,14 @@ The context is specifying the namespace and the name of a ManagementContext used
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>value</b></td>
+        <td><b>defaultValue</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
-        <td><b>defaultValue</b></td>
+        <td><b>value</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -2900,7 +2902,48 @@ The context is specifying the namespace and the name of a ManagementContext used
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionspecresourcesindexref">ref</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.resources[index].ref
+<sup><sup>[↩ Parent](#apidefinitionspecresourcesindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -3281,7 +3324,7 @@ The context is specifying the namespace and the name of a ManagementContext used
 
 
 
-ApiDefinitionStatus defines the observed state of ApiDefinition.
+ApiDefinitionStatus defines the observed state of API Definition.
 
 <table>
     <thead>
@@ -3296,14 +3339,14 @@ ApiDefinitionStatus defines the observed state of ApiDefinition.
         <td><b>crossId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The cross ID of the API definition. Similar to the ID but does not change across environments.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>generation</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          The observed generation is used internally, together with the processing status, to determine if the API definition is being updated or created.<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -3312,20 +3355,121 @@ ApiDefinitionStatus defines the observed state of ApiDefinition.
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The ID of the API definition in the Gravitee API Management instance (if a management context has been configured).<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>processingStatus</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The processing status of the API definition.<br/>
           <br/>
             <i>Enum</i>: Completed, Failed, Reconciling<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>state</b></td>
+        <td>string</td>
+        <td>
+          The state of the API. Can be either STARTED or STOPPED.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## ApiResource
+<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>gravitee.io/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ApiResource</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#apiresourcespec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ApiResourceSpec defines the desired state of ApiResource.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiResource.spec
+<sup><sup>[↩ Parent](#apiresource)</sup></sup>
+
+
+
+ApiResourceSpec defines the desired state of ApiResource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
         <td>string</td>
         <td>
           <br/>
@@ -3374,7 +3518,7 @@ ManagementContext is the Schema for the Management API.
         <td><b><a href="#managementcontextspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ManagementContext represents the configuration for a Management API.<br/>
+          ManagementContext represents the configuration for a specific environment of a Management API instance.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3393,7 +3537,7 @@ ManagementContext is the Schema for the Management API.
 
 
 
-ManagementContext represents the configuration for a Management API.
+ManagementContext represents the configuration for a specific environment of a Management API instance.
 
 <table>
     <thead>
@@ -3408,28 +3552,28 @@ ManagementContext represents the configuration for a Management API.
         <td><b><a href="#managementcontextspecauth">auth</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>baseUrl</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The URL of a management API instance<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>environmentId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          An existing environment id targeted by the context within the organization.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          An existing organization id targeted by the context on the management API instance.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -3441,7 +3585,7 @@ ManagementContext represents the configuration for a Management API.
 
 
 
-
+Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.
 
 <table>
     <thead>
@@ -3456,21 +3600,21 @@ ManagementContext represents the configuration for a Management API.
         <td><b>bearerToken</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The bearer token used to authenticate against the API Management instance (must be generated from an admin account)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#managementcontextspecauthcredentials">credentials</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The Basic credentials used to authenticate against the API Management instance.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#managementcontextspecauthsecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3482,7 +3626,7 @@ ManagementContext represents the configuration for a Management API.
 
 
 
-
+The Basic credentials used to authenticate against the API Management instance.
 
 <table>
     <thead>
@@ -3516,7 +3660,7 @@ ManagementContext represents the configuration for a Management API.
 
 
 
-
+A secret reference holding either a bearer token or the user name and password used for basic authentication
 
 <table>
     <thead>

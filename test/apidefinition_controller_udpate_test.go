@@ -51,8 +51,16 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create an API definition resource without a management context")
 
-			apiDefinition, err := internal.NewApiDefinition(internal.BasicApiFile)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			fixture, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api: internal.BasicApiFile,
+			})
+
 			Expect(err).ToNot(HaveOccurred())
+
+			apiDefinition := fixture.Api
+
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
@@ -112,9 +120,12 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiFile, internal.ContextWithSecretFile,
-			)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
+			})
 
 			Expect(err).ToNot(HaveOccurred())
 
@@ -191,9 +202,12 @@ var _ = Describe("API Definition Controller", func() {
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
 
-			apiWithContext, err := internal.NewApiWithRandomContext(
-				internal.BasicApiFile, internal.ContextWithSecretFile,
-			)
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
+			})
 
 			Expect(err).ToNot(HaveOccurred())
 
@@ -222,7 +236,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
-			updatedApiDefinition.Spec.Context = &model.ContextRef{
+			updatedApiDefinition.Spec.Context = &model.NamespacedName{
 				Name:      managementContextFixture.Name,
 				Namespace: managementContextFixture.Namespace,
 			}

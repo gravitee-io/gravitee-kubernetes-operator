@@ -22,35 +22,40 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
-	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 )
 
 func (d *Delegate) CreateOrUpdate(
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	apiDefinition.Status.CrossID = getOrGenerateCrossId(apiDefinition)
-	apiDefinition.Status.ID = getOrGenerateId(apiDefinition)
-	apiDefinition.Spec.Id = apiDefinition.Status.ID
-	apiDefinition.Spec.CrossId = apiDefinition.Status.CrossID
+	api := apiDefinition.DeepCopy()
+	api.Status.CrossID = getOrGenerateCrossId(api)
+	api.Status.ID = getOrGenerateId(api)
+	api.Spec.Id = api.Status.ID
+	api.Spec.CrossId = api.Status.CrossID
 
 	// TODO Check if Management context is provided and don't add default plan if it is the case ?
-	addDefaultPlan(apiDefinition)
+	addDefaultPlan(api)
 
-	generateEmptyPlanCrossIds(apiDefinition)
+	generateEmptyPlanCrossIds(api)
 
-	apiDefinition.Spec.DefinitionContext = &model.DefinitionContext{
+	if err := d.ResolveResources(api); err != nil {
+		return err
+	}
+
+	api.Spec.DefinitionContext = &model.DefinitionContext{
 		Origin: origin,
 		Mode:   mode,
 	}
 
 	if d.HasManagementContext() {
-		apiJson, marshalErr := json.Marshal(apiDefinition.Spec)
+		apiJson, marshalErr := json.Marshal(api.Spec)
 		if marshalErr != nil {
 			d.log.Error(marshalErr, "Unable to marshall API definition as JSON")
 			return marshalErr
 		}
 
-		_, findErr := d.apimClient.GetByCrossId(apiDefinition.Status.CrossID)
+		_, findErr := d.apimClient.GetByCrossId(api.Status.CrossID)
 
 		if findErr != nil && !clienterror.IsNotFound(findErr) {
 			return findErr
@@ -70,42 +75,36 @@ func (d *Delegate) CreateOrUpdate(
 		d.log.Info(fmt.Sprintf("Api has been %s to the Management API", importMethod))
 
 		// Get Plan Id from the Management API to send it to the Gateway. (Used by the Gateway to find subscription)
-		retrieveMgmtPlanIds(apiDefinition, mgmtApi)
+		retrieveMgmtPlanIds(api, mgmtApi)
 
 		// Make sure status ID will match APIM ID (could be different if APIM generated it)
-		apiDefinition.Spec.Id = mgmtApi.Id
+		api.Spec.Id = mgmtApi.Id
 	}
 
-	if apiDefinition.Spec.State == model.StateStopped {
-		if err := d.deleteConfigMap(apiDefinition.Namespace, apiDefinition.Name); err != nil {
+	if api.Spec.State == model.StateStopped {
+		if err := d.deleteConfigMap(api.Namespace, api.Name); err != nil {
 			d.log.Error(err, "Unable to delete ConfigMap from API definition")
 			return err
 		}
 	} else {
-		if err := d.saveConfigMap(apiDefinition); err != nil {
+		if err := d.saveConfigMap(api); err != nil {
 			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 			return err
 		}
 	}
 
 	// Creation succeeded, update Status
-	status := apiDefinition.Status.DeepCopy()
-	status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
+	status := api.Status.DeepCopy()
+	status.ObservedGeneration = api.ObjectMeta.Generation
 	status.ProcessingStatus = gio.ProcessingStatusCompleted
-	status.State = apiDefinition.Spec.State
-	status.ID = apiDefinition.Spec.Id
+	status.State = api.Spec.State
+	status.ID = api.Spec.Id
 
-	// If reconcile is triggered by a management context update, the status update may result in a conflict error
-	// For this reason, we need to fetch the last resource version before updating the status
-	namespacedName := types.NamespacedName{Namespace: apiDefinition.Namespace, Name: apiDefinition.Name}
-	if err := d.k8sClient.Get(d.ctx, namespacedName, apiDefinition); err != nil {
-		d.log.Error(err, "Unable to update API definition status (Failed to refresh api definition resource version")
-		return err
-	}
+	api.Status = *status
 
-	apiDefinition.Status = *status
-
-	if err := d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy()); err != nil {
+	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		return d.k8sClient.Status().Update(d.ctx, api)
+	}); err != nil {
 		d.log.Error(err, "Unable to update API definition status")
 		return err
 	}

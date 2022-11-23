@@ -1,0 +1,78 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Trigger Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: 'Source branch'
+        required: true
+        default: 'alpha'
+        type: choice
+        options:
+          - alpha
+      target_branch:
+        description: 'Target branch'
+        required: true
+        default: 'master'
+        type: choice
+        options:
+          - master
+
+jobs:
+  trigger-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: "Trigger merge from ${{ inputs.source_branch }} to ${{ inputs.target_branch }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_BRANCH: ${{ github.event.inputs.source_branch }}
+          TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
+        run: |
+          git checkout ${TARGET_BRANCH}
+          git checkout ${SOURCE_BRANCH}
+          
+          has_diff=$( git diff --quiet --exit-code ${SOURCE_BRANCH} ${TARGET_BRANCH} ; echo $? )
+          if [[ "${has_diff}" == "0" ]]; then
+            echo "no diff between ${SOURCE_BRANCH} and ${DEPLOY_TARGET}, aborting step ..."
+            exit 0
+          elif [[ "${has_diff}" != "1" ]]; then
+            echo 'git diff failed unexpectedly.'
+            exit 1
+          fi
+          
+          echo "🚀 Creating pull request from ${SOURCE_BRANCH} to ${TARGET_BRANCH}"
+
+          PR_TITLE="chore: merge ${SOURCE_BRANCH} into ${TARGET_BRANCH}"
+          PR_BODY="⚠️ This pull request has been created to trigger a release on ${TARGET_BRANCH} an should merge automatically"
+
+          pr_url=$( gh pr create --base ${TARGET_BRANCH} --head ${SOURCE_BRANCH} --title "${PR_TITLE}" --body "${PR_BODY}" --no-maintainer-edit )
+
+          echo "Created pull request ${pr_url} 🚀"
+
+          if [[ -z "${pr_url}" ]]; then
+            echo "failed to create pull request unexpectedly."
+            exit 1
+          fi
+
+          echo "🚀 Merging pull request ${pr_url} using a merge commit ..."
+
+          gh pr merge ${pr_url} --admin --merge --subject "${PR_TITLE}"
+
+          echo "Pull request merged 🚀"

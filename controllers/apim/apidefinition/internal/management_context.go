@@ -18,7 +18,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	coreV1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -28,10 +27,10 @@ const (
 )
 
 func (d *Delegate) ResolveContext(
-	contextRef *model.ContextRef,
+	contextRef *model.NamespacedName,
 ) (*gio.ManagementContext, error) {
 	apimContext := new(gio.ManagementContext)
-	ns := types.NamespacedName{Name: contextRef.Name, Namespace: contextRef.Namespace}
+	ns := contextRef.ToK8sType()
 
 	d.log.Info("Looking for context from", "namespace", contextRef.Namespace, "name", contextRef.Name)
 
@@ -41,10 +40,9 @@ func (d *Delegate) ResolveContext(
 
 	if apimContext.HasSecretRef() {
 		secret := new(coreV1.Secret)
-		secretName := apimContext.Spec.Auth.SecretRef.Name
-		secretNameSpace := getSecretNamespace(apimContext)
 
-		secretKey := types.NamespacedName{Name: secretName, Namespace: secretNameSpace}
+		secretKey := apimContext.Spec.Auth.SecretRef.ToK8sType()
+		secretKey.Namespace = getSecretNamespace(apimContext)
 
 		if err := d.k8sClient.Get(d.ctx, secretKey, secret); err != nil {
 			return nil, err

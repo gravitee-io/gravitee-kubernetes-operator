@@ -1,0 +1,13 @@
+apiVersion: gravitee.io/v1alpha1
+kind: ApiResource
+metadata:
+  name: reusable-resource-http-auth-provider
+  namespace: default
+spec:
+  name: "http-auth"
+  type: "auth-provider-http-resource"
+  enabled: true
+  configuration:
+      method: "POST"
+      condition: "{#authResponse.status == 200}"
+      url: "http://authorization-server.com/basic"
