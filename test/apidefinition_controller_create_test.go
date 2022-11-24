@@ -123,15 +123,13 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			By("Create an API definition resource referencing the management context")
-			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
-
-			By("Get created resource and expect to find it")
-
 			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
+
+			By("Create an API definition resource referencing the management context")
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
 			Eventually(func() bool {
@@ -175,15 +173,13 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			By("Create an API definition resource referencing the management context")
-			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
-
-			By("Get created resource and expect to find it")
-
 			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
+
+			By("Create an API definition resource referencing the management context")
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
 			Eventually(func() bool {
@@ -244,15 +240,13 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			By("Create an API definition resource referencing the management context")
-			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
-
-			By("Get created resource and expect to find it")
-
 			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
+
+			By("Create an API definition resource referencing the management context")
+			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
 			Eventually(func() bool {

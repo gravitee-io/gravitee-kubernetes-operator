@@ -43,6 +43,7 @@ var _ = Describe("API Resource Controller", func() {
 	Context("Update an API Resource", func() {
 
 		var apiLookupKey types.NamespacedName
+		var contextLookupKey types.NamespacedName
 		var resourceLookupKey types.NamespacedName
 
 		BeforeEach(func() {
@@ -58,7 +59,13 @@ var _ = Describe("API Resource Controller", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(k8sClient.Create(ctx, fixture.Context)).Should(Succeed())
+			managementContext := fixture.Context
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
+
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+			}, timeout, interval).Should(Succeed())
 
 			Expect(k8sClient.Create(ctx, fixture.Resource)).Should(Succeed())
 
