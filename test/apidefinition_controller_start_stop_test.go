@@ -46,6 +46,7 @@ var _ = Describe("API Definition Controller", func() {
 	Context("With Started basic ApiDefinition & ManagementContext", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
+		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
 			By("Create a management context to synchronize with the REST API")
@@ -61,6 +62,11 @@ var _ = Describe("API Definition Controller", func() {
 
 			managementContext := apiWithContext.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
+
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
 
