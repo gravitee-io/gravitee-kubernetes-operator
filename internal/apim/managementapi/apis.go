@@ -28,20 +28,22 @@ import (
 func (client *Client) GetByCrossId(
 	crossId string,
 ) (*model.ApiListItem, error) {
+	url := client.envUrl + "/apis?crossId=" + crossId
+
 	req, err := http.NewRequestWithContext(
 		client.ctx,
 		http.MethodGet,
-		client.envUrl+"/apis?crossId="+crossId,
+		url,
 		nil,
 	)
 
 	if err != nil && crossId == "" {
-		return nil, fmt.Errorf("unable to look for apis matching cross id %s (%w)", crossId, err)
+		return nil, fmt.Errorf("unable to create request for %s (%w)", url, err)
 	}
 
 	resp, err := client.http.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("an error as occurred while performing GetByCrossId request")
+		return nil, fmt.Errorf("an error as occurred while performing request to %s (%w)", url, err)
 	}
 
 	defer resp.Body.Close()
