@@ -32,6 +32,7 @@ import (
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/metrics"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -66,6 +67,8 @@ type Reconciler struct {
 //
 //nolint:funlen,gocognit // We prefer to have a long function with visible intentions than several functions making it more complex to understand
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	metrics.ReconcilesApisTotal.Inc()
+
 	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
 
 	log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
