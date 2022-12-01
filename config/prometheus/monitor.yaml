@@ -19,8 +19,9 @@ kind: ServiceMonitor
 metadata:
   labels:
     control-plane: controller-manager
+    release: prometheus
   name: controller-manager-metrics-monitor
-  namespace: system
+  namespace: gko-system
 spec:
   endpoints:
     - path: /metrics
