@@ -67,14 +67,14 @@ To create a basic API Definition, run following commands:
 [source,shell]
 ----
 # Create a Management Context custom resource for your APIM instance running on k3d
-kubectl apply -f ./config/samples/context/k3d/managementcontext_credentials_k3d.yaml
+kubectl apply -f ./config/samples/context/k3d/management-context-with-credentials.yml
 
 # Create a basic API Definition custom resource
-kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
+kubectl apply -f ./config/samples/apim/api-with-context.yml
 
-kubectl get graviteeapis  -o wide
-# NAME                ID                                     ENTRYPOINT   ENDPOINT                       VERSION   ENABLED
-# basic-api-example   ff3549c9-ceb2-36da-87f7-f5e51ba89097   /k8s-basic   https://api.gravitee.io/echo   1.0       true
+kubectl get graviteeapis -o wide
+# NAME                ID                                     ENTRYPOINT            ENDPOINT                       VERSION   ENABLED
+# basic-api-example   ff3549c9-ceb2-36da-87f7-f5e51ba89097   /k8s-basic-with-ctx   https://api.gravitee.io/echo   1.0       true
 ----
 
 == Deploying GKO as a k3d deployment
@@ -107,10 +107,10 @@ make service-account
 make run # or run using a debugger if you need to debug the operator as well
 
 # Create the debug Management Context resource for APIM
-kubectl apply -f ./config/samples/context/debug/managementcontext_credentials.yaml
+kubectl apply -f ./config/samples/context/debug/management-context-with-credentials.yml
 
 # Create a basic API Definition resource
-kubectl apply -f ./config/samples/apim/basic-example-with-ctx.yml
+kubectl apply -f ./config/samples/apim/api-with-context.yml
 ----
 
 === Testing and linting
