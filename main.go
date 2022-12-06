@@ -21,6 +21,8 @@ import (
 	"flag"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
+
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -67,7 +69,8 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 
 	opts := zap.Options{
-		Development: os.Getenv("DEV_MODE") == "true",
+		Development:          os.Getenv("DEV_MODE") == "true",
+		EncoderConfigOptions: utils.NewEncoderConfigOption(),
 	}
 
 	opts.BindFlags(flag.CommandLine)
