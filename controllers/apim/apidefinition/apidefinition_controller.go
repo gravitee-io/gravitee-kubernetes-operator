@@ -93,7 +93,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		managementContext, ctxErr := apisDelegate.ResolveContext(apiDefinition.Spec.Context)
 
 		if ctxErr != nil {
-			log.Error(ctxErr, "And error has occurred while trying to retrieve ManagementContext")
+			log.Error(ctxErr, "An error has occurred while trying to retrieve ManagementContext")
 			event.NormalEvent(
 				apiDefinition,
 				"ManagementContextUnlinked",
