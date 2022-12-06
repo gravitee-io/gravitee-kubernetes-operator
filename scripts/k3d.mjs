@@ -301,6 +301,7 @@ helm install \
     --set "portal.enabled=false" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/apim-gateway" \
     --set "gateway.services.sync.kubernetes.enabled=true" \
+    --set "gateway.services.sync.kubernetes.namespaces[0]=ALL" \
     --set "gateway.ingress.hosts[0]=localhost" \
     --set "gateway.ingress.path=/gateway/?(.*)" \
     --set "gateway.ingress.tls=false" \
