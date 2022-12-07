@@ -1,3 +1,16 @@
+# [0.4.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.3.0...0.4.0) (2022-12-07)
+
+
+### Bug Fixes
+
+* error log typo ([a7377ec](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/a7377ec9ba2535307a3d435fa165fb7ed52ca629))
+
+
+### Features
+
+* add DEV_MODE logging option ([d1cae84](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/d1cae8487ad7627651e20026e40776087a3ff614))
+* use `message` and `timestamp` keys in log ([15b75d4](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/15b75d483520e06eb245b4af8671d9f768564955))
+
 # [0.3.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.2.0...0.3.0) (2022-11-23)
 
 
