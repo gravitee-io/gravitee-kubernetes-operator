@@ -229,9 +229,9 @@ jobs:
           step-name: "Run Semantic Release"
           command: |
             npx semantic-release
-            if [ ! -z bundle.yml ]; then
-              # ensure bundle.yml exists
-              touch bundle.yml
+            if [ ! -z ~/bundle.yml ]; then
+              # ensure ~/bundle.yml exists
+              touch ~/bundle.yml
             fi
           
       - persist_to_workspace:
