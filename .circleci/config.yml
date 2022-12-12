@@ -25,7 +25,7 @@ executors:
 jobs:
   lint:
     docker:
-      - image: cimg/go:1.19.3-node
+      - image: cimg/go:1.19.4-node
     steps:
       - checkout
       - go/mod-download-cached
@@ -179,7 +179,7 @@ jobs:
 
   deploy-gko-image:
     docker:
-      - image: cimg/go:1.19.3
+      - image: cimg/go:1.19.4
     steps:
       - attach_workspace:
           at: ~/
@@ -195,7 +195,7 @@ jobs:
 
   semantic-release:
     docker:
-      - image: cimg/go:1.19.3-node
+      - image: cimg/go:1.19.4-node
     environment:
       GITHUB_TOKEN: "keeper://TIlcGPFq4rN5GvgnZb9hng/field/password"
       GIT_AUTHOR_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
