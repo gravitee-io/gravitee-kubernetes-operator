@@ -28,6 +28,7 @@ limitations under the License.
 package test
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -80,10 +81,18 @@ var _ = Describe("API Definition Controller", func() {
 			// Check created api is callable
 			var endpointInitial = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpointInitial)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				if callErr != nil {
+					return callErr
+				}
+
+				if res.StatusCode != 200 {
+					return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+				}
+
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Update the context path in API definition and expect no error")
 
@@ -191,12 +200,45 @@ var _ = Describe("API Definition Controller", func() {
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
-				return apiErr == nil &&
-					api.Id == updatedApiDefinition.Status.ID &&
-					api.Name == expectedName
-			}, timeout, interval).Should(BeTrue())
+				if apiErr != nil {
+					return err
+				}
+
+				if api.Id != updatedApiDefinition.Status.ID {
+					return fmt.Errorf("API ID mismatch: %s != %s", api.Id, updatedApiDefinition.Status.ID)
+				}
+
+				if api.Name != expectedName {
+					return fmt.Errorf("API name mismatch: %s != %s", api.Name, expectedName)
+				}
+
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			By("Calling rest API, expecting one API matching status ID and kubernetes context")
+
+			Eventually(func() error {
+				api, apiErr := apimClient.GetApiById(updatedApiDefinition.Status.ID)
+				if apiErr != nil {
+					return err
+				}
+
+				if api.Id != updatedApiDefinition.Status.ID {
+					return fmt.Errorf("API ID mismatch: %s != %s", api.Id, updatedApiDefinition.Status.ID)
+				}
+
+				if api.DefinitionContext.Mode != "fully_managed" {
+					return fmt.Errorf("API mode mismatch: %s != %s", api.DefinitionContext.Mode, "fully_managed")
+				}
+
+				if api.DefinitionContext.Origin != "kubernetes" {
+					return fmt.Errorf("API origin mismatch: %s != %s", api.DefinitionContext.Mode, "kubernetes")
+				}
+
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
 

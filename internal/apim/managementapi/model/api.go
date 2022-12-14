@@ -15,13 +15,36 @@
 package model
 
 type ApiEntity struct {
-	Id                string      `json:"id"`
-	Name              string      `json:"name"`
-	State             string      `json:"state"`
-	Visibility        string      `json:"visibility"`
-	ApiLifecycleState string      `json:"lifecycle_state"`
-	Plans             []*Plan     `json:"plans"`
-	Resources         []*Resource `json:"resources,omitempty"`
+	Id                string             `json:"id"`
+	Name              string             `json:"name"`
+	State             string             `json:"state"`
+	Visibility        string             `json:"visibility"`
+	ApiLifecycleState string             `json:"lifecycle_state"`
+	Plans             []*Plan            `json:"plans"`
+	Resources         []*Resource        `json:"resources,omitempty"`
+	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
+}
+
+func (api *ApiEntity) ShouldSetKubernetesContext() bool {
+	return api.DefinitionContext == nil || api.DefinitionContext.Origin == OriginManagement
+}
+
+type DefinitionContext struct {
+	Origin string `json:"origin,omitempty"`
+	Mode   string `json:"mode,omitempty"`
+}
+
+const (
+	OriginManagement = "management"
+	OriginKubernetes = "kubernetes"
+	ModeFullyManaged = "fully_managed"
+)
+
+func NewKubernetesContext() *DefinitionContext {
+	return &DefinitionContext{
+		Origin: OriginKubernetes,
+		Mode:   ModeFullyManaged,
+	}
 }
 
 type ApiListItem struct {
