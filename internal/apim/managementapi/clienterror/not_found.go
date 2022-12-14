@@ -32,7 +32,7 @@ func NewCrossIdNotFoundError(crossId string) NotFoundError {
 }
 
 func NewApiNotFoundError(apiId string) NotFoundError {
-	return NotFoundError{message: "No API found for API " + apiId}
+	return NotFoundError{message: "No API found for ID " + apiId}
 }
 
 func IsNotFound(err error) bool {

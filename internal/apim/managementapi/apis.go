@@ -244,3 +244,42 @@ func (client *Client) DeleteApi(
 		)
 	}
 }
+
+func (client *Client) SetKubernetesContext(apiId string) error {
+	url := client.envUrl + "/apis/" + apiId + "/definition-context"
+
+	definitionContext, err := json.Marshal(model.NewKubernetesContext())
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(client.ctx, http.MethodPut, url, bytes.NewBuffer(definitionContext))
+	if err != nil {
+		return fmt.Errorf("unable initialize PUT request for URL %s", url)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.http.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return nil
+	case http.StatusUnauthorized:
+		return clienterror.NewUnauthorizedApiRequestError(apiId)
+	case http.StatusNotFound:
+		return clienterror.NewApiNotFoundError(apiId)
+	case http.StatusBadRequest:
+		return clienterror.NewBadRequestError(resp)
+	default:
+		return fmt.Errorf(
+			"an error as occurred trying to set kubernetes context for API %s, HTTP Status: %d ",
+			apiId, resp.StatusCode,
+		)
+	}
+}

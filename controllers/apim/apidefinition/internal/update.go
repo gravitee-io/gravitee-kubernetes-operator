@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	gioModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
 	"k8s.io/client-go/util/retry"
 )
 
@@ -48,6 +49,7 @@ func (d *Delegate) CreateOrUpdate(
 		Mode:   mode,
 	}
 
+	//nolint:nestif // Needed for proper error handling and meaningful logging
 	if d.HasManagementContext() {
 		apiJson, marshalErr := json.Marshal(api.Spec)
 		if marshalErr != nil {
@@ -70,6 +72,10 @@ func (d *Delegate) CreateOrUpdate(
 		if mgmtErr != nil {
 			d.log.Error(mgmtErr, "Unable to create API to the Management API")
 			return mgmtErr
+		}
+
+		if err := d.ensureKubernetesContext(mgmtApi); err != nil {
+			return err
 		}
 
 		d.log.Info(fmt.Sprintf("Api has been %s to the Management API", importMethod))
@@ -109,5 +115,14 @@ func (d *Delegate) CreateOrUpdate(
 		return err
 	}
 
+	return nil
+}
+
+func (d *Delegate) ensureKubernetesContext(api *gioModel.ApiEntity) error {
+	if api.ShouldSetKubernetesContext() {
+		if err := d.apimClient.SetKubernetesContext(api.Id); err != nil {
+			return err
+		}
+	}
 	return nil
 }
