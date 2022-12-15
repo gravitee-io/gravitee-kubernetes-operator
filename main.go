@@ -85,6 +85,7 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
+		Namespace:              os.Getenv("NAMESPACE"),
 	})
 
 	if err != nil {
