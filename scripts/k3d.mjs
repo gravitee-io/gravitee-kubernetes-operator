@@ -56,7 +56,7 @@ const ELASTIC_IMAGE_TAG = "7.17.5";
 const K3D_CLUSTER_NAME = "graviteeio";
 const K3D_CLUSTER_AGENTS = 1;
 const K3D_API_PORT = 6950;
-const K3D_NAMESPACE_NAME = "apim-dev";
+const K3D_NAMESPACE_NAME = "default";
 const K3D_LOAD_BALANCER_PORT = 9000;
 const K3D_IMAGES_REGISTRY_NAME = `${K3D_CLUSTER_NAME}.docker.localhost`;
 const K3D_IMAGES_REGISTRY_PORT = 12345;
@@ -238,18 +238,6 @@ async function registerImages() {
 
 blue(`
 
-  ☸ Creating Kubernetes namespace ${K3D_NAMESPACE_NAME} ...
-`);
-
-await time(createNamespace);
-
-async function createNamespace() {
-  await $`kubectl create namespace ${K3D_NAMESPACE_NAME}`;
-  await $`kubectl config set-context --current --namespace ${K3D_NAMESPACE_NAME}`;
-}
-
-blue(`
-
   ☸ Storing APIM context credentials as a secret ...
 
   The following declaration can be used in your management context to reference this secret:
@@ -301,7 +289,6 @@ helm install \
     --set "portal.enabled=false" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/apim-gateway" \
     --set "gateway.services.sync.kubernetes.enabled=true" \
-    --set "gateway.services.sync.kubernetes.namespaces=ALL" \
     --set "gateway.ingress.hosts[0]=localhost" \
     --set "gateway.ingress.path=/gateway/?(.*)" \
     --set "gateway.ingress.tls=false" \
