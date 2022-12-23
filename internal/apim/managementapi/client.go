@@ -19,45 +19,61 @@ import (
 	"net/http"
 	"strings"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 )
 
 type Client struct {
 	ctx     context.Context
 	baseUrl string
-	orgUrl  string
-	envUrl  string
+	orgId   string
+	envId   string
 	http    http.Client
 }
 
+func (client *Client) orgUrl() string {
+	return client.baseUrl + "/management/organizations/" + client.orgId
+}
+
+func (client *Client) envUrl() string {
+	return client.orgUrl() + "/environments/" + client.envId
+}
+
+func (client *Client) GetEnvId() string {
+	return client.envId
+}
+
+func (client *Client) GetOrgId() string {
+	return client.orgId
+}
+
 type AuthenticatedRoundTripper struct {
-	apimCtx   *gio.ManagementContext
-	transport http.RoundTripper
+	management *model.Management
+	transport  http.RoundTripper
 }
 
 func newAuthenticatedRoundTripper(
-	apimCtx *gio.ManagementContext,
+	management *model.Management,
 	transport http.RoundTripper,
 ) *AuthenticatedRoundTripper {
 	return &AuthenticatedRoundTripper{
-		apimCtx, transport,
+		management, transport,
 	}
 }
 
 func (t *AuthenticatedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	t.apimCtx.Authenticate(req)
+	t.management.Authenticate(req)
 	return t.transport.RoundTrip(req)
 }
 
-func NewClient(ctx context.Context, apimCtx *gio.ManagementContext, httpCli http.Client) *Client {
-	baseUrl := strings.TrimSuffix(apimCtx.Spec.BaseUrl, "/")
-	orgUrl := baseUrl + "/management/organizations/" + apimCtx.Spec.OrgId
-	envUrl := orgUrl + "/environments/" + apimCtx.Spec.EnvId
+func NewClient(ctx context.Context, management *model.Management, httpClient http.Client) *Client {
+	baseUrl := strings.TrimSuffix(management.BaseUrl, "/")
 
-	authRoundTripper := newAuthenticatedRoundTripper(apimCtx, http.DefaultTransport)
-	httpCli.Transport = authRoundTripper
+	authRoundTripper := newAuthenticatedRoundTripper(management, http.DefaultTransport)
+	httpClient.Transport = authRoundTripper
+
+	orgId, envId := management.OrgId, management.EnvId
 
 	return &Client{
-		ctx, baseUrl, orgUrl, envUrl, httpCli,
+		ctx, baseUrl, orgId, envId, httpClient,
 	}
 }

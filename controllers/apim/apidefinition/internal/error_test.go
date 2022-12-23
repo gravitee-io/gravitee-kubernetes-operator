@@ -15,23 +15,43 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	apimError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
+var errRaw = fmt.Errorf("raw error")
+var errNotFound = ContextError{Cause: apimError.NotFoundError{}}
+var errBadRequest = ContextError{Cause: apimError.BadRequestError{}}
+var errUnauthorized = ContextError{Cause: apimError.UnauthorizedError{}}
+var errIllegalState = ContextError{Cause: apimError.IllegalStateError{}}
+
 var _ = Describe("Errors", func() {
-	DescribeTable("wrap error",
+	DescribeTable("recoverable errors",
 		func(given error, expected bool) {
-			Expect(IsRecoverableError(wrapError(given))).To(Equal(expected))
+			Expect(IsRecoverable(given)).To(Equal(expected))
 		},
-		Entry("With raw error", fmt.Errorf("raw error"), true),
-		Entry("With not found error", clienterror.NewCrossIdNotFoundError("cross-id"), true),
-		Entry("With illegal state error", clienterror.NewAmbiguousCrossIdError("cross-id", 2), true),
-		Entry("With unauthorized api request error", clienterror.NewUnauthorizedApiRequestError("api-id"), false),
-		Entry("With unauthorized cross ID request error", clienterror.NewUnauthorizedCrossIdRequestError("api-id"), false),
+		Entry("With raw error", errRaw, true),
+		Entry("With not found error", errNotFound, true),
+		Entry("With illegal state error", errIllegalState, true),
+		Entry("With unauthorized error", errUnauthorized, false),
+		Entry("With bad request", errBadRequest, false),
+	)
+
+	DescribeTable("context error",
+		func(given error, expected bool) {
+			Expect(errors.Is(given, ContextError{})).To(Equal(expected))
+		},
+		Entry("With raw error", errRaw, false),
+		Entry("With nil error", nil, false),
+		Entry("With context error", ContextError{}, true),
+		Entry("With aggregate containing context error", kErrors.NewAggregate([]error{ContextError{}}), true),
+		Entry("With aggregate not containing any context error", kErrors.NewAggregate([]error{errRaw}), false),
+		Entry("With empty aggregate", kErrors.NewAggregate([]error{}), false),
 	)
 })

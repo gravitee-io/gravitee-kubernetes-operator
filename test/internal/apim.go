@@ -24,10 +24,10 @@ import (
 func NewApimClient(ctx context.Context) (*apim.Client, error) {
 	httpClient := http.Client{Timeout: apimClientTimeout}
 
-	context, err := newManagementContext(contextWithCredentialsFile)
+	context, err := newApiContext(contextWithCredentialsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	return apim.NewClient(ctx, context, httpClient), nil
+	return apim.NewClient(ctx, context.Spec.Management, httpClient), nil
 }

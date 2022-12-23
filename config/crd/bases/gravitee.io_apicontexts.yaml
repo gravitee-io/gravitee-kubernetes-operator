@@ -1,0 +1,110 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.0
+  creationTimestamp: null
+  name: apicontexts.gravitee.io
+spec:
+  group: gravitee.io
+  names:
+    kind: ApiContext
+    listKind: ApiContextList
+    plural: apicontexts
+    shortNames:
+    - graviteecontexts
+    singular: apicontext
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .spec.baseUrl
+      name: BaseUrl
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ApiContext represents the configuration for a specific environment
+            properties:
+              management:
+                properties:
+                  auth:
+                    description: Auth defines the authentication method used to connect
+                      to the API Management. Can be either basic authentication credentials,
+                      a bearer token or a reference to a kubernetes secret holding
+                      one of these two configurations.
+                    properties:
+                      bearerToken:
+                        description: The bearer token used to authenticate against
+                          the API Management instance (must be generated from an admin
+                          account)
+                        type: string
+                      credentials:
+                        description: The Basic credentials used to authenticate against
+                          the API Management instance.
+                        properties:
+                          password:
+                            type: string
+                          username:
+                            type: string
+                        type: object
+                      secretRef:
+                        description: A secret reference holding either a bearer token
+                          or the user name and password used for basic authentication
+                        properties:
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                    type: object
+                  baseUrl:
+                    description: The URL of a management API instance
+                    pattern: ^http(s?):\/\/.+$
+                    type: string
+                  environmentId:
+                    description: An existing environment id targeted by the context
+                      within the organization.
+                    type: string
+                  organizationId:
+                    description: An existing organization id targeted by the context
+                      on the management API instance.
+                    type: string
+                required:
+                - auth
+                - baseUrl
+                - environmentId
+                - organizationId
+                type: object
+              values:
+                additionalProperties:
+                  type: string
+                type: object
+            type: object
+          status:
+            description: ApiContextStatus defines the observed state of an API Context.
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

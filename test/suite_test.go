@@ -18,12 +18,10 @@ package test
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
-	ginkgotypes "github.com/onsi/ginkgo/v2/types"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -35,9 +33,10 @@ import (
 	"github.com/onsi/gomega/gexec"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apicontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -96,7 +95,7 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&managementcontext.Reconciler{
+	err = (&apicontext.Reconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
 	}).SetupWithManager(k8sManager)
@@ -112,34 +111,12 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	cache := k8sManager.GetCache()
 
-	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "spec.contextRef.name", func(obj client.Object) []string {
-		api, ok := obj.(*gio.ApiDefinition)
-		if !ok || api.Spec.Context == nil {
-			return []string{}
-		}
-		return []string{api.Spec.Context.Name}
-	})
-
+	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexApiContexts)
+	err = cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "spec.contextRef.namespace", func(obj client.Object) []string {
-		api, ok := obj.(*gio.ApiDefinition)
-		if !ok || api.Spec.Context == nil {
-			return []string{}
-		}
-		return []string{api.Spec.Context.Namespace}
-	})
-
-	Expect(err).ToNot(HaveOccurred())
-
-	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "status.processingStatus", func(obj client.Object) []string {
-		api, ok := obj.(*gio.ApiDefinition)
-		if !ok {
-			return []string{}
-		}
-		return []string{string(api.Status.ProcessingStatus)}
-	})
-
+	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
+	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
@@ -161,29 +138,11 @@ var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
 
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
-	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
+	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiContext{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 
-})
-
-var _ = ReportAfterEach(func(specReport ginkgotypes.SpecReport) {
-	enableDSmokeExpect := true
-	for _, label := range specReport.Labels() {
-		if label == "DisableSmokeExpect" {
-			enableDSmokeExpect = false
-		}
-	}
-
-	if enableDSmokeExpect {
-		// Smoke test to check there was no unwanted error in the operator's logs. masked by a reconcile for example
-		Expect(
-			strings.Contains(specReport.CapturedGinkgoWriterOutput, "\tERROR\t"),
-		).To(
-			BeFalse(), "[Smoke Test] There are errors in the operator logs",
-		)
-	}
 })
 
 // Add filed indexes for event to be able to filter on it.

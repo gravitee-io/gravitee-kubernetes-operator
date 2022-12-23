@@ -28,7 +28,7 @@ import (
 func (client *Client) GetByCrossId(
 	crossId string,
 ) (*model.ApiListItem, error) {
-	url := client.envUrl + "/apis?crossId=" + crossId
+	url := client.envUrl() + "/apis?crossId=" + crossId
 
 	req, err := http.NewRequestWithContext(
 		client.ctx,
@@ -86,7 +86,7 @@ func (client *Client) GetApiById(
 	req, err := http.NewRequestWithContext(
 		client.ctx,
 		http.MethodGet,
-		client.envUrl+"/apis/"+apiId,
+		client.envUrl()+"/apis/"+apiId,
 		nil,
 	)
 
@@ -95,7 +95,10 @@ func (client *Client) GetApiById(
 	}
 	resp, err := client.http.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("an error as occurred while performing GetApiById request")
+		return nil, fmt.Errorf(
+			"an error as occurred while performing request GET %s (%w)",
+			client.envUrl()+"/apis/"+apiId, err,
+		)
 	}
 
 	defer resp.Body.Close()
@@ -133,7 +136,7 @@ func (client *Client) ImportApi(
 	importHttpMethod string,
 	apiJson []byte,
 ) (*model.ApiEntity, error) {
-	url := client.envUrl + "/apis/import?definitionVersion=2.0.0"
+	url := client.envUrl() + "/apis/import?definitionVersion=2.0.0"
 	req, err := http.NewRequestWithContext(client.ctx, importHttpMethod, url, bytes.NewBuffer(apiJson))
 
 	if err != nil {
@@ -182,7 +185,7 @@ func (client *Client) UpdateApiState(
 	apiId string,
 	action model.Action,
 ) error {
-	url := client.envUrl + "/apis/" + apiId + "?action=" + string(action)
+	url := client.envUrl() + "/apis/" + apiId + "?action=" + string(action)
 	req, err := http.NewRequestWithContext(client.ctx, http.MethodPost, url, nil)
 	if err != nil {
 		return fmt.Errorf("unable to update the api state into the Management API. Action: %s", action)
@@ -215,7 +218,7 @@ func (client *Client) UpdateApiState(
 func (client *Client) DeleteApi(
 	apiId string,
 ) error {
-	url := client.envUrl + "/apis/" + apiId + "?closePlans=true"
+	url := client.envUrl() + "/apis/" + apiId + "?closePlans=true"
 	req, err := http.NewRequestWithContext(client.ctx, http.MethodDelete, url, nil)
 	if err != nil {
 		return fmt.Errorf("unable to delete the api into the Management API")
@@ -246,7 +249,7 @@ func (client *Client) DeleteApi(
 }
 
 func (client *Client) SetKubernetesContext(apiId string) error {
-	url := client.envUrl + "/apis/" + apiId + "/definition-context"
+	url := client.envUrl() + "/apis/" + apiId + "/definition-context"
 
 	definitionContext, err := json.Marshal(model.NewKubernetesContext())
 	if err != nil {

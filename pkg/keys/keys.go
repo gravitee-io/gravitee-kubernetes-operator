@@ -28,9 +28,9 @@ const (
 	CrdGroup   = "gravitee.io"
 	CrdVersion = "v1alpha1"
 
-	CrdManagementContextResource = "managementcontext"
-	CrdApiDefinitionResource     = "apidefinitions"
-	CrdApiDefinitionTemplate     = "template"
+	CrdApiContextResource    = "apicontext"
+	CrdApiDefinitionResource = "apidefinitions"
+	CrdApiDefinitionTemplate = "template"
 )
 
 // Kubernetes Finalizers.
