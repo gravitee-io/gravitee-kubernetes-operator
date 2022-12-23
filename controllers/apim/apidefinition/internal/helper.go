@@ -15,40 +15,11 @@
 package internal
 
 import (
-	"k8s.io/apimachinery/pkg/types"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	managementapimodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
-
-func getOrGenerateCrossId(api *gio.ApiDefinition) string {
-	// If a CrossID is defined at the API status level, reuse it.
-	if api.Status.CrossID != "" {
-		return api.Status.CrossID
-	}
-
-	// If a CrossID is defined at the API spec level, reuse it.
-	if api.Spec.CrossId != "" {
-		return api.Spec.CrossId
-	}
-
-	// The ID of the API will be based on the API Name and Namespace to ensure consistency
-	return utils.ToUUID(types.NamespacedName{Namespace: api.Namespace, Name: api.Name}.String())
-}
-
-func getOrGenerateId(api *gio.ApiDefinition) string {
-	if api.Status.ID != "" {
-		return api.Status.ID
-	}
-
-	if api.Spec.Id != "" {
-		return api.Spec.Id
-	}
-
-	return utils.NewUUID()
-}
 
 // Add a default keyless plan to the api definition if no plan is defined.
 func addDefaultPlan(api *gio.ApiDefinition) {
@@ -66,19 +37,19 @@ func addDefaultPlan(api *gio.ApiDefinition) {
 }
 
 // For each plan, generate a CrossId from Api Id & Plan Name if not defined.
-func generateEmptyPlanCrossIds(api *gio.ApiDefinition) {
-	plans := api.Spec.Plans
+func generateEmptyPlanCrossIds(spec *gio.ApiDefinitionSpec) {
+	plans := spec.Plans
 
 	for _, plan := range plans {
 		if plan.CrossId == "" {
-			plan.CrossId = utils.ToUUID(api.Spec.Id + separator + plan.Name)
+			plan.CrossId = utils.ToUUID(spec.ID + separator + plan.Name)
 		}
 	}
 }
 
 // Retrieve the plan ids from the management apiEntity.
-func retrieveMgmtPlanIds(apiDefinition *gio.ApiDefinition, mgmtApi *managementapimodel.ApiEntity) {
-	plans := apiDefinition.Spec.Plans
+func retrieveMgmtPlanIds(spec *gio.ApiDefinitionSpec, mgmtApi *managementapimodel.ApiEntity) {
+	plans := spec.Plans
 
 	for _, plan := range plans {
 		for _, mgmtPlan := range mgmtApi.Plans {

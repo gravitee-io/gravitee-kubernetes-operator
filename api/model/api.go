@@ -23,8 +23,8 @@ type Api struct {
 	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 
 	// io.gravitee.definition.model.Api
-	Id      string `json:"id,omitempty"`
-	CrossId string `json:"crossId,omitempty"`
+	ID      string `json:"id,omitempty"`
+	CrossID string `json:"crossId,omitempty"`
 	// +kubebuilder:validation:Required
 	Name string `json:"name,omitempty"`
 	// +kubebuilder:validation:Required
@@ -108,6 +108,11 @@ func NewResource() *Resource {
 		Enabled: true,
 	}
 }
+
+const (
+	ModeFullyManaged = "fully_managed"
+	OriginKubernetes = "kubernetes"
+)
 
 type DefinitionContext struct {
 	// +kubebuilder:default:=kubernetes

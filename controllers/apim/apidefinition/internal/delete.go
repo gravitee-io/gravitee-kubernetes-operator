@@ -16,33 +16,41 @@ package internal
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapierror "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"k8s.io/apimachinery/pkg/util/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (d *Delegate) Delete(
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	// Do nothing if finalizer is already removed
 	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer) {
 		return nil
 	}
 
-	if d.HasManagementContext() && apiDefinition.Status.ID != "" {
-		d.log.Info("Delete API definition into Management API")
-		err := d.apimClient.DeleteApi(apiDefinition.Status.ID)
-		if managementapierror.IsNotFound(err) {
-			d.log.Info("The API has already been deleted", "id", apiDefinition.Status.ID)
-		}
-		if err != nil && !managementapierror.IsNotFound(err) {
-			d.log.Error(err, "Unable to delete API definition into Management API")
-			return err
+	if d.HasContext() {
+		return d.deleteWithContext(apiDefinition)
+	}
+
+	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
+
+	return d.k8s.Update(d.ctx, apiDefinition)
+}
+
+func (d *Delegate) deleteWithContext(api *gio.ApiDefinition) error {
+	errs := make([]error, 0)
+
+	for _, context := range d.contexts {
+		if err := context.delete(api); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
-	// Remove finalizer when API definition is fully deleted
-	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
+	if len(errs) == 0 {
+		util.RemoveFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
+	}
 
-	return d.k8sClient.Update(d.ctx, apiDefinition)
+	errs = append(errs, d.k8s.Update(d.ctx, api))
+
+	return errors.NewAggregate(errs)
 }

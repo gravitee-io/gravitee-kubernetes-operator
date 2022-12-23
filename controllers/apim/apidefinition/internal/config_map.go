@@ -26,23 +26,33 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+func (d *Delegate) updateConfigMap(api *gio.ApiDefinition, context *DelegateContext) error {
+	if api.Spec.State == model.StateStopped {
+		if err := d.deleteConfigMap(api.Namespace, api.Name); err != nil {
+			d.log.Error(err, "Unable to delete ConfigMap from API definition")
+			return err
+		}
+	} else {
+		if err := d.saveConfigMap(api, context); err != nil {
+			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (d *Delegate) saveConfigMap(
-	apiDefinition *gio.ApiDefinition,
+	apiDefinition *gio.ApiDefinition, context *DelegateContext,
 ) error {
 	if apiDefinition.Spec.State == model.StateStopped {
 		return nil
 	}
 
-	apiJson, err := json.Marshal(apiDefinition.Spec)
-	if err != nil {
-		d.log.Error(err, "Unable to marshall API definition as JSON")
-		return err
-	}
-
-	// Create configmap with some specific metadata that will be used to check changes across 'Update' events.
+	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
 
-	// Set OwnerReference on configmap to be able to delete it when API is deleted.
+	// Set OwnerReference on config map to be able to delete it when API is deleted.
 	// 📝 ConfigMap should be in same namespace as ApiDefinition.
 	newOwnerReferences := []metav1.OwnerReference{
 		{
@@ -63,30 +73,42 @@ func (d *Delegate) saveConfigMap(
 	}
 
 	cm.Data = map[string]string{
-		"definition":        string(apiJson),
 		"definitionVersion": apiDefinition.ResourceVersion,
 	}
 
-	if d.managementContext != nil {
-		cm.Data["organizationId"] = d.managementContext.Spec.OrgId
-		cm.Data["environmentId"] = d.managementContext.Spec.EnvId
+	spec := apiDefinition.Spec.DeepCopy()
+
+	if context != nil && context.hasManagement() {
+		status := apiDefinition.Status.Contexts[context.Location]
+		cm.Data["organizationId"] = status.OrgID
+		cm.Data["environmentId"] = status.EnvID
+		spec.ID = status.ID
+	} else {
+		spec.ID = apiDefinition.GetID()
 	}
 
+	jsonSpec, err := json.Marshal(spec)
+	if err != nil {
+		return err
+	}
+
+	cm.Data["definition"] = string(jsonSpec)
+
 	currentApiDefinition := &v1.ConfigMap{}
-	err = d.k8sClient.Get(d.ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentApiDefinition)
+	err = d.k8s.Get(d.ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentApiDefinition)
 
 	if err == nil {
 		if currentApiDefinition.Data["definitionVersion"] != apiDefinition.ResourceVersion {
-			d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.Id)
+			d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.ID)
 			// Only update the config map if resource version has changed (means api definition has changed).
-			err = d.k8sClient.Update(d.ctx, cm)
+			err = d.k8s.Update(d.ctx, cm)
 		} else {
-			d.log.Info("No change detected on api. Skipped.", "id", apiDefinition.Spec.Id)
+			d.log.Info("No change detected on api. Skipped.", "id", apiDefinition.Spec.ID)
 			return nil
 		}
 	} else {
-		d.log.Info("Creating config map for api.", "id", apiDefinition.Spec.Id, "name", apiDefinition.Name)
-		err = d.k8sClient.Create(d.ctx, cm)
+		d.log.Info("Creating config map for api.", "id", apiDefinition.Spec.ID, "name", apiDefinition.Name)
+		err = d.k8s.Create(d.ctx, cm)
 	}
 	return err
 }
@@ -100,7 +122,7 @@ func (d *Delegate) deleteConfigMap(apiNamespace string, apiName string) error {
 	}
 
 	d.log.Info("Deleting ConfigMap associated to API if exist")
-	err := d.k8sClient.Delete(d.ctx, configMap)
+	err := d.k8s.Delete(d.ctx, configMap)
 
 	if errors.IsNotFound(err) {
 		return nil

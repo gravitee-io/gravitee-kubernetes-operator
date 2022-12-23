@@ -28,6 +28,7 @@ limitations under the License.
 package test
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -91,10 +92,12 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Expect the API Definition is Ready")
 
 			savedApiDefinition = new(gio.ApiDefinition)
-			Eventually(func() bool {
-				k8sErr := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
-				return k8sErr == nil && savedApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(savedApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
@@ -104,10 +107,10 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		})
 
 		It("Should return unauthorize without subscription", func() {
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 401
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusUnauthorized)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
 		It("Should return success with subscription", func() {
@@ -115,14 +118,16 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiKey := createSubscriptionAndGetApiKey(
 				mgmtClient,
 				savedApiDefinition,
+				contextLookupKey,
 				func(mgmtApi *managementapimodel.ApiEntity) string { return mgmtApi.Plans[0].Id },
 			)
 
 			By("Call gateway with subscription api key")
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := getWithGioApiKey(&httpClient, gatewayEndpoint, apiKey)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
 		})
 
 		It("Should update ApiDefinition resource", func() {
@@ -140,11 +145,13 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Wait for the ApiDefinition to be updated
-			Eventually(func() bool {
+			Eventually(func() error {
+				expectedGeneration := savedApiDefinition.Status.ObservedGeneration + 1
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
-				return k8sErr == nil &&
-					updatedApiDefinition.Status.ObservedGeneration == savedApiDefinition.Status.ObservedGeneration+1
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndObservedGenerationEquals(
+					k8sErr, updatedApiDefinition, expectedGeneration,
+				)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			// Update savedApiDefinition & global var with last Get
 			savedApiDefinition = updatedApiDefinition.DeepCopy()
@@ -164,11 +171,13 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Wait for the ApiDefinition to be updated
-			Eventually(func() bool {
+			Eventually(func() error {
+				expectedGeneration := savedApiDefinition.Status.ObservedGeneration + 1
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
-				return k8sErr == nil &&
-					updatedApiDefinition.Status.ObservedGeneration == savedApiDefinition.Status.ObservedGeneration+1
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndObservedGenerationEquals(
+					k8sErr, updatedApiDefinition, expectedGeneration,
+				)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			// Update savedApiDefinition & global var with last Get
 			savedApiDefinition = updatedApiDefinition.DeepCopy()
@@ -176,6 +185,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiKey := createSubscriptionAndGetApiKey(
 				mgmtClient,
 				savedApiDefinition,
+				contextLookupKey,
 				func(mgmtApi *managementapimodel.ApiEntity) string {
 					for _, plan := range mgmtApi.Plans {
 						if plan.CrossId == secondPlanCrossId {
@@ -187,10 +197,10 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			)
 
 			By("Call gateway with subscription api key of second plan")
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := getWithGioApiKey(&httpClient, gatewayEndpoint, apiKey)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
 		It("Should delete ApiDefinition resource", func() {
@@ -199,17 +209,21 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Call deleted API definition URL and expect 404")
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 404
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Get the API definition from ManagementApi and expect deleted state")
 
-			Eventually(func() bool {
-				_, apiErr := mgmtClient.GetApiById(savedApiDefinition.Status.ID)
-				return apiErr != nil && clientError.IsNotFound(apiErr)
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				_, apiErr := mgmtClient.GetApiById(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				if !clientError.IsNotFound(apiErr) {
+					return fmt.Errorf("API definition should not be found")
+				}
+
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
 })
@@ -217,6 +231,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 func createSubscriptionAndGetApiKey(
 	mgmtClient *managementapi.Client,
 	createdApiDefinition *gio.ApiDefinition,
+	contextLocation types.NamespacedName,
 	planSelector func(*managementapimodel.ApiEntity) string,
 ) string {
 	// Get first active application
@@ -225,17 +240,17 @@ func createSubscriptionAndGetApiKey(
 	defaultApplication := mgmtApplications[0]
 
 	// Get Api description with plan
-	mgmtApi, mgmtErr := mgmtClient.GetApiById(createdApiDefinition.Status.ID)
+	mgmtApi, mgmtErr := mgmtClient.GetApiById(internal.GetStatusId(createdApiDefinition, contextLocation))
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	planId := planSelector(mgmtApi)
 
 	// Create subscription
-	mgmtSubscription, mgmtErr := mgmtClient.SubscribeToPlan(mgmtApi.Id, defaultApplication.Id, planId)
+	mgmtSubscription, mgmtErr := mgmtClient.SubscribeToPlan(mgmtApi.ID, defaultApplication.Id, planId)
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	// Get subscription api keys
-	mgmtSubscriptionApiKeys, mgmtErr := mgmtClient.GetSubscriptionApiKey(mgmtApi.Id, mgmtSubscription.Id)
+	mgmtSubscriptionApiKeys, mgmtErr := mgmtClient.GetSubscriptionApiKey(mgmtApi.ID, mgmtSubscription.Id)
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	return mgmtSubscriptionApiKeys[0].Key

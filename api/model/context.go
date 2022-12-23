@@ -15,7 +15,9 @@
 // +kubebuilder:object:generate=true
 package model
 
-type Context struct {
+import "net/http"
+
+type Management struct {
 	// The URL of a management API instance
 	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
 	BaseUrl string `json:"baseUrl"`
@@ -47,4 +49,70 @@ type BasicAuth struct {
 	Username string `json:"username,omitempty"`
 	// +kubebuilder:validation:Required
 	Password string `json:"password,omitempty"`
+}
+
+func (m *Management) HasAuthentication() bool {
+	return m.Auth != nil
+}
+
+func (m *Management) HasSecretRef() bool {
+	if !m.HasAuthentication() {
+		return false
+	}
+
+	return m.Auth.SecretRef != nil
+}
+
+func (m *Management) SecretRef() *NamespacedName {
+	if !m.HasSecretRef() {
+		return nil
+	}
+
+	return m.Auth.SecretRef
+}
+
+func (m *Management) SetToken(token string) {
+	if !m.HasAuthentication() {
+		return
+	}
+
+	m.Auth.BearerToken = token
+}
+
+func (m *Management) SetCredentials(username, password string) {
+	if !m.HasAuthentication() {
+		return
+	}
+
+	m.Auth.Credentials = &BasicAuth{
+		Username: username,
+		Password: password,
+	}
+}
+
+func (m *Management) Authenticate(req *http.Request) {
+	if !m.HasAuthentication() {
+		return
+	}
+
+	bearerToken := m.Auth.BearerToken
+	basicAuth := m.Auth.Credentials
+
+	if bearerToken != "" {
+		setBearerToken(req, bearerToken)
+	} else if basicAuth != nil {
+		setBasicAuth(req, basicAuth)
+	}
+}
+
+func setBearerToken(request *http.Request, token string) {
+	if token != "" {
+		request.Header.Add("Authorization", "Bearer "+token)
+	}
+}
+
+func setBasicAuth(request *http.Request, auth *BasicAuth) {
+	if auth != nil && auth.Username != "" {
+		request.SetBasicAuth(auth.Username, auth.Password)
+	}
 }

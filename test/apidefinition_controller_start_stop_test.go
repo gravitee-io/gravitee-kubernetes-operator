@@ -28,6 +28,7 @@ limitations under the License.
 package test
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -81,20 +82,22 @@ var _ = Describe("API Definition Controller", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
 			// Expect the API Definition is Ready
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-				return err == nil && createdApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			By("Call initial API definition URL and expect no error")
+			By("Call initial API definition URL and expect 200")
 
 			// Check created api is callable
 			var gatewayEndpoint = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Stop the API by define state to STOPPED")
 
@@ -106,23 +109,28 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect 404")
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 404
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call rest API and expect STOPPED state")
 
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
-				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
+			Eventually(func() error {
+				api, cliErr := apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				if cliErr != nil {
+					return err
+				}
 
-				return apiErr == nil &&
-					api.Id == updatedApiDefinition.Status.ID &&
-					api.State == "STOPPED"
-			}, timeout, interval).Should(BeTrue())
+				if api.State != "STOPPED" {
+					return fmt.Errorf("API state should be STOPPED")
+				}
+
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
 })

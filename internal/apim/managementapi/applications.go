@@ -30,7 +30,7 @@ func (client *Client) SearchApplications(
 	req, err := http.NewRequestWithContext(
 		client.ctx,
 		http.MethodGet,
-		client.envUrl+"/applications?status="+status+"&query="+query,
+		client.envUrl()+"/applications?status="+status+"&query="+query,
 		nil,
 	)
 

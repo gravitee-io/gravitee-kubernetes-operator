@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Use this context if you are running APIM and GKO locally
 apiVersion: gravitee.io/v1alpha1
-kind: ManagementContext
+kind: ApiContext
 metadata:
   name: dev-mgmt-ctx
-  namespace: default
 spec:
-  baseUrl: http://localhost:8083
-  environmentId: DEFAULT
-  organizationId: DEFAULT
-  auth:
-    credentials:
-      username: admin
-      password: admin
+  management:
+    baseUrl: http://localhost:9000
+    environmentId: DEFAULT
+    organizationId: DEFAULT
+    auth:
+      # TODO: replace with your generate bearer token
+      bearerToken: xxxx-yyyy-zzzz 

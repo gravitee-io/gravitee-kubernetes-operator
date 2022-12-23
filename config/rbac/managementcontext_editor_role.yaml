@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# permissions for end users to edit managementcontexts.
+# permissions for end users to edit apicontexts.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: managementcontext-editor-role
+  name: apicontext-editor-role
 rules:
 - apiGroups:
   - gravitee.io
   resources:
-  - managementcontexts
+  - apicontexts
   verbs:
   - create
   - delete
@@ -33,6 +33,6 @@ rules:
 - apiGroups:
   - gravitee.io
   resources:
-  - managementcontexts/status
+  - apicontexts/status
   verbs:
   - get
