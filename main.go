@@ -21,6 +21,7 @@ import (
 	"flag"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -31,15 +32,14 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apicontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -108,7 +108,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
 		os.Exit(1)
 	}
-	if err = (&managementcontext.Reconciler{
+	if err = (&apicontext.Reconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -151,38 +151,14 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	cache := manager.GetCache()
 	ctx := context.Background()
 
-	err := cache.IndexField(ctx, &gio.ApiDefinition{}, "spec.contextRef.name", func(obj client.Object) []string {
-		api, ok := obj.(*gio.ApiDefinition)
-		if !ok || api.Spec.Context == nil {
-			return []string{}
-		}
-		return []string{api.Spec.Context.Name}
-	})
-
+	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexApiContexts)
+	err := cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	if err != nil {
 		return err
 	}
 
-	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "spec.contextRef.namespace", func(obj client.Object) []string {
-		api, ok := obj.(*gio.ApiDefinition)
-		if !ok || api.Spec.Context == nil {
-			return []string{}
-		}
-		return []string{api.Spec.Context.Namespace}
-	})
-
-	if err != nil {
-		return err
-	}
-
-	err = cache.IndexField(ctx, &gio.ApiDefinition{}, "status.processingStatus", func(obj client.Object) []string {
-		api, ok := obj.(*gio.ApiDefinition)
-		if !ok {
-			return []string{}
-		}
-		return []string{string(api.Status.ProcessingStatus)}
-	})
-
+	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
+	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
 	if err != nil {
 		return err
 	}

@@ -43,7 +43,7 @@ func (d *Delegate) ImportApiDefinitionTemplate(
 		ingressList := netv1.IngressList{}
 
 		// Retrieves the ingresses from the namespace
-		err := d.k8sClient.List(d.ctx, &ingressList, client.InNamespace(namespace))
+		err := d.k8s.List(d.ctx, &ingressList, client.InNamespace(namespace))
 		if err != nil && !kerrors.IsNotFound(err) {
 			return false, err
 		}
@@ -64,7 +64,7 @@ func (d *Delegate) ImportApiDefinitionTemplate(
 
 		util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
 
-		return false, d.k8sClient.Update(d.ctx, apiDefinition)
+		return false, d.k8s.Update(d.ctx, apiDefinition)
 	}
 
 	// Adding or updating a new ApiDefinition template
@@ -72,13 +72,13 @@ func (d *Delegate) ImportApiDefinitionTemplate(
 	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer) {
 		util.AddFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
 
-		return false, d.k8sClient.Update(d.ctx, apiDefinition)
+		return false, d.k8s.Update(d.ctx, apiDefinition)
 	}
 
 	ingressList := netv1.IngressList{}
 
 	// Listing ingresses from the same namespace
-	err := d.k8sClient.List(d.ctx, &ingressList, client.InNamespace(namespace))
+	err := d.k8s.List(d.ctx, &ingressList, client.InNamespace(namespace))
 
 	if err != nil {
 		return false, client.IgnoreNotFound(err)

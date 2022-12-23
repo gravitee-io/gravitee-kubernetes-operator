@@ -44,7 +44,7 @@ func (d *Delegate) resolveIfRef(resourceOrRef *model.ResourceOrRef) error {
 
 	d.log.Info("Looking for api resource from", "namespace", namespacedName.Namespace, "name", namespacedName.Name)
 
-	if err := d.k8sClient.Get(d.ctx, namespacedName, resource); err != nil {
+	if err := d.k8s.Get(d.ctx, namespacedName, resource); err != nil {
 		return err
 	}
 

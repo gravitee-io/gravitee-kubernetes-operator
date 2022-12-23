@@ -99,6 +99,5 @@ spec:
                   useCompression: true
                   followRedirects: false
     response_templates: {}
-    contextRef:
-        name: "dev-mgmt-ctx"
-        namespace: "default"
+
+

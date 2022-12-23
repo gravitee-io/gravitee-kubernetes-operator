@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package apiresource
+package apicontext
 
 import (
 	"context"
@@ -27,22 +27,17 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-// Reconciler reconciles a ApiResource object.
+// Reconciler reconciles a ManagementContext object.
 type Reconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=gravitee.io,resources=apiresources,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=gravitee.io,resources=apiresources/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=gravitee.io,resources=apiresources/finalizers,verbs=update
-
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
+// +kubebuilder:rbac:groups=gravitee.io,resources=apicontexts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=gravitee.io,resources=apicontexts/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=gravitee.io,resources=apicontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	instance := &gio.ApiResource{}
+	instance := &gio.ApiContext{}
 
 	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -54,7 +49,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.ApiResource{}).
+		For(&gio.ApiContext{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

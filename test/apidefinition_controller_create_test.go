@@ -29,6 +29,7 @@ package test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -77,10 +78,9 @@ var _ = Describe("Create", func() {
 			By("Getting created resource and expect to find it")
 
 			apiDefinition := new(gio.ApiDefinition)
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-				return err == nil && apiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			var endpoint = internal.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
@@ -89,16 +89,16 @@ var _ = Describe("Create", func() {
 
 			By("Calling gateway endpoint and expect the API to be available")
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
 
 	Context("a basic spec with a management context", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
-		var managementContextFixture *gio.ManagementContext
+		var managementContextFixture *gio.ApiContext
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -123,7 +123,7 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(gio.ApiContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -132,10 +132,12 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-				return err == nil && apiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
 			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
@@ -144,26 +146,30 @@ var _ = Describe("Create", func() {
 
 			var endpoint = internal.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call rest API and expect one API matching status cross ID")
 
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
-				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
-				return apiErr == nil && api.Id == apiDefinition.Status.ID
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				if apiErr != nil {
+					return apiErr
+				}
+
+				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
 			Expect(
 				getEventsReason(apiDefinition),
 			).Should(
-				ContainElements([]string{"Created", "Creating", "AddedFinalizer"}),
+				ContainElements([]string{"UpdateStarted", "UpdateSucceeded"}),
 			)
 		})
 
@@ -173,7 +179,7 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(gio.ApiContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -182,10 +188,12 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-				return err == nil && apiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
 			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
@@ -204,10 +212,22 @@ var _ = Describe("Create", func() {
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
-				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
-				return apiErr == nil && api.Id == apiDefinition.Status.ID && api.State == "STOPPED"
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				if apiErr != nil {
+					return apiErr
+				}
+
+				if err = internal.AssertApiEntityMatchesStatusContext(api, apiDefinition); err != nil {
+					return err
+				}
+
+				if api.State != "STOPPED" {
+					return fmt.Errorf("expected state STOPPED, got %s", api.State)
+				}
+
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
 		It("should create an API Definition with existing api in Management Api", func() {
@@ -216,8 +236,8 @@ var _ = Describe("Create", func() {
 
 			By("Init existing api in management api")
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
-			existingApiSpec.Id = utils.NewUUID()
-			existingApiSpec.CrossId = utils.ToUUID(
+			existingApiSpec.ID = utils.NewUUID()
+			existingApiSpec.CrossID = utils.ToUUID(
 				types.NamespacedName{Namespace: apiDefinitionFixture.Namespace, Name: apiDefinitionFixture.Name}.String())
 			existingApiSpec.DefinitionContext = &model.DefinitionContext{
 				Origin: origin,
@@ -240,7 +260,7 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(gio.ApiContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -249,10 +269,12 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
-			Eventually(func() bool {
-				k8sErr := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-				return k8sErr == nil && apiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if getErr := k8sClient.Get(ctx, apiLookupKey, apiDefinition); getErr != nil {
+					return getErr
+				}
+				return internal.AssertStatusContextIsSet(apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
 			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
@@ -261,17 +283,20 @@ var _ = Describe("Create", func() {
 
 			var endpoint = internal.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call rest API and expect one API matching status cross ID")
 
-			Eventually(func() bool {
-				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
-				return apiErr == nil && api.Id == apiDefinition.Status.ID
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				if apiErr != nil {
+					return apiErr
+				}
+				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
 	})
@@ -296,7 +321,7 @@ var _ = Describe("Create", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(gio.ApiContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -305,10 +330,12 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
-			Eventually(func() bool {
-				err = k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-				return err == nil && apiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err = k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
 			Expect(apiDefinition.Spec.Name).Should(Equal(expectedApiName))
@@ -317,20 +344,23 @@ var _ = Describe("Create", func() {
 
 			var endpoint = internal.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
-				return callErr == nil && res.StatusCode == expectedGatewayStatusCode
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, expectedGatewayStatusCode)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Calling rest API, expecting one API to match status cross ID")
 
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
-				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
-				return apiErr == nil && api.Id == apiDefinition.Status.ID
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				if apiErr != nil {
+					return apiErr
+				}
+				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		},
 		Entry("should import with health check", internal.ApiWithHCFile, 200),
 		Entry("should import with disabled health check", internal.ApiWithDisabledHCFile, 200),
@@ -373,7 +403,7 @@ var _ = Describe("Create", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(gio.ApiContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -382,29 +412,34 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
 			apiDefinition := new(gio.ApiDefinition)
-			Eventually(func() bool {
-				err = k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-				return err == nil && apiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err = k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Calling gateway endpoint, expecting the API to be available")
 
 			var endpoint = internal.GatewayUrl + apiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
-				return callErr == nil && res.StatusCode == expectedGatewayStatusCode
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, expectedGatewayStatusCode)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Calling rest API, expecting one API to match status cross ID")
 
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
-				api, apiErr := apimClient.GetByCrossId(apiDefinition.Status.CrossID)
-				return apiErr == nil && api.Id == apiDefinition.Status.ID
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				if apiErr != nil {
+					return apiErr
+				}
+				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		},
 		Entry(
 			"should import with cache resource ref",

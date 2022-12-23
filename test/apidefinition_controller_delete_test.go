@@ -28,6 +28,7 @@ limitations under the License.
 package test
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -86,20 +87,22 @@ var _ = Describe("API Definition Controller", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
 			// Expect the API Definition is Ready
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-				return err == nil && createdApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
 			var gatewayEndpoint = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Delete the API Definition")
 
@@ -117,10 +120,13 @@ var _ = Describe("API Definition Controller", func() {
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
-				_, apiErr := apimClient.GetApiById(createdApiDefinition.Status.ID)
-				return apiErr != nil && clientError.IsNotFound(apiErr)
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				_, apiErr := apimClient.GetApiById(internal.GetStatusId(createdApiDefinition, contextLookupKey))
+				if !clientError.IsNotFound(apiErr) {
+					return fmt.Errorf("Expected 404 error, got %w", apiErr)
+				}
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Expect that the ConfigMap has been deleted")
 			cm := &v1.ConfigMap{}
@@ -135,7 +141,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(
 				getEventsReason(apiDefinitionFixture),
 			).Should(
-				ContainElements([]string{"Deleted", "Deleting"}),
+				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
 			)
 		})
 
@@ -145,22 +151,24 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			// Expect the API Definition is Ready
-			Eventually(func() bool {
-				err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-				return err == nil && createdApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
 			// Check created api is callable
 			var gatewayEndpoint = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Delete the API calling directly the REST API")
-			deleteErr := managementClient.DeleteApi(createdApiDefinition.Status.ID)
+			deleteErr := managementClient.DeleteApi(internal.GetStatusId(createdApiDefinition, contextLookupKey))
 			Expect(deleteErr).ToNot(HaveOccurred())
 
 			By("Delete the API Definition")

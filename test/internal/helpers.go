@@ -16,13 +16,35 @@ package internal
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-func (d *Delegate) AddDeletionFinalizer(
-	apiDefinition *gio.ApiDefinition,
-) error {
-	util.AddFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
-	return d.k8sClient.Update(d.ctx, apiDefinition)
+func GetStatusContext(apiDefinition *gio.ApiDefinition, location types.NamespacedName) *gio.StatusContext {
+	contexts := apiDefinition.Status.Contexts
+
+	if contexts == nil {
+		return nil
+	}
+
+	if len(contexts) == 0 {
+		return nil
+	}
+
+	context, ok := contexts[location.String()]
+
+	if !ok {
+		return nil
+	}
+
+	return &context
+}
+
+func GetStatusId(apiDefinition *gio.ApiDefinition, location types.NamespacedName) string {
+	context := GetStatusContext(apiDefinition, location)
+
+	if context == nil {
+		return ""
+	}
+
+	return context.ID
 }

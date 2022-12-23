@@ -18,54 +18,58 @@ import (
 	"errors"
 	"fmt"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapierror "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"k8s.io/client-go/util/retry"
-	k8sUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	apimError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
-type NonRecoverableError struct {
-	cause error
+type ContextError struct {
+	Cause   error
+	Context string
 }
 
-func (e NonRecoverableError) Error() string {
-	return fmt.Sprintf("Non recoverable error: %s", e.cause.Error())
+func (e ContextError) Error() string {
+	return fmt.Sprintf("context %s errored: %s", e.Context, e.Cause.Error())
 }
 
-func IsRecoverableError(err error) bool {
-	return !errors.As(err, new(NonRecoverableError))
+// Redirects the behavior of Is to As
+// because Is is not implemented for k8s.io errors aggregate.
+func (e ContextError) Is(err error) bool {
+	return errors.As(err, new(ContextError))
 }
 
-func (d *Delegate) UpdateStatusAndReturnError(apiDefinition *gio.ApiDefinition, reconcileErr error) error {
-	reconcileErr = wrapError(reconcileErr)
+func newContextError(location string, err error) error {
+	return ContextError{Cause: err, Context: location}
+}
 
-	processingStatus := gio.ProcessingStatusReconciling
-	if !IsRecoverableError(reconcileErr) {
-		processingStatus = gio.ProcessingStatusFailed
+func IsRecoverable(err error) bool {
+	errs := make([]error, 0)
 
-		// Remove finalizer when API definition is failed. To allow the user to remove it.
-		k8sUtil.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
+	//nolint:errorlint // type assertion is intended here
+	if agg, ok := err.(kErrors.Aggregate); ok {
+		errs = kErrors.Flatten(agg).Errors()
+	} else {
+		errs = append(errs, err)
 	}
 
-	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		apiDefinition.Status.ProcessingStatus = processingStatus
-		apiDefinition.Status.ObservedGeneration = apiDefinition.ObjectMeta.Generation
-		return d.k8sClient.Status().Update(d.ctx, apiDefinition.DeepCopy())
-	})
-	if err != nil {
-		d.log.Info("Unexpected error while updating API definition status.", "err", err)
-		return err
+	for _, e := range errs {
+		if isRecoverable(e) {
+			return true
+		}
 	}
-	return reconcileErr
+
+	return false
 }
 
-// Wraps the error in a NonRecoverableError if it's not recoverable.
-func wrapError(err error) error {
-	switch {
-	case managementapierror.IsUnauthorized(err):
-		return NonRecoverableError{cause: err}
-	default:
-		return err
+func isRecoverable(err error) bool {
+	//nolint:errorlint // type assertion is intended here
+	if cErr, ok := err.(ContextError); ok {
+		cause := cErr.Cause
+		return !isUnRecoverable(cause)
 	}
+
+	return true
+}
+
+func isUnRecoverable(err error) bool {
+	return apimError.IsBadRequest(err) || apimError.IsUnauthorized(err)
 }

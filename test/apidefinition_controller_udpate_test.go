@@ -35,6 +35,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -71,10 +72,9 @@ var _ = Describe("API Definition Controller", func() {
 		It("Should update an API Definition", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-				return err == nil && createdApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
 
@@ -83,41 +83,40 @@ var _ = Describe("API Definition Controller", func() {
 
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpointInitial)
-				if callErr != nil {
-					return callErr
-				}
-
-				if res.StatusCode != 200 {
-					return fmt.Errorf("unexpected status code: %d", res.StatusCode)
-				}
-
-				return nil
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Update the context path in API definition and expect no error")
 
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
 			expectedPath := updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path + "-updated"
 			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
 
-			err := k8sClient.Update(ctx, updatedApiDefinition)
+			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+				return k8sClient.Update(ctx, updatedApiDefinition)
+			})
+
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect no error")
 
 			var endpointUpdated = internal.GatewayUrl + expectedPath
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpointUpdated)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
 			Expect(
 				getEventsReason(apiDefinitionFixture),
 			).Should(
-				ContainElements([]string{"Updated", "Updating"}),
+				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
 		})
 	})
@@ -159,20 +158,22 @@ var _ = Describe("API Definition Controller", func() {
 		It("Should update an API Definition", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-				return err == nil && createdApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
 			var endpointInitial = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpointInitial)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Update the context path in API definition and expect no error")
 
@@ -201,13 +202,9 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
-				if apiErr != nil {
-					return err
-				}
-
-				if api.Id != updatedApiDefinition.Status.ID {
-					return fmt.Errorf("API ID mismatch: %s != %s", api.Id, updatedApiDefinition.Status.ID)
+				api, cliErr := apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				if cliErr != nil {
+					return cliErr
 				}
 
 				if api.Name != expectedName {
@@ -220,13 +217,9 @@ var _ = Describe("API Definition Controller", func() {
 			By("Calling rest API, expecting one API matching status ID and kubernetes context")
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(updatedApiDefinition.Status.ID)
-				if apiErr != nil {
-					return err
-				}
-
-				if api.Id != updatedApiDefinition.Status.ID {
-					return fmt.Errorf("API ID mismatch: %s != %s", api.Id, updatedApiDefinition.Status.ID)
+				api, cliErr := apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				if cliErr != nil {
+					return cliErr
 				}
 
 				if api.DefinitionContext.Mode != "fully_managed" {
@@ -243,7 +236,7 @@ var _ = Describe("API Definition Controller", func() {
 	})
 
 	Context("With basic ApiDefinition & ManagementContext adding context ref on update", func() {
-		var managementContextFixture *gio.ManagementContext
+		var managementContextFixture *gio.ApiContext
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
@@ -281,19 +274,21 @@ var _ = Describe("API Definition Controller", func() {
 		It("Should update an API Definition, adding a management context", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
-				return err == nil && createdApiDefinition.Status.CrossID != ""
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Updating the context ref in API definition, expecting no error")
 
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
-			updatedApiDefinition.Spec.Context = &model.NamespacedName{
+			updatedApiDefinition.Spec.Contexts = append([]model.NamespacedName{}, model.NamespacedName{
 				Name:      managementContextFixture.Name,
 				Namespace: managementContextFixture.Namespace,
-			}
+			})
 
 			err := k8sClient.Update(ctx, updatedApiDefinition)
 			Expect(err).ToNot(HaveOccurred())
@@ -303,10 +298,10 @@ var _ = Describe("API Definition Controller", func() {
 			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() bool {
-				api, apiErr := apimClient.GetByCrossId(updatedApiDefinition.Status.CrossID)
-				return apiErr == nil && api.Id == updatedApiDefinition.Status.ID
-			}, timeout, interval).Should(BeTrue())
+			Eventually(func() error {
+				_, err = apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				return err
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
 })

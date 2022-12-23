@@ -30,7 +30,7 @@ func (client *Client) SubscribeToPlan(
 ) (*model.Subscription, error) {
 	queryParams := "?application=" + applicationId + "&plan=" + planId
 
-	url := client.envUrl + "/apis/" + apiId + "/subscriptions" + queryParams
+	url := client.envUrl() + "/apis/" + apiId + "/subscriptions" + queryParams
 
 	req, err := http.NewRequestWithContext(client.ctx, http.MethodPost, url, nil)
 	if err != nil {
@@ -75,7 +75,7 @@ func (client *Client) GetSubscriptionApiKey(
 	req, err := http.NewRequestWithContext(
 		client.ctx,
 		http.MethodGet,
-		client.envUrl+"/apis/"+apiId+"/subscriptions/"+subscriptionId+"/apikeys",
+		client.envUrl()+"/apis/"+apiId+"/subscriptions/"+subscriptionId+"/apikeys",
 		nil,
 	)
 

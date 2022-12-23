@@ -29,7 +29,7 @@ var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
 	Api      *gio.ApiDefinition
-	Context  *gio.ManagementContext
+	Context  *gio.ApiContext
 	Resource *gio.ApiResource
 }
 
@@ -77,9 +77,11 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	if fixtures.Context != nil {
-		fixtures.Api.Spec.Context = &model.NamespacedName{
-			Name:      fixtures.Context.Name,
-			Namespace: fixtures.Context.Namespace,
+		fixtures.Api.Spec.Contexts = []model.NamespacedName{
+			{
+				Name:      fixtures.Context.Name,
+				Namespace: fixtures.Context.Namespace,
+			},
 		}
 	}
 
@@ -117,9 +119,9 @@ func (f *FixtureGenerator) NewApiDefinition(
 }
 
 func (f *FixtureGenerator) NewManagementContext(
-	path string, transforms ...func(*gio.ManagementContext),
-) (*gio.ManagementContext, error) {
-	ctx, err := newManagementContext(path, transforms...)
+	path string, transforms ...func(*gio.ApiContext),
+) (*gio.ApiContext, error) {
+	ctx, err := newApiContext(path, transforms...)
 	if err != nil {
 		return nil, err
 	}
@@ -187,21 +189,21 @@ func newApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.Api
 	return resource, nil
 }
 
-func newManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
+func newApiContext(path string, transforms ...func(*gio.ApiContext)) (*gio.ApiContext, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("ManagementContext")
-	decoded, _, err := decode(crd, &gvk, new(gio.ManagementContext))
+	gvk := gio.GroupVersion.WithKind("ApiContext")
+	decoded, _, err := decode(crd, &gvk, new(gio.ApiContext))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, ok := decoded.(*gio.ManagementContext)
+	ctx, ok := decoded.(*gio.ApiContext)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert type of Management Context CRD")
+		return nil, fmt.Errorf("failed to assert type of API Context CRD")
 	}
 
 	for _, transform := range transforms {
