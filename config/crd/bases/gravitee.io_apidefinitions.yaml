@@ -18,10 +18,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: API state (STARTED or STOPPED).
-      jsonPath: .status.state
-      name: State
-      type: string
     - description: API entrypoint.
       jsonPath: .spec.proxy.virtual_hosts[*].path
       name: Entrypoint
@@ -33,14 +29,6 @@ spec:
     - description: API version.
       jsonPath: .spec.version
       name: Version
-      type: string
-    - description: Management context name.
-      jsonPath: .spec.contextRef.name
-      name: Management Context
-      type: string
-    - description: Api definition processing status.
-      jsonPath: .status.processingStatus
-      name: Processing Status
       type: string
     name: v1alpha1
     schema:
@@ -64,18 +52,20 @@ spec:
               Operator Most of the configuration properties defined here are already
               documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
             properties:
-              contextRef:
+              contexts:
                 description: The contextRef refers to the namespace and the name of
                   a ManagementContext used for synchronizing API definitions with
                   a Gravitee API Management instance.
-                properties:
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - name
-                type: object
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               crossId:
                 type: string
               definition_context:
@@ -962,34 +952,39 @@ spec:
           status:
             description: ApiDefinitionStatus defines the observed state of API Definition.
             properties:
-              crossId:
-                description: The cross ID of the API definition. Similar to the ID
-                  but does not change across environments.
-                type: string
-              generation:
-                description: The observed generation is used internally, together
-                  with the processing status, to determine if the API definition is
-                  being updated or created.
+              contexts:
+                additionalProperties:
+                  properties:
+                    crossId:
+                      type: string
+                    environmentId:
+                      type: string
+                    id:
+                      description: The ID of the API definition in the Gravitee API
+                        Management instance (if a management context has been configured).
+                      type: string
+                    organizationId:
+                      type: string
+                    state:
+                      description: The state of the API. Can be either STARTED or
+                        STOPPED.
+                      type: string
+                    status:
+                      description: The processing status of the API definition.
+                      enum:
+                      - Completed
+                      - Failed
+                      type: string
+                  required:
+                  - crossId
+                  - environmentId
+                  - id
+                  - organizationId
+                  type: object
+                type: object
+              observedGeneration:
                 format: int64
                 type: integer
-              id:
-                description: The ID of the API definition in the Gravitee API Management
-                  instance (if a management context has been configured).
-                type: string
-              processingStatus:
-                description: The processing status of the API definition.
-                enum:
-                - Completed
-                - Failed
-                - Reconciling
-                type: string
-              state:
-                description: The state of the API. Can be either STARTED or STOPPED.
-                type: string
-            required:
-            - crossId
-            - generation
-            - id
             type: object
         type: object
     served: true

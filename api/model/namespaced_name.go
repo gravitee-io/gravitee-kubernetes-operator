@@ -21,6 +21,14 @@ type NamespacedName struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
+func NewNamespacedName(namespace, name string) NamespacedName {
+	return NamespacedName{Namespace: namespace, Name: name}
+}
+
 func (n NamespacedName) ToK8sType() types.NamespacedName {
 	return types.NamespacedName{Namespace: n.Namespace, Name: n.Name}
+}
+
+func (n NamespacedName) String() string {
+	return n.Namespace + "/" + n.Name
 }

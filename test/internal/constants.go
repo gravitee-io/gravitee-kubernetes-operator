@@ -19,7 +19,7 @@ import "time"
 const (
 	GatewayUrl                          = "http://localhost:9000/gateway"
 	SamplesPath                         = "../config/samples"
-	ContextWithSecretFile               = SamplesPath + "/context/dev/management-context-with-secret-ref.yml"
+	ContextWithSecretFile               = SamplesPath + "/context/dev/api-context-with-secret-ref.yml"
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
 	ApiWithDisabledHCFile               = SamplesPath + "/apim/api-with-health-check-disabled.yml"
 	ApiWithHCFile                       = SamplesPath + "/apim/api-with-health-check.yml"
@@ -54,6 +54,6 @@ const (
 	ApiResourceOauth2AMFile           = SamplesPath + "/apim/api-resource-oauth2-am.yml"
 	ApiResourceOauth2GenericFile      = SamplesPath + "/apim/api-resource-oauth2-generic.yml"
 
-	contextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yml"
+	contextWithCredentialsFile = SamplesPath + "/context/dev/api-context-with-credentials.yml"
 	apimClientTimeout          = 5 * time.Second
 )

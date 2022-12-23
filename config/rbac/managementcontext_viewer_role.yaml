@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# permissions for end users to view managementcontexts.
+# permissions for end users to view apicontexts.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: managementcontext-viewer-role
+  name: apicontext-viewer-role
 rules:
 - apiGroups:
   - gravitee.io
   resources:
-  - managementcontexts
+  - apicontexts
   verbs:
   - get
   - list
@@ -29,6 +29,6 @@ rules:
 - apiGroups:
   - gravitee.io
   resources:
-  - managementcontexts/status
+  - apicontexts/status
   verbs:
   - get
