@@ -15,10 +15,10 @@ spec:
       kind: ApiDefinition
       name: apidefinitions.gravitee.io
       version: v1alpha1
-    - description: ManagementContext is the Schema for the Management API.
-      displayName: Management Context
-      kind: ManagementContext
-      name: managementcontexts.gravitee.io
+    - description: API Context.
+      displayName: API Context
+      kind: ApiContext
+      name: apicontexts.gravitee.io
       version: v1alpha1
   description: Gravitee Operator for Kubernetes (GKO)
   displayName: Gravitee.io Kubernetes Operator

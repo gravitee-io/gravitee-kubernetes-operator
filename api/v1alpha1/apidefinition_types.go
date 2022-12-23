@@ -18,9 +18,11 @@ package v1alpha1
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"k8s.io/apimachinery/pkg/types"
+	kUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // The API definition is the main resource handled by the Kubernetes Operator
@@ -33,33 +35,39 @@ type ApiDefinitionSpec struct {
 
 	// The contextRef refers to the namespace and the name of a ManagementContext used for
 	// synchronizing API definitions with a Gravitee API Management instance.
-	Context *model.NamespacedName `json:"contextRef,omitempty"`
+	Contexts []model.NamespacedName `json:"contexts,omitempty"`
+}
+
+type StatusContext struct {
+	OrgID string `json:"organizationId"`
+	EnvID string `json:"environmentId"`
+	// The ID of the API definition in the Gravitee API Management instance (if a management context has been configured).
+	ID      string `json:"id"`
+	CrossID string `json:"crossId"`
+	// The processing status of the API definition.
+	Status ProcessingStatus `json:"status,omitempty"`
+	// The state of the API. Can be either STARTED or STOPPED.
+	State string `json:"state,omitempty"`
 }
 
 // ApiDefinitionStatus defines the observed state of API Definition.
 type ApiDefinitionStatus struct {
-	// The ID of the API definition in the Gravitee API Management instance (if a management context has been configured).
-	ID string `json:"id"`
-	// The cross ID of the API definition. Similar to the ID but does not change across environments.
-	CrossID string `json:"crossId"`
-	// The state of the API. Can be either STARTED or STOPPED.
-	State string `json:"state,omitempty"`
-	// The processing status of the API definition.
-	ProcessingStatus ProcessingStatus `json:"processingStatus,omitempty"`
-	// The observed generation is used internally, together with the processing status,
-	// to determine if the API definition is being updated or created.
-	ObservedGeneration int64 `json:"generation"`
+	Contexts           map[string]StatusContext `json:"contexts,omitempty"`
+	ObservedGeneration int64                    `json:"observedGeneration,omitempty"`
+}
+
+func (s *ApiDefinitionStatus) Initialize() {
+	if s.Contexts == nil {
+		s.Contexts = make(map[string]StatusContext)
+	}
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`,description="API state (STARTED or STOPPED)."
 // +kubebuilder:printcolumn:name="Entrypoint",type=string,JSONPath=`.spec.proxy.virtual_hosts[*].path`,description="API entrypoint."
 // +kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.spec.proxy.groups[*].endpoints[*].target`,description="API endpoint."
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
-// +kubebuilder:printcolumn:name="Management Context",type=string,JSONPath=`.spec.contextRef.name`,description="Management context name."
-// +kubebuilder:printcolumn:name="Processing Status",type=string,JSONPath=`.status.processingStatus`,description="Api definition processing status."
 // +kubebuilder:resource:shortName=graviteeapis
 // ApiDefinition is the Schema for the apidefinitions API.
 type ApiDefinition struct {
@@ -70,37 +78,63 @@ type ApiDefinition struct {
 	Status ApiDefinitionStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=Completed;Failed;Reconciling;
+// +kubebuilder:validation:Enum=Completed;Failed;
 type ProcessingStatus string
 
 const (
-	ProcessingStatusCompleted   ProcessingStatus = "Completed"
-	ProcessingStatusFailed      ProcessingStatus = "Failed"
-	ProcessingStatusReconciling ProcessingStatus = "Reconciling"
+	ProcessingStatusCompleted ProcessingStatus = "Completed"
+	ProcessingStatusFailed    ProcessingStatus = "Failed"
 )
 
-func (api *ApiDefinition) HasDeletionFinalizer() bool {
-	return util.ContainsFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
+func (api *ApiDefinition) IsMissingDeletionFinalizer() bool {
+	return !kUtil.ContainsFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
 }
 
 func (api *ApiDefinition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-func (api *ApiDefinition) IsBeingUpdated() bool {
-	return api.hasNewGeneration() || api.isReconciling()
+func (api *ApiDefinition) PickID(statusKey string) string {
+	status, ok := api.Status.Contexts[statusKey]
+
+	if ok && status.ID != "" {
+		return status.ID
+	}
+
+	return api.GetID()
 }
 
-func (api *ApiDefinition) IsBeingCreated() bool {
-	return api.Status.CrossID == ""
+func (api *ApiDefinition) GetID() string {
+	if api.Spec.ID != "" {
+		return api.Spec.ID
+	}
+
+	return string(api.UID)
 }
 
-func (api *ApiDefinition) hasNewGeneration() bool {
-	return api.Status.ObservedGeneration != api.ObjectMeta.Generation
+func (api *ApiDefinition) PickCrossID(statusKey string) string {
+	status, ok := api.Status.Contexts[statusKey]
+
+	if ok && status.CrossID != "" {
+		return status.CrossID
+	}
+
+	return api.GetOrGenerateCrossID()
 }
 
-func (api *ApiDefinition) isReconciling() bool {
-	return api.Status.ProcessingStatus == ProcessingStatusReconciling
+func (api *ApiDefinition) GetOrGenerateCrossID() string {
+	if api.Spec.CrossID != "" {
+		return api.Spec.CrossID
+	}
+
+	return utils.ToUUID(types.NamespacedName{Namespace: api.Namespace, Name: api.Name}.String())
+}
+
+func (spec *ApiDefinitionSpec) SetDefinitionContext() {
+	spec.DefinitionContext = &model.DefinitionContext{
+		Mode:   model.ModeFullyManaged,
+		Origin: model.OriginKubernetes,
+	}
 }
 
 // +kubebuilder:object:root=true
