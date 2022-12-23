@@ -15,114 +15,68 @@
 package internal
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
-	gioModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
-	"k8s.io/client-go/util/retry"
+	"k8s.io/apimachinery/pkg/util/errors"
 )
 
-func (d *Delegate) CreateOrUpdate(
-	apiDefinition *gio.ApiDefinition,
-) error {
-	api := apiDefinition.DeepCopy()
-	api.Status.CrossID = getOrGenerateCrossId(api)
-	api.Status.ID = getOrGenerateId(api)
-	api.Spec.Id = api.Status.ID
-	api.Spec.CrossId = api.Status.CrossID
-
-	// TODO Check if Management context is provided and don't add default plan if it is the case ?
+func (d *Delegate) CreateOrUpdate(api *gio.ApiDefinition) error {
 	addDefaultPlan(api)
-
-	generateEmptyPlanCrossIds(api)
-
-	if err := d.ResolveResources(api); err != nil {
-		return err
-	}
 
 	api.Spec.DefinitionContext = &model.DefinitionContext{
 		Origin: origin,
 		Mode:   mode,
 	}
 
-	//nolint:nestif // Needed for proper error handling and meaningful logging
-	if d.HasManagementContext() {
-		apiJson, marshalErr := json.Marshal(api.Spec)
-		if marshalErr != nil {
-			d.log.Error(marshalErr, "Unable to marshall API definition as JSON")
-			return marshalErr
-		}
-
-		_, findErr := d.apimClient.GetByCrossId(api.Status.CrossID)
-
-		if findErr != nil && !clienterror.IsNotFound(findErr) {
-			return findErr
-		}
-
-		importMethod := http.MethodPost
-		if findErr == nil {
-			importMethod = http.MethodPut
-		}
-
-		mgmtApi, mgmtErr := d.apimClient.ImportApi(importMethod, apiJson)
-		if mgmtErr != nil {
-			d.log.Error(mgmtErr, "Unable to create API to the Management API")
-			return mgmtErr
-		}
-
-		if err := d.ensureKubernetesContext(mgmtApi); err != nil {
-			return err
-		}
-
-		d.log.Info(fmt.Sprintf("Api has been %s to the Management API", importMethod))
-
-		// Get Plan Id from the Management API to send it to the Gateway. (Used by the Gateway to find subscription)
-		retrieveMgmtPlanIds(api, mgmtApi)
-
-		// Make sure status ID will match APIM ID (could be different if APIM generated it)
-		api.Spec.Id = mgmtApi.Id
+	if d.HasContext() {
+		return d.UpdateWithContext(api)
 	}
 
-	if api.Spec.State == model.StateStopped {
-		if err := d.deleteConfigMap(api.Namespace, api.Name); err != nil {
-			d.log.Error(err, "Unable to delete ConfigMap from API definition")
-			return err
-		}
-	} else {
-		if err := d.saveConfigMap(api); err != nil {
-			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
-			return err
-		}
-	}
-
-	// Creation succeeded, update Status
-	status := api.Status.DeepCopy()
-	status.ObservedGeneration = api.ObjectMeta.Generation
-	status.ProcessingStatus = gio.ProcessingStatusCompleted
-	status.State = api.Spec.State
-	status.ID = api.Spec.Id
-
-	api.Status = *status
-
-	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		return d.k8sClient.Status().Update(d.ctx, api)
-	}); err != nil {
-		d.log.Error(err, "Unable to update API definition status")
-		return err
-	}
-
-	return nil
+	return d.UpdateWithoutContext(api)
 }
 
-func (d *Delegate) ensureKubernetesContext(api *gioModel.ApiEntity) error {
-	if api.ShouldSetKubernetesContext() {
-		if err := d.apimClient.SetKubernetesContext(api.Id); err != nil {
-			return err
+func (d *Delegate) UpdateWithContext(api *gio.ApiDefinition) error {
+	errs := make([]error, 0)
+
+	for i, context := range d.contexts {
+		cp, err := context.compile(api)
+
+		if err != nil {
+			errs = append(errs, err)
 		}
+
+		if err = d.ResolveResources(cp); err != nil {
+			errs = append(errs, err)
+		}
+
+		if err = context.update(cp); err != nil {
+			errs = append(errs, err)
+		}
+
+		if err = d.updateConfigMap(cp, &d.contexts[i]); err != nil {
+			errs = append(errs, err)
+		}
+
+		api.Status.Contexts[context.Location] = cp.Status.Contexts[context.Location]
 	}
-	return nil
+
+	return errors.NewAggregate(errs)
+}
+
+func (d *Delegate) UpdateWithoutContext(api *gio.ApiDefinition) error {
+	spec := &api.Spec
+
+	generateEmptyPlanCrossIds(spec)
+
+	errs := make([]error, 0)
+
+	if err := d.ResolveResources(api); err != nil {
+		errs = append(errs, err)
+	}
+
+	if err := d.updateConfigMap(api, nil); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errors.NewAggregate(errs)
 }

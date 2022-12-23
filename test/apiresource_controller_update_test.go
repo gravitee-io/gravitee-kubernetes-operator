@@ -92,11 +92,14 @@ var _ = Describe("API Resource Controller", func() {
 					return err
 				}
 
-				if createdApi.Status.ProcessingStatus != gio.ProcessingStatusCompleted {
-					return errors.New("api is not ready")
-				}
-
-				return nil
+				return internal.AssertStatusContextMatches(createdApi, contextLookupKey, &gio.StatusContext{
+					EnvID:   "DEFAULT",
+					OrgID:   "DEFAULT",
+					CrossID: createdApi.GetOrGenerateCrossID(),
+					ID:      createdApi.GetID(),
+					Status:  gio.ProcessingStatusCompleted,
+					State:   "STARTED",
+				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Updating the API resource, expecting the API definition resource to be updated")
@@ -110,7 +113,7 @@ var _ = Describe("API Resource Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(createdApi.Status.ID)
+				api, apiErr := apimClient.GetApiById(internal.GetStatusId(createdApi, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
