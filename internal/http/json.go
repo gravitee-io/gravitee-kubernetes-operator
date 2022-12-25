@@ -12,48 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clienterror
+package http
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 )
 
-type BadRequestError struct {
-	Message string `json:"message"`
+func WriteJSON(resp *http.Response, entity any) error {
+	if resp.Body == nil || entity == nil {
+		return nil
+	}
+	return json.NewDecoder(resp.Body).Decode(entity)
 }
 
-func (e BadRequestError) Error() string {
-	if e.Message == "" {
-		return "BAD REQUEST"
+func ReadJSON(entity any) (io.Reader, error) {
+	buf := new(bytes.Buffer)
+	if entity == nil {
+		return buf, nil
 	}
-	return e.Message
-}
-
-func NewBadRequestError(resp *http.Response) BadRequestError {
-	if resp.Body == nil {
-		return BadRequestError{}
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-
-	if err != nil {
-		return BadRequestError{}
-	}
-
-	var badRequestErr BadRequestError
-
-	if err = json.Unmarshal(body, &badRequestErr); err != nil {
-		return BadRequestError{}
-	}
-
-	return badRequestErr
-}
-
-func IsBadRequest(err error) bool {
-	return errors.As(err, &BadRequestError{})
+	return buf, json.NewEncoder(buf).Encode(entity)
 }

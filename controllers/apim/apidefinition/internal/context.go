@@ -22,7 +22,7 @@ import (
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
 const (
@@ -98,13 +98,8 @@ func (c *DelegateContext) update(api *gio.ApiDefinition) error {
 
 	statusContext := api.Status.Contexts[c.Location]
 
-	apiJson, jsonErr := json.Marshal(spec)
-	if jsonErr != nil {
-		return jsonErr
-	}
-
-	_, findErr := c.GetByCrossId(spec.CrossID)
-	if findErr != nil && !clienterror.IsNotFound(findErr) {
+	_, findErr := c.APIs.GetByCrossID(spec.CrossID)
+	if errors.IgnoreNotFound(findErr) != nil {
 		return newContextError(c.Location, findErr)
 	}
 
@@ -113,13 +108,13 @@ func (c *DelegateContext) update(api *gio.ApiDefinition) error {
 		importMethod = http.MethodPut
 	}
 
-	mgmtApi, mgmtErr := c.ImportApi(importMethod, apiJson)
+	mgmtApi, mgmtErr := c.APIs.Import(importMethod, &spec.Api)
 	if mgmtErr != nil {
 		return newContextError(c.Location, mgmtErr)
 	}
 
 	if mgmtApi.ShouldSetKubernetesContext() {
-		if err := c.SetKubernetesContext(mgmtApi.ID); err != nil {
+		if err := c.APIs.SetKubernetesContext(mgmtApi.ID); err != nil {
 			return newContextError(c.Location, err)
 		}
 	}
@@ -129,8 +124,8 @@ func (c *DelegateContext) update(api *gio.ApiDefinition) error {
 	statusContext.ID = mgmtApi.ID
 	statusContext.CrossID = spec.CrossID
 	statusContext.State = spec.State
-	statusContext.OrgID = c.GetOrgId()
-	statusContext.EnvID = c.GetEnvId()
+	statusContext.OrgID = c.OrgID()
+	statusContext.EnvID = c.EnvID()
 	statusContext.Status = gio.ProcessingStatusCompleted
 
 	api.Status.Contexts[c.Location] = statusContext
@@ -149,13 +144,5 @@ func (c *DelegateContext) delete(api *gio.ApiDefinition) error {
 
 	status := api.Status.Contexts[c.Location]
 
-	if status.ID == "" {
-		return nil // todo return an error instead
-	}
-
-	if err := c.DeleteApi(status.ID); !clienterror.IsNotFound(err) {
-		return err
-	}
-
-	return nil
+	return errors.IgnoreNotFound(c.APIs.Delete(status.ID))
 }

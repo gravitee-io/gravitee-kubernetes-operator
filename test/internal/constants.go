@@ -14,8 +14,6 @@
 
 package internal
 
-import "time"
-
 const (
 	GatewayUrl                          = "http://localhost:9000/gateway"
 	SamplesPath                         = "../config/samples"
@@ -55,5 +53,4 @@ const (
 	ApiResourceOauth2GenericFile      = SamplesPath + "/apim/api-resource-oauth2-generic.yml"
 
 	contextWithCredentialsFile = SamplesPath + "/context/dev/api-context-with-credentials.yml"
-	apimClientTimeout          = 5 * time.Second
 )

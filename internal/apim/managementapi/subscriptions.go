@@ -15,99 +15,46 @@
 package managementapi
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
-func (client *Client) SubscribeToPlan(
-	apiId string,
-	applicationId string,
-	planId string,
-) (*model.Subscription, error) {
-	queryParams := "?application=" + applicationId + "&plan=" + planId
-
-	url := client.envUrl() + "/apis/" + apiId + "/subscriptions" + queryParams
-
-	req, err := http.NewRequestWithContext(client.ctx, http.MethodPost, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"unable to subscribe to the plan into the Management API, ApiId=%s, ApplicationId=%s, PlanId=%s",
-			apiId, applicationId, planId)
-	}
-
-	resp, err := client.http.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf(
-			"unable to subscribe to the plan into the Management API, ApiId=%s, ApplicationId=%s, PlanId=%s, HTTP Status: %d",
-			apiId, applicationId, planId, resp.StatusCode)
-	}
-
-	body, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, readErr
-	}
-
-	var subscription model.Subscription
-	err = json.Unmarshal(body, &subscription)
-	if err != nil {
-		return nil, err
-	}
-
-	return &subscription, nil
+type Subscriptions struct {
+	*Client
 }
 
-func (client *Client) GetSubscriptionApiKey(
-	apiId string,
-	subscriptionId string,
-) ([]model.ApiKeyEntity, error) {
-	req, err := http.NewRequestWithContext(
-		client.ctx,
-		http.MethodGet,
-		client.envUrl()+"/apis/"+apiId+"/subscriptions/"+subscriptionId+"/apikeys",
-		nil,
+func NewSubscriptions(client *Client) *Subscriptions {
+	return &Subscriptions{Client: client}
+}
+
+func (svc *Subscriptions) APITarget(apiID string) *http.URL {
+	return svc.EnvTarget("apis").WithPath(apiID).WithPath("subscriptions")
+}
+
+func (svc *Subscriptions) Subscribe(apiID, applicationID, planID string) (*model.Subscription, error) {
+	url := svc.APITarget(apiID).WithQueryParams(
+		map[string]string{
+			planParam:        planID,
+			applicationParam: applicationID,
+		},
 	)
 
-	if err != nil && apiId == "" {
-		return nil, fmt.Errorf(
-			"unable to look for apikey matching apiId=%s and subscriptionId=%s (%w)",
-			apiId, subscriptionId, err)
-	}
-	resp, err := client.http.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("an error as occurred while performing GetSubscriptionApiKey request")
-	}
+	subscription := new(model.Subscription)
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(
-			"an error as occurred trying to get apikey matching apiId=%s and subscriptionId=%s, HTTP Status: %d ",
-			apiId, subscriptionId, resp.StatusCode)
-	}
-
-	body, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, readErr
-	}
-
-	var apiKeys []model.ApiKeyEntity
-
-	err = json.Unmarshal(body, &apiKeys)
-	if err != nil {
+	if err := svc.http.Post(url.String(), nil, subscription); err != nil {
 		return nil, err
 	}
 
-	return apiKeys, nil
+	return subscription, nil
+}
+
+func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiKeyEntity, error) {
+	url := svc.APITarget(apiID).WithPath(subscriptionID).WithPath("apikeys")
+	apiKeys := new([]model.ApiKeyEntity)
+
+	if err := svc.http.Get(url.String(), apiKeys); err != nil {
+		return nil, err
+	}
+
+	return *apiKeys, nil
 }
