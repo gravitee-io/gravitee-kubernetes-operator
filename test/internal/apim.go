@@ -16,18 +16,24 @@ package internal
 
 import (
 	"context"
-	"net/http"
 
 	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
 )
 
 func NewApimClient(ctx context.Context) (*apim.Client, error) {
-	httpClient := http.Client{Timeout: apimClientTimeout}
-
 	context, err := newApiContext(contextWithCredentialsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	return apim.NewClient(ctx, context.Spec.Management, httpClient), nil
+	client, err := apim.NewClient(ctx, context.Spec.Management)
+	if err != nil {
+		return nil, err
+	}
+
+	client.APIs = apim.NewAPIs(client)
+	client.Applications = apim.NewApplications(client)
+	client.Subscriptions = apim.NewSubscriptions(client)
+
+	return client, nil
 }

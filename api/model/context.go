@@ -15,8 +15,6 @@
 // +kubebuilder:object:generate=true
 package model
 
-import "net/http"
-
 type Management struct {
 	// The URL of a management API instance
 	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
@@ -87,32 +85,5 @@ func (m *Management) SetCredentials(username, password string) {
 	m.Auth.Credentials = &BasicAuth{
 		Username: username,
 		Password: password,
-	}
-}
-
-func (m *Management) Authenticate(req *http.Request) {
-	if !m.HasAuthentication() {
-		return
-	}
-
-	bearerToken := m.Auth.BearerToken
-	basicAuth := m.Auth.Credentials
-
-	if bearerToken != "" {
-		setBearerToken(req, bearerToken)
-	} else if basicAuth != nil {
-		setBasicAuth(req, basicAuth)
-	}
-}
-
-func setBearerToken(request *http.Request, token string) {
-	if token != "" {
-		request.Header.Add("Authorization", "Bearer "+token)
-	}
-}
-
-func setBasicAuth(request *http.Request, auth *BasicAuth) {
-	if auth != nil && auth.Username != "" {
-		request.SetBasicAuth(auth.Username, auth.Password)
 	}
 }

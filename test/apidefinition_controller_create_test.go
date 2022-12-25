@@ -28,7 +28,6 @@ limitations under the License.
 package test
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -157,7 +156,7 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -213,7 +212,7 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -251,10 +250,8 @@ var _ = Describe("Create", func() {
 					Status:   "PUBLISHED",
 				},
 			}
-			apiJson, err := json.Marshal(existingApiSpec)
-			Expect(err).ToNot(HaveOccurred())
 
-			_, err = apimClient.ImportApi(http.MethodPost, apiJson)
+			_, err = apimClient.APIs.Import(http.MethodPost, &existingApiSpec.Api)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Create a management context to synchronize with the REST API")
@@ -291,7 +288,7 @@ var _ = Describe("Create", func() {
 			By("Call rest API and expect one API matching status cross ID")
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -355,7 +352,7 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -434,7 +431,7 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}

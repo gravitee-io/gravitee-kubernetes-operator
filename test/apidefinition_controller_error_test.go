@@ -100,6 +100,11 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Update the API definition")
 			apiDefinition := savedApiDefinition.DeepCopy()
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
 			apiDefinition.Spec.Name = "new-name"
 
 			err = k8sClient.Update(ctx, apiDefinition)
@@ -136,7 +141,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, cliErr := apimClient.GetApiById(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				api, cliErr := apimClient.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
 				if cliErr != nil {
 					return cliErr
 				}
