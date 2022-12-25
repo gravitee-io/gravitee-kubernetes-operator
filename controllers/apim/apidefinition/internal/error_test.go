@@ -21,15 +21,14 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	apimError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	apimError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 var errRaw = fmt.Errorf("raw error")
-var errNotFound = ContextError{Cause: apimError.NotFoundError{}}
-var errBadRequest = ContextError{Cause: apimError.BadRequestError{}}
-var errUnauthorized = ContextError{Cause: apimError.UnauthorizedError{}}
-var errIllegalState = ContextError{Cause: apimError.IllegalStateError{}}
+var errNotFound = ContextError{Cause: apimError.ServerError{StatusCode: 404}}
+var errBadRequest = ContextError{Cause: apimError.ServerError{StatusCode: 400}}
+var errUnauthorized = ContextError{Cause: apimError.ServerError{StatusCode: 401}}
 
 var _ = Describe("Errors", func() {
 	DescribeTable("recoverable errors",
@@ -38,7 +37,6 @@ var _ = Describe("Errors", func() {
 		},
 		Entry("With raw error", errRaw, true),
 		Entry("With not found error", errNotFound, true),
-		Entry("With illegal state error", errIllegalState, true),
 		Entry("With unauthorized error", errUnauthorized, false),
 		Entry("With bad request", errBadRequest, false),
 	)

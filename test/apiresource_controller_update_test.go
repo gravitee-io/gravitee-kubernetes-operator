@@ -113,7 +113,7 @@ var _ = Describe("API Resource Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.GetApiById(internal.GetStatusId(createdApi, contextLookupKey))
+				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(createdApi, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}

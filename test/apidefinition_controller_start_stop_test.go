@@ -120,7 +120,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, cliErr := apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				api, cliErr := apimClient.APIs.GetByID(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
 				if cliErr != nil {
 					return err
 				}

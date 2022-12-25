@@ -22,6 +22,9 @@ import (
 )
 
 func (d *Delegate) UpdateStatusSuccess(api *gio.ApiDefinition) error {
+	if api.IsBeingDeleted() {
+		return nil
+	}
 	api.Status.ObservedGeneration = api.ObjectMeta.Generation
 	return d.k8s.Status().Update(d.ctx, api)
 }
@@ -33,7 +36,7 @@ func (d *Delegate) UpdateStatusFailure(api *gio.ApiDefinition, err error) error 
 }
 
 func updateStatusContexts(api *gio.ApiDefinition, err error) {
-	//nolint:errorlint // type assertion is intended here
+	//nolint:errorlint // cannot use As on interface
 	agg, ok := err.(kErrors.Aggregate)
 
 	if !ok {
@@ -49,19 +52,17 @@ func updateStatusContexts(api *gio.ApiDefinition, err error) {
 }
 
 func updateStatusContext(api *gio.ApiDefinition, err error) {
-	if !errors.Is(err, ContextError{}) {
+	contextError := &ContextError{}
+	if !errors.As(err, contextError) {
 		return
 	}
 
-	//nolint:errcheck,errorlint // type assertion is intended here
-	cErr := err.(ContextError)
-
-	context, ok := api.Status.Contexts[cErr.Context]
+	context, ok := api.Status.Contexts[contextError.Context]
 
 	if !ok {
 		context = gio.StatusContext{}
 	}
 
 	context.Status = gio.ProcessingStatusFailed
-	api.Status.Contexts[cErr.Context] = context
+	api.Status.Contexts[contextError.Context] = context
 }

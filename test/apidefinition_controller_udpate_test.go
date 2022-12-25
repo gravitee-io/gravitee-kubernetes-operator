@@ -202,7 +202,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, cliErr := apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				api, cliErr := apimClient.APIs.GetByID(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
 				if cliErr != nil {
 					return cliErr
 				}
@@ -217,7 +217,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Calling rest API, expecting one API matching status ID and kubernetes context")
 
 			Eventually(func() error {
-				api, cliErr := apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				api, cliErr := apimClient.APIs.GetByID(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
 				if cliErr != nil {
 					return cliErr
 				}
@@ -299,7 +299,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				_, err = apimClient.GetApiById(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				_, err = apimClient.APIs.GetByID(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
 				return err
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})

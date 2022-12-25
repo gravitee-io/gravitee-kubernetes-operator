@@ -28,11 +28,10 @@ limitations under the License.
 package test
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
-	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -59,7 +58,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		var contextLookupKey types.NamespacedName
 
 		var gatewayEndpoint string
-		var mgmtClient *managementapi.Client
+		var apimClient *managementapi.Client
 
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
@@ -101,7 +100,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			mgmtClient, err = internal.NewApimClient(ctx)
+			apimClient, err = internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 		})
@@ -116,7 +115,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		It("Should return success with subscription", func() {
 			By("Create a subscription and get api key")
 			apiKey := createSubscriptionAndGetApiKey(
-				mgmtClient,
+				apimClient,
 				savedApiDefinition,
 				contextLookupKey,
 				func(mgmtApi *managementapimodel.ApiEntity) string { return mgmtApi.Plans[0].Id },
@@ -183,7 +182,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			savedApiDefinition = updatedApiDefinition.DeepCopy()
 
 			apiKey := createSubscriptionAndGetApiKey(
-				mgmtClient,
+				apimClient,
 				savedApiDefinition,
 				contextLookupKey,
 				func(mgmtApi *managementapimodel.ApiEntity) string {
@@ -217,40 +216,36 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Get the API definition from ManagementApi and expect deleted state")
 
 			Eventually(func() error {
-				_, apiErr := mgmtClient.GetApiById(internal.GetStatusId(savedApiDefinition, contextLookupKey))
-				if !clientError.IsNotFound(apiErr) {
-					return fmt.Errorf("API definition should not be found")
-				}
-
-				return nil
+				_, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				return errors.IgnoreNotFound(apiErr)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
 })
 
 func createSubscriptionAndGetApiKey(
-	mgmtClient *managementapi.Client,
+	apimClient *managementapi.Client,
 	createdApiDefinition *gio.ApiDefinition,
 	contextLocation types.NamespacedName,
 	planSelector func(*managementapimodel.ApiEntity) string,
 ) string {
 	// Get first active application
-	mgmtApplications, mgmtErr := mgmtClient.SearchApplications("", "ACTIVE")
+	mgmtApplications, mgmtErr := apimClient.Applications.Search("", "ACTIVE")
 	Expect(mgmtErr).ToNot(HaveOccurred())
 	defaultApplication := mgmtApplications[0]
 
 	// Get Api description with plan
-	mgmtApi, mgmtErr := mgmtClient.GetApiById(internal.GetStatusId(createdApiDefinition, contextLocation))
+	mgmtApi, mgmtErr := apimClient.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLocation))
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	planId := planSelector(mgmtApi)
 
 	// Create subscription
-	mgmtSubscription, mgmtErr := mgmtClient.SubscribeToPlan(mgmtApi.ID, defaultApplication.Id, planId)
+	mgmtSubscription, mgmtErr := apimClient.Subscriptions.Subscribe(mgmtApi.ID, defaultApplication.Id, planId)
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	// Get subscription api keys
-	mgmtSubscriptionApiKeys, mgmtErr := mgmtClient.GetSubscriptionApiKey(mgmtApi.ID, mgmtSubscription.Id)
+	mgmtSubscriptionApiKeys, mgmtErr := apimClient.Subscriptions.GetApiKeys(mgmtApi.ID, mgmtSubscription.Id)
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	return mgmtSubscriptionApiKeys[0].Key
