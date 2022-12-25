@@ -15,274 +15,93 @@
 package managementapi
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	kModel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func (client *Client) GetByCrossId(
-	crossId string,
-) (*model.ApiListItem, error) {
-	url := client.envUrl() + "/apis?crossId=" + crossId
+const (
+	crossIDParam     = "crossId"
+	stateActionParam = "action"
+	planParam        = "plan"
+	applicationParam = "application"
+)
 
-	req, err := http.NewRequestWithContext(
-		client.ctx,
-		http.MethodGet,
-		url,
-		nil,
-	)
+var importParams = map[string]string{
+	"definitionVersion": "2.0.0",
+}
 
-	if err != nil && crossId == "" {
-		return nil, fmt.Errorf("unable to create request for %s (%w)", url, err)
-	}
+var deleteParams = map[string]string{
+	"closePlans": "true",
+}
 
-	resp, err := client.http.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("an error as occurred while performing request to %s (%w)", url, err)
-	}
+type APIs struct {
+	*Client
+}
 
-	defer resp.Body.Close()
+func NewAPIs(client *Client) *APIs {
+	return &APIs{Client: client}
+}
 
-	switch resp.StatusCode {
-	case http.StatusOK:
-		break
-	case http.StatusUnauthorized:
-		return nil, clienterror.NewUnauthorizedCrossIdRequestError(crossId)
-	default:
-		return nil, fmt.Errorf("an error as occurred trying to find API %s, HTTP Status: %d ", crossId, resp.StatusCode)
-	}
+func (svc *APIs) GetByCrossID(crossID string) (*model.ApiListItem, error) {
+	url := svc.EnvTarget("apis").WithQueryParam(crossIDParam, crossID)
+	apis := new([]model.ApiListItem)
 
-	body, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, readErr
-	}
-
-	var apis []model.ApiListItem
-
-	err = json.Unmarshal(body, &apis)
-	if err != nil {
+	if err := svc.http.Get(url.String(), apis); err != nil {
 		return nil, err
 	}
 
-	if len(apis) == 0 {
-		return nil, clienterror.NewCrossIdNotFoundError(crossId)
+	if len(*apis) == 0 {
+		return nil, errors.NewNotFoundError()
 	}
 
-	if len(apis) > 1 {
-		return nil, clienterror.NewAmbiguousCrossIdError(crossId, len(apis))
-	}
-
-	return &apis[0], nil
+	return &(*apis)[0], nil
 }
 
-func (client *Client) GetApiById(
-	apiId string,
-) (*model.ApiEntity, error) {
-	req, err := http.NewRequestWithContext(
-		client.ctx,
-		http.MethodGet,
-		client.envUrl()+"/apis/"+apiId,
-		nil,
-	)
+func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
+	url := svc.EnvTarget("apis").WithPath(apiID)
+	api := new(model.ApiEntity)
 
-	if err != nil && apiId == "" {
-		return nil, fmt.Errorf("unable to look for apis matching id %s (%w)", apiId, err)
-	}
-	resp, err := client.http.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"an error as occurred while performing request GET %s (%w)",
-			client.envUrl()+"/apis/"+apiId, err,
-		)
-	}
-
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		break
-	case http.StatusUnauthorized:
-		return nil, clienterror.NewUnauthorizedApiRequestError(apiId)
-	case http.StatusNotFound:
-		return nil, clienterror.NewApiNotFoundError(apiId)
-	default:
-		return nil, fmt.Errorf(
-			"an error as occurred trying to get API matching id %s, HTTP Status: %d ",
-			apiId, resp.StatusCode,
-		)
-	}
-
-	body, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, readErr
-	}
-
-	var api model.ApiEntity
-
-	err = json.Unmarshal(body, &api)
-	if err != nil {
+	if err := svc.http.Get(url.String(), api); err != nil {
 		return nil, err
 	}
 
-	return &api, nil
+	return api, nil
 }
 
-func (client *Client) ImportApi(
-	importHttpMethod string,
-	apiJson []byte,
-) (*model.ApiEntity, error) {
-	url := client.envUrl() + "/apis/import?definitionVersion=2.0.0"
-	req, err := http.NewRequestWithContext(client.ctx, importHttpMethod, url, bytes.NewBuffer(apiJson))
+func (svc *APIs) Import(method string, spec *kModel.Api) (*model.ApiEntity, error) {
+	url := svc.EnvTarget("apis/import").WithQueryParams(importParams)
+	api := new(model.ApiEntity)
+	fun := svc.getImportFunc(method)
 
-	if err != nil {
-		return nil, fmt.Errorf("unable to import the api into the Management API")
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-	resp, err := client.http.Do(req)
-
-	if err != nil {
+	if err := fun(url.String(), spec, api); err != nil {
 		return nil, err
 	}
 
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
-
-	switch resp.StatusCode {
-	case http.StatusCreated:
-	case http.StatusOK:
-		break
-	case http.StatusUnauthorized:
-		return nil, clienterror.UnauthorizedError{}
-	case http.StatusBadRequest:
-		return nil, clienterror.NewBadRequestError(resp)
-	default:
-		return nil, fmt.Errorf("an error as occurred trying to import API definition, HTTP Status: %d ", resp.StatusCode)
-	}
-
-	body, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, readErr
-	}
-
-	var api model.ApiEntity
-
-	err = json.Unmarshal(body, &api)
-	if err != nil {
-		return nil, err
-	}
-
-	return &api, nil
+	return api, nil
 }
 
-func (client *Client) UpdateApiState(
-	apiId string,
-	action model.Action,
-) error {
-	url := client.envUrl() + "/apis/" + apiId + "?action=" + string(action)
-	req, err := http.NewRequestWithContext(client.ctx, http.MethodPost, url, nil)
-	if err != nil {
-		return fmt.Errorf("unable to update the api state into the Management API. Action: %s", action)
+func (svc *APIs) getImportFunc(method string) func(string, any, any) error {
+	if method == http.MethodPost {
+		return svc.http.Post
 	}
-
-	resp, err := client.http.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
-
-	switch resp.StatusCode {
-	case http.StatusNoContent:
-		return nil
-	case http.StatusUnauthorized:
-		return clienterror.NewUnauthorizedApiRequestError(apiId)
-	case http.StatusNotFound:
-		return clienterror.NewApiNotFoundError(apiId)
-	default:
-		return fmt.Errorf(
-			"an error as occurred trying to update API state matching id %s, HTTP Status: %d ",
-			apiId, resp.StatusCode,
-		)
-	}
+	return svc.http.Put
 }
 
-func (client *Client) DeleteApi(
-	apiId string,
-) error {
-	url := client.envUrl() + "/apis/" + apiId + "?closePlans=true"
-	req, err := http.NewRequestWithContext(client.ctx, http.MethodDelete, url, nil)
-	if err != nil {
-		return fmt.Errorf("unable to delete the api into the Management API")
-	}
-
-	resp, err := client.http.Do(req)
-	if err != nil {
-		return err
-	}
-
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
-
-	switch resp.StatusCode {
-	case http.StatusNoContent:
-		return nil
-	case http.StatusUnauthorized:
-		return clienterror.NewUnauthorizedApiRequestError(apiId)
-	case http.StatusNotFound:
-		return clienterror.NewApiNotFoundError(apiId)
-	default:
-		return fmt.Errorf(
-			"an error as occurred trying to delete API matching id %s, HTTP Status: %d ",
-			apiId, resp.StatusCode,
-		)
-	}
+func (svc *APIs) UpdateState(apiID string, action model.Action) error {
+	url := svc.EnvTarget("apis").WithPath(apiID).WithQueryParam(stateActionParam, string(action))
+	return svc.http.Post(url.String(), nil, nil)
 }
 
-func (client *Client) SetKubernetesContext(apiId string) error {
-	url := client.envUrl() + "/apis/" + apiId + "/definition-context"
+func (svc *APIs) Delete(apiID string) error {
+	url := svc.EnvTarget("apis").WithPath(apiID).WithQueryParams(deleteParams)
+	return svc.http.Delete(url.String(), nil)
+}
 
-	definitionContext, err := json.Marshal(model.NewKubernetesContext())
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequestWithContext(client.ctx, http.MethodPut, url, bytes.NewBuffer(definitionContext))
-	if err != nil {
-		return fmt.Errorf("unable initialize PUT request for URL %s", url)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.http.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return nil
-	case http.StatusUnauthorized:
-		return clienterror.NewUnauthorizedApiRequestError(apiId)
-	case http.StatusNotFound:
-		return clienterror.NewApiNotFoundError(apiId)
-	case http.StatusBadRequest:
-		return clienterror.NewBadRequestError(resp)
-	default:
-		return fmt.Errorf(
-			"an error as occurred trying to set kubernetes context for API %s, HTTP Status: %d ",
-			apiId, resp.StatusCode,
-		)
-	}
+func (svc *APIs) SetKubernetesContext(apiID string) error {
+	url := svc.EnvTarget("apis").WithPath(apiID).WithPath("definition-context")
+	return svc.http.Post(url.String(), model.NewKubernetesContext(), nil)
 }

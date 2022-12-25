@@ -16,8 +16,6 @@ package internal
 
 import (
 	"context"
-	"net/http"
-	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
@@ -30,13 +28,12 @@ import (
 )
 
 const (
-	requestTimeoutSeconds = 5
-	separator             = "/"
-	defaultPlanSecurity   = "KEY_LESS"
-	defaultPlanStatus     = "PUBLISHED"
-	defaultPlanName       = "G.K.O. Default"
-	origin                = "kubernetes"
-	mode                  = "fully_managed"
+	separator           = "/"
+	defaultPlanSecurity = "KEY_LESS"
+	defaultPlanStatus   = "PUBLISHED"
+	defaultPlanName     = "G.K.O. Default"
+	origin              = "kubernetes"
+	mode                = "fully_managed"
 )
 
 type Delegate struct {
@@ -128,9 +125,17 @@ func (d *Delegate) addContext(apiContext *gio.ApiContext) {
 		Location: apiContext.Namespace + separator + apiContext.Name,
 	}
 
-	if spec.Management != nil {
-		httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second}
-		context.Client = apim.NewClient(d.ctx, spec.Management, httpClient)
+	if spec.Management == nil {
+		d.contexts = append(d.contexts, context)
+		return
+	}
+
+	client, err := apim.NewClient(d.ctx, spec.Management)
+
+	if err != nil {
+		d.log.Error(err, "Unable to create management API client")
+	} else {
+		context.Client = client
 	}
 
 	d.contexts = append(d.contexts, context)
