@@ -18,7 +18,7 @@ import (
 	"errors"
 	"fmt"
 
-	apimError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	apimError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
@@ -44,7 +44,7 @@ func newContextError(location string, err error) error {
 func IsRecoverable(err error) bool {
 	errs := make([]error, 0)
 
-	//nolint:errorlint // type assertion is intended here
+	//nolint:errorlint // type assertion is intended here (Aggregate is an interface)
 	if agg, ok := err.(kErrors.Aggregate); ok {
 		errs = kErrors.Flatten(agg).Errors()
 	} else {
@@ -61,15 +61,14 @@ func IsRecoverable(err error) bool {
 }
 
 func isRecoverable(err error) bool {
-	//nolint:errorlint // type assertion is intended here
-	if cErr, ok := err.(ContextError); ok {
-		cause := cErr.Cause
-		return !isUnRecoverable(cause)
+	contextError := &ContextError{}
+	if errors.As(err, contextError) {
+		cause := contextError.Cause
+		serverError := &apimError.ServerError{}
+		if errors.As(cause, serverError) {
+			return serverError.IsRecoverable()
+		}
 	}
 
 	return true
-}
-
-func isUnRecoverable(err error) bool {
-	return apimError.IsBadRequest(err) || apimError.IsUnauthorized(err)
 }

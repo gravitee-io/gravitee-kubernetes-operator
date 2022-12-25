@@ -28,11 +28,10 @@ limitations under the License.
 package test
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
-	clientError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/clienterror"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -56,16 +55,17 @@ var _ = Describe("API Definition Controller", func() {
 
 			fixtureGenerator := internal.NewFixtureGenerator()
 
-			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.BasicApiFile,
 				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinition := apiWithContext.Api
-			managementContext := apiWithContext.Context
+			apiDefinition := fixtures.Api
+			managementContext := fixtures.Context
 			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
@@ -78,6 +78,10 @@ var _ = Describe("API Definition Controller", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+			}, timeout, interval).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
@@ -110,10 +114,10 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Call deleted API definition URL and expect 404")
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(gatewayEndpoint)
-				return callErr == nil && res.StatusCode == 404
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call rest API and expect DELETED api")
 
@@ -121,11 +125,8 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				_, apiErr := apimClient.GetApiById(internal.GetStatusId(createdApiDefinition, contextLookupKey))
-				if !clientError.IsNotFound(apiErr) {
-					return fmt.Errorf("Expected 404 error, got %w", apiErr)
-				}
-				return nil
+				_, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLookupKey))
+				return errors.IgnoreNotFound(apiErr)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Expect that the ConfigMap has been deleted")
@@ -147,10 +148,9 @@ var _ = Describe("API Definition Controller", func() {
 
 		It("Should detect when API has already been deleted", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
-			managementClient, err := internal.NewApimClient(ctx)
+			apimClient, err := internal.NewApimClient(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Expect the API Definition is Ready
 			Eventually(func() error {
 				if err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
@@ -159,7 +159,7 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
-			// Check created api is callable
+
 			var gatewayEndpoint = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() error {
@@ -168,8 +168,10 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Delete the API calling directly the REST API")
-			deleteErr := managementClient.DeleteApi(internal.GetStatusId(createdApiDefinition, contextLookupKey))
-			Expect(deleteErr).ToNot(HaveOccurred())
+
+			Eventually(func() error {
+				return apimClient.APIs.Delete(internal.GetStatusId(createdApiDefinition, contextLookupKey))
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Delete the API Definition")
 			err = k8sClient.Delete(ctx, apiDefinitionFixture)
