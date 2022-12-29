@@ -41,7 +41,7 @@ func (apim *APIM) OrgID() string {
 	return apim.orgID
 }
 
-// FromContext returns a new APIM instance from a given reconcile context, and management context.
+// FromContext returns a new APIM instance from a given reconcile context and management context.
 func FromContext(ctx context.Context, management *model.Management) (*APIM, error) {
 	orgID, envID := management.OrgId, management.EnvId
 	urls, err := client.NewURLs(management.BaseUrl, orgID, envID)
