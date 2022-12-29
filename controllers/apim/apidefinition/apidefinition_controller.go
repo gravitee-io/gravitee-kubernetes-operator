@@ -24,7 +24,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -52,7 +51,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithValues("namespace", req.Namespace, "name", req.Name)
+	log := log.FromContext(ctx)
 
 	apiDefinition := &gio.ApiDefinition{}
 
@@ -100,13 +99,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	contextsWatcher := &handler.Funcs{UpdateFunc: r.CreateUpdaterFromLookup(indexer.ContextField.String())}
-	resourceWatcher := &handler.Funcs{UpdateFunc: r.CreateUpdaterFromLookup(indexer.ResourceField.String())}
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ApiDefinition{}).
-		Watches(&source.Kind{Type: &gio.ApiContext{}}, contextsWatcher).
-		Watches(&source.Kind{Type: &gio.ApiResource{}}, resourceWatcher).
+		Watches(&source.Kind{Type: &gio.ApiContext{}}, r.ContextWatcher(indexer.ContextField.String())).
+		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.ResourceWatcher(indexer.ResourceField.String())).
 		WithEventFilter(ApiUpdateFilter{}).
 		Complete(r)
 }
