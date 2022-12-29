@@ -55,22 +55,8 @@ func (ApiUpdateFilter) Update(e event.UpdateEvent) bool {
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
 func (r *Reconciler) NewUpdateFromLookup(lookupField string) UpdateFunc {
 	return func(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
-		ctx := context.Background()
 		ref := model.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
-		log := log.FromContext(ctx).WithValues("reference", ref.String())
-
-		apis, err := r.listForRef(ctx, ref, lookupField)
-		if err != nil {
-			log.Error(err, "unable to list APIs for context, skipping update")
-			return
-		}
-
-		for _, api := range apis {
-			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-				Name:      api.Name,
-				Namespace: api.Namespace,
-			}})
-		}
+		r.queueRefs(lookupField, ref, q)
 	}
 }
 
@@ -81,27 +67,14 @@ func (r *Reconciler) NewUpdateFromLookup(lookupField string) UpdateFunc {
 // This can be used to reconcile API definitions when have been created before the referenced object (e.g. an API context).
 func (r *Reconciler) NewCreateFromLookup(lookupField string) CreateFunc {
 	return func(e event.CreateEvent, q workqueue.RateLimitingInterface) {
-		ctx := context.Background()
 		ref := model.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
-		log := log.FromContext(ctx).WithValues("reference", ref.String())
-
-		apis, err := r.listForRef(ctx, ref, lookupField)
-		if err != nil {
-			log.Error(err, "unable to list APIs for context, skipping update")
-			return
-		}
-
-		for _, api := range apis {
-			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-				Name:      api.Name,
-				Namespace: api.Namespace,
-			}})
-		}
+		r.queueRefs(lookupField, ref, q)
 	}
 }
 
 // ContextWatcher creates a watcher that will trigger an update on all API definitions
-// that are referencing the updated, or created context. API can thus be created before referencing
+// that are referencing the updated or created context.
+// API can thus be created before referencing
 // a context, and will be reconciled when the context is later created.
 func (r *Reconciler) ContextWatcher(lookupField string) *handler.Funcs {
 	return &handler.Funcs{
@@ -115,10 +88,28 @@ func (r *Reconciler) ResourceWatcher(lookupField string) *handler.Funcs {
 		UpdateFunc: r.NewUpdateFromLookup(indexer.ResourceField.String()),
 	}
 }
+
+func (r *Reconciler) queueRefs(lookupField string, ref model.NamespacedName, q workqueue.RateLimitingInterface) {
+	ctx := context.Background()
+	log := log.FromContext(ctx).WithValues("reference", ref.String())
+
+	apis, err := r.listForRef(ctx, ref, lookupField)
+	if err != nil {
+		log.Error(err, "unable to list APIs referencing resource, skipping update")
+		return
+	}
+
+	for _, api := range apis {
+		q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+			Name:      api.Name,
+			Namespace: api.Namespace,
+		}})
+	}
+}
+
 func (r *Reconciler) listForRef(
 	ctx context.Context, ref model.NamespacedName, field string,
 ) ([]gio.ApiDefinition, error) {
-	log := log.FromContext(ctx).WithValues("field", field)
 	apiDefinitionList := &gio.ApiDefinitionList{}
 
 	filter := &client.ListOptions{
@@ -126,7 +117,6 @@ func (r *Reconciler) listForRef(
 	}
 
 	if err := r.Client.List(ctx, apiDefinitionList, filter); err != nil {
-		log.Error(err, "unable to list API definitions from reference")
 		return nil, err
 	}
 
