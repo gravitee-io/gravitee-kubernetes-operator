@@ -236,8 +236,7 @@ var _ = Describe("Create", func() {
 			By("Init existing api in management api")
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
 			existingApiSpec.ID = uuid.NewV4String()
-			existingApiSpec.CrossID = uuid.FromString(
-				types.NamespacedName{Namespace: apiDefinitionFixture.Namespace, Name: apiDefinitionFixture.Name}.String())
+			existingApiSpec.CrossID = uuid.FromString(apiDefinitionFixture.GetNamespacedName())
 			existingApiSpec.DefinitionContext = &model.DefinitionContext{
 				Origin: origin,
 				Mode:   mode,
