@@ -37,6 +37,8 @@ func (client *Client) Context() context.Context {
 	return client.ctx
 }
 
+// Get returns the result of a GET request to the specified URL, marshaled into the target.
+// If the target is nil, the response is discarded.
 func (client *Client) Get(url string, target any) error {
 	req, err := client.prepareGet(url)
 	if err != nil {
@@ -46,6 +48,9 @@ func (client *Client) Get(url string, target any) error {
 	return client.do(req, target)
 }
 
+// Post returns the result of a POST request to the specified URL,
+// using entity as the body of the request, marshaling the result into target.
+// If the target is nil, the response is discarded.
 func (client *Client) Post(url string, entity, target any) error {
 	req, err := client.preparePost(url, entity)
 	if err != nil {
@@ -55,6 +60,9 @@ func (client *Client) Post(url string, entity, target any) error {
 	return client.do(req, target)
 }
 
+// Post returns the result of a PUT request to the specified URL,
+// using entity as the body of the request, marshaling the result into target.
+// If the target is nil, the response is discarded.
 func (client *Client) Put(url string, entity, target any) error {
 	req, err := client.preparePut(url, entity)
 	if err != nil {
@@ -64,6 +72,8 @@ func (client *Client) Put(url string, entity, target any) error {
 	return client.do(req, target)
 }
 
+// Delete returns the result of a DELETE request to the specified URL, marshaling the result into target.
+// If the target is nil, the response is discarded.
 func (client *Client) Delete(url string, target any) error {
 	req, err := client.prepareDelete(url)
 	if err != nil {

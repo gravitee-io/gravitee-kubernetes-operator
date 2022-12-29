@@ -16,14 +16,17 @@ package http
 
 import "net/url"
 
+// URL is a wrapper around url.URL that provides a fluent API for building URLs.
 type URL struct {
 	base *url.URL
 }
 
+// WithPath appends the given segments to the URL path.
 func (u *URL) WithPath(segments ...string) *URL {
 	return &URL{u.base.JoinPath(segments...)}
 }
 
+// WithQueryParam adds the given key-value pair to the URL query.
 func (u *URL) WithQueryParam(k, v string) *URL {
 	base := u.base
 	query := base.Query()
@@ -32,6 +35,7 @@ func (u *URL) WithQueryParam(k, v string) *URL {
 	return &URL{base}
 }
 
+// WithQueryParams adds the given key-value pairs to the URL query.
 func (u *URL) WithQueryParams(params map[string]string) *URL {
 	base := u.base
 	query := base.Query()
@@ -42,6 +46,7 @@ func (u *URL) WithQueryParams(params map[string]string) *URL {
 	return &URL{base}
 }
 
+// String returns the URL as a string.
 func (u *URL) String() string {
 	return u.base.String()
 }
