@@ -22,7 +22,7 @@ import (
 	"os"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -70,7 +70,7 @@ func main() {
 
 	opts := zap.Options{
 		Development:          os.Getenv("DEV_MODE") == "true",
-		EncoderConfigOptions: utils.NewEncoderConfigOption(),
+		EncoderConfigOptions: logging.NewEncoderConfigOption(),
 	}
 
 	opts.BindFlags(flag.CommandLine)
