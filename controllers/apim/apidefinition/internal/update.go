@@ -39,22 +39,30 @@ func (d *Delegate) UpdateWithContext(api *gio.ApiDefinition) error {
 	errs := make([]error, 0)
 
 	for i, context := range d.contexts {
-		cp, err := context.compile(api)
+		log := d.log.WithValues("context", context.Location).WithValues("api", api.GetNamespacedName())
 
+		cp, err := context.compile(api)
 		if err != nil {
 			errs = append(errs, err)
+			log.Error(err, "unable to compile api definition")
+			continue
 		}
 
 		if err = d.ResolveResources(cp); err != nil {
 			errs = append(errs, err)
+			log.Error(err, "unable to resolve resources")
+			continue
 		}
 
 		if err = context.update(cp); err != nil {
 			errs = append(errs, err)
+			log.Error(err, "unable to update api definition")
+			continue
 		}
 
 		if err = d.updateConfigMap(cp, &d.contexts[i]); err != nil {
 			errs = append(errs, err)
+			log.Error(err, "unable to update config map")
 		}
 
 		api.Status.Contexts[context.Location] = cp.Status.Contexts[context.Location]
