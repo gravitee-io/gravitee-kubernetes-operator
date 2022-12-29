@@ -34,19 +34,24 @@ type Client struct {
 	URLs *URLs
 }
 
+// URLs contains URLs targeting the organization and environment of the client.
 type URLs struct {
 	Org *http.URL
 	Env *http.URL
 }
 
+// EnvTarget returns a new URL with the given path appended to the environment URL.
 func (client *Client) EnvTarget(path string) *http.URL {
 	return client.URLs.Env.WithPath(path)
 }
 
+// OrgTarget returns a new URL with the given path appended to the organization URL.
 func (client *Client) OrgTarget(path string) *http.URL {
 	return client.URLs.Org.WithPath(path)
 }
 
+// NewURLs returns a new URLs instance for the given base URL
+// with Org path initialized from the given orgID and Env path initialized from the given envID.
 func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
 	base, err := http.NewURL(baseUrl)
 	if err != nil {
@@ -59,6 +64,8 @@ func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
 	return &URLs{org, env}, nil
 }
 
+// NewClient returns a new client for the given management context.
+// The client is created once per reconcile and management context and reused for all the operations.
 func NewClient(ctx context.Context, management *model.Management) (*Client, error) {
 	orgID, envID := management.OrgId, management.EnvId
 	urls, err := NewURLs(management.BaseUrl, orgID, envID)

@@ -20,6 +20,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
+// Subscriptions brings support for managing gravitee.io APIM support for subscriptions.
+// This service is used for testing purposes only and not initialized by the operator manager.
 type Subscriptions struct {
 	*client.Client
 }
