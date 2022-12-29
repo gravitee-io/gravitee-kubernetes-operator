@@ -127,7 +127,11 @@ func (api *ApiDefinition) GetOrGenerateCrossID() string {
 		return api.Spec.CrossID
 	}
 
-	return uuid.FromString(types.NamespacedName{Namespace: api.Namespace, Name: api.Name}.String())
+	return uuid.FromString(api.GetNamespacedName())
+}
+
+func (api *ApiDefinition) GetNamespacedName() string {
+	return types.NamespacedName{Namespace: api.Namespace, Name: api.Name}.String()
 }
 
 func (spec *ApiDefinitionSpec) SetDefinitionContext() {
