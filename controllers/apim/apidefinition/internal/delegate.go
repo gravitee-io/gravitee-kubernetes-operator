@@ -20,7 +20,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	coreV1 "k8s.io/api/core/v1"
 	k8s "sigs.k8s.io/controller-runtime/pkg/client"
@@ -130,12 +130,12 @@ func (d *Delegate) addContext(apiContext *gio.ApiContext) {
 		return
 	}
 
-	client, err := apim.NewClient(d.ctx, spec.Management)
+	apim, err := apim.FromContext(d.ctx, spec.Management)
 
 	if err != nil {
 		d.log.Error(err, "Unable to create management API client")
 	} else {
-		context.Client = client
+		context.APIM = apim
 	}
 
 	d.contexts = append(d.contexts, context)

@@ -12,84 +12,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package managementapi
+package apim
 
 import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
-const (
-	orgPath = "/management/organizations/"
-	envPath = "/environments/"
-)
+type APIM struct {
+	APIs *service.APIs
 
-// Client is the client for a given instance of the Gravitee.io Management API
-// The client is created once per reconcile and management context and reused for all the operations
-// of a reconcile cycle, using the reconcile context.Context.
-type Client struct {
-	http  *http.Client
-	urls  *URLs
 	orgID string
 	envID string
-	// services
-	APIs          *APIs
-	Applications  *Applications
-	Subscriptions *Subscriptions
 }
 
-type URLs struct {
-	Org *http.URL
-	Env *http.URL
+func (apim *APIM) EnvID() string {
+	return apim.envID
 }
 
-func (client *Client) EnvID() string {
-	return client.envID
+func (apim *APIM) OrgID() string {
+	return apim.orgID
 }
 
-func (client *Client) OrgID() string {
-	return client.orgID
-}
-
-func (client *Client) EnvTarget(path string) *http.URL {
-	return client.urls.Env.WithPath(path)
-}
-
-func (client *Client) OrgTarget(path string) *http.URL {
-	return client.urls.Org.WithPath(path)
-}
-
-func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
-	base, err := http.NewURL(baseUrl)
-	if err != nil {
-		return nil, err
-	}
-
-	org := base.WithPath(orgPath, orgID)
-	env := org.WithPath(envPath, envID)
-
-	return &URLs{org, env}, nil
-}
-
-func NewClient(ctx context.Context, management *model.Management) (*Client, error) {
+// FromContext returns a new APIM instance from a given reconcile context.
+func FromContext(ctx context.Context, management *model.Management) (*APIM, error) {
 	orgID, envID := management.OrgId, management.EnvId
-	urls, err := NewURLs(management.BaseUrl, orgID, envID)
+	urls, err := client.NewURLs(management.BaseUrl, orgID, envID)
 	if err != nil {
 		return nil, err
 	}
 
-	client := &Client{
-		http:  http.NewClient(ctx, toHttpAuth(management)),
-		urls:  urls,
-		envID: envID,
-		orgID: orgID,
+	client := &client.Client{
+		HTTP: http.NewClient(ctx, toHttpAuth(management)),
+		URLs: urls,
 	}
 
-	client.APIs = NewAPIs(client)
-
-	return client, nil
+	return &APIM{
+		APIs:  service.NewAPIs(client),
+		orgID: orgID,
+		envID: envID,
+	}, nil
 }
 
 func toHttpAuth(management *model.Management) *http.Auth {
