@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package managementapi
+package service
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
 type Subscriptions struct {
-	*Client
+	*client.Client
 }
 
-func NewSubscriptions(client *Client) *Subscriptions {
+func NewSubscriptions(client *client.Client) *Subscriptions {
 	return &Subscriptions{Client: client}
 }
 
@@ -41,7 +42,7 @@ func (svc *Subscriptions) Subscribe(apiID, applicationID, planID string) (*model
 
 	subscription := new(model.Subscription)
 
-	if err := svc.http.Post(url.String(), nil, subscription); err != nil {
+	if err := svc.HTTP.Post(url.String(), nil, subscription); err != nil {
 		return nil, err
 	}
 
@@ -52,7 +53,7 @@ func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiK
 	url := svc.APITarget(apiID).WithPath(subscriptionID).WithPath("apikeys")
 	apiKeys := new([]model.ApiKeyEntity)
 
-	if err := svc.http.Get(url.String(), apiKeys); err != nil {
+	if err := svc.HTTP.Get(url.String(), apiKeys); err != nil {
 		return nil, err
 	}
 

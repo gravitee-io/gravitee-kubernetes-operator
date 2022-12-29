@@ -109,7 +109,7 @@ var _ = Describe("API Resource Controller", func() {
 
 			Expect(k8sClient.Update(ctx, updatedResource)).Should(Succeed())
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
