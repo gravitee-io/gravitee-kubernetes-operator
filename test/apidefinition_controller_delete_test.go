@@ -121,7 +121,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect DELETED api")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
@@ -148,7 +148,7 @@ var _ = Describe("API Definition Controller", func() {
 
 		It("Should detect when API has already been deleted", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
-			apimClient, err := internal.NewApimClient(ctx)
+			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
