@@ -19,6 +19,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
+// Applications brings support for managing gravitee.io APIM applications
+// This service is used for testing purposes only and not initialized by the operator manager.
 type Applications struct {
 	*client.Client
 }
