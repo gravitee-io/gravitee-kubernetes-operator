@@ -38,7 +38,7 @@ import (
 
 	model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
@@ -235,8 +235,8 @@ var _ = Describe("Create", func() {
 
 			By("Init existing api in management api")
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
-			existingApiSpec.ID = utils.NewUUID()
-			existingApiSpec.CrossID = utils.ToUUID(
+			existingApiSpec.ID = uuid.NewV4String()
+			existingApiSpec.CrossID = uuid.FromString(
 				types.NamespacedName{Namespace: apiDefinitionFixture.Namespace, Name: apiDefinitionFixture.Name}.String())
 			existingApiSpec.DefinitionContext = &model.DefinitionContext{
 				Origin: origin,
@@ -244,7 +244,7 @@ var _ = Describe("Create", func() {
 			}
 			existingApiSpec.Plans = []*model.Plan{
 				{
-					Id:       utils.NewUUID(),
+					Id:       uuid.NewV4String(),
 					Name:     "G.K.O. Default",
 					Security: "KEY_LESS",
 					Status:   "PUBLISHED",
