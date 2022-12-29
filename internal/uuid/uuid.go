@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package uuid
 
 import (
 	"encoding/base64"
@@ -20,11 +20,11 @@ import (
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
 
-func ToUUID(decoded string) string {
-	encoded := base64.RawStdEncoding.EncodeToString([]byte(decoded))
+func FromString(seed string) string {
+	encoded := base64.RawStdEncoding.EncodeToString([]byte(seed))
 	return uuid.NewV3(uuid.NamespaceURL, encoded).String()
 }
 
-func NewUUID() string {
+func NewV4String() string {
 	return uuid.NewV4().String()
 }
