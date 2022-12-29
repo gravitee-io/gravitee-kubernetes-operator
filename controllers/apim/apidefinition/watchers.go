@@ -19,17 +19,20 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type UpdaterFunc = func(event.UpdateEvent, workqueue.RateLimitingInterface)
+type UpdateFunc = func(event.UpdateEvent, workqueue.RateLimitingInterface)
+type CreateFunc = func(event.CreateEvent, workqueue.RateLimitingInterface)
 
 // ApiUpdateFilter filters out update event that are coming from internal updates such as adding finalizers.
 type ApiUpdateFilter struct {
@@ -46,11 +49,11 @@ func (ApiUpdateFilter) Update(e event.UpdateEvent) bool {
 	return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
 }
 
-// CreateUpdaterFromLookup creates an updater function that will trigger an update
+// NewUpdateFromLookup creates an updater function that will trigger an update
 // on all API definitions that are referencing the updated object
 // The lookupField is the field that is used to lookup the API definitions
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
-func (r *Reconciler) CreateUpdaterFromLookup(lookupField string) UpdaterFunc {
+func (r *Reconciler) NewUpdateFromLookup(lookupField string) UpdateFunc {
 	return func(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
 		ctx := context.Background()
 		ref := model.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
@@ -71,6 +74,47 @@ func (r *Reconciler) CreateUpdaterFromLookup(lookupField string) UpdaterFunc {
 	}
 }
 
+// NewCreateFromLookup creates an updater function that will trigger an update
+// on all API definitions that are referencing the created object
+// The lookupField is the field that is used to lookup the API definitions
+// Note that this field *must* have been registered as a cache index in our main func (see main.go).
+// This can be used to reconcile API definitions when have been created before the referenced object (e.g. an API context).
+func (r *Reconciler) NewCreateFromLookup(lookupField string) CreateFunc {
+	return func(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+		ctx := context.Background()
+		ref := model.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
+		log := log.FromContext(ctx).WithValues("reference", ref.String())
+
+		apis, err := r.listForRef(ctx, ref, lookupField)
+		if err != nil {
+			log.Error(err, "unable to list APIs for context, skipping update")
+			return
+		}
+
+		for _, api := range apis {
+			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+				Name:      api.Name,
+				Namespace: api.Namespace,
+			}})
+		}
+	}
+}
+
+// ContextWatcher creates a watcher that will trigger an update on all API definitions
+// that are referencing the updated, or created context. API can thus be created before referencing
+// a context, and will be reconciled when the context is later created.
+func (r *Reconciler) ContextWatcher(lookupField string) *handler.Funcs {
+	return &handler.Funcs{
+		UpdateFunc: r.NewUpdateFromLookup(indexer.ContextField.String()),
+		CreateFunc: r.NewCreateFromLookup(indexer.ContextField.String()),
+	}
+}
+
+func (r *Reconciler) ResourceWatcher(lookupField string) *handler.Funcs {
+	return &handler.Funcs{
+		UpdateFunc: r.NewUpdateFromLookup(indexer.ResourceField.String()),
+	}
+}
 func (r *Reconciler) listForRef(
 	ctx context.Context, ref model.NamespacedName, field string,
 ) ([]gio.ApiDefinition, error) {
