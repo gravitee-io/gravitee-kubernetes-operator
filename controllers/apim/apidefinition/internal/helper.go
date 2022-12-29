@@ -18,7 +18,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 )
 
 // Add a default keyless plan to the api definition if no plan is defined.
@@ -42,7 +42,7 @@ func generateEmptyPlanCrossIds(spec *gio.ApiDefinitionSpec) {
 
 	for _, plan := range plans {
 		if plan.CrossId == "" {
-			plan.CrossId = utils.ToUUID(spec.ID + separator + plan.Name)
+			plan.CrossId = uuid.FromString(spec.ID + separator + plan.Name)
 		}
 	}
 }
