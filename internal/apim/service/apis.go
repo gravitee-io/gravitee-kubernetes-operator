@@ -39,6 +39,7 @@ var deleteParams = map[string]string{
 	"closePlans": "true",
 }
 
+// APIs brings support for managing gravitee.io APIM APIs.
 type APIs struct {
 	*client.Client
 }
