@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
+// APIM wraps services needed to sync resources with a given environment on a Gravitee.io APIM instance.
 type APIM struct {
 	APIs *service.APIs
 
@@ -30,15 +31,17 @@ type APIM struct {
 	envID string
 }
 
+// EnvID returns the environment ID of the current managed APIM instance.
 func (apim *APIM) EnvID() string {
 	return apim.envID
 }
 
+// OrgID returns the organization ID of the current managed APIM instance.
 func (apim *APIM) OrgID() string {
 	return apim.orgID
 }
 
-// FromContext returns a new APIM instance from a given reconcile context.
+// FromContext returns a new APIM instance from a given reconcile context, and management context.
 func FromContext(ctx context.Context, management *model.Management) (*APIM, error) {
 	orgID, envID := management.OrgId, management.EnvId
 	urls, err := client.NewURLs(management.BaseUrl, orgID, envID)
