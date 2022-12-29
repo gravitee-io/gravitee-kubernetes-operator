@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package managementapi
+package service
 
 import (
 	"net/http"
 
 	kModel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -39,10 +40,10 @@ var deleteParams = map[string]string{
 }
 
 type APIs struct {
-	*Client
+	*client.Client
 }
 
-func NewAPIs(client *Client) *APIs {
+func NewAPIs(client *client.Client) *APIs {
 	return &APIs{Client: client}
 }
 
@@ -50,7 +51,7 @@ func (svc *APIs) GetByCrossID(crossID string) (*model.ApiListItem, error) {
 	url := svc.EnvTarget("apis").WithQueryParam(crossIDParam, crossID)
 	apis := new([]model.ApiListItem)
 
-	if err := svc.http.Get(url.String(), apis); err != nil {
+	if err := svc.HTTP.Get(url.String(), apis); err != nil {
 		return nil, err
 	}
 
@@ -65,7 +66,7 @@ func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
 	url := svc.EnvTarget("apis").WithPath(apiID)
 	api := new(model.ApiEntity)
 
-	if err := svc.http.Get(url.String(), api); err != nil {
+	if err := svc.HTTP.Get(url.String(), api); err != nil {
 		return nil, err
 	}
 
@@ -86,22 +87,22 @@ func (svc *APIs) Import(method string, spec *kModel.Api) (*model.ApiEntity, erro
 
 func (svc *APIs) getImportFunc(method string) func(string, any, any) error {
 	if method == http.MethodPost {
-		return svc.http.Post
+		return svc.HTTP.Post
 	}
-	return svc.http.Put
+	return svc.HTTP.Put
 }
 
 func (svc *APIs) UpdateState(apiID string, action model.Action) error {
 	url := svc.EnvTarget("apis").WithPath(apiID).WithQueryParam(stateActionParam, string(action))
-	return svc.http.Post(url.String(), nil, nil)
+	return svc.HTTP.Post(url.String(), nil, nil)
 }
 
 func (svc *APIs) Delete(apiID string) error {
 	url := svc.EnvTarget("apis").WithPath(apiID).WithQueryParams(deleteParams)
-	return svc.http.Delete(url.String(), nil)
+	return svc.HTTP.Delete(url.String(), nil)
 }
 
 func (svc *APIs) SetKubernetesContext(apiID string) error {
 	url := svc.EnvTarget("apis").WithPath(apiID).WithPath("definition-context")
-	return svc.http.Post(url.String(), model.NewKubernetesContext(), nil)
+	return svc.HTTP.Post(url.String(), model.NewKubernetesContext(), nil)
 }

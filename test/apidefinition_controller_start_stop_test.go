@@ -116,7 +116,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect STOPPED state")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {

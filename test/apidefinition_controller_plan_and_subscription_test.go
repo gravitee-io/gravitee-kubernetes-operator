@@ -40,8 +40,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapi "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
-	managementapimodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
+	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
@@ -58,7 +57,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		var contextLookupKey types.NamespacedName
 
 		var gatewayEndpoint string
-		var apimClient *managementapi.Client
+		var apim *internal.APIM
 
 		BeforeAll(func() {
 			By("Create a management context to synchronize with the REST API")
@@ -100,7 +99,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			apimClient, err = internal.NewApimClient(ctx)
+			apim, err = internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 		})
@@ -115,10 +114,10 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		It("Should return success with subscription", func() {
 			By("Create a subscription and get api key")
 			apiKey := createSubscriptionAndGetApiKey(
-				apimClient,
+				apim,
 				savedApiDefinition,
 				contextLookupKey,
-				func(mgmtApi *managementapimodel.ApiEntity) string { return mgmtApi.Plans[0].Id },
+				func(mgmtApi *apimModel.ApiEntity) string { return mgmtApi.Plans[0].Id },
 			)
 
 			By("Call gateway with subscription api key")
@@ -182,10 +181,10 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			savedApiDefinition = updatedApiDefinition.DeepCopy()
 
 			apiKey := createSubscriptionAndGetApiKey(
-				apimClient,
+				apim,
 				savedApiDefinition,
 				contextLookupKey,
-				func(mgmtApi *managementapimodel.ApiEntity) string {
+				func(mgmtApi *apimModel.ApiEntity) string {
 					for _, plan := range mgmtApi.Plans {
 						if plan.CrossId == secondPlanCrossId {
 							return plan.Id
@@ -216,7 +215,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Get the API definition from ManagementApi and expect deleted state")
 
 			Eventually(func() error {
-				_, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				_, apiErr := apim.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
 				return errors.IgnoreNotFound(apiErr)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
@@ -224,28 +223,28 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 })
 
 func createSubscriptionAndGetApiKey(
-	apimClient *managementapi.Client,
+	apim *internal.APIM,
 	createdApiDefinition *gio.ApiDefinition,
 	contextLocation types.NamespacedName,
-	planSelector func(*managementapimodel.ApiEntity) string,
+	planSelector func(*apimModel.ApiEntity) string,
 ) string {
 	// Get first active application
-	mgmtApplications, mgmtErr := apimClient.Applications.Search("", "ACTIVE")
+	mgmtApplications, mgmtErr := apim.Applications.Search("", "ACTIVE")
 	Expect(mgmtErr).ToNot(HaveOccurred())
 	defaultApplication := mgmtApplications[0]
 
 	// Get Api description with plan
-	mgmtApi, mgmtErr := apimClient.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLocation))
+	mgmtApi, mgmtErr := apim.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLocation))
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	planId := planSelector(mgmtApi)
 
 	// Create subscription
-	mgmtSubscription, mgmtErr := apimClient.Subscriptions.Subscribe(mgmtApi.ID, defaultApplication.Id, planId)
+	mgmtSubscription, mgmtErr := apim.Subscriptions.Subscribe(mgmtApi.ID, defaultApplication.Id, planId)
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	// Get subscription api keys
-	mgmtSubscriptionApiKeys, mgmtErr := apimClient.Subscriptions.GetApiKeys(mgmtApi.ID, mgmtSubscription.Id)
+	mgmtSubscriptionApiKeys, mgmtErr := apim.Subscriptions.GetApiKeys(mgmtApi.ID, mgmtSubscription.Id)
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	return mgmtSubscriptionApiKeys[0].Key

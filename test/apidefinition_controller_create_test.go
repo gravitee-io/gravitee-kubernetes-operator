@@ -152,11 +152,11 @@ var _ = Describe("Create", func() {
 
 			By("Call rest API and expect one API matching status cross ID")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -208,11 +208,11 @@ var _ = Describe("Create", func() {
 
 			By("Call rest API and expect one API matching status cross ID and state STOPPED")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -230,7 +230,7 @@ var _ = Describe("Create", func() {
 		})
 
 		It("should create an API Definition with existing api in Management Api", func() {
-			apimClient, err := internal.NewApimClient(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Init existing api in management api")
@@ -251,7 +251,7 @@ var _ = Describe("Create", func() {
 				},
 			}
 
-			_, err = apimClient.APIs.Import(http.MethodPost, &existingApiSpec.Api)
+			_, err = apim.APIs.Import(http.MethodPost, &existingApiSpec.Api)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Create a management context to synchronize with the REST API")
@@ -288,7 +288,7 @@ var _ = Describe("Create", func() {
 			By("Call rest API and expect one API matching status cross ID")
 
 			Eventually(func() error {
-				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -348,11 +348,11 @@ var _ = Describe("Create", func() {
 
 			By("Calling rest API, expecting one API to match status cross ID")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}
@@ -427,11 +427,11 @@ var _ = Describe("Create", func() {
 
 			By("Calling rest API, expecting one API to match status cross ID")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
 				if apiErr != nil {
 					return apiErr
 				}

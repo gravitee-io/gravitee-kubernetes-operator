@@ -137,11 +137,11 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Check that API definition has been reconciled on ManagementContext update")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, cliErr := apimClient.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				api, cliErr := apim.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
 				if cliErr != nil {
 					return cliErr
 				}

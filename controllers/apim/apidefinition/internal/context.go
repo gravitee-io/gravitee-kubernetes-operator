@@ -21,7 +21,7 @@ import (
 	"text/template"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -34,7 +34,7 @@ const (
 var templateEngine = template.New("api-definitions")
 
 type DelegateContext struct {
-	*apim.Client
+	*apim.APIM
 	// Location is the namespace and name of the API in the form namespace/name
 	Location string
 	// Values is a map of values that can be passed as a golang template context to the API spec
@@ -72,7 +72,7 @@ func (c *DelegateContext) compile(api *gio.ApiDefinition) (*gio.ApiDefinition, e
 }
 
 func (c *DelegateContext) hasManagement() bool {
-	return c.Client != nil
+	return c.APIM != nil
 }
 
 func (c *DelegateContext) hasValues() bool {
