@@ -121,11 +121,11 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect DELETED api")
 
-			apimClient, err := internal.NewAPIM(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				_, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLookupKey))
+				_, apiErr := apim.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLookupKey))
 				return errors.IgnoreNotFound(apiErr)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -148,7 +148,7 @@ var _ = Describe("API Definition Controller", func() {
 
 		It("Should detect when API has already been deleted", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
-			apimClient, err := internal.NewAPIM(ctx)
+			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
@@ -170,7 +170,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Delete the API calling directly the REST API")
 
 			Eventually(func() error {
-				return apimClient.APIs.Delete(internal.GetStatusId(createdApiDefinition, contextLookupKey))
+				return apim.APIs.Delete(internal.GetStatusId(createdApiDefinition, contextLookupKey))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Delete the API Definition")

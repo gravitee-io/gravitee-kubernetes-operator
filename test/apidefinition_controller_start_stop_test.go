@@ -81,7 +81,6 @@ var _ = Describe("API Definition Controller", func() {
 		It("Should Stop an API Definition", func() {
 			createdApiDefinition := new(gio.ApiDefinition)
 
-			// Expect the API Definition is Ready
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
@@ -91,7 +90,6 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call initial API definition URL and expect 200")
 
-			// Check created api is callable
 			var gatewayEndpoint = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() error {
