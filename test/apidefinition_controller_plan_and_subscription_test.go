@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -41,7 +42,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
 var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
@@ -157,7 +157,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			By("Update ApiDefinition add ApiKey plan")
 
-			secondPlanCrossId := utils.ToUUID("second-plan-cross-id")
+			secondPlanCrossId := uuid.FromString("second-plan-cross-id")
 			updatedApiDefinition.Spec.Plans = append(savedApiDefinition.Spec.Plans, &model.Plan{
 				CrossId:  secondPlanCrossId,
 				Name:     "G.K.O. Second ApiKey",
