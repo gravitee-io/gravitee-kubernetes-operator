@@ -17,23 +17,34 @@ package internal
 import (
 	"context"
 
-	apim "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 )
 
-func NewApimClient(ctx context.Context) (*apim.Client, error) {
+type APIM struct {
+	*apim.APIM
+
+	Applications  *service.Applications
+	Subscriptions *service.Subscriptions
+}
+
+func NewAPIM(ctx context.Context) (*APIM, error) {
 	context, err := newApiContext(contextWithCredentialsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := apim.NewClient(ctx, context.Spec.Management)
+	apim, err := apim.FromContext(ctx, context.Spec.Management)
 	if err != nil {
 		return nil, err
 	}
 
-	client.APIs = apim.NewAPIs(client)
-	client.Applications = apim.NewApplications(client)
-	client.Subscriptions = apim.NewSubscriptions(client)
+	applications := service.NewApplications(apim.APIs.Client)
+	subscriptions := service.NewSubscriptions(apim.APIs.Client)
 
-	return client, nil
+	return &APIM{
+		APIM:          apim,
+		Applications:  applications,
+		Subscriptions: subscriptions,
+	}, nil
 }

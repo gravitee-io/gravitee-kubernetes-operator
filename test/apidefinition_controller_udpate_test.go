@@ -198,7 +198,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Call rest API and expect one API matching status cross ID & updated name")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
@@ -295,7 +295,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Calling rest API, expecting one API matching status ID")
 
-			apimClient, err := internal.NewApimClient(ctx)
+			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {

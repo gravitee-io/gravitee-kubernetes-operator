@@ -17,7 +17,7 @@ package internal
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	managementapimodel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
+	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/utils"
 )
 
@@ -48,7 +48,7 @@ func generateEmptyPlanCrossIds(spec *gio.ApiDefinitionSpec) {
 }
 
 // Retrieve the plan ids from the management apiEntity.
-func retrieveMgmtPlanIds(spec *gio.ApiDefinitionSpec, mgmtApi *managementapimodel.ApiEntity) {
+func retrieveMgmtPlanIds(spec *gio.ApiDefinitionSpec, mgmtApi *apimModel.ApiEntity) {
 	plans := spec.Plans
 
 	for _, plan := range plans {

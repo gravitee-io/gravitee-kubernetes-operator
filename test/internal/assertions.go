@@ -20,7 +20,7 @@ import (
 	"reflect"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/managementapi/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"k8s.io/apimachinery/pkg/types"
 )
 
