@@ -61,7 +61,7 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	if files.Context != "" {
-		ctx, err := f.NewManagementContext(files.Context)
+		ctx, err := f.NewApiContext(files.Context)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func (f *FixtureGenerator) NewApiDefinition(
 	return api, nil
 }
 
-func (f *FixtureGenerator) NewManagementContext(
+func (f *FixtureGenerator) NewApiContext(
 	path string, transforms ...func(*gio.ApiContext),
 ) (*gio.ApiContext, error) {
 	ctx, err := newApiContext(path, transforms...)
