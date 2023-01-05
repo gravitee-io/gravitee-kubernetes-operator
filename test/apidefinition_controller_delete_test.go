@@ -63,15 +63,15 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinition := fixtures.Api
-			managementContext := fixtures.Context
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			apiContext := fixtures.Context
+			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
 			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
 
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
