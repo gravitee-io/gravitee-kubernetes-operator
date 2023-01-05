@@ -97,7 +97,7 @@ var _ = Describe("Create", func() {
 
 	Context("a basic spec with a management context", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
-		var managementContextFixture *gio.ApiContext
+		var apiContextFixture *gio.ApiContext
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -112,19 +112,19 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = apiWithContext.Api
-			managementContextFixture = apiWithContext.Context
+			apiContextFixture = apiWithContext.Context
 
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
 		})
 
 		It("should create an API Definition", func() {
 			By("Create a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ApiContext)
+			apiContext := new(gio.ApiContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
@@ -176,11 +176,11 @@ var _ = Describe("Create", func() {
 			apiDefinitionFixture.Spec.State = model.StateStopped
 
 			By("Create a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ApiContext)
+			apiContext := new(gio.ApiContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
@@ -254,11 +254,11 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Create a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ApiContext)
+			apiContext := new(gio.ApiContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
@@ -309,17 +309,17 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture := apiWithContext.Api
-			managementContextFixture := apiWithContext.Context
+			apiContextFixture := apiWithContext.Context
 
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			contextLookupKey := types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
 
 			By("Creating a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ApiContext)
+			apiContext := new(gio.ApiContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Creating an API definition resource referencing the management context")
@@ -391,17 +391,17 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
 
 			apiDefinitionFixture := fixtures.Api
-			managementContextFixture := fixtures.Context
+			apiContextFixture := fixtures.Context
 
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			contextLookupKey := types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
 
 			By("Creating a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ApiContext)
+			apiContext := new(gio.ApiContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Creating an API definition resource referencing the management context")

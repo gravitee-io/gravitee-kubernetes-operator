@@ -59,12 +59,12 @@ var _ = Describe("API Resource Controller", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 
-			managementContext := fixture.Context
-			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
+			apiContext := fixture.Context
+			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			Expect(k8sClient.Create(ctx, fixture.Resource)).Should(Succeed())
