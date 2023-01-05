@@ -41,7 +41,7 @@ import (
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
 
 	Context("With basic ApiDefinition & ManagementContext", func() {
-		var managementContextFixture *gio.ApiContext
+		var apiContextFixture *gio.ApiContext
 		var apiDefinitionFixture *gio.ApiDefinition
 
 		var savedApiDefinition *gio.ApiDefinition
@@ -61,12 +61,12 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			Expect(err).ToNot(HaveOccurred())
 
-			managementContext := apiWithContext.Context
-			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			apiContext := apiWithContext.Context
+			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
 
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
@@ -75,7 +75,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			managementContextFixture = managementContext
+			apiContextFixture = apiContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
@@ -91,11 +91,11 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 		It("Should not requeue reconcile with 401 error", func() {
 
 			By("Set bad credentials in ManagementContext")
-			managementContextBad := managementContextFixture.DeepCopy()
-			managementContextBad.Spec.Management.Auth.SecretRef = nil
-			managementContextBad.Spec.Management.Auth.BearerToken = "bad-token"
+			apiContextBad := apiContextFixture.DeepCopy()
+			apiContextBad.Spec.Management.Auth.SecretRef = nil
+			apiContextBad.Spec.Management.Auth.BearerToken = "bad-token"
 
-			err := k8sClient.Update(ctx, managementContextBad)
+			err := k8sClient.Update(ctx, apiContextBad)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Update the API definition")
@@ -129,10 +129,10 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
 
 			By("Set right credentials in ManagementContext")
-			managementContextRight := managementContextBad.DeepCopy()
-			managementContextRight.Spec = managementContextFixture.Spec
+			apiContextRight := apiContextBad.DeepCopy()
+			apiContextRight.Spec = apiContextFixture.Spec
 
-			err = k8sClient.Update(ctx, managementContextRight)
+			err = k8sClient.Update(ctx, apiContextRight)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Check that API definition has been reconciled on ManagementContext update")
@@ -166,10 +166,10 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 		It("Should requeue reconcile with bad ManagementContext BaseUrl", func() {
 
 			By("Set bad BaseUrl in ManagementContext")
-			managementContextBad := managementContextFixture.DeepCopy()
-			managementContextBad.Spec.Management.BaseUrl = "http://bad-url:8083"
+			apiContextBad := apiContextFixture.DeepCopy()
+			apiContextBad.Spec.Management.BaseUrl = "http://bad-url:8083"
 
-			err := k8sClient.Update(ctx, managementContextBad)
+			err := k8sClient.Update(ctx, apiContextBad)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Update the API definition")
@@ -196,10 +196,10 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Set right BaseUrl in ManagementContext")
-			managementContextRight := managementContextBad.DeepCopy()
-			managementContextRight.Spec = managementContextFixture.Spec
+			apiContextRight := apiContextBad.DeepCopy()
+			apiContextRight.Spec = apiContextFixture.Spec
 
-			err = k8sClient.Update(ctx, managementContextRight)
+			err = k8sClient.Update(ctx, apiContextRight)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Check API definition processing status")
