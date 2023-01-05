@@ -71,12 +71,12 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			Expect(err).ToNot(HaveOccurred())
 
-			managementContext := apiWithContext.Context
-			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
+			apiContext := apiWithContext.Context
+			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
