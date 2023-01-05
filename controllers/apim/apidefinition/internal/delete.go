@@ -29,7 +29,7 @@ func (d *Delegate) Delete(
 	}
 
 	if d.HasContext() {
-		return d.deleteWithContext(apiDefinition)
+		return d.deleteWithContexts(apiDefinition)
 	}
 
 	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
@@ -37,11 +37,11 @@ func (d *Delegate) Delete(
 	return d.k8s.Update(d.ctx, apiDefinition)
 }
 
-func (d *Delegate) deleteWithContext(api *gio.ApiDefinition) error {
+func (d *Delegate) deleteWithContexts(api *gio.ApiDefinition) error {
 	errs := make([]error, 0)
 
 	for _, context := range d.contexts {
-		if err := context.delete(api); err != nil {
+		if err := d.deleteWithContext(api, context); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -53,4 +53,13 @@ func (d *Delegate) deleteWithContext(api *gio.ApiDefinition) error {
 	errs = append(errs, d.k8s.Update(d.ctx, api))
 
 	return errors.NewAggregate(errs)
+}
+
+func (d *Delegate) deleteWithContext(api *gio.ApiDefinition, context DelegateContext) error {
+	cp, err := context.compile(api)
+	if err != nil {
+		return err
+	}
+
+	return context.delete(cp)
 }
