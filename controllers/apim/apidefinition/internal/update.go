@@ -29,49 +29,54 @@ func (d *Delegate) CreateOrUpdate(api *gio.ApiDefinition) error {
 	}
 
 	if d.HasContext() {
-		return d.UpdateWithContext(api)
+		return d.updateWithContexts(api)
 	}
 
-	return d.UpdateWithoutContext(api)
+	return d.updateWithoutContext(api)
 }
 
-func (d *Delegate) UpdateWithContext(api *gio.ApiDefinition) error {
+func (d *Delegate) updateWithContexts(api *gio.ApiDefinition) error {
 	errs := make([]error, 0)
 
-	for i, context := range d.contexts {
-		log := d.log.WithValues("context", context.Location).WithValues("api", api.GetNamespacedName())
-
-		cp, err := context.compile(api)
-		if err != nil {
+	for _, context := range d.contexts {
+		if err := d.updateWithContext(api, context); err != nil {
 			errs = append(errs, err)
-			log.Error(err, "unable to compile api definition")
-			continue
 		}
-
-		if err = d.ResolveResources(cp); err != nil {
-			errs = append(errs, err)
-			log.Error(err, "unable to resolve resources")
-			continue
-		}
-
-		if err = context.update(cp); err != nil {
-			errs = append(errs, err)
-			log.Error(err, "unable to update api definition")
-			continue
-		}
-
-		if err = d.updateConfigMap(cp, &d.contexts[i]); err != nil {
-			errs = append(errs, err)
-			log.Error(err, "unable to update config map")
-		}
-
-		api.Status.Contexts[context.Location] = cp.Status.Contexts[context.Location]
 	}
 
 	return errors.NewAggregate(errs)
 }
 
-func (d *Delegate) UpdateWithoutContext(api *gio.ApiDefinition) error {
+func (d *Delegate) updateWithContext(api *gio.ApiDefinition, context DelegateContext) error {
+	log := d.log.WithValues("context", context.Location).WithValues("api", api.GetNamespacedName())
+
+	cp, err := context.compile(api)
+	if err != nil {
+		log.Error(err, "unable to compile api definition")
+		return err
+	}
+
+	if err = d.ResolveResources(cp); err != nil {
+		log.Error(err, "unable to resolve resources")
+		return err
+	}
+
+	if err = context.update(cp); err != nil {
+		log.Error(err, "unable to update api definition")
+		return err
+	}
+
+	if err = d.updateConfigMap(cp, &context); err != nil {
+		log.Error(err, "unable to update config map")
+		return err
+	}
+
+	api.Status.Contexts[context.Location] = cp.Status.Contexts[context.Location]
+
+	return nil
+}
+
+func (d *Delegate) updateWithoutContext(api *gio.ApiDefinition) error {
 	spec := &api.Spec
 
 	generateEmptyPlanCrossIds(spec)
