@@ -35,7 +35,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/retry"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -97,11 +96,14 @@ var _ = Describe("API Definition Controller", func() {
 			expectedPath := updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path + "-updated"
 			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
 
-			err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-				return k8sClient.Update(ctx, updatedApiDefinition)
-			})
-
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect no error")
 
@@ -184,8 +186,14 @@ var _ = Describe("API Definition Controller", func() {
 			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
 			updatedApiDefinition.Spec.Name = expectedName
 
-			err := k8sClient.Update(ctx, updatedApiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect no error")
 
@@ -290,8 +298,14 @@ var _ = Describe("API Definition Controller", func() {
 				Namespace: mapiContextFixture.Namespace,
 			})
 
-			err := k8sClient.Update(ctx, updatedApiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Calling rest API, expecting one API matching status ID")
 

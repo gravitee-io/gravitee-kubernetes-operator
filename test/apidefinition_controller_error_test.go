@@ -63,6 +63,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			apiContext := &fixtures.Contexts[0]
 			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+
 			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
 
 			Eventually(func() error {
@@ -79,6 +80,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
+
 			savedApiDefinition = new(gio.ApiDefinition)
 			Eventually(func() error {
 				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
@@ -91,14 +93,22 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 		It("Should not requeue reconcile with 401 error", func() {
 
 			By("Set bad credentials in ManagementContext")
+
 			apiContextBad := apiContextFixture.DeepCopy()
 			apiContextBad.Spec.Management.Auth.SecretRef = nil
 			apiContextBad.Spec.Management.Auth.BearerToken = "bad-token"
 
-			err := k8sClient.Update(ctx, apiContextBad)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiContext)
+				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
+					return err
+				}
+				apiContextBad.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Update the API definition")
+
 			apiDefinition := savedApiDefinition.DeepCopy()
 
 			Eventually(func() error {
@@ -107,12 +117,19 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			apiDefinition.Spec.Name = "new-name"
 
-			err = k8sClient.Update(ctx, apiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				apiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check API definition processing status")
+
 			Eventually(func() error {
-				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
+				if err := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
 				context := internal.GetStatusContext(savedApiDefinition, contextLookupKey)
@@ -126,14 +143,22 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
+
 			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
 
 			By("Set right credentials in ManagementContext")
+
 			apiContextRight := apiContextBad.DeepCopy()
 			apiContextRight.Spec = apiContextFixture.Spec
 
-			err = k8sClient.Update(ctx, apiContextRight)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiContext)
+				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
+					return err
+				}
+				apiContextRight.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check that API definition has been reconciled on ManagementContext update")
 
@@ -166,22 +191,37 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 		It("Should requeue reconcile with bad ManagementContext BaseUrl", func() {
 
 			By("Set bad BaseUrl in ManagementContext")
+
 			apiContextBad := apiContextFixture.DeepCopy()
 			apiContextBad.Spec.Management.BaseUrl = "http://bad-url:8083"
 
-			err := k8sClient.Update(ctx, apiContextBad)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiContext)
+				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
+					return err
+				}
+				apiContextBad.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Update the API definition")
+
 			apiDefinition := savedApiDefinition.DeepCopy()
 			apiDefinition.Spec.Name = "new-name"
 
-			err = k8sClient.Update(ctx, apiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				apiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check API definition processing status")
+
 			Eventually(func() error {
-				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
+				if err := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
 
@@ -196,15 +236,23 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Set right BaseUrl in ManagementContext")
+
 			apiContextRight := apiContextBad.DeepCopy()
 			apiContextRight.Spec = apiContextFixture.Spec
 
-			err = k8sClient.Update(ctx, apiContextRight)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiContext)
+				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
+					return err
+				}
+				apiContextRight.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check API definition processing status")
+
 			Eventually(func() error {
-				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
+				if err := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
 

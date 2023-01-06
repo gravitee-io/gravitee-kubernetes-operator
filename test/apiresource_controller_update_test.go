@@ -107,7 +107,14 @@ var _ = Describe("API Resource Controller", func() {
 			updatedResource := createdResource.DeepCopy()
 			updatedResource.Spec.Enabled = false
 
-			Expect(k8sClient.Update(ctx, updatedResource)).Should(Succeed())
+			Eventually(func() error {
+				update := new(gio.ApiResource)
+				if err := k8sClient.Get(ctx, resourceLookupKey, update); err != nil {
+					return err
+				}
+				updatedResource.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
