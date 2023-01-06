@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	kUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -127,11 +126,11 @@ func (api *ApiDefinition) GetOrGenerateCrossID() string {
 		return api.Spec.CrossID
 	}
 
-	return uuid.FromString(api.GetNamespacedName())
+	return uuid.FromString(api.GetNamespacedName().String())
 }
 
-func (api *ApiDefinition) GetNamespacedName() string {
-	return types.NamespacedName{Namespace: api.Namespace, Name: api.Name}.String()
+func (api *ApiDefinition) GetNamespacedName() model.NamespacedName {
+	return model.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
 func (spec *ApiDefinitionSpec) SetDefinitionContext() {
