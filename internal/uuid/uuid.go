@@ -16,11 +16,13 @@ package uuid
 
 import (
 	"encoding/base64"
+	"strings"
 
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
 
-func FromString(seed string) string {
+func FromStrings(seeds ...string) string {
+	seed := strings.Join(seeds, "")
 	encoded := base64.RawStdEncoding.EncodeToString([]byte(seed))
 	return uuid.NewV3(uuid.NamespaceURL, encoded).String()
 }

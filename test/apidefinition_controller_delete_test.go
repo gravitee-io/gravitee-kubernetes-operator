@@ -56,14 +56,14 @@ var _ = Describe("API Definition Controller", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
-				Context: internal.ContextWithSecretFile,
+				Api:      internal.BasicApiFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinition := fixtures.Api
-			apiContext := fixtures.Context
+			apiContext := &fixtures.Contexts[0]
 			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
 			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 
