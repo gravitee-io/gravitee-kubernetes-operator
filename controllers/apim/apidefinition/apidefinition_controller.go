@@ -64,6 +64,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if apiDefinition.Spec.Contexts != nil {
 		delegate.ResolveContexts(apiDefinition)
+		delegate.AddDeletionFinalizer(apiDefinition)
 	}
 
 	apiDefinition.Status.Initialize()

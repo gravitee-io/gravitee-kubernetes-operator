@@ -60,12 +60,14 @@ func (d *Delegate) ResolveContexts(api *gio.ApiDefinition) {
 		}
 
 		d.addContext(context)
+	}
+}
 
-		if api.IsMissingDeletionFinalizer() {
-			util.AddFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
-			if err = d.k8s.Update(d.ctx, api); err != nil {
-				d.log.Error(err, "Unable to add deletion finalizer to API definition", "namespace", api.Namespace, "name", api.Name)
-			}
+func (d *Delegate) AddDeletionFinalizer(api *gio.ApiDefinition) {
+	if api.IsMissingDeletionFinalizer() {
+		util.AddFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
+		if err := d.k8s.Update(d.ctx, api); err != nil {
+			d.log.Error(err, "Unable to add deletion finalizer to API definition")
 		}
 	}
 }
