@@ -53,9 +53,10 @@ spec:
               documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
             properties:
               contexts:
-                description: The contextRef refers to the namespace and the name of
-                  a ManagementContext used for synchronizing API definitions with
-                  a Gravitee API Management instance.
+                description: Contexts refer to the namespace and name of API contexts
+                  attached to this API Context may be used either to sync the API
+                  with an APIM instance, or to configure values that may be used later
+                  as a template context to compile the API definition spec.
                 items:
                   properties:
                     name:
@@ -961,7 +962,7 @@ spec:
                       type: string
                     id:
                       description: The ID of the API definition in the Gravitee API
-                        Management instance (if a management context has been configured).
+                        Management instance (if an API context has been configured).
                       type: string
                     organizationId:
                       type: string
