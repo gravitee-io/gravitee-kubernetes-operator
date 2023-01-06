@@ -103,8 +103,14 @@ var _ = Describe("API Definition Controller", func() {
 
 			updatedApiDefinition.Spec.State = "STOPPED"
 
-			err := k8sClient.Update(ctx, updatedApiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect 404")
 			Eventually(func() error {
