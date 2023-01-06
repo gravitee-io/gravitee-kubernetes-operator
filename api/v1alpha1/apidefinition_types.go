@@ -32,15 +32,16 @@ import (
 type ApiDefinitionSpec struct {
 	model.Api `json:",inline"`
 
-	// The contextRef refers to the namespace and the name of a ManagementContext used for
-	// synchronizing API definitions with a Gravitee API Management instance.
+	// Contexts refer to the namespace and name of API contexts attached to this API
+	// Context may be used either to sync the API with an APIM instance, or to configure
+	// values that may be used later as a template context to compile the API definition spec.
 	Contexts []model.NamespacedName `json:"contexts,omitempty"`
 }
 
 type StatusContext struct {
 	OrgID string `json:"organizationId"`
 	EnvID string `json:"environmentId"`
-	// The ID of the API definition in the Gravitee API Management instance (if a management context has been configured).
+	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
 	ID      string `json:"id"`
 	CrossID string `json:"crossId"`
 	// The processing status of the API definition.

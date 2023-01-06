@@ -95,22 +95,27 @@ func (d *Delegate) saveConfigMap(
 	cm.Data["definition"] = string(jsonSpec)
 
 	currentApiDefinition := &v1.ConfigMap{}
-	err = d.k8s.Get(d.ctx, types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}, currentApiDefinition)
 
-	if err == nil {
-		if currentApiDefinition.Data["definitionVersion"] != apiDefinition.ResourceVersion {
-			d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.ID)
-			// Only update the config map if resource version has changed (means api definition has changed).
-			err = d.k8s.Update(d.ctx, cm)
-		} else {
-			d.log.Info("No change detected on api. Skipped.", "id", apiDefinition.Spec.ID)
-			return nil
-		}
-	} else {
+	lookupKey := types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}
+
+	err = d.k8s.Get(d.ctx, lookupKey, currentApiDefinition)
+	if errors.IsNotFound(err) {
 		d.log.Info("Creating config map for api.", "id", apiDefinition.Spec.ID, "name", apiDefinition.Name)
-		err = d.k8s.Create(d.ctx, cm)
+		return d.k8s.Create(d.ctx, cm)
 	}
-	return err
+
+	if err != nil {
+		return err
+	}
+
+	// Only update the config map if resource version has changed (means api definition has changed).
+	if currentApiDefinition.Data["definitionVersion"] != apiDefinition.ResourceVersion {
+		d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.ID)
+		return d.k8s.Update(d.ctx, cm)
+	}
+
+	d.log.Info("No change detected on api. Skipped.", "id", apiDefinition.Spec.ID)
+	return nil
 }
 
 func (d *Delegate) deleteConfigMap(apiNamespace string, apiName string) error {
