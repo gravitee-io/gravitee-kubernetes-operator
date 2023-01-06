@@ -221,7 +221,7 @@ async function registerImages() {
 blue(`
   ☸ Storing APIM context credentials as a secret ...
 
-  The following declaration can be used in your management context to reference this secret:
+  The following declaration can be used in your API context to reference this secret:
 
   secretRef:
       name: ${APIM_CONTEXT_SECRET_NAME}
