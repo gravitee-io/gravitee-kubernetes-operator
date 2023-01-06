@@ -46,6 +46,10 @@ type ApiContext struct {
 	Status ApiContextStatus `json:"status,omitempty"`
 }
 
+func (context *ApiContext) GetNamespacedName() model.NamespacedName {
+	return model.NamespacedName{Namespace: context.Namespace, Name: context.Name}
+}
+
 // +kubebuilder:object:root=true
 // ApiContextList contains a list of API Contexts.
 type ApiContextList struct {
