@@ -27,7 +27,7 @@ const (
 )
 
 // Client is the client for a given instance of the Gravitee.io Management API
-// The client is created once per reconcile and management context and reused for all the operations
+// The client is created once per reconcile and API context and reused for all the operations
 // of a reconcile cycle, using the reconcile context.Context.
 type Client struct {
 	// HTTP is the HTTP client used to communicate with the Gravitee.io Management API
