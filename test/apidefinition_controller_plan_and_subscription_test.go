@@ -139,8 +139,14 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
 			updatedApiDefinition.Spec.Name = expectedName
 
-			err := k8sClient.Update(ctx, updatedApiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			// Wait for the ApiDefinition to be updated
 			Eventually(func() error {
@@ -165,8 +171,14 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				Status:   "PUBLISHED",
 			})
 
-			err = k8sClient.Update(ctx, updatedApiDefinition)
-			Expect(err).ToNot(HaveOccurred())
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			// Wait for the ApiDefinition to be updated
 			Eventually(func() error {
