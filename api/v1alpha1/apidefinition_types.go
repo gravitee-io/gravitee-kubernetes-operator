@@ -93,6 +93,11 @@ func (api *ApiDefinition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+// PickID returns the ID of the API definition, when a context has been defined at the spec level.
+// The ID might be returned from the API status, meaning that the API is already known.
+// If the API is unknown, the ID is either given from the spec if given,
+// or generated from the API UID and the context key to ensure uniqueness
+// in case the API is replicated on a same APIM instance.
 func (api *ApiDefinition) PickID(statusKey string) string {
 	status, ok := api.Status.Contexts[statusKey]
 
@@ -100,9 +105,17 @@ func (api *ApiDefinition) PickID(statusKey string) string {
 		return status.ID
 	}
 
-	return api.GetID()
+	if api.Spec.ID != "" {
+		return api.Spec.ID
+	}
+
+	return uuid.FromStrings(string(api.UID), statusKey)
 }
 
+// GetID returns the ID of the API definition.
+// This method should not be used when a context has been defined at the spec level
+// and is only used when generating the config map definition, because the gateway
+// required an ID to be defined on deserialization.
 func (api *ApiDefinition) GetID() string {
 	if api.Spec.ID != "" {
 		return api.Spec.ID
@@ -126,7 +139,7 @@ func (api *ApiDefinition) GetOrGenerateCrossID() string {
 		return api.Spec.CrossID
 	}
 
-	return uuid.FromString(api.GetNamespacedName().String())
+	return uuid.FromStrings(api.GetNamespacedName().String())
 }
 
 func (api *ApiDefinition) GetNamespacedName() model.NamespacedName {
