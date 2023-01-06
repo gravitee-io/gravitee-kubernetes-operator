@@ -42,7 +42,7 @@ func generateEmptyPlanCrossIds(spec *gio.ApiDefinitionSpec) {
 
 	for _, plan := range plans {
 		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromString(spec.ID + separator + plan.Name)
+			plan.CrossId = uuid.FromStrings(spec.ID, separator, plan.Name)
 		}
 	}
 }

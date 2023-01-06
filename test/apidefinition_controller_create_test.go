@@ -104,15 +104,15 @@ var _ = Describe("Create", func() {
 		BeforeEach(func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
-			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
-				Context: internal.ContextWithSecretFile,
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:      internal.BasicApiFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinitionFixture = apiWithContext.Api
-			apiContextFixture = apiWithContext.Context
+			apiDefinitionFixture = fixtures.Api
+			apiContextFixture = &fixtures.Contexts[0]
 
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			contextLookupKey = types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
@@ -236,7 +236,7 @@ var _ = Describe("Create", func() {
 			By("Init existing api in management api")
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
 			existingApiSpec.ID = uuid.NewV4String()
-			existingApiSpec.CrossID = uuid.FromString(apiDefinitionFixture.GetNamespacedName().String())
+			existingApiSpec.CrossID = uuid.FromStrings(apiDefinitionFixture.GetNamespacedName().String())
 			existingApiSpec.DefinitionContext = &model.DefinitionContext{
 				Origin: origin,
 				Mode:   mode,
@@ -301,15 +301,15 @@ var _ = Describe("Create", func() {
 		func(specFile string, expectedGatewayStatusCode int) {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
-			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     specFile,
-				Context: internal.ContextWithSecretFile,
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:      specFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinitionFixture := apiWithContext.Api
-			apiContextFixture := apiWithContext.Context
+			apiDefinitionFixture := fixtures.Api
+			apiContextFixture := &fixtures.Contexts[0]
 
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			contextLookupKey := types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
@@ -380,7 +380,7 @@ var _ = Describe("Create", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:      specFile,
-				Context:  internal.ContextWithSecretFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 				Resource: resourceFile,
 			})
 
@@ -391,7 +391,7 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
 
 			apiDefinitionFixture := fixtures.Api
-			apiContextFixture := fixtures.Context
+			apiContextFixture := &fixtures.Contexts[0]
 
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 			contextLookupKey := types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}

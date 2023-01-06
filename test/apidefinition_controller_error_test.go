@@ -54,14 +54,14 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			fixtureGenerator := internal.NewFixtureGenerator()
 
-			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
-				Context: internal.ContextWithSecretFile,
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:      internal.BasicApiFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := apiWithContext.Context
+			apiContext := &fixtures.Contexts[0]
 			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
 			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
 
@@ -71,7 +71,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Create an API definition resource stared by default")
 
-			apiDefinition := apiWithContext.Api
+			apiDefinition := fixtures.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
@@ -190,7 +190,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					EnvID:   "DEFAULT",
 					OrgID:   "DEFAULT",
 					CrossID: apiDefinition.GetOrGenerateCrossID(),
-					ID:      apiDefinition.GetID(),
+					ID:      apiDefinition.PickID(contextLookupKey.String()),
 					State:   "STARTED",
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -212,7 +212,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					Status:  gio.ProcessingStatusCompleted,
 					EnvID:   "DEFAULT",
 					OrgID:   "DEFAULT",
-					ID:      apiDefinition.GetID(),
+					ID:      apiDefinition.PickID(contextLookupKey.String()),
 					CrossID: apiDefinition.GetOrGenerateCrossID(),
 					State:   "STARTED",
 				})

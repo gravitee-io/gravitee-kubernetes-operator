@@ -132,13 +132,13 @@ var _ = Describe("API Definition Controller", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
-				Context: internal.ContextWithSecretFile,
+				Api:      internal.BasicApiFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := apiWithContext.Context
+			apiContext := &apiWithContext.Contexts[0]
 			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
 
 			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
@@ -247,13 +247,13 @@ var _ = Describe("API Definition Controller", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			apiWithContext, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
-				Context: internal.ContextWithSecretFile,
+				Api:      internal.BasicApiFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := apiWithContext.Context
+			apiContext := &apiWithContext.Contexts[0]
 			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
 
 			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}

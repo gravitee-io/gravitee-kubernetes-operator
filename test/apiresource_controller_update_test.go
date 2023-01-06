@@ -51,15 +51,15 @@ var _ = Describe("API Resource Controller", func() {
 
 			fixtureGenerator := internal.NewFixtureGenerator()
 
-			fixture, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:      internal.BasicApiFile,
-				Context:  internal.ContextWithSecretFile,
+				Contexts: []string{internal.ContextWithSecretFile},
 				Resource: internal.ApiResourceCacheFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := fixture.Context
+			apiContext := &fixtures.Contexts[0]
 			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
 
 			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
@@ -67,12 +67,12 @@ var _ = Describe("API Resource Controller", func() {
 				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
 
-			Expect(k8sClient.Create(ctx, fixture.Resource)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
 
-			Expect(k8sClient.Create(ctx, fixture.Api)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, fixtures.Api)).Should(Succeed())
 
-			apiLookupKey = types.NamespacedName{Name: fixture.Api.Name, Namespace: namespace}
-			resourceLookupKey = types.NamespacedName{Name: fixture.Resource.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: fixtures.Api.Name, Namespace: namespace}
+			resourceLookupKey = types.NamespacedName{Name: fixtures.Resource.Name, Namespace: namespace}
 		})
 
 		It("Should update the API definition on resource update", func() {
@@ -96,7 +96,7 @@ var _ = Describe("API Resource Controller", func() {
 					EnvID:   "DEFAULT",
 					OrgID:   "DEFAULT",
 					CrossID: createdApi.GetOrGenerateCrossID(),
-					ID:      createdApi.GetID(),
+					ID:      createdApi.PickID(contextLookupKey.String()),
 					Status:  gio.ProcessingStatusCompleted,
 					State:   "STARTED",
 				})

@@ -15,9 +15,15 @@
 package internal
 
 const (
-	GatewayUrl                          = "http://localhost:9000/gateway"
-	SamplesPath                         = "../config/samples"
-	ContextWithSecretFile               = SamplesPath + "/context/dev/api-context-with-secret-ref.yml"
+	GatewayUrl = "http://localhost:9000/gateway"
+
+	SamplesPath = "../config/samples"
+
+	ContextWithSecretFile        = SamplesPath + "/context/dev/api-context-with-secret-ref.yml"
+	ContextWithCredentialsFile   = SamplesPath + "/context/dev/api-context-with-credentials.yml"
+	ContextWithValuesDevFile     = SamplesPath + "/context/dev/api-context-with-values-dev.yml"
+	ContextWithValuesStagingFile = SamplesPath + "/context/dev/api-context-with-values-staging.yml"
+
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
 	ApiWithDisabledHCFile               = SamplesPath + "/apim/api-with-health-check-disabled.yml"
 	ApiWithHCFile                       = SamplesPath + "/apim/api-with-health-check.yml"
@@ -42,15 +48,12 @@ const (
 	ApiWithInlineAuthProviderRefFile    = SamplesPath + "/apim/api-with-inline-auth-provider-ref.yml"
 	ApiWithHTTPAuthProviderFile         = SamplesPath + "/apim/api-with-http-auth-provider.yml"
 	ApiWithHTTPAuthProviderRefFile      = SamplesPath + "/apim/api-with-http-auth-provider-ref.yml"
-
-	ApiResourceCacheFile              = SamplesPath + "/apim/api-resource-cache.yml"
-	ApiResourceCacheRedisFile         = SamplesPath + "/apim/api-resource-cache-redis.yml"
-	ApiResourceHTTPAuthProviderFile   = SamplesPath + "/apim/api-resource-http-auth-provider.yml"
-	ApiResourceInlineAuthProviderFile = SamplesPath + "/apim/api-resource-inline-auth-provider.yml"
-	ApiResourceLDAPAuthProviderFile   = SamplesPath + "/apim/api-resource-ldap-auth-provider.yml"
-	ApiResourceKeycloakAdapterFile    = SamplesPath + "/apim/api-resource-keycloak-adapter.yml"
-	ApiResourceOauth2AMFile           = SamplesPath + "/apim/api-resource-oauth2-am.yml"
-	ApiResourceOauth2GenericFile      = SamplesPath + "/apim/api-resource-oauth2-generic.yml"
-
-	contextWithCredentialsFile = SamplesPath + "/context/dev/api-context-with-credentials.yml"
+	ApiResourceCacheFile                = SamplesPath + "/apim/api-resource-cache.yml"
+	ApiResourceCacheRedisFile           = SamplesPath + "/apim/api-resource-cache-redis.yml"
+	ApiResourceHTTPAuthProviderFile     = SamplesPath + "/apim/api-resource-http-auth-provider.yml"
+	ApiResourceInlineAuthProviderFile   = SamplesPath + "/apim/api-resource-inline-auth-provider.yml"
+	ApiResourceLDAPAuthProviderFile     = SamplesPath + "/apim/api-resource-ldap-auth-provider.yml"
+	ApiResourceKeycloakAdapterFile      = SamplesPath + "/apim/api-resource-keycloak-adapter.yml"
+	ApiResourceOauth2AMFile             = SamplesPath + "/apim/api-resource-oauth2-am.yml"
+	ApiResourceOauth2GenericFile        = SamplesPath + "/apim/api-resource-oauth2-generic.yml"
 )
