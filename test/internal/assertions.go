@@ -60,6 +60,20 @@ func AssertStatusContextIsSet(apiDefinition *gio.ApiDefinition) error {
 	return nil
 }
 
+func AssertStatusContextsLen(apiDefinition *gio.ApiDefinition, expectedLen int) error {
+	contexts := apiDefinition.Status.Contexts
+
+	if contexts == nil {
+		return fmt.Errorf("contexts should not be nil")
+	}
+
+	if len(contexts) != expectedLen {
+		return NewAssertionError("contexts length", expectedLen, len(contexts))
+	}
+
+	return nil
+}
+
 func AssertApiEntityMatchesStatusContext(apiEntity *model.ApiEntity, apiDefinition *gio.ApiDefinition) error {
 	contexts := apiDefinition.Status.Contexts
 
@@ -96,10 +110,7 @@ func AssertStatusContextMatches(
 	}
 
 	if !reflect.DeepEqual(context, expectedContext) {
-		return fmt.Errorf(
-			"expected status context %s to match %v, got %v ",
-			location, expectedContext, context,
-		)
+		return NewAssertionError("context", expectedContext, context)
 	}
 
 	return nil
@@ -110,7 +121,7 @@ func AssertNoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus in
 		return err
 	}
 	if res.StatusCode != expectedStatus {
-		return fmt.Errorf("expected status %d, got %d", expectedStatus, res.StatusCode)
+		return NewAssertionError("status", expectedStatus, res.StatusCode)
 	}
 	return nil
 }
@@ -122,11 +133,16 @@ func AssertNoErrorAndObservedGenerationEquals(
 		return err
 	}
 	if apiDefinition.Status.ObservedGeneration != expectedGeneration {
-		return fmt.Errorf(
-			"expected observed generation %d, got %d",
-			expectedGeneration,
-			apiDefinition.Status.ObservedGeneration,
+		return NewAssertionError(
+			"observedGeneration", expectedGeneration, apiDefinition.Status.ObservedGeneration,
 		)
+	}
+	return nil
+}
+
+func AssertEquals(property string, expected, actual interface{}) error {
+	if !reflect.DeepEqual(expected, actual) {
+		return NewAssertionError(property, expected, actual)
 	}
 	return nil
 }

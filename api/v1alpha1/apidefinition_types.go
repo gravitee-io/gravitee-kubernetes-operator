@@ -56,6 +56,8 @@ type ApiDefinitionStatus struct {
 	ObservedGeneration int64                    `json:"observedGeneration,omitempty"`
 }
 
+// Initialize assigns an empty map to the Status.Contexts field if it is nil.
+// This should be done at before performing updates to avoid nil pointer dereference panics.
 func (s *ApiDefinitionStatus) Initialize() {
 	if s.Contexts == nil {
 		s.Contexts = make(map[string]StatusContext)
@@ -111,18 +113,6 @@ func (api *ApiDefinition) PickID(statusKey string) string {
 	}
 
 	return uuid.FromStrings(string(api.UID), statusKey)
-}
-
-// GetID returns the ID of the API definition.
-// This method should not be used when a context has been defined at the spec level
-// and is only used when generating the config map definition, because the gateway
-// required an ID to be defined on deserialization.
-func (api *ApiDefinition) GetID() string {
-	if api.Spec.ID != "" {
-		return api.Spec.ID
-	}
-
-	return string(api.UID)
 }
 
 func (api *ApiDefinition) PickCrossID(statusKey string) string {
