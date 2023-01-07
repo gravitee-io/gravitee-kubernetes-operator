@@ -40,13 +40,17 @@ type FixtureFiles struct {
 }
 
 type FixtureGenerator struct {
-	suffix string
+	Suffix string
 }
 
 func NewFixtureGenerator() *FixtureGenerator {
 	return &FixtureGenerator{
-		suffix: randomSuffix(),
+		Suffix: randomSuffix(),
 	}
+}
+
+func (f *FixtureGenerator) AddSuffix(property string) string {
+	return property + f.Suffix
 }
 
 func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*Fixtures)) (*Fixtures, error) {
@@ -81,7 +85,7 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	if fixtures.Contexts != nil {
-		apiContexts := fixtures.Api.Spec.Contexts
+		apiContexts := make([]model.NamespacedName, 0)
 		for _, ctx := range fixtures.Contexts {
 			apiContexts = append(apiContexts, ctx.GetNamespacedName())
 		}
@@ -114,9 +118,9 @@ func (f *FixtureGenerator) NewApiDefinition(
 		return nil, err
 	}
 
-	api.Name += f.suffix
-	api.Spec.Name += f.suffix
-	api.Spec.Proxy.VirtualHosts[0].Path += f.suffix
+	api.Name += f.Suffix
+	api.Spec.Name += f.Suffix
+	api.Spec.Proxy.VirtualHosts[0].Path += f.Suffix
 
 	return api, nil
 }
@@ -129,7 +133,7 @@ func (f *FixtureGenerator) NewApiContext(
 		return nil, err
 	}
 
-	ctx.Name += f.suffix
+	ctx.Name += f.Suffix
 
 	return ctx, nil
 }
@@ -139,7 +143,7 @@ func (f *FixtureGenerator) NewApiResource(path string, transforms ...func(*gio.A
 	if err != nil {
 		return nil, err
 	}
-	resource.Name += f.suffix
+	resource.Name += f.Suffix
 
 	return resource, nil
 }
