@@ -19,6 +19,8 @@ const { log } = console;
 
 const pullMode = argv.pull || "all";
 
+$.verbose = argv.verbose || false;
+
 const newLogger =
   (color) =>
   (...args) =>
@@ -28,9 +30,7 @@ async function time(fn) {
   const start = Date.now();
   await fn();
   const end = Date.now();
-  green(`
-  Done in ${(end - start) / 1000}s
-  `);
+  green(`Done in ${(end - start) / 1000}s`);
 }
 
 const $Quote = $.quote;
@@ -66,10 +66,10 @@ let K3D_IMAGES_REGISTRY = `${K3D_IMAGES_REGISTRY_NAME}:${K3D_IMAGES_REGISTRY_POR
 // APIM credentials
 const APIM_CONTEXT_SECRET_NAME = "apim-context-credentials";
 
-green("Starting k3d cluster with APIM dependencies...");
+green(`
+Starting k3d cluster with APIM dependencies...`);
 
 blue(`
-
   ☸ Installing the latest version of k3d (if not present) ...
 
   See https://k3d.io/
@@ -86,7 +86,6 @@ async function installK3d() {
 }
 
 blue(`
-
   🐳 Initializing a local docker images registry for k3d images (if not present) ...
 `);
 
@@ -96,14 +95,10 @@ async function initRegistry() {
   try {
     await $`k3d registry list | grep -q "${K3D_IMAGES_REGISTRY_NAME}"`;
 
-    magenta(`
-  
-    K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
+    magenta(`K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
     `);
   } catch (error) {
-    magenta(`
-  
-    Initializing registry ${K3D_IMAGES_REGISTRY_NAME}
+    magenta(`Initializing registry ${K3D_IMAGES_REGISTRY_NAME}
     `);
 
     await $`k3d registry create ${K3D_IMAGES_REGISTRY_NAME} --port ${K3D_IMAGES_REGISTRY_PORT}`;
@@ -113,7 +108,6 @@ async function initRegistry() {
 }
 
 yellow(`
-
   ⚠️ WARNING ⚠️ 
 
   Assuming that host "${K3D_IMAGES_REGISTRY_NAME}" points to 127.0.0.1
@@ -124,24 +118,17 @@ yellow(`
 await time(initCluster);
 
 async function initCluster() {
-  blue(`
-
-  ☸ Deleting K3d cluster ${K3D_CLUSTER_NAME} (if present) ...
+  blue(`☸ Deleting K3d cluster ${K3D_CLUSTER_NAME} (if present) ...
 `);
 
   try {
     await $`k3d cluster list| grep -q "${K3D_CLUSTER_NAME}"`;
     await $`k3d cluster delete ${K3D_CLUSTER_NAME}`;
   } catch (error) {
-    magenta(`
-
-    No K3d cluster with name ${K3D_CLUSTER_NAME}
-    `);
+    magenta(`No K3d cluster with name ${K3D_CLUSTER_NAME}`);
   }
 
-  blue(`
-
-  ☸ Creating a K3d cluster with name ${K3D_CLUSTER_NAME}
+  blue(`☸ Creating a K3d cluster with name ${K3D_CLUSTER_NAME} ...
   `);
 
   await $`k3d cluster create --wait \
@@ -156,7 +143,6 @@ async function initCluster() {
 
 if (pullMode !== "none") {
   blue(`
-
   🐳 Registering docker images to ${K3D_IMAGES_REGISTRY} ...
 `);
 
@@ -204,18 +190,16 @@ async function registerImages() {
 
   $.quote = $NoQuote;
 
-  magenta(`
-      
-    Pulling docker images ...
+  magenta(`Pulling docker images ...
       `);
 
   await Promise.all(
-    Array.from(images.keys()).map((image) => $`docker pull ${image} > /dev/null`)
+    Array.from(images.keys()).map(
+      (image) => $`docker pull ${image} > /dev/null`
+    )
   );
 
-  magenta(`
-      
-    Tagging docker images ...
+  magenta(`Tagging docker images ...
       `);
 
   await Promise.all(
@@ -224,9 +208,7 @@ async function registerImages() {
     )
   );
 
-  magenta(`
-      
-    Pushing docker images to ${K3D_IMAGES_REGISTRY}
+  magenta(`Pushing docker images to ${K3D_IMAGES_REGISTRY} ...
       `);
 
   await Promise.all(
@@ -237,7 +219,6 @@ async function registerImages() {
 }
 
 blue(`
-
   ☸ Storing APIM context credentials as a secret ...
 
   The following declaration can be used in your management context to reference this secret:
@@ -258,8 +239,7 @@ async function createSecret() {
 }
 
 blue(`
-
-  ⎈ Adding Helm repositories (if not presents) ...
+⎈ Adding Helm repositories (if not presents) ...
 `);
 
 await time(addHelmRepos);
@@ -271,14 +251,13 @@ async function addHelmRepos() {
 }
 
 blue(`
-  ⎈ Installing components in namespace ${K3D_NAMESPACE_NAME}
+⎈ Installing components in namespace ${K3D_NAMESPACE_NAME} ...
 
       Mongodb         ${MONGO_IMAGE_TAG}
       Elasticsearch   ${ELASTIC_IMAGE_TAG}
       Nginx ingress   ${NGINX_CONTROLLER_IMAGE_TAG}           
       Nginx backend   ${NGINX_BACKEND_IMAGE_TAG}
       Gravitee APIM   ${APIM_IMAGE_TAG}
-
 `);
 
 $.quote = $NoQuote;
@@ -382,9 +361,7 @@ async function helmInstall() {
   ]);
 }
 
-
-blue(`
-
+magenta(`
     APIM containers are starting ...
 
     Version: ${APIM_IMAGE_TAG}
@@ -402,9 +379,7 @@ blue(`
     > kubectl rollout restart deployment apim-apim3-gateway
 `);
 
-blue(`
-
-    Waiting for APIM to be ready ...
+blue(`Waiting for APIM to be ready ...
     
     Press ctrl+c to exit this script without waiting ...
 `);
@@ -416,6 +391,5 @@ async function waitForApim() {
 }
 
 green(`
-
 🚀 Cluster is ready!
 `);
