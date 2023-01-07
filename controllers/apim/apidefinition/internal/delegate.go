@@ -98,6 +98,10 @@ func (d *Delegate) resolveContext(
 func (d *Delegate) resolveContextSecrets(context *gio.ApiContext) error {
 	management := context.Spec.Management
 
+	if management == nil {
+		return nil
+	}
+
 	if management.HasSecretRef() {
 		secret := new(coreV1.Secret)
 
