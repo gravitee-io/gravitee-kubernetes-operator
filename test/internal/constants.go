@@ -19,12 +19,12 @@ const (
 
 	SamplesPath = "../config/samples"
 
-	ContextWithSecretFile        = SamplesPath + "/context/dev/api-context-with-secret-ref.yml"
-	ContextWithCredentialsFile   = SamplesPath + "/context/dev/api-context-with-credentials.yml"
-	ContextWithValuesDevFile     = SamplesPath + "/context/dev/api-context-with-values-dev.yml"
-	ContextWithValuesStagingFile = SamplesPath + "/context/dev/api-context-with-values-staging.yml"
+	ContextWithSecretFile      = SamplesPath + "/context/dev/api-context-with-secret-ref.yml"
+	ContextWithCredentialsFile = SamplesPath + "/context/dev/api-context-with-credentials.yml"
+	ContextWithValuesFile      = SamplesPath + "/context/dev/api-context-with-values.yml"
 
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
+	ApiWithContextFile                  = SamplesPath + "/apim/api-with-context.yml"
 	ApiWithDisabledHCFile               = SamplesPath + "/apim/api-with-health-check-disabled.yml"
 	ApiWithHCFile                       = SamplesPath + "/apim/api-with-health-check.yml"
 	ApiWithServiceDiscoveryFile         = SamplesPath + "/apim/api-with-service-discovery.yml"

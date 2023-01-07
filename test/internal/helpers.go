@@ -15,6 +15,8 @@
 package internal
 
 import (
+	"fmt"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -47,4 +49,8 @@ func GetStatusId(apiDefinition *gio.ApiDefinition, location types.NamespacedName
 	}
 
 	return context.ID
+}
+
+func NewAssertionError(field string, expected, given any) error {
+	return fmt.Errorf("expected %s to be %v, got %v", field, expected, given)
 }
