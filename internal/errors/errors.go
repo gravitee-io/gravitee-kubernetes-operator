@@ -88,7 +88,7 @@ func FromResponse(resp *http.Response) error {
 func FromDoRequestError(req *http.Request, err error) error {
 	return fmt.Errorf(
 		"unable to perform request [%s] %s: (%w)",
-		req.Method, req.URL.String(), err,
+		req.Method, req.URL, err,
 	)
 }
 
