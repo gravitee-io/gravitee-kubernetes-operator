@@ -88,15 +88,13 @@ func (c *DelegateContext) update(api *gio.ApiDefinition) error {
 		api.Status.Contexts[c.Location] = gio.StatusContext{}
 	}
 
-	spec := &api.Spec
+	spec := &(api.Spec)
 	spec.ID = api.PickID(c.Location)
 	spec.CrossID = api.PickCrossID(c.Location)
 
 	spec.SetDefinitionContext()
 
 	generateEmptyPlanCrossIds(spec)
-
-	statusContext := api.Status.Contexts[c.Location]
 
 	_, findErr := c.APIs.GetByCrossID(spec.CrossID)
 	if errors.IgnoreNotFound(findErr) != nil {
@@ -121,12 +119,11 @@ func (c *DelegateContext) update(api *gio.ApiDefinition) error {
 
 	retrieveMgmtPlanIds(spec, mgmtApi)
 
-	statusContext.ID = mgmtApi.ID
-	statusContext.CrossID = spec.CrossID
-	statusContext.State = spec.State
+	statusContext := api.Status.Contexts[c.Location]
+
+	spec.ID = mgmtApi.ID
 	statusContext.OrgID = c.OrgID()
 	statusContext.EnvID = c.EnvID()
-	statusContext.Status = gio.ProcessingStatusCompleted
 
 	api.Status.Contexts[c.Location] = statusContext
 

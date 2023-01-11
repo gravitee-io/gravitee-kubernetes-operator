@@ -39,11 +39,11 @@ type ApiDefinitionSpec struct {
 }
 
 type StatusContext struct {
-	OrgID string `json:"organizationId"`
-	EnvID string `json:"environmentId"`
+	OrgID string `json:"organizationId,omitempty"`
+	EnvID string `json:"environmentId,omitempty"`
 	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
-	ID      string `json:"id"`
-	CrossID string `json:"crossId"`
+	ID      string `json:"id,omitempty"`
+	CrossID string `json:"crossId,omitempty"`
 	// The processing status of the API definition.
 	Status ProcessingStatus `json:"status,omitempty"`
 	// The state of the API. Can be either STARTED or STOPPED.
