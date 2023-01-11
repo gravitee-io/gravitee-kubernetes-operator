@@ -3621,28 +3621,28 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>environmentId</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>state</b></td>
         <td>string</td>
