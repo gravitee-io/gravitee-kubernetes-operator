@@ -125,7 +125,8 @@ async function initCluster() {
     await $`k3d cluster list| grep -q "${K3D_CLUSTER_NAME}"`;
     await $`k3d cluster delete ${K3D_CLUSTER_NAME}`;
   } catch (error) {
-    magenta(`No K3d cluster with name ${K3D_CLUSTER_NAME}`);
+    magenta(`No K3d cluster with name ${K3D_CLUSTER_NAME}
+    `);
   }
 
   blue(`☸ Creating a K3d cluster with name ${K3D_CLUSTER_NAME} ...

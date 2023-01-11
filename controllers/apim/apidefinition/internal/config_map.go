@@ -79,7 +79,7 @@ func (d *Delegate) saveConfigMap(
 		"definitionVersion": apiDefinition.ResourceVersion,
 	}
 
-	spec := apiDefinition.Spec.DeepCopy()
+	spec := &(apiDefinition.Spec)
 
 	if context != nil {
 		spec.ID = apiDefinition.PickID(context.Location)
@@ -88,7 +88,9 @@ func (d *Delegate) saveConfigMap(
 			cm.Data["organizationId"] = context.OrgID()
 			cm.Data["environmentId"] = context.EnvID()
 		}
-	} else {
+	}
+
+	if spec.ID == "" {
 		spec.ID = string(apiDefinition.UID)
 	}
 
