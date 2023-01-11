@@ -71,7 +71,14 @@ func (d *Delegate) updateWithContext(api *gio.ApiDefinition, context DelegateCon
 		return err
 	}
 
-	api.Status.Contexts[context.Location] = cp.Status.Contexts[context.Location]
+	statusContext := cp.Status.Contexts[context.Location]
+
+	statusContext.ID = cp.Spec.ID
+	statusContext.CrossID = cp.Spec.CrossID
+	statusContext.State = cp.Spec.State
+	statusContext.Status = gio.ProcessingStatusCompleted
+
+	api.Status.Contexts[context.Location] = statusContext
 
 	return nil
 }
