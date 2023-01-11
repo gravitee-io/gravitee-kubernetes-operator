@@ -976,11 +976,6 @@ spec:
                       - Completed
                       - Failed
                       type: string
-                  required:
-                  - crossId
-                  - environmentId
-                  - id
-                  - organizationId
                   type: object
                 type: object
               observedGeneration:
