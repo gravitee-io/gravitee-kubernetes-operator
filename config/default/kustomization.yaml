@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # Adds namespace to all resources.
-namespace: gko-system
-
+namespace: '{{ .Release.Namespace }}'
+ 
 # Value of this field is prepended to the
 # names of all resources, e.g. a deployment named
 # "wordpress" becomes "alices-wordpress".
@@ -37,7 +37,6 @@ bases:
 #- ../certmanager
 # [PROMETHEUS] To enable prometheus monitor, uncomment all sections with 'PROMETHEUS'.
 #- ../prometheus
-
 patchesStrategicMerge:
 # Protect the /metrics endpoint by putting it behind auth.
 # If you want your controller-manager to expose the /metrics
