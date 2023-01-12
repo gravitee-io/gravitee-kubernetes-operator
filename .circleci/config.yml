@@ -1,6 +1,6 @@
 version: 2.1
 
-orbs: 
+orbs:
   kubernetes: circleci/kubernetes@1.3.1
   go: circleci/go@1.7.2
   helm: circleci/helm@2.0.1
@@ -67,7 +67,7 @@ jobs:
     steps:
       - checkout
       - go/install:
-          version: '1.19.2'
+          version: "1.19.2"
       - go/load-cache
       - kubernetes/install-kubectl
       - helm/install-helm-client
@@ -156,8 +156,8 @@ jobs:
           var-name: AZURE_SP_PASSWORD
       - when:
           condition:
-            equal: [ apim-preprod, << parameters.clusterName >> ]
-          steps: 
+            equal: [apim-preprod, << parameters.clusterName >>]
+          steps:
             - run:
                 name: Get ~/.kube/config from Azure
                 command: |
@@ -165,8 +165,8 @@ jobs:
                   az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
       - when:
           condition:
-            equal: [ devs-preprod, << parameters.clusterName >> ]
-          steps: 
+            equal: [devs-preprod, << parameters.clusterName >>]
+          steps:
             - run:
                 name: Get ~/.kube/config from Azure
                 command: |
@@ -207,16 +207,16 @@ jobs:
       - gravitee/install-semantic-release
       - setup_remote_docker
       - keeper/env-export:
-            secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login
-            var-name: DOCKERHUB_BOT_USER_NAME
+          secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login
+          var-name: DOCKERHUB_BOT_USER_NAME
       - keeper/env-export:
-            secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password
-            var-name: DOCKERHUB_BOT_USER_TOKEN
+          secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password
+          var-name: DOCKERHUB_BOT_USER_TOKEN
       - run:
           name: Docker login
           command: docker login --username="${DOCKERHUB_BOT_USER_NAME}" -p="${DOCKERHUB_BOT_USER_TOKEN}"
       - run:
-          name: Install operator SDK 
+          name: Install operator SDK
           command: |
             export OPERATOR_SDK_RELEASE_VERSION=v1.23.0
             export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
@@ -233,7 +233,7 @@ jobs:
               # ensure ~/bundle.yml exists
               touch ~/bundle.yml
             fi
-          
+
       - persist_to_workspace:
           root: ~/
           paths:
@@ -244,13 +244,13 @@ jobs:
       - image: cimg/base:stable
     resource_class: small
     steps:
-    - keeper/env-export:
-        secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
-        var-name: SLACK_ACCESS_TOKEN
-    - slack/notify:
-        channel: C02NGT20S4W
-        event: pass
-        custom: |
+      - keeper/env-export:
+          secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+          var-name: SLACK_ACCESS_TOKEN
+      - slack/notify:
+          channel: C02NGT20S4W
+          event: pass
+          custom: |
             {
               "blocks": [
                 {
@@ -262,6 +262,39 @@ jobs:
                 }
               ]
             }
+
+  helm-lint:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - helm/install-helm-client
+      - run:
+          name: Lint Helm chart
+          command: helm lint helm/gko
+
+  helm-test:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - helm/install-helm-client
+      - go/install:
+          version: "1.19.2"
+      - go/load-cache
+      - run:
+          name: Install Helm unit test plugin
+          command: helm plugin install https://github.com/quintush/helm-unittest
+      - run:
+          name: Generate bundle template
+          command: make prepare-release
+      - run:
+          name: Run Helm unit tests 
+          command: cd helm && helm unittest gko
+      - go/save-cache
+
 workflows:
   pull_requests:
     when:
@@ -278,16 +311,23 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Lint
+      - helm-lint:
+          name: Lint Helm chart
+      - helm-test:
+          name: Test Helm chart
+          requires:
+            - Lint Helm chart
 
   release:
     when:
       and:
         - or:
-          - equal: [ master, << pipeline.git.branch >> ]
-          - equal: [ alpha, << pipeline.git.branch >> ]
+            - equal: [master, << pipeline.git.branch >>]
+            - equal: [alpha, << pipeline.git.branch >>]
         - not:
             # Workflow will not run when we open a pull request from alpha to master to trigger a release
-            equal: [ << pipeline.git.revision >>, << pipeline.git.base_revision >> ]
+            equal:
+              [<< pipeline.git.revision >>, << pipeline.git.base_revision >>]
     jobs:
       - lint:
           name: Lint
@@ -320,7 +360,7 @@ workflows:
           filters:
             branches:
               only:
-               - alpha
+                - alpha
       - deploy-gko-image:
           name: Deploy operator to k8s
           context: cicd-orchestrator
@@ -328,7 +368,7 @@ workflows:
             - K8s login on devs-preprod and get ~/.kube/config
             - K8s login on apim-preprod and get ~/.kube/config
 
-  notify-release: 
+  notify-release:
     jobs:
       - notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
@@ -338,4 +378,3 @@ workflows:
               ignore: /.*/
             tags:
               only: /\d+\.\d+\.\d+/
-
