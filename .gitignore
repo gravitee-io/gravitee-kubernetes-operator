@@ -38,4 +38,4 @@ bundle/
 bundle.yml
 
 # Helm release artifacts
-bundle.tpl
+helm/gko/templates/bundle.yaml
