@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-  name: system
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -73,7 +66,7 @@ spec:
             memory: 64Mi
         envFrom:
         - configMapRef:
-            name: gko-manager-env
+            name: '{{ .Values.manager.configMap.name }}'
             optional: true
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
