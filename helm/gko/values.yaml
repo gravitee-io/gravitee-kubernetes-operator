@@ -18,6 +18,6 @@ manager:
   configMap:
     name: gko-config
   scope:
-    cluster: false
+    cluster: true
 
 
