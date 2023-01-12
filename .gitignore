@@ -36,3 +36,6 @@ gko-config-default.yml
 cache/
 bundle/
 bundle.yml
+
+# Helm release artifacts
+bundle.tpl
