@@ -260,10 +260,10 @@ addlicense: $(ADDLICENSE)
 $(ADDLICENSE): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install github.com/google/addlicense@latest
 
-.PHONY: bundle-standalone
-bundle-standalone: manifests kustomize ## bundles all operator resources as a single bundle.yml file
+.PHONY: prepare-release
+prepare-release: manifests kustomize ## generates the bundle.tpl file for the helm chart
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default > bundle.yml
+	$(KUSTOMIZE) build config/default > helm/templates/bundle.tpl
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
