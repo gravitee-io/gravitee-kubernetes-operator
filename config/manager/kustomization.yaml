@@ -14,8 +14,6 @@
 
 resources:
 - manager.yaml
-# uncomment to include the default env config map in the generated bundle
-#- env.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
