@@ -23,26 +23,50 @@ executors:
     resource_class: <<parameters.resource_class>>
 
 jobs:
-  lint:
+  lint-sources:
+    docker:
+      - image: cimg/go:1.19.4
+    steps:
+      - checkout
+      - go/load-cache
+      - run:
+          name: Lint sources
+          command: make lint-sources
+      - go/save-cache
+
+  lint-licenses:
+    docker:
+      - image: cimg/go:1.19.4
+    steps:
+      - checkout
+      - go/load-cache
+      - run:
+          name: Lint licenses
+          command: make lint-licenses
+      - go/save-cache
+
+  lint-commits:
     docker:
       - image: cimg/go:1.19.4-node
     steps:
       - checkout
-      - go/mod-download-cached
       - run:
-          name: Install GolangCi Lint
-          command: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      - run:
-          name: Lint Go sources
-          command: make lint-go
-      - run:
-          name: Lint licensing
-          command: make lint-license
+          name: Install commitlint
+          command: npm i @commitlint/config-conventional @commitlint/cli
       - run:
           name: Lint commits
           command: |
-            npm i @commitlint/config-conventional @commitlint/cli
-            node_modules/.bin/commitlint -x @commitlint/config-conventional --from $(git describe --tags --abbrev=0)
+            node_modules/.bin/commitlint \
+              -x @commitlint/config-conventional \
+              --from $(git describe --tags --abbrev=0)
+
+  lint-resources:
+    docker:
+      - image: cimg/go:1.19.4
+    resource_class: small
+    steps:
+      - checkout
+      - go/mod-download-cached
       - run:
           name: Check that make generate has been executed
           command: |
@@ -304,13 +328,22 @@ workflows:
         - not:
             equal: [alpha, << pipeline.git.branch >>]
     jobs:
-      - lint:
-          name: Lint
+      - lint-sources:
+          name: Lint sources
+      - lint-licenses:
+          name: Lint licenses
+      - lint-commits:
+          name: Lint commits
+      - lint-resources:
+          name: Lint resources
       - test:
           name: Test
           context: cicd-orchestrator
           requires:
-            - Lint
+            - Lint sources
+            - Lint licenses
+            - Lint commits
+            - Lint resources
       - helm-lint:
           name: Lint Helm chart
       - helm-test:
@@ -329,13 +362,22 @@ workflows:
             equal:
               [<< pipeline.git.revision >>, << pipeline.git.base_revision >>]
     jobs:
-      - lint:
-          name: Lint
+      - lint-sources:
+          name: Lint sources
+      - lint-licenses:
+          name: Lint licenses
+      - lint-commits:
+          name: Lint commits
+      - lint-resources:
+          name: Lint resources
       - test:
           name: Test
           context: cicd-orchestrator
           requires:
-            - Lint
+            - Lint sources
+            - Lint licenses
+            - Lint commits
+            - Lint resources
       - semantic-release:
           name: Semantic Release
           context: cicd-orchestrator
