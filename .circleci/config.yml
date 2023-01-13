@@ -294,11 +294,14 @@ jobs:
 
   helm-lint:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/go:<< pipeline.parameters.go-version >>
     resource_class: small
     steps:
       - checkout
       - helm/install-helm-client
+      - run:
+          name: Generate bundle template
+          command: make prepare-release
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
@@ -320,8 +323,35 @@ jobs:
           name: Generate bundle template
           command: make prepare-release
       - run:
-          name: Run Helm unit tests 
+          name: Run Helm unit tests
           command: cd helm && helm unittest -3 gko
+      - go/save-cache
+
+  helm-install:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    resource_class: small
+    parameters:
+      namespace:
+        type: string
+        default: "apim-apim-master"
+        description: The kubernetes namespace in which the operator is deployed
+    steps:
+      - checkout
+      - helm/install-helm-client
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - go/load-cache
+      - run:
+          name: Generate bundle template
+          command: make prepare-release
+      - run:
+          name: Helm install the operator
+          command: |
+            helm upgrade --install \
+              gko helm/gko \
+              --set manager.scope.cluster=false \
+              -n << parameters.namespace >>
       - go/save-cache
 
 workflows:
@@ -355,6 +385,29 @@ workflows:
           name: Test Helm chart
           requires:
             - Lint Helm chart
+
+  deploy:
+    when:
+      and:
+        - or:
+            - equal: [ci-staging, << pipeline.git.branch >>]
+            - equal: [alpha, << pipeline.git.branch >>]
+    jobs:
+      - test:
+          name: Test operator
+          context: cicd-orchestrator
+      - helm-test:
+          name: Test chart
+      - login-to-azure:
+          name: K8s login on apim-preprod and get ~/.kube/config
+          context: cicd-orchestrator
+          clusterName: apim-preprod
+          requires:
+            - Test
+            - Test chart
+      - helm-install:
+          name: Deploy operator
+          namespace: apim-blue
 
   release:
     when:
