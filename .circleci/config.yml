@@ -27,6 +27,18 @@ executors:
       - image: mcr.microsoft.com/azure-cli:2.44.1
     resource_class: <<parameters.resource_class>>
 
+commands:
+  notify-on-failure:
+        steps:
+            - keeper/env-export:
+                  secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+                  var-name: SLACK_ACCESS_TOKEN
+            - slack/notify:
+                  channel: C02JENTV2AX
+                  branch_pattern: master,[0-9]+\.[0-9]+\.x
+                  event: fail
+                  template: basic_fail_1
+
 jobs:
   lint-sources:
     docker:
@@ -206,21 +218,32 @@ jobs:
           paths:
             - .kube/config
 
-  deploy-gko-image:
+  publish-private-image:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>
+    parameters:
+      image:
+        type: string
     steps:
-      - attach_workspace:
-          at: ~/
-      - kubernetes/install-kubectl
+      - checkout
+      - setup_remote_docker
+      - keeper/env-export:
+            secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+            var-name: AZURE_DOCKER_REGISTRY_USERNAME
+      - keeper/env-export:
+            secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+            var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
-          name: Deploy controller to the K8s cluster specified in ~/.kube/config
+          name: Build image << parameters.image >>
+          command: IMG=<< parameters.image >> make docker-build
+      - run:
+          name: Publish image << parameters.image >>
           command: |
-            if [ -s bundle.yml ]; then 
-              kubectl apply -f ~/bundle.yml
-            else 
-              echo "No bundle.yml in current revision. Skipping deployment"
-            fi
+            echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login \
+              --username $AZURE_DOCKER_REGISTRY_USERNAME \
+              --password-stdin graviteeio.azurecr.io
+            IMG=<< parameters.image >> make docker-push
+            docker logout graviteeio.azurecr.io
 
   semantic-release:
     docker:
@@ -294,11 +317,14 @@ jobs:
 
   helm-lint:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/go:<< pipeline.parameters.go-version >>
     resource_class: small
     steps:
       - checkout
       - helm/install-helm-client
+      - run:
+          name: Generate bundle template
+          command: make prepare-bundle
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
@@ -318,11 +344,44 @@ jobs:
           command: helm plugin install https://github.com/quintush/helm-unittest
       - run:
           name: Generate bundle template
-          command: make prepare-release
+          command: make prepare-bundle
       - run:
-          name: Run Helm unit tests 
+          name: Run Helm unit tests
           command: cd helm && helm unittest -3 gko
       - go/save-cache
+
+  helm-install:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    resource_class: small
+    parameters:
+      namespace:
+        type: string
+        default: "apim-apim-master"
+        description: The kubernetes namespace in which the operator is deployed
+      image:
+        type: string
+    steps:
+      - checkout
+      - helm/install-helm-client
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - go/load-cache
+      - run:
+          name: Generate bundle template
+          command: IMG="<< parameters.image >>" make prepare-bundle
+      - attach_workspace:
+          name: Restore Kubernetes config
+          at: ~/
+      - run:
+          name: Helm install the operator
+          command: |
+            helm upgrade --install \
+              gko helm/gko \
+              --set manager.scope.cluster=false \
+              -n << parameters.namespace >>
+      - go/save-cache
+      - notify-on-failure
 
 workflows:
   pull_requests:
@@ -332,6 +391,8 @@ workflows:
             equal: [master, << pipeline.git.branch >>]
         - not:
             equal: [alpha, << pipeline.git.branch >>]
+        - not:
+            equal: [ci-staging, << pipeline.git.branch >>]
     jobs:
       - lint-sources:
           name: Lint sources
@@ -356,6 +417,38 @@ workflows:
           requires:
             - Lint Helm chart
 
+  deploy:
+    when:
+      and:
+        - or:
+            - equal: [ci-staging, << pipeline.git.branch >>]
+            - equal: [alpha, << pipeline.git.branch >>]
+    jobs:
+      - test:
+          name: Test operator
+          context: cicd-orchestrator
+      - helm-test:
+          name: Test chart
+      - publish-private-image:
+          name: Stage image
+          image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
+          context: cicd-orchestrator
+          requires:
+            - Test operator
+            - Test chart
+      - login-to-azure:
+          name: Authenticate on cluster
+          context: cicd-orchestrator
+          clusterName: apim-preprod
+      - helm-install:
+          name: Deploy operator
+          context: cicd-orchestrator
+          namespace: apim-blue
+          image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
+          requires:
+            - Authenticate on cluster
+            - Stage image
+
   release:
     when:
       and:
@@ -367,53 +460,11 @@ workflows:
             equal:
               [<< pipeline.git.revision >>, << pipeline.git.base_revision >>]
     jobs:
-      - lint-sources:
-          name: Lint sources
-      - lint-licenses:
-          name: Lint licenses
-      - lint-commits:
-          name: Lint commits
-      - lint-resources:
-          name: Lint resources
-      - test:
-          name: Test
-          context: cicd-orchestrator
-          requires:
-            - Lint sources
-            - Lint licenses
-            - Lint commits
-            - Lint resources
       - semantic-release:
           name: Semantic Release
           context: cicd-orchestrator
           requires:
             - Test
-      - login-to-azure:
-          name: K8s login on devs-preprod and get ~/.kube/config
-          context: cicd-orchestrator
-          clusterName: devs-preprod
-          requires:
-            - Semantic Release
-          filters:
-            branches:
-              only:
-                - master
-      - login-to-azure:
-          name: K8s login on apim-preprod and get ~/.kube/config
-          context: cicd-orchestrator
-          clusterName: apim-preprod
-          requires:
-            - Semantic Release
-          filters:
-            branches:
-              only:
-                - alpha
-      - deploy-gko-image:
-          name: Deploy operator to k8s
-          context: cicd-orchestrator
-          requires:
-            - K8s login on devs-preprod and get ~/.kube/config
-            - K8s login on apim-preprod and get ~/.kube/config
 
   notify-release:
     jobs:
