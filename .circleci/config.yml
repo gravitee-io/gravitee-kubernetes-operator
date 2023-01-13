@@ -8,6 +8,11 @@ orbs:
   gravitee: gravitee-io/gravitee@2.2.0
   slack: circleci/slack@4.12.0
 
+parameters:
+  go-version:
+    type: string
+    default: "1.19.4"
+
 executors:
   azure-cli:
     parameters:
@@ -25,7 +30,7 @@ executors:
 jobs:
   lint-sources:
     docker:
-      - image: cimg/go:1.19.4
+      - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
       - checkout
       - go/load-cache
@@ -36,7 +41,7 @@ jobs:
 
   lint-licenses:
     docker:
-      - image: cimg/go:1.19.4
+      - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
       - checkout
       - go/load-cache
@@ -47,7 +52,7 @@ jobs:
 
   lint-commits:
     docker:
-      - image: cimg/go:1.19.4-node
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
       - run:
@@ -62,7 +67,7 @@ jobs:
 
   lint-resources:
     docker:
-      - image: cimg/go:1.19.4
+      - image: cimg/go:<< pipeline.parameters.go-version >>
     resource_class: small
     steps:
       - checkout
@@ -91,7 +96,7 @@ jobs:
     steps:
       - checkout
       - go/install:
-          version: "1.19.2"
+          version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
       - kubernetes/install-kubectl
       - helm/install-helm-client
@@ -203,7 +208,7 @@ jobs:
 
   deploy-gko-image:
     docker:
-      - image: cimg/go:1.19.4
+      - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
       - attach_workspace:
           at: ~/
@@ -219,7 +224,7 @@ jobs:
 
   semantic-release:
     docker:
-      - image: cimg/go:1.19.4-node
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     environment:
       GITHUB_TOKEN: "keeper://TIlcGPFq4rN5GvgnZb9hng/field/password"
       GIT_AUTHOR_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
@@ -300,13 +305,13 @@ jobs:
 
   helm-test:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/go:<< pipeline.parameters.go-version >>
     resource_class: small
     steps:
       - checkout
       - helm/install-helm-client
       - go/install:
-          version: "1.19.2"
+          version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
       - run:
           name: Install Helm unit test plugin
