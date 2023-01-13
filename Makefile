@@ -103,19 +103,19 @@ lint-fix: golangci-lint addlicense ## Fix (trivial) issues found by golangci-lin
 	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
 
 .PHONY: lint
-lint: lint-commitlint lint-go lint-license ## Run all lint and fail on error
+lint: lint-commits lint-sources lint-licenses ## Run all lint and fail on error
 
-.PHONY: lint-commitlint
-lint-commitlint:  ## Run commitlint and fail on error
+.PHONY: lint-commits
+lint-commits:  ## Run commitlint and fail on error
 	npm i -g @commitlint/config-conventional @commitlint/cli
 	commitlint -x @commitlint/config-conventional --edit
 
-.PHONY: lint-go
-lint-go: golangci-lint ## Run golangci-lint and fail on error
+.PHONY: lint-sources
+lint-sources: golangci-lint ## Run golangci-lint and fail on error
 	$(GOLANGCILINT) run ./... 
 
-.PHONY: lint-license
-lint-license: addlicense ## Run addlicense lint and fail on error
+.PHONY: lint-licenses
+lint-licenses: addlicense ## Run addlicense lint and fail on error
 	$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
 
 GOTESTARGS ?= ""
@@ -183,7 +183,7 @@ ifndef ignore-not-found
 endif
 
 .PHONY: install
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+install: kustomize manifests ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 .PHONY: uninstall
@@ -240,14 +240,14 @@ $(ENVTEST): $(LOCALBIN)
 ginkgo: $(GINKGO) ## Download ginkgo cli locally if necessary.
 $(GINKGO): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install github.com/onsi/ginkgo/v2/ginkgo@latest
-
-.PHONY: crdoc
+ 
+.PHONY: crdoc ## Download crdoc cli locally if necessary.
 crdoc: $(CRDOC)
 $(CRDOC): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install fybrik.io/crdoc@latest
 
 .PHONY: reference
-reference: crdoc
+reference: crdoc ## Generate the reference documentation
 	$(CRDOC) --resources config/crd/bases --output docs/api/reference.md
 
 .PHONY: golangci-lint
