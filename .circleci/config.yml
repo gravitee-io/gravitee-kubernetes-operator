@@ -292,7 +292,7 @@ jobs:
           command: make prepare-release
       - run:
           name: Run Helm unit tests 
-          command: cd helm && helm unittest gko
+          command: cd helm && helm unittest -3 gko
       - go/save-cache
 
 workflows:
