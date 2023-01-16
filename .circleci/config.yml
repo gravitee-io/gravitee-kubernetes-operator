@@ -19,7 +19,7 @@ executors:
     docker:
       # Version can be found here https://docs.microsoft.com/en-us/cli/azure/release-notes-azure-cli
       # be careful when updating the version as it looks it is not following semver
-      - image: mcr.microsoft.com/azure-cli:2.43.0
+      - image: mcr.microsoft.com/azure-cli:2.44.1
     resource_class: <<parameters.resource_class>>
 
 jobs:
