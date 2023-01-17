@@ -39,3 +39,4 @@ bundle.yml
 
 # Helm release artifacts
 helm/gko/templates/bundle.yaml
+helm/gko/crds/*.yaml
