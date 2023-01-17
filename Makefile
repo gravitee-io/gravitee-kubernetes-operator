@@ -260,10 +260,11 @@ addlicense: $(ADDLICENSE)
 $(ADDLICENSE): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install github.com/google/addlicense@latest
 
-.PHONY: prepare-bundle
-prepare-bundle: manifests kustomize ## generates the bundle.tpl file for the helm chart
+.PHONY: prepare-helm-chart
+prepare-helm-chart: manifests kustomize ## generates the bundle.tpl file for the helm chart
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o helm/gko/templates/bundle.yaml
+	npx zx scripts/helm-transform.mjs
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
