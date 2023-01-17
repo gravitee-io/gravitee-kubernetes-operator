@@ -425,6 +425,10 @@ workflows:
           context: cicd-orchestrator
       - helm-test:
           name: Test chart
+      - login-to-azure:
+          name: Authenticate on cluster
+          context: cicd-orchestrator
+          clusterName: apim-preprod
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
@@ -432,17 +436,15 @@ workflows:
           requires:
             - Test operator
             - Test chart
-      - login-to-azure:
-          name: Authenticate on cluster
-          context: cicd-orchestrator
-          clusterName: apim-preprod
-      - helm-install:
-          name: Deploy operator
-          context: cicd-orchestrator
-          namespace: apim-blue
-          image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
-          requires:
             - Authenticate on cluster
+      - helm-install:
+          name: Deploy in << matrix.namespace >>
+          context: cicd-orchestrator
+          matrix:
+            parameters:
+              namespace: [apim-blue, apim-green]
+              image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
+          requires:
             - Stage image
 
   release:
