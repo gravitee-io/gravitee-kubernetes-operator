@@ -317,34 +317,32 @@ jobs:
 
   helm-lint:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     steps:
       - checkout
       - helm/install-helm-client
       - run:
-          name: Generate bundle template
-          command: make prepare-bundle
+          name: Prepare Helm chart
+          command: make prepare-helm-chart
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
 
   helm-test:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     steps:
       - checkout
       - helm/install-helm-client
-      - go/install:
-          version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
       - run:
           name: Install Helm unit test plugin
           command: helm plugin install https://github.com/quintush/helm-unittest
       - run:
-          name: Generate bundle template
-          command: make prepare-bundle
+          name: Prepare Helm chart
+          command: make prepare-helm-chart
       - run:
           name: Run Helm unit tests
           command: cd helm && helm unittest -3 gko
@@ -352,7 +350,7 @@ jobs:
 
   helm-install:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     parameters:
       namespace:
@@ -364,12 +362,10 @@ jobs:
     steps:
       - checkout
       - helm/install-helm-client
-      - go/install:
-          version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
       - run:
-          name: Generate bundle template
-          command: IMG="<< parameters.image >>" make prepare-bundle
+          name: Prepare Helm chart
+          command: IMG="<< parameters.image >>" make prepare-helm-chart
       - attach_workspace:
           name: Restore Kubernetes config
           at: ~/
