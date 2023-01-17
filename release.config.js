@@ -36,13 +36,7 @@ const plugins = [
     "@semantic-release/exec",
     {
       prepareCmd:
-        "IMG=graviteeio/kubernetes-operator:${nextRelease.version} BUNDLE_IMG=graviteeio/kubernetes-operator-bundle:${nextRelease.version} make docker-build docker-push bundle-standalone bundle-build bundle-push lint-fix",
-    },
-  ],
-  [
-    "@semantic-release/github",
-    {
-      assets: [{ path: "bundle.yml", label: "Operator resources bundle" }],
+        "npx zx scripts/helm-release.mjs --version ${nextRelease.version} --img graviteeio/helm-operator",
     },
   ],
   [

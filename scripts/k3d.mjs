@@ -16,12 +16,9 @@
  * limitations under the License.
  */
 import {
-  toggleVerbosity,
-  blue,
-  yellow,
-  magenta,
-  green,
+  LOG,
   time,
+  toggleVerbosity,
   setNoQuoteEscape,
   setQuoteEscape,
 } from "./lib/index.mjs";
@@ -55,10 +52,10 @@ let K3D_IMAGES_REGISTRY = `${K3D_IMAGES_REGISTRY_NAME}:${K3D_IMAGES_REGISTRY_POR
 // APIM credentials
 const APIM_CONTEXT_SECRET_NAME = "apim-context-credentials";
 
-green(`
+LOG.green(`
 Starting k3d cluster with APIM dependencies...`);
 
-blue(`
+LOG.blue(`
   ☸ Installing the latest version of k3d (if not present) ...
 
   See https://k3d.io/
@@ -74,7 +71,7 @@ async function installK3d() {
   }
 }
 
-blue(`
+LOG.blue(`
   🐳 Initializing a local docker images registry for k3d images (if not present) ...
 `);
 
@@ -84,10 +81,10 @@ async function initRegistry() {
   try {
     await $`k3d registry list | grep -q "${K3D_IMAGES_REGISTRY_NAME}"`;
 
-    magenta(`K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
+    LOG.magenta(`K3d images registry ${K3D_IMAGES_REGISTRY_NAME} already exists, skipping.
     `);
   } catch (error) {
-    magenta(`Initializing registry ${K3D_IMAGES_REGISTRY_NAME}
+    LOG.magenta(`Initializing registry ${K3D_IMAGES_REGISTRY_NAME}
     `);
 
     await $`k3d registry create ${K3D_IMAGES_REGISTRY_NAME} --port ${K3D_IMAGES_REGISTRY_PORT}`;
@@ -96,7 +93,7 @@ async function initRegistry() {
   K3D_IMAGES_REGISTRY = `k3d-${K3D_IMAGES_REGISTRY}`;
 }
 
-yellow(`
+LOG.yellow(`
   ⚠️ WARNING ⚠️ 
 
   Assuming that host "${K3D_IMAGES_REGISTRY_NAME}" points to 127.0.0.1
@@ -107,18 +104,18 @@ yellow(`
 await time(initCluster);
 
 async function initCluster() {
-  blue(`☸ Deleting K3d cluster ${K3D_CLUSTER_NAME} (if present) ...
+  LOG.blue(`☸ Deleting K3d cluster ${K3D_CLUSTER_NAME} (if present) ...
 `);
 
   try {
     await $`k3d cluster list| grep -q "${K3D_CLUSTER_NAME}"`;
     await $`k3d cluster delete ${K3D_CLUSTER_NAME}`;
   } catch (error) {
-    magenta(`No K3d cluster with name ${K3D_CLUSTER_NAME}
+    LOG.magenta(`No K3d cluster with name ${K3D_CLUSTER_NAME}
     `);
   }
 
-  blue(`☸ Creating a K3d cluster with name ${K3D_CLUSTER_NAME} ...
+  LOG.blue(`☸ Creating a K3d cluster with name ${K3D_CLUSTER_NAME} ...
   `);
 
   await $`k3d cluster create --wait \
@@ -132,7 +129,7 @@ async function initCluster() {
 }
 
 if (pullMode !== "none") {
-  blue(`
+  LOG.blue(`
   🐳 Registering docker images to ${K3D_IMAGES_REGISTRY} ...
 `);
 
@@ -180,7 +177,7 @@ async function registerImages() {
 
   setNoQuoteEscape();
 
-  magenta(`Pulling docker images ...
+  LOG.magenta(`Pulling docker images ...
       `);
 
   await Promise.all(
@@ -189,7 +186,7 @@ async function registerImages() {
     )
   );
 
-  magenta(`Tagging docker images ...
+  LOG.magenta(`Tagging docker images ...
       `);
 
   await Promise.all(
@@ -198,7 +195,7 @@ async function registerImages() {
     )
   );
 
-  magenta(`Pushing docker images to ${K3D_IMAGES_REGISTRY} ...
+  LOG.magenta(`Pushing docker images to ${K3D_IMAGES_REGISTRY} ...
       `);
 
   await Promise.all(
@@ -208,7 +205,7 @@ async function registerImages() {
   setQuoteEscape();
 }
 
-blue(`
+LOG.blue(`
   ☸ Storing APIM context credentials as a secret ...
 
   The following declaration can be used in your API context to reference this secret:
@@ -228,7 +225,7 @@ async function createSecret() {
   `;
 }
 
-blue(`
+LOG.blue(`
 ⎈ Adding Helm repositories (if not presents) ...
 `);
 
@@ -240,7 +237,7 @@ async function addHelmRepos() {
   await $`helm repo add graviteeio https://helm.gravitee.io`;
 }
 
-blue(`
+LOG.blue(`
 ⎈ Installing components in namespace ${K3D_NAMESPACE_NAME} ...
 
       Mongodb         ${MONGO_IMAGE_TAG}
@@ -351,7 +348,7 @@ async function helmInstall() {
   ]);
 }
 
-magenta(`
+LOG.magenta(`
     APIM containers are starting ...
 
     Version: ${APIM_IMAGE_TAG}
@@ -369,7 +366,7 @@ magenta(`
     > kubectl rollout restart deployment apim-apim3-gateway
 `);
 
-blue(`Waiting for APIM to be ready ...
+LOG.blue(`Waiting for APIM to be ready ...
     
     Press ctrl+c to exit this script without waiting ...
 `);
@@ -380,6 +377,6 @@ async function waitForApim() {
   await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
 }
 
-green(`
+LOG.green(`
 🚀 Cluster is ready!
 `);
