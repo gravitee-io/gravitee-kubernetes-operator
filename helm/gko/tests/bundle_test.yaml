@@ -19,43 +19,10 @@ tests:
   - it: Should nest all needed resources
     asserts:
       - hasDocuments:
-          count: 14
-
-  - it: Should have CRD named ApiDefinition
-    documentIndex: 0
-    asserts:
-      - isKind:
-          of: CustomResourceDefinition
-      - isAPIVersion:
-          of: apiextensions.k8s.io/v1
-      - equal:
-          path: metadata.name
-          value: apidefinitions.gravitee.io
-
-  - it: Should have CRD named ApiResource
-    documentIndex: 1
-    asserts:
-      - isKind:
-          of: CustomResourceDefinition
-      - isAPIVersion:
-          of: apiextensions.k8s.io/v1
-      - equal:
-          path: metadata.name
-          value: apiresources.gravitee.io
-
-  - it: Should have CRD named ManagementContext
-    documentIndex: 2
-    asserts:
-      - isKind:
-          of: CustomResourceDefinition
-      - isAPIVersion:
-          of: apiextensions.k8s.io/v1
-      - equal:
-          path: metadata.name
-          value: managementcontexts.gravitee.io
+          count: 11
 
   - it: Should have manager service account in release namespace
-    documentIndex: 3
+    documentIndex: 0
     asserts:
       - isKind:
           of: ServiceAccount
@@ -66,7 +33,7 @@ tests:
           value: NAMESPACE
 
   - it: Should have leader election role in release namespace
-    documentIndex: 4
+    documentIndex: 1
     asserts:
       - isKind:
           of: Role
@@ -77,10 +44,10 @@ tests:
           value: NAMESPACE
       - equal:
           path: metadata.name
-          value: gko-leader-election-role
+          value: gko-leader-election-role-RELEASE-NAME-NAMESPACE
 
   - it: Should have manager cluster role
-    documentIndex: 5
+    documentIndex: 2
     asserts:
       - isKind:
           of: ClusterRole
@@ -88,10 +55,10 @@ tests:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-manager-role
+          value: gko-manager-role-RELEASE-NAME-NAMESPACE
 
   - it: Should have metrics cluster role
-    documentIndex: 6
+    documentIndex: 3
     asserts:
       - isKind:
           of: ClusterRole
@@ -99,10 +66,10 @@ tests:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-metrics-reader
+          value: gko-metrics-reader-RELEASE-NAME-NAMESPACE
 
   - it: Should have proxy cluster role
-    documentIndex: 7
+    documentIndex: 4
     asserts:
       - isKind:
           of: ClusterRole
@@ -110,11 +77,11 @@ tests:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-proxy-role
+          value: gko-proxy-role-RELEASE-NAME-NAMESPACE
 
 
   - it: Should have leader election role binding in release namespace
-    documentIndex: 8
+    documentIndex: 5
     asserts:
       - isKind:
           of: RoleBinding
@@ -128,7 +95,7 @@ tests:
           value: NAMESPACE
 
   - it: Should have manager cluster role binding
-    documentIndex: 9
+    documentIndex: 6
     asserts:
       - isKind:
           of: ClusterRoleBinding
@@ -136,10 +103,10 @@ tests:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-manager-rolebinding
+          value: gko-manager-rolebinding-RELEASE-NAME-NAMESPACE
 
   - it: Should have proxy cluster role binding
-    documentIndex: 10
+    documentIndex: 7
     asserts:
       - isKind:
           of: ClusterRoleBinding
@@ -147,10 +114,10 @@ tests:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-proxy-rolebinding
+          value: gko-proxy-rolebinding-RELEASE-NAME-NAMESPACE
 
   - it: Should have manager config in release namespace
-    documentIndex: 11
+    documentIndex: 8
     asserts:
       - isKind:
           of: ConfigMap
@@ -164,7 +131,7 @@ tests:
           value: NAMESPACE
 
   - it: Should have a manager https service in release namespace
-    documentIndex: 12
+    documentIndex: 9
     asserts:
       - isKind:
           of: Service
@@ -187,7 +154,7 @@ tests:
           value: controller-manager
 
   - it: Should have a controller manager deployment in release namespace
-    documentIndex: 13
+    documentIndex: 10
     asserts:
       - isKind:
           of: Deployment
