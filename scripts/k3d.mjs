@@ -1,4 +1,5 @@
 #!/usr/bin/env zx
+
 /**
  * Copyright (C) 2015 The Gravitee team (http://gravitee.io)
  *
@@ -14,32 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {
+  toggleVerbosity,
+  blue,
+  yellow,
+  magenta,
+  green,
+  time,
+  setNoQuoteEscape,
+  setQuoteEscape,
+} from "./lib/index.mjs";
 
-const { log } = console;
+toggleVerbosity(argv.verbose);
 
 const pullMode = argv.pull || "all";
-
-$.verbose = argv.verbose || false;
-
-const newLogger =
-  (color) =>
-  (...args) =>
-    log(color(...args));
-
-async function time(fn) {
-  const start = Date.now();
-  await fn();
-  const end = Date.now();
-  green(`Done in ${(end - start) / 1000}s`);
-}
-
-const $Quote = $.quote;
-const $NoQuote = (unescaped) => unescaped;
-
-const blue = newLogger(chalk.blue);
-const yellow = newLogger(chalk.yellow);
-const magenta = newLogger(chalk.magenta);
-const green = newLogger(chalk.green);
 
 const APIM_IMAGE_REGISTRY = `${
   process.env.APIM_IMAGE_REGISTRY || "graviteeio"
@@ -189,7 +178,7 @@ async function registerImages() {
 
   const images = pullMode === "all" ? allImages : apimImages;
 
-  $.quote = $NoQuote;
+  setNoQuoteEscape();
 
   magenta(`Pulling docker images ...
       `);
@@ -216,7 +205,7 @@ async function registerImages() {
     Array.from(images.values()).map((tag) => $`docker push ${tag}  > /dev/null`)
   );
 
-  $.quote = $Quote;
+  setQuoteEscape();
 }
 
 blue(`
@@ -261,7 +250,7 @@ blue(`
       Gravitee APIM   ${APIM_IMAGE_TAG}
 `);
 
-$.quote = $NoQuote;
+setNoQuoteEscape;
 
 const helmInstallApim = $`
 helm install \
