@@ -153,7 +153,7 @@ jobs:
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
             export APIM_IMAGE_TAG=master-latest
-            K3DARGS="--pull=${K3D_PULL}" make k3d-apim-init
+            K3DARGS="--pull=${K3D_PULL}" make k3d-init
       - run:
           name: Run tests
           command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
@@ -324,7 +324,7 @@ jobs:
       - helm/install-helm-client
       - run:
           name: Prepare Helm chart
-          command: make prepare-helm-chart
+          command: make helm-prepare
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
@@ -342,7 +342,7 @@ jobs:
           command: helm plugin install https://github.com/quintush/helm-unittest
       - run:
           name: Prepare Helm chart
-          command: make prepare-helm-chart
+          command: make helm-prepare
       - run:
           name: Run Helm unit tests
           command: cd helm && helm unittest -3 gko
@@ -365,7 +365,7 @@ jobs:
       - go/load-cache
       - run:
           name: Prepare Helm chart
-          command: IMG="<< parameters.image >>" make prepare-helm-chart
+          command: IMG="<< parameters.image >>" make helm-prepare
       - attach_workspace:
           name: Restore Kubernetes config
           at: ~/
