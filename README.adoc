@@ -33,7 +33,9 @@ You can find detailed information about the Gravitee Kubernetes Operator in the 
 
 The GKO API reference documentation is available https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/docs/api/reference.md[here].
 
-== Initialize your environment
+== Developer guide
+
+=== Initialize your environment
 
 * Install link:https://www.docker.com/[Docker^]
 * Install link:https://kubernetes.io/docs/tasks/tools/#kubectl[kubectl^]
@@ -41,85 +43,74 @@ The GKO API reference documentation is available https://github.com/gravitee-io/
 * Install link:https://nodejs.org/en/download/[NodeJs^]
 * Install the operator-sdk: `brew install operator-sdk`
 
-== How to run locally
+=== Install tooling for development
+
+All the tool needed to run the make targets used during development can be installed by running the following command:
+
+[source,shell]
+----
+make install-tools
+----
+
+To get more information about the available make targets, run:
+
+[source,shell]
+----
+make help
+----
+
+=== Run the operator locally
 
 To run the operator locally against an APIM-ready link:https://k3d.io/[k3d^] cluster, run the following commands:
 
 [source,shell]
 ----
-# Initialize APIM locally using k3d
-make k3d-apim-init
+# Initialize a local kubernetes cluster running APIM
+make k3d-init
 
-# Install CRDs into the K8s cluster specified in ~/.kube/config
+# Install the operator CRDs into the cluster
 make install
 
-# Check that the Gravitee CRDs are available on your cluster
-kubectl get crd
-
-# Run a controller from your host
+# Run the operator controller on your local machine
 make run
 ----
 
-== Try it
-
-To create a basic API Definition, run following commands:
-
-[source,shell]
-----
-# Create a Management Context custom resource for your APIM instance running on k3d
-kubectl apply -f ./config/samples/context/k3d/management-context-with-credentials.yml
-
-# Create a basic API Definition custom resource
-kubectl apply -f ./config/samples/apim/api-with-context.yml
-
-kubectl get graviteeapis -o wide
-# NAME                ID                                     ENTRYPOINT            ENDPOINT                       VERSION   ENABLED
-# basic-api-example   ff3549c9-ceb2-36da-87f7-f5e51ba89097   /k8s-basic-with-ctx   https://api.gravitee.io/echo   1.0       true
-----
-
-== Deploying GKO as a k3d deployment
-
-You can deploy the operator on your local kubernetes cluster by running the following commands:
-
-[source,shell]
-----
-make k3d-gko-build k3d-gko-push k3d-gko-deploy
-----
-
-== Contributing
-
-=== Debugging with a locally running APIM
+=== Debug the operator and APIM
 
 To be able to run the operator against a local instance of both an APIM Gateway and an APIM Management API, you will need to:
 
 * Attach to a local cluster context.
 * Create a local service account to authenticate the gateway against the local cluster.
-* Run both the APIM Gateway and the APIM Management API in debug mode.
-* Create a Management Context custom resource pointing to your local APIM Management API.
+* Create an API Context pointing to your local APIM Management API.
+* Run what you need to debug in debug mode.
 
 [source,shell]
 ----
 # Create a service account token with 'cluster-admin' role in the current context and
 # use this token to authenticate against the current cluster
-make service-account
+make k3d-admin
 
 make run # or run using a debugger if you need to debug the operator as well
 
 # Create the debug Management Context resource for APIM
-kubectl apply -f ./config/samples/context/debug/management-context-with-credentials.yml
+kubectl apply -f ./config/samples/context/debug/api-context-with-credentials.yml
 
 # Create a basic API Definition resource
 kubectl apply -f ./config/samples/apim/api-with-context.yml
 ----
 
-=== Testing and linting
+=== Run the operator as a deployment on the k3d cluster
 
-To be able  to run `make lint` and `make install`, install the following golang package:
+Some features and behaviors of the operator can only be tested when running it as a deployment on the k3d cluster.
+
+This is a case for e.g. for link:https://sdk.operatorframework.io/docs/building-operators/golang/webhook/[webhooks^] or 
+when testing the operator deployed in multiple namespaces.
+
+You can deploy the operator on your k3d cluster by running the following commands:
 
 [source,shell]
 ----
-go install gotest.tools/gotestsum@latest
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+make k3d-build k3d-push k3d-deploy
 ----
 
 === Working with the repo
@@ -141,19 +132,6 @@ Go in the `Actions` tab and select the `Trigger Release` workflow. Run it with t
 A new release is automatically created on `master` and a new tag is pushed. When a new tag is pushed, a github action `Sync Branches` is triggered to rebase `alpha` on `master`.
 
 == Troubleshooting
-
-=== Note for Apple Silicon users
-
-The default version of kustomize installed by the `kustomize` target is not available on
-arm64 platforms.
-
-You can override the version to be used by setting the `KUSTOMIZE_VERSION` environment variable, as follows:
-
-[source,shell]
-----
-export KUSTOMIZE_VERSION=v4.5.5
-make kustomize
-----
 
 === Local Docker image registry
 
