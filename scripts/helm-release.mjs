@@ -96,7 +96,7 @@ LOG.blue(`
 await time(prepareHelmChart);
 
 async function prepareHelmChart() {
-  await $`make prepare-helm-chart`;
+  await $`make helm-prepare`;
 }
 
 LOG.blue(`
@@ -149,7 +149,7 @@ if (!DRY_RUN) {
 
 async function publishRelease() {
   cd(WORKING_DIR);
-  await $`git add index.yaml helm/gko/gko-${VERSION}.tgz`;
+  await $`git add clm/gko/gko-${VERSION}.tgz`;
   await $`git commit -m "chore(gko): release version ${VERSION}"`;
   await $`git push origin ${HELM.releaseBranch}`;
 }

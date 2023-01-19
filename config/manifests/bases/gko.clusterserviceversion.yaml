@@ -10,15 +10,19 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: API Context.
+      displayName: API Context
+      kind: ApiContext
+      name: apicontexts.gravitee.io
+      version: v1alpha1
     - description: ApiDefinition is the Schema for the apidefinitions API.
       displayName: Api Definition
       kind: ApiDefinition
       name: apidefinitions.gravitee.io
       version: v1alpha1
-    - description: API Context.
-      displayName: API Context
-      kind: ApiContext
-      name: apicontexts.gravitee.io
+    - displayName: Api Resource
+      kind: ApiResource
+      name: apiresources.gravitee.io
       version: v1alpha1
   description: Gravitee Operator for Kubernetes (GKO)
   displayName: Gravitee.io Kubernetes Operator

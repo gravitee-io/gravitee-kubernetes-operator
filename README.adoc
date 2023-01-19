@@ -79,8 +79,7 @@ kubectl get graviteeapis -o wide
 
 == Deploying GKO as a k3d deployment
 
-The following command will publish your Docker image to the k3d cluster registry, and deploy the operator
-in a dedicated `gko-system` namespace:
+You can deploy the operator on your local kubernetes cluster by running the following commands:
 
 [source,shell]
 ----
