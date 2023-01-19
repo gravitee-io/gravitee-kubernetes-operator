@@ -35,8 +35,7 @@ gko-config-default.yml
 # K8S OLM 
 cache/
 bundle/
-bundle.yml
+bundle.yaml
 
 # Helm release artifacts
-helm/gko/templates/bundle.yaml
 helm/gko/crds/*.yaml
