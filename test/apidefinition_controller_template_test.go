@@ -42,7 +42,7 @@ var _ = Describe("An API template", func() {
 				fixtures, err := fixturesGenerator.NewFixtures(internal.FixtureFiles{
 					Api: internal.ApiWithContextFile,
 					Contexts: []string{
-						internal.ContextWithValuesFile,
+						internal.ContextWithSecretFile,
 					},
 				}, func(fixtures *internal.Fixtures) {
 					fixtures.Contexts[0].Spec.Management = nil
@@ -71,7 +71,7 @@ var _ = Describe("An API template", func() {
 				By("calling successfully the API using the context path templated with the context values")
 
 				httpClient := http.Client{Timeout: 5 * time.Second}
-				endpoint := internal.GatewayUrl + fixturesGenerator.AddSuffix("/context-staging")
+				endpoint := internal.GatewayUrl + fixturesGenerator.AddSuffix("/context-dev")
 				Eventually(func() error {
 					res, callErr := httpClient.Get(endpoint)
 					return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
@@ -85,7 +85,7 @@ var _ = Describe("An API template", func() {
 				fixtures, err := fixturesGenerator.NewFixtures(internal.FixtureFiles{
 					Api: internal.ApiWithContextFile,
 					Contexts: []string{
-						internal.ContextWithValuesFile,
+						internal.ContextWithSecretFile,
 					},
 				})
 				Expect(err).ToNot(HaveOccurred())
@@ -126,14 +126,14 @@ var _ = Describe("An API template", func() {
 						return getErr
 					}
 
-					expectedName := fixturesGenerator.AddSuffix("Context (staging)")
+					expectedName := fixturesGenerator.AddSuffix("Context (dev)")
 					return internal.AssertEquals("API Name", expectedName, api.Name)
 				}, timeout, interval).ShouldNot(HaveOccurred())
 
 				By("calling successfully the API using the context path templated with the context values")
 
 				httpClient := http.Client{Timeout: 5 * time.Second}
-				endpoint := internal.GatewayUrl + fixturesGenerator.AddSuffix("/context-staging")
+				endpoint := internal.GatewayUrl + fixturesGenerator.AddSuffix("/context-dev")
 				Eventually(func() error {
 					res, callErr := httpClient.Get(endpoint)
 					return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
@@ -150,19 +150,18 @@ var _ = Describe("An API template", func() {
 				fixtures, err := fixturesGenerator.NewFixtures(internal.FixtureFiles{
 					Api: internal.ApiWithContextFile,
 					Contexts: []string{
-						internal.ContextWithValuesFile,
+						internal.ContextWithSecretFile,
 					},
 				}, func(fixtures *internal.Fixtures) {
 
 					fixtures.Contexts[0].Spec.Management = nil
 
-					stagingContext := &fixtures.Contexts[0]
-					stagingContext.Name = strings.Replace(stagingContext.Name, "with-values", "staging", 1)
+					devContext := &fixtures.Contexts[0]
 
-					devContext := stagingContext.DeepCopy()
-					devContext.Name = strings.Replace(devContext.Name, "staging", "dev", 1)
-					devContext.Spec.Values = map[string]string{
-						"env": "dev",
+					stagingContext := devContext.DeepCopy()
+					stagingContext.Name = strings.Replace(devContext.Name, "dev", "staging", 1)
+					stagingContext.Spec.Values = map[string]string{
+						"env": "staging",
 					}
 
 					fixtures.Contexts = []gio.ApiContext{

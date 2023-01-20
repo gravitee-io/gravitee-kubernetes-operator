@@ -21,7 +21,7 @@ metadata:
 spec:
   name: "K8s ApiKey Example"
   contextRef: 
-    name: "dev-mgmt-ctx"
+    name: "dev-ctx"
     namespace: "default"
   version: "1.0"
   description: "Api managed by Gravitee Kubernetes Operator with Key plan"
