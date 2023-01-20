@@ -15,7 +15,7 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiContext
 metadata:
-  name: dev-mgmt-ctx
+  name: dev-ctx
 spec:
   management:
     baseUrl: http://localhost:9000
@@ -24,3 +24,5 @@ spec:
     auth:
       # TODO: replace with your generate bearer token
       bearerToken: xxxx-yyyy-zzzz 
+  values: 
+    env: dev
