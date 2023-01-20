@@ -249,7 +249,7 @@ jobs:
         var-name: SLACK_ACCESS_TOKEN
     - slack/notify:
         channel: C02NGT20S4W
-        event: always
+        event: pass
         custom: |
             {
               "blocks": [
