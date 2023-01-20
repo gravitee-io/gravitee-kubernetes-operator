@@ -21,7 +21,6 @@ const (
 
 	ContextWithSecretFile      = SamplesPath + "/context/dev/api-context-with-secret-ref.yml"
 	ContextWithCredentialsFile = SamplesPath + "/context/dev/api-context-with-credentials.yml"
-	ContextWithValuesFile      = SamplesPath + "/context/dev/api-context-with-values.yml"
 
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
 	ApiWithContextFile                  = SamplesPath + "/apim/api-with-context.yml"
