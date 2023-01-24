@@ -247,7 +247,7 @@ LOG.blue(`
       Gravitee APIM   ${APIM_IMAGE_TAG}
 `);
 
-setNoQuoteEscape;
+setNoQuoteEscape();
 
 const helmInstallApim = $`
 helm install \
