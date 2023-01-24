@@ -6,6 +6,60 @@ metadata:
   name: "manager-role-{{ .Release.Name }}-{{ .Release.Namespace }}"
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apidefinitions
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apidefinitions/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apidefinitions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - gravitee.io
   resources:
   - apiresources
@@ -27,6 +81,32 @@ rules:
   - gravitee.io
   resources:
   - apiresources/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apicontexts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apicontexts/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gravitee.io
+  resources:
+  - apicontexts/status
   verbs:
   - get
   - patch
