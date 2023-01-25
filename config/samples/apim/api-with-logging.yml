@@ -22,6 +22,10 @@ spec:
   name: "With logging"
   version: "1.0"
   description: "API with logging"
+  plans:
+    - name: "KEY_LESS"
+      description: "FREE"
+      security: "KEY_LESS"
   proxy:
     logging:
         mode: "CLIENT_PROXY"

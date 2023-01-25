@@ -21,8 +21,6 @@ import (
 )
 
 func (d *Delegate) CreateOrUpdate(api *gio.ApiDefinition) error {
-	addDefaultPlan(api)
-
 	api.Spec.DefinitionContext = &model.DefinitionContext{
 		Origin: origin,
 		Mode:   mode,

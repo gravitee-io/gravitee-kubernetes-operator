@@ -22,6 +22,10 @@ spec:
   name: "K8s Basic Example"
   version: "1.0"
   description: "Basic api managed by Gravitee Kubernetes Operator"
+  plans:
+    - name: "KEY_LESS"
+      description: "FREE"
+      security: "KEY_LESS"
   proxy:
     virtual_hosts:
       - path: "/k8s-basic"

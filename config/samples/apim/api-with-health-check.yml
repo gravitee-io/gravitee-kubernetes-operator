@@ -35,6 +35,10 @@ spec:
         response:
           assertions:
           - "#response.status == 200"
+  plans:
+    - name: "KEY_LESS"
+      description: "FREE"
+      security: "KEY_LESS"
   proxy:
     virtual_hosts:
       - path: "/with-hc"
