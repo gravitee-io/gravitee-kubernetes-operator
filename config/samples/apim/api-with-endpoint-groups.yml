@@ -22,6 +22,10 @@ spec:
   name: "With endpoint groups"
   version: "1.0"
   description: "API with endpoint groups and failover"
+  plans:
+    - name: "KEY_LESS"
+      description: "FREE"
+      security: "KEY_LESS"
   proxy:
     virtual_hosts:
     - path: "/with-endpoint-groups"

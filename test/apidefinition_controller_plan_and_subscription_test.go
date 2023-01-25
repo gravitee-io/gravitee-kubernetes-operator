@@ -232,6 +232,127 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
+
+	Context("Checking Api with no plan", Ordered, func() {
+		var apiDefinitionFixture *gio.ApiDefinition
+		var savedApiDefinition *gio.ApiDefinition
+		var apiLookupKey types.NamespacedName
+		var contextLookupKey types.NamespacedName
+		var gatewayEndpoint string
+		var apim *internal.APIM
+
+		BeforeAll(func() {
+			By("Create a management context to synchronize with the REST API")
+
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:      internal.ApiWithContextNoPlanFile,
+				Contexts: []string{internal.ContextWithSecretFile},
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			apiContext := &fixtures.Contexts[0]
+			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+
+			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+			}, timeout, interval).Should(Succeed())
+
+			By("Create an API definition resource stared by default")
+
+			apiDefinition := fixtures.Api
+			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
+
+			apiDefinitionFixture = apiDefinition
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+
+			By("Expect the API Definition is Ready")
+
+			savedApiDefinition = new(gio.ApiDefinition)
+			Eventually(func() error {
+				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertStatusContextIsSet(savedApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+
+			apim, err = internal.NewAPIM(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Should have no plan in the API definition")
+			Expect(0, len(savedApiDefinition.Spec.Plans))
+		})
+
+		It("Should return NotFound Exception without plan", func() {
+			Eventually(func() error {
+				res, callErr := httpClient.Get(gatewayEndpoint)
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
+
+		It("Should be reachable using KeyLess plan", func() {
+			By("Update ApiDefinition add KeyLess plan")
+			updatedApiDefinition := savedApiDefinition.DeepCopy()
+			keyLessPlanCrossId := uuid.FromStrings("key-less-plan-cross-id")
+			updatedApiDefinition.Spec.Plans = append(savedApiDefinition.Spec.Plans, &model.Plan{
+				CrossId:  keyLessPlanCrossId,
+				Name:     "G.K.O. KeyLess Plan",
+				Security: "KEY_LESS",
+				Status:   "PUBLISHED",
+			})
+
+			Eventually(func() error {
+				update := new(gio.ApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
+					return err
+				}
+				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
+				return k8sClient.Update(ctx, update)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			// Wait for the ApiDefinition to be updated
+			Eventually(func() error {
+				expectedGeneration := savedApiDefinition.Status.ObservedGeneration + 1
+				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
+				return internal.AssertNoErrorAndObservedGenerationEquals(
+					k8sErr, updatedApiDefinition, expectedGeneration,
+				)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			// Update savedApiDefinition & global var with last Get
+			savedApiDefinition = updatedApiDefinition.DeepCopy()
+
+			By("Call gateway with subscription api key of second plan")
+			Eventually(func() error {
+				res, callErr := httpClient.Get(gatewayEndpoint)
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
+
+		It("Should delete ApiDefinition resource", func() {
+			By("Delete the ApiDefinition resource")
+			err := k8sClient.Delete(ctx, apiDefinitionFixture)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Call deleted API definition URL and expect 404")
+			Eventually(func() error {
+				res, callErr := httpClient.Get(gatewayEndpoint)
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			By("Get the API definition from ManagementApi and expect deleted state")
+
+			Eventually(func() error {
+				_, apiErr := apim.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				return errors.IgnoreNotFound(apiErr)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
+	})
 })
 
 func createSubscriptionAndGetApiKey(

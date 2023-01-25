@@ -16,25 +16,20 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: with-metadata
-  namespace: default
+  name: api-with-context-no-plan
+  namespace: "default"
 spec:
-  name: "With metadata"
+  name: "K8s No Plan Example"
+  contexts:
+    - name: "ctx-dev"
+      namespace: "default"
   version: "1.0"
-  description: "API with metadata"
+  description: "Api managed by Gravitee Kubernetes Operator with no plan"
   proxy:
     virtual_hosts:
-      - path: "/with-metadata"
+      - path: "/api-with-context-no-plan"
     groups:
-      - endpoints:
+      - name: default-group
+        endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
-  plans:
-    - name: "KEY_LESS"
-      description: "FREE"
-      security: "KEY_LESS"
-  metadata:
-  - key: "build-version"
-    name: "build-version"
-    format: "STRING"
-    value: "0.0.1"
