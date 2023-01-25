@@ -22,6 +22,10 @@ spec:
   name: "With service-discovery"
   version: "1.0"
   description: "API with service-discovery"
+  plans:
+    - name: "KEY_LESS"
+      description: "FREE"
+      security: "KEY_LESS"
   proxy:
     virtual_hosts:
       - path: "/with-service-discovery"

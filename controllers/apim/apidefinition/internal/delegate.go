@@ -28,12 +28,9 @@ import (
 )
 
 const (
-	separator           = "/"
-	defaultPlanSecurity = "KEY_LESS"
-	defaultPlanStatus   = "PUBLISHED"
-	defaultPlanName     = "G.K.O. Default"
-	origin              = "kubernetes"
-	mode                = "fully_managed"
+	separator = "/"
+	origin    = "kubernetes"
+	mode      = "fully_managed"
 )
 
 type Delegate struct {
