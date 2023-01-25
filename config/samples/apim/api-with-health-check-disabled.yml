@@ -26,6 +26,10 @@ spec:
     health-check:
       enabled: false
       schedule: "*/1 * * * * *"
+  plans:
+    - name: "KEY_LESS"
+      description: "FREE"
+      security: "KEY_LESS"
   proxy:
     virtual_hosts:
       - path: "/with-disabled-hc"

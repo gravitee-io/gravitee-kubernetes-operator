@@ -24,6 +24,7 @@ const (
 
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
 	ApiWithContextFile                  = SamplesPath + "/apim/api-with-context.yml"
+	ApiWithContextNoPlanFile            = SamplesPath + "/apim/api-with-no-plan.yml"
 	ApiWithDisabledHCFile               = SamplesPath + "/apim/api-with-health-check-disabled.yml"
 	ApiWithHCFile                       = SamplesPath + "/apim/api-with-health-check.yml"
 	ApiWithServiceDiscoveryFile         = SamplesPath + "/apim/api-with-service-discovery.yml"
