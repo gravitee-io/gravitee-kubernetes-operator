@@ -271,7 +271,7 @@ jobs:
           name: Install operator SDK
           command: |
             export OPERATOR_SDK_RELEASE_VERSION=v1.23.0
-            export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+            export ARCH=$(case $(uname -m) in amd64|x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
             export OS=$(uname | awk '{print tolower($0)}')
             export DOWNLOAD_URL=https://github.com/operator-framework/operator-sdk/releases/latest/download
             export BINARY=operator-sdk_${OS}_${ARCH}
@@ -387,8 +387,6 @@ workflows:
             equal: [master, << pipeline.git.branch >>]
         - not:
             equal: [alpha, << pipeline.git.branch >>]
-        - not:
-            equal: [ci-staging, << pipeline.git.branch >>]
     jobs:
       - lint-sources:
           name: Lint sources
