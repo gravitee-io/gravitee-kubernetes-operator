@@ -15,13 +15,10 @@
  */
 
 const config = {
-  branches: [{ name: "alpha", prerelease: true }, "master"],
+  branches: ["master"],
   tagFormat: "${version}",
 };
-
-const branch = process.env.CIRCLE_BRANCH;
-const changelogFileName =
-  branch === "master" ? "CHANGELOG.md" : `CHANGELOG-${branch.toUpperCase()}.md`;
+const changelogFileName = "CHANGELOG.md";
 
 const plugins = [
   "@semantic-release/commit-analyzer",
