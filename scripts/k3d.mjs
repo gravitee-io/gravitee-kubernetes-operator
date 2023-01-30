@@ -30,7 +30,7 @@ const pullMode = argv.pull || "all";
 const APIM_IMAGE_REGISTRY = `${
   process.env.APIM_IMAGE_REGISTRY || "graviteeio"
 }`;
-const APIM_IMAGE_TAG = `${process.env.APIM_IMAGE_TAG || "3.19"}`;
+const APIM_IMAGE_TAG = `${process.env.APIM_IMAGE_TAG || "latest"}`;
 
 // Docker dependencies images tags
 const NGINX_CONTROLLER_IMAGE_TAG = "1.3.0";
