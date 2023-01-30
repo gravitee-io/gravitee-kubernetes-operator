@@ -238,6 +238,16 @@ async function addHelmRepos() {
 }
 
 LOG.blue(`
+⎈ Ensuring that Graviteeio repo is up to date ...
+`);
+
+await time(updateGraviteeRepo);
+
+async function updateGraviteeRepo() {
+  await $`helm repo update graviteeio`;
+}
+
+LOG.blue(`
 ⎈ Installing components in namespace ${K3D_NAMESPACE_NAME} ...
 
       Mongodb         ${MONGO_IMAGE_TAG}
