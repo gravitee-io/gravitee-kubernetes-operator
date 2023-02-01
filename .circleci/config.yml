@@ -277,6 +277,7 @@ jobs:
             export BINARY=operator-sdk_${OS}_${ARCH}
             curl -OJL ${DOWNLOAD_URL}/${BINARY}
             chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
+      - helm/install-helm-client
       - keeper/exec:
           step-name: "Run Semantic Release"
           command: |
