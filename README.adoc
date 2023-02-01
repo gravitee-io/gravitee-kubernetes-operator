@@ -119,7 +119,7 @@ When committing your contributions, please follow link:https://www.conventionalc
 
 === Release process
 
-/!\ All new changes should be committed to the `alpha` branch. A prerelease is automatically created on `alpha` like `0.2.0-alpha.1`.
+/!\ All new changes should be committed to the `alpha` branch.
 
 To create a new release, we need to merge `alpha` into `master`. 
 A github action do the job. 
