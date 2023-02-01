@@ -149,7 +149,7 @@ if (!DRY_RUN) {
 
 async function publishRelease() {
   cd(WORKING_DIR);
-  await $`git add clm/gko/gko-${VERSION}.tgz`;
+  await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
   await $`git commit -m "chore(gko): release version ${VERSION}"`;
   await $`git push origin ${HELM.releaseBranch}`;
 }
