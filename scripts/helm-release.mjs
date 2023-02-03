@@ -23,6 +23,7 @@ import {
 } from "./lib/index.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), "helm-charts");
+const PROJECT_DIR = path.join(__dirname, "..");
 
 const VERSION = argv.version;
 const IMG = argv.img;
@@ -33,8 +34,8 @@ $.env["IMG"] = `${IMG}:${VERSION}`;
 
 LOG.magenta(`
 🚀 Releasing version ${VERSION} ...
-
-    📦 Working dir    | ${WORKING_DIR}
+    📦 Project dir    | ${WORKING_DIR}
+    📦 Working dir    | ${PROJECT_DIR}
     🐳 Docker image   | ${$.env.IMG}`);
 
 toggleVerbosity(VERBOSE);
@@ -69,7 +70,11 @@ LOG.blue(`
 🐳 Building docker image ...
 `);
 
-await time(buildDockerImage);
+if (!DRY_RUN) {
+  await await time(buildDockerImage);
+} else {
+  LOG.yellow(`  ⚠️ This is a dry run, image will not be built ...`);
+}
 
 async function buildDockerImage() {
   await $`make docker-build`;
@@ -152,6 +157,7 @@ async function publishRelease() {
   await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
   await $`git commit -m "chore(gko): release version ${VERSION}"`;
   await $`git push origin ${HELM.releaseBranch}`;
+  cd(PROJECT_DIR);
 }
 
 if (!DRY_RUN) {
