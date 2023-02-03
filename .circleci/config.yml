@@ -264,6 +264,24 @@ jobs:
       - keeper/env-export:
           secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password
           var-name: DOCKERHUB_BOT_USER_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/private_key
+          var-name: GIT_SSH_KEY
       - run:
           name: Docker login
           command: docker login --username="${DOCKERHUB_BOT_USER_NAME}" -p="${DOCKERHUB_BOT_USER_TOKEN}"
@@ -278,19 +296,12 @@ jobs:
             curl -OJL ${DOWNLOAD_URL}/${BINARY}
             chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
       - helm/install-helm-client
+      - run:
+          name: Add git SSH key
+          command: echo "${GIT_SSH_KEY}" | ssh-add - 
       - keeper/exec:
           step-name: "Run Semantic Release"
-          command: |
-            npx semantic-release
-            if [ ! -z ~/bundle.yml ]; then
-              # ensure ~/bundle.yml exists
-              touch ~/bundle.yml
-            fi
-
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - "bundle.yml"
+          command: npx semantic-release
 
   notify-release-slack:
     docker:
