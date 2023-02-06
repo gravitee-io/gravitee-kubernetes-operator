@@ -15,7 +15,7 @@
 // +kubebuilder:object:generate=true
 package model
 
-type Management struct {
+type Context struct {
 	// The URL of a management API instance
 	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
 	BaseUrl string `json:"baseUrl"`
@@ -49,40 +49,40 @@ type BasicAuth struct {
 	Password string `json:"password,omitempty"`
 }
 
-func (m *Management) HasAuthentication() bool {
-	return m.Auth != nil
+func (c *Context) HasAuthentication() bool {
+	return c.Auth != nil
 }
 
-func (m *Management) HasSecretRef() bool {
-	if !m.HasAuthentication() {
+func (c *Context) HasSecretRef() bool {
+	if !c.HasAuthentication() {
 		return false
 	}
 
-	return m.Auth.SecretRef != nil
+	return c.Auth.SecretRef != nil
 }
 
-func (m *Management) SecretRef() *NamespacedName {
-	if !m.HasSecretRef() {
+func (c *Context) SecretRef() *NamespacedName {
+	if !c.HasSecretRef() {
 		return nil
 	}
 
-	return m.Auth.SecretRef
+	return c.Auth.SecretRef
 }
 
-func (m *Management) SetToken(token string) {
-	if !m.HasAuthentication() {
+func (c *Context) SetToken(token string) {
+	if !c.HasAuthentication() {
 		return
 	}
 
-	m.Auth.BearerToken = token
+	c.Auth.BearerToken = token
 }
 
-func (m *Management) SetCredentials(username, password string) {
-	if !m.HasAuthentication() {
+func (c *Context) SetCredentials(username, password string) {
+	if !c.HasAuthentication() {
 		return
 	}
 
-	m.Auth.Credentials = &BasicAuth{
+	c.Auth.Credentials = &BasicAuth{
 		Username: username,
 		Password: password,
 	}

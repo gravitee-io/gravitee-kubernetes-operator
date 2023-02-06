@@ -5,16 +5,16 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.1
   creationTimestamp: null
-  name: apicontexts.gravitee.io
+  name: managementcontexts.gravitee.io
 spec:
   group: gravitee.io
   names:
-    kind: ApiContext
-    listKind: ApiContextList
-    plural: apicontexts
+    kind: ManagementContext
+    listKind: ManagementContextList
+    plural: managementcontexts
     shortNames:
     - graviteecontexts
-    singular: apicontext
+    singular: managementcontext
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -41,7 +41,8 @@ spec:
           metadata:
             type: object
           spec:
-            description: ApiContext represents the configuration for a specific environment
+            description: ManagementContext represents the configuration for a specific
+              environment
             properties:
               management:
                 properties:
@@ -101,7 +102,8 @@ spec:
                 type: object
             type: object
           status:
-            description: ApiContextStatus defines the observed state of an API Context.
+            description: ManagementContextStatus defines the observed state of an
+              API Context.
             type: object
         type: object
     served: true

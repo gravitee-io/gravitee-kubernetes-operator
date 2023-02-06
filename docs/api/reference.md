@@ -8,7 +8,7 @@ Packages:
 
 Resource Types:
 
-- [ApiContext](#apicontext)
+- [ManagementContext](#managementcontext)
 
 - [ApiDefinition](#apidefinition)
 
@@ -17,7 +17,7 @@ Resource Types:
 
 
 
-## ApiContext
+## ManagementContext
 <sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
 
 
@@ -45,7 +45,7 @@ Resource Types:
       <tr>
       <td><b>kind</b></td>
       <td>string</td>
-      <td>ApiContext</td>
+      <td>ManagementContext</td>
       <td>true</td>
       </tr>
       <tr>
@@ -54,29 +54,29 @@ Resource Types:
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
       </tr><tr>
-        <td><b><a href="#apicontextspec">spec</a></b></td>
+        <td><b><a href="#managementcontextspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ApiContext represents the configuration for a specific environment<br/>
+          ManagementContext represents the configuration for a specific environment<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>status</b></td>
         <td>object</td>
         <td>
-          ApiContextStatus defines the observed state of an API Context.<br/>
+          ManagementContextStatus defines the observed state of an API Context.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### ApiContext.spec
-<sup><sup>[↩ Parent](#apicontext)</sup></sup>
+### ManagementContext.spec
+<sup><sup>[↩ Parent](#managementcontext)</sup></sup>
 
 
 
-ApiContext represents the configuration for a specific environment
+ManagementContext represents the configuration for a specific environment
 
 <table>
     <thead>
@@ -88,7 +88,7 @@ ApiContext represents the configuration for a specific environment
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apicontextspecmanagement">management</a></b></td>
+        <td><b><a href="#managementcontextspecmanagement">management</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -105,8 +105,8 @@ ApiContext represents the configuration for a specific environment
 </table>
 
 
-### ApiContext.spec.management
-<sup><sup>[↩ Parent](#apicontextspec)</sup></sup>
+### ManagementContext.spec.management
+<sup><sup>[↩ Parent](#managementcontextspec)</sup></sup>
 
 
 
@@ -122,7 +122,7 @@ ApiContext represents the configuration for a specific environment
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apicontextspecmanagementauth">auth</a></b></td>
+        <td><b><a href="#managementcontextspecmanagementauth">auth</a></b></td>
         <td>object</td>
         <td>
           Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.<br/>
@@ -153,8 +153,8 @@ ApiContext represents the configuration for a specific environment
 </table>
 
 
-### ApiContext.spec.management.auth
-<sup><sup>[↩ Parent](#apicontextspecmanagement)</sup></sup>
+### ManagementContext.spec.management.auth
+<sup><sup>[↩ Parent](#managementcontextspecmanagement)</sup></sup>
 
 
 
@@ -177,14 +177,14 @@ Auth defines the authentication method used to connect to the API Management. Ca
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apicontextspecmanagementauthcredentials">credentials</a></b></td>
+        <td><b><a href="#managementcontextspecmanagementauthcredentials">credentials</a></b></td>
         <td>object</td>
         <td>
           The Basic credentials used to authenticate against the API Management instance.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apicontextspecmanagementauthsecretref">secretRef</a></b></td>
+        <td><b><a href="#managementcontextspecmanagementauthsecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
@@ -194,8 +194,8 @@ Auth defines the authentication method used to connect to the API Management. Ca
 </table>
 
 
-### ApiContext.spec.management.auth.credentials
-<sup><sup>[↩ Parent](#apicontextspecmanagementauth)</sup></sup>
+### ManagementContext.spec.management.auth.credentials
+<sup><sup>[↩ Parent](#managementcontextspecmanagementauth)</sup></sup>
 
 
 
@@ -228,8 +228,8 @@ The Basic credentials used to authenticate against the API Management instance.
 </table>
 
 
-### ApiContext.spec.management.auth.secretRef
-<sup><sup>[↩ Parent](#apicontextspecmanagementauth)</sup></sup>
+### ManagementContext.spec.management.auth.secretRef
+<sup><sup>[↩ Parent](#managementcontextspecmanagementauth)</sup></sup>
 
 
 

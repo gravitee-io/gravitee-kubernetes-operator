@@ -244,7 +244,7 @@ var _ = Describe("API Definition Controller", func() {
 	})
 
 	Context("With basic ApiDefinition & ManagementContext adding context ref on update", func() {
-		var mapiContextFixture *gio.ApiContext
+		var mapiContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
