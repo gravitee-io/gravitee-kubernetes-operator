@@ -102,7 +102,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ApiDefinition{}).
-		Watches(&source.Kind{Type: &gio.ApiContext{}}, r.ContextWatcher(indexer.ContextField.String())).
+		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.ContextWatcher(indexer.ContextField.String())).
 		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.ResourceWatcher(indexer.ResourceField.String())).
 		WithEventFilter(ApiUpdateFilter{}).
 		Complete(r)

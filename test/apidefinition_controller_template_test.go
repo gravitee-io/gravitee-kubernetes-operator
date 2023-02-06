@@ -164,7 +164,7 @@ var _ = Describe("An API template", func() {
 						"env": "staging",
 					}
 
-					fixtures.Contexts = []gio.ApiContext{
+					fixtures.Contexts = []gio.ManagementContext{
 						*stagingContext,
 						*devContext,
 					}
@@ -184,7 +184,7 @@ var _ = Describe("An API template", func() {
 					context := &contexts[i]
 					Expect(k8sClient.Create(ctx, context)).Should(Succeed())
 					Eventually(func() error {
-						return k8sClient.Get(ctx, context.GetNamespacedName().ToK8sType(), new(gio.ApiContext))
+						return k8sClient.Get(ctx, context.GetNamespacedName().ToK8sType(), new(gio.ManagementContext))
 					}, timeout, interval).Should(Succeed())
 				}
 

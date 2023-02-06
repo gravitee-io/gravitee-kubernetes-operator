@@ -29,7 +29,7 @@ var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
 	Api      *gio.ApiDefinition
-	Contexts []gio.ApiContext
+	Contexts []gio.ManagementContext
 	Resource *gio.ApiResource
 }
 
@@ -65,10 +65,10 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	if files.Contexts != nil {
-		fixtures.Contexts = make([]gio.ApiContext, 0)
+		fixtures.Contexts = make([]gio.ManagementContext, 0)
 
 		for _, file := range files.Contexts {
-			ctx, err := f.NewApiContext(file)
+			ctx, err := f.NewManagementContext(file)
 			if err != nil {
 				return nil, err
 			}
@@ -125,10 +125,10 @@ func (f *FixtureGenerator) NewApiDefinition(
 	return api, nil
 }
 
-func (f *FixtureGenerator) NewApiContext(
-	path string, transforms ...func(*gio.ApiContext),
-) (*gio.ApiContext, error) {
-	ctx, err := newApiContext(path, transforms...)
+func (f *FixtureGenerator) NewManagementContext(
+	path string, transforms ...func(*gio.ManagementContext),
+) (*gio.ManagementContext, error) {
+	ctx, err := newManagementContext(path, transforms...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,19 +196,19 @@ func newApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.Api
 	return resource, nil
 }
 
-func newApiContext(path string, transforms ...func(*gio.ApiContext)) (*gio.ApiContext, error) {
+func newManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("ApiContext")
-	decoded, _, err := decode(crd, &gvk, new(gio.ApiContext))
+	gvk := gio.GroupVersion.WithKind("ManagementContext")
+	decoded, _, err := decode(crd, &gvk, new(gio.ManagementContext))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, ok := decoded.(*gio.ApiContext)
+	ctx, ok := decoded.(*gio.ManagementContext)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of API Context CRD")
 	}

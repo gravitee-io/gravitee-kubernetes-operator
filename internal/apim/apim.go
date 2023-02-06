@@ -42,7 +42,7 @@ func (apim *APIM) OrgID() string {
 }
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
-func FromContext(ctx context.Context, management *model.Management) (*APIM, error) {
+func FromContext(ctx context.Context, management *model.Context) (*APIM, error) {
 	orgID, envID := management.OrgId, management.EnvId
 	urls, err := client.NewURLs(management.BaseUrl, orgID, envID)
 	if err != nil {
@@ -61,7 +61,7 @@ func FromContext(ctx context.Context, management *model.Management) (*APIM, erro
 	}, nil
 }
 
-func toHttpAuth(management *model.Management) *http.Auth {
+func toHttpAuth(management *model.Context) *http.Auth {
 	if !management.HasAuthentication() {
 		return nil
 	}

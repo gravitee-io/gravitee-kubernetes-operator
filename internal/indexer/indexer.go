@@ -59,7 +59,7 @@ func NewIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) I
 	}
 }
 
-func IndexApiContexts(api *gio.ApiDefinition, fields *[]string) {
+func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	if api.Spec.Contexts == nil {
 		return
 	}

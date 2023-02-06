@@ -41,7 +41,7 @@ import (
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
 
 	Context("With basic ApiDefinition & ManagementContext", func() {
-		var apiContextFixture *gio.ApiContext
+		var apiContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 
 		var savedApiDefinition *gio.ApiDefinition
@@ -99,7 +99,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiContextBad.Spec.Management.Auth.BearerToken = "bad-token"
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
@@ -152,7 +152,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiContextRight.Spec = apiContextFixture.Spec
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
@@ -196,7 +196,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiContextBad.Spec.Management.BaseUrl = "http://bad-url:8083"
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
@@ -241,7 +241,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiContextRight.Spec = apiContextFixture.Spec
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}

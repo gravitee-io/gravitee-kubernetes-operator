@@ -97,7 +97,7 @@ var _ = Describe("Create", func() {
 
 	Context("a basic spec with a management context", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
-		var apiContextFixture *gio.ApiContext
+		var apiContextFixture *gio.ManagementContext
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -122,7 +122,7 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			apiContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
@@ -178,7 +178,7 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			apiContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
@@ -256,7 +256,7 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			apiContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
@@ -317,7 +317,7 @@ var _ = Describe("Create", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			apiContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())
@@ -399,7 +399,7 @@ var _ = Describe("Create", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			apiContext := new(gio.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, apiContext)
 			}, timeout, interval).Should(Succeed())

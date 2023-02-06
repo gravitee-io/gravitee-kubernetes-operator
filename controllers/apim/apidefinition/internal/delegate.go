@@ -75,8 +75,8 @@ func (d *Delegate) HasContext() bool {
 
 func (d *Delegate) resolveContext(
 	ref model.NamespacedName,
-) (*gio.ApiContext, error) {
-	apiContext := new(gio.ApiContext)
+) (*gio.ManagementContext, error) {
+	apiContext := new(gio.ManagementContext)
 	ns := ref.ToK8sType()
 
 	d.log.Info("Resolving API context", "namespace", ref.Namespace, "name", ref.Name)
@@ -92,7 +92,7 @@ func (d *Delegate) resolveContext(
 	return apiContext, nil
 }
 
-func (d *Delegate) resolveContextSecrets(context *gio.ApiContext) error {
+func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
 	management := context.Spec.Management
 
 	if management == nil {
@@ -120,7 +120,7 @@ func (d *Delegate) resolveContextSecrets(context *gio.ApiContext) error {
 	return nil
 }
 
-func (d *Delegate) addContext(apiContext *gio.ApiContext) {
+func (d *Delegate) addContext(apiContext *gio.ManagementContext) {
 	spec := apiContext.Spec
 
 	context := DelegateContext{
@@ -144,7 +144,7 @@ func (d *Delegate) addContext(apiContext *gio.ApiContext) {
 	d.contexts = append(d.contexts, context)
 }
 
-func getSecretNamespace(context *gio.ApiContext) string {
+func getSecretNamespace(context *gio.ManagementContext) string {
 	secretRef := context.Spec.Management.SecretRef()
 	if secretRef.Namespace != "" {
 		return secretRef.Namespace

@@ -33,9 +33,9 @@ import (
 	"github.com/onsi/gomega/gexec"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apicontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	//+kubebuilder:scaffold:imports
 )
@@ -95,7 +95,7 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&apicontext.Reconciler{
+	err = (&managementcontext.Reconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
 	}).SetupWithManager(k8sManager)
@@ -111,7 +111,7 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	cache := k8sManager.GetCache()
 
-	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexApiContexts)
+	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -138,7 +138,7 @@ var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
 
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
-	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiContext{}, client.InNamespace(namespace))).To(Succeed())
+	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
