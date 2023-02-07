@@ -20,6 +20,8 @@ metadata:
   namespace: default
   annotations:
     kubernetes.io/ingress.class: graviteeio
+  labels:
+    gravitee.io/ingress: graviteeio
 spec:
   rules:
     - host: local.example.com

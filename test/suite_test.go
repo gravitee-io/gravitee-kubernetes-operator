@@ -21,6 +21,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	netv1 "k8s.io/api/networking/v1"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -109,6 +114,14 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&ingress.Reconciler{
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("ingress-controller"),
+	}).SetupWithManager(k8sManager)
+
+	Expect(err).ToNot(HaveOccurred())
+
 	cache := k8sManager.GetCache()
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
@@ -137,6 +150,12 @@ var _ = SynchronizedBeforeSuite(func() {
 var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
 
+	Expect(k8sClient.DeleteAllOf(
+		ctx,
+		&netv1.Ingress{},
+		client.InNamespace(namespace),
+		client.MatchingLabels{keys.IngressLabel: keys.IngressLabelValue}),
+	).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
