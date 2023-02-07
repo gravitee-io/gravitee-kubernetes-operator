@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 
+	netV1 "k8s.io/api/networking/v1"
+
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
@@ -31,12 +33,14 @@ type Fixtures struct {
 	Api      *gio.ApiDefinition
 	Context  *gio.ManagementContext
 	Resource *gio.ApiResource
+	Ingress  *netV1.Ingress
 }
 
 type FixtureFiles struct {
 	Api      string
 	Context  string
 	Resource string
+	Ingress  string
 }
 
 type FixtureGenerator struct {
@@ -93,6 +97,14 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 				},
 			},
 		}
+	}
+
+	if files.Ingress != "" {
+		ingress, err := f.NewIngress(files.Ingress)
+		if err != nil {
+			return nil, err
+		}
+		fixtures.Ingress = ingress
 	}
 
 	for _, transform := range transforms {
@@ -210,6 +222,40 @@ func newManagementContext(path string, transforms ...func(*gio.ManagementContext
 	}
 
 	return ctx, nil
+}
+
+func (f *FixtureGenerator) NewIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress, error) {
+	ingress, err := newIngress(path, transforms...)
+	if err != nil {
+		return nil, err
+	}
+	ingress.Name += f.Suffix
+
+	return ingress, nil
+}
+
+func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress, error) {
+	crd, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := gio.GroupVersion.WithKind("Ingress")
+	decoded, _, err := decode(crd, &gvk, new(netV1.Ingress))
+	if err != nil {
+		return nil, err
+	}
+
+	resource, ok := decoded.(*netV1.Ingress)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of API CRD")
+	}
+
+	for _, transform := range transforms {
+		transform(resource)
+	}
+
+	return resource, nil
 }
 
 func randomSuffix() string {

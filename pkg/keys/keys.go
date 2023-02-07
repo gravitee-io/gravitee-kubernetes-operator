@@ -17,6 +17,7 @@ package keys
 // Kubernetes Ingresses.
 const (
 	IngressLabel                = "gravitee.io/ingress"
+	IngressLabelValue           = "graviteeio"
 	IngressClassAnnotation      = "kubernetes.io/ingress.class"
 	IngressClassAnnotationValue = "graviteeio"
 	IngressTemplateAnnotation   = "gravitee.io/template"

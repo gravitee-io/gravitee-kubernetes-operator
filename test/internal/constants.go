@@ -56,4 +56,5 @@ const (
 	ApiResourceKeycloakAdapterFile      = SamplesPath + "/apim/api-resource-keycloak-adapter.yml"
 	ApiResourceOauth2AMFile             = SamplesPath + "/apim/api-resource-oauth2-am.yml"
 	ApiResourceOauth2GenericFile        = SamplesPath + "/apim/api-resource-oauth2-generic.yml"
+	IngressWithoutTemplateFile          = SamplesPath + "/ingress/ingress-without-api-template.yml"
 )
