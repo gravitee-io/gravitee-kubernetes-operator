@@ -19,7 +19,7 @@ lint-sources: golangci-lint ## Run golangci-lint and fail on error
 .PHONY: lint-licenses
 lint-licenses: addlicense ## Run addlicense lint and fail on error
 	@echo "Checking license headers ..."
-	@$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" -ignore "helm/crds/**" .
+	@$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" -ignore "helm/crds/**" -ignore ".idea/**" .
 
 .PHONY: clean-tools ## Run all linters
 lint: $(ALL_LINT)
