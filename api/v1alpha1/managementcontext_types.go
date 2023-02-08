@@ -24,8 +24,7 @@ import (
 // ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
 type ManagementContextSpec struct {
-	Management *model.Context    `json:"management,omitempty"`
-	Values     map[string]string `json:"values,omitempty"`
+	model.Context `json:",inline"`
 }
 
 // ManagementContextStatus defines the observed state of an API Context.
@@ -46,8 +45,8 @@ type ManagementContext struct {
 	Status ManagementContextStatus `json:"status,omitempty"`
 }
 
-func (context *ManagementContext) GetNamespacedName() model.NamespacedName {
-	return model.NamespacedName{Namespace: context.Namespace, Name: context.Name}
+func (context *ManagementContext) GetNamespacedName() *model.NamespacedName {
+	return &model.NamespacedName{Namespace: context.Namespace, Name: context.Name}
 }
 
 // +kubebuilder:object:root=true

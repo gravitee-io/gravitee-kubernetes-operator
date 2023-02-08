@@ -26,9 +26,9 @@ import (
 )
 
 var errRaw = fmt.Errorf("raw error")
-var errNotFound = ContextError{Cause: apimError.ServerError{StatusCode: 404}}
-var errBadRequest = ContextError{Cause: apimError.ServerError{StatusCode: 400}}
-var errUnauthorized = ContextError{Cause: apimError.ServerError{StatusCode: 401}}
+var errNotFound = ContextError{apimError.ServerError{StatusCode: 404}}
+var errBadRequest = ContextError{apimError.ServerError{StatusCode: 400}}
+var errUnauthorized = ContextError{apimError.ServerError{StatusCode: 401}}
 
 var _ = Describe("Errors", func() {
 	DescribeTable("recoverable errors",

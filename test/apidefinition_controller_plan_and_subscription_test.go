@@ -65,18 +65,18 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:      internal.ApiWithApiKeyPlanFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Api:     internal.ApiWithApiKeyPlanFile,
+				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := &fixtures.Contexts[0]
-			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+			managementContext := fixtures.Context
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
@@ -94,7 +94,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(savedApiDefinition)
+				return internal.AssertStatusIsSet(savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
@@ -116,7 +116,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiKey := createSubscriptionAndGetApiKey(
 				apim,
 				savedApiDefinition,
-				contextLookupKey,
 				func(mgmtApi *apimModel.ApiEntity) string { return mgmtApi.Plans[0].Id },
 			)
 
@@ -195,7 +194,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiKey := createSubscriptionAndGetApiKey(
 				apim,
 				savedApiDefinition,
-				contextLookupKey,
 				func(mgmtApi *apimModel.ApiEntity) string {
 					for _, plan := range mgmtApi.Plans {
 						if plan.CrossId == secondPlanCrossId {
@@ -227,7 +225,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Get the API definition from ManagementApi and expect deleted state")
 
 			Eventually(func() error {
-				_, apiErr := apim.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				_, apiErr := apim.APIs.GetByID(savedApiDefinition.Status.ID)
 				return errors.IgnoreNotFound(apiErr)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
@@ -247,18 +245,18 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:      internal.ApiWithContextNoPlanFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Api:     internal.ApiWithContextNoPlanFile,
+				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := &fixtures.Contexts[0]
-			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+			managementContext := fixtures.Context
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
@@ -276,7 +274,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(savedApiDefinition)
+				return internal.AssertStatusIsSet(savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
@@ -348,7 +346,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Get the API definition from ManagementApi and expect deleted state")
 
 			Eventually(func() error {
-				_, apiErr := apim.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				_, apiErr := apim.APIs.GetByID(savedApiDefinition.Status.ID)
 				return errors.IgnoreNotFound(apiErr)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
@@ -358,7 +356,6 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 func createSubscriptionAndGetApiKey(
 	apim *internal.APIM,
 	createdApiDefinition *gio.ApiDefinition,
-	contextLocation types.NamespacedName,
 	planSelector func(*apimModel.ApiEntity) string,
 ) string {
 	// Get first active application
@@ -367,7 +364,7 @@ func createSubscriptionAndGetApiKey(
 	defaultApplication := mgmtApplications[0]
 
 	// Get Api description with plan
-	mgmtApi, mgmtErr := apim.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLocation))
+	mgmtApi, mgmtErr := apim.APIs.GetByID(createdApiDefinition.Status.ID)
 	Expect(mgmtErr).ToNot(HaveOccurred())
 
 	planId := planSelector(mgmtApi)

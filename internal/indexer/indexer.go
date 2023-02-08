@@ -60,13 +60,11 @@ func NewIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) I
 }
 
 func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
-	if api.Spec.Contexts == nil {
+	if api.Spec.Context == nil {
 		return
 	}
 
-	for location := range api.Status.Contexts {
-		*fields = append(*fields, location)
-	}
+	*fields = append(*fields, api.Spec.Context.String())
 }
 
 func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {

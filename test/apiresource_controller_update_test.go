@@ -53,18 +53,18 @@ var _ = Describe("API Resource Controller", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:      internal.BasicApiFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Context:  internal.ContextWithSecretFile,
 				Resource: internal.ApiResourceCacheFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := &fixtures.Contexts[0]
-			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+			managementContext := fixtures.Context
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
@@ -92,13 +92,14 @@ var _ = Describe("API Resource Controller", func() {
 					return err
 				}
 
-				return internal.AssertStatusContextMatches(createdApi, contextLookupKey, &gio.StatusContext{
-					EnvID:   "DEFAULT",
-					OrgID:   "DEFAULT",
-					CrossID: createdApi.GetOrGenerateCrossID(),
-					ID:      createdApi.PickID(contextLookupKey.String()),
-					Status:  gio.ProcessingStatusCompleted,
-					State:   "STARTED",
+				return internal.AssertStatusMatches(createdApi, gio.ApiDefinitionStatus{
+					EnvID:              "DEFAULT",
+					OrgID:              "DEFAULT",
+					CrossID:            createdApi.GetOrGenerateCrossID(),
+					ID:                 createdApi.PickID(),
+					Status:             gio.ProcessingStatusCompleted,
+					State:              "STARTED",
+					ObservedGeneration: 1,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -120,7 +121,7 @@ var _ = Describe("API Resource Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apimClient.APIs.GetByID(internal.GetStatusId(createdApi, contextLookupKey))
+				api, apiErr := apimClient.APIs.GetByID(createdApi.Status.ID)
 				if apiErr != nil {
 					return apiErr
 				}
