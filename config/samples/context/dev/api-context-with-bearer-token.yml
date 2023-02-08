@@ -17,12 +17,9 @@ kind: ManagementContext
 metadata:
   name: dev-ctx
 spec:
-  management:
-    baseUrl: http://localhost:9000
-    environmentId: DEFAULT
-    organizationId: DEFAULT
-    auth:
-      # TODO: replace with your generate bearer token
-      bearerToken: xxxx-yyyy-zzzz 
-  values: 
-    env: dev
+  baseUrl: http://localhost:9000
+  environmentId: DEFAULT
+  organizationId: DEFAULT
+  auth:
+    # TODO: replace with your generate bearer token
+    bearerToken: xxxx-yyyy-zzzz 

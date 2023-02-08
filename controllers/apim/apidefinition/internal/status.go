@@ -15,10 +15,7 @@
 package internal
 
 import (
-	"errors"
-
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 func (d *Delegate) UpdateStatusSuccess(api *gio.ApiDefinition) error {
@@ -30,39 +27,6 @@ func (d *Delegate) UpdateStatusSuccess(api *gio.ApiDefinition) error {
 }
 
 func (d *Delegate) UpdateStatusFailure(api *gio.ApiDefinition, err error) error {
-	api.Status.ObservedGeneration = api.ObjectMeta.Generation
-	updateStatusContexts(api, err)
+	api.Status.Status = gio.ProcessingStatusFailed
 	return d.k8s.Status().Update(d.ctx, api)
-}
-
-func updateStatusContexts(api *gio.ApiDefinition, err error) {
-	//nolint:errorlint // cannot use As on interface
-	agg, ok := err.(kErrors.Aggregate)
-
-	if !ok {
-		updateStatusContext(api, err)
-		return
-	}
-
-	agg = kErrors.Flatten(agg)
-
-	for _, err := range agg.Errors() {
-		updateStatusContext(api, err)
-	}
-}
-
-func updateStatusContext(api *gio.ApiDefinition, err error) {
-	contextError := &ContextError{}
-	if !errors.As(err, contextError) {
-		return
-	}
-
-	context, ok := api.Status.Contexts[contextError.Context]
-
-	if !ok {
-		context = gio.StatusContext{}
-	}
-
-	context.Status = gio.ProcessingStatusFailed
-	api.Status.Contexts[contextError.Context] = context
 }

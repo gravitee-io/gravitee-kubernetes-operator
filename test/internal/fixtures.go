@@ -29,13 +29,13 @@ var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
 	Api      *gio.ApiDefinition
-	Contexts []gio.ManagementContext
+	Context  *gio.ManagementContext
 	Resource *gio.ApiResource
 }
 
 type FixtureFiles struct {
 	Api      string
-	Contexts []string
+	Context  string
 	Resource string
 }
 
@@ -64,16 +64,12 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 		fixtures.Api = api
 	}
 
-	if files.Contexts != nil {
-		fixtures.Contexts = make([]gio.ManagementContext, 0)
-
-		for _, file := range files.Contexts {
-			ctx, err := f.NewManagementContext(file)
-			if err != nil {
-				return nil, err
-			}
-			fixtures.Contexts = append(fixtures.Contexts, *ctx)
+	if files.Context != "" {
+		ctx, err := f.NewManagementContext(files.Context)
+		if err != nil {
+			return nil, err
 		}
+		fixtures.Context = ctx
 	}
 
 	if files.Resource != "" {
@@ -84,12 +80,8 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 		fixtures.Resource = resource
 	}
 
-	if fixtures.Contexts != nil {
-		apiContexts := make([]model.NamespacedName, 0)
-		for _, ctx := range fixtures.Contexts {
-			apiContexts = append(apiContexts, ctx.GetNamespacedName())
-		}
-		fixtures.Api.Spec.Contexts = apiContexts
+	if fixtures.Context != nil {
+		fixtures.Api.Spec.Context = fixtures.Context.GetNamespacedName()
 	}
 
 	if fixtures.Resource != nil {

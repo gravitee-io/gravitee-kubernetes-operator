@@ -55,18 +55,18 @@ var _ = Describe("API Definition Controller", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:      internal.BasicApiFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := &fixtures.Contexts[0]
-			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+			managementContext := fixtures.Context
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
@@ -85,7 +85,7 @@ var _ = Describe("API Definition Controller", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(createdApiDefinition)
+				return internal.AssertStatusIsSet(createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect 200")
@@ -124,7 +124,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, cliErr := apimClient.APIs.GetByID(internal.GetStatusId(updatedApiDefinition, contextLookupKey))
+				api, cliErr := apimClient.APIs.GetByID(updatedApiDefinition.Status.ID)
 				if cliErr != nil {
 					return err
 				}

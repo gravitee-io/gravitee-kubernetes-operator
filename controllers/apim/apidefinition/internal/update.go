@@ -15,86 +15,76 @@
 package internal
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"net/http"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/util/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func (d *Delegate) CreateOrUpdate(api *gio.ApiDefinition) error {
-	api.Spec.DefinitionContext = &model.DefinitionContext{
-		Origin: origin,
-		Mode:   mode,
+func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
+	cp := apiDefinition.DeepCopy()
+
+	spec := &cp.Spec
+	spec.ID = cp.PickID()
+
+	apiDefinition.Status.ID = cp.Spec.ID
+
+	if err := d.resolveResources(spec); err != nil {
+		d.log.Error(err, "unable to resolve resources")
+		return err
 	}
+
+	generateEmptyPlanCrossIds(spec)
 
 	if d.HasContext() {
-		return d.updateWithContexts(api)
-	}
-
-	return d.updateWithoutContext(api)
-}
-
-func (d *Delegate) updateWithContexts(api *gio.ApiDefinition) error {
-	errs := make([]error, 0)
-
-	for _, context := range d.contexts {
-		if err := d.updateWithContext(api, context); err != nil {
-			errs = append(errs, err)
+		spec.CrossID = cp.PickCrossID()
+		apiDefinition.Status.EnvID = d.apim.EnvID()
+		apiDefinition.Status.OrgID = d.apim.OrgID()
+		apiDefinition.Status.CrossID = spec.CrossID
+		if err := d.updateWithContext(cp); err != nil {
+			return err
 		}
+		apiDefinition.Status.ID = spec.ID
+		apiDefinition.Status.State = spec.State
 	}
 
-	return errors.NewAggregate(errs)
-}
-
-func (d *Delegate) updateWithContext(api *gio.ApiDefinition, context DelegateContext) error {
-	log := d.log.WithValues("context", context.Location).WithValues("api", api.GetNamespacedName())
-
-	cp, err := context.compile(api)
-	if err != nil {
-		log.Error(err, "unable to compile api definition")
+	if err := d.updateConfigMap(cp); err != nil {
 		return err
 	}
 
-	if err = d.ResolveResources(cp); err != nil {
-		log.Error(err, "unable to resolve resources")
-		return err
-	}
-
-	if err = context.update(cp); err != nil {
-		log.Error(err, "unable to update api definition")
-		return err
-	}
-
-	if err = d.updateConfigMap(cp, &context); err != nil {
-		log.Error(err, "unable to update config map")
-		return err
-	}
-
-	statusContext := cp.Status.Contexts[context.Location]
-
-	statusContext.ID = cp.Spec.ID
-	statusContext.CrossID = cp.Spec.CrossID
-	statusContext.State = cp.Spec.State
-	statusContext.Status = gio.ProcessingStatusCompleted
-
-	api.Status.Contexts[context.Location] = statusContext
+	apiDefinition.Status.Status = gio.ProcessingStatusCompleted
 
 	return nil
 }
 
-func (d *Delegate) updateWithoutContext(api *gio.ApiDefinition) error {
+func (d *Delegate) updateWithContext(api *gio.ApiDefinition) error {
 	spec := &api.Spec
 
-	generateEmptyPlanCrossIds(spec)
+	spec.SetDefinitionContext()
 
-	errs := make([]error, 0)
-
-	if err := d.ResolveResources(api); err != nil {
-		errs = append(errs, err)
+	_, findErr := d.apim.APIs.GetByCrossID(spec.CrossID)
+	if errors.IgnoreNotFound(findErr) != nil {
+		return newContextError(findErr)
 	}
 
-	if err := d.updateConfigMap(api, nil); err != nil {
-		errs = append(errs, err)
+	importMethod := http.MethodPost
+	if findErr == nil {
+		importMethod = http.MethodPut
 	}
 
-	return errors.NewAggregate(errs)
+	mgmtApi, mgmtErr := d.apim.APIs.Import(importMethod, &spec.Api)
+	if mgmtErr != nil {
+		return newContextError(mgmtErr)
+	}
+
+	retrieveMgmtPlanIds(spec, mgmtApi)
+	spec.ID = mgmtApi.ID
+
+	if mgmtApi.ShouldSetKubernetesContext() {
+		if err := d.apim.APIs.SetKubernetesContext(mgmtApi.ID); err != nil {
+			return newContextError(err)
+		}
+	}
+
+	return nil
 }

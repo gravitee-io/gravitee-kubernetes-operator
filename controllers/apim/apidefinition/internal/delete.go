@@ -16,8 +16,8 @@ package internal
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"k8s.io/apimachinery/pkg/util/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -29,7 +29,9 @@ func (d *Delegate) Delete(
 	}
 
 	if d.HasContext() {
-		return d.deleteWithContexts(apiDefinition)
+		if err := d.deleteWithContext(apiDefinition); err != nil {
+			return err
+		}
 	}
 
 	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
@@ -37,29 +39,6 @@ func (d *Delegate) Delete(
 	return d.k8s.Update(d.ctx, apiDefinition)
 }
 
-func (d *Delegate) deleteWithContexts(api *gio.ApiDefinition) error {
-	errs := make([]error, 0)
-
-	for _, context := range d.contexts {
-		if err := d.deleteWithContext(api, context); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if len(errs) == 0 {
-		util.RemoveFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
-	}
-
-	errs = append(errs, d.k8s.Update(d.ctx, api))
-
-	return errors.NewAggregate(errs)
-}
-
-func (d *Delegate) deleteWithContext(api *gio.ApiDefinition, context DelegateContext) error {
-	cp, err := context.compile(api)
-	if err != nil {
-		return err
-	}
-
-	return context.delete(cp)
+func (d *Delegate) deleteWithContext(api *gio.ApiDefinition) error {
+	return errors.IgnoreNotFound(d.apim.APIs.Delete(api.Status.ID))
 }

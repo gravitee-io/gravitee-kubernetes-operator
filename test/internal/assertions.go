@@ -21,96 +21,46 @@ import (
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"k8s.io/apimachinery/pkg/types"
 )
 
-func AssertStatusContextIsSet(apiDefinition *gio.ApiDefinition) error {
-	contexts := apiDefinition.Status.Contexts
+func AssertStatusIsSet(apiDefinition *gio.ApiDefinition) error {
+	status := apiDefinition.Status
 
-	if contexts == nil {
-		return fmt.Errorf("contexts should not be nil")
+	if status.ID == "" {
+		return fmt.Errorf("id should not be empty in status")
 	}
 
-	if len(contexts) == 0 {
-		return fmt.Errorf("status contexts should not be empty")
+	if status.EnvID == "" {
+		return fmt.Errorf("envId should not be empty in status")
 	}
 
-	for location, context := range contexts {
-		if context.ID == "" {
-			return fmt.Errorf("id should not be empty for context %s", location)
-		}
+	if status.OrgID == "" {
+		return fmt.Errorf("envId should not be empty in status")
+	}
 
-		if context.EnvID == "" {
-			return fmt.Errorf("envId should not be empty for context %s", location)
-		}
+	if status.Status == "" {
+		return fmt.Errorf("status should not be empty in status")
+	}
 
-		if context.OrgID == "" {
-			return fmt.Errorf("envId should not be empty for context %s", location)
-		}
-
-		if context.Status == "" {
-			return fmt.Errorf("status should not be empty for context %s", location)
-		}
-
-		if context.State == "" {
-			return fmt.Errorf("state should not be empty for context %s", location)
-		}
+	if status.State == "" {
+		return fmt.Errorf("state should not be empty in status")
 	}
 
 	return nil
 }
 
-func AssertStatusContextsLen(apiDefinition *gio.ApiDefinition, expectedLen int) error {
-	contexts := apiDefinition.Status.Contexts
-
-	if contexts == nil {
-		return fmt.Errorf("contexts should not be nil")
+func AssertApiEntityMatchesStatus(apiEntity *model.ApiEntity, apiDefinition *gio.ApiDefinition) error {
+	if apiEntity.ID != apiDefinition.Status.ID {
+		return NewAssertionError("Status id", apiEntity.ID, apiDefinition.Status.ID)
 	}
-
-	if len(contexts) != expectedLen {
-		return NewAssertionError("contexts length", expectedLen, len(contexts))
-	}
-
 	return nil
 }
 
-func AssertApiEntityMatchesStatusContext(apiEntity *model.ApiEntity, apiDefinition *gio.ApiDefinition) error {
-	contexts := apiDefinition.Status.Contexts
-
-	if contexts == nil {
-		return fmt.Errorf("contexts should not be nil")
-	}
-
-	if len(contexts) == 0 {
-		return fmt.Errorf("status contexts should not be empty")
-	}
-
-	found := false
-
-	for _, context := range contexts {
-		if context.ID == apiEntity.ID {
-			found = true
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("api %s not found in status", apiEntity.ID)
-	}
-
-	return nil
-}
-
-func AssertStatusContextMatches(
-	apiDefinition *gio.ApiDefinition, location types.NamespacedName, expectedContext *gio.StatusContext,
+func AssertStatusMatches(
+	apiDefinition *gio.ApiDefinition, expectedStatus gio.ApiDefinitionStatus,
 ) error {
-	context := GetStatusContext(apiDefinition, location)
-
-	if context == nil {
-		return fmt.Errorf("context %s not found in status", location)
-	}
-
-	if !reflect.DeepEqual(context, expectedContext) {
-		return NewAssertionError("context", expectedContext, context)
+	if !reflect.DeepEqual(apiDefinition.Status, expectedStatus) {
+		return NewAssertionError("status", expectedStatus, apiDefinition.Status.Status)
 	}
 
 	return nil
