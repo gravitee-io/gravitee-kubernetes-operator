@@ -15,14 +15,32 @@
 package internal
 
 import (
+	"fmt"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func DefaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
+func (d *Delegate) ResolveApiDefinitionTemplate(ingress *v1.Ingress) (*v1alpha1.ApiDefinition, error) {
+	var apiDefinition *v1alpha1.ApiDefinition
+	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
+		apiDefinition = &v1alpha1.ApiDefinition{}
+		if err := d.k8s.Get(d.ctx, types.NamespacedName{Name: name, Namespace: ingress.Namespace}, apiDefinition); err != nil {
+			return nil, err
+		}
+	} else {
+		apiDefinition = defaultApiDefinitionTemplate()
+	}
+
+	return mergeApiDefinition(d.log, apiDefinition, ingress), nil
+}
+
+func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 	return &v1alpha1.ApiDefinition{
 		Spec: v1alpha1.ApiDefinitionSpec{
 			Api: model.Api{
@@ -39,19 +57,47 @@ func DefaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 	}
 }
 
-func (d *Delegate) ResolveApiDefinition(ingress *v1.Ingress, namespace string) (*v1alpha1.ApiDefinition, error) {
-	var apiDefinition *v1alpha1.ApiDefinition
-	name, hasIngressTemplateAnnotation := ingress.Annotations[keys.IngressTemplateAnnotation]
-
-	if hasIngressTemplateAnnotation {
-		apiDefinition = &v1alpha1.ApiDefinition{}
-		err := d.k8s.Get(d.ctx, types.NamespacedName{Name: name, Namespace: namespace}, apiDefinition)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		apiDefinition = DefaultApiDefinitionTemplate()
+// MergeApiDefinition
+// Transform the ingress as an API Definition as per https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
+func mergeApiDefinition(
+	log logr.Logger,
+	apiDefinition *v1alpha1.ApiDefinition,
+	ingress *v1.Ingress,
+) *v1alpha1.ApiDefinition {
+	api := &v1alpha1.ApiDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ingress.Name,
+			Namespace: ingress.Namespace,
+		},
+		Spec: *apiDefinition.Spec.DeepCopy(),
 	}
 
-	return MergeApiDefinition(d.log, apiDefinition, ingress), nil
+	log.Info("Merge Ingress with API Definition")
+
+	for _, rule := range ingress.Spec.Rules {
+		for _, path := range rule.HTTP.Paths {
+			service := path.Backend.Service
+
+			//TODO: How-to dedal with PathType ?
+			api.Spec.Proxy = &model.Proxy{
+				VirtualHosts: []*model.VirtualHost{
+					{
+						Path: path.Path,
+					},
+				},
+				Groups: []*model.EndpointGroup{
+					{
+						Name: "default",
+						Endpoints: []*model.HttpEndpoint{
+							{
+								Name:   service.Name,
+								Target: fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", service.Name, ingress.Namespace, service.Port.Number),
+							},
+						},
+					},
+				},
+			}
+		}
+	}
+	return api
 }

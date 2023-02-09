@@ -17,21 +17,12 @@ package internal
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/types"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) AddFinalizer(desired *v1.Ingress) error {
-	ingress := &v1.Ingress{}
-	if err := d.k8s.Get(
-		d.ctx, types.NamespacedName{Namespace: desired.Namespace, Name: desired.Name}, ingress,
-	); err != nil {
-		return err
+func (d *Delegate) Delete(ingress *v1.Ingress) error {
+	if util.ContainsFinalizer(ingress, keys.IngressFinalizer) {
+		util.RemoveFinalizer(ingress, keys.IngressFinalizer)
 	}
-
-	if !util.ContainsFinalizer(ingress, keys.IngressFinalizer) {
-		util.AddFinalizer(ingress, keys.IngressFinalizer)
-	}
-
 	return d.k8s.Update(d.ctx, ingress)
 }
