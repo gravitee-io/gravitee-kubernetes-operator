@@ -17,8 +17,6 @@ package ingress
 import (
 	"context"
 
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -57,26 +55,26 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	d := internal.NewDelegate(ctx, r.Client, log)
 
-	var operation util.OperationResult
-	var createError error
-	if ingress.ObjectMeta.DeletionTimestamp.IsZero() {
-		operation, createError = d.CreateOrUpdateApiDefintion(ingress, req.Namespace)
+	if !ingress.DeletionTimestamp.IsZero() {
+		err := d.Delete(ingress)
+		if err != nil {
+			log.Error(err, "An error occurs while deleting the Ingress", "Ingress", ingress)
+			return ctrl.Result{}, err
+		}
+	} else {
+		err := d.AddFinalizer(ingress)
+		if err != nil {
+			log.Error(err, "An error occurs while adding finalizer to the Ingress", "Ingress", ingress)
+			return ctrl.Result{}, err
+		}
+		operation, createError := d.CreateOrUpdateApiDefinition(ingress)
 		if createError != nil {
 			log.Error(createError, "An error occurs while creating or updating the ApiDefinition", "Operation", operation)
 			return ctrl.Result{}, createError
 		}
 	}
 
-	operation, createError = d.CreateOrUpdateIngress(ingress)
-	if createError != nil {
-		log.Error(createError, "An error occurs while updating the ingress", "Operation", operation)
-		return ctrl.Result{}, createError
-	}
-
-	// TODO: templating
-	// TODO: transform
 	log.Info("Sync ingress DONE")
-
 	return ctrl.Result{}, nil
 }
 
@@ -95,7 +93,17 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			return isGraviteeIngress(e.Object)
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			return isGraviteeIngress(e.ObjectNew)
+			if !isGraviteeIngress(e.ObjectNew) {
+				return false
+			}
+			if e.ObjectOld == nil || e.ObjectNew == nil {
+				return false
+			}
+			if len(e.ObjectOld.GetFinalizers()) != len(e.ObjectNew.GetFinalizers()) {
+				return false
+			}
+
+			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			return isGraviteeIngress(e.Object)

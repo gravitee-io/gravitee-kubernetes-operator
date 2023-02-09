@@ -15,76 +15,83 @@
 package internal
 
 import (
-	"fmt"
-
-	"github.com/go-logr/logr"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	netV1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// MergeApiDefinition
-// Transform the ingress as an API Definition as per https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
-func MergeApiDefinition(
-	log logr.Logger,
-	apiDefinition *v1alpha1.ApiDefinition,
-	ingress *netV1.Ingress,
-) *v1alpha1.ApiDefinition {
-	api := &v1alpha1.ApiDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ingress.Name,
-			Namespace: ingress.Namespace,
-		},
-		Spec: *apiDefinition.Spec.DeepCopy(),
+func (d *Delegate) CreateOrUpdateApiDefinition(ingress *v1.Ingress) (util.OperationResult, error) {
+	apiDefinition, err := d.ResolveApiDefinitionTemplate(ingress)
+	if err != nil {
+		d.log.Error(err, "ResolveApiDefinition error")
+		return util.OperationResultNone, err
 	}
 
-	log.Info("Merge Ingress with API Definition")
-
-	for _, rule := range ingress.Spec.Rules {
-		for _, path := range rule.HTTP.Paths {
-			service := path.Backend.Service
-
-			//TODO: How-to dedal with PathType ?
-			api.Spec.Proxy = &model.Proxy{
-				VirtualHosts: []*model.VirtualHost{
-					{
-						Path: path.Path,
-					},
-				},
-				Groups: []*model.EndpointGroup{
-					{
-						Name: "default",
-						Endpoints: []*model.HttpEndpoint{
-							{
-								Name:   service.Name,
-								Target: fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", service.Name, ingress.Namespace, service.Port.Number),
-							},
-						},
-					},
-				},
-			}
-		}
+	var existingApiDefinition *v1alpha1.ApiDefinition
+	existingApiDefinition, err = d.getApiDefinition(types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name})
+	if errors.IsNotFound(err) {
+		return d.createApiDefinition(ingress, apiDefinition)
 	}
-	return api
+
+	if err != nil {
+		d.log.Error(err, "Get ApiDefinition error")
+		return util.OperationResultNone, err
+	}
+
+	if !equality.Semantic.DeepEqual(existingApiDefinition, apiDefinition) {
+		apiDefinition.Spec.DeepCopyInto(&existingApiDefinition.Spec)
+		return d.updateApiDefinition(ingress, existingApiDefinition)
+	}
+
+	d.log.Info(
+		"No change detected on ApiDefinition. Skipped.",
+		"name", apiDefinition.Name,
+		"namespace", apiDefinition.Namespace,
+	)
+	return util.OperationResultNone, nil
 }
 
-func (d *Delegate) CreateOrUpdateApiDefintion(ingress *netV1.Ingress, namespace string) (util.OperationResult, error) {
-	apiDefinition, err := d.ResolveApiDefinition(ingress, namespace)
+func (d *Delegate) createApiDefinition(
+	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
+) (util.OperationResult, error) {
+	d.log.Info("Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+
+	if err := util.SetOwnerReference(ingress, apiDefinition, d.k8s.Scheme()); err != nil {
+		return util.OperationResultNone, err
+	}
+
+	return util.OperationResultCreated, d.k8s.Create(d.ctx, apiDefinition)
+}
+
+func (d *Delegate) updateApiDefinition(
+	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
+) (util.OperationResult, error) {
+	d.log.Info("Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+
+	err := util.SetOwnerReference(ingress, apiDefinition, d.k8s.Scheme())
 	if err != nil {
 		return util.OperationResultNone, err
 	}
 
-	api := &v1alpha1.ApiDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      apiDefinition.Name,
-			Namespace: apiDefinition.Namespace,
-		},
+	var existingApiDefinition *v1alpha1.ApiDefinition
+	existingApiDefinition, err = d.getApiDefinition(types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name})
+	if err != nil {
+		return util.OperationResultNone, err
 	}
 
-	return util.CreateOrUpdate(d.ctx, d.k8s, api, func() error {
-		apiDefinition.Spec.DeepCopyInto(&api.Spec)
-		return util.SetOwnerReference(ingress, api, d.k8s.Scheme())
-	})
+	apiDefinition.Spec.DeepCopyInto(&existingApiDefinition.Spec)
+	return util.OperationResultUpdated, d.k8s.Update(d.ctx, existingApiDefinition)
+}
+
+func (d *Delegate) getApiDefinition(key client.ObjectKey) (*v1alpha1.ApiDefinition, error) {
+	api := &v1alpha1.ApiDefinition{}
+	err := d.k8s.Get(d.ctx, key, api)
+	if err != nil {
+		return nil, err
+	}
+	return api, err
 }
