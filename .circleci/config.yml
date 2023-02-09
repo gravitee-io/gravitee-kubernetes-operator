@@ -280,18 +280,8 @@ jobs:
       - helm/install-helm-client
       - keeper/exec:
           step-name: "Run Semantic Release"
-          command: |
-            npx semantic-release
-            if [ ! -z ~/bundle.yml ]; then
-              # ensure ~/bundle.yml exists
-              touch ~/bundle.yml
-            fi
-
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - "bundle.yml"
-
+          command: npx semantic-release
+          
   notify-release-slack:
     docker:
       - image: cimg/base:stable
