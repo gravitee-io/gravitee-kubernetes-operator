@@ -19,10 +19,21 @@ tests:
   - it: Should nest all needed resources
     asserts:
       - hasDocuments:
-          count: 11
+          count: 12
+
+  - it: Should have manager the release namespace resource
+    documentIndex: 0
+    asserts:
+      - isKind:
+          of: Namespace
+      - isAPIVersion:
+          of: v1
+      - equal:
+          path: metadata.name
+          value: NAMESPACE
 
   - it: Should have manager service account in release namespace
-    documentIndex: 0
+    documentIndex: 1
     asserts:
       - isKind:
           of: ServiceAccount
@@ -33,7 +44,7 @@ tests:
           value: NAMESPACE
 
   - it: Should have leader election role in release namespace
-    documentIndex: 1
+    documentIndex: 2
     asserts:
       - isKind:
           of: Role
@@ -47,7 +58,7 @@ tests:
           value: gko-leader-election-role-RELEASE-NAME-NAMESPACE
 
   - it: Should have manager cluster role
-    documentIndex: 2
+    documentIndex: 3
     asserts:
       - isKind:
           of: ClusterRole
@@ -58,7 +69,7 @@ tests:
           value: gko-manager-role-RELEASE-NAME-NAMESPACE
 
   - it: Should have metrics cluster role
-    documentIndex: 3
+    documentIndex: 4
     asserts:
       - isKind:
           of: ClusterRole
@@ -69,7 +80,7 @@ tests:
           value: gko-metrics-reader-RELEASE-NAME-NAMESPACE
 
   - it: Should have proxy cluster role
-    documentIndex: 4
+    documentIndex: 5
     asserts:
       - isKind:
           of: ClusterRole
@@ -81,7 +92,7 @@ tests:
 
 
   - it: Should have leader election role binding in release namespace
-    documentIndex: 5
+    documentIndex: 6
     asserts:
       - isKind:
           of: RoleBinding
@@ -95,7 +106,7 @@ tests:
           value: NAMESPACE
 
   - it: Should have manager cluster role binding
-    documentIndex: 6
+    documentIndex: 7
     asserts:
       - isKind:
           of: ClusterRoleBinding
@@ -106,7 +117,7 @@ tests:
           value: gko-manager-rolebinding-RELEASE-NAME-NAMESPACE
 
   - it: Should have proxy cluster role binding
-    documentIndex: 7
+    documentIndex: 8
     asserts:
       - isKind:
           of: ClusterRoleBinding
@@ -117,7 +128,7 @@ tests:
           value: gko-proxy-rolebinding-RELEASE-NAME-NAMESPACE
 
   - it: Should have manager config in release namespace
-    documentIndex: 8
+    documentIndex: 9
     asserts:
       - isKind:
           of: ConfigMap
@@ -131,7 +142,7 @@ tests:
           value: NAMESPACE
 
   - it: Should have a manager https service in release namespace
-    documentIndex: 9
+    documentIndex: 10
     asserts:
       - isKind:
           of: Service
@@ -154,7 +165,7 @@ tests:
           value: controller-manager
 
   - it: Should have a controller manager deployment in release namespace
-    documentIndex: 10
+    documentIndex: 11
     asserts:
       - isKind:
           of: Deployment
