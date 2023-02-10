@@ -72,6 +72,16 @@ func mergeApiDefinition(
 		Spec: *apiDefinition.Spec.DeepCopy(),
 	}
 
+	api.Spec.Proxy = &model.Proxy{
+		VirtualHosts: []*model.VirtualHost{},
+		Groups: []*model.EndpointGroup{
+			{
+				Name:      "default",
+				Endpoints: []*model.HttpEndpoint{},
+			},
+		},
+	}
+
 	log.Info("Merge Ingress with API Definition")
 
 	for _, rule := range ingress.Spec.Rules {
@@ -79,24 +89,19 @@ func mergeApiDefinition(
 			service := path.Backend.Service
 
 			//TODO: How-to dedal with PathType ?
-			api.Spec.Proxy = &model.Proxy{
-				VirtualHosts: []*model.VirtualHost{
-					{
-						Path: path.Path,
-					},
+
+			api.Spec.Proxy.VirtualHosts = append(
+				api.Spec.Proxy.VirtualHosts,
+				&model.VirtualHost{Host: rule.Host, Path: path.Path},
+			)
+
+			api.Spec.Proxy.Groups[0].Endpoints = append(
+				api.Spec.Proxy.Groups[0].Endpoints,
+				&model.HttpEndpoint{
+					Name:   service.Name,
+					Target: fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", service.Name, ingress.Namespace, service.Port.Number),
 				},
-				Groups: []*model.EndpointGroup{
-					{
-						Name: "default",
-						Endpoints: []*model.HttpEndpoint{
-							{
-								Name:   service.Name,
-								Target: fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", service.Name, ingress.Namespace, service.Port.Number),
-							},
-						},
-					},
-				},
-			}
+			)
 		}
 	}
 	return api
