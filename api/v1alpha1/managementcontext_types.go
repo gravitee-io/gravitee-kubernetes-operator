@@ -34,7 +34,7 @@ type ManagementContextStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.metadata.name`
 // +kubebuilder:printcolumn:name="BaseUrl",type=string,JSONPath=`.spec.baseUrl`
 // +kubebuilder:resource:shortName=graviteecontexts
 type ManagementContext struct {
