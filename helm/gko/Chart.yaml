@@ -25,7 +25,7 @@ home: https://gravitee.io
 
 
 sources:
-- https://github.com/gravitee-io
+- https://github.com/gravitee-io/gravitee-kubernetes-operator
 keywords:
 - gravitee.io
 - kubernetes
