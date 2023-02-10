@@ -16,3 +16,8 @@ helm-template: manifests kustomize helm-prepare ## generates a templated (legacy
 .PHONY: helm-document ## generates helm chart documentation
 helm-document: helm-docs
 	$(HELMDOCS) --dry-run
+
+.PHONY: helm-test
+helm-test: helm-unittest
+	@echo "Running helm unit tests ..."
+	@helm unittest -3 helm/gko
