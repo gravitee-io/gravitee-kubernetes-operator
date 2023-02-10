@@ -33,22 +33,17 @@ var _ = Describe("Ingress Create", func() {
 		It("should create an Ingress and the default ApiDefinition", func() {
 			By("Initializing the Ingress fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
-
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Ingress: internal.IngressWithoutTemplateFile,
 			})
-
 			Expect(err).ToNot(HaveOccurred())
-
 			ingressFixture = fixtures.Ingress
 			ingressLookupKey = types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
 
 			By("Creating an Ingress and the default ApiDefinition")
-
 			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
 
 			By("Getting created resource and expect to find it")
-
 			createdIngress := &netV1.Ingress{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
@@ -68,6 +63,51 @@ var _ = Describe("Ingress Create", func() {
 					{
 						Name:   "wiremock-svc",
 						Target: "http://wiremock-svc.default.svc.cluster.local:8080",
+					},
+				},
+			))
+		})
+
+		It("should create an Ingress with multiple hosts", func() {
+			By("Initializing the Ingress fixture")
+			fixtureGenerator := internal.NewFixtureGenerator()
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Ingress: internal.IngressWithMultipleHosts,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			ingressFixture = fixtures.Ingress
+			ingressLookupKey = types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
+
+			By("Creating the ingress with multiple hosts")
+			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
+
+			By("Getting created resource and expect to find it")
+			createdIngress := &netV1.Ingress{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			createdApiDefinition := &gio.ApiDefinition{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(2))
+			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(
+				Equal([]*model.VirtualHost{
+					{Host: "bar.example.com", Path: "/bar"},
+					{Host: "foo.example.com", Path: "/foo"},
+				}),
+			)
+			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
+				[]*model.HttpEndpoint{
+					{
+						Name:   "bar-svc",
+						Target: "http://bar-svc.default.svc.cluster.local:8080",
+					},
+					{
+						Name:   "foo-svc",
+						Target: "http://foo-svc.default.svc.cluster.local:8080",
 					},
 				},
 			))
