@@ -15,7 +15,7 @@ GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
 HELMDOCS ?= $(LOCALBIN)/helm-docs
 
-ALL_TOOLS = kustomize controller-gen envtest ginkgo crdoc golangci-lint addlicense helm-docs
+ALL_TOOLS = kustomize controller-gen envtest ginkgo crdoc golangci-lint addlicense helm-docs helm-unittest
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v4.5.7
@@ -70,6 +70,11 @@ helm-docs: $(HELMDOCS) ## Download helmdocs cli locally if necessary.
 $(HELMDOCS): $(LOCALBIN)
 	@echo "Installing helm-docs ..."
 	@GOBIN=$(LOCALBIN) go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
+
+.PHONY: helm-unittest
+helm-unittest: ## Install helm-unittest plugin if necessary.
+	@echo "Installing helm-unittest ..."
+	@helm plugin list | grep -q unittest || helm plugin install https://github.com/quintush/helm-unittest > /dev/null 2>&1
 
 .PHONY: all-tools
 install-tools: $(ALL_TOOLS) ## Install all binary tools (use -j to run in parallel)
