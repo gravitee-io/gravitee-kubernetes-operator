@@ -13,8 +13,9 @@ GINKGO ?= $(LOCALBIN)/ginkgo
 CRDOC ?= $(LOCALBIN)/crdoc
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
+HELMDOCS ?= $(LOCALBIN)/helm-docs
 
-ALL_TOOLS = kustomize controller-gen envtest ginkgo crdoc golangci-lint addlicense
+ALL_TOOLS = kustomize controller-gen envtest ginkgo crdoc golangci-lint addlicense helm-docs
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v4.5.7
@@ -63,6 +64,12 @@ addlicense: $(ADDLICENSE) ## Download addlicense cli locally if necessary.
 $(ADDLICENSE): $(LOCALBIN)
 	@echo "Installing addlicense ..."
 	@GOBIN=$(LOCALBIN) go install github.com/google/addlicense@latest
+
+.PHONY: helm-docs
+helm-docs: $(HELMDOCS) ## Download helmdocs cli locally if necessary.
+$(HELMDOCS): $(LOCALBIN)
+	@echo "Installing helm-docs ..."
+	@GOBIN=$(LOCALBIN) go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest
 
 .PHONY: all-tools
 install-tools: $(ALL_TOOLS) ## Install all binary tools (use -j to run in parallel)
