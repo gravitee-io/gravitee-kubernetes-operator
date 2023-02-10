@@ -23,8 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Ingress Delete", func() {
-	Context("A basic ingress without api definition template", func() {
+var _ = Describe("Deleting an ingress", func() {
+	Context("Without api definition template", func() {
 		var ingressFixture *netV1.Ingress
 		var ingressLookupKey types.NamespacedName
 
@@ -42,7 +42,7 @@ var _ = Describe("Ingress Delete", func() {
 			ingressLookupKey = types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
 		})
 
-		It("should delete an Ingress and the default ApiDefinition", func() {
+		It("Should delete the Ingress and the default ApiDefinition", func() {
 			By("Creating an Ingress and the default ApiDefinition")
 
 			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
@@ -73,6 +73,13 @@ var _ = Describe("Ingress Delete", func() {
 				err := k8sClient.Get(ctx, ingressLookupKey, api)
 				return err
 			}, timeout, interval).ShouldNot(Succeed())
+
+			By("Checking events")
+			Expect(
+				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+			).Should(
+				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
+			)
 		})
 	})
 })

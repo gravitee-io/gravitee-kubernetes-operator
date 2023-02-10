@@ -130,7 +130,9 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Check events")
 
-			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
+			Expect(
+				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
+			).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
 
 			By("Set right credentials in ManagementContext")
 
@@ -165,7 +167,9 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
-			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"UpdateSucceeded"}))
+			Expect(
+				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
+			).Should(ContainElements([]string{"UpdateSucceeded"}))
 		})
 
 		It("Should requeue reconcile with bad ManagementContext BaseUrl", func() {

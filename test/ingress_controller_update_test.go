@@ -23,8 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Ingress Update", func() {
-	Context("A basic ingress without api definition template", func() {
+var _ = Describe("Updating an ingress", func() {
+	Context("Without api definition template", func() {
 		var ingressFixture *netV1.Ingress
 		var ingressLookupKey types.NamespacedName
 
@@ -42,7 +42,7 @@ var _ = Describe("Ingress Update", func() {
 			ingressLookupKey = types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
 		})
 
-		It("should update an Ingress and the default ApiDefinition", func() {
+		It("Should update an Ingress and the default ApiDefinition", func() {
 			By("Creating an Ingress and the default ApiDefinition")
 
 			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
@@ -87,6 +87,13 @@ var _ = Describe("Ingress Update", func() {
 				}, timeout, interval).ShouldNot(HaveOccurred())
 				return apiDefinitionWithUpdatedPath.Spec.Proxy.VirtualHosts[0].Path == fooPath
 			}).ShouldNot(Equal(false))
+
+			By("Checking events")
+			Expect(
+				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+			).Should(
+				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
+			)
 		})
 	})
 })

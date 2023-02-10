@@ -166,7 +166,7 @@ var _ = Describe("Create", func() {
 
 			By("Check events")
 			Expect(
-				getEventsReason(apiDefinition),
+				getEventsReason(apiDefinition.GetNamespace(), apiDefinition.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateStarted", "UpdateSucceeded"}),
 			)

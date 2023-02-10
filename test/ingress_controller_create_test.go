@@ -25,12 +25,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Ingress Create", func() {
-	Context("A basic ingress without api definition template", func() {
+var _ = Describe("Creating an ingress", func() {
+	Context("Without api definition template", func() {
 		var ingressFixture *netV1.Ingress
 		var ingressLookupKey types.NamespacedName
 
-		It("should create an Ingress and the default ApiDefinition", func() {
+		It("Should create the ingress and use the default ApiDefinition", func() {
 			By("Initializing the Ingress fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
@@ -66,9 +66,16 @@ var _ = Describe("Ingress Create", func() {
 					},
 				},
 			))
+
+			By("Checking events")
+			Expect(
+				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+			).Should(
+				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
+			)
 		})
 
-		It("should create an Ingress with multiple hosts", func() {
+		It("Should create the ingress and the api definition with multiple hosts", func() {
 			By("Initializing the Ingress fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
