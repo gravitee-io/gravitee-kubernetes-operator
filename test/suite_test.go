@@ -178,7 +178,7 @@ func addEventIndexes() error {
 	return err
 }
 
-func getEventsReason(apiDefinition *gio.ApiDefinition) []string {
+func getEventsReason(namespace string, name string) []string {
 	eventsReason := []string{}
 
 	events := &v1.EventList{}
@@ -186,8 +186,8 @@ func getEventsReason(apiDefinition *gio.ApiDefinition) []string {
 	err := k8sClient.List(
 		ctx,
 		events,
-		&client.ListOptions{Namespace: apiDefinition.GetNamespace()},
-		client.MatchingFields{"involvedObject.name": apiDefinition.GetName()},
+		&client.ListOptions{Namespace: namespace},
+		client.MatchingFields{"involvedObject.name": name},
 	)
 	Expect(err).ToNot(HaveOccurred())
 

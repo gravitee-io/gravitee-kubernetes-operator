@@ -116,7 +116,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Check events")
 			Expect(
-				getEventsReason(apiDefinitionFixture),
+				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)

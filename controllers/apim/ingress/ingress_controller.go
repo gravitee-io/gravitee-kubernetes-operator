@@ -17,6 +17,8 @@ package ingress
 import (
 	"context"
 
+	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -55,23 +57,21 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	d := internal.NewDelegate(ctx, r.Client, log)
 
+	events := e.NewRecorder(r.Recorder)
+	var reconcileErr error
 	if !ingress.DeletionTimestamp.IsZero() {
-		err := d.Delete(ingress)
-		if err != nil {
-			log.Error(err, "An error occurs while deleting the Ingress", "Ingress", ingress)
-			return ctrl.Result{}, err
-		}
+		reconcileErr = events.Record(e.Delete, ingress, func() error {
+			return d.Delete(ingress)
+		})
 	} else {
-		err := d.AddFinalizer(ingress)
-		if err != nil {
-			log.Error(err, "An error occurs while adding finalizer to the Ingress", "Ingress", ingress)
-			return ctrl.Result{}, err
-		}
-		operation, createError := d.CreateOrUpdateApiDefinition(ingress)
-		if createError != nil {
-			log.Error(createError, "An error occurs while creating or updating the ApiDefinition", "Operation", operation)
-			return ctrl.Result{}, createError
-		}
+		reconcileErr = events.Record(e.Update, ingress, func() error {
+			return d.CreateOrUpdate(ingress)
+		})
+	}
+
+	if reconcileErr != nil {
+		log.Error(reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)
+		return ctrl.Result{}, reconcileErr
 	}
 
 	log.Info("Sync ingress DONE")

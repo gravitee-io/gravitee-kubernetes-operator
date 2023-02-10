@@ -21,7 +21,26 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) AddFinalizer(desired *v1.Ingress) error {
+func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
+	if err := d.addFinalizer(desired); err != nil {
+		d.log.Error(err, "An error occurs while adding finalizer to the Ingress", "Ingress", desired)
+		return err
+	}
+
+	operation, apiDefinitionError := d.CreateOrUpdateApiDefinition(desired)
+	if apiDefinitionError != nil {
+		d.log.Error(
+			apiDefinitionError,
+			"An error occurs while creating or updating the ApiDefinition",
+			"Operation", operation,
+		)
+		return apiDefinitionError
+	}
+
+	return nil
+}
+
+func (d *Delegate) addFinalizer(desired *v1.Ingress) error {
 	ingress := &v1.Ingress{}
 	if err := d.k8s.Get(
 		d.ctx, types.NamespacedName{Namespace: desired.Namespace, Name: desired.Name}, ingress,

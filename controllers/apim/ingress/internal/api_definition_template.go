@@ -16,6 +16,7 @@ package internal
 
 import (
 	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -30,7 +31,9 @@ func (d *Delegate) ResolveApiDefinitionTemplate(ingress *v1.Ingress) (*v1alpha1.
 	var apiDefinition *v1alpha1.ApiDefinition
 	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
 		apiDefinition = &v1alpha1.ApiDefinition{}
-		if err := d.k8s.Get(d.ctx, types.NamespacedName{Name: name, Namespace: ingress.Namespace}, apiDefinition); err != nil {
+		if err := d.k8s.Get(
+			d.ctx, types.NamespacedName{Name: name, Namespace: ingress.Namespace}, apiDefinition,
+		); err != nil {
 			return nil, err
 		}
 	} else {
