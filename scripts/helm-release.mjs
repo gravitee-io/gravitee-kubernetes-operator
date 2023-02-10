@@ -30,6 +30,8 @@ const IMG = argv.img;
 const VERBOSE = argv.verbose;
 const DRY_RUN = argv["dry-run"];
 
+const GITHUB_TOKEN=$.env.GITHUB_TOKEN
+
 $.env["IMG"] = `${IMG}:${VERSION}`;
 
 LOG.magenta(`
@@ -51,6 +53,13 @@ async function checkRequirements() {
   if (!isNonEmptyString(IMG)) {
     LOG.red(
       "You must specify a docker image to build (without any tag) using the --img flag"
+    );
+    await $`exit 1`;
+  }
+
+  if (!isNonEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
+    LOG.red(
+      "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable."
     );
     await $`exit 1`;
   }
@@ -117,6 +126,7 @@ async function checkoutHelmCharts() {
     --depth 1 ${WORKING_DIR}`;
 }
 
+
 LOG.blue(`
 ⎈ Packaging chart ...
 `);
@@ -154,6 +164,7 @@ if (!DRY_RUN) {
 
 async function publishRelease() {
   cd(WORKING_DIR);
+  await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/gravitee-io/helm-charts.git"`
   await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
   await $`git commit -m "chore(gko): release version ${VERSION}"`;
   await $`git push origin ${HELM.releaseBranch}`;
