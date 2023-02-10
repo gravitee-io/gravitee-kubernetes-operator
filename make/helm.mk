@@ -13,11 +13,4 @@ helm-prepare: manifests kustomize ## prepare helm chart from kustomize resources
 helm-template: manifests kustomize helm-prepare ## generates a templated (legacy) bundle.yml
 	helm template --include-crds  helm/gko -n gko-system > bundle.yml
 
-.PHONY: helm-document ## generates helm chart documentation
-helm-document: helm-docs
-	$(HELMDOCS) --dry-run
 
-.PHONY: helm-test
-helm-test: helm-unittest
-	@echo "Running helm unit tests ..."
-	@helm unittest -3 helm/gko
