@@ -18,7 +18,9 @@ const config = {
   branches: ["master"],
   tagFormat: "${version}",
 };
-const changelogFileName = "CHANGELOG.md";
+const changelogFile = "CHANGELOG.md";
+const chartFile = "helm/gko/Chart.yaml"
+const chartReferenceFile = "helm/gko/README.md"
 
 const plugins = [
   "@semantic-release/commit-analyzer",
@@ -26,7 +28,7 @@ const plugins = [
   [
     "@semantic-release/changelog",
     {
-      changelogFile: changelogFileName,
+      changelogFile,
     },
   ],
   [
@@ -45,7 +47,7 @@ const plugins = [
   [
     "@semantic-release/git",
     {
-      assets: [changelogFileName],
+      assets: [changelogFile, chartFile, chartReferenceFile],
       message: "chore(release): ${nextRelease.version} [skip ci]",
     },
   ],

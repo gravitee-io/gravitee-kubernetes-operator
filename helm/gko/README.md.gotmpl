@@ -1,0 +1,20 @@
+# G.K.O.
+
+{{ template "chart.description" . }}
+
+{{ template "chart.typeBadge" . }}{{ template "chart.versionBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+## Installing the Chart
+
+To install the chart with the release name `graviteeio-gko`:
+
+```console
+$ helm repo add graviteeio https://helm.gravitee.io
+$ helm install graviteeio-gko graviteeio/{{ template "chart.name" . }}
+```
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

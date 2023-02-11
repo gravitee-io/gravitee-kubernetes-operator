@@ -164,7 +164,7 @@ if (!DRY_RUN) {
 
 async function publishRelease() {
   cd(WORKING_DIR);
-  await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/gravitee-io/helm-charts.git"`
+  await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${HELM.chartsRepo}.git"`
   await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
   await $`git commit -m "chore(gko): release version ${VERSION}"`;
   await $`git push origin ${HELM.releaseBranch}`;
@@ -181,10 +181,45 @@ async function generateLegacyBundle() {
   await $`make helm-template`;
 }
 
+LOG.blue(`
+⎈ Setting chart version to ${VERSION} ...
+`);
+
+await time(setChartVersion);
+
+async function setChartVersion() {
+  const chartFile = await fs.readFile(`${HELM.chartDir}/Chart.yaml`, "utf8");
+  const chartYaml = await YAML.parse(chartFile);
+  chartYaml.version = VERSION;
+  chartYaml.appVersion = VERSION;
+  await fs.writeFile(`${HELM.chartDir}/Chart.yaml`, YAML.stringify(chartYaml));
+}
+
+LOG.blue(`
+⎈ Generating chart reference ...
+`);
+
+await time(generateChartReference);
+
+async function generateChartReference() {
+  await $`make helm-reference`;
+}
+
+LOG.blue(`
+⎈ Adding license headers to generated files ...
+`);
+
+await time(addLicense);
+
+async function addLicense() {
+  await $`make add-license`;
+}
+
 if (!DRY_RUN) {
   LOG.magenta(`
 🎉 version ${VERSION} has been released !`);
 } else {
-  LOG.magenta(`🎉 dry run done for version ${VERSION}`);
+  LOG.magenta(`
+🎉 dry run done for version ${VERSION}`);
 }
 

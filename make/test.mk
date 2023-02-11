@@ -1,4 +1,4 @@
-##@ Test
+##@ 🧪 Test
 
 GOTESTARGS ?= ""
 COVERPKG = "github.com/gravitee-io/gravitee-kubernetes-operator/..."

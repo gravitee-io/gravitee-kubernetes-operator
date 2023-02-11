@@ -21,7 +21,7 @@ tests:
       - hasDocuments:
           count: 12
 
-  - it: Should have manager the release namespace resource
+  - it: Should have manager namespace resource
     documentIndex: 0
     asserts:
       - isKind:
