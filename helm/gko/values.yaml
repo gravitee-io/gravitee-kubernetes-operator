@@ -14,9 +14,13 @@
 
 manager:
   logs:
+    # -- Whether to output manager logs in JSON format.
     json: true
   configMap:
+    # -- The name of the config map used to set the manager config from this values.
     name: gko-config
   scope:
+    # -- If true, the manager listens to resources created in the whole cluster.
+    # Use false to listen only in the release namespace.
     cluster: true
 
