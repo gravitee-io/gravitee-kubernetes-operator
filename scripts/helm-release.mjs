@@ -171,9 +171,20 @@ async function publishRelease() {
   cd(PROJECT_DIR);
 }
 
+LOG.blue(`
+📦 Generating legacy bundle.yml file ...
+`);
+
+await time(generateLegacyBundle);
+
+async function generateLegacyBundle() {
+  await $`make helm-template`;
+}
+
 if (!DRY_RUN) {
   LOG.magenta(`
 🎉 version ${VERSION} has been released !`);
 } else {
   LOG.magenta(`🎉 dry run done for version ${VERSION}`);
 }
+
