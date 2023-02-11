@@ -37,6 +37,12 @@ const plugins = [
     },
   ],
   [
+    "@semantic-release/github",
+    {
+      assets: [{ path: "bundle.yml", label: "Operator resources bundle" }],
+    },
+  ],
+  [
     "@semantic-release/git",
     {
       assets: [changelogFileName],
