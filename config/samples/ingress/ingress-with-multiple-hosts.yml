@@ -24,23 +24,23 @@ metadata:
     gravitee.io/ingress: graviteeio
 spec:
   rules:
-    - host: bar.example.com
+    - host: httpbin.example.com
       http:
         paths:
-          - path: /bar
+          - path: /httpbin
             pathType: Prefix
             backend:
               service:
-                name: bar-svc
+                name: httpbin
                 port:
-                  number: 8080
-    - host: foo.example.com
+                  number: 8000
+    - host: wiremock.example.com
       http:
         paths:
-          - path: /foo
+          - path: /wiremock
             pathType: Prefix
             backend:
               service:
-                name: foo-svc
+                name: wiremock-svc
                 port:
                   number: 8080

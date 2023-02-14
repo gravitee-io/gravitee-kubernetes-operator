@@ -57,12 +57,12 @@ var _ = Describe("Creating an ingress", func() {
 			expectedApiName := ingressFixture.Name
 			Expect(createdApiDefinition.Name).Should(Equal(expectedApiName))
 
-			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/"))
+			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get"))
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
-						Name:   "wiremock-svc",
-						Target: "http://wiremock-svc.default.svc.cluster.local:8080",
+						Name:   "httpbin",
+						Target: "http://httpbin.default.svc.cluster.local:8000",
 					},
 				},
 			))
@@ -102,19 +102,25 @@ var _ = Describe("Creating an ingress", func() {
 			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(2))
 			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(
 				Equal([]*model.VirtualHost{
-					{Host: "bar.example.com", Path: "/bar"},
-					{Host: "foo.example.com", Path: "/foo"},
+					{
+						Host: "httpbin.example.com",
+						Path: "/httpbin",
+					},
+					{
+						Host: "wiremock.example.com",
+						Path: "/wiremock",
+					},
 				}),
 			)
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
-						Name:   "bar-svc",
-						Target: "http://bar-svc.default.svc.cluster.local:8080",
+						Name:   "httpbin",
+						Target: "http://httpbin.default.svc.cluster.local:8000",
 					},
 					{
-						Name:   "foo-svc",
-						Target: "http://foo-svc.default.svc.cluster.local:8080",
+						Name:   "wiremock-svc",
+						Target: "http://wiremock-svc.default.svc.cluster.local:8080",
 					},
 				},
 			))
