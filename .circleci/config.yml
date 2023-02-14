@@ -413,7 +413,7 @@ workflows:
       - login-to-azure:
           name: Authenticate on cluster
           context: cicd-orchestrator
-          clusterName: apim-preprod
+          clusterName: devs-preprod
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
@@ -427,7 +427,7 @@ workflows:
           context: cicd-orchestrator
           matrix:
             parameters:
-              namespace: [apim-blue, apim-green]
+              namespace: [apim-apim-master]
               image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
           requires:
             - Stage image
