@@ -8,14 +8,3 @@ To learn more about your release, try:
 Please visit our documentation to learn about custom resources managed by the operator:
 
 https://docs.gravitee.io/apim/3.x/apim_kubernetes_operator_overview.html
-
-⚠️ Warning
-
-The Gravitee Kubernetes Operator is still in alpha stage.
-
-  ○ The software may contain bugs. Enabling a feature may expose bugs.
-  ○ Support for an alpha API may be dropped at any time without notice.
-  ○ The API may change in incompatible ways in a later software release without notice.
-  ○ The software is recommended for use only in short-lived testing clusters, due to the lack of long-term support.
-
-Please use with caution and feel free to provide feedback for further improvement.
