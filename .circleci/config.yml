@@ -183,7 +183,7 @@ jobs:
     parameters:
       clusterName:
         type: enum
-        enum: ["apim-preprod", "devs-preprod"]
+        enum: ["devs-preprod"]
         description: Name of the Azure k8s cluster
     steps:
       - keeper/env-export:
@@ -195,15 +195,6 @@ jobs:
       - keeper/env-export:
           secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
           var-name: AZURE_SP_PASSWORD
-      - when:
-          condition:
-            equal: [apim-preprod, << parameters.clusterName >>]
-          steps:
-            - run:
-                name: Get ~/.kube/config from Azure
-                command: |
-                  az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
-                  az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
       - when:
           condition:
             equal: [devs-preprod, << parameters.clusterName >>]
