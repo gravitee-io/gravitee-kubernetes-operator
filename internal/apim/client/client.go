@@ -68,7 +68,7 @@ func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
 
 // NewClient returns a new client for the given management context.
 // The client is created once per reconcile and management context and reused for all the operations.
-func NewClient(ctx context.Context, management *model.Management) (*Client, error) {
+func NewClient(ctx context.Context, management *model.Context) (*Client, error) {
 	orgID, envID := management.OrgId, management.EnvId
 	urls, err := NewURLs(management.BaseUrl, orgID, envID)
 	if err != nil {
@@ -83,7 +83,7 @@ func NewClient(ctx context.Context, management *model.Management) (*Client, erro
 	return client, nil
 }
 
-func toHttpAuth(management *model.Management) *http.Auth {
+func toHttpAuth(management *model.Context) *http.Auth {
 	if !management.HasAuthentication() {
 		return nil
 	}

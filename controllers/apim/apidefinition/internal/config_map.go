@@ -16,7 +16,6 @@ package internal
 
 import (
 	"encoding/json"
-	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -28,14 +27,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (d *Delegate) updateConfigMap(api *gio.ApiDefinition, context *DelegateContext) error {
+func (d *Delegate) updateConfigMap(api *gio.ApiDefinition) error {
 	if api.Spec.State == model.StateStopped {
-		if err := d.deleteConfigMap(api, context); err != nil {
+		if err := d.deleteConfigMap(api); err != nil {
 			d.log.Error(err, "Unable to delete ConfigMap from API definition")
 			return err
 		}
 	} else {
-		if err := d.saveConfigMap(api, context); err != nil {
+		if err := d.saveConfigMap(api); err != nil {
 			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 			return err
 		}
@@ -45,7 +44,7 @@ func (d *Delegate) updateConfigMap(api *gio.ApiDefinition, context *DelegateCont
 }
 
 func (d *Delegate) saveConfigMap(
-	apiDefinition *gio.ApiDefinition, context *DelegateContext,
+	apiDefinition *gio.ApiDefinition,
 ) error {
 	if apiDefinition.Spec.State == model.StateStopped {
 		return nil
@@ -67,8 +66,8 @@ func (d *Delegate) saveConfigMap(
 	cm.SetOwnerReferences(newOwnerReferences)
 
 	cm.Namespace = apiDefinition.Namespace
+	cm.Name = apiDefinition.Name
 
-	cm.Name = d.getConfigMapName(apiDefinition, context)
 	cm.CreationTimestamp = metav1.Now()
 	cm.Labels = map[string]string{
 		"managed-by": keys.CrdGroup,
@@ -81,13 +80,9 @@ func (d *Delegate) saveConfigMap(
 
 	spec := &(apiDefinition.Spec)
 
-	if context != nil {
-		spec.ID = apiDefinition.PickID(context.Location)
-
-		if context.hasManagement() {
-			cm.Data["organizationId"] = context.OrgID()
-			cm.Data["environmentId"] = context.EnvID()
-		}
+	if d.apim != nil {
+		cm.Data["organizationId"] = d.apim.OrgID()
+		cm.Data["environmentId"] = d.apim.EnvID()
 	}
 
 	if spec.ID == "" {
@@ -125,22 +120,14 @@ func (d *Delegate) saveConfigMap(
 	return nil
 }
 
-func (d *Delegate) deleteConfigMap(api *gio.ApiDefinition, context *DelegateContext) error {
+func (d *Delegate) deleteConfigMap(api *gio.ApiDefinition) error {
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      d.getConfigMapName(api, context),
+			Name:      api.Name,
 			Namespace: api.Namespace,
 		},
 	}
 
 	d.log.Info("Deleting Config Map associated to API if exists")
 	return client.IgnoreNotFound(d.k8s.Delete(d.ctx, configMap))
-}
-
-func (d *Delegate) getConfigMapName(api *gio.ApiDefinition, context *DelegateContext) string {
-	if context != nil {
-		return api.Name + "-" + strings.Replace(context.Location, "/", "-", 1)
-	}
-
-	return api.Name
 }

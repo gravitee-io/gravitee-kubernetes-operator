@@ -16,19 +16,13 @@ package internal
 
 import (
 	"errors"
-	"fmt"
 
 	apimError "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 type ContextError struct {
-	Cause   error
-	Context string
-}
-
-func (e ContextError) Error() string {
-	return fmt.Sprintf("context %s errored: %s", e.Context, e.Cause.Error())
+	error
 }
 
 // Redirects the behavior of Is to As
@@ -37,8 +31,8 @@ func (e ContextError) Is(err error) bool {
 	return errors.As(err, new(ContextError))
 }
 
-func newContextError(location string, err error) error {
-	return ContextError{Cause: err, Context: location}
+func newContextError(err error) error {
+	return ContextError{err}
 }
 
 func IsRecoverable(err error) bool {
@@ -63,7 +57,7 @@ func IsRecoverable(err error) bool {
 func isRecoverable(err error) bool {
 	contextError := &ContextError{}
 	if errors.As(err, contextError) {
-		cause := contextError.Cause
+		cause := contextError.error
 		serverError := &apimError.ServerError{}
 		if errors.As(cause, serverError) {
 			return serverError.IsRecoverable()

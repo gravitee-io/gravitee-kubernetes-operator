@@ -6,7 +6,7 @@ orbs:
   helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.2
   gravitee: gravitee-io/gravitee@2.2.0
-  slack: circleci/slack@4.12.0
+  slack: circleci/slack@4.12.1
 
 parameters:
   go-version:
@@ -183,7 +183,7 @@ jobs:
     parameters:
       clusterName:
         type: enum
-        enum: ["apim-preprod", "devs-preprod"]
+        enum: ["devs-preprod"]
         description: Name of the Azure k8s cluster
     steps:
       - keeper/env-export:
@@ -195,15 +195,6 @@ jobs:
       - keeper/env-export:
           secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
           var-name: AZURE_SP_PASSWORD
-      - when:
-          condition:
-            equal: [apim-preprod, << parameters.clusterName >>]
-          steps:
-            - run:
-                name: Get ~/.kube/config from Azure
-                command: |
-                  az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
-                  az aks get-credentials --admin --resource-group Apim-Preprod-Hosted --name gravitee-apim-preprod-aks-cluster
       - when:
           condition:
             equal: [devs-preprod, << parameters.clusterName >>]
@@ -254,37 +245,15 @@ jobs:
       GIT_AUTHOR_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
       GIT_COMMITTER_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
       GIT_COMMITTER_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
+      DOCKER_USERNAME: "keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login"
+      DOCKER_TOKEN: "keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password"
     steps:
       - checkout
       - gravitee/install-semantic-release
       - setup_remote_docker
-      - keeper/env-export:
-          secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login
-          var-name: DOCKERHUB_BOT_USER_NAME
-      - keeper/env-export:
-          secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password
-          var-name: DOCKERHUB_BOT_USER_TOKEN
-      - keeper/env-export:
-          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
-          var-name: GITHUB_TOKEN
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
-          var-name: GIT_AUTHOR_NAME
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
-          var-name: GIT_AUTHOR_EMAIL
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
-          var-name: GIT_COMMITTER_NAME
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
-          var-name: GIT_COMMITTER_EMAIL
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/private_key
-          var-name: GIT_SSH_KEY
-      - run:
-          name: Docker login
-          command: docker login --username="${DOCKERHUB_BOT_USER_NAME}" -p="${DOCKERHUB_BOT_USER_TOKEN}"
+      - keeper/exec:
+          step-name: Docker login
+          command: docker login --username="${DOCKER_USERNAME}" -p="${DOCKER_TOKEN}"
       - run:
           name: Install operator SDK
           command: |
@@ -296,9 +265,6 @@ jobs:
             curl -OJL ${DOWNLOAD_URL}/${BINARY}
             chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
       - helm/install-helm-client
-      - run:
-          name: Add git SSH key
-          command: echo "${GIT_SSH_KEY}" | ssh-add - 
       - keeper/exec:
           step-name: "Run Semantic Release"
           command: npx semantic-release
@@ -438,7 +404,7 @@ workflows:
       - login-to-azure:
           name: Authenticate on cluster
           context: cicd-orchestrator
-          clusterName: apim-preprod
+          clusterName: devs-preprod
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
@@ -452,7 +418,7 @@ workflows:
           context: cicd-orchestrator
           matrix:
             parameters:
-              namespace: [apim-blue, apim-green]
+              namespace: [apim-apim-master]
               image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
           requires:
             - Stage image

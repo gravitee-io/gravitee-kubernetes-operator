@@ -29,12 +29,12 @@ type APIM struct {
 }
 
 func NewAPIM(ctx context.Context) (*APIM, error) {
-	context, err := newApiContext(ContextWithCredentialsFile)
+	context, err := newManagementContext(ContextWithCredentialsFile)
 	if err != nil {
 		return nil, err
 	}
 
-	apim, err := apim.FromContext(ctx, context.Spec.Management)
+	apim, err := apim.FromContext(ctx, context.Spec.Context)
 	if err != nil {
 		return nil, err
 	}

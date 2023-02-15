@@ -8,258 +8,14 @@ Packages:
 
 Resource Types:
 
-- [ApiContext](#apicontext)
-
 - [ApiDefinition](#apidefinition)
 
 - [ApiResource](#apiresource)
 
+- [ManagementContext](#managementcontext)
 
 
 
-## ApiContext
-<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
-
-
-
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-      <td><b>apiVersion</b></td>
-      <td>string</td>
-      <td>gravitee.io/v1alpha1</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b>kind</b></td>
-      <td>string</td>
-      <td>ApiContext</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
-      <td>object</td>
-      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
-      <td>true</td>
-      </tr><tr>
-        <td><b><a href="#apicontextspec">spec</a></b></td>
-        <td>object</td>
-        <td>
-          ApiContext represents the configuration for a specific environment<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>status</b></td>
-        <td>object</td>
-        <td>
-          ApiContextStatus defines the observed state of an API Context.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiContext.spec
-<sup><sup>[↩ Parent](#apicontext)</sup></sup>
-
-
-
-ApiContext represents the configuration for a specific environment
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#apicontextspecmanagement">management</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>values</b></td>
-        <td>map[string]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiContext.spec.management
-<sup><sup>[↩ Parent](#apicontextspec)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#apicontextspecmanagementauth">auth</a></b></td>
-        <td>object</td>
-        <td>
-          Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>baseUrl</b></td>
-        <td>string</td>
-        <td>
-          The URL of a management API instance<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>environmentId</b></td>
-        <td>string</td>
-        <td>
-          An existing environment id targeted by the context within the organization.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>organizationId</b></td>
-        <td>string</td>
-        <td>
-          An existing organization id targeted by the context on the management API instance.<br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### ApiContext.spec.management.auth
-<sup><sup>[↩ Parent](#apicontextspecmanagement)</sup></sup>
-
-
-
-Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>bearerToken</b></td>
-        <td>string</td>
-        <td>
-          The bearer token used to authenticate against the API Management instance (must be generated from an admin account)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apicontextspecmanagementauthcredentials">credentials</a></b></td>
-        <td>object</td>
-        <td>
-          The Basic credentials used to authenticate against the API Management instance.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apicontextspecmanagementauthsecretref">secretRef</a></b></td>
-        <td>object</td>
-        <td>
-          A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiContext.spec.management.auth.credentials
-<sup><sup>[↩ Parent](#apicontextspecmanagementauth)</sup></sup>
-
-
-
-The Basic credentials used to authenticate against the API Management instance.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>password</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>username</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiContext.spec.management.auth.secretRef
-<sup><sup>[↩ Parent](#apicontextspecmanagementauth)</sup></sup>
-
-
-
-A secret reference holding either a bearer token or the user name and password used for basic authentication
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>namespace</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
 
 ## ApiDefinition
 <sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
@@ -332,10 +88,10 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionspeccontextsindex">contexts</a></b></td>
-        <td>[]object</td>
+        <td><b><a href="#apidefinitionspeccontextref">contextRef</a></b></td>
+        <td>object</td>
         <td>
-          Contexts refer to the namespace and name of API contexts attached to this API Context may be used either to sync the API with an APIM instance, or to configure values that may be used later as a template context to compile the API definition spec.<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -526,7 +282,7 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
 </table>
 
 
-### ApiDefinition.spec.contexts[index]
+### ApiDefinition.spec.contextRef
 <sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
 
 
@@ -3580,42 +3336,6 @@ ApiDefinitionStatus defines the observed state of API Definition.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionstatuscontextskey">contexts</a></b></td>
-        <td>map[string]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>observedGeneration</b></td>
-        <td>integer</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.status.contexts[key]
-<sup><sup>[↩ Parent](#apidefinitionstatus)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
         <td><b>crossId</b></td>
         <td>string</td>
         <td>
@@ -3634,6 +3354,15 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td>string</td>
         <td>
           The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3755,6 +3484,216 @@ ApiResourceSpec defines the desired state of ApiResource.
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## ManagementContext
+<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>gravitee.io/v1alpha1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ManagementContext</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ManagementContext represents the configuration for a specific environment<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>object</td>
+        <td>
+          ManagementContextStatus defines the observed state of an API Context.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec
+<sup><sup>[↩ Parent](#managementcontext)</sup></sup>
+
+
+
+ManagementContext represents the configuration for a specific environment
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#managementcontextspecauth">auth</a></b></td>
+        <td>object</td>
+        <td>
+          Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>baseUrl</b></td>
+        <td>string</td>
+        <td>
+          The URL of a management API instance<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>environmentId</b></td>
+        <td>string</td>
+        <td>
+          An existing environment id targeted by the context within the organization.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>organizationId</b></td>
+        <td>string</td>
+        <td>
+          An existing organization id targeted by the context on the management API instance.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth
+<sup><sup>[↩ Parent](#managementcontextspec)</sup></sup>
+
+
+
+Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>bearerToken</b></td>
+        <td>string</td>
+        <td>
+          The bearer token used to authenticate against the API Management instance (must be generated from an admin account)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthcredentials">credentials</a></b></td>
+        <td>object</td>
+        <td>
+          The Basic credentials used to authenticate against the API Management instance.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthsecretref">secretRef</a></b></td>
+        <td>object</td>
+        <td>
+          A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.credentials
+<sup><sup>[↩ Parent](#managementcontextspecauth)</sup></sup>
+
+
+
+The Basic credentials used to authenticate against the API Management instance.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>username</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.secretRef
+<sup><sup>[↩ Parent](#managementcontextspecauth)</sup></sup>
+
+
+
+A secret reference holding either a bearer token or the user name and password used for basic authentication
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
         <td>string</td>
         <td>
           <br/>

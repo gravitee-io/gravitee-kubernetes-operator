@@ -88,7 +88,7 @@ rules:
 - apiGroups:
   - gravitee.io
   resources:
-  - apicontexts
+  - managementcontexts
   verbs:
   - create
   - delete
@@ -100,13 +100,13 @@ rules:
 - apiGroups:
   - gravitee.io
   resources:
-  - apicontexts/finalizers
+  - managementcontexts/finalizers
   verbs:
   - update
 - apiGroups:
   - gravitee.io
   resources:
-  - apicontexts/status
+  - managementcontexts/status
   verbs:
   - get
   - patch

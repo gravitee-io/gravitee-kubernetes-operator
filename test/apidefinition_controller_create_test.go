@@ -97,7 +97,7 @@ var _ = Describe("Create", func() {
 
 	Context("a basic spec with a management context", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
-		var apiContextFixture *gio.ApiContext
+		var managementContextFixture *gio.ManagementContext
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -105,26 +105,26 @@ var _ = Describe("Create", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:      internal.BasicApiFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture = fixtures.Api
-			apiContextFixture = &fixtures.Contexts[0]
+			managementContextFixture = fixtures.Context
 
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey = types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
 		})
 
 		It("should create an API Definition", func() {
 			By("Create a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
@@ -135,7 +135,7 @@ var _ = Describe("Create", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(apiDefinition)
+				return internal.AssertStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -156,17 +156,17 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(apiDefinition.Status.ID)
 				if apiErr != nil {
 					return apiErr
 				}
 
-				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+				return internal.AssertApiEntityMatchesStatus(api, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
 			Expect(
-				getEventsReason(apiDefinition),
+				getEventsReason(apiDefinition.GetNamespace(), apiDefinition.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateStarted", "UpdateSucceeded"}),
 			)
@@ -176,11 +176,11 @@ var _ = Describe("Create", func() {
 			apiDefinitionFixture.Spec.State = model.StateStopped
 
 			By("Create a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
@@ -191,7 +191,7 @@ var _ = Describe("Create", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(apiDefinition)
+				return internal.AssertStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -212,12 +212,12 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(apiDefinition.Status.ID)
 				if apiErr != nil {
 					return apiErr
 				}
 
-				if err = internal.AssertApiEntityMatchesStatusContext(api, apiDefinition); err != nil {
+				if err = internal.AssertApiEntityMatchesStatus(api, apiDefinition); err != nil {
 					return err
 				}
 
@@ -254,11 +254,11 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Create a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
@@ -269,7 +269,7 @@ var _ = Describe("Create", func() {
 				if getErr := k8sClient.Get(ctx, apiLookupKey, apiDefinition); getErr != nil {
 					return getErr
 				}
-				return internal.AssertStatusContextIsSet(apiDefinition)
+				return internal.AssertStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -287,11 +287,11 @@ var _ = Describe("Create", func() {
 			By("Call rest API and expect one API matching status cross ID")
 
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(apiDefinition.Status.ID)
 				if apiErr != nil {
 					return apiErr
 				}
-				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+				return internal.AssertApiEntityMatchesStatus(api, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
@@ -302,24 +302,24 @@ var _ = Describe("Create", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:      specFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Api:     specFile,
+				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture := fixtures.Api
-			apiContextFixture := &fixtures.Contexts[0]
+			managementContextFixture := fixtures.Context
 
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey := types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
+			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
 
 			By("Creating a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Creating an API definition resource referencing the management context")
@@ -330,7 +330,7 @@ var _ = Describe("Create", func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(apiDefinition)
+				return internal.AssertStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -351,11 +351,11 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(apiDefinition.Status.ID)
 				if apiErr != nil {
 					return apiErr
 				}
-				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+				return internal.AssertApiEntityMatchesStatus(api, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		},
 		Entry("should import with health check", internal.ApiWithHCFile, 200),
@@ -380,7 +380,7 @@ var _ = Describe("Create", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:      specFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Context:  internal.ContextWithSecretFile,
 				Resource: resourceFile,
 			})
 
@@ -391,17 +391,17 @@ var _ = Describe("Create", func() {
 			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
 
 			apiDefinitionFixture := fixtures.Api
-			apiContextFixture := &fixtures.Contexts[0]
+			managementContextFixture := fixtures.Context
 
 			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey := types.NamespacedName{Name: apiContextFixture.Name, Namespace: namespace}
+			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
 
 			By("Creating a management context to synchronize with the REST API")
-			Expect(k8sClient.Create(ctx, apiContextFixture)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			apiContext := new(gio.ApiContext)
+			managementContext := new(gio.ManagementContext)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Creating an API definition resource referencing the management context")
@@ -412,7 +412,7 @@ var _ = Describe("Create", func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(apiDefinition)
+				return internal.AssertStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Calling gateway endpoint, expecting the API to be available")
@@ -430,11 +430,11 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetByID(internal.GetStatusId(apiDefinition, contextLookupKey))
+				api, apiErr := apim.APIs.GetByID(apiDefinition.Status.ID)
 				if apiErr != nil {
 					return apiErr
 				}
-				return internal.AssertApiEntityMatchesStatusContext(api, apiDefinition)
+				return internal.AssertApiEntityMatchesStatus(api, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		},
 		Entry(

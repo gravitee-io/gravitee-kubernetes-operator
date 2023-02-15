@@ -13,19 +13,34 @@
 # limitations under the License.
 
 # Use this context if you are running APIM and GKO in k3d
-apiVersion: gravitee.io/v1alpha1
-kind: ApiContext
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: dev-ctx
+  name: ingress-with-multiple-hosts
   namespace: default
+  annotations:
+    kubernetes.io/ingress.class: graviteeio
+  labels:
+    gravitee.io/ingress: graviteeio
 spec:
-  management:
-    baseUrl: http://apim-apim3-api.default.svc:83
-    environmentId: DEFAULT
-    organizationId: DEFAULT
-    auth:
-      credentials:
-        username: admin
-        password: admin
-  values:
-    env: dev
+  rules:
+    - host: httpbin.example.com
+      http:
+        paths:
+          - path: /httpbin
+            pathType: Prefix
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000
+    - host: wiremock.example.com
+      http:
+        paths:
+          - path: /wiremock
+            pathType: Prefix
+            backend:
+              service:
+                name: wiremock-svc
+                port:
+                  number: 8080

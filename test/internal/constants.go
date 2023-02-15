@@ -15,12 +15,12 @@
 package internal
 
 const (
-	GatewayUrl = "http://localhost:9000/gateway"
+	GatewayUrl = "http://localhost:9001"
 
 	SamplesPath = "../config/samples"
 
-	ContextWithSecretFile      = SamplesPath + "/context/dev/api-context-with-secret-ref.yml"
-	ContextWithCredentialsFile = SamplesPath + "/context/dev/api-context-with-credentials.yml"
+	ContextWithSecretFile      = SamplesPath + "/context/dev/management-context-with-secret-ref.yml"
+	ContextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yml"
 
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
 	ApiWithContextFile                  = SamplesPath + "/apim/api-with-context.yml"
@@ -56,4 +56,6 @@ const (
 	ApiResourceKeycloakAdapterFile      = SamplesPath + "/apim/api-resource-keycloak-adapter.yml"
 	ApiResourceOauth2AMFile             = SamplesPath + "/apim/api-resource-oauth2-am.yml"
 	ApiResourceOauth2GenericFile        = SamplesPath + "/apim/api-resource-oauth2-generic.yml"
+	IngressWithoutTemplateFile          = SamplesPath + "/ingress/ingress-without-api-template.yml"
+	IngressWithMultipleHosts            = SamplesPath + "/ingress/ingress-with-multiple-hosts.yml"
 )

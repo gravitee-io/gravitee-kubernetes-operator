@@ -52,21 +52,15 @@ spec:
               Operator Most of the configuration properties defined here are already
               documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
             properties:
-              contexts:
-                description: Contexts refer to the namespace and name of API contexts
-                  attached to this API Context may be used either to sync the API
-                  with an APIM instance, or to configure values that may be used later
-                  as a template context to compile the API definition spec.
-                items:
-                  properties:
-                    name:
-                      type: string
-                    namespace:
-                      type: string
-                  required:
-                  - name
-                  type: object
-                type: array
+              contextRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                type: object
               crossId:
                 type: string
               definition_context:
@@ -953,34 +947,28 @@ spec:
           status:
             description: ApiDefinitionStatus defines the observed state of API Definition.
             properties:
-              contexts:
-                additionalProperties:
-                  properties:
-                    crossId:
-                      type: string
-                    environmentId:
-                      type: string
-                    id:
-                      description: The ID of the API definition in the Gravitee API
-                        Management instance (if an API context has been configured).
-                      type: string
-                    organizationId:
-                      type: string
-                    state:
-                      description: The state of the API. Can be either STARTED or
-                        STOPPED.
-                      type: string
-                    status:
-                      description: The processing status of the API definition.
-                      enum:
-                      - Completed
-                      - Failed
-                      type: string
-                  type: object
-                type: object
+              crossId:
+                type: string
+              environmentId:
+                type: string
+              id:
+                description: The ID of the API definition in the Gravitee API Management
+                  instance (if an API context has been configured).
+                type: string
               observedGeneration:
                 format: int64
                 type: integer
+              organizationId:
+                type: string
+              state:
+                description: The state of the API. Can be either STARTED or STOPPED.
+                type: string
+              status:
+                description: The processing status of the API definition.
+                enum:
+                - Completed
+                - Failed
+                type: string
             type: object
         type: object
     served: true

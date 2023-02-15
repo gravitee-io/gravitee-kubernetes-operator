@@ -31,14 +31,11 @@ import (
 // +kubebuilder:object:generate=true
 type ApiDefinitionSpec struct {
 	model.Api `json:",inline"`
-
-	// Contexts refer to the namespace and name of API contexts attached to this API
-	// Context may be used either to sync the API with an APIM instance, or to configure
-	// values that may be used later as a template context to compile the API definition spec.
-	Contexts []model.NamespacedName `json:"contexts,omitempty"`
+	Context   *model.NamespacedName `json:"contextRef,omitempty"`
 }
 
-type StatusContext struct {
+// ApiDefinitionStatus defines the observed state of API Definition.
+type ApiDefinitionStatus struct {
 	OrgID string `json:"organizationId,omitempty"`
 	EnvID string `json:"environmentId,omitempty"`
 	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
@@ -48,20 +45,8 @@ type StatusContext struct {
 	Status ProcessingStatus `json:"status,omitempty"`
 	// The state of the API. Can be either STARTED or STOPPED.
 	State string `json:"state,omitempty"`
-}
 
-// ApiDefinitionStatus defines the observed state of API Definition.
-type ApiDefinitionStatus struct {
-	Contexts           map[string]StatusContext `json:"contexts,omitempty"`
-	ObservedGeneration int64                    `json:"observedGeneration,omitempty"`
-}
-
-// Initialize assigns an empty map to the Status.Contexts field if it is nil.
-// This should be done at before performing updates to avoid nil pointer dereference panics.
-func (s *ApiDefinitionStatus) Initialize() {
-	if s.Contexts == nil {
-		s.Contexts = make(map[string]StatusContext)
-	}
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -101,25 +86,21 @@ func (api *ApiDefinition) IsBeingDeleted() bool {
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiDefinition) PickID(statusKey string) string {
-	status, ok := api.Status.Contexts[statusKey]
-
-	if ok && status.ID != "" {
-		return status.ID
+func (api *ApiDefinition) PickID() string {
+	if api.Status.ID != "" {
+		return api.Status.ID
 	}
 
 	if api.Spec.ID != "" {
 		return api.Spec.ID
 	}
 
-	return uuid.FromStrings(string(api.UID), statusKey)
+	return string(api.UID)
 }
 
-func (api *ApiDefinition) PickCrossID(statusKey string) string {
-	status, ok := api.Status.Contexts[statusKey]
-
-	if ok && status.CrossID != "" {
-		return status.CrossID
+func (api *ApiDefinition) PickCrossID() string {
+	if api.Status.CrossID != "" {
+		return api.Status.CrossID
 	}
 
 	return api.GetOrGenerateCrossID()

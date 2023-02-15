@@ -15,42 +15,36 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-func GetStatusContext(apiDefinition *gio.ApiDefinition, location types.NamespacedName) *gio.StatusContext {
-	contexts := apiDefinition.Status.Contexts
-
-	if contexts == nil {
-		return nil
-	}
-
-	if len(contexts) == 0 {
-		return nil
-	}
-
-	context, ok := contexts[location.String()]
-
-	if !ok {
-		return nil
-	}
-
-	return &context
-}
-
-func GetStatusId(apiDefinition *gio.ApiDefinition, location types.NamespacedName) string {
-	context := GetStatusContext(apiDefinition, location)
-
-	if context == nil {
-		return ""
-	}
-
-	return context.ID
-}
 
 func NewAssertionError(field string, expected, given any) error {
 	return fmt.Errorf("expected %s to be %v, got %v", field, expected, given)
+}
+
+func UpdateSafely[T client.Object](client client.Client, objNew T) error {
+	key := types.NamespacedName{
+		Namespace: objNew.GetNamespace(),
+		Name:      objNew.GetName(),
+	}
+
+	objLast, ok := objNew.DeepCopyObject().(T)
+	if !ok {
+		return fmt.Errorf("failed to copy object %v", objNew)
+	}
+
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		if err := client.Get(context.Background(), key, objLast); err != nil {
+			return err
+		}
+
+		objNew.SetResourceVersion(objLast.GetResourceVersion())
+
+		return client.Update(context.Background(), objNew)
+	})
 }

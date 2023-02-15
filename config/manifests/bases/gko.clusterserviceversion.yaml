@@ -12,8 +12,8 @@ spec:
     owned:
     - description: API Context.
       displayName: API Context
-      kind: ApiContext
-      name: apicontexts.gravitee.io
+      kind: ManagementContext
+      name: managementcontexts.gravitee.io
       version: v1alpha1
     - description: ApiDefinition is the Schema for the apidefinitions API.
       displayName: Api Definition

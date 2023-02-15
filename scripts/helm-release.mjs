@@ -30,6 +30,8 @@ const IMG = argv.img;
 const VERBOSE = argv.verbose;
 const DRY_RUN = argv["dry-run"];
 
+const GITHUB_TOKEN=$.env.GITHUB_TOKEN
+
 $.env["IMG"] = `${IMG}:${VERSION}`;
 
 LOG.magenta(`
@@ -51,6 +53,13 @@ async function checkRequirements() {
   if (!isNonEmptyString(IMG)) {
     LOG.red(
       "You must specify a docker image to build (without any tag) using the --img flag"
+    );
+    await $`exit 1`;
+  }
+
+  if (!isNonEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
+    LOG.red(
+      "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable."
     );
     await $`exit 1`;
   }
@@ -117,6 +126,7 @@ async function checkoutHelmCharts() {
     --depth 1 ${WORKING_DIR}`;
 }
 
+
 LOG.blue(`
 ⎈ Packaging chart ...
 `);
@@ -154,15 +164,62 @@ if (!DRY_RUN) {
 
 async function publishRelease() {
   cd(WORKING_DIR);
+  await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${HELM.chartsRepo}.git"`
   await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
   await $`git commit -m "chore(gko): release version ${VERSION}"`;
   await $`git push origin ${HELM.releaseBranch}`;
   cd(PROJECT_DIR);
 }
 
+LOG.blue(`
+📦 Generating legacy bundle.yml file ...
+`);
+
+await time(generateLegacyBundle);
+
+async function generateLegacyBundle() {
+  await $`make helm-template`;
+}
+
+LOG.blue(`
+⎈ Setting chart version to ${VERSION} ...
+`);
+
+await time(setChartVersion);
+
+async function setChartVersion() {
+  const chartFile = await fs.readFile(`${HELM.chartDir}/Chart.yaml`, "utf8");
+  const chartYaml = await YAML.parse(chartFile);
+  chartYaml.version = VERSION;
+  chartYaml.appVersion = VERSION;
+  await fs.writeFile(`${HELM.chartDir}/Chart.yaml`, YAML.stringify(chartYaml));
+}
+
+LOG.blue(`
+⎈ Generating chart reference ...
+`);
+
+await time(generateChartReference);
+
+async function generateChartReference() {
+  await $`make helm-reference`;
+}
+
+LOG.blue(`
+⎈ Adding license headers to generated files ...
+`);
+
+await time(addLicense);
+
+async function addLicense() {
+  await $`make add-license`;
+}
+
 if (!DRY_RUN) {
   LOG.magenta(`
 🎉 version ${VERSION} has been released !`);
 } else {
-  LOG.magenta(`🎉 dry run done for version ${VERSION}`);
+  LOG.magenta(`
+🎉 dry run done for version ${VERSION}`);
 }
+

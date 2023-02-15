@@ -41,7 +41,7 @@ import (
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
 
 	Context("With basic ApiDefinition & ManagementContext", func() {
-		var apiContextFixture *gio.ApiContext
+		var managementContextFixture *gio.ManagementContext
 		var apiDefinitionFixture *gio.ApiDefinition
 
 		var savedApiDefinition *gio.ApiDefinition
@@ -55,19 +55,19 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:      internal.BasicApiFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiContext := &fixtures.Contexts[0]
-			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+			managementContext := fixtures.Context
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
 
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
@@ -76,7 +76,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiContextFixture = apiContext
+			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
 			By("Expect the API Definition is Ready")
@@ -86,7 +86,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(savedApiDefinition)
+				return internal.AssertStatusIsSet(savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
@@ -94,36 +94,26 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Set bad credentials in ManagementContext")
 
-			apiContextBad := apiContextFixture.DeepCopy()
-			apiContextBad.Spec.Management.Auth.SecretRef = nil
-			apiContextBad.Spec.Management.Auth.BearerToken = "bad-token"
+			managementContextBad := managementContextFixture.DeepCopy()
+			managementContextBad.Spec.Auth.SecretRef = nil
+			managementContextBad.Spec.Auth.BearerToken = "bad-token"
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
-				apiContextBad.Spec.DeepCopyInto(&update.Spec)
+				managementContextBad.Spec.DeepCopyInto(&update.Spec)
 				return k8sClient.Update(ctx, update)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Update the API definition")
 
 			apiDefinition := savedApiDefinition.DeepCopy()
-
-			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
-			}, timeout, interval).ShouldNot(HaveOccurred())
-
 			apiDefinition.Spec.Name = "new-name"
 
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
-				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
-					return err
-				}
-				apiDefinition.Spec.DeepCopyInto(&update.Spec)
-				return k8sClient.Update(ctx, update)
+				return internal.UpdateSafely(k8sClient, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check API definition processing status")
@@ -132,31 +122,29 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 				if err := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				context := internal.GetStatusContext(savedApiDefinition, contextLookupKey)
-				if context == nil {
-					return fmt.Errorf("context not found")
-				}
-				if context.Status != gio.ProcessingStatusFailed {
-					return fmt.Errorf("expected status %s, got %s", gio.ProcessingStatusFailed, context.Status)
+				if savedApiDefinition.Status.Status != gio.ProcessingStatusFailed {
+					return internal.NewAssertionError("status", gio.ProcessingStatusFailed, apiDefinition.Status.Status)
 				}
 				return nil
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
 
-			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
+			Expect(
+				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
+			).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
 
 			By("Set right credentials in ManagementContext")
 
-			apiContextRight := apiContextBad.DeepCopy()
-			apiContextRight.Spec = apiContextFixture.Spec
+			managementContextRight := managementContextBad.DeepCopy()
+			managementContextRight.Spec = managementContextFixture.Spec
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
-				apiContextRight.Spec.DeepCopyInto(&update.Spec)
+				managementContextRight.Spec.DeepCopyInto(&update.Spec)
 				return k8sClient.Update(ctx, update)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -166,7 +154,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				api, cliErr := apim.APIs.GetByID(internal.GetStatusId(savedApiDefinition, contextLookupKey))
+				api, cliErr := apim.APIs.GetByID(savedApiDefinition.Status.ID)
 				if cliErr != nil {
 					return cliErr
 				}
@@ -175,32 +163,28 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					return fmt.Errorf("expected name %s, got %s", "new-name", api.Name)
 				}
 
-				context := internal.GetStatusContext(savedApiDefinition, contextLookupKey)
-
-				if context.ID != api.ID {
-					return fmt.Errorf("expected id %s, got %s", api.ID, context.ID)
-				}
-
-				return nil
+				return internal.AssertApiEntityMatchesStatus(api, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
-			Expect(getEventsReason(apiDefinitionFixture)).Should(ContainElements([]string{"UpdateSucceeded"}))
+			Expect(
+				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
+			).Should(ContainElements([]string{"UpdateSucceeded"}))
 		})
 
 		It("Should requeue reconcile with bad ManagementContext BaseUrl", func() {
 
 			By("Set bad BaseUrl in ManagementContext")
 
-			apiContextBad := apiContextFixture.DeepCopy()
-			apiContextBad.Spec.Management.BaseUrl = "http://bad-url:8083"
+			managementContextBad := managementContextFixture.DeepCopy()
+			managementContextBad.Spec.BaseUrl = "http://bad-url:8083"
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
-				apiContextBad.Spec.DeepCopyInto(&update.Spec)
+				managementContextBad.Spec.DeepCopyInto(&update.Spec)
 				return k8sClient.Update(ctx, update)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -225,27 +209,28 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					return err
 				}
 
-				return internal.AssertStatusContextMatches(savedApiDefinition, contextLookupKey, &gio.StatusContext{
-					Status:  gio.ProcessingStatusFailed,
-					EnvID:   "DEFAULT",
-					OrgID:   "DEFAULT",
-					CrossID: apiDefinition.GetOrGenerateCrossID(),
-					ID:      apiDefinition.PickID(contextLookupKey.String()),
-					State:   "STARTED",
+				return internal.AssertStatusMatches(savedApiDefinition, gio.ApiDefinitionStatus{
+					Status:             gio.ProcessingStatusFailed,
+					EnvID:              "DEFAULT",
+					OrgID:              "DEFAULT",
+					CrossID:            apiDefinition.GetOrGenerateCrossID(),
+					ID:                 apiDefinition.PickID(),
+					State:              "STARTED",
+					ObservedGeneration: 1,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Set right BaseUrl in ManagementContext")
 
-			apiContextRight := apiContextBad.DeepCopy()
-			apiContextRight.Spec = apiContextFixture.Spec
+			managementContextRight := managementContextBad.DeepCopy()
+			managementContextRight.Spec = managementContextFixture.Spec
 
 			Eventually(func() error {
-				update := new(gio.ApiContext)
+				update := new(gio.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
-				apiContextRight.Spec.DeepCopyInto(&update.Spec)
+				managementContextRight.Spec.DeepCopyInto(&update.Spec)
 				return k8sClient.Update(ctx, update)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -256,13 +241,14 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					return err
 				}
 
-				return internal.AssertStatusContextMatches(savedApiDefinition, contextLookupKey, &gio.StatusContext{
-					Status:  gio.ProcessingStatusCompleted,
-					EnvID:   "DEFAULT",
-					OrgID:   "DEFAULT",
-					ID:      apiDefinition.PickID(contextLookupKey.String()),
-					CrossID: apiDefinition.GetOrGenerateCrossID(),
-					State:   "STARTED",
+				return internal.AssertStatusMatches(savedApiDefinition, gio.ApiDefinitionStatus{
+					Status:             gio.ProcessingStatusCompleted,
+					EnvID:              "DEFAULT",
+					OrgID:              "DEFAULT",
+					ID:                 apiDefinition.PickID(),
+					CrossID:            apiDefinition.GetOrGenerateCrossID(),
+					State:              "STARTED",
+					ObservedGeneration: 2,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})

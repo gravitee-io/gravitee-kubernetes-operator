@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package apicontext
+package managementcontext
 
 import (
 	"context"
@@ -33,11 +33,11 @@ type Reconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=gravitee.io,resources=apicontexts,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=gravitee.io,resources=apicontexts/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=gravitee.io,resources=apicontexts/finalizers,verbs=update
+// +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	instance := &gio.ApiContext{}
+	instance := &gio.ManagementContext{}
 
 	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -49,7 +49,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.ApiContext{}).
+		For(&gio.ManagementContext{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

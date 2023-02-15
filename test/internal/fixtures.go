@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 
+	netV1 "k8s.io/api/networking/v1"
+
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
@@ -29,14 +31,16 @@ var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
 	Api      *gio.ApiDefinition
-	Contexts []gio.ApiContext
+	Context  *gio.ManagementContext
 	Resource *gio.ApiResource
+	Ingress  *netV1.Ingress
 }
 
 type FixtureFiles struct {
 	Api      string
-	Contexts []string
+	Context  string
 	Resource string
+	Ingress  string
 }
 
 type FixtureGenerator struct {
@@ -64,16 +68,12 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 		fixtures.Api = api
 	}
 
-	if files.Contexts != nil {
-		fixtures.Contexts = make([]gio.ApiContext, 0)
-
-		for _, file := range files.Contexts {
-			ctx, err := f.NewApiContext(file)
-			if err != nil {
-				return nil, err
-			}
-			fixtures.Contexts = append(fixtures.Contexts, *ctx)
+	if files.Context != "" {
+		ctx, err := f.NewManagementContext(files.Context)
+		if err != nil {
+			return nil, err
 		}
+		fixtures.Context = ctx
 	}
 
 	if files.Resource != "" {
@@ -84,12 +84,8 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 		fixtures.Resource = resource
 	}
 
-	if fixtures.Contexts != nil {
-		apiContexts := make([]model.NamespacedName, 0)
-		for _, ctx := range fixtures.Contexts {
-			apiContexts = append(apiContexts, ctx.GetNamespacedName())
-		}
-		fixtures.Api.Spec.Contexts = apiContexts
+	if fixtures.Context != nil {
+		fixtures.Api.Spec.Context = fixtures.Context.GetNamespacedName()
 	}
 
 	if fixtures.Resource != nil {
@@ -101,6 +97,14 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 				},
 			},
 		}
+	}
+
+	if files.Ingress != "" {
+		ingress, err := f.NewIngress(files.Ingress)
+		if err != nil {
+			return nil, err
+		}
+		fixtures.Ingress = ingress
 	}
 
 	for _, transform := range transforms {
@@ -125,10 +129,10 @@ func (f *FixtureGenerator) NewApiDefinition(
 	return api, nil
 }
 
-func (f *FixtureGenerator) NewApiContext(
-	path string, transforms ...func(*gio.ApiContext),
-) (*gio.ApiContext, error) {
-	ctx, err := newApiContext(path, transforms...)
+func (f *FixtureGenerator) NewManagementContext(
+	path string, transforms ...func(*gio.ManagementContext),
+) (*gio.ManagementContext, error) {
+	ctx, err := newManagementContext(path, transforms...)
 	if err != nil {
 		return nil, err
 	}
@@ -196,19 +200,19 @@ func newApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.Api
 	return resource, nil
 }
 
-func newApiContext(path string, transforms ...func(*gio.ApiContext)) (*gio.ApiContext, error) {
+func newManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("ApiContext")
-	decoded, _, err := decode(crd, &gvk, new(gio.ApiContext))
+	gvk := gio.GroupVersion.WithKind("ManagementContext")
+	decoded, _, err := decode(crd, &gvk, new(gio.ManagementContext))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, ok := decoded.(*gio.ApiContext)
+	ctx, ok := decoded.(*gio.ManagementContext)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of API Context CRD")
 	}
@@ -218,6 +222,40 @@ func newApiContext(path string, transforms ...func(*gio.ApiContext)) (*gio.ApiCo
 	}
 
 	return ctx, nil
+}
+
+func (f *FixtureGenerator) NewIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress, error) {
+	ingress, err := newIngress(path, transforms...)
+	if err != nil {
+		return nil, err
+	}
+	ingress.Name += f.Suffix
+
+	return ingress, nil
+}
+
+func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress, error) {
+	crd, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := gio.GroupVersion.WithKind("Ingress")
+	decoded, _, err := decode(crd, &gvk, new(netV1.Ingress))
+	if err != nil {
+		return nil, err
+	}
+
+	resource, ok := decoded.(*netV1.Ingress)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of API CRD")
+	}
+
+	for _, transform := range transforms {
+		transform(resource)
+	}
+
+	return resource, nil
 }
 
 func randomSuffix() string {

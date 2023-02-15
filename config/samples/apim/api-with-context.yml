@@ -19,21 +19,19 @@ metadata:
   name: api-with-context
   namespace: default
 spec:
-  name: "Context ({{.Values.env}})"
-  contexts: 
-  - name: "ctx-dev"
-    namespace: "default"
-  - name: "ctx-staging"
+  name: "Echo API"
+  contextRef: 
+    name: "dev-ctx"
     namespace: "default"
   version: "1.1"
-  description: "Environment: {{ .Values.env }}"
+  description: "Gravitee Kubernetes Operator sample"
   plans:
     - name: "KEY_LESS"
       description: "FREE"
       security: "KEY_LESS"
   proxy:
     virtual_hosts:
-      - path: "/context-{{.Values.env}}"
+      - path: "/echo"
     groups:
       - endpoints:
           - name: "Default"

@@ -12,20 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Use this context if you are running APIM in K3d and GKO locally
 apiVersion: gravitee.io/v1alpha1
-kind: ApiContext
+kind: ManagementContext
 metadata:
   name: dev-ctx
-  namespace: default
 spec:
-  management:
-    baseUrl: http://localhost:9000
-    environmentId: DEFAULT
-    organizationId: DEFAULT
-    auth:
-      secretRef:
-        name: apim-context-credentials
-        namespace: default
-  values: 
-    env: dev
+  baseUrl: http://localhost:9000
+  environmentId: DEFAULT
+  organizationId: DEFAULT
+  auth:
+    # TODO: replace with your generate bearer token
+    bearerToken: xxxx-yyyy-zzzz 

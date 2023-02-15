@@ -169,5 +169,3 @@ tests:
       - equal:
           path: metadata.labels.control-plane
           value: controller-manager
-
-

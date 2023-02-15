@@ -21,43 +21,42 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ApiContext represents the configuration for a specific environment
+// ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
-type ApiContextSpec struct {
-	Management *model.Management `json:"management,omitempty"`
-	Values     map[string]string `json:"values,omitempty"`
+type ManagementContextSpec struct {
+	model.Context `json:",inline"`
 }
 
-// ApiContextStatus defines the observed state of an API Context.
-type ApiContextStatus struct {
+// ManagementContextStatus defines the observed state of an API Context.
+type ManagementContextStatus struct {
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.metadata.name`
 // +kubebuilder:printcolumn:name="BaseUrl",type=string,JSONPath=`.spec.baseUrl`
 // +kubebuilder:resource:shortName=graviteecontexts
-type ApiContext struct {
+type ManagementContext struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ApiContextSpec   `json:"spec,omitempty"`
-	Status ApiContextStatus `json:"status,omitempty"`
+	Spec   ManagementContextSpec   `json:"spec,omitempty"`
+	Status ManagementContextStatus `json:"status,omitempty"`
 }
 
-func (context *ApiContext) GetNamespacedName() model.NamespacedName {
-	return model.NamespacedName{Namespace: context.Namespace, Name: context.Name}
+func (context *ManagementContext) GetNamespacedName() *model.NamespacedName {
+	return &model.NamespacedName{Namespace: context.Namespace, Name: context.Name}
 }
 
 // +kubebuilder:object:root=true
-// ApiContextList contains a list of API Contexts.
-type ApiContextList struct {
+// ManagementContextList contains a list of API Contexts.
+type ManagementContextList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ApiContext `json:"items"`
+	Items           []ManagementContext `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&ApiContext{}, &ApiContextList{})
+	SchemeBuilder.Register(&ManagementContext{}, &ManagementContextList{})
 }

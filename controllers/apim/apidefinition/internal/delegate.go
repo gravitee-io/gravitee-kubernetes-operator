@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -29,35 +28,52 @@ import (
 
 const (
 	separator = "/"
-	origin    = "kubernetes"
-	mode      = "fully_managed"
+
+	bearerTokenSecretKey = "bearerToken"
+	usernameSecretKey    = "username"
+	passwordSecretKey    = "password"
 )
 
 type Delegate struct {
-	ctx      context.Context
-	k8s      k8s.Client
-	log      logr.Logger
-	contexts []DelegateContext
+	ctx  context.Context
+	k8s  k8s.Client
+	log  logr.Logger
+	apim *apim.APIM
 }
 
 func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate {
 	return &Delegate{
-		ctx, k8s, log, make([]DelegateContext, 0),
+		ctx, k8s, log, nil,
 	}
 }
 
-func (d *Delegate) ResolveContexts(api *gio.ApiDefinition) {
-	contexts := api.Spec.Contexts
-	for _, ref := range contexts {
-		context, err := d.resolveContext(ref)
+func (d *Delegate) ResolveContext(api *gio.ApiDefinition) error {
+	managementContext := new(gio.ManagementContext)
 
-		if err != nil {
-			d.log.Error(err, "Unable to resolve context ", "namespace", ref.Namespace, "name", ref.Name)
-			continue
-		}
+	ref := api.Spec.Context
+	ns := ref.ToK8sType()
 
-		d.addContext(context)
+	d.log.Info("Resolving API context", "namespace", ref.Namespace, "name", ref.Name)
+
+	if err := d.k8s.Get(d.ctx, ns, managementContext); err != nil {
+		return err
 	}
+
+	if err := d.resolveContextSecrets(managementContext); err != nil {
+		return err
+	}
+
+	apim, err := apim.FromContext(d.ctx, managementContext.Spec.Context)
+	if err != nil {
+		return err
+	}
+
+	d.apim = apim
+	return nil
+}
+
+func (d *Delegate) HasContext() bool {
+	return d.apim != nil
 }
 
 func (d *Delegate) AddDeletionFinalizer(api *gio.ApiDefinition) {
@@ -69,35 +85,8 @@ func (d *Delegate) AddDeletionFinalizer(api *gio.ApiDefinition) {
 	}
 }
 
-func (d *Delegate) HasContext() bool {
-	return len(d.contexts) > 0
-}
-
-func (d *Delegate) resolveContext(
-	ref model.NamespacedName,
-) (*gio.ApiContext, error) {
-	apiContext := new(gio.ApiContext)
-	ns := ref.ToK8sType()
-
-	d.log.Info("Resolving API context", "namespace", ref.Namespace, "name", ref.Name)
-
-	if err := d.k8s.Get(d.ctx, ns, apiContext); err != nil {
-		return nil, err
-	}
-
-	if err := d.resolveContextSecrets(apiContext); err != nil {
-		return nil, err
-	}
-
-	return apiContext, nil
-}
-
-func (d *Delegate) resolveContextSecrets(context *gio.ApiContext) error {
-	management := context.Spec.Management
-
-	if management == nil {
-		return nil
-	}
+func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
+	management := context.Spec
 
 	if management.HasSecretRef() {
 		secret := new(coreV1.Secret)
@@ -120,32 +109,8 @@ func (d *Delegate) resolveContextSecrets(context *gio.ApiContext) error {
 	return nil
 }
 
-func (d *Delegate) addContext(apiContext *gio.ApiContext) {
-	spec := apiContext.Spec
-
-	context := DelegateContext{
-		Values:   spec.Values,
-		Location: apiContext.Namespace + separator + apiContext.Name,
-	}
-
-	if spec.Management == nil {
-		d.contexts = append(d.contexts, context)
-		return
-	}
-
-	apim, err := apim.FromContext(d.ctx, spec.Management)
-
-	if err != nil {
-		d.log.Error(err, "Unable to create management API client")
-	} else {
-		context.APIM = apim
-	}
-
-	d.contexts = append(d.contexts, context)
-}
-
-func getSecretNamespace(context *gio.ApiContext) string {
-	secretRef := context.Spec.Management.SecretRef()
+func getSecretNamespace(context *gio.ManagementContext) string {
+	secretRef := context.Spec.SecretRef()
 	if secretRef.Namespace != "" {
 		return secretRef.Namespace
 	}

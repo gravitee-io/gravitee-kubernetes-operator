@@ -43,7 +43,8 @@ const K3D_CLUSTER_NAME = "graviteeio";
 const K3D_CLUSTER_AGENTS = 1;
 const K3D_API_PORT = 6950;
 const K3D_NAMESPACE_NAME = "default";
-const K3D_LOAD_BALANCER_PORT = 9000;
+const NGINX_LOAD_BALANCER_PORT = 9000;
+const GATEWAY_LOAD_BALANCER_PORT = 9001;
 const K3D_IMAGES_REGISTRY_NAME = `${K3D_CLUSTER_NAME}.docker.localhost`;
 const K3D_IMAGES_REGISTRY_PORT = 12345;
 
@@ -121,7 +122,8 @@ async function initCluster() {
   await $`k3d cluster create --wait \
     --agents ${K3D_CLUSTER_AGENTS} \
     --api-port ${K3D_API_PORT} \
-    -p "${K3D_LOAD_BALANCER_PORT}:80@loadbalancer" \
+    -p "${NGINX_LOAD_BALANCER_PORT}:80@loadbalancer" \
+    -p "${GATEWAY_LOAD_BALANCER_PORT}:82@loadbalancer" \
     --k3s-arg "--disable=traefik@server:*" \
     --registry-use=${K3D_IMAGES_REGISTRY_NAME} \
     ${K3D_CLUSTER_NAME}
@@ -265,11 +267,16 @@ helm install \
     --set "portal.enabled=false" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/apim-gateway" \
     --set "gateway.services.sync.kubernetes.enabled=true" \
-    --set "gateway.ingress.hosts[0]=localhost" \
-    --set "gateway.ingress.path=/gateway/?(.*)" \
-    --set "gateway.ingress.tls=false" \
-    --set "gateway.ingress.annotations.'nginx\\.ingress\\.kubernetes\\.io/rewrite-target'=/\\$1" \
+    --set "gateway.ingress.enabled=false" \
+    --set "gateway.service.type=LoadBalancer" \
     --set "gateway.autoscaling.enabled=false" \
+    --set "gateway.resources.requests.memory=2048Mi" \
+    --set "gateway.resources.limits.memory=2048Mi" \
+    --set "gateway.env[0].name=GIO_MIN_MEM" \
+    --set "gateway.env[0].value=1024m" \
+    --set "gateway.env[1].name=GIO_MAX_MEM" \
+    --set "gateway.env[1].value=1024m" \
+    --set "gateway.image.tag=${APIM_IMAGE_TAG}" \
     --set "api.ingress.management.hosts[0]=localhost" \
     --set "api.ingress.management.tls=false" \
     --set "api.portal.enabled=false" \
@@ -277,18 +284,13 @@ helm install \
     --set "api.resources.limits.memory=2048Mi" \
     --set "api.resources.requests.cpu=1500m" \
     --set "api.resources.limits.cpu=1500m" \
-    --set "gateway.resources.requests.memory=2048Mi" \
-    --set "gateway.resources.limits.memory=2048Mi" \
-    --set "gateway.env[0].name=GIO_MIN_MEM" \
-    --set "gateway.env[0].value=1024m" \
-    --set "gateway.env[1].name=GIO_MAX_MEM" \
-    --set "gateway.env[1].value=1024m" \
     --set "api.env[0].name=GIO_MIN_MEM" \
     --set "api.env[0].value=1024m" \
     --set "api.env[1].name=GIO_MAX_MEM" \
     --set "api.env[1].value=1024m" \
     --set "api.startupProbe.initialDelaySeconds=5" \
     --set "api.startupProbe.timeoutSeconds=10" \
+    --set "api.image.tag=${APIM_IMAGE_TAG}" \
     --set "api.image.repository=${K3D_IMAGES_REGISTRY}/apim-management-api" \
     --set "ui.ingress.hosts[0]=localhost" \
     --set "ui.ingress.tls=false" \
@@ -297,9 +299,7 @@ helm install \
     --set "ui.env[0].name=CONSOLE_BASE_HREF" \
     --set "ui.env[0].value=/console/" \
     --set "ui.image.tag=${APIM_IMAGE_TAG}" \
-    --set "ui.baseURL=http://localhost:${K3D_LOAD_BALANCER_PORT}/management/organizations/DEFAULT/environments/DEFAULT" \
-    --set "gateway.image.tag=${APIM_IMAGE_TAG}" \
-    --set "api.image.tag=${APIM_IMAGE_TAG}" \
+    --set "ui.baseURL=http://localhost:${NGINX_LOAD_BALANCER_PORT}/management/organizations/DEFAULT/environments/DEFAULT" \
     --set "elasticsearch.enabled=false" \
     --set "es.endpoints[0]=http://elasticsearch-master:9200" \
     --set "mongo.dbhost=mongodb" \
@@ -365,9 +365,9 @@ LOG.magenta(`
 
     Available endpoints are:
 
-        Gateway       http://localhost:${K3D_LOAD_BALANCER_PORT}/gateway
-        Management    http://localhost:${K3D_LOAD_BALANCER_PORT}/management
-        Console       http://localhost:${K3D_LOAD_BALANCER_PORT}/console/#!/login
+        Gateway       http://localhost:${GATEWAY_LOAD_BALANCER_PORT}
+        Management    http://localhost:${NGINX_LOAD_BALANCER_PORT}/management
+        Console       http://localhost:${NGINX_LOAD_BALANCER_PORT}/console/#!/login
 
     To update APIM components (e.g. APIM Gateway) to use a new docker image run:
 

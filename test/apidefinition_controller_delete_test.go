@@ -56,22 +56,22 @@ var _ = Describe("API Definition Controller", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:      internal.BasicApiFile,
-				Contexts: []string{internal.ContextWithSecretFile},
+				Api:     internal.BasicApiFile,
+				Context: internal.ContextWithSecretFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinition := fixtures.Api
-			apiContext := &fixtures.Contexts[0]
-			contextLookupKey = types.NamespacedName{Name: apiContext.Name, Namespace: namespace}
+			managementContext := fixtures.Context
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
 			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(k8sClient.Create(ctx, apiContext)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
 			Eventually(func() error {
-				return k8sClient.Get(ctx, contextLookupKey, apiContext)
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource stared by default")
@@ -95,7 +95,7 @@ var _ = Describe("API Definition Controller", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(createdApiDefinition)
+				return internal.AssertStatusIsSet(createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
@@ -125,7 +125,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				_, apiErr := apim.APIs.GetByID(internal.GetStatusId(createdApiDefinition, contextLookupKey))
+				_, apiErr := apim.APIs.GetByID(createdApiDefinition.Status.ID)
 				return errors.IgnoreNotFound(apiErr)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -140,7 +140,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Check events")
 			Expect(
-				getEventsReason(apiDefinitionFixture),
+				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
 			).Should(
 				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
 			)
@@ -155,7 +155,7 @@ var _ = Describe("API Definition Controller", func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusContextIsSet(createdApiDefinition)
+				return internal.AssertStatusIsSet(createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
@@ -170,7 +170,7 @@ var _ = Describe("API Definition Controller", func() {
 			By("Delete the API calling directly the REST API")
 
 			Eventually(func() error {
-				return apim.APIs.Delete(internal.GetStatusId(createdApiDefinition, contextLookupKey))
+				return apim.APIs.Delete(createdApiDefinition.Status.ID)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Delete the API Definition")

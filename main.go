@@ -36,10 +36,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apicontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -108,16 +108,17 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
 		os.Exit(1)
 	}
-	if err = (&apicontext.Reconciler{
+	if err = (&managementcontext.Reconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
 		os.Exit(1)
 	}
-	if err = (&controllers.IngressReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+	if err = (&ingress.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
 		os.Exit(1)
@@ -151,7 +152,7 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	cache := manager.GetCache()
 	ctx := context.Background()
 
-	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexApiContexts)
+	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
 	err := cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	if err != nil {
 		return err
