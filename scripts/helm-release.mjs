@@ -36,8 +36,8 @@ $.env["IMG"] = `${IMG}:${VERSION}`;
 
 LOG.magenta(`
 🚀 Releasing version ${VERSION} ...
-    📦 Project dir    | ${WORKING_DIR}
-    📦 Working dir    | ${PROJECT_DIR}
+    📦 Project dir    | ${PROJECT_DIR}
+    📦 Working dir    | ${WORKING_DIR}
     🐳 Docker image   | ${$.env.IMG}`);
 
 toggleVerbosity(VERBOSE);
