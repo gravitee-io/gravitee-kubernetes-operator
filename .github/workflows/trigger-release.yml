@@ -64,11 +64,15 @@ jobs:
 
           pr_url=$( gh pr create --base ${TARGET_BRANCH} --head ${SOURCE_BRANCH} --title "${PR_TITLE}" --body "${PR_BODY}" --no-maintainer-edit )
 
-          echo "Created pull request ${pr_url} 🚀"
-
           if [[ -z "${pr_url}" ]]; then
             echo "failed to create pull request unexpectedly."
             exit 1
           fi
 
-          echo "Pull request created. Please approve to continue ${pr_url} 🚀"
+          echo "Pull request ${pr_url} has been created"
+
+          echo "Triggering pull request merge"
+
+          gh pr merge ${pr_url} --auto --merge --subject "${PR_TITLE}"
+
+          echo "Pull request should merge automatically when all requirements are met 🚀"
