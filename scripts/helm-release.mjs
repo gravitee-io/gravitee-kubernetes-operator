@@ -145,7 +145,7 @@ await time(indexRepo);
 
 async function indexRepo() {
   await $`helm repo index \
-      --url https://helm.gravitee.io/helm \
+      --url https://helm.gravitee.io/helm/gko \
       --merge ${WORKING_DIR}/index.yaml ${WORKING_DIR}/helm/gko`;
 
   await $`mv ${WORKING_DIR}/helm/gko/index.yaml ${WORKING_DIR}/index.yaml`;
