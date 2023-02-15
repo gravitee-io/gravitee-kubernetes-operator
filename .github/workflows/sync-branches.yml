@@ -35,6 +35,7 @@ jobs:
         run: |
           echo "🚀 Rebasing ${TARGET_BRANCH} on ${SOURCE_BRANCH}"
 
+          git remote set-url origin "https://${GITHUB_TOKEN}@github.com/gravitee-io/gravitee-kubernetes-operator.git
           git fetch
           git checkout ${TARGET_BRANCH}
           git rebase origin/${SOURCE_BRANCH}
