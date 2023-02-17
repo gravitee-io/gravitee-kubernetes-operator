@@ -35,7 +35,7 @@ const plugins = [
     "@semantic-release/exec",
     {
       prepareCmd:
-        "npx zx scripts/helm-release.mjs --version ${nextRelease.version} --img graviteeio/helm-operator",
+        "npx zx scripts/helm-release.mjs --version ${nextRelease.version} --img graviteeio/kubernetes-operator",
     },
   ],
   [
