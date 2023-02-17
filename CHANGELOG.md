@@ -4,15 +4,10 @@
 ### Bug Fixes
 
 * remove automatic plan creation ([98b78a8](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/98b78a85b4b426c473a7d3504b6283311dc5d761))
-* restore rbac for api definitions and api context ([1fe20ac](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1fe20ac0c67487d6609d41fc87d568774773a390))
-* unescape quotes before applying helm charts ([71b8245](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/71b82459ccfe35392168fb638f9651e16753a3c7))
-
 
 ### Features
 
 * add ingress events on create, update and delete ([1df9534](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1df9534b1c408e9491e9d8815f17b6ca16ffafea))
-* add ingress without template example ([db7e4af](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/db7e4afad21cbdcf8b278fba7101ec0177731249))
-* allow multiple api contexts with templating ([70911d9](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/70911d9028b47ce985299263172f00610b412c2b))
 * allow to listen for resources in a namespace ([5cbdf0d](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/5cbdf0d824f36226c847a3876d6e28518baf03bb))
 * allow users to customize the manager env ([37c8644](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/37c8644bed16fad2fc1552cc7f9e4b141da45fe3))
 * handle ingress with multiple hosts ([e56b5ac](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/e56b5acb3d8b2078cc104f438e871b0cacdb065b))
