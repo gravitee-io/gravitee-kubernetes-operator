@@ -36,8 +36,8 @@ $.env["IMG"] = `${IMG}:${VERSION}`;
 
 LOG.magenta(`
 🚀 Releasing version ${VERSION} ...
-    📦 Project dir    | ${WORKING_DIR}
-    📦 Working dir    | ${PROJECT_DIR}
+    📦 Project dir    | ${PROJECT_DIR}
+    📦 Working dir    | ${WORKING_DIR}
     🐳 Docker image   | ${$.env.IMG}`);
 
 toggleVerbosity(VERBOSE);
@@ -145,7 +145,7 @@ await time(indexRepo);
 
 async function indexRepo() {
   await $`helm repo index \
-      --url https://helm.gravitee.io/helm \
+      --url https://helm.gravitee.io/helm/gko \
       --merge ${WORKING_DIR}/index.yaml ${WORKING_DIR}/helm/gko`;
 
   await $`mv ${WORKING_DIR}/helm/gko/index.yaml ${WORKING_DIR}/index.yaml`;
