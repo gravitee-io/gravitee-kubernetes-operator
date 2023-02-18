@@ -39,6 +39,25 @@ commands:
           event: fail
           template: basic_fail_1
 
+  add-docker-image-to-snyk:
+    parameters:
+      docker-image-name:
+        type: string
+    steps:
+      - run:
+          name: Add << parameters.docker-image-name >> to Snyk
+          command: |
+            curl --fail \
+                 --include \
+                 --request POST \
+                 --header "Content-Type: application/json; charset=utf-8" \
+                 --header "Authorization: token ${SNYK_API_TOKEN}" \
+                 --data-binary "{
+              \"target\": {
+                \"name\": \"graviteeio/<< parameters.docker-image-name >>:$(git describe --tags --abbrev=0)\"
+              }
+            }" \
+            "https://api.snyk.io/api/v1/org/${SNYK_ORG_ID}/integrations/${SNYK_INTEGRATION_ID}/import"
 jobs:
   lint-sources:
     docker:
@@ -381,6 +400,23 @@ jobs:
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
       - notify-on-failure
 
+  add-docker-images-to-snyk:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_org_api_token
+          var-name: SNYK_API_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_org_id
+          var-name: SNYK_ORG_ID
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_dockerhub_integration_id
+          var-name: SNYK_INTEGRATION_ID
+      - add-docker-image-to-snyk:
+          docker-image-name: graviteeio/kubernetes-operator
+
 workflows:
   pull_requests:
     when:
@@ -468,6 +504,9 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Test chart
+      - add-docker-images-to-snyk:
+          name: Add Docker images to snyk
+          context: cicd-orchestrator
 
   notify-release:
     jobs:
