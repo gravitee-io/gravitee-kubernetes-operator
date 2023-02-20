@@ -469,6 +469,11 @@ workflows:
           name: Authenticate on cluster
           context: cicd-orchestrator
           clusterName: devs-preprod
+      - sonarcloud-analysis:
+          name: Sonarcloud Analysis
+          context: cicd-orchestrator
+          requires:
+            - Test operator
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
