@@ -161,7 +161,7 @@ var _ = SynchronizedAfterSuite(func() {
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
-
+	// NOSONAR ignore this noop func
 })
 
 // Add filed indexes for event to be able to filter on it.
