@@ -80,7 +80,7 @@ LOG.blue(`
 `);
 
 if (!DRY_RUN) {
-  await await time(buildDockerImage);
+  await time(buildDockerImage);
 } else {
   LOG.yellow(`  ⚠️ This is a dry run, image will not be built ...`);
 }
