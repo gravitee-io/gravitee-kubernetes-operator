@@ -15,9 +15,6 @@
 package client
 
 import (
-	"context"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
@@ -64,51 +61,4 @@ func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
 	env := org.WithPath(envPath, envID)
 
 	return &URLs{org, env}, nil
-}
-
-// NewClient returns a new client for the given management context.
-// The client is created once per reconcile and management context and reused for all the operations.
-func NewClient(ctx context.Context, management *model.Context) (*Client, error) {
-	orgID, envID := management.OrgId, management.EnvId
-	urls, err := NewURLs(management.BaseUrl, orgID, envID)
-	if err != nil {
-		return nil, err
-	}
-
-	client := &Client{
-		HTTP: http.NewClient(ctx, toHttpAuth(management)),
-		URLs: urls,
-	}
-
-	return client, nil
-}
-
-func toHttpAuth(management *model.Context) *http.Auth {
-	if !management.HasAuthentication() {
-		return nil
-	}
-
-	return &http.Auth{
-		Basic: toBasicAuth(management.Auth),
-		Token: toBearer(management.Auth),
-	}
-}
-
-func toBasicAuth(auth *model.Auth) *http.BasicAuth {
-	if auth == nil || auth.Credentials == nil {
-		return nil
-	}
-
-	return &http.BasicAuth{
-		Username: auth.Credentials.Username,
-		Password: auth.Credentials.Password,
-	}
-}
-
-func toBearer(auth *model.Auth) http.BearerToken {
-	if auth == nil {
-		return ""
-	}
-
-	return http.BearerToken(auth.BearerToken)
 }
