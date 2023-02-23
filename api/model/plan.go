@@ -58,6 +58,11 @@ func NewRule() *Rule {
 // +kubebuilder:validation:Enum=STARTS_WITH;EQUALS;
 type Operator string
 
+const (
+	StartWithOperator = Operator("STARTS_WITH")
+	EqualsOperator    = Operator("EQUALS")
+)
+
 type PathOperator struct {
 	Path string `json:"path,omitempty"`
 	// +kubebuilder:default:=STARTS_WITH

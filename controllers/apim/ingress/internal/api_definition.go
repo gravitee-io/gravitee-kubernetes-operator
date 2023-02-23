@@ -24,8 +24,8 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) CreateOrUpdateApiDefinition(ingress *v1.Ingress) (util.OperationResult, error) {
-	apiDefinition, err := d.ResolveApiDefinitionTemplate(ingress)
+func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.OperationResult, error) {
+	apiDefinition, err := d.resolveApiDefinitionTemplate(ingress)
 	if err != nil {
 		d.log.Error(err, "ResolveApiDefinition error")
 		return util.OperationResultNone, err

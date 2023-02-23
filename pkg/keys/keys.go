@@ -34,6 +34,8 @@ const (
 	CrdApiDefinitionTemplate     = "template"
 )
 
+const Extends = "gravitee.io/extends"
+
 // Kubernetes Finalizers.
 const (
 	ApiDefinitionDeletionFinalizer = "finalizers.gravitee.io/apidefinitiondeletion"
