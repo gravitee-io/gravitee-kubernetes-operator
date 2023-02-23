@@ -61,7 +61,7 @@ var _ = Describe("Creating an ingress", func() {
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
-						Name:   "httpbin",
+						Name:   "httpbin.example.com/get",
 						Target: "http://httpbin.default.svc.cluster.local:8000",
 					},
 				},
@@ -99,28 +99,36 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(2))
+			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(3))
 			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(
 				Equal([]*model.VirtualHost{
 					{
-						Host: "httpbin.example.com",
-						Path: "/httpbin",
+						Host: "foo.example.com",
+						Path: "/ingress/foo",
 					},
 					{
-						Host: "wiremock.example.com",
-						Path: "/wiremock",
+						Host: "bar.example.com",
+						Path: "/ingress/bar",
+					},
+					{
+						Host: "",
+						Path: "/ingress/baz",
 					},
 				}),
 			)
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
-						Name:   "httpbin",
-						Target: "http://httpbin.default.svc.cluster.local:8000",
+						Name:   "foo.example.com/ingress/foo",
+						Target: "http://svc-1.default.svc.cluster.local:8080",
 					},
 					{
-						Name:   "wiremock-svc",
-						Target: "http://wiremock-svc.default.svc.cluster.local:8080",
+						Name:   "bar.example.com/ingress/bar",
+						Target: "http://svc-2.default.svc.cluster.local:8080",
+					},
+					{
+						Name:   "ingress/baz",
+						Target: "http://svc-3.default.svc.cluster.local:8080",
 					},
 				},
 			))
