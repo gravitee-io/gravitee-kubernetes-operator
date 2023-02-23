@@ -27,6 +27,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	definitionVersionKey = "definitionVersion"
+	definitionKey        = "definition"
+	managedByKey         = "managed-by"
+	gioTypeKey           = "gio-type"
+	orgKey               = "organizationId"
+	envKey               = "environmentId"
+)
+
 func (d *Delegate) updateConfigMap(api *gio.ApiDefinition) error {
 	if api.Spec.State == model.StateStopped {
 		if err := d.deleteConfigMap(api); err != nil {
@@ -70,19 +79,19 @@ func (d *Delegate) saveConfigMap(
 
 	cm.CreationTimestamp = metav1.Now()
 	cm.Labels = map[string]string{
-		"managed-by": keys.CrdGroup,
-		"gio-type":   keys.CrdApiDefinitionResource + "." + keys.CrdGroup,
+		managedByKey: keys.CrdGroup,
+		gioTypeKey:   keys.CrdApiDefinitionResource + "." + keys.CrdGroup,
 	}
 
 	cm.Data = map[string]string{
-		"definitionVersion": apiDefinition.ResourceVersion,
+		definitionVersionKey: apiDefinition.ResourceVersion,
 	}
 
 	spec := &(apiDefinition.Spec)
 
 	if d.apim != nil {
-		cm.Data["organizationId"] = d.apim.OrgID()
-		cm.Data["environmentId"] = d.apim.EnvID()
+		cm.Data[orgKey] = d.apim.OrgID()
+		cm.Data[envKey] = d.apim.EnvID()
 	}
 
 	if spec.ID == "" {
@@ -94,7 +103,7 @@ func (d *Delegate) saveConfigMap(
 		return err
 	}
 
-	cm.Data["definition"] = string(jsonSpec)
+	cm.Data[definitionKey] = string(jsonSpec)
 
 	currentApiDefinition := &v1.ConfigMap{}
 
@@ -111,7 +120,7 @@ func (d *Delegate) saveConfigMap(
 	}
 
 	// Only update the config map if resource version has changed (means api definition has changed).
-	if currentApiDefinition.Data["definitionVersion"] != apiDefinition.ResourceVersion {
+	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.ResourceVersion {
 		d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.ID)
 		return d.k8s.Update(d.ctx, cm)
 	}
