@@ -42,11 +42,18 @@ type ApiDefinitionStatus struct {
 	ID      string `json:"id,omitempty"`
 	CrossID string `json:"crossId,omitempty"`
 	// The processing status of the API definition.
-	Status ProcessingStatus `json:"status,omitempty"`
+	Status ProcessingStatus `json:"processingStatus,omitempty"`
+	// This field is kept for backward compatibility and shall be removed in future versions.
+	// Use processingStatus instead.
+	DeprecatedStatus ProcessingStatus `json:"status,omitempty"`
+
 	// The state of the API. Can be either STARTED or STOPPED.
 	State string `json:"state,omitempty"`
 
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	// This field is kept for backward compatibility and shall be removed in future versions.
+	// Use observedGeneration instead.
+	DeprecatedObservedGeneration int64 `json:"generation,omitempty"`
 }
 
 // +kubebuilder:object:root=true

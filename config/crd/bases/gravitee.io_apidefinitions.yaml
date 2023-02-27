@@ -951,6 +951,11 @@ spec:
                 type: string
               environmentId:
                 type: string
+              generation:
+                description: This field is kept for backward compatibility and shall
+                  be removed in future versions. Use observedGeneration instead.
+                format: int64
+                type: integer
               id:
                 description: The ID of the API definition in the Gravitee API Management
                   instance (if an API context has been configured).
@@ -960,11 +965,18 @@ spec:
                 type: integer
               organizationId:
                 type: string
+              processingStatus:
+                description: The processing status of the API definition.
+                enum:
+                - Completed
+                - Failed
+                type: string
               state:
                 description: The state of the API. Can be either STARTED or STOPPED.
                 type: string
               status:
-                description: The processing status of the API definition.
+                description: This field is kept for backward compatibility and shall
+                  be removed in future versions. Use processingStatus instead.
                 enum:
                 - Completed
                 - Failed

@@ -3350,6 +3350,15 @@ ApiDefinitionStatus defines the observed state of API Definition.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>generation</b></td>
+        <td>integer</td>
+        <td>
+          This field is kept for backward compatibility and shall be removed in future versions. Use observedGeneration instead.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
@@ -3373,6 +3382,15 @@ ApiDefinitionStatus defines the observed state of API Definition.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>processingStatus</b></td>
+        <td>enum</td>
+        <td>
+          The processing status of the API definition.<br/>
+          <br/>
+            <i>Enum</i>: Completed, Failed<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>state</b></td>
         <td>string</td>
         <td>
@@ -3383,7 +3401,7 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td><b>status</b></td>
         <td>enum</td>
         <td>
-          The processing status of the API definition.<br/>
+          This field is kept for backward compatibility and shall be removed in future versions. Use processingStatus instead.<br/>
           <br/>
             <i>Enum</i>: Completed, Failed<br/>
         </td>
