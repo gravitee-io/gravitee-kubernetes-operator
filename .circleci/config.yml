@@ -512,7 +512,8 @@ workflows:
       - add-docker-images-to-snyk:
           name: Add Docker images to snyk
           context: cicd-orchestrator
-
+          requires:
+            - Semantic Release
   notify-release:
     jobs:
       - notify-release-slack:
