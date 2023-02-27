@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.5.0...0.5.1) (2023-02-27)
+
+
+### Bug Fixes
+
+* restore and deprecate v0.4.0 status fields ([536e806](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/536e806b567cf6c36d7ed64cf615f12a6804cecc))
+
 # [0.5.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.4.0...0.5.0) (2023-02-17)
 
 
