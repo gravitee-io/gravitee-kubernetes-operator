@@ -29,16 +29,35 @@ executors:
 
 commands:
   notify-on-failure:
-        steps:
-            - keeper/env-export:
-                  secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
-                  var-name: SLACK_ACCESS_TOKEN
-            - slack/notify:
-                  channel: C02JENTV2AX
-                  branch_pattern: master,[0-9]+\.[0-9]+\.x
-                  event: fail
-                  template: basic_fail_1
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+          var-name: SLACK_ACCESS_TOKEN
+      - slack/notify:
+          channel: C02JENTV2AX
+          branch_pattern: master,[0-9]+\.[0-9]+\.x
+          event: fail
+          template: basic_fail_1
 
+  add-docker-image-to-snyk:
+    parameters:
+      docker-image-name:
+        type: string
+    steps:
+      - run:
+          name: Add << parameters.docker-image-name >> to Snyk
+          command: |
+            curl --fail \
+                 --include \
+                 --request POST \
+                 --header "Content-Type: application/json; charset=utf-8" \
+                 --header "Authorization: token ${SNYK_API_TOKEN}" \
+                 --data-binary "{
+              \"target\": {
+                \"name\": \"graviteeio/<< parameters.docker-image-name >>:$(git describe --tags --abbrev=0)\"
+              }
+            }" \
+            "https://api.snyk.io/api/v1/org/${SNYK_ORG_ID}/integrations/${SNYK_INTEGRATION_ID}/import"
 jobs:
   lint-sources:
     docker:
@@ -174,6 +193,10 @@ jobs:
           key: k3d-registry-docker-v1
       - store_test_results:
           path: /tmp/junit/reports
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover.out
       - go/save-cache
 
   login-to-azure:
@@ -219,11 +242,11 @@ jobs:
       - checkout
       - setup_remote_docker
       - keeper/env-export:
-            secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
-            var-name: AZURE_DOCKER_REGISTRY_USERNAME
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          var-name: AZURE_DOCKER_REGISTRY_USERNAME
       - keeper/env-export:
-            secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
-            var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> make docker-build
@@ -357,6 +380,43 @@ jobs:
       - go/save-cache
       - notify-on-failure
 
+  sonarcloud-analysis:
+    description: A job that run Sonarcloud analysis
+    docker:
+      - image: sonarsource/sonar-scanner-cli
+    resource_class: large
+    steps:
+      - run:
+          name: Add SSH tool
+          command: apk add --no-cache openssh
+      - checkout
+      - attach_workspace:
+          at: /tmp/junit/reports
+      - keeper/env-export:
+          secret-url: keeper://9x9YgyU6DWzux4DPoHAzDQ/field/password
+          var-name: SONAR_TOKEN
+      - run:
+          name: Run Sonarcloud Analysis
+          command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
+      - notify-on-failure
+
+  add-docker-images-to-snyk:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_org_api_token
+          var-name: SNYK_API_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_org_id
+          var-name: SNYK_ORG_ID
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_dockerhub_integration_id
+          var-name: SNYK_INTEGRATION_ID
+      - add-docker-image-to-snyk:
+          docker-image-name: graviteeio/kubernetes-operator
+
 workflows:
   pull_requests:
     when:
@@ -388,7 +448,11 @@ workflows:
           name: Test Helm chart
           requires:
             - Lint Helm chart
-
+      - sonarcloud-analysis:
+          name: Sonarcloud Analysis
+          context: cicd-orchestrator
+          requires:
+            - Test
   deploy:
     when:
       and:
@@ -405,6 +469,11 @@ workflows:
           name: Authenticate on cluster
           context: cicd-orchestrator
           clusterName: devs-preprod
+      - sonarcloud-analysis:
+          name: Sonarcloud Analysis
+          context: cicd-orchestrator
+          requires:
+            - Test operator
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
@@ -440,6 +509,9 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Test chart
+      - add-docker-images-to-snyk:
+          name: Add Docker images to snyk
+          context: cicd-orchestrator
 
   notify-release:
     jobs:

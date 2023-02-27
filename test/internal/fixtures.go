@@ -190,7 +190,7 @@ func newApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.Api
 
 	resource, ok := decoded.(*gio.ApiResource)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert type of API CRD")
+		return nil, fmt.Errorf("failed to assert type of API Resource CRD")
 	}
 
 	for _, transform := range transforms {
@@ -214,7 +214,7 @@ func newManagementContext(path string, transforms ...func(*gio.ManagementContext
 
 	ctx, ok := decoded.(*gio.ManagementContext)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert type of API Context CRD")
+		return nil, fmt.Errorf("failed to assert type of ManagementContext CRD")
 	}
 
 	for _, transform := range transforms {
@@ -248,7 +248,7 @@ func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress
 
 	resource, ok := decoded.(*netV1.Ingress)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert type of API CRD")
+		return nil, fmt.Errorf("failed to assert type of Ingress CRD")
 	}
 
 	for _, transform := range transforms {
