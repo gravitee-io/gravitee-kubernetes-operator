@@ -360,6 +360,19 @@ async function helmInstall() {
   ]);
 }
 
+LOG.blue(`
+⎈ Deploying test backends ...
+`);
+
+await time(deployTestBackends);
+
+async function deployTestBackends() {
+  await $`docker pull mccutchen/go-httpbin`;
+  await $`docker tag mccutchen/go-httpbin ${K3D_IMAGES_REGISTRY}/go-httpbin`;
+  await $`docker push ${K3D_IMAGES_REGISTRY}/go-httpbin`;
+  await $`kubectl apply -f backends`;
+}
+
 LOG.magenta(`
     APIM containers are starting ...
 
