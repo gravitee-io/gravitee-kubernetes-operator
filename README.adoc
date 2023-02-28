@@ -82,7 +82,7 @@ To be able to run the operator against a local instance of both an APIM Gateway 
 
 * Attach to a local cluster context.
 * Create a local service account to authenticate the gateway against the local cluster.
-* Create an API Context pointing to your local APIM Management API.
+* Create a Management Context pointing to your local APIM Management API.
 * Run what you need to debug in debug mode.
 
 [source,shell]
