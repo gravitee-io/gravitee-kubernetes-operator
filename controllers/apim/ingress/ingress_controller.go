@@ -19,12 +19,12 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"sigs.k8s.io/controller-runtime/pkg/source"
-
 	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -53,14 +53,14 @@ type Reconciler struct {
 // Reconcile perform reconciliation logic for Ingress resource that is managed
 // by the operator.
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	ingress := &netV1.Ingress{}
 	if err := r.Get(ctx, req.NamespacedName, ingress); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	d := internal.NewDelegate(ctx, r.Client, log)
+	d := internal.NewDelegate(ctx, r.Client, logger)
 
 	events := e.NewRecorder(r.Recorder)
 	var reconcileErr error
@@ -75,11 +75,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr != nil {
-		log.Error(reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)
+		logger.Error(reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)
 		return ctrl.Result{}, reconcileErr
 	}
 
-	log.Info("Sync ingress DONE")
+	logger.Info("Sync ingress DONE")
 	return ctrl.Result{}, nil
 }
 
@@ -90,6 +90,8 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			return t.GetAnnotations()[keys.IngressClassAnnotation] == keys.IngressClassAnnotationValue
 		case *v1alpha1.ApiDefinition:
 			return t.GetLabels()[keys.CrdApiDefinitionTemplate] == "true"
+		case *corev1.Secret:
+			return t.Type == "kubernetes.io/tls"
 		default:
 			return false
 		}
@@ -110,6 +112,12 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 				return false
 			}
 
+			// for some reasons "generation" is not set for the TLS secretes
+			if _, ok := e.ObjectNew.(*corev1.Secret); ok &&
+				e.ObjectOld.GetResourceVersion() != e.ObjectNew.GetResourceVersion() {
+				return true
+			}
+
 			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
@@ -124,6 +132,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&netV1.Ingress{}).
 		Owns(&v1alpha1.ApiDefinition{}).
 		Watches(&source.Kind{Type: &v1alpha1.ApiDefinition{}}, r.Watcher.WatchApiTemplate()).
+		Watches(&source.Kind{Type: &corev1.Secret{}}, r.Watcher.WatchTLSSecret()).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)
 }

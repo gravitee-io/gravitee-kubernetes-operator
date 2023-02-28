@@ -21,6 +21,7 @@ const (
 	IngressClassAnnotation      = "kubernetes.io/ingress.class"
 	IngressClassAnnotationValue = "graviteeio"
 	IngressTemplateAnnotation   = "gravitee.io/template"
+	GatewayKeystoreConfigSecret = "gravitee.io/gw-keystore-config" //nolint:gosec // GW keystore credentials
 )
 
 // Gravitee.io CRDs.
@@ -41,4 +42,5 @@ const (
 	ApiDefinitionTemplateFinalizer     = "finalizers.gravitee.io/apidefinitiontemplate"
 	ManagementContextDeletionFinalizer = "finalizers.gravitee.io/managementcontextdeletion"
 	IngressFinalizer                   = "finalizers.gravitee.io/ingress"
+	KeyPairFinalizer                   = "finalizers.gravitee.io/keypair"
 )

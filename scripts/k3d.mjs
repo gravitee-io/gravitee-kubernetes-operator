@@ -52,6 +52,9 @@ let K3D_IMAGES_REGISTRY = `${K3D_IMAGES_REGISTRY_NAME}:${K3D_IMAGES_REGISTRY_POR
 
 // APIM credentials
 const APIM_CONTEXT_SECRET_NAME = "apim-context-credentials";
+const GATEWAY_KEY_STORE_SECRET = "gw-keystore";
+const HTTPBIN_EXAMPLE_COM = "httpbin.example.com";
+const GATEWAY_KEY_STORE_CREDENTIALS_SECRET_NAME = "gw-keystore-credentials";
 
 LOG.green(`
 Starting k3d cluster with APIM dependencies...`);
@@ -230,6 +233,55 @@ async function createSecret() {
 }
 
 LOG.blue(`
+  ☸ Storing Gateway keystore as a secret ...
+`);
+
+await time(createGwKeystoreSecret);
+
+async function createGwKeystoreSecret() {
+  await $`kubectl create secret generic ${GATEWAY_KEY_STORE_SECRET} \
+    -n ${K3D_NAMESPACE_NAME} \
+    --from-file=keystore=${__dirname}/resources/keystore.jks
+  `;
+}
+
+LOG.blue(`
+  ☸ Storing Gateway keystore credentials as a secret ...
+`);
+
+await time(createGwKeystoreSecretCredentials);
+
+async function createGwKeystoreSecretCredentials() {
+  await $`kubectl create secret generic ${GATEWAY_KEY_STORE_CREDENTIALS_SECRET_NAME} \
+    -n ${K3D_NAMESPACE_NAME} \
+    --from-literal=name=${GATEWAY_KEY_STORE_SECRET} \
+    --from-literal=password=changeme
+  `;
+  await $`kubectl label secrets ${GATEWAY_KEY_STORE_CREDENTIALS_SECRET_NAME} gravitee.io/gw-keystore-config=true`;
+}
+
+LOG.blue(`
+  ☸ Storing httpbin.example.com keypair as a secret ...
+
+  The following declaration can be used in your ingress to reference this secret:
+
+  tls:
+    - hosts:
+        - httpbin.example.com
+      secretName: httpbin.example.com
+`);
+
+await time(createHttpBinSecret);
+
+async function createHttpBinSecret() {
+  await $`kubectl create secret tls ${HTTPBIN_EXAMPLE_COM} \
+    -n ${K3D_NAMESPACE_NAME} \
+    --key ${__dirname}/resources/httpbin.example.com.key \
+    --cert ${__dirname}/resources/httpbin.example.com.crt
+  `;
+}
+
+LOG.blue(`
 ⎈ Adding Helm repositories (if not presents) ...
 `);
 
@@ -269,6 +321,7 @@ helm install \
     --set "portal.enabled=false" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/apim-gateway" \
     --set "gateway.services.sync.kubernetes.enabled=true" \
+    --set "gateway.services.sync.kubernetes.namespaces=default" \
     --set "gateway.ingress.enabled=false" \
     --set "gateway.service.type=LoadBalancer" \
     --set "gateway.autoscaling.enabled=false" \

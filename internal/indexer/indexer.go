@@ -27,6 +27,7 @@ const (
 	ContextField     IndexField = "context"
 	ResourceField    IndexField = "resource"
 	ApiTemplateField IndexField = "api-template"
+	TLSSecretField   IndexField = "tls-secret"
 )
 
 func (f IndexField) String() string {
@@ -88,4 +89,18 @@ func IndexApiTemplate(ing *v1.Ingress, fields *[]string) {
 	}
 
 	*fields = append(*fields, ing.Namespace+"/"+ing.Annotations[keys.IngressTemplateAnnotation])
+}
+
+func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
+	if ing.Annotations[keys.IngressClassAnnotation] != keys.IngressClassAnnotationValue {
+		return
+	}
+
+	if ing.Spec.TLS == nil || len(ing.Spec.TLS) == 0 {
+		return
+	}
+
+	for i := range ing.Spec.TLS {
+		*fields = append(*fields, ing.Namespace+"/"+ing.Spec.TLS[i].SecretName)
+	}
 }

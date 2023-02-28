@@ -60,4 +60,5 @@ const (
 	ApiTemplateWithApiKeyPlanFile       = SamplesPath + "/ingress/api-template-with-api-key-plan.yml"
 	IngressWithTemplateFile             = SamplesPath + "/ingress/ingress-with-api-template.yml"
 	IngressWithMultipleHosts            = SamplesPath + "/ingress/ingress-with-multiple-hosts.yml"
+	IngressWithTLS                      = SamplesPath + "/ingress/ingress-with-tls.yml"
 )

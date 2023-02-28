@@ -16,11 +16,16 @@ package test
 
 import (
 	"errors"
+
+	"bytes"
 	"fmt"
 
 	apimErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/pavlo-v-chernykh/keystore-go/v4"
+	core "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -31,6 +36,8 @@ import (
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
+
+const TLSCN = "httpbin.example.com"
 
 var _ = Describe("Creating an ingress", func() {
 	Context("Without api definition template", func() {
@@ -200,6 +207,91 @@ var _ = Describe("Creating an ingress", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
+		It("Should create the ingress, default ApiDefinition and update GW keystore", func() {
+			By("Initializing the Ingress fixture")
+			fixtureGenerator := internal.NewFixtureGenerator()
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Ingress: internal.IngressWithTLS,
+			})
+			Expect(err).ToNot(HaveOccurred())
+			ingressFixture = fixtures.Ingress
+			ingressLookupKey = types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
+
+			By("Creating an Ingress and the default ApiDefinition")
+			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
+
+			By("Getting created resource and expect to find it")
+			createdIngress := &netV1.Ingress{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			createdApiDefinition := &gio.ApiDefinition{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			expectedApiName := ingressFixture.Name
+			Expect(createdApiDefinition.Name).Should(Equal(expectedApiName))
+
+			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get-tls" + fixtureGenerator.Suffix))
+			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
+				[]*model.HttpEndpoint{
+					{
+						Name:   "rule01-path01",
+						Target: "http://httpbin.default.svc.cluster.local:8000",
+					},
+				},
+			))
+
+			By("Checking events")
+			Expect(
+				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+			).Should(
+				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
+			)
+
+			ksCredentials := &core.Secret{}
+			Eventually(func() error {
+				ksObjectKey := types.NamespacedName{
+					Namespace: namespace,
+					Name:      "gw-keystore-credentials",
+				}
+				return k8sClient.Get(ctx, ksObjectKey, ksCredentials)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			ksSecret := &core.Secret{}
+			Eventually(func() error {
+				ksObjectKey := types.NamespacedName{
+					Namespace: namespace,
+					Name:      string(ksCredentials.Data["name"]),
+				}
+				return k8sClient.Get(ctx, ksObjectKey, ksSecret)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Eventually(func() error {
+				data := ksSecret.Data["keystore"]
+				if data == nil {
+					return fmt.Errorf("gateway keystore not found")
+				}
+
+				ks := keystore.New()
+				err = ks.Load(bytes.NewReader(data), []byte("changeme"))
+				if err != nil {
+					return fmt.Errorf("can't load the gateway keystore")
+				}
+
+				for _, a := range ks.Aliases() {
+					if a == TLSCN {
+						return nil
+					}
+				}
+
+				return fmt.Errorf("no keyair found for %s in the keystore", TLSCN)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Expect(k8sClient.Delete(ctx, ingressFixture)).Should(Succeed())
+		})
 	})
 
 	Context("With API definition template", func() {

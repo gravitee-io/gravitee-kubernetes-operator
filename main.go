@@ -19,11 +19,15 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
+
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -97,15 +101,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = indexApiDefinitionFields(mgr)
+	err = addIndexer(mgr)
 	if err != nil {
-		setupLog.Error(err, "unable to start manager (Indexing fields in API definition)")
-		os.Exit(1)
-	}
-
-	err = indexIngressFields(mgr)
-	if err != nil {
-		setupLog.Error(err, "unable to start manager (Indexing fields in ingress resources)")
+		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
@@ -161,6 +159,25 @@ func main() {
 	}
 }
 
+func addIndexer(mgr manager.Manager) error {
+	err := indexApiDefinitionFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in API definition)")
+	}
+
+	err = indexIngressFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
+	}
+
+	err = indexTLSSecretFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
+	}
+
+	return nil
+}
+
 func indexApiDefinitionFields(manager ctrl.Manager) error {
 	cache := manager.GetCache()
 	ctx := context.Background()
@@ -186,6 +203,19 @@ func indexIngressFields(manager ctrl.Manager) error {
 
 	apiTemplateIndexer := indexer.NewIndexer(indexer.ApiTemplateField, indexer.IndexApiTemplate)
 	err := cache.IndexField(ctx, &v1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func indexTLSSecretFields(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	tlsSecretIndexer := indexer.NewIndexer(indexer.TLSSecretField, indexer.IndexTLSSecret)
+	err := cache.IndexField(ctx, &v1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func)
 	if err != nil {
 		return err
 	}
