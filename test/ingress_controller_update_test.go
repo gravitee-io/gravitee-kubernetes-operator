@@ -15,6 +15,7 @@
 package test
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
@@ -23,6 +24,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/pavlo-v-chernykh/keystore-go/v4"
+	core "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -240,6 +243,175 @@ var _ = Describe("Updating an ingress", func() {
 				).Should(
 					ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 				)
+			})
+		})
+	})
+
+	Describe("Should update an Ingress, the default ApiDefinition and the GW keystore", func() {
+		var ingressFixture *netV1.Ingress
+		var ingressLookupKey types.NamespacedName
+
+		BeforeEach(func() {
+			By("Initializing the Ingress fixture")
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Ingress: internal.IngressWithoutTemplateFile,
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			ingressFixture = fixtures.Ingress
+			ingressLookupKey = types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
+
+			By("Creating an Ingress and the default ApiDefinition")
+			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
+		})
+
+		AfterEach(func() {
+			// To remove any reference to the tls certificate
+			Expect(k8sClient.Delete(ctx, ingressFixture))
+		})
+
+		When("there is no tls", func() {
+			It("the gw keystore must not include any keypair", func() {
+				By("Getting created resource and expect to find it")
+				createdIngress := &netV1.Ingress{}
+				Eventually(func() error {
+					return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				createdApiDefinition := &gio.ApiDefinition{}
+				Eventually(func() error {
+					return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				expectedApiName := ingressFixture.Name
+				Expect(createdApiDefinition.Name).Should(Equal(expectedApiName))
+
+				ksCredentials := &core.Secret{}
+				Eventually(func() error {
+					ksObjectKey := types.NamespacedName{
+						Namespace: namespace,
+						Name:      "gw-keystore-credentials",
+					}
+					return k8sClient.Get(ctx, ksObjectKey, ksCredentials)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				ksSecret := &core.Secret{}
+				Eventually(func() error {
+					ksObjectKey := types.NamespacedName{
+						Namespace: namespace,
+						Name:      string(ksCredentials.Data["name"]),
+					}
+					return k8sClient.Get(ctx, ksObjectKey, ksSecret)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				Eventually(func() error {
+					data := ksSecret.Data["keystore"]
+					if data == nil {
+						return fmt.Errorf("gateway keystore not found")
+					}
+
+					ks := keystore.New()
+					err := ks.Load(bytes.NewReader(data), []byte("changeme"))
+					if err != nil {
+						return fmt.Errorf("can't load the gateway keystore")
+					}
+
+					for _, a := range ks.Aliases() {
+						if a == TLSCN {
+							return fmt.Errorf("tls keypair shouldn't be in the gwateway keystore")
+						}
+					}
+
+					return nil
+				}, timeout, interval).ShouldNot(HaveOccurred())
+			})
+		})
+
+		When("the ingress has tls", func() {
+			It("the gw keystore must include a keypair", func() {
+				By("Getting created resource and expect to find it")
+				createdIngress := &netV1.Ingress{}
+				Eventually(func() error {
+					return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				By("Updating the Ingress")
+				updatedIngress := createdIngress.DeepCopy()
+				updatedIngress.Spec.TLS = []netV1.IngressTLS{
+					{
+						Hosts:      []string{TLSCN},
+						SecretName: TLSCN,
+					},
+				}
+
+				Eventually(func() error {
+					update := new(netV1.Ingress)
+					if err := k8sClient.Get(ctx, ingressLookupKey, update); err != nil {
+						return err
+					}
+					updatedIngress.Spec.DeepCopyInto(&update.Spec)
+					return k8sClient.Update(ctx, update)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				Eventually(func() error {
+					secret := &core.Secret{}
+					if err := k8sClient.Get(ctx, types.NamespacedName{
+						Namespace: namespace,
+						Name:      TLSCN,
+					}, secret); err != nil {
+						return err
+					}
+
+					for _, f := range secret.Finalizers {
+						if f == keys.KeyPairFinalizer {
+							return nil
+						}
+					}
+
+					return fmt.Errorf("%s finalizer is not added to the tls secret", keys.KeyPairFinalizer)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				ksCredentials := &core.Secret{}
+				Eventually(func() error {
+					ksObjectKey := types.NamespacedName{
+						Namespace: namespace,
+						Name:      "gw-keystore-credentials",
+					}
+					return k8sClient.Get(ctx, ksObjectKey, ksCredentials)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				ksSecret := &core.Secret{}
+				Eventually(func() error {
+					ksObjectKey := types.NamespacedName{
+						Namespace: namespace,
+						Name:      string(ksCredentials.Data["name"]),
+					}
+					return k8sClient.Get(ctx, ksObjectKey, ksSecret)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				Eventually(func() error {
+					data := ksSecret.Data["keystore"]
+					if data == nil {
+						return fmt.Errorf("gateway keystore not found")
+					}
+
+					ks := keystore.New()
+					err := ks.Load(bytes.NewReader(data), []byte("changeme"))
+					if err != nil {
+						return fmt.Errorf("can't load the gateway keystore")
+					}
+
+					for _, a := range ks.Aliases() {
+						if a == TLSCN {
+							return nil
+						}
+					}
+
+					return fmt.Errorf("can't find tls keypair in the gwateway keystore")
+				}, timeout, interval).ShouldNot(HaveOccurred())
 			})
 		})
 	})

@@ -37,6 +37,7 @@ type Interface interface {
 	WatchContexts() *handler.Funcs
 	WatchResources() *handler.Funcs
 	WatchApiTemplate() *handler.Funcs
+	WatchTLSSecret() *handler.Funcs
 }
 
 type UpdateFunc = func(event.UpdateEvent, workqueue.RateLimitingInterface)
@@ -82,6 +83,15 @@ func (w *Type) WatchApiTemplate() *handler.Funcs {
 	return &handler.Funcs{
 		UpdateFunc: w.UpdateFromLookup(indexer.ApiTemplateField),
 		CreateFunc: w.CreateFromLookup(indexer.ApiTemplateField),
+	}
+}
+
+// WatchTLSSecret can be used to trigger a reconciliation when an TLS secret is updated
+// on resources that are depending on it. Right now this is only used for Ingress resources.
+func (w *Type) WatchTLSSecret() *handler.Funcs {
+	return &handler.Funcs{
+		UpdateFunc: w.UpdateFromLookup(indexer.TLSSecretField),
+		CreateFunc: w.CreateFromLookup(indexer.TLSSecretField),
 	}
 }
 
@@ -135,7 +145,7 @@ func (w *Type) queueByFieldReferencing(
 		if item, ok := items[i].(client.Object); !ok {
 			log.FromContext(w.ctx).Error(
 				fmt.Errorf("cating error"),
-				"unable to convert the item to cleint.Object type", "type", reflect.TypeOf(items[i]))
+				"unable to convert the item to client.Object type", "type", reflect.TypeOf(items[i]))
 		} else {
 			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 				Name:      item.GetName(),

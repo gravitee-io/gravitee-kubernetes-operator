@@ -141,6 +141,11 @@ var _ = SynchronizedBeforeSuite(func() {
 	err = cache.IndexField(ctx, &netv1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
+	tlsSecretIndexer := indexer.NewIndexer(indexer.TLSSecretField, indexer.IndexTLSSecret)
+	err = cache.IndexField(ctx, &netv1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
+	// Set initial values for env variables
 	env.Config.CMTemplate404NS = namespace
 	env.Config.CMTemplate404Name = "template-404"
 
