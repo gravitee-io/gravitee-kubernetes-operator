@@ -62,7 +62,7 @@ var _ = Describe("Creating an ingress", func() {
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
-						Name:   "httpbin.example.com/get",
+						Name:   "rule01-path01",
 						Target: "http://httpbin.default.svc.cluster.local:8000",
 					},
 				},
@@ -122,15 +122,15 @@ var _ = Describe("Creating an ingress", func() {
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
-						Name:   "foo.example.com/ingress/foo",
+						Name:   "rule01-path01",
 						Target: "http://svc-1.default.svc.cluster.local:8080",
 					},
 					{
-						Name:   "bar.example.com/ingress/bar",
+						Name:   "rule02-path01",
 						Target: "http://svc-2.default.svc.cluster.local:8080",
 					},
 					{
-						Name:   "ingress/baz",
+						Name:   "rule03-path01",
 						Target: "http://svc-3.default.svc.cluster.local:8080",
 					},
 				},
@@ -160,13 +160,24 @@ var _ = Describe("Creating an ingress", func() {
 
 			Expect(internal.AssertHostPrefix(host, "svc-2")).ToNot(HaveOccurred())
 
-			By("Checking that rule with no host is working")
+			By("Checking that rule with no host is working with no host")
 
 			host = new(internal.Host)
 
 			Eventually(func() error {
 				url := internal.GatewayUrl + "/ingress/baz/hostname"
 				return cli.Get(url, host)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Expect(internal.AssertHostPrefix(host, "svc-3")).ToNot(HaveOccurred())
+
+			By("Checking that rule with no host is working with unknown host")
+
+			host = new(internal.Host)
+
+			Eventually(func() error {
+				url := internal.GatewayUrl + "/ingress/baz/hostname"
+				return cli.Get(url, host, xhttp.WithHost("unknown.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Expect(internal.AssertHostPrefix(host, "svc-3")).ToNot(HaveOccurred())

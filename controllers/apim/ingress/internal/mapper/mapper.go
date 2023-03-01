@@ -16,8 +16,6 @@ package mapper
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -37,7 +35,8 @@ const (
 	routingRulesKey        = "rules"
 	routingPatternKey      = "pattern"
 	routingUrlKey          = "url"
-	endpointMatcherPattern = "{#endpoints['%s']}{#group[0]}"
+	endpointNamePattern    = "rule%02d-path%02d"
+	endpointMatcherPattern = "%s:{#group[0]}"
 	hostConditionPattern   = "{#request.headers['Host'][0] == '%s'}"
 	noHostConditionPattern = "#request.headers['Host'][0] != '%s' && "
 	rootPath               = "/"
@@ -53,11 +52,34 @@ func New() *Mapper {
 	}
 }
 
+// This wrapper is used to compute the endpoint name
+// used for target selection in the routing policy.
+type indexedPath struct {
+	*v1.HTTPIngressPath
+	ruleIndex int
+	index     int
+}
+
+func (p indexedPath) String() string {
+	ruleIndex := p.ruleIndex + 1
+	pathIndex := p.index + 1
+	return fmt.Sprintf(endpointNamePattern, ruleIndex, pathIndex)
+}
+
+func newIndexedPath(path *v1.HTTPIngressPath, ruleIndex, index int) *indexedPath {
+	return &indexedPath{
+		HTTPIngressPath: path,
+		ruleIndex:       ruleIndex,
+		index:           index,
+	}
+}
+
 // Map maps an ingress to a graviteeio API definition, adding one virtual host per ingress rule,
 // one endpoint per backend service, and one conditional flow per host and path of the rule.
 // The host header is used to select the flow, and a dynamic routing policy routes the request
 // to the backend service, identified by the host and path of the rule.
 func (m *Mapper) Map(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio.ApiDefinition {
+	m.hosts = getHosts(ingress)
 	cp := buildApiCopy(apiDefinition, ingress)
 	cp.Spec.Proxy = buildProxy(ingress)
 	cp.Spec.Flows = m.buildFlows(ingress.Spec.Rules)
@@ -78,18 +100,18 @@ func buildApiCopy(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio.Ap
 }
 
 func (m *Mapper) buildFlows(rules []v1.IngressRule) []model.Flow {
-	cp := sortHostsFirst(rules)
 	flows := make([]model.Flow, 0)
-	for _, rule := range cp {
-		flows = append(flows, m.buildPathFlows(rule)...)
+	for ruleIndex, rule := range rules {
+		flows = append(flows, m.buildPathFlows(rule, ruleIndex)...)
 	}
 	return flows
 }
 
-func (m *Mapper) buildPathFlows(rule v1.IngressRule) []model.Flow {
+func (m *Mapper) buildPathFlows(rule v1.IngressRule, ruleIndex int) []model.Flow {
 	flows := make([]model.Flow, 0)
-	for _, path := range rule.HTTP.Paths {
-		flows = append(flows, m.buildConditionalFlow(rule, path))
+	for i := range rule.HTTP.Paths {
+		path := rule.HTTP.Paths[i]
+		flows = append(flows, m.buildConditionalFlow(rule, newIndexedPath(&path, ruleIndex, i)))
 	}
 	return flows
 }
@@ -99,11 +121,11 @@ func (m *Mapper) buildPathFlows(rule v1.IngressRule) []model.Flow {
 // based on the host of the rule. If no host is defined for the rule, then
 // the condition will check that none of the host we have processed matches the Host header
 // of the incoming request.
-func (m *Mapper) buildConditionalFlow(rule v1.IngressRule, path v1.HTTPIngressPath) model.Flow {
+func (m *Mapper) buildConditionalFlow(rule v1.IngressRule, path *indexedPath) model.Flow {
 	flow := model.Flow{}
-	flow.Name = buildEndpointName(rule.Host, path.Path)
+	flow.Name = rule.Host + path.Path
 	flow.PathOperator = buildPathOperator(path)
-	flow.Pre = buildRouting(rule, path)
+	flow.Pre = buildRouting(path)
 
 	if rule.Host == "" {
 		flow.Condition = m.buildNoHostCondition()
@@ -127,7 +149,7 @@ func buildHostCondition(rule v1.IngressRule) string {
 	return fmt.Sprintf(hostConditionPattern, rule.Host)
 }
 
-func buildRoutingStep(rule v1.IngressRule, path v1.HTTPIngressPath) model.FlowStep {
+func buildRoutingStep(path *indexedPath) model.FlowStep {
 	return model.FlowStep{
 		Name:    routingStepName,
 		Policy:  routingPolicyName,
@@ -135,24 +157,24 @@ func buildRoutingStep(rule v1.IngressRule, path v1.HTTPIngressPath) model.FlowSt
 		Configuration: &model.GenericStringMap{
 			Unstructured: unstructured.Unstructured{
 				Object: map[string]interface{}{
-					routingRulesKey: buildRoutingRules(rule, path),
+					routingRulesKey: buildRoutingRules(path),
 				},
 			},
 		},
 	}
 }
 
-func buildRoutingRules(rule v1.IngressRule, path v1.HTTPIngressPath) []interface{} {
+func buildRoutingRules(path *indexedPath) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			routingPatternKey: routingPattern,
-			routingUrlKey:     buildRoutingTarget(rule.Host, path.Path),
+			routingUrlKey:     buildRoutingTarget(path),
 		},
 	}
 }
 
-func buildRoutingTarget(host, path string) string {
-	return fmt.Sprintf(endpointMatcherPattern, buildEndpointName(host, path))
+func buildRoutingTarget(path *indexedPath) string {
+	return fmt.Sprintf(endpointMatcherPattern, path.String())
 }
 
 func buildProxy(ingress *v1.Ingress) *model.Proxy {
@@ -169,9 +191,10 @@ func buildProxy(ingress *v1.Ingress) *model.Proxy {
 
 func buildEndpoints(ingress *v1.Ingress) []*model.HttpEndpoint {
 	eps := make([]*model.HttpEndpoint, 0)
-	for _, rule := range ingress.Spec.Rules {
-		for _, path := range rule.HTTP.Paths {
-			eps = append(eps, buildEndpoint(ingress, rule, path))
+	for ruleIndex, rule := range ingress.Spec.Rules {
+		for pathIndex := range rule.HTTP.Paths {
+			path := &rule.HTTP.Paths[pathIndex]
+			eps = append(eps, buildEndpoint(ingress, newIndexedPath(path, ruleIndex, pathIndex)))
 		}
 	}
 	return eps
@@ -179,21 +202,16 @@ func buildEndpoints(ingress *v1.Ingress) []*model.HttpEndpoint {
 
 // For each rule and path of an ingress, build an endpoint identified by the host and path,
 // in order to be able to match it in the routing step when handling an incoming request for routing.
-func buildEndpoint(ingress *v1.Ingress, rule v1.IngressRule, path v1.HTTPIngressPath) *model.HttpEndpoint {
+func buildEndpoint(ingress *v1.Ingress, path *indexedPath) *model.HttpEndpoint {
 	return &model.HttpEndpoint{
-		Name:   buildEndpointName(rule.Host, path.Path),
+		Name:   path.String(),
 		Target: buildEndpointTarget(ingress, path),
 	}
 }
 
-func buildEndpointTarget(ingress *v1.Ingress, path v1.HTTPIngressPath) string {
+func buildEndpointTarget(ingress *v1.Ingress, path *indexedPath) string {
 	svc := path.Backend.Service
 	return fmt.Sprintf(serviceURIPattern, svc.Name, ingress.Namespace, svc.Port.Number)
-}
-
-func buildEndpointName(host, path string) string {
-	rawName := host + path
-	return strings.TrimPrefix(rawName, "/")
 }
 
 // For each ingress host and path, build a virtual host.
@@ -213,11 +231,11 @@ func buildVirtualHost(rule v1.IngressRule, path v1.HTTPIngressPath) *model.Virtu
 
 // Builds a flow step with a single routing policy that will forward the request to
 // its matching endpoint using the request ingress host and path as a endpoint name.
-func buildRouting(rule v1.IngressRule, path v1.HTTPIngressPath) []model.FlowStep {
-	return append([]model.FlowStep{}, buildRoutingStep(rule, path))
+func buildRouting(path *indexedPath) []model.FlowStep {
+	return append([]model.FlowStep{}, buildRoutingStep(path))
 }
 
-func buildPathOperator(path v1.HTTPIngressPath) *model.PathOperator {
+func buildPathOperator(path *indexedPath) *model.PathOperator {
 	if *path.PathType == v1.PathTypeExact {
 		return &model.PathOperator{
 			Operator: model.EqualsOperator,
@@ -230,15 +248,16 @@ func buildPathOperator(path v1.HTTPIngressPath) *model.PathOperator {
 	}
 }
 
-// Sort the rules so that the ones with a host appear first,
+// Get all the host names defined in the ingress rules,
 // in order to compute the condition for rules with no host,
 // checking that none of the hosts we have processed matches the
 // host header of the incoming request.
-func sortHostsFirst(rules []v1.IngressRule) []v1.IngressRule {
-	cp := make([]v1.IngressRule, len(rules))
-	copy(cp, rules)
-	sort.Slice(cp, func(i, j int) bool {
-		return cp[i].Host != ""
-	})
-	return cp
+func getHosts(ingress *v1.Ingress) []string {
+	hosts := make([]string, 0)
+	for _, rule := range ingress.Spec.Rules {
+		if rule.Host != "" {
+			hosts = append(hosts, rule.Host)
+		}
+	}
+	return hosts
 }
