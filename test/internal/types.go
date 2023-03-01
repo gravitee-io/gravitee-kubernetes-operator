@@ -20,10 +20,6 @@ type Host struct {
 	Name string `json:"hostname"`
 }
 
-func (h Host) String() string {
-	return h.Name
-}
-
 func (h Host) StartsWith(prefix string) bool {
 	return strings.HasPrefix(h.Name, prefix)
 }
