@@ -15,6 +15,7 @@
 package test
 
 import (
+	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
@@ -100,6 +101,7 @@ var _ = Describe("Creating an ingress", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(3))
+
 			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(
 				Equal([]*model.VirtualHost{
 					{
@@ -116,6 +118,7 @@ var _ = Describe("Creating an ingress", func() {
 					},
 				}),
 			)
+
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
@@ -132,6 +135,41 @@ var _ = Describe("Creating an ingress", func() {
 					},
 				},
 			))
+
+			cli := xhttp.NewClient(ctx, nil)
+
+			By("Checking that rule with host foo.example.com is working")
+
+			host := new(internal.Host)
+
+			Eventually(func() error {
+				url := internal.GatewayUrl + "/ingress/foo/hostname"
+				return cli.Get(url, host, xhttp.WithHost("foo.example.com"))
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Expect(internal.AssertHostPrefix(host, "svc-1")).ToNot(HaveOccurred())
+
+			By("Checking that rule with host bar.example.com is working")
+
+			host = new(internal.Host)
+
+			Eventually(func() error {
+				url := internal.GatewayUrl + "/ingress/bar/hostname"
+				return cli.Get(url, host, xhttp.WithHost("bar.example.com"))
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Expect(internal.AssertHostPrefix(host, "svc-2")).ToNot(HaveOccurred())
+
+			By("Checking that rule with no host is working")
+
+			host = new(internal.Host)
+
+			Eventually(func() error {
+				url := internal.GatewayUrl + "/ingress/baz/hostname"
+				return cli.Get(url, host)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Expect(internal.AssertHostPrefix(host, "svc-3")).ToNot(HaveOccurred())
 		})
 	})
 })
