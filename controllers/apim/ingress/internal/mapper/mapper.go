@@ -16,6 +16,7 @@ package mapper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -37,8 +38,9 @@ const (
 	routingUrlKey          = "url"
 	endpointNamePattern    = "rule%02d-path%02d"
 	endpointMatcherPattern = "%s:{#group[0]}"
-	hostConditionPattern   = "{#request.headers['Host'][0] == '%s'}"
+	hostConditionPattern   = "#request.headers['Host'][0] == '%s' &&"
 	noHostConditionPattern = "#request.headers['Host'][0] != '%s' && "
+	pathConditionPattern   = "#request.contextPath.startsWith('%s')"
 	rootPath               = "/"
 )
 
@@ -128,25 +130,30 @@ func (m *Mapper) buildConditionalFlow(rule v1.IngressRule, path *indexedPath) mo
 	flow.Pre = buildRouting(path)
 
 	if rule.Host == "" {
-		flow.Condition = m.buildNoHostCondition()
+		flow.Condition = m.buildNoHostCondition(path)
 		return flow
 	}
 
-	flow.Condition = buildHostCondition(rule)
+	flow.Condition = buildHostCondition(rule, path)
 	m.hosts = append(m.hosts, rule.Host)
 	return flow
 }
 
-func (m *Mapper) buildNoHostCondition() string {
-	condition := "{"
+func (m *Mapper) buildNoHostCondition(path *indexedPath) string {
+	contextPath := strings.TrimSuffix(path.Path, rootPath) + rootPath
+	pathCondition := fmt.Sprintf(pathConditionPattern, strings.TrimSuffix(path.Path, contextPath))
+	condition := ""
 	for _, host := range m.hosts {
 		condition += fmt.Sprintf(noHostConditionPattern, host)
 	}
-	return condition[:len(condition)-4] + "}"
+	return "{" + condition + pathCondition + "}"
 }
 
-func buildHostCondition(rule v1.IngressRule) string {
-	return fmt.Sprintf(hostConditionPattern, rule.Host)
+func buildHostCondition(rule v1.IngressRule, path *indexedPath) string {
+	hostCondition := fmt.Sprintf(hostConditionPattern, rule.Host)
+	contextPath := strings.TrimSuffix(path.Path, rootPath) + rootPath
+	pathCondition := fmt.Sprintf(pathConditionPattern, contextPath)
+	return "{" + hostCondition + pathCondition + "}"
 }
 
 func buildRoutingStep(path *indexedPath) model.FlowStep {
