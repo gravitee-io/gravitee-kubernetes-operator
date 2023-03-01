@@ -37,12 +37,26 @@ func (client *Client) Context() context.Context {
 	return client.ctx
 }
 
+// RequestTransformer is a function that can be used to mutate a request
+// before it is sent (e.g. setting headers).
+type RequestTransformer = func(*http.Request)
+
+func WithHost(host string) RequestTransformer {
+	return func(req *http.Request) {
+		req.Host = host
+	}
+}
+
 // Get returns the result of a GET request to the specified URL, marshaled into the target.
 // If the target is nil, the response is discarded.
-func (client *Client) Get(url string, target any) error {
+func (client *Client) Get(url string, target any, transformers ...RequestTransformer) error {
 	req, err := client.prepareGet(url)
 	if err != nil {
 		return errors.FromNewRequestError(http.MethodGet, url, err)
+	}
+
+	for _, transform := range transformers {
+		transform(req)
 	}
 
 	return client.do(req, target)
@@ -51,10 +65,14 @@ func (client *Client) Get(url string, target any) error {
 // Post returns the result of a POST request to the specified URL,
 // using entity as the body of the request, marshaling the result into target.
 // If the target is nil, the response is discarded.
-func (client *Client) Post(url string, entity, target any) error {
+func (client *Client) Post(url string, entity, target any, transformers ...RequestTransformer) error {
 	req, err := client.preparePost(url, entity)
 	if err != nil {
 		return errors.FromNewRequestError(http.MethodPost, url, err)
+	}
+
+	for _, transform := range transformers {
+		transform(req)
 	}
 
 	return client.do(req, target)
@@ -63,10 +81,14 @@ func (client *Client) Post(url string, entity, target any) error {
 // Post returns the result of a PUT request to the specified URL,
 // using entity as the body of the request, marshaling the result into target.
 // If the target is nil, the response is discarded.
-func (client *Client) Put(url string, entity, target any) error {
+func (client *Client) Put(url string, entity, target any, transformers ...RequestTransformer) error {
 	req, err := client.preparePut(url, entity)
 	if err != nil {
 		return errors.FromNewRequestError(http.MethodPut, url, err)
+	}
+
+	for _, transform := range transformers {
+		transform(req)
 	}
 
 	return client.do(req, target)
@@ -74,10 +96,14 @@ func (client *Client) Put(url string, entity, target any) error {
 
 // Delete returns the result of a DELETE request to the specified URL, marshaling the result into target.
 // If the target is nil, the response is discarded.
-func (client *Client) Delete(url string, target any) error {
+func (client *Client) Delete(url string, target any, transformers ...RequestTransformer) error {
 	req, err := client.prepareDelete(url)
 	if err != nil {
 		return errors.FromNewRequestError(http.MethodDelete, url, err)
+	}
+
+	for _, transform := range transformers {
+		transform(req)
 	}
 
 	return client.do(req, target)
@@ -135,7 +161,9 @@ func (client *Client) newJSONRequest(method, url string, entity any) (*http.Requ
 
 func NewClient(ctx context.Context, auth *Auth) *Client {
 	httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second}
-	authRoundTripper := NewAuthenticatedRoundTripper(auth, http.DefaultTransport)
-	httpClient.Transport = authRoundTripper
+	if auth != nil {
+		authRoundTripper := NewAuthenticatedRoundTripper(auth, http.DefaultTransport)
+		httpClient.Transport = authRoundTripper
+	}
 	return &Client{ctx, httpClient}
 }

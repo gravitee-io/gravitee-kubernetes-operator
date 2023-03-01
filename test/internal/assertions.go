@@ -96,3 +96,10 @@ func AssertEquals(property string, expected, actual interface{}) error {
 	}
 	return nil
 }
+
+func AssertHostPrefix(hostname *Host, prefix string) error {
+	if !hostname.StartsWith(prefix) {
+		return fmt.Errorf("hostname %s does not start with %s", hostname, prefix)
+	}
+	return nil
+}

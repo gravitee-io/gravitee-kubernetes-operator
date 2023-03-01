@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
 const (
@@ -43,6 +44,8 @@ var deleteParams = map[string]string{
 type APIs struct {
 	*client.Client
 }
+
+type httpImportMethod = func(string, any, any, ...xhttp.RequestTransformer) error
 
 func NewAPIs(client *client.Client) *APIs {
 	return &APIs{Client: client}
@@ -86,7 +89,7 @@ func (svc *APIs) Import(method string, spec *kModel.Api) (*model.ApiEntity, erro
 	return api, nil
 }
 
-func (svc *APIs) getImportFunc(method string) func(string, any, any) error {
+func (svc *APIs) getImportFunc(method string) httpImportMethod {
 	if method == http.MethodPost {
 		return svc.HTTP.Post
 	}
