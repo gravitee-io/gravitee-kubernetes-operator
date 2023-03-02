@@ -19,10 +19,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+
 	netv1 "k8s.io/api/networking/v1"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -121,6 +122,7 @@ var _ = SynchronizedBeforeSuite(func() {
 		Client:   k8sManager.GetClient(),
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: k8sManager.GetEventRecorderFor("ingress-controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &netv1.IngressList{}),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
@@ -133,6 +135,10 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
+	apiTemplateIndexer := indexer.NewIndexer(indexer.ApiTemplateField, indexer.IndexApiTemplate)
+	err = cache.IndexField(ctx, &netv1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
 	env.Config.CMTemplate404NS = namespace
@@ -164,8 +170,14 @@ var _ = SynchronizedAfterSuite(func() {
 		client.InNamespace(namespace),
 		client.MatchingLabels{keys.IngressLabel: keys.IngressLabelValue}),
 	).To(Succeed())
-	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
-	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.ApiDefinition{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.ManagementContext{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.Delete(ctx, template404())).Should(Succeed())
 	gexec.KillAndWait(5 * time.Second)

@@ -18,11 +18,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+
 	netV1 "k8s.io/api/networking/v1"
 
 	"k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
@@ -100,7 +103,8 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	if files.Ingress != "" {
-		ingress, err := f.NewIngress(files.Ingress)
+		ingress, err := f.NewIngress(files.Ingress, ingressHttpPathTransformer(f))
+
 		if err != nil {
 			return nil, err
 		}
@@ -114,6 +118,16 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	return fixtures, nil
 }
 
+func ingressHttpPathTransformer(f *FixtureGenerator) func(ingress *netV1.Ingress) {
+	return func(ingress *netV1.Ingress) {
+		for i := range ingress.Spec.Rules {
+			for j := range ingress.Spec.Rules[i].HTTP.Paths {
+				ingress.Spec.Rules[i].HTTP.Paths[j].Path += f.Suffix
+			}
+		}
+	}
+}
+
 func (f *FixtureGenerator) NewApiDefinition(
 	path string, transforms ...func(*gio.ApiDefinition),
 ) (*gio.ApiDefinition, error) {
@@ -124,11 +138,13 @@ func (f *FixtureGenerator) NewApiDefinition(
 
 	api.Name += f.Suffix
 	api.Spec.Name += f.Suffix
-	api.Spec.Proxy.VirtualHosts[0].Path += f.Suffix
+
+	if !isTemplate(api) {
+		api.Spec.Proxy.VirtualHosts[0].Path += f.Suffix
+	}
 
 	return api, nil
 }
-
 func (f *FixtureGenerator) NewManagementContext(
 	path string, transforms ...func(*gio.ManagementContext),
 ) (*gio.ManagementContext, error) {
@@ -260,4 +276,8 @@ func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress
 
 func randomSuffix() string {
 	return "-" + uuid.NewV4().String()[:7]
+}
+
+func isTemplate(api *gio.ApiDefinition) bool {
+	return api.Labels[keys.CrdApiDefinitionTemplate] == "true"
 }

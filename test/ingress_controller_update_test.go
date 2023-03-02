@@ -15,7 +15,11 @@
 package test
 
 import (
+	"fmt"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -53,9 +57,9 @@ var _ = Describe("Updating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdApiDefinition := new(gio.ApiDefinition)
+			createdAPIDefinition := new(gio.ApiDefinition)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Updating the Ingress")
@@ -94,6 +98,149 @@ var _ = Describe("Updating an ingress", func() {
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
+		})
+	})
+
+	Context("With API definition template", func() {
+		var apiDefinitionTemplate *gio.ApiDefinition
+		var ingressFixture *netV1.Ingress
+		var ingressLookupKey types.NamespacedName
+		var apiTemplateLookupKey types.NamespacedName
+
+		BeforeEach(func() {
+			By("Initializing the Ingress fixture")
+			fixtureGenerator := internal.NewFixtureGenerator()
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.ApiTemplateWithApiKeyPlanFile,
+				Ingress: internal.IngressWithTemplateFile,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Create an API definition template")
+
+			apiDefinitionTemplate = fixtures.Api
+			Expect(k8sClient.Create(ctx, apiDefinitionTemplate)).Should(Succeed())
+
+			apiTemplateLookupKey = types.NamespacedName{Namespace: namespace, Name: apiDefinitionTemplate.Name}
+
+			ingressFixture = fixtures.Ingress
+			ingressFixture.Annotations[keys.IngressTemplateAnnotation] = apiDefinitionTemplate.Name
+			ingressLookupKey = types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
+
+			By("Creating an Ingress and the default ApiDefinition")
+			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
+		})
+
+		When("Updating API definition template", func() {
+			It("it should update the ingress and final api definition", func() {
+				By("Getting created resource and expect to find it")
+
+				createdAPIDefinition := &gio.ApiDefinition{}
+				Eventually(func() error {
+					return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				Expect(len(createdAPIDefinition.Spec.Plans)).Should(Equal(1))
+				Expect(createdAPIDefinition.Spec.Plans[0].Security).Should(Equal("API_KEY"))
+
+				currentAPITemplate := new(gio.ApiDefinition)
+				Eventually(func() error {
+					return k8sClient.Get(ctx, apiTemplateLookupKey, currentAPITemplate)
+				}).Should(Succeed())
+
+				By("update api template")
+
+				updatedAPITemplate := currentAPITemplate.DeepCopy()
+				updatedAPITemplate.Spec.Plans = append(updatedAPITemplate.Spec.Plans, &model.Plan{
+					Name:     "Default keyless plan",
+					Security: "KEY_LESS",
+					Status:   "PUBLISHED",
+				})
+
+				Eventually(func() error {
+					update := new(gio.ApiDefinition)
+					if err := k8sClient.Get(ctx, apiTemplateLookupKey, update); err != nil {
+						return err
+					}
+					updatedAPITemplate.Spec.DeepCopyInto(&update.Spec)
+					return k8sClient.Update(ctx, update)
+				}).ShouldNot(HaveOccurred())
+
+				updateAPIDefinition := &gio.ApiDefinition{}
+				Consistently(func() error {
+					return k8sClient.Get(ctx, ingressLookupKey, updateAPIDefinition)
+				}, timeout/5, interval).ShouldNot(HaveOccurred())
+
+				Expect(len(updateAPIDefinition.Spec.Plans)).Should(Equal(2))
+				Expect(updateAPIDefinition.Spec.Plans[0].Security).Should(Equal("API_KEY"))
+				Expect(updateAPIDefinition.Spec.Plans[1].Security).Should(Equal("KEY_LESS"))
+
+				By("Checking events")
+				Expect(
+					getEventsReason(ingressLookupKey.Namespace, ingressLookupKey.Name),
+				).Should(
+					ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
+				)
+			})
+		})
+
+		When("Updating the ingress", func() {
+			It("it should update the api definition", func() {
+				By("Getting created resource and expect to find it")
+				createdIngress := new(netV1.Ingress)
+				Eventually(func() error {
+					return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				createdAPIDefinition := new(gio.ApiDefinition)
+				Eventually(func() error {
+					return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				By("Updating the Ingress")
+				fooPath := "/foo-tls"
+
+				updatedIngress := createdIngress.DeepCopy()
+				updatedIngress.Spec.Rules[0].HTTP.Paths[0].Path = fooPath
+
+				Eventually(func() error {
+					update := new(netV1.Ingress)
+					if err := k8sClient.Get(ctx, ingressLookupKey, update); err != nil {
+						return err
+					}
+					updatedIngress.Spec.DeepCopyInto(&update.Spec)
+					return k8sClient.Update(ctx, update)
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				By("Checking the Ingress and ApiDefinition values")
+				ingressWithUpdatedPath := new(netV1.Ingress)
+				Eventually(func() error {
+					if err := k8sClient.Get(ctx, ingressLookupKey, ingressWithUpdatedPath); err != nil {
+						return err
+					}
+
+					if ingressWithUpdatedPath.Spec.Rules[0].HTTP.Paths[0].Path != fooPath {
+						return fmt.Errorf("the ingress path hasn't been updated")
+					}
+
+					return nil
+				}, timeout, interval).ShouldNot(HaveOccurred())
+
+				Eventually(func() bool {
+					apiDefinitionWithUpdatedPath := new(gio.ApiDefinition)
+					Eventually(func() error {
+						return k8sClient.Get(ctx, ingressLookupKey, apiDefinitionWithUpdatedPath)
+					}, timeout, interval).ShouldNot(HaveOccurred())
+					return apiDefinitionWithUpdatedPath.Spec.Proxy.VirtualHosts[0].Path == fooPath
+				}).ShouldNot(Equal(false))
+
+				By("Checking events")
+				Expect(
+					getEventsReason(ingressLookupKey.Namespace, ingressLookupKey.Name),
+				).Should(
+					ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
+				)
+			})
 		})
 	})
 })
