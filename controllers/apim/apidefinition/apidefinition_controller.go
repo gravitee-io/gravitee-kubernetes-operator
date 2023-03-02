@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -53,7 +55,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
 	apiDefinition := &gio.ApiDefinition{}
 
@@ -61,12 +63,24 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	delegate := internal.NewDelegate(ctx, r.Client, log)
+	delegate := internal.NewDelegate(ctx, r.Client, logger)
 	events := event.NewRecorder(r.Recorder)
+
+	if apiDefinition.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
+		logger.Info("syncing template", "template", apiDefinition.Name)
+
+		if err := delegate.SyncApiDefinitionTemplate(apiDefinition, req.Namespace); err != nil {
+			logger.Error(err, "Failed to sync API definition template")
+			return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		}
+
+		logger.Info("template synced successfully.", "template:", apiDefinition.Name)
+		return ctrl.Result{}, nil
+	}
 
 	if apiDefinition.Spec.Context != nil {
 		if err := delegate.ResolveContext(apiDefinition); err != nil {
-			log.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
+			logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
 		}
 		delegate.AddDeletionFinalizer(apiDefinition)
 	}
@@ -84,7 +98,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr == nil {
-		log.Info("API definition has been reconciled")
+		logger.Info("API definition has been reconciled")
 		return ctrl.Result{}, delegate.UpdateStatusSuccess(apiDefinition)
 	}
 
@@ -93,11 +107,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if internal.IsRecoverable(reconcileErr) {
-		log.Error(reconcileErr, "Requeuing reconcile")
+		logger.Error(reconcileErr, "Requeuing reconcile")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}
 
-	log.Error(reconcileErr, "Aborting reconcile")
+	logger.Error(reconcileErr, "Aborting reconcile")
 	return ctrl.Result{}, nil
 }
 

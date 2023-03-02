@@ -38,7 +38,7 @@ func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.Operat
 	}
 
 	if err != nil {
-		d.log.Error(err, "Get ApiDefinition error")
+		d.log.Error(err, "unable to create api definition from template")
 		return util.OperationResultNone, err
 	}
 

@@ -21,6 +21,8 @@ import (
 	"flag"
 	"os"
 
+	v1 "k8s.io/api/networking/v1"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
@@ -96,9 +98,14 @@ func main() {
 	}
 
 	err = indexApiDefinitionFields(mgr)
-
 	if err != nil {
 		setupLog.Error(err, "unable to start manager (Indexing fields in API definition)")
+		os.Exit(1)
+	}
+
+	err = indexIngressFields(mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to start manager (Indexing fields in ingress resources)")
 		os.Exit(1)
 	}
 
@@ -124,6 +131,7 @@ func main() {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1.IngressList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
 		os.Exit(1)
@@ -165,6 +173,19 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func indexIngressFields(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	apiTemplateIndexer := indexer.NewIndexer(indexer.ApiTemplateField, indexer.IndexApiTemplate)
+	err := cache.IndexField(ctx, &v1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func)
 	if err != nil {
 		return err
 	}

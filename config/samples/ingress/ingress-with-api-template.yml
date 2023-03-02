@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,24 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-apiVersion: gravitee.io/v1alpha1
-kind: ApiDefinition
+
+# Use this context if you are running APIM and GKO in k3d
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: api-with-context-no-plan
-  namespace: "default"
+  name: ingress-with-api-template
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: graviteeio
+    gravitee.io/template: api-template-with-api-key-plan
+  labels:
+    gravitee.io/ingress: graviteeio
 spec:
-  name: "K8s No Plan Example"
-  contextRef:
-    name: "ctx-dev"
-    namespace: "default"
-  version: "1.0"
-  description: "Api managed by Gravitee Kubernetes Operator with no plan"
-  proxy:
-    virtual_hosts:
-      - path: "/api-with-context-no-plan"
-    groups:
-      - name: default-group
-        endpoints:
-          - name: "Default"
-            target: "https://api.gravitee.io/echo"
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /api-with-template
+            pathType: Prefix
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000

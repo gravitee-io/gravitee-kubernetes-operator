@@ -64,9 +64,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		})
 	}
 
-	if reconcileErr != nil {
+	if reconcileErr == nil {
 		log.Info("Management context has been reconciled")
-		return ctrl.Result{}, reconcileErr
+		return ctrl.Result{}, nil
 	}
 
 	// There was an error reconciling the Management Context

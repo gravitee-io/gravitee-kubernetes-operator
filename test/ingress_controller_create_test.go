@@ -16,12 +16,15 @@ package test
 
 import (
 	"errors"
+	"fmt"
 
 	apimErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -53,16 +56,15 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdApiDefinition := &gio.ApiDefinition{}
+			createdAPIDefinition := &gio.ApiDefinition{}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			expectedApiName := ingressFixture.Name
-			Expect(createdApiDefinition.Name).Should(Equal(expectedApiName))
+			Expect(createdAPIDefinition.Name).Should(Equal(ingressFixture.Name))
 
-			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get"))
-			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
+			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get" + fixtureGenerator.Suffix))
+			Expect(createdAPIDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
 						Name:   "rule01-path01",
@@ -98,31 +100,31 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdApiDefinition := &gio.ApiDefinition{}
+			createdAPIDefinition := &gio.ApiDefinition{}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(3))
+			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(3))
 
-			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts).Should(
+			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts).Should(
 				Equal([]*model.VirtualHost{
 					{
 						Host: "foo.example.com",
-						Path: "/ingress/foo",
+						Path: "/ingress/foo" + fixtureGenerator.Suffix,
 					},
 					{
 						Host: "bar.example.com",
-						Path: "/ingress/bar",
+						Path: "/ingress/bar" + fixtureGenerator.Suffix,
 					},
 					{
 						Host: "",
-						Path: "/ingress/baz",
+						Path: "/ingress/baz" + fixtureGenerator.Suffix,
 					},
 				}),
 			)
 
-			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
+			Expect(createdAPIDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*model.HttpEndpoint{
 					{
 						Name:   "rule01-path01",
@@ -146,7 +148,7 @@ var _ = Describe("Creating an ingress", func() {
 			host := new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/foo/hostname"
+				url := fmt.Sprintf("%s/ingress/foo%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
 				return cli.Get(url, host, xhttp.WithHost("foo.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -157,7 +159,7 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/bar/hostname"
+				url := fmt.Sprintf("%s/ingress/bar%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
 				return cli.Get(url, host, xhttp.WithHost("bar.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -168,7 +170,7 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/baz/hostname"
+				url := fmt.Sprintf("%s/ingress/baz%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
 				return cli.Get(url, host)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -179,7 +181,7 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/baz/hostname"
+				url := fmt.Sprintf("%s/ingress/baz%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
 				return cli.Get(url, host, xhttp.WithHost("unknown.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -188,7 +190,7 @@ var _ = Describe("Creating an ingress", func() {
 			By("Checking that a 404 is returned if no rule matches, using a custom template")
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/baz/hostname"
+				url := fmt.Sprintf("%s/ingress/baz%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
 				callErr := cli.Get(url, host, xhttp.WithHost("foo.example.com"))
 				nfErr := new(apimErrors.ServerError)
 				if !errors.As(callErr, nfErr) {
@@ -196,6 +198,64 @@ var _ = Describe("Creating an ingress", func() {
 				}
 				return internal.AssertEquals("message", "not-found-test", nfErr.Message)
 			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
+
+	})
+
+	Context("With API definition template", func() {
+
+		It("Should create the ingress and use the ApiDefinition Template", func() {
+			By("Initializing the Ingress fixture")
+			fixtureGenerator := internal.NewFixtureGenerator()
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.ApiTemplateWithApiKeyPlanFile,
+				Ingress: internal.IngressWithTemplateFile,
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Create an API definition template")
+
+			apiDefinitionTemplate := fixtures.Api
+			Expect(k8sClient.Create(ctx, apiDefinitionTemplate)).Should(Succeed())
+
+			apiTemplateLookupKey := types.NamespacedName{Name: apiDefinitionTemplate.Name, Namespace: namespace}
+			By("Expect the API Template to be ready")
+
+			savedAPITemplate := new(gio.ApiDefinition)
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate)
+			}, timeout, interval).Should(Succeed())
+
+			ingressFixture := fixtures.Ingress
+			ingressFixture.Annotations[keys.IngressTemplateAnnotation] = apiTemplateLookupKey.Name
+			ingressLookupKey := types.NamespacedName{Name: ingressFixture.Name, Namespace: namespace}
+
+			By("Creating an Ingress and the ApiDefinition")
+			Expect(k8sClient.Create(ctx, ingressFixture)).Should(Succeed())
+
+			By("Getting created resource and expect to find it")
+			createdIngress := &netV1.Ingress{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			createdApiDefinition := &gio.ApiDefinition{}
+			Eventually(func() error {
+				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			expectedApiName := ingressFixture.Name
+			Expect(createdApiDefinition.Name).Should(Equal(expectedApiName))
+
+			Expect(len(createdApiDefinition.Spec.Plans)).Should(Equal(1))
+			Expect(createdApiDefinition.Spec.Plans[0].Security).Should(Equal("API_KEY"))
+
+			By("Checking events")
+			Expect(
+				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+			).Should(
+				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
+			)
 		})
 
 	})

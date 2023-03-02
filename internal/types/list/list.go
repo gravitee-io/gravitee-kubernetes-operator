@@ -18,15 +18,18 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
+	netv1 "k8s.io/api/networking/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func OfType(obj interface{}) (list.Interface, error) {
+func OfType(obj interface{}) (client.ObjectList, error) {
 	switch obj.(type) {
 	case *v1alpha1.ApiDefinitionList:
 		return &v1alpha1.ApiDefinitionList{}, nil
 	case *v1alpha1.ApiDefinition:
 		return &v1alpha1.ApiDefinitionList{}, nil
+	case *netv1.IngressList:
+		return &netv1.IngressList{}, nil
 	default:
 		return nil, fmt.Errorf("unknown type %T", obj)
 	}
