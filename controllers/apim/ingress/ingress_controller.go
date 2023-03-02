@@ -17,6 +17,13 @@ package ingress
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	"sigs.k8s.io/controller-runtime/pkg/source"
+
 	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
@@ -24,14 +31,11 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 // Reconciler watches and reconciles Ingress objects.
@@ -40,6 +44,7 @@ type Reconciler struct {
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+	Watcher  watch.Interface
 }
 
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
@@ -79,10 +84,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
-	isGraviteeIngress := func(o runtime.Object) bool {
-		switch e := o.(type) {
+	reconcilable := func(o runtime.Object) bool {
+		switch t := o.(type) {
 		case *netV1.Ingress:
-			return e.GetAnnotations()[keys.IngressClassAnnotation] == keys.IngressClassAnnotationValue
+			return t.GetAnnotations()[keys.IngressClassAnnotation] == keys.IngressClassAnnotationValue
+		case *v1alpha1.ApiDefinition:
+			return t.GetLabels()[keys.CrdApiDefinitionTemplate] == "true"
 		default:
 			return false
 		}
@@ -90,10 +97,10 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			return isGraviteeIngress(e.Object)
+			return reconcilable(e.Object)
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			if !isGraviteeIngress(e.ObjectNew) {
+			if !reconcilable(e.ObjectNew) {
 				return false
 			}
 			if e.ObjectOld == nil || e.ObjectNew == nil {
@@ -106,7 +113,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return isGraviteeIngress(e.Object)
+			return reconcilable(e.Object)
 		},
 	}
 }
@@ -116,6 +123,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
 		Owns(&v1alpha1.ApiDefinition{}).
+		Watches(&source.Kind{Type: &v1alpha1.ApiDefinition{}}, r.Watcher.WatchApiTemplate()).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)
 }

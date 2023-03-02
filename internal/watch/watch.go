@@ -16,11 +16,14 @@ package watch
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/types/list"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,6 +36,7 @@ import (
 type Interface interface {
 	WatchContexts() *handler.Funcs
 	WatchResources() *handler.Funcs
+	WatchApiTemplate() *handler.Funcs
 }
 
 type UpdateFunc = func(event.UpdateEvent, workqueue.RateLimitingInterface)
@@ -72,6 +76,15 @@ func (w *Type) WatchResources() *handler.Funcs {
 	}
 }
 
+// WatchApiTemplate can be used to trigger a reconciliation when an API template is updated
+// on resources that are depending on it. Right now this is only used for Ingress resources.
+func (w *Type) WatchApiTemplate() *handler.Funcs {
+	return &handler.Funcs{
+		UpdateFunc: w.UpdateFromLookup(indexer.ApiTemplateField),
+		CreateFunc: w.CreateFromLookup(indexer.ApiTemplateField),
+	}
+}
+
 // UpdateFromLookup creates an updater function that will trigger an update
 // on all resources that are referencing the updated object.
 // The lookupField is the field that is used to lookup the resources.
@@ -101,22 +114,33 @@ func (w *Type) queueByFieldReferencing(
 	ref model.NamespacedName,
 	q workqueue.RateLimitingInterface,
 ) {
-	list, err := list.OfType(w.objectList)
+	objectList, err := list.OfType(w.objectList)
 
 	if err != nil {
 		log.FromContext(w.ctx).Error(err, "unable to create list of type", "type", w.objectList)
 		return
 	}
 
-	if sErr := search.New(w.ctx, w.k8s).FindByFieldReferencing(field, ref, list); sErr != nil {
+	if sErr := search.New(w.ctx, w.k8s).FindByFieldReferencing(field, ref, objectList); sErr != nil {
 		log.FromContext(w.ctx).Error(sErr, "error while searching for items referencing", "reference", ref.String())
 		return
 	}
 
-	for _, item := range list.GetItems() {
-		q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
-			Name:      item.GetName(),
-			Namespace: item.GetNamespace(),
-		}})
+	items, err := meta.ExtractList(objectList)
+	if err != nil {
+		log.FromContext(w.ctx).Error(err, "error while extracting list items of type", "type", w.objectList)
+	}
+
+	for i := range items {
+		if item, ok := items[i].(client.Object); !ok {
+			log.FromContext(w.ctx).Error(
+				fmt.Errorf("cating error"),
+				"unable to convert the item to cleint.Object type", "type", reflect.TypeOf(items[i]))
+		} else {
+			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
+				Name:      item.GetName(),
+				Namespace: item.GetNamespace(),
+			}})
+		}
 	}
 }
