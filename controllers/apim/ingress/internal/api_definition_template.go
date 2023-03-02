@@ -45,7 +45,6 @@ func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 	return &v1alpha1.ApiDefinition{
 		Spec: v1alpha1.ApiDefinitionSpec{
 			Api: model.Api{
-				Name: "default-keyless",
 				Plans: []*model.Plan{
 					{
 						Name:     "Default keyless plan",
