@@ -88,6 +88,10 @@ var _ = Describe("Deleting a management context", func() {
 			apiLookupKey = types.NamespacedName{Name: apiFixture.Name, Namespace: namespace}
 		})
 
+		AfterEach(func() {
+			Expect(k8sClient.Delete(ctx, apiFixture)).Should(Succeed())
+		})
+
 		It("Should not delete the management context", func() {
 			By("Creating a new management context")
 			Expect(k8sClient.Create(ctx, contextFixture)).Should(Succeed())
@@ -106,9 +110,9 @@ var _ = Describe("Deleting a management context", func() {
 
 			By("Getting created resource and expect to find it")
 			createdApi := new(gio.ApiDefinition)
-			Eventually(func() error {
+			Consistently(func() error { // just to let gko have time to configure API definition
 				return k8sClient.Get(ctx, apiLookupKey, createdApi)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout/10, interval).Should(Succeed())
 
 			By("Trying to delete the management context")
 			Expect(k8sClient.Delete(ctx, createdContext)).ToNot(HaveOccurred())

@@ -20,18 +20,19 @@ import (
 	"context"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -61,6 +62,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	delegate := internal.NewDelegate(ctx, r.Client, log)
 	events := event.NewRecorder(r.Recorder)
+
+	if apiDefinition.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
+		log.Info("syncing template", "template", apiDefinition.Name)
+
+		if err := delegate.SyncApiDefinitionTemplate(apiDefinition, req.Namespace); err != nil {
+			log.Error(err, "Failed to sync API definition template")
+			return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		}
+
+		log.Info("template synced successfully.", "template:", apiDefinition.Name)
+		return ctrl.Result{}, nil
+	}
 
 	if apiDefinition.Spec.Context != nil {
 		if err := delegate.ResolveContext(apiDefinition); err != nil {

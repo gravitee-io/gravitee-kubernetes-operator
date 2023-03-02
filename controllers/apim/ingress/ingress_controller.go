@@ -17,6 +17,9 @@ package ingress
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+
 	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
@@ -24,14 +27,11 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 // Reconciler watches and reconciles Ingress objects.
@@ -78,44 +78,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
-	isGraviteeIngress := func(o runtime.Object) bool {
-		switch e := o.(type) {
-		case *netV1.Ingress:
-			return e.GetAnnotations()[keys.IngressClassAnnotation] == keys.IngressClassAnnotationValue
-		default:
-			return false
-		}
-	}
-
-	return predicate.Funcs{
-		CreateFunc: func(e event.CreateEvent) bool {
-			return isGraviteeIngress(e.Object)
-		},
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			if !isGraviteeIngress(e.ObjectNew) {
-				return false
-			}
-			if e.ObjectOld == nil || e.ObjectNew == nil {
-				return false
-			}
-			if len(e.ObjectOld.GetFinalizers()) != len(e.ObjectNew.GetFinalizers()) {
-				return false
-			}
-
-			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
-		},
-		DeleteFunc: func(e event.DeleteEvent) bool {
-			return isGraviteeIngress(e.Object)
-		},
-	}
-}
-
 // SetupWithManager initializes ingress controller manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
 		Owns(&v1alpha1.ApiDefinition{}).
+		Watches(&source.Kind{Type: &v1alpha1.ApiDefinition{}}, r.ApiTemplateWatcher(indexer.ApiTemplateField)).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)
 }

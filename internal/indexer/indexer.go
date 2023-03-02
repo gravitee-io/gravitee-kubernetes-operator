@@ -16,14 +16,17 @@ package indexer
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	v1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type IndexField string
 
 const (
-	ContextField  IndexField = "context"
-	ResourceField IndexField = "resource"
+	ContextField     IndexField = "context"
+	ResourceField    IndexField = "resource"
+	ApiTemplateField IndexField = "api-template"
 )
 
 func (f IndexField) String() string {
@@ -77,4 +80,12 @@ func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
 			*fields = append(*fields, resource.Ref.String())
 		}
 	}
+}
+
+func IndexApiTemplate(ing *v1.Ingress, fields *[]string) {
+	if ing.Annotations[keys.IngressTemplateAnnotation] == "" {
+		return
+	}
+
+	*fields = append(*fields, ing.Namespace+"/"+ing.Annotations[keys.IngressTemplateAnnotation])
 }
