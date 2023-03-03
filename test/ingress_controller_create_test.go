@@ -124,15 +124,15 @@ var _ = Describe("Creating an ingress", func() {
 				[]*model.HttpEndpoint{
 					{
 						Name:   "rule01-path01",
-						Target: "http://svc-1.default.svc.cluster.local:8080",
+						Target: "http://httpbin-1.default.svc.cluster.local:8080",
 					},
 					{
 						Name:   "rule02-path01",
-						Target: "http://svc-2.default.svc.cluster.local:8080",
+						Target: "http://httpbin-2.default.svc.cluster.local:8080",
 					},
 					{
 						Name:   "rule03-path01",
-						Target: "http://svc-3.default.svc.cluster.local:8080",
+						Target: "http://httpbin-3.default.svc.cluster.local:8080",
 					},
 				},
 			))
@@ -148,7 +148,7 @@ var _ = Describe("Creating an ingress", func() {
 				return cli.Get(url, host, xhttp.WithHost("foo.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			Expect(internal.AssertHostPrefix(host, "svc-1")).ToNot(HaveOccurred())
+			Expect(internal.AssertHostPrefix(host, "httpbin-1")).ToNot(HaveOccurred())
 
 			By("Checking that rule with host bar.example.com is working")
 
@@ -159,7 +159,7 @@ var _ = Describe("Creating an ingress", func() {
 				return cli.Get(url, host, xhttp.WithHost("bar.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			Expect(internal.AssertHostPrefix(host, "svc-2")).ToNot(HaveOccurred())
+			Expect(internal.AssertHostPrefix(host, "httpbin-2")).ToNot(HaveOccurred())
 
 			By("Checking that rule with no host is working with no host")
 
@@ -170,7 +170,7 @@ var _ = Describe("Creating an ingress", func() {
 				return cli.Get(url, host)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			Expect(internal.AssertHostPrefix(host, "svc-3")).ToNot(HaveOccurred())
+			Expect(internal.AssertHostPrefix(host, "httpbin-3")).ToNot(HaveOccurred())
 
 			By("Checking that rule with no host is working with unknown host")
 
@@ -181,7 +181,7 @@ var _ = Describe("Creating an ingress", func() {
 				return cli.Get(url, host, xhttp.WithHost("unknown.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			Expect(internal.AssertHostPrefix(host, "svc-3")).ToNot(HaveOccurred())
+			Expect(internal.AssertHostPrefix(host, "httpbin-3")).ToNot(HaveOccurred())
 
 			By("Checking that a 404 is returned if no rule matches")
 
