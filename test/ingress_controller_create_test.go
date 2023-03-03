@@ -15,6 +15,7 @@
 package test
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
@@ -181,6 +182,18 @@ var _ = Describe("Creating an ingress", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Expect(internal.AssertHostPrefix(host, "svc-3")).ToNot(HaveOccurred())
+
+			By("Checking that a 404 is returned if no rule matches")
+
+			Eventually(func() error {
+				url := internal.GatewayUrl + "/ingress/baz/hostname"
+				callErr := cli.Get(url, host, xhttp.WithHost("foo.example.com"))
+				if !errors.IsNotFound(callErr) {
+					return internal.NewAssertionError("error", errors.NewNotFoundError(), callErr)
+				}
+				return nil
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
+
 	})
 })
