@@ -103,7 +103,7 @@ func newIndexedPath(path *v1.HTTPIngressPath, ruleIndex, index int) *indexedPath
 // Map maps an ingress to a graviteeio API definition, adding one virtual host per ingress rule,
 // one endpoint per backend service, and one conditional flow per host and path of the rule.
 // The host header is used to select the flow, and a dynamic routing policy routes the request
-// to the backend service, identified by the host and path of the rule. Is no rule matches,
+// to the backend service, identified by the endpoint name. Is no rule matches,
 // a 404 response is returned by a flow that negates all the previous conditions.
 func (m *Mapper) Map(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio.ApiDefinition {
 	m.hosts = getHosts(ingress)
@@ -263,7 +263,7 @@ func buildEndpoints(ingress *v1.Ingress) []*model.HttpEndpoint {
 	return eps
 }
 
-// For each rule and path of an ingress, build an endpoint identified by the host and path,
+// For each rule and path of an ingress, build an endpoint identified by the position of the path in the rule,
 // in order to be able to match it in the routing step when handling an incoming request for routing.
 func buildEndpoint(ingress *v1.Ingress, path *indexedPath) *model.HttpEndpoint {
 	return &model.HttpEndpoint{
@@ -292,8 +292,6 @@ func buildVirtualHost(rule v1.IngressRule, path v1.HTTPIngressPath) *model.Virtu
 	return &model.VirtualHost{Host: rule.Host, Path: path.Path}
 }
 
-// Builds a flow step with a single routing policy that will forward the request to
-// its matching endpoint using the request ingress host and path as a endpoint name.
 func buildRouting(path *indexedPath) []model.FlowStep {
 	return append([]model.FlowStep{}, buildRoutingStep(path))
 }
