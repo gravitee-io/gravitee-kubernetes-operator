@@ -31,7 +31,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: svc-1
+                name: httpbin-1
                 port:
                   number: 8080
     - host: bar.example.com
@@ -41,7 +41,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: svc-2
+                name: httpbin-2
                 port:
                   number: 8080
     - http:
@@ -50,6 +50,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: svc-3
+                name: httpbin-3
                 port:
                   number: 8080

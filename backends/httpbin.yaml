@@ -15,21 +15,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: svc-1
+  name: httpbin-1
   labels:
-    type: svc-1
+    type: httpbin-1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      type: svc-1
+      type: httpbin-1
   template:
     metadata:
       labels:
-        type: svc-1        
+        type: httpbin-1
     spec:
       containers:
-      - name: svc-1
+      - name: httpbin-1
         image: k3d-graviteeio.docker.localhost:12345/go-httpbin
         imagePullPolicy: IfNotPresent
         ports:
@@ -48,34 +48,34 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: svc-1
+  name: httpbin-1
   labels:
-    type: svc-1
+    type: httpbin-1
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    type: svc-1
+    type: httpbin-1
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: svc-2
+  name: httpbin-2
   labels:
-    type: svc-2
+    type: httpbin-2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      type: svc-2
+      type: httpbin-2
   template:
     metadata:
       labels:
-        type: svc-2        
+        type: httpbin-2
     spec:
       containers:
-      - name: svc-2
+      - name: httpbin-2
         image: k3d-graviteeio.docker.localhost:12345/go-httpbin
         imagePullPolicy: IfNotPresent
         ports:
@@ -94,34 +94,34 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: svc-2
+  name: httpbin-2
   labels:
-    type: svc-2
+    type: httpbin-2
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    type: svc-2
+    type: httpbin-2
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: svc-3
+  name: httpbin-3
   labels:
-    type: svc-3
+    type: httpbin-3
 spec:
   replicas: 1
   selector:
     matchLabels:
-      type: svc-3
+      type: httpbin-3
   template:
     metadata:
       labels:
-        type: svc-3        
+        type: httpbin-3
     spec:
       containers:
-      - name: svc-3
+      - name: httpbin-3
         image: k3d-graviteeio.docker.localhost:12345/go-httpbin
         imagePullPolicy: IfNotPresent
         ports:
@@ -140,13 +140,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: svc-3
+  name: httpbin-3
   labels:
-    type: svc-3
+    type: httpbin-3
 spec:
   ports:
     - port: 8080
       targetPort: 8080
   selector:
-    type: svc-3
+    type: httpbin-3
 
