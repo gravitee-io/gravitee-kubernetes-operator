@@ -21,6 +21,7 @@ import (
 	"flag"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
 
@@ -69,7 +70,7 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 
 	opts := zap.Options{
-		Development:          os.Getenv("DEV_MODE") == "true",
+		Development:          env.Config.Development,
 		EncoderConfigOptions: logging.NewEncoderConfigOption(),
 	}
 
@@ -85,7 +86,7 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
-		Namespace:              os.Getenv("NAMESPACE"),
+		Namespace:              env.Config.NS,
 	})
 
 	if err != nil {
