@@ -15,16 +15,21 @@
 package internal
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal/mapper"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	v1 "k8s.io/api/networking/v1"
+	coreV1 "k8s.io/api/core/v1"
+	netV1 "k8s.io/api/networking/v1"
 )
 
-func (d *Delegate) resolveApiDefinitionTemplate(ingress *v1.Ingress) (*v1alpha1.ApiDefinition, error) {
+func (d *Delegate) resolveApiDefinitionTemplate(ingress *netV1.Ingress) (*v1alpha1.ApiDefinition, error) {
 	var apiDefinition *v1alpha1.ApiDefinition
 
 	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
@@ -38,7 +43,49 @@ func (d *Delegate) resolveApiDefinitionTemplate(ingress *v1.Ingress) (*v1alpha1.
 		apiDefinition = defaultApiDefinitionTemplate()
 	}
 
-	return mapper.New().Map(apiDefinition, ingress), nil
+	return mapper.New(d.getMapperOpts()).Map(apiDefinition, ingress), nil
+}
+
+func (d *Delegate) getMapperOpts() mapper.Opts {
+	opts := mapper.NewOpts()
+	d.setNotFoundTemplate(&opts)
+	return opts
+}
+
+func (d *Delegate) setNotFoundTemplate(opts *mapper.Opts) {
+	ns, name := env.Config.CMTemplate404NS, env.Config.CMTemplate404Name
+
+	if name == "" {
+		return
+	}
+
+	cm := coreV1.ConfigMap{}
+	if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
+		d.log.Error(err, "unable to access config map, using default HTTP not found template")
+		return
+	}
+
+	if err := checkData(cm.Data); err != nil {
+		d.log.Error(err, "missing key in config map, using default HTTP not found template")
+		return
+	}
+
+	opts.Templates[http.StatusNotFound] = mapper.ResponseTemplate{
+		Content:     cm.Data["content"],
+		ContentType: cm.Data["contentType"],
+	}
+}
+
+func checkData(template map[string]string) error {
+	if _, ok := template["content"]; !ok {
+		return fmt.Errorf("missing content in template")
+	}
+
+	if _, ok := template["contentType"]; !ok {
+		return fmt.Errorf("missing contentType in template")
+	}
+
+	return nil
 }
 
 func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {

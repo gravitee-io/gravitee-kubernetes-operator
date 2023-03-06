@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/el"
+	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,6 +43,7 @@ const (
 	mockStepName           = "No Route Found"
 	mockContentKey         = "content"
 	mockStatusKey          = "status"
+	mockHeadersKey         = "headers"
 	endpointNamePattern    = "rule%02d-path%02d"
 	endpointMatcherPattern = "%s:{#group[0]}"
 	rootPath               = "/"
@@ -51,28 +53,15 @@ var hostCondition = el.Expression("#request.headers['Host'][0] == '%s'")
 var noHostCondition = el.Expression("#request.headers['Host'][0] != '%s'")
 var pathCondition = el.Expression("#request.contextPath.startsWith('%s')")
 
-// This policy is used to return a 404 response when no route is found.
-var notFoundPolicy = model.FlowStep{
-	Name:    mockStepName,
-	Policy:  mockPolicyName,
-	Enabled: true,
-	Configuration: &model.GenericStringMap{
-		Unstructured: unstructured.Unstructured{
-			Object: map[string]interface{}{
-				mockContentKey: fmt.Sprintln(http.StatusText(http.StatusNotFound)),
-				mockStatusKey:  fmt.Sprint(http.StatusNotFound),
-			},
-		},
-	},
-}
-
 type Mapper struct {
+	opts       Opts
 	hosts      map[string]bool
 	conditions []el.Expression
 }
 
-func New() *Mapper {
+func New(opts Opts) *Mapper {
 	return &Mapper{
+		opts:       mergeOpts(opts),
 		hosts:      make(map[string]bool),
 		conditions: make([]el.Expression, 0),
 	}
@@ -111,6 +100,20 @@ func (m *Mapper) Map(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio
 	cp.Spec.Proxy = buildProxy(ingress)
 	cp.Spec.Flows = m.buildFlows(ingress.Spec.Rules)
 	return cp
+}
+
+// Get all the host names defined in the ingress rules,
+// in order to compute the condition for rules with no host,
+// checking that none of the hosts we have processed matches the
+// host header of the incoming request.
+func getHosts(ingress *v1.Ingress) map[string]bool {
+	hosts := make(map[string]bool)
+	for _, rule := range ingress.Spec.Rules {
+		if rule.Host != "" {
+			hosts[rule.Host] = true
+		}
+	}
+	return hosts
 }
 
 func buildApiCopy(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio.ApiDefinition {
@@ -168,26 +171,21 @@ func (m *Mapper) buildRoutingFlow(rule v1.IngressRule, path *indexedPath) model.
 	return flow
 }
 
-func (m *Mapper) buildNotFoundFlow() model.Flow {
-	flow := model.Flow{
-		Name:    "No Route Found",
-		Pre:     []model.FlowStep{notFoundPolicy},
-		Enabled: true,
-		PathOperator: &model.PathOperator{
-			Operator: model.StartWithOperator,
+func buildPathOperator(path *indexedPath) *model.PathOperator {
+	if *path.PathType == v1.PathTypeExact {
+		return &model.PathOperator{
+			Operator: model.EqualsOperator,
 			Path:     rootPath,
-		},
+		}
 	}
-
-	condition := el.Empty()
-
-	for _, c := range m.conditions {
-		condition = condition.Or(c)
+	return &model.PathOperator{
+		Operator: model.StartWithOperator,
+		Path:     rootPath,
 	}
+}
 
-	flow.Condition = condition.Parenthesized().Negated().Closed().String()
-
-	return flow
+func buildRouting(path *indexedPath) []model.FlowStep {
+	return append([]model.FlowStep{}, buildRoutingStep(path))
 }
 
 func (m *Mapper) buildNoHostCondition(path *indexedPath) string {
@@ -240,6 +238,53 @@ func buildRoutingTarget(path *indexedPath) string {
 	return fmt.Sprintf(endpointMatcherPattern, path.String())
 }
 
+// This flow is used to return a 404 HTTP response when no route is found.
+func (m *Mapper) buildNotFoundFlow() model.Flow {
+	flow := model.Flow{
+		Name:    mockStepName,
+		Pre:     []model.FlowStep{m.buildNotFoundStep()},
+		Enabled: true,
+		PathOperator: &model.PathOperator{
+			Operator: model.StartWithOperator,
+			Path:     rootPath,
+		},
+	}
+
+	condition := el.Empty()
+
+	for _, c := range m.conditions {
+		condition = condition.Or(c)
+	}
+
+	flow.Condition = condition.Parenthesized().Negated().Closed().String()
+
+	return flow
+}
+
+func (m *Mapper) buildNotFoundStep() model.FlowStep {
+	template := m.opts.Templates[http.StatusNotFound]
+
+	return model.FlowStep{
+		Name:    mockStepName,
+		Policy:  mockPolicyName,
+		Enabled: true,
+		Configuration: &model.GenericStringMap{
+			Unstructured: unstructured.Unstructured{
+				Object: map[string]interface{}{
+					mockContentKey: template.Content,
+					mockStatusKey:  fmt.Sprint(http.StatusNotFound),
+					mockHeadersKey: []interface{}{
+						map[string]interface{}{
+							"name":  xhttp.ContentTypeHeader,
+							"value": template.ContentType,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func buildProxy(ingress *v1.Ingress) *model.Proxy {
 	return &model.Proxy{
 		VirtualHosts: buildVirtualHosts(ingress),
@@ -290,35 +335,4 @@ func buildVirtualHosts(ingress *v1.Ingress) []*model.VirtualHost {
 
 func buildVirtualHost(rule v1.IngressRule, path v1.HTTPIngressPath) *model.VirtualHost {
 	return &model.VirtualHost{Host: rule.Host, Path: path.Path}
-}
-
-func buildRouting(path *indexedPath) []model.FlowStep {
-	return append([]model.FlowStep{}, buildRoutingStep(path))
-}
-
-func buildPathOperator(path *indexedPath) *model.PathOperator {
-	if *path.PathType == v1.PathTypeExact {
-		return &model.PathOperator{
-			Operator: model.EqualsOperator,
-			Path:     rootPath,
-		}
-	}
-	return &model.PathOperator{
-		Operator: model.StartWithOperator,
-		Path:     rootPath,
-	}
-}
-
-// Get all the host names defined in the ingress rules,
-// in order to compute the condition for rules with no host,
-// checking that none of the hosts we have processed matches the
-// host header of the incoming request.
-func getHosts(ingress *v1.Ingress) map[string]bool {
-	hosts := make(map[string]bool)
-	for _, rule := range ingress.Spec.Rules {
-		if rule.Host != "" {
-			hosts[rule.Host] = true
-		}
-	}
-	return hosts
 }

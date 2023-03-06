@@ -24,3 +24,16 @@ manager:
     # Use false to listen only in the release namespace.
     cluster: true
 
+ingress:
+  templates:
+    404:
+      # -- name of the config map storing the HTTP 404 ingress response template.
+      # A default template is used if this entry is empty.
+      # The config map should contain a content key and a contentType key.
+      # The default template is used if one of the key is missing.
+      name: ""
+      # -- namespace of the config map storing the HTTP 404 ingress response template.
+      # A default template is used if this entry is empty.
+      # The config map should contain a content key and a contentType key.
+      # The default template is used if one of the key is missing.       
+      namespace: ""

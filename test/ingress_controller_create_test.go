@@ -15,7 +15,9 @@
 package test
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"errors"
+
+	apimErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
@@ -183,15 +185,16 @@ var _ = Describe("Creating an ingress", func() {
 
 			Expect(internal.AssertHostPrefix(host, "httpbin-3")).ToNot(HaveOccurred())
 
-			By("Checking that a 404 is returned if no rule matches")
+			By("Checking that a 404 is returned if no rule matches, using a custom template")
 
 			Eventually(func() error {
 				url := internal.GatewayUrl + "/ingress/baz/hostname"
 				callErr := cli.Get(url, host, xhttp.WithHost("foo.example.com"))
-				if !errors.IsNotFound(callErr) {
-					return internal.NewAssertionError("error", errors.NewNotFoundError(), callErr)
+				nfErr := new(apimErrors.ServerError)
+				if !errors.As(callErr, nfErr) {
+					return internal.NewAssertionError("error", nfErr, callErr)
 				}
-				return nil
+				return internal.AssertEquals("message", "not-found-test", nfErr.Message)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 

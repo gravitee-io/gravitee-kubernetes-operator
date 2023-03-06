@@ -23,8 +23,6 @@ import (
 )
 
 const (
-	ContentTypeHeader     = "Content-Type"
-	ContentTypeJSON       = "application/json"
 	requestTimeoutSeconds = 5
 )
 
