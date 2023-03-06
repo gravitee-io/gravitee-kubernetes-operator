@@ -29,6 +29,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,6 +42,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	//+kubebuilder:scaffold:imports
 )
@@ -132,6 +134,9 @@ var _ = SynchronizedBeforeSuite(func() {
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
+	env.Config.CMTemplate404NS = namespace
+	env.Config.CMTemplate404Name = "template-404"
+
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
 		Expect(err).ToNot(HaveOccurred())
@@ -145,6 +150,8 @@ var _ = SynchronizedBeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 	k8sClient = cli
 	ctx = context.Background()
+
+	Expect(k8sClient.Create(ctx, template404())).Should(Succeed())
 })
 
 var _ = SynchronizedAfterSuite(func() {
@@ -159,6 +166,7 @@ var _ = SynchronizedAfterSuite(func() {
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
+	Expect(k8sClient.Delete(ctx, template404())).Should(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 	// NOSONAR ignore this noop func
@@ -195,4 +203,17 @@ func getEventsReason(namespace string, name string) []string {
 		eventsReason = append(eventsReason, event.Reason)
 	}
 	return eventsReason
+}
+
+func template404() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "template-404",
+			Namespace: namespace,
+		},
+		Data: map[string]string{
+			"content":     `{ "message": "not-found-test" }`,
+			"contentType": "application/json",
+		},
+	}
 }
