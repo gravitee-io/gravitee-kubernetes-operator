@@ -32,7 +32,6 @@ import (
 const (
 	proxyName              = "default"
 	serviceURIPattern      = "http://%s.%s.svc.cluster.local:%d"
-	flowNamePattern        = "%s%s"
 	routingPattern         = "(.*)"
 	routingPolicyName      = "dynamic-routing"
 	routingStepName        = "Ingress Routing"
