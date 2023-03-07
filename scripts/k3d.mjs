@@ -126,6 +126,8 @@ async function initCluster() {
     -p "${GATEWAY_LOAD_BALANCER_PORT}:82@loadbalancer" \
     --k3s-arg "--disable=traefik@server:*" \
     --registry-use=${K3D_IMAGES_REGISTRY_NAME} \
+    --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@agent:*' \
+    --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*' \
     ${K3D_CLUSTER_NAME}
   `;
 }
