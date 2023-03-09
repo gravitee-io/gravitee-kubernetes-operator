@@ -98,6 +98,10 @@ func (m *Mapper) Map(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio
 	cp := buildApiCopy(apiDefinition, ingress)
 	cp.Spec.Proxy = buildProxy(ingress)
 	cp.Spec.Flows = m.buildFlows(ingress.Spec.Rules)
+	if apiDefinition.Spec.Flows != nil {
+		cp.Spec.FlowMode = model.DefaultFlowMode
+		cp.Spec.Flows = append(cp.Spec.Flows, apiDefinition.Spec.Flows...)
+	}
 	return cp
 }
 
