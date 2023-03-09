@@ -67,6 +67,11 @@ type ApiVisibility string
 // +kubebuilder:validation:Enum=DEFAULT;BEST_MATCH;
 type FlowMode string
 
+const (
+	BestMatchFlowMode = FlowMode("BEST_MATCH")
+	DefaultFlowMode   = FlowMode("DEFAULT")
+)
+
 type DefinitionVersion string
 
 const (
