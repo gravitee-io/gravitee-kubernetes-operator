@@ -110,8 +110,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&managementcontext.Reconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
 		os.Exit(1)

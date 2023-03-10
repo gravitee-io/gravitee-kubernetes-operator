@@ -17,13 +17,13 @@ package apidefinition
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -53,10 +53,10 @@ func (ApiUpdateFilter) Update(e event.UpdateEvent) bool {
 // on all API definitions that are referencing the updated object
 // The lookupField is the field that is used to lookup the API definitions
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
-func (r *Reconciler) NewUpdateFromLookup(lookupField string) UpdateFunc {
+func (r *Reconciler) NewUpdateFromLookup(field indexer.IndexField) UpdateFunc {
 	return func(e event.UpdateEvent, q workqueue.RateLimitingInterface) {
 		ref := model.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
-		r.queueRefs(lookupField, ref, q)
+		r.queueRefs(field, ref, q)
 	}
 }
 
@@ -65,10 +65,10 @@ func (r *Reconciler) NewUpdateFromLookup(lookupField string) UpdateFunc {
 // The lookupField is the field that is used to lookup the API definitions
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
 // This can be used to reconcile API definitions when have been created before the referenced object (e.g. an API context).
-func (r *Reconciler) NewCreateFromLookup(lookupField string) CreateFunc {
+func (r *Reconciler) NewCreateFromLookup(field indexer.IndexField) CreateFunc {
 	return func(e event.CreateEvent, q workqueue.RateLimitingInterface) {
 		ref := model.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
-		r.queueRefs(lookupField, ref, q)
+		r.queueRefs(field, ref, q)
 	}
 }
 
@@ -76,49 +76,38 @@ func (r *Reconciler) NewCreateFromLookup(lookupField string) CreateFunc {
 // that are referencing the updated or created context.
 // API can thus be created before referencing
 // a context, and will be reconciled when the context is later created.
-func (r *Reconciler) ContextWatcher(lookupField string) *handler.Funcs {
+func (r *Reconciler) ContextWatcher(field indexer.IndexField) *handler.Funcs {
 	return &handler.Funcs{
-		UpdateFunc: r.NewUpdateFromLookup(indexer.ContextField.String()),
-		CreateFunc: r.NewCreateFromLookup(indexer.ContextField.String()),
+		UpdateFunc: r.NewUpdateFromLookup(field),
+		CreateFunc: r.NewCreateFromLookup(field),
 	}
 }
 
-func (r *Reconciler) ResourceWatcher(lookupField string) *handler.Funcs {
+func (r *Reconciler) ResourceWatcher(field indexer.IndexField) *handler.Funcs {
 	return &handler.Funcs{
-		UpdateFunc: r.NewUpdateFromLookup(indexer.ResourceField.String()),
+		UpdateFunc: r.NewUpdateFromLookup(field),
 	}
 }
 
-func (r *Reconciler) queueRefs(lookupField string, ref model.NamespacedName, q workqueue.RateLimitingInterface) {
+func (r *Reconciler) queueRefs(
+	indexer indexer.IndexField,
+	ref model.NamespacedName,
+	q workqueue.RateLimitingInterface,
+) {
 	ctx := context.Background()
-	log := log.FromContext(ctx).WithValues("reference", ref.String())
-
-	apis, err := r.listForRef(ctx, ref, lookupField)
-	if err != nil {
-		log.Error(err, "unable to list APIs referencing resource, skipping update")
+	apis := &gio.ApiDefinitionList{}
+	if err := search.New(ctx, r.Client).FindByFieldReferencing(indexer, ref, apis); err != nil {
+		log.FromContext(ctx).WithValues("reference", ref.String()).Error(
+			err,
+			"unable to list APIs referencing resource, skipping update",
+		)
 		return
 	}
 
-	for _, api := range apis {
+	for _, api := range apis.Items {
 		q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 			Name:      api.Name,
 			Namespace: api.Namespace,
 		}})
 	}
-}
-
-func (r *Reconciler) listForRef(
-	ctx context.Context, ref model.NamespacedName, field string,
-) ([]gio.ApiDefinition, error) {
-	apiDefinitionList := &gio.ApiDefinitionList{}
-
-	filter := &client.ListOptions{
-		FieldSelector: fields.SelectorFromSet(fields.Set{field: ref.String()}),
-	}
-
-	if err := r.Client.List(ctx, apiDefinitionList, filter); err != nil {
-		return nil, err
-	}
-
-	return apiDefinitionList.Items, nil
 }

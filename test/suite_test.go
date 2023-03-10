@@ -103,8 +103,9 @@ var _ = SynchronizedBeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&managementcontext.Reconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("managementcontext_controller"),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
