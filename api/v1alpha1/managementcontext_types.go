@@ -60,3 +60,7 @@ type ManagementContextList struct {
 func init() {
 	SchemeBuilder.Register(&ManagementContext{}, &ManagementContextList{})
 }
+
+func (context *ManagementContext) IsBeingDeleted() bool {
+	return !context.ObjectMeta.DeletionTimestamp.IsZero()
+}

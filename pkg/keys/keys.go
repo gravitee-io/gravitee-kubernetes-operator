@@ -21,7 +21,6 @@ const (
 	IngressClassAnnotation      = "kubernetes.io/ingress.class"
 	IngressClassAnnotationValue = "graviteeio"
 	IngressTemplateAnnotation   = "gravitee.io/template"
-	IngressFinalizer            = "finalizers.gravitee.io/ingress"
 )
 
 // Gravitee.io CRDs.
@@ -38,6 +37,8 @@ const Extends = "gravitee.io/extends"
 
 // Kubernetes Finalizers.
 const (
-	ApiDefinitionDeletionFinalizer = "finalizers.gravitee.io/apidefinitiondeletion"
-	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
+	ApiDefinitionDeletionFinalizer     = "finalizers.gravitee.io/apidefinitiondeletion"
+	ApiDefinitionTemplateFinalizer     = "finalizers.gravitee.io/apidefinitiontemplate"
+	ManagementContextDeletionFinalizer = "finalizers.gravitee.io/managementcontextdeletion"
+	IngressFinalizer                   = "finalizers.gravitee.io/ingress"
 )
