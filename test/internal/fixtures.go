@@ -84,7 +84,7 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 		fixtures.Resource = resource
 	}
 
-	if fixtures.Context != nil {
+	if fixtures.Context != nil && fixtures.Api != nil {
 		fixtures.Api.Spec.Context = fixtures.Context.GetNamespacedName()
 	}
 

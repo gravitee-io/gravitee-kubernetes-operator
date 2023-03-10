@@ -19,6 +19,11 @@ package managementcontext
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,17 +35,38 @@ import (
 // Reconciler reconciles a ManagementContext object.
 type Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
 	instance := &gio.ManagementContext{}
-
 	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	events := event.NewRecorder(r.Recorder)
+	var reconcileErr error
+	if instance.IsBeingDeleted() {
+		reconcileErr = events.Record(event.Delete, instance, func() error {
+			if reconcileErr = internal.Delete(ctx, r.Client, instance); reconcileErr != nil {
+				return reconcileErr
+			}
+			return nil
+		})
+	} else {
+		reconcileErr = events.Record(event.Update, instance, func() error {
+			return internal.CreateOrUpdate(ctx, r.Client, instance)
+		})
+	}
+
+	if reconcileErr != nil {
+		log.Info("Management context has been reconciled")
+		return ctrl.Result{}, reconcileErr
 	}
 
 	return ctrl.Result{}, nil
