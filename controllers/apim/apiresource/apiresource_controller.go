@@ -19,6 +19,8 @@ package apiresource
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,10 +49,14 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 	apiResource := &gio.ApiResource{}
 	if err := r.Get(ctx, req.NamespacedName, apiResource); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if err := template.NewResolver(ctx, r.Client, logger, apiResource).Resolve(); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	events := event.NewRecorder(r.Recorder)
@@ -66,7 +72,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr == nil {
-		log.Info("API Resource has been reconciled")
+		logger.Info("API Resource has been reconciled")
 		return ctrl.Result{}, nil
 	}
 
