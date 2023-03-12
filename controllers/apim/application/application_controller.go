@@ -63,6 +63,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	delegate := internal.NewDelegate(ctx, r.Client, logger)
+	if err := delegate.ResolveTemplate(application); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	events := event.NewRecorder(r.Recorder)
 
 	if application.Spec.Context == nil {
