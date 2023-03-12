@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -105,10 +106,12 @@ func main() {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
 		os.Exit(1)
 	}
+
 	if err = (&managementcontext.Reconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),

@@ -31,7 +31,8 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/filter"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -42,6 +43,7 @@ type Reconciler struct {
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+	Watcher  watch.Interface
 }
 
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
@@ -102,8 +104,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ApiDefinition{}).
-		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.ContextWatcher(indexer.ContextField)).
-		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.ResourceWatcher(indexer.ResourceField)).
-		WithEventFilter(ApiUpdateFilter{}).
+		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts()).
+		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.Watcher.WatchResources()).
+		WithEventFilter(filter.NoFinalizerUpdateFilter{}).
 		Complete(r)
 }
