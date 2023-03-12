@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -55,6 +56,8 @@ type ApiDefinitionStatus struct {
 	// Use observedGeneration instead.
 	DeprecatedObservedGeneration int64 `json:"generation,omitempty"`
 }
+
+var _ list.Item = &ApiDefinition{}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
@@ -132,12 +135,22 @@ func (spec *ApiDefinitionSpec) SetDefinitionContext() {
 	}
 }
 
+var _ list.Interface = &ApiDefinitionList{}
+
 // +kubebuilder:object:root=true
 // ApiDefinitionList contains a list of ApiDefinition.
 type ApiDefinitionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ApiDefinition `json:"items"`
+}
+
+func (l *ApiDefinitionList) GetItems() []list.Item {
+	items := make([]list.Item, len(l.Items))
+	for i := range l.Items {
+		items[i] = &l.Items[i]
+	}
+	return items
 }
 
 func init() {
