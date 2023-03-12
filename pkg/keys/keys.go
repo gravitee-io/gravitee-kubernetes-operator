@@ -33,7 +33,6 @@ const (
 
 	CrdManagementContextResource = "managementcontext"
 	CrdApiDefinitionResource     = "apidefinitions"
-	CrdApiDefinitionTemplate     = "template"
 )
 
 const Extends = "gravitee.io/extends"
@@ -49,4 +48,5 @@ const (
 	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
 	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
 	ApplicationDeletionFinalizer     = "finalizers.gravitee.io/applicationdeletion"
+	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 )

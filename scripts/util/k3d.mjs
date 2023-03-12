@@ -80,6 +80,20 @@ export async function createGwKeystoreSecretCredentials() {
     await $`kubectl label secrets ${env.GATEWAY_KEY_STORE_CREDENTIALS_SECRET_NAME} gravitee.io/gw-keystore-config=true`;
 }
 
+export async function createTemplatingSecret() {
+    await $`kubectl create secret generic ${env.TEMPLATING_SECRET_CONFIGMAP_NAME} \
+    -n ${env.K3D_NAMESPACE_NAME} \
+    --from-literal=security=KEY_LESS
+  `;
+}
+
+export async function createTemplatingConfigmap() {
+    await $`kubectl create configmap ${env.TEMPLATING_SECRET_CONFIGMAP_NAME} \
+    -n ${env.K3D_NAMESPACE_NAME} \
+    --from-literal=target=https://api.gravitee.io/echo
+  `;
+}
+
 export async function createHttpBinSecret() {
     await $`kubectl create secret tls ${env.HTTPBIN_EXAMPLE_COM} \
     -n ${env.K3D_NAMESPACE_NAME} \
