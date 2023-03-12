@@ -37,26 +37,20 @@ var _ = Describe("Create", func() {
 
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
-	Context("a basic spec without a management context", func() {
-		var apiDefinitionFixture *gio.ApiDefinition
-
-		var apiLookupKey types.NamespacedName
-
-		BeforeEach(func() {
+	DescribeTable("a basic spec without a management context",
+		func(specFile string, expectedGatewayStatusCode int) {
 			By("Initializing the API definition fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api: internal.BasicApiFile,
+				Api: specFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiDefinitionFixture = fixtures.Api
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-		})
+			apiDefinitionFixture := fixtures.Api
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
-		It("should create an API Definition", func() {
 			By("Creating an API definition resource without a management context")
 
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
@@ -79,8 +73,18 @@ var _ = Describe("Create", func() {
 				res, callErr := httpClient.Get(endpoint)
 				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
 			}, timeout, interval).ShouldNot(HaveOccurred())
-		})
-	})
+		},
+		Entry(
+			"should make basic api available",
+			internal.BasicApiFile,
+			200,
+		),
+		Entry(
+			"should resolve the template and makes api available",
+			internal.BasicApiFileTemplating,
+			200,
+		),
+	)
 
 	Context("a basic spec with a management context", func() {
 		var apiDefinitionFixture *gio.ApiDefinition

@@ -19,6 +19,8 @@ package managementcontext
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -45,10 +47,14 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 	managementContext := &gio.ManagementContext{}
 	if err := r.Get(ctx, req.NamespacedName, managementContext); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	if err := template.NewResolver(ctx, r.Client, logger, managementContext).Resolve(); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	events := event.NewRecorder(r.Recorder)
@@ -64,7 +70,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr == nil {
-		log.Info("Management context has been reconciled")
+		logger.Info("Management context has been reconciled")
 		return ctrl.Result{}, nil
 	}
 
