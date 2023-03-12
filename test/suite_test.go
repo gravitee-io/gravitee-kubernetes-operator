@@ -44,6 +44,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -98,6 +99,7 @@ var _ = SynchronizedBeforeSuite(func() {
 		Client:   k8sManager.GetClient(),
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: k8sManager.GetEventRecorderFor("apidefinition_controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), gio.ApiDefinitionKind),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
