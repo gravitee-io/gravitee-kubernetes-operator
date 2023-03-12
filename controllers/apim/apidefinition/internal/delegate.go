@@ -20,6 +20,7 @@ import (
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	coreV1 "k8s.io/api/core/v1"
 	k8s "sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,6 +46,10 @@ func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate
 	return &Delegate{
 		ctx, k8s, log, nil,
 	}
+}
+
+func (d *Delegate) ResolveTemplate(api *gio.ApiDefinition) error {
+	return template.NewResolver(d.ctx, d.k8s, d.log, api).Resolve()
 }
 
 func (d *Delegate) ResolveContext(api *gio.ApiDefinition) error {
