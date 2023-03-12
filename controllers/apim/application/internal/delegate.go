@@ -17,6 +17,8 @@ package internal
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -43,6 +45,10 @@ func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate
 	return &Delegate{
 		ctx, k8s, log, nil,
 	}
+}
+
+func (d *Delegate) ResolveTemplate(application *gio.Application) error {
+	return template.NewResolver(d.ctx, d.k8s, d.log, application).Resolve()
 }
 
 func (d *Delegate) ResolveContext(application *gio.Application) error {
