@@ -60,6 +60,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	d := internal.NewDelegate(ctx, r.Client, logger)
+	if err := d.ResolveTemplate(ingress); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	events := e.NewRecorder(r.Recorder)
 	var reconcileErr error
