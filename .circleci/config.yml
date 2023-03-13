@@ -170,9 +170,7 @@ jobs:
       - run:
           name: Start APIM using k3d
           command: |
-            export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=master-latest
-            K3DARGS="--pull=${K3D_PULL}" make k3d-init
+            K3DARGS="--pull=${K3D_PULL}" APIM_HELM_VERSION=3.1.58 make k3d-init
       - run:
           name: Run tests
           command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test

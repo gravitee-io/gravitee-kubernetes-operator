@@ -31,6 +31,7 @@ const APIM_IMAGE_REGISTRY = `${
   process.env.APIM_IMAGE_REGISTRY || "graviteeio"
 }`;
 const APIM_IMAGE_TAG = `${process.env.APIM_IMAGE_TAG || "latest"}`;
+const APIM_HELM_VERSION = `${process.env.APIM_HELM_VERSION || ""}`;
 
 // Docker dependencies images tags
 const NGINX_CONTROLLER_IMAGE_TAG = "1.3.0";
@@ -263,6 +264,13 @@ LOG.blue(`
 
 setNoQuoteEscape();
 
+function getApimHelmVersion() {
+  if(!!APIM_HELM_VERSION) {
+    return "--version=" + APIM_HELM_VERSION;
+  }
+  return " ";
+}
+
 const helmInstallApim = $`
 helm install \
     --namespace ${K3D_NAMESPACE_NAME} \
@@ -307,7 +315,7 @@ helm install \
     --set "mongo.dbhost=mongodb" \
     --set "mongodb-replicaset=false" \
     --set "mongo.rsEnabled=false" \
-    apim graviteeio/apim3 > /dev/null
+    ${getApimHelmVersion()} apim graviteeio/apim3 > /dev/null
 `;
 
 const helmInstallMongo = $`
