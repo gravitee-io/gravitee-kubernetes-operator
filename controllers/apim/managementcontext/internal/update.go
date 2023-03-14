@@ -29,13 +29,16 @@ func CreateOrUpdate(
 	k8s client.Client,
 	instance *gio.ManagementContext,
 ) error {
+	// We only add a finalizer to our ManagementContexts to keep track of their deletion
 	if !util.ContainsFinalizer(instance, keys.ManagementContextDeletionFinalizer) {
 		util.AddFinalizer(instance, keys.ManagementContextDeletionFinalizer)
+
+		if err := k8s.Update(ctx, instance); err != nil {
+			err = fmt.Errorf("an error occurs while adding finalizer to the management context: %w", err)
+			return err
+		}
 	}
 
-	if err := k8s.Update(ctx, instance); err != nil {
-		err = fmt.Errorf("an error occurs while adding finalizer to the management context: %w", err)
-		return err
-	}
+	// We do nothing with Management Context
 	return nil
 }

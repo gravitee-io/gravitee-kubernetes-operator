@@ -69,7 +69,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, reconcileErr
 	}
 
-	return ctrl.Result{}, nil
+	// There was an error reconciling the Management Context
+	return ctrl.Result{}, reconcileErr
 }
 
 // SetupWithManager sets up the controller with the Manager.
