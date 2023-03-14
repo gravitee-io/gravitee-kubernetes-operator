@@ -49,8 +49,7 @@ func Delete(
 	}
 
 	if len(apis.Items) > 0 {
-		err = fmt.Errorf("can not delete %s because it depends on %v", instance.Name, apis)
-		return err
+		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apis.Items))
 	}
 
 	util.RemoveFinalizer(instance, keys.ManagementContextDeletionFinalizer)
