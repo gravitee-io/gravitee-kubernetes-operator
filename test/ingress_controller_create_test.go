@@ -147,7 +147,7 @@ var _ = Describe("Creating an ingress", func() {
 			host := new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/foo" + fixtureGenerator.Suffix
+				url := internal.GatewayUrl + "/ingress/foo" + fixtureGenerator.Suffix + "/hostname"
 				return cli.Get(url, host, xhttp.WithHost("foo.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -158,7 +158,7 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/bar" + fixtureGenerator.Suffix
+				url := internal.GatewayUrl + "/ingress/bar" + fixtureGenerator.Suffix + "/hostname"
 				return cli.Get(url, host, xhttp.WithHost("bar.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -169,7 +169,7 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/baz" + fixtureGenerator.Suffix
+				url := internal.GatewayUrl + "/ingress/baz" + fixtureGenerator.Suffix + "/hostname"
 				return cli.Get(url, host)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -180,7 +180,7 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/baz" + fixtureGenerator.Suffix
+				url := internal.GatewayUrl + "/ingress/baz" + fixtureGenerator.Suffix + "/hostname"
 				return cli.Get(url, host, xhttp.WithHost("unknown.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -189,7 +189,7 @@ var _ = Describe("Creating an ingress", func() {
 			By("Checking that a 404 is returned if no rule matches, using a custom template")
 
 			Eventually(func() error {
-				url := internal.GatewayUrl + "/ingress/baz" + fixtureGenerator.Suffix
+				url := internal.GatewayUrl + "/ingress/baz" + fixtureGenerator.Suffix + "/hostname"
 				callErr := cli.Get(url, host, xhttp.WithHost("foo.example.com"))
 				nfErr := new(apimErrors.ServerError)
 				if !errors.As(callErr, nfErr) {
