@@ -20,3 +20,4 @@ spec:
           : \"f1c9ff64-abcf-4671-9ddb-4fe4a172390d\"\n                },\n         \
           \       \"confidential-port\": 0,\n                \"policy-enforcer\": {}\n\
           }"
+  local: true
