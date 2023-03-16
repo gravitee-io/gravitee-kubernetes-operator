@@ -33,3 +33,4 @@ spec:
       - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
+  local: true

@@ -48,7 +48,7 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 		apiDefinition.Status.State = spec.State
 	}
 
-	if err := d.updateConfigMap(cp); err != nil {
+	if err := d.deploy(cp); err != nil {
 		return err
 	}
 
