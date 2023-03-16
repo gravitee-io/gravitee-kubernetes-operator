@@ -94,3 +94,7 @@ const (
 	PlanStatusDeprecated PlanStatus = "DEPRECATED"
 	PlanStatusClosed     PlanStatus = "CLOSED"
 )
+
+type ApiDeployment struct {
+	DeploymentLabel string `json:"deploymentLabel"`
+}
