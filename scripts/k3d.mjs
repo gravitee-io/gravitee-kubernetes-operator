@@ -319,6 +319,13 @@ const helmInstallApim = $`
 helm install \
     --namespace ${K3D_NAMESPACE_NAME} \
     --set "portal.enabled=false" \
+    --set "listeners.http.port=8082"
+    --set "listeners.https.port=8443"
+    --set "listeners.https.secured: false
+    --set "listeners.https.ssl.keystore.type"=jks"
+    --set "listeners.https.ssl.keystore.kubernetes=/default/secrets/gw-keystore/keystore"
+    --set "listeners.https.ssl.keystore.password=changeme"
+    --set "listeners.https.ssl.sni=true"
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/apim-gateway" \
     --set "gateway.services.sync.kubernetes.enabled=true" \
     --set "gateway.services.sync.kubernetes.namespaces=default" \
