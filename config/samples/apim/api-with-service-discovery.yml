@@ -48,3 +48,4 @@ spec:
             trustStoreType: "NONE"
             keyStoreType: "NONE"
             service: "test"
+  local: true

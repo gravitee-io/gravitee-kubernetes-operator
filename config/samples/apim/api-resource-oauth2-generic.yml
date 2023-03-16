@@ -26,3 +26,4 @@ spec:
       clientId: "0roMt9mBy1Fm_78suKoTdpIh"
       scopeSeparator: " ,"
       clientSecret: "YcNbtCHtOvvznmFhjCCbl6u-wp827MElS3m7l1Hsoupw4M4f"
+  local: true

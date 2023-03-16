@@ -38,3 +38,4 @@ spec:
     name: "build-version"
     format: "STRING"
     value: "0.0.1"
+  local: true

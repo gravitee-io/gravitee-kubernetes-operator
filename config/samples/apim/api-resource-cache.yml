@@ -11,3 +11,4 @@ spec:
       timeToIdleSeconds: 0
       timeToLiveSeconds: 0
       maxEntriesLocalHeap: 1000
+  local: true

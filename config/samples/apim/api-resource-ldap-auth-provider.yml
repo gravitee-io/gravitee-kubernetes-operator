@@ -20,3 +20,4 @@ spec:
       contextSourceBase: "dc=example,dc=com"
       contextSourceUsername: "cn=Directory Manager"
       contextSourcePassword: "password"
+  local: true
