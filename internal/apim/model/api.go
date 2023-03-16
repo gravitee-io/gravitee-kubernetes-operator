@@ -57,11 +57,6 @@ type ApiListItem struct {
 
 type Action string
 
-const (
-	ActionStart Action = "START"
-	ActionStop  Action = "STOP"
-)
-
 type Plan struct {
 	Id       string           `json:"id"`
 	CrossId  string           `json:"crossId"`
@@ -79,21 +74,7 @@ type Resource struct {
 
 type PlanSecurityType string
 
-const (
-	PlanSecurityTypeKeyLess PlanSecurityType = "KEY_LESS"
-	PlanSecurityTypeApiKey  PlanSecurityType = "API_KEY"
-	PlanSecurityTypeOauth2  PlanSecurityType = "OAUTH2"
-	PlanSecurityTypeJwt     PlanSecurityType = "JWT"
-)
-
 type PlanStatus string
-
-const (
-	PlanStatusStaging    PlanStatus = "STAGING"
-	PlanStatusPublished  PlanStatus = "PUBLISHED"
-	PlanStatusDeprecated PlanStatus = "DEPRECATED"
-	PlanStatusClosed     PlanStatus = "CLOSED"
-)
 
 type ApiDeployment struct {
 	DeploymentLabel string `json:"deploymentLabel"`
