@@ -11,3 +11,4 @@ spec:
       users:
           - username: "user"
             password: "password"
+  local: true

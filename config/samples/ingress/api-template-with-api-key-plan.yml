@@ -29,4 +29,5 @@ spec:
       description: 'Api key plan'
       security: API_KEY
       status: "PUBLISHED"
+  local: true
 

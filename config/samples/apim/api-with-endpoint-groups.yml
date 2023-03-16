@@ -87,3 +87,4 @@ spec:
       retryTimeout: 10000
       cases:
       - "TIMEOUT"
+  local: true
