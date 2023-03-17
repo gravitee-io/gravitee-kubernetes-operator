@@ -43,7 +43,7 @@ var _ = Describe("API Definition Controller", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
+				Api:     internal.ApiWithContextFile,
 				Context: internal.ContextWithSecretFile,
 			})
 

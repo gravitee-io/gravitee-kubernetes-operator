@@ -92,7 +92,7 @@ var _ = Describe("Create", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
+				Api:     internal.ApiWithContextFile,
 				Context: internal.ContextWithSecretFile,
 			})
 
