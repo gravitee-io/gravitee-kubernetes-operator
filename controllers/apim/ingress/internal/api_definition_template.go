@@ -99,6 +99,9 @@ func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 						Status:   "PUBLISHED",
 					},
 				},
+				Version:     "1.0.0",
+				Description: "A default keyless API",
+				IsLocal:     true,
 			},
 		},
 	}
