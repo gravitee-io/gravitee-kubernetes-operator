@@ -19,7 +19,7 @@ tests:
   - it: Should nest all needed resources
     asserts:
       - hasDocuments:
-          count: 11
+          count: 13
 
   - it: Should have manager service account in release namespace
     documentIndex: 0
@@ -46,7 +46,7 @@ tests:
           path: metadata.name
           value: gko-leader-election-role-RELEASE-NAME-NAMESPACE
 
-  - it: Should have manager cluster role
+  - it: Should have manager cluster role for CRD
     documentIndex: 2
     asserts:
       - isKind:
@@ -55,7 +55,7 @@ tests:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-manager-role-RELEASE-NAME-NAMESPACE
+          value: gko-manager-role-crd-RELEASE-NAME-NAMESPACE
 
   - it: Should have metrics cluster role
     documentIndex: 3
@@ -94,7 +94,7 @@ tests:
           path: metadata.namespace
           value: NAMESPACE
 
-  - it: Should have manager cluster role binding
+  - it: Should have manager cluster role binding for CRD
     documentIndex: 6
     asserts:
       - isKind:
@@ -103,7 +103,7 @@ tests:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-manager-rolebinding-RELEASE-NAME-NAMESPACE
+          value: gko-manager-rolebinding-crd-RELEASE-NAME-NAMESPACE
 
   - it: Should have proxy cluster role binding
     documentIndex: 7
@@ -169,3 +169,55 @@ tests:
       - equal:
           path: metadata.labels.control-plane
           value: controller-manager
+
+  - it: Should have manager cluster role  for config maps and secrets
+    documentIndex: 11
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - isAPIVersion:
+          of: rbac.authorization.k8s.io/v1
+      - equal:
+          path: metadata.name
+          value: gko-manager-role-RELEASE-NAME-NAMESPACE
+
+  - it: Should have manager cluster role binding for config maps and secrets
+    documentIndex: 12
+    asserts:
+      - isKind:
+          of: ClusterRoleBinding
+      - isAPIVersion:
+          of: rbac.authorization.k8s.io/v1
+      - equal:
+          path: metadata.name
+          value: gko-manager-rolebinding-RELEASE-NAME-NAMESPACE
+
+  - it: Should have manager role  for config maps and secrets
+    set:
+      manager:
+        scope:
+            cluster: false
+    documentIndex: 11
+    asserts:
+      - isKind:
+          of: Role
+      - isAPIVersion:
+          of: rbac.authorization.k8s.io/v1
+      - equal:
+          path: metadata.name
+          value: gko-manager-role-RELEASE-NAME-NAMESPACE
+
+  - it: Should have manager role binding for config maps and secrets
+    set:
+      manager:
+        scope:
+            cluster: false
+    documentIndex: 12
+    asserts:
+      - isKind:
+          of: RoleBinding
+      - isAPIVersion:
+          of: rbac.authorization.k8s.io/v1
+      - equal:
+          path: metadata.name
+          value: gko-manager-rolebinding-RELEASE-NAME-NAMESPACE

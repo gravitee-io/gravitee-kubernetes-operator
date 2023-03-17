@@ -31,7 +31,7 @@ k3d-push: ## Push the controller image to the k3d registry
 .PHONY: k3d-deploy
 k3d-deploy: ## Install operator helm chart to the k3d cluster
 	$(MAKE) helm-prepare IMG=$(K3D_IMG)
-	helm upgrade --install --create-namespace gko helm/gko -n gko-system
+	helm upgrade --install --create-namespace gko helm/gko -n default --set manager.scope.cluster=false
 
 .PHONY:
 k3d-admin: ## Gain a kubernetes context with admin role on the k3d cluster

@@ -20,7 +20,9 @@ resources:
 # subjects if changing service account names.
 - service_account.yaml
 - role.yaml
+- role_crd.yaml
 - role_binding.yaml
+- role_binding_crd.yaml
 - leader_election_role.yaml
 - leader_election_role_binding.yaml
 # Comment the following 4 lines if you want to disable
