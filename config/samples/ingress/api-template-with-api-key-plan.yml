@@ -29,5 +29,8 @@ spec:
       description: 'Api key plan'
       security: API_KEY
       status: "PUBLISHED"
+  contextRef:
+    name: "dev-ctx"
+    namespace: "default"
   local: true
 
