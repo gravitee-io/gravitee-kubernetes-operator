@@ -42,7 +42,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api:     internal.BasicApiFile,
+				Api:     internal.ApiWithContextFile,
 				Context: internal.ContextWithSecretFile,
 			})
 
