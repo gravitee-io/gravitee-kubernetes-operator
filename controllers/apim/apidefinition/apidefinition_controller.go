@@ -102,7 +102,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, delegate.UpdateStatusSuccess(apiDefinition)
 	}
 
-	if err := delegate.UpdateStatusFailure(apiDefinition, reconcileErr); err != nil {
+	if err := delegate.UpdateStatusFailure(apiDefinition); err != nil {
 		return ctrl.Result{}, err
 	}
 

@@ -43,9 +43,5 @@ func (s *Type) FindByFieldReferencing(
 		FieldSelector: fields.SelectorFromSet(fields.Set{field.String(): ref.String()}),
 	}
 
-	if err := s.k8s.List(s.ctx, result, filter); err != nil {
-		return err
-	}
-
-	return nil
+	return s.k8s.List(s.ctx, result, filter)
 }
