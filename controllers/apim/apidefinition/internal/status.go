@@ -26,7 +26,7 @@ func (d *Delegate) UpdateStatusSuccess(api *gio.ApiDefinition) error {
 	return d.k8s.Status().Update(d.ctx, api)
 }
 
-func (d *Delegate) UpdateStatusFailure(api *gio.ApiDefinition, err error) error {
+func (d *Delegate) UpdateStatusFailure(api *gio.ApiDefinition) error {
 	api.Status.Status = gio.ProcessingStatusFailed
 	return d.k8s.Status().Update(d.ctx, api)
 }

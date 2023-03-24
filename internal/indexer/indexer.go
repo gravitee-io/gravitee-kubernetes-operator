@@ -41,7 +41,7 @@ type Indexer struct {
 
 type Func = func(obj client.Object) []string
 
-func CreateIndexerFunc[T client.Object](field IndexField, doIndex func(T, *[]string)) Func {
+func CreateIndexerFunc[T client.Object](doIndex func(T, *[]string)) Func {
 	return func(obj client.Object) []string {
 		fields := []string{}
 		o, ok := obj.(T)
@@ -59,7 +59,7 @@ func CreateIndexerFunc[T client.Object](field IndexField, doIndex func(T, *[]str
 func NewIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) Indexer {
 	return Indexer{
 		Field: string(field),
-		Func:  CreateIndexerFunc(field, doIndex),
+		Func:  CreateIndexerFunc(doIndex),
 	}
 }
 

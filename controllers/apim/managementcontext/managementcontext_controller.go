@@ -53,10 +53,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	var reconcileErr error
 	if instance.IsBeingDeleted() {
 		reconcileErr = events.Record(event.Delete, instance, func() error {
-			if reconcileErr = internal.Delete(ctx, r.Client, instance); reconcileErr != nil {
-				return reconcileErr
-			}
-			return nil
+			return internal.Delete(ctx, r.Client, instance)
 		})
 	} else {
 		reconcileErr = events.Record(event.Update, instance, func() error {
