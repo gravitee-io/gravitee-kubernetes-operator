@@ -487,7 +487,9 @@ workflows:
           context: cicd-orchestrator
           matrix:
             parameters:
-              namespace: [apim-apim-master]
+              namespace:
+              - apim-apim-master
+              - apim-apim-3-21-x
               image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
           requires:
             - Stage image
