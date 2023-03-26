@@ -36,8 +36,7 @@ k3d-deploy: ## Install operator helm chart to the k3d cluster
 .PHONY:
 k3d-admin: ## Gain a kubernetes context with admin role on the k3d cluster
 	kubectl config use-context k3d-graviteeio
-	bash ./scripts/service_account.sh
-
+	npx zx ./scripts/service-account.mjs
 
 ifndef ignore-not-found
   ignore-not-found = false
