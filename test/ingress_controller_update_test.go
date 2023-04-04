@@ -96,7 +96,7 @@ var _ = Describe("Updating an ingress", func() {
 			}).ShouldNot(Equal(false))
 
 			By("Checking events")
-			Expect(
+			Eventually(
 				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
