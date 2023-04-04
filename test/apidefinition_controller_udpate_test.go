@@ -102,7 +102,7 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
-			Expect(
+			Eventually(
 				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
