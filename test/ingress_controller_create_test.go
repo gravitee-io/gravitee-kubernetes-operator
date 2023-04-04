@@ -81,7 +81,7 @@ var _ = Describe("Creating an ingress", func() {
 			))
 
 			By("Checking events")
-			Expect(
+			Eventually(
 				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
@@ -245,7 +245,7 @@ var _ = Describe("Creating an ingress", func() {
 			))
 
 			By("Checking events")
-			Expect(
+			Eventually(
 				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
@@ -343,7 +343,7 @@ var _ = Describe("Creating an ingress", func() {
 			Expect(createdApiDefinition.Spec.Plans[0].Security).Should(Equal("API_KEY"))
 
 			By("Checking events")
-			Expect(
+			Eventually(
 				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),

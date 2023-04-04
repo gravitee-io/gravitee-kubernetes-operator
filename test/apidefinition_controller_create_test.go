@@ -152,7 +152,7 @@ var _ = Describe("Create", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
-			Expect(
+			Eventually(
 				getEventsReason(apiDefinition.GetNamespace(), apiDefinition.GetName()),
 			).Should(
 				ContainElements([]string{"UpdateStarted", "UpdateSucceeded"}),

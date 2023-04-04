@@ -126,7 +126,7 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).ShouldNot(Succeed())
 
 			By("Check events")
-			Expect(
+			Eventually(
 				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
 			).Should(
 				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),

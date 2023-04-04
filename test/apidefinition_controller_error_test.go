@@ -117,7 +117,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Check events")
 
-			Expect(
+			Eventually(
 				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
 			).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
 
@@ -154,7 +154,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
-			Expect(
+			Eventually(
 				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
 			).Should(ContainElements([]string{"UpdateSucceeded"}))
 		})
