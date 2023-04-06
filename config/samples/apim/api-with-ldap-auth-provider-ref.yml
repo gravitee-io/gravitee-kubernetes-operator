@@ -4,7 +4,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-ldap-auth-provider"
-    namespace: default
+  
 spec:
     name: "with-ldap-auth-provider"
     version: "1"
@@ -16,7 +16,7 @@ spec:
     resources:
         - ref:
             name: reusable-resource-ldap-auth-provider
-            namespace: default
+          
     properties: []
     plans:
         - name: "free"

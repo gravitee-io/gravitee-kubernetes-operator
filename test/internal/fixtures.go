@@ -137,6 +137,7 @@ func (f *FixtureGenerator) NewApiDefinition(
 	}
 
 	api.Name += f.Suffix
+	api.Namespace = Namespace
 	api.Spec.Name += f.Suffix
 
 	if !isTemplate(api) {
@@ -154,6 +155,7 @@ func (f *FixtureGenerator) NewManagementContext(
 	}
 
 	ctx.Name += f.Suffix
+	ctx.Namespace = Namespace
 
 	return ctx, nil
 }
@@ -164,6 +166,7 @@ func (f *FixtureGenerator) NewApiResource(path string, transforms ...func(*gio.A
 		return nil, err
 	}
 	resource.Name += f.Suffix
+	resource.Namespace = Namespace
 
 	return resource, nil
 }
@@ -246,6 +249,7 @@ func (f *FixtureGenerator) NewIngress(path string, transforms ...func(*netV1.Ing
 		return nil, err
 	}
 	ingress.Name += f.Suffix
+	ingress.Namespace = Namespace
 
 	return ingress, nil
 }

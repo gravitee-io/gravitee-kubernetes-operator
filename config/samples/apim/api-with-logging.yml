@@ -17,7 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: with-logging
-  namespace: default
 spec:
   name: "With logging"
   version: "1.0"

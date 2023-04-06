@@ -3,7 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-inline-auth-provider-ref"
-    namespace: default
+  
 spec:
     name: "with-inline-auth-provider-ref"
     version: "1"
@@ -15,7 +15,7 @@ spec:
     resources:
         - ref:
             name: reusable-resource-inline-auth-provider
-            namespace: default
+          
     properties: []
     plans:
         - name: "free"
