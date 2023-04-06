@@ -11,13 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 # Use this context if you are running APIM and GKO in k3d
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ingress-with-tls
-  namespace: default
   annotations:
     kubernetes.io/ingress.class: graviteeio
   labels:

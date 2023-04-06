@@ -33,4 +33,3 @@ spec:
     name: "dev-ctx"
     namespace: "default"
   local: true
-

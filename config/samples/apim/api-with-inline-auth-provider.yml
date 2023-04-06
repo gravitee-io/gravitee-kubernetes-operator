@@ -3,7 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-inline-auth-provider"
-    namespace: default
+  
 spec:
     name: "with-inline-auth-provider"
     version: "1"

@@ -17,7 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: with-endpoint-groups
-  namespace: default
 spec:
   name: "With endpoint groups"
   version: "1.0"
