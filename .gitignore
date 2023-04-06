@@ -36,7 +36,3 @@ gko-config-default.yml
 cache/
 bundle/
 bundle.yml
-bundle.yaml
-
-# Helm release artifacts
-helm/gko/crds/*.yaml
