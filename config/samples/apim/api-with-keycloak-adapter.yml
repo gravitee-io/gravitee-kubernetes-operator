@@ -3,7 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-keycloak-adapter"
-    namespace: default
+  
 spec:
     name: "with-keycloak-adapter"
     version: "1"

@@ -17,7 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: with-hc
-  namespace: default
 spec:
   name: "With health check"
   version: "1.0"

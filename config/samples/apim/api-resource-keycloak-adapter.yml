@@ -2,7 +2,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiResource
 metadata:
   name: reusable-resource-keycloak-adapter
-  namespace: default
 spec:
   name: "keycloak-adapter"
   type: "oauth2-keycloak-resource"

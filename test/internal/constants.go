@@ -15,6 +15,8 @@
 package internal
 
 const (
+	Namespace = "default"
+
 	GatewayUrl = "http://localhost:9001"
 
 	SamplesPath = "../config/samples"

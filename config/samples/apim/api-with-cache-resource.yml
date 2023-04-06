@@ -3,7 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-cache-resource"
-    namespace: default
+  
 spec:
     name: "with-cache"
     version: "1"

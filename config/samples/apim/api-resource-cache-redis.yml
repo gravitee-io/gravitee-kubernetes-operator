@@ -2,7 +2,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiResource
 metadata:
   name: reusable-resource-cache-redis
-  namespace: default
 spec:
   name: "redis-cache"
   type: "cache-redis"

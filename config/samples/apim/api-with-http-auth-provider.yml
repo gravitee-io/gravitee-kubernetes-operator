@@ -3,7 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-http-auth-provider"
-    namespace: default
+  
 spec:
     name: "with-http-auth-provider"
     version: "1"

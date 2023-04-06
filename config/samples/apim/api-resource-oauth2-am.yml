@@ -2,7 +2,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiResource
 metadata:
   name: reusable-resource-oauth2-am
-  namespace: default
 spec:
   name: "oauth2-am-resource"
   type: "oauth2-am-resource"

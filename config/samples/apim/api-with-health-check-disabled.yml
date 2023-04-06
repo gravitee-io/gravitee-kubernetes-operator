@@ -17,7 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: with-disabled-hc
-  namespace: default
 spec:
   name: "With disabled health check"
   version: "1.0"
