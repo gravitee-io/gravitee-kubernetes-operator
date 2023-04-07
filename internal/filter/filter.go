@@ -31,5 +31,5 @@ func (NoFinalizerUpdateFilter) Update(e event.UpdateEvent) bool {
 	if len(e.ObjectOld.GetFinalizers()) != len(e.ObjectNew.GetFinalizers()) {
 		return false
 	}
-	return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
+	return true
 }
