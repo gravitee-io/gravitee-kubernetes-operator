@@ -25,6 +25,7 @@ import (
 	"golang.org/x/net/context"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func Delete(
@@ -32,7 +33,7 @@ func Delete(
 	client client.Client,
 	instance *gio.ManagementContext,
 ) error {
-	if !util.ContainsFinalizer(instance, keys.ManagementContextDeletionFinalizer) {
+	if !util.ContainsFinalizer(instance, keys.ManagementContextFinalizer) {
 		return nil
 	}
 
@@ -49,7 +50,8 @@ func Delete(
 	}
 
 	if len(apis.Items) > 0 {
-		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apis.Items))
+		log.FromContext(ctx).Info("context is referenced and will remain", "refCount", len(apis.Items))
+		return nil
 	}
 
 	apps := &gio.ApplicationList{}
@@ -69,7 +71,7 @@ func Delete(
 			instance.Name, len(apps.Items))
 	}
 
-	util.RemoveFinalizer(instance, keys.ManagementContextDeletionFinalizer)
+	util.RemoveFinalizer(instance, keys.ManagementContextFinalizer)
 
 	return client.Update(ctx, instance)
 }
