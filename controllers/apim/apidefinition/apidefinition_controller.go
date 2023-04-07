@@ -30,6 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/go-logr/logr"
@@ -83,7 +84,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if apiDefinition.Spec.Context != nil {
 		if err := delegate.ResolveContext(apiDefinition); err != nil {
-			logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
+			logger.Info("Unable to resolve context, no attempt will be made to sync with APIM")
 		}
 		delegate.AddDeletionFinalizer(apiDefinition)
 	}
@@ -124,5 +125,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts(indexer.ContextField)).
 		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.Watcher.WatchResources()).
 		WithEventFilter(filter.NoFinalizerUpdateFilter{}).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }
