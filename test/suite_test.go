@@ -109,6 +109,7 @@ var _ = SynchronizedBeforeSuite(func() {
 		Client:   k8sManager.GetClient(),
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: k8sManager.GetEventRecorderFor("managementcontext_controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &gio.ManagementContextList{}),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
@@ -142,6 +143,10 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
+	contextSecretsIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
+	err = cache.IndexField(ctx, &gio.ManagementContext{}, contextSecretsIndexer.Field, contextSecretsIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)

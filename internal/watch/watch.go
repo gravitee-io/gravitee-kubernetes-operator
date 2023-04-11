@@ -35,6 +35,7 @@ import (
 
 type Interface interface {
 	WatchContexts(index indexer.IndexField) *handler.Funcs
+	WatchContextSecrets() *handler.Funcs
 	WatchResources() *handler.Funcs
 	WatchApiTemplate() *handler.Funcs
 	WatchTLSSecret() *handler.Funcs
@@ -66,6 +67,13 @@ func (w *Type) WatchContexts(index indexer.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		UpdateFunc: w.UpdateFromLookup(index),
 		CreateFunc: w.CreateFromLookup(index),
+	}
+}
+
+func (w *Type) WatchContextSecrets() *handler.Funcs {
+	return &handler.Funcs{
+		UpdateFunc: w.UpdateFromLookup(indexer.SecretRefField),
+		CreateFunc: w.CreateFromLookup(indexer.SecretRefField),
 	}
 }
 

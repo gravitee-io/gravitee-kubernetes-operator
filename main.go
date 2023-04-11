@@ -144,6 +144,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
 		os.Exit(1)
@@ -181,6 +182,11 @@ func addIndexer(mgr manager.Manager) error {
 		return fmt.Errorf("unable to start manager (Indexing fields in API definition)")
 	}
 
+	err = indexSecretRefs(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in context resources)")
+	}
+
 	err = indexIngressFields(mgr)
 	if err != nil {
 		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
@@ -216,6 +222,14 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	}
 
 	return nil
+}
+
+func indexSecretRefs(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	secretRefIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
+	return cache.IndexField(ctx, &gio.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
 }
 
 func indexIngressFields(manager ctrl.Manager) error {
