@@ -22,9 +22,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/filter"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -38,6 +41,7 @@ type Reconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+	Watcher  watch.Interface
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts,verbs=get;list;watch;create;update;patch;delete
@@ -77,5 +81,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&gio.ManagementContext{}).
 		WithEventFilter(filter.NoFinalizerUpdateFilter{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		Watches(&source.Kind{Type: &v1.Secret{}}, r.Watcher.WatchContextSecrets()).
 		Complete(r)
 }
