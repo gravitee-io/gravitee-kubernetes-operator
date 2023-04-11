@@ -21,7 +21,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/filter"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/record"
@@ -49,20 +48,20 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
-	instance := &gio.ManagementContext{}
-	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+	managementContext := &gio.ManagementContext{}
+	if err := r.Get(ctx, req.NamespacedName, managementContext); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	events := event.NewRecorder(r.Recorder)
 	var reconcileErr error
-	if instance.IsBeingDeleted() {
-		reconcileErr = events.Record(event.Delete, instance, func() error {
-			return internal.Delete(ctx, r.Client, instance)
+	if managementContext.IsBeingDeleted() {
+		reconcileErr = events.Record(event.Delete, managementContext, func() error {
+			return internal.Delete(ctx, r.Client, managementContext)
 		})
 	} else {
-		reconcileErr = events.Record(event.Update, instance, func() error {
-			return internal.CreateOrUpdate(ctx, r.Client, instance)
+		reconcileErr = events.Record(event.Update, managementContext, func() error {
+			return internal.CreateOrUpdate(ctx, r.Client, managementContext)
 		})
 	}
 
@@ -79,7 +78,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ManagementContext{}).
-		WithEventFilter(filter.NoFinalizerUpdateFilter{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Watches(&source.Kind{Type: &v1.Secret{}}, r.Watcher.WatchContextSecrets()).
 		Complete(r)

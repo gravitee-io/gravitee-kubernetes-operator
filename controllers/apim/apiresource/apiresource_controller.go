@@ -20,17 +20,22 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 )
 
 // Reconciler reconciles a ApiResource object.
 type Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
 //+kubebuilder:rbac:groups=gravitee.io,resources=apiresources,verbs=get;list;watch;create;update;patch;delete
@@ -42,13 +47,31 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	instance := &gio.ApiResource{}
-
-	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+	log := log.FromContext(ctx)
+	apiResource := &gio.ApiResource{}
+	if err := r.Get(ctx, req.NamespacedName, apiResource); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	return ctrl.Result{}, nil
+	events := event.NewRecorder(r.Recorder)
+	var reconcileErr error
+	if apiResource.IsBeingDeleted() {
+		reconcileErr = events.Record(event.Delete, apiResource, func() error {
+			return internal.Delete(ctx, r.Client, apiResource)
+		})
+	} else {
+		reconcileErr = events.Record(event.Update, apiResource, func() error {
+			return internal.CreateOrUpdate(ctx, r.Client, apiResource)
+		})
+	}
+
+	if reconcileErr == nil {
+		log.Info("API Resource has been reconciled")
+		return ctrl.Result{}, nil
+	}
+
+	// There was an error reconciling the Management Context
+	return ctrl.Result{}, reconcileErr
 }
 
 // SetupWithManager sets up the controller with the Manager.
