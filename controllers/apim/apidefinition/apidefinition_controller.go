@@ -37,7 +37,6 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/filter"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 )
 
@@ -124,7 +123,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&gio.ApiDefinition{}).
 		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts(indexer.ContextField)).
 		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.Watcher.WatchResources()).
-		WithEventFilter(filter.NoFinalizerUpdateFilter{}).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

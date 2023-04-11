@@ -12,30 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package list
+package internal
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	v1 "k8s.io/api/core/v1"
-	netv1 "k8s.io/api/networking/v1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func OfType(obj interface{}) (client.ObjectList, error) {
-	switch obj.(type) {
-	case *v1alpha1.ApiDefinitionList:
-		return &v1alpha1.ApiDefinitionList{}, nil
-	case *v1alpha1.ManagementContextList:
-		return &v1alpha1.ManagementContextList{}, nil
-	case *netv1.IngressList:
-		return &netv1.IngressList{}, nil
-	case *v1.SecretList:
-		return &v1.SecretList{}, nil
-	case *v1alpha1.ApplicationList:
-		return &v1alpha1.ApplicationList{}, nil
-	default:
-		return nil, fmt.Errorf("unknown type %T", obj)
+func CreateOrUpdate(
+	ctx context.Context,
+	k8s client.Client,
+	instance *v1alpha1.ApiResource,
+) error {
+	if !util.ContainsFinalizer(instance, keys.ApiResourceFinalizer) {
+		util.AddFinalizer(instance, keys.ApiResourceFinalizer)
+
+		if err := k8s.Update(ctx, instance); err != nil {
+			err = fmt.Errorf("an error occurs while adding finalizer to the resource: %w", err)
+			return err
+		}
 	}
+
+	return nil
 }

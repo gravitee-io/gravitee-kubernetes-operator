@@ -43,6 +43,7 @@ const (
 	ApiDefinitionDeletionFinalizer = "finalizers.gravitee.io/apidefinitiondeletion"
 	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
 	ManagementContextFinalizer     = "finalizers.gravitee.io/managementcontextdeletion"
+	ApiResourceFinalizer           = "finalizers.gravitee.io/apiresource"
 	//nolint:gosec // This is not an hardcoded secret
 	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
 	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
