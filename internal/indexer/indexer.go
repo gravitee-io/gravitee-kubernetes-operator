@@ -25,6 +25,7 @@ type IndexField string
 
 const (
 	ContextField     IndexField = "context"
+	SecretRefField   IndexField = "secretRef"
 	ResourceField    IndexField = "resource"
 	ApiTemplateField IndexField = "api-template"
 	TLSSecretField   IndexField = "tls-secret"
@@ -70,6 +71,12 @@ func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	}
 
 	*fields = append(*fields, api.Spec.Context.String())
+}
+
+func IndexManagementContextSecrets(context *gio.ManagementContext, fields *[]string) {
+	if context.Spec.HasSecretRef() {
+		*fields = append(*fields, context.Spec.SecretRef().String())
+	}
 }
 
 func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {

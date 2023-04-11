@@ -30,6 +30,10 @@ func OfType(obj interface{}) (client.ObjectList, error) {
 		return &v1alpha1.ApiDefinitionList{}, nil
 	case *v1alpha1.ApiDefinition:
 		return &v1alpha1.ApiDefinitionList{}, nil
+	case *v1alpha1.ManagementContextList:
+		return &v1alpha1.ManagementContextList{}, nil
+	case *v1alpha1.ManagementContext:
+		return &v1alpha1.ManagementContextList{}, nil
 	case *netv1.IngressList:
 		return &netv1.IngressList{}, nil
 	case *v1.SecretList:

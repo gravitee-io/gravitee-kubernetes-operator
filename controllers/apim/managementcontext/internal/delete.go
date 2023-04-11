@@ -23,9 +23,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"golang.org/x/net/context"
+	coreV1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func Delete(
@@ -38,24 +38,39 @@ func Delete(
 	}
 
 	apis := &gio.ApiDefinitionList{}
-	err := search.New(ctx, client).FindByFieldReferencing(
+	if err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.ContextField,
 		model.NewNamespacedName(instance.Namespace, instance.Name),
 		apis,
-	)
-
-	if err != nil {
+	); err != nil {
 		err = fmt.Errorf("an error occurred while checking if the management context is linked to an api definition: %w", err)
 		return err
 	}
 
 	if len(apis.Items) > 0 {
-		log.FromContext(ctx).Info("context is referenced and will remain", "refCount", len(apis.Items))
-		return nil
+		// log.FromContext(ctx).Info("context is referenced and will remain", "refCount", len(apis.Items))
+		return fmt.Errorf("context is referenced and will remain")
+	}
+
+	if instance.Spec.HasSecretRef() {
+		contextList := gio.ManagementContextList{}
+		if err := search.New(ctx, client).FindByFieldReferencing(
+			indexer.SecretRefField,
+			*instance.Spec.SecretRef(),
+			&contextList,
+		); err != nil {
+			return err
+		}
+
+		if len(contextList.Items) <= 1 {
+			if err := removeSecretFinalizer(ctx, client, instance); err != nil {
+				return err
+			}
+		}
 	}
 
 	apps := &gio.ApplicationList{}
-	err = search.New(ctx, client).FindByFieldReferencing(
+	err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.AppContextField,
 		model.NewNamespacedName(instance.Namespace, instance.Name),
 		apps,
@@ -74,4 +89,19 @@ func Delete(
 	util.RemoveFinalizer(instance, keys.ManagementContextFinalizer)
 
 	return client.Update(ctx, instance)
+}
+
+func removeSecretFinalizer(ctx context.Context, client client.Client, instance *gio.ManagementContext) error {
+	secret := &coreV1.Secret{}
+	key := instance.Spec.SecretRef()
+	key.Namespace = getSecretNamespace(instance)
+	ns := key.ToK8sType()
+	if err := client.Get(ctx, ns, secret); err != nil {
+		return err
+	}
+	if util.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
+		util.RemoveFinalizer(secret, keys.ManagementContextSecretFinalizer)
+		return client.Update(ctx, secret)
+	}
+	return nil
 }
