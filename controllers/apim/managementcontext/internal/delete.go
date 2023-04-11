@@ -48,8 +48,7 @@ func Delete(
 	}
 
 	if len(apis.Items) > 0 {
-		// log.FromContext(ctx).Info("context is referenced and will remain", "refCount", len(apis.Items))
-		return fmt.Errorf("context is referenced and will remain")
+		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apis.Items))
 	}
 
 	if instance.Spec.HasSecretRef() {

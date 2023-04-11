@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/filter"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 
 	"github.com/go-logr/logr"
@@ -120,6 +119,5 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.Application{}).
 		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts(indexer.AppContextField)).
-		WithEventFilter(filter.NoFinalizerUpdateFilter{}).
 		Complete(r)
 }
