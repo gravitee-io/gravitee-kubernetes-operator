@@ -346,7 +346,7 @@ jobs:
           command: make helm-prepare
       - run:
           name: Run Helm unit tests
-          command: cd helm && helm unittest -3 gko
+          command: cd helm && helm unittest gko
       - go/save-cache
 
   helm-install:
