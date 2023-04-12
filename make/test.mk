@@ -11,4 +11,4 @@ test: manifests generate install ginkgo ## Run tests.
 .PHONY: helm-test
 helm-test: helm-unittest
 	@echo "Running helm unit tests ..."
-	@helm unittest -3 helm/gko
+	@helm unittest helm/gko
