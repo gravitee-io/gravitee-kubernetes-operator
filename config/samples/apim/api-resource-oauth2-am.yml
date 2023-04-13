@@ -14,4 +14,3 @@ spec:
       securityDomain: "gravitee"
       clientId: "0roMt9mBy1Fm_78suKoTdpIh"
       clientSecret: "0roMt9mBy1Fm_78suKoTdpIh"
-  local: true

@@ -20,4 +20,3 @@ spec:
           enabled: false
           masterId: "sentinel-master"
       password: "redispassword"
-  local: true
