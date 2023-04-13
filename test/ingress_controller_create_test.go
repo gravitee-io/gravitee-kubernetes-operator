@@ -117,11 +117,11 @@ var _ = Describe("Creating an ingress", func() {
 			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts).Should(
 				Equal([]*model.VirtualHost{
 					{
-						Host: "foo.example.com",
+						Host: "apim-3-21-x-v3-ingress.team-apim.gravitee.dev",
 						Path: "/ingress/foo" + fixtureGenerator.Suffix,
 					},
 					{
-						Host: "bar.example.com",
+						Host: "apim-3-21-x-v3-ingress-gateway.team-apim.gravitee.dev",
 						Path: "/ingress/bar" + fixtureGenerator.Suffix,
 					},
 					{
@@ -150,24 +150,24 @@ var _ = Describe("Creating an ingress", func() {
 
 			cli := xhttp.NewClient(ctx, nil)
 
-			By("Checking that rule with host foo.example.com is working")
+			By("Checking that rule with host apim-3-21-x-v3-ingress.team-apim.gravitee.dev is working")
 
 			host := new(internal.Host)
 
 			Eventually(func() error {
 				url := fmt.Sprintf("%s/ingress/foo%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
-				return cli.Get(url, host, xhttp.WithHost("foo.example.com"))
+				return cli.Get(url, host, xhttp.WithHost("apim-3-21-x-v3-ingress.team-apim.gravitee.dev"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Expect(internal.AssertHostPrefix(host, "httpbin-1")).ToNot(HaveOccurred())
 
-			By("Checking that rule with host bar.example.com is working")
+			By("Checking that rule with host apim-3-21-x-v3-ingress-gateway.team-apim.gravitee.dev is working")
 
 			host = new(internal.Host)
 
 			Eventually(func() error {
 				url := fmt.Sprintf("%s/ingress/bar%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
-				return cli.Get(url, host, xhttp.WithHost("bar.example.com"))
+				return cli.Get(url, host, xhttp.WithHost("apim-3-21-x-v3-ingress-gateway.team-apim.gravitee.dev"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Expect(internal.AssertHostPrefix(host, "httpbin-2")).ToNot(HaveOccurred())
@@ -198,7 +198,7 @@ var _ = Describe("Creating an ingress", func() {
 
 			Eventually(func() error {
 				url := fmt.Sprintf("%s/ingress/baz%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
-				callErr := cli.Get(url, host, xhttp.WithHost("foo.example.com"))
+				callErr := cli.Get(url, host, xhttp.WithHost("apim-3-21-x-v3-ingress.team-apim.gravitee.dev"))
 				nfErr := new(apimErrors.ServerError)
 				if !errors.As(callErr, nfErr) {
 					return internal.NewAssertionError("error", nfErr, callErr)
