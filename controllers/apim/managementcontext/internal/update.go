@@ -34,7 +34,7 @@ func CreateOrUpdate(
 		util.AddFinalizer(instance, keys.ManagementContextDeletionFinalizer)
 
 		if err := k8s.Update(ctx, instance); err != nil {
-			err = fmt.Errorf("an error occurs while adding finalizer to the management context: %w", err)
+			err = fmt.Errorf("an error occurred while adding finalizer to the management context: %w", err)
 			return err
 		}
 	}
