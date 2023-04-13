@@ -10,4 +10,3 @@ spec:
       method: "POST"
       condition: "{#authResponse.status == 200}"
       url: "http://authorization-server.com/basic"
-  local: true
