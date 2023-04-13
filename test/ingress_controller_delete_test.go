@@ -283,7 +283,7 @@ var _ = Describe("Deleting an ingress", func() {
 
 				for _, a := range ks.Aliases() {
 					if a == TLSCN {
-						return fmt.Errorf("tls keypair shouldn't be in the gwateway keystore")
+						return fmt.Errorf("tls keypair shouldn't be in the gateway keystore")
 					}
 				}
 

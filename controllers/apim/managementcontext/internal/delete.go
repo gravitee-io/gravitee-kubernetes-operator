@@ -44,7 +44,7 @@ func Delete(
 	)
 
 	if err != nil {
-		err = fmt.Errorf("an error occured while checking if the management context is linked to an api definition: %w", err)
+		err = fmt.Errorf("an error occurred while checking if the management context is linked to an api definition: %w", err)
 		return err
 	}
 
