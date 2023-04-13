@@ -128,9 +128,9 @@ func (d *Delegate) getKeystoreCredentials(ns string) (*keystoreCredentials, erro
 
 	if len(sl.Items) == 0 {
 		return nil, fmt.Errorf("%s %s %s:%s", "can't find a secret for accessing the gateway keystore",
-			"you need to lable you secret with", keys.GatewayKeystoreConfigSecret, "true")
+			"you need to label you secret with", keys.GatewayKeystoreConfigSecret, "true")
 	} else if len(sl.Items) > 1 {
-		return nil, fmt.Errorf("%s %s", "found more than one secrets with lable", keys.GatewayKeystoreConfigSecret)
+		return nil, fmt.Errorf("%s %s", "found more than one secrets with label", keys.GatewayKeystoreConfigSecret)
 	}
 
 	s := sl.Items[0]
@@ -185,7 +185,7 @@ func (d *Delegate) autoDiscoverGatewayKeystore(ns string) (*keystoreCredentials,
 		if len(ksPass) != k8sPropertyLength {
 			return nil,
 				fmt.Errorf("%s%s", "wrong Gateway keystore password",
-					"if you refrence a secret it should be like	/${NAMESPACE}/secrets/${SECRET_NAME}/${SECRET_KEY}")
+					"if you reference a secret it should be like	/${NAMESPACE}/secrets/${SECRET_NAME}/${SECRET_KEY}")
 		}
 
 		if ksPass[1] != ns {

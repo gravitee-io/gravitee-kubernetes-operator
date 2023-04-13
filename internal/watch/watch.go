@@ -144,8 +144,8 @@ func (w *Type) queueByFieldReferencing(
 	for i := range items {
 		if item, ok := items[i].(client.Object); !ok {
 			log.FromContext(w.ctx).Error(
-				fmt.Errorf("cating error"),
-				"unable to convert the item to client.Object type", "type", reflect.TypeOf(items[i]))
+				fmt.Errorf("unable to convert the item to client.Object type"),
+				"type", reflect.TypeOf(items[i]))
 		} else {
 			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 				Name:      item.GetName(),

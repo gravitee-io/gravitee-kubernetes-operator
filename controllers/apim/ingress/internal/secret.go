@@ -58,7 +58,7 @@ func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 
 		// Secret has been deleted while it still has reference to an ingress, not allowed
 		if !secret.DeletionTimestamp.IsZero() {
-			return fmt.Errorf("secret can't be deleted because it has reference to an exsintg ingress [%s]", ingress.Name)
+			return fmt.Errorf("secret can't be deleted because it has reference to an existing ingress [%s]", ingress.Name)
 		}
 
 		d.log.Info("Update GW keystore with new key pairs")
