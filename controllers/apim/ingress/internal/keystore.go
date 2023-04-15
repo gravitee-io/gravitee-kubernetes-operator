@@ -38,6 +38,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+const graviteeConfigFile = "gravitee.yml"
+
 type keystoreCredentials struct {
 	name string
 	pass []byte
@@ -150,7 +152,7 @@ func (d *Delegate) autoDiscoverGatewayKeystore(ns string) (*keystoreCredentials,
 
 	ksType, ok := keystoreYaml["type"].(string)
 	if !ok || ksType == "" {
-		return nil, fmt.Errorf("gravitee.yml doesn't include a http.ssl.keystore.type")
+		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore.type", graviteeConfigFile)
 	}
 
 	if ksType != "jks" {
@@ -159,12 +161,12 @@ func (d *Delegate) autoDiscoverGatewayKeystore(ns string) (*keystoreCredentials,
 
 	kubernetes, ok := keystoreYaml["kubernetes"].(string)
 	if !ok || kubernetes == "" {
-		return nil, fmt.Errorf("gravitee.yml doesn't include a http.ssl.keystore.kubernetes")
+		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore.kubernetes", graviteeConfigFile)
 	}
 
 	password, ok := keystoreYaml["password"].(string)
 	if !ok || password == "" {
-		return nil, fmt.Errorf("gravitee.yml doesn't include a http.ssl.keystore.password")
+		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore.password", graviteeConfigFile)
 	}
 
 	// kubernetes properties must have a length of 4 if you split them with "/"
@@ -214,29 +216,29 @@ func (d *Delegate) unmarshalGatewayConfig(ns string) (map[string]interface{}, er
 		return nil, client.IgnoreNotFound(err)
 	}
 
-	if len(cl.Items) != 1 || cl.Items[0].Data["gravitee.yml"] == "" {
+	if len(cl.Items) != 1 || cl.Items[0].Data[graviteeConfigFile] == "" {
 		d.log.Info("can't automatically find gateway gravitee.yml config")
-		return nil, kerrors.NewNotFound(core.Resource("gravitee.yml"), "gravitee.yml")
+		return nil, kerrors.NewNotFound(core.Resource(graviteeConfigFile), graviteeConfigFile)
 	}
 
 	yml := make(map[string]interface{})
-	if err := yaml.Unmarshal([]byte(cl.Items[0].Data["gravitee.yml"]), yml); err != nil {
+	if err := yaml.Unmarshal([]byte(cl.Items[0].Data[graviteeConfigFile]), yml); err != nil {
 		return nil, err
 	}
 
 	http, ok := yml["http"].(map[string]interface{})
 	if !ok || http == nil {
-		return nil, fmt.Errorf("gravitee.yml doesn't include a http section")
+		return nil, fmt.Errorf("%s doesn't include a http section", graviteeConfigFile)
 	}
 
 	ssl, ok := http["ssl"].(map[string]interface{})
 	if !ok || ssl == nil {
-		return nil, fmt.Errorf("gravitee.yml doesn't include a http.ssl section")
+		return nil, fmt.Errorf("%s doesn't include a http.ssl section", graviteeConfigFile)
 	}
 
 	ks, ok := ssl["keystore"].(map[string]interface{})
 	if !ok || ks == nil {
-		return nil, fmt.Errorf("gravitee.yml doesn't include a http.ssl.keystore section")
+		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore section", graviteeConfigFile)
 	}
 
 	return ks, nil
