@@ -59,10 +59,6 @@ export async function registerImages() {
             `${K3D_IMAGES_REGISTRY}/mongodb:${env.MONGO_IMAGE_TAG}`,
         ],
         [
-            `docker.elastic.co/elasticsearch/elasticsearch:${env.ELASTIC_IMAGE_TAG}`,
-            `${K3D_IMAGES_REGISTRY}/elasticsearch:${env.ELASTIC_IMAGE_TAG}`,
-        ],
-        [
             `docker.io/bitnami/nginx-ingress-controller:${env.NGINX_CONTROLLER_IMAGE_TAG}`,
             `${K3D_IMAGES_REGISTRY}/nginx-ingress-controller:${env.NGINX_CONTROLLER_IMAGE_TAG}`,
         ],
