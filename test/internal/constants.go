@@ -17,9 +17,9 @@ package internal
 const (
 	Namespace = "default"
 
-	GatewayUrl = "http://localhost:9001"
-
-	SamplesPath = "../config/samples"
+	GatewayUrl    = "http://localhost:9001"
+	ManagementUrl = "http://localhost:9000/management"
+	SamplesPath   = "../config/samples"
 
 	ContextWithSecretFile      = SamplesPath + "/context/dev/management-context-with-secret-ref.yml"
 	ContextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yml"
@@ -63,4 +63,5 @@ const (
 	IngressWithTemplateFile             = SamplesPath + "/ingress/ingress-with-api-template.yml"
 	IngressWithMultipleHosts            = SamplesPath + "/ingress/ingress-with-multiple-hosts.yml"
 	IngressWithTLS                      = SamplesPath + "/ingress/ingress-with-tls.yml"
+	BasicApplication                    = SamplesPath + "/apim/basic-application.yml"
 )

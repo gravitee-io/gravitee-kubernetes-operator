@@ -33,17 +33,19 @@ import (
 var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
-	Api      *gio.ApiDefinition
-	Context  *gio.ManagementContext
-	Resource *gio.ApiResource
-	Ingress  *netV1.Ingress
+	Api         *gio.ApiDefinition
+	Context     *gio.ManagementContext
+	Resource    *gio.ApiResource
+	Ingress     *netV1.Ingress
+	Application *gio.Application
 }
 
 type FixtureFiles struct {
-	Api      string
-	Context  string
-	Resource string
-	Ingress  string
+	Api         string
+	Context     string
+	Resource    string
+	Ingress     string
+	Application string
 }
 
 type FixtureGenerator struct {
@@ -111,11 +113,32 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 		fixtures.Ingress = ingress
 	}
 
+	err := f.addApplication(files, fixtures)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, transform := range transforms {
 		transform(fixtures)
 	}
 
 	return fixtures, nil
+}
+
+func (f *FixtureGenerator) addApplication(files FixtureFiles, fixtures *Fixtures) error {
+	if files.Application != "" {
+		application, err := f.NewApplication(files.Application)
+		if err != nil {
+			return err
+		}
+		fixtures.Application = application
+	}
+
+	if fixtures.Context != nil && fixtures.Application != nil {
+		fixtures.Application.Spec.Context = fixtures.Context.GetNamespacedName()
+	}
+
+	return nil
 }
 
 func ingressHttpPathTransformer(f *FixtureGenerator) func(ingress *netV1.Ingress) {
@@ -276,6 +299,41 @@ func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress
 	}
 
 	return resource, nil
+}
+
+func (f *FixtureGenerator) NewApplication(path string,
+	transforms ...func(application *gio.Application)) (*gio.Application, error) {
+	application, err := newApplication(path, transforms...)
+	if err != nil {
+		return nil, err
+	}
+	application.Name += f.Suffix
+
+	return application, nil
+}
+
+func newApplication(path string, transforms ...func(application *gio.Application)) (*gio.Application, error) {
+	crd, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := gio.GroupVersion.WithKind("Application")
+	decoded, _, err := decode(crd, &gvk, new(gio.Application))
+	if err != nil {
+		return nil, err
+	}
+
+	application, ok := decoded.(*gio.Application)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of Application CRD")
+	}
+
+	for _, transform := range transforms {
+		transform(application)
+	}
+
+	return application, nil
 }
 
 func randomSuffix() string {

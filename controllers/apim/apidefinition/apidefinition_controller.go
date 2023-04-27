@@ -20,6 +20,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -106,7 +109,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if internal.IsRecoverable(reconcileErr) {
+	if apim.IsRecoverable(reconcileErr) {
 		logger.Error(reconcileErr, "Requeuing reconcile")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}
@@ -118,7 +121,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ApiDefinition{}).
-		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts()).
+		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts(indexer.ContextField)).
 		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.Watcher.WatchResources()).
 		WithEventFilter(filter.NoFinalizerUpdateFilter{}).
 		Complete(r)

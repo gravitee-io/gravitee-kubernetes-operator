@@ -24,6 +24,8 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+
 	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -107,40 +109,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&apidefinition.Reconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApiDefinitionList{}),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
-		os.Exit(1)
-	}
+	registerControllers(mgr)
 
-	if err = (&managementcontext.Reconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
-		os.Exit(1)
-	}
-	if err = (&ingress.Reconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1.IngressList{}),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
-		os.Exit(1)
-	}
-	if err = (&apiresource.Reconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiResource")
-		os.Exit(1)
-	}
 	//+kubebuilder:scaffold:builder
 
 	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
@@ -159,6 +129,52 @@ func main() {
 	}
 }
 
+func registerControllers(mgr manager.Manager) {
+	if err := (&apidefinition.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApiDefinitionList{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
+		os.Exit(1)
+	}
+
+	if err := (&managementcontext.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
+		os.Exit(1)
+	}
+	if err := (&ingress.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1.IngressList{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
+		os.Exit(1)
+	}
+	if err := (&apiresource.Reconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApiResource")
+		os.Exit(1)
+	}
+	if err := (&application.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("application-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApplicationList{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Application")
+		os.Exit(1)
+	}
+}
+
 func addIndexer(mgr manager.Manager) error {
 	err := indexApiDefinitionFields(mgr)
 	if err != nil {
@@ -173,6 +189,11 @@ func addIndexer(mgr manager.Manager) error {
 	err = indexTLSSecretFields(mgr)
 	if err != nil {
 		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
+	}
+
+	err = indexApplicationFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in application resources)")
 	}
 
 	return nil
@@ -216,6 +237,19 @@ func indexTLSSecretFields(manager ctrl.Manager) error {
 
 	tlsSecretIndexer := indexer.NewIndexer(indexer.TLSSecretField, indexer.IndexTLSSecret)
 	err := cache.IndexField(ctx, &v1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func indexApplicationFields(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
+	err := cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
 	if err != nil {
 		return err
 	}
