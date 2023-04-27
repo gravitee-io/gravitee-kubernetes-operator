@@ -19,6 +19,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
 	netv1 "k8s.io/api/networking/v1"
@@ -127,6 +129,15 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&application.Reconciler{
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("application-controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &gio.ApplicationList{}),
+	}).SetupWithManager(k8sManager)
+
+	Expect(err).ToNot(HaveOccurred())
+
 	cache := k8sManager.GetCache()
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
@@ -148,6 +159,10 @@ var _ = SynchronizedBeforeSuite(func() {
 	// Set initial values for env variables
 	env.Config.CMTemplate404NS = namespace
 	env.Config.CMTemplate404Name = "template-404"
+
+	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
+	err = cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
@@ -178,6 +193,10 @@ var _ = SynchronizedAfterSuite(func() {
 	Consistently(k8sClient.DeleteAllOf(
 		ctx,
 		&gio.ApiDefinition{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.Application{},
 		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
 	Consistently(k8sClient.DeleteAllOf(
 		ctx,

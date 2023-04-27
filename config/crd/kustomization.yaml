@@ -19,6 +19,7 @@ resources:
 - bases/gravitee.io_apidefinitions.yaml
 - bases/gravitee.io_managementcontexts.yaml
 - bases/gravitee.io_apiresources.yaml
+- bases/gravitee.io_applications.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

@@ -25,7 +25,8 @@ import (
 
 // APIM wraps services needed to sync resources with a given environment on a Gravitee.io APIM instance.
 type APIM struct {
-	APIs *service.APIs
+	APIs         *service.APIs
+	Applications *service.Applications
 
 	orgID string
 	envID string
@@ -55,9 +56,10 @@ func FromContext(ctx context.Context, managementContext model.Context) (*APIM, e
 	}
 
 	return &APIM{
-		APIs:  service.NewAPIs(client),
-		orgID: orgID,
-		envID: envID,
+		APIs:         service.NewAPIs(client),
+		Applications: service.NewApplications(client),
+		orgID:        orgID,
+		envID:        envID,
 	}, nil
 }
 

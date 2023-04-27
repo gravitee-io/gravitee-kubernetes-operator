@@ -34,6 +34,8 @@ func OfType(obj interface{}) (client.ObjectList, error) {
 		return &netv1.IngressList{}, nil
 	case *v1.SecretList:
 		return &v1.SecretList{}, nil
+	case *v1alpha1.ApplicationList:
+		return &v1alpha1.ApplicationList{}, nil
 	default:
 		return nil, fmt.Errorf("unknown type %T", obj)
 	}
