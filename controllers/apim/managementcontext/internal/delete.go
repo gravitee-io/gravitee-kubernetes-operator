@@ -52,6 +52,23 @@ func Delete(
 		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apis.Items))
 	}
 
+	apps := &gio.ApplicationList{}
+	err = search.New(ctx, client).FindByFieldReferencing(
+		indexer.AppContextField,
+		model.NewNamespacedName(instance.Namespace, instance.Name),
+		apps,
+	)
+
+	if err != nil {
+		err = fmt.Errorf("an error occurred while checking if the management context is linked to an application: %w", err)
+		return err
+	}
+
+	if len(apps.Items) > 0 {
+		return fmt.Errorf("can not delete %s because %d application(s) are relying on this context",
+			instance.Name, len(apps.Items))
+	}
+
 	util.RemoveFinalizer(instance, keys.ManagementContextDeletionFinalizer)
 
 	return client.Update(ctx, instance)

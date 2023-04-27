@@ -43,4 +43,5 @@ const (
 	ManagementContextDeletionFinalizer = "finalizers.gravitee.io/managementcontextdeletion"
 	IngressFinalizer                   = "finalizers.gravitee.io/ingress"
 	KeyPairFinalizer                   = "finalizers.gravitee.io/keypair"
+	ApplicationDeletionFinalizer       = "finalizers.gravitee.io/applicationdeletion"
 )

@@ -28,6 +28,7 @@ const (
 	ResourceField    IndexField = "resource"
 	ApiTemplateField IndexField = "api-template"
 	TLSSecretField   IndexField = "tls-secret"
+	AppContextField  IndexField = "app-context"
 )
 
 func (f IndexField) String() string {
@@ -103,4 +104,12 @@ func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
 	for i := range ing.Spec.TLS {
 		*fields = append(*fields, ing.Namespace+"/"+ing.Spec.TLS[i].SecretName)
 	}
+}
+
+func IndexApplicationManagementContexts(application *gio.Application, fields *[]string) {
+	if application.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, application.Spec.Context.String())
 }
