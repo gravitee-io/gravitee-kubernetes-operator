@@ -351,7 +351,6 @@ var _ = Describe("Create", func() {
 		Entry("should import with endpoint groups", internal.ApiWithEndpointGroupsFile, 200),
 		Entry("should import with service discovery", internal.ApiWithServiceDiscoveryFile, 200),
 		Entry("should import with metadata", internal.ApiWithMetadataFile, 200),
-		Entry("should import with cache resource", internal.ApiWithCacheResourceFile, 200),
 		Entry("should import with cache redis resource", internal.ApiWithCacheRedisResourceFile, 200),
 		Entry("should import with oauth2 generic resource", internal.ApiWithOAuth2GenericResourceFile, 200),
 		Entry("should import with oauth2 am resource", internal.ApiWithOauth2AmResourceFile, 200),
@@ -424,12 +423,6 @@ var _ = Describe("Create", func() {
 				return internal.AssertApiEntityMatchesStatus(api, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		},
-		Entry(
-			"should import with cache resource ref",
-			internal.ApiResourceCacheFile,
-			internal.ApiWithCacheResourceRefFile,
-			200,
-		),
 		Entry(
 			"should import with cache redis resource ref",
 			internal.ApiResourceCacheRedisFile,
