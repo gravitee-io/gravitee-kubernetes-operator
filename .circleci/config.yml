@@ -6,7 +6,7 @@ orbs:
   helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.3
   gravitee: gravitee-io/gravitee@2.5.0
-  slack: circleci/slack@4.12.1
+  slack: circleci/slack@4.12.3
 
 parameters:
   go-version:
