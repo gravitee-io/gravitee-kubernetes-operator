@@ -287,7 +287,7 @@ var _ = Describe("Creating an ingress", func() {
 					}
 				}
 
-				return fmt.Errorf("no keyair found for %s in the keystore", TLSCN)
+				return fmt.Errorf("no keypair found for %s in the keystore", TLSCN)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Expect(k8sClient.Delete(ctx, ingressFixture)).Should(Succeed())

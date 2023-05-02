@@ -26,6 +26,7 @@ import (
 	"github.com/pavlo-v-chernykh/keystore-go/v4"
 	core "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -146,60 +147,48 @@ var _ = Describe("Deleting an ingress", func() {
 			Expect(createdAPIDefinition.Spec.Plans[0].Security).Should(Equal("API_KEY"))
 		})
 
-		When("API template has a reference to an exiting ingress", func() {
-			It("Should NOT delete the API Template", func() {
-				By("Deleting the API definition template")
-				Expect(k8sClient.Delete(ctx, apiDefinitionTemplate)).ToNot(HaveOccurred())
-				Eventually(func() error {
-					By("Expect the API Template to be still available")
+		It("Should delete the API template once not referenced", func() {
+			By("Deleting the API definition template")
+			Expect(k8sClient.Delete(ctx, apiDefinitionTemplate)).ToNot(HaveOccurred())
+			Eventually(func() error {
+				By("Expect the API Template to be still available")
 
-					savedAPITemplate := new(gio.ApiDefinition)
-					return k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate)
-				}).Should(Succeed())
+				savedAPITemplate := new(gio.ApiDefinition)
+				return k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate)
+			}).Should(Succeed())
 
-				Expect(k8sClient.Delete(ctx, createdIngress)).ToNot(HaveOccurred())
-			})
-		})
+			Expect(k8sClient.Delete(ctx, createdIngress)).ToNot(HaveOccurred())
 
-		When("API template does not have a reference to an exiting ingress", func() {
-			It("Should delete the Ingress and the ApiDefinition", func() {
-				By("Deleting the Ingress")
-				Expect(k8sClient.Delete(ctx, createdIngress)).ToNot(HaveOccurred())
+			By("Checking the Ingress has been deleted")
+			ing := &netV1.Ingress{}
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, ingressLookupKey, ing)
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("Should not find ingress: %s", ingressLookupKey)
+			}, timeout, interval).Should(Succeed())
 
-				By("Checking the Ingress has been deleted")
-				ing := &netV1.Ingress{}
-				Eventually(func() error {
-					return k8sClient.Get(ctx, ingressLookupKey, ing)
-				}, timeout, interval).ShouldNot(Succeed())
+			By("Checking the API Template has been deleted")
+			api := &gio.ApiDefinition{}
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, apiTemplateLookupKey, api)
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("Should not find api template: %s", apiTemplateLookupKey)
+			}, timeout, interval).Should(Succeed())
 
-				api := &gio.ApiDefinition{}
-				Eventually(func() error {
-					err := k8sClient.Get(ctx, ingressLookupKey, api)
-					return err
-				}, timeout, interval).ShouldNot(Succeed())
-
-				By("Deleting the API definition template")
-
-				Eventually(func() error {
-					savedAPITemplate := new(gio.ApiDefinition)
-					if err := k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate); err != nil {
-						return err
-					}
-
-					return k8sClient.Delete(ctx, savedAPITemplate)
-				}, timeout, interval).Should(Succeed())
-
-				By("Checking events")
-				Expect(
-					getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
-				).Should(
-					ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
-				)
-			})
+			By("Checking events")
+			Expect(
+				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+			).Should(
+				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
+			)
 		})
 	})
 
-	Context("With API definition template", func() {
+	Context("With API definition template and TLS", func() {
 		It("Should delete the Ingress, the default ApiDefinition and keypair in GW keystore", func() {
 			By("Initializing the Ingress fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
