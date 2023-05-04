@@ -229,23 +229,26 @@ func addEventIndexes() error {
 	return err
 }
 
-func getEventsReason(namespace string, name string) []string {
-	eventsReason := []string{}
+func getEventReasons(obj client.Object) func() []string {
+	return func() []string {
+		eventsReason := []string{}
 
-	events := &v1.EventList{}
+		events := &v1.EventList{}
 
-	err := k8sClient.List(
-		ctx,
-		events,
-		&client.ListOptions{Namespace: namespace},
-		client.MatchingFields{"involvedObject.name": name},
-	)
-	Expect(err).ToNot(HaveOccurred())
+		if err := k8sClient.List(
+			ctx,
+			events,
+			&client.ListOptions{Namespace: obj.GetNamespace()},
+			client.MatchingFields{"involvedObject.name": obj.GetName()},
+		); err != nil {
+			return nil
+		}
 
-	for _, event := range events.Items {
-		eventsReason = append(eventsReason, event.Reason)
+		for _, event := range events.Items {
+			eventsReason = append(eventsReason, event.Reason)
+		}
+		return eventsReason
 	}
-	return eventsReason
 }
 
 func template404() *v1.ConfigMap {
