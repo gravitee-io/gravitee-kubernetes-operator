@@ -87,7 +87,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 	reconcilable := func(o runtime.Object) bool {
 		switch t := o.(type) {
 		case *netV1.Ingress:
-			return t.GetAnnotations()[keys.IngressClassAnnotation] == keys.IngressClassAnnotationValue
+			return isGraviteeIngress(t)
 		case *v1alpha1.ApiDefinition:
 			return t.GetLabels()[keys.CrdApiDefinitionTemplate] == "true"
 		case *corev1.Secret:
@@ -108,9 +108,6 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			if e.ObjectOld == nil || e.ObjectNew == nil {
 				return false
 			}
-			if len(e.ObjectOld.GetFinalizers()) != len(e.ObjectNew.GetFinalizers()) {
-				return false
-			}
 
 			// for some reasons "generation" is not set for the TLS secretes
 			if _, ok := e.ObjectNew.(*corev1.Secret); ok &&
@@ -124,6 +121,13 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			return reconcilable(e.Object)
 		},
 	}
+}
+
+func isGraviteeIngress(ingress *netV1.Ingress) bool {
+	if ingress.Spec.IngressClassName != nil {
+		return *(ingress.Spec.IngressClassName) == keys.IngressClassAnnotationValue
+	}
+	return ingress.GetAnnotations()[keys.IngressClassAnnotation] == keys.IngressClassAnnotationValue
 }
 
 // SetupWithManager initializes ingress controller manager.
