@@ -82,7 +82,7 @@ var _ = Describe("Deleting an ingress", func() {
 
 			By("Checking events")
 			Eventually(
-				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+				getEventReasons(ingressFixture), timeout, interval,
 			).Should(
 				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
 			)
@@ -190,8 +190,8 @@ var _ = Describe("Deleting an ingress", func() {
 				}, timeout, interval).Should(Succeed())
 
 				By("Checking events")
-				Expect(
-					getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+				Eventually(
+					getEventReasons(ingressFixture), timeout, interval,
 				).Should(
 					ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
 				)
@@ -246,7 +246,7 @@ var _ = Describe("Deleting an ingress", func() {
 
 			By("Checking events")
 			Eventually(
-				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+				getEventReasons(ingressFixture), timeout, interval,
 			).Should(
 				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
 			)

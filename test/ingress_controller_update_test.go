@@ -97,7 +97,7 @@ var _ = Describe("Updating an ingress", func() {
 
 			By("Checking events")
 			Eventually(
-				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+				getEventReasons(ingressFixture), timeout, interval,
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
@@ -179,8 +179,8 @@ var _ = Describe("Updating an ingress", func() {
 				Expect(updateAPIDefinition.Spec.Plans[1].Security).Should(Equal("KEY_LESS"))
 
 				By("Checking events")
-				Expect(
-					getEventsReason(ingressLookupKey.Namespace, ingressLookupKey.Name),
+				Eventually(
+					getEventReasons(ingressFixture), timeout, interval,
 				).Should(
 					ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 				)
@@ -238,8 +238,8 @@ var _ = Describe("Updating an ingress", func() {
 				}).ShouldNot(Equal(false))
 
 				By("Checking events")
-				Expect(
-					getEventsReason(ingressLookupKey.Namespace, ingressLookupKey.Name),
+				Eventually(
+					getEventReasons(ingressFixture), timeout, interval,
 				).Should(
 					ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 				)
