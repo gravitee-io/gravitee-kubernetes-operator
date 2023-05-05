@@ -3,7 +3,6 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-keycloak-adapter-ref"
-  
 spec:
     name: "with-keycloak-adapter-ref"
     version: "1"
@@ -15,7 +14,7 @@ spec:
     resources:
         - ref:
             name: reusable-resource-keycloak-adapter
-          
+            namespace: default
     properties: []
     plans:
         - name: "free"
