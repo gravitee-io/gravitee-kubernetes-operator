@@ -69,7 +69,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	delegate := internal.NewDelegate(ctx, r.Client, logger)
 	events := event.NewRecorder(r.Recorder)
 
-	if apiDefinition.GetLabels()[keys.CrdApiDefinitionTemplate] == "true" {
+	if apiDefinition.GetLabels()[keys.IngressTemplateAnnotation] == "true" {
 		logger.Info("syncing template", "template", apiDefinition.Name)
 
 		if err := delegate.SyncApiDefinitionTemplate(apiDefinition, req.Namespace); err != nil {
