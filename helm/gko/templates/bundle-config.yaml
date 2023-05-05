@@ -17,12 +17,15 @@ apiVersion: v1
 metadata:
   name: {{ .Values.manager.configMap.name }}
 data:
-{{- if not .Values.manager.scope.cluster }}
+  {{- if not .Values.manager.scope.cluster }}
   NAMESPACE: {{ .Release.Namespace }}
-{{- end }}
-{{- if not .Values.manager.logs.json }}
+  {{- end }}
+  {{- if .Values.manager.applyCRDs }}
+  APPLY_CRDS: "true"
+  {{- end }}
+  {{- if not .Values.manager.logs.json }}
   DEV_MODE: "true"
-{{- end }}
+  {{- end }}
   {{- $template404 := get .Values.ingress.templates "404" }}
   {{- if $template404.name }}
   TEMPLATE_404_CONFIG_MAP_NAME: {{ $template404.name }}
