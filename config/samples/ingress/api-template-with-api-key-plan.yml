@@ -19,7 +19,7 @@ metadata:
   name: api-template-with-api-key-plan
   namespace: "default"
   labels:
-    template: "true"
+    gravitee.io/template: "true"
 spec:
   name: "K8s ApiKey Example"
   version: "1.0"
