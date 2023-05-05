@@ -210,8 +210,7 @@ func (d *Delegate) unmarshalGatewayConfig(ns string) (map[string]interface{}, er
 		d.ctx, cl,
 		client.InNamespace(ns),
 		client.MatchingLabels{
-			// Search for default helm chart labels
-			"gravitee.io/component": "gateway",
+			keys.GraviteeComponentLabel: keys.IngressComponentLabelValue,
 		}); err != nil {
 		return nil, client.IgnoreNotFound(err)
 	}
