@@ -15,21 +15,16 @@
 package test
 
 import (
-	"fmt"
-	"net/http"
-	"time"
-
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	ihttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Deleting an Application", func() {
-	httpClient := http.Client{Timeout: 5 * time.Second}
+	// httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("Deleting an Application", func() {
 
@@ -65,45 +60,25 @@ var _ = Describe("Deleting an Application", func() {
 			By("Getting created application and expect to find it")
 			createdApplication := &gio.Application{}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, appLookupKey, createdApplication)
+				if err = k8sClient.Get(ctx, appLookupKey, createdApplication); err != nil {
+					return err
+				}
+				return internal.AssertApplicationStatusIsSet(createdApplication)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			expectedApiName := applicationFixture.Name
-			Expect(createdApplication.Name).Should(Equal(expectedApiName))
+			expectedApplicationName := applicationFixture.Name
+			Expect(createdApplication.Name).Should(Equal(expectedApplicationName))
 
 			Expect(createdApplication.Spec.Name).Should(Equal(applicationFixture.Spec.Name))
 			Expect(len(*createdApplication.Spec.ApplicationMetaData)).Should(Equal(2))
 
 			By("Call Management API and expect the Application to be available")
-			var endpoint = fmt.Sprintf("%s/organizations/%s/environments/%s/applications",
-				internal.ManagementUrl, managementContext.Spec.OrgId, managementContext.Spec.EnvId)
+			apim, err := internal.NewAPIM(ctx)
+			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
-				req, _ := http.NewRequest("GET", endpoint, nil)
-				req.Header.Add("Authorization", "Basic "+basicAuth(managementContext))
-
-				resp, callErr := httpClient.Do(req)
-				if callErr != nil {
-					return err
-				}
-
-				applications := new([]*model.Application)
-				callErr = ihttp.WriteJSON(resp, applications)
-				if callErr != nil {
-					return err
-				}
-
-				if applications == nil || len(*applications) < 2 {
-					return fmt.Errorf("application hasn't been created")
-				}
-
-				for _, app := range *applications {
-					if app.Name == applicationFixture.Spec.Name {
-						return nil
-					}
-				}
-
-				return fmt.Errorf("can't find any application with the given name %s", applicationFixture.Spec.Name)
+				_, err = apim.Applications.GetByID(createdApplication.Status.ID)
+				return err
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Eventually(func() error {
@@ -120,10 +95,8 @@ var _ = Describe("Deleting an Application", func() {
 			By("Getting the deleted application")
 			deletedApplication := &gio.Application{}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, appLookupKey, deletedApplication)
-			}, timeout, interval).Should(HaveOccurred())
-
+				return client.IgnoreNotFound(k8sClient.Get(ctx, appLookupKey, deletedApplication))
+			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})
-
 })

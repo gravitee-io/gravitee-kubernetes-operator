@@ -23,7 +23,14 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
-func AssertStatusIsSet(apiDefinition *gio.ApiDefinition) error {
+func AssertApplicationStatusIsSet(application *gio.Application) error {
+	if application.Status.ID == "" {
+		return fmt.Errorf("id should not be empty in status")
+	}
+	return nil
+}
+
+func AssertApiStatusIsSet(apiDefinition *gio.ApiDefinition) error {
 	status := apiDefinition.Status
 
 	if status.ID == "" {
