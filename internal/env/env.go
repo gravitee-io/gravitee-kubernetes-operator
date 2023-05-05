@@ -23,10 +23,12 @@ const (
 	CMTemplate404NS   = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
 	Development       = "DEV_MODE"
 	NS                = "NAMESPACE"
+	ApplyCRDs         = "APPLY_CRDS"
 )
 
 var Config = struct {
 	NS                string
+	ApplyCRDs         bool
 	Development       bool
 	CMTemplate404Name string
 	CMTemplate404NS   string
@@ -34,6 +36,7 @@ var Config = struct {
 
 func init() {
 	Config.NS = os.Getenv(NS)
+	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == "true"
 	Config.Development = os.Getenv(Development) == "true"
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)

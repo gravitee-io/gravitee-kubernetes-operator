@@ -27,9 +27,10 @@ tests:
       - equal:
           path: metadata.name
           value: gko-config
-      - isEmpty:
+      - equal:
           # It should not contain environment variable by default
-          path: data
+          path: data.APPLY_CRDS
+          value: "true"
 
   - it: Check config with json logs disabled
     set:
@@ -39,13 +40,6 @@ tests:
     asserts:
       - hasDocuments:
           count: 1
-      - isKind:
-          of: ConfigMap
-      - isAPIVersion:
-          of: v1
-      - equal:
-          path: metadata.name
-          value: gko-config
       - equal:
           # It should not contain environment variable by default
           path: data.DEV_MODE
