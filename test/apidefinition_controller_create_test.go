@@ -122,7 +122,7 @@ var _ = Describe("Create", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(apiDefinition)
+				return internal.AssertApiStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -178,7 +178,7 @@ var _ = Describe("Create", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(apiDefinition)
+				return internal.AssertApiStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -256,7 +256,7 @@ var _ = Describe("Create", func() {
 				if getErr := k8sClient.Get(ctx, apiLookupKey, apiDefinition); getErr != nil {
 					return getErr
 				}
-				return internal.AssertStatusIsSet(apiDefinition)
+				return internal.AssertApiStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -317,7 +317,7 @@ var _ = Describe("Create", func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(apiDefinition)
+				return internal.AssertApiStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := apiDefinitionFixture.Spec.Name
@@ -398,7 +398,7 @@ var _ = Describe("Create", func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(apiDefinition)
+				return internal.AssertApiStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Calling gateway endpoint, expecting the API to be available")

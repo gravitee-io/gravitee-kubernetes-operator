@@ -73,7 +73,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(savedApiDefinition)
+				return internal.AssertApiStatusIsSet(savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
