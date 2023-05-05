@@ -258,7 +258,7 @@ func (d *Delegate) generateKeyPair(secret *core.Secret) (*pkix.Name, *keystore.P
 		return nil, nil, fmt.Errorf("%s", "can not decode the tls key")
 	}
 
-	if tlsKey.Type != "PRIVATE KEY" {
+	if !strings.Contains(tlsKey.Type, "PRIVATE KEY") {
 		return nil, nil, fmt.Errorf("%s", "wrong tls key type")
 	}
 
