@@ -81,7 +81,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(savedApiDefinition)
+				return internal.AssertApiStatusIsSet(savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
@@ -261,7 +261,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(savedApiDefinition)
+				return internal.AssertApiStatusIsSet(savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path

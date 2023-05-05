@@ -72,7 +72,7 @@ var _ = Describe("Create a basic API", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(apiDefinition)
+				return internal.AssertApiStatusIsSet(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 			Expect(apiDefinition.Spec.IsLocal).To(BeTrue())
 

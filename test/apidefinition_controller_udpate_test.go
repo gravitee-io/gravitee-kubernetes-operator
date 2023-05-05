@@ -151,7 +151,7 @@ var _ = Describe("API Definition Controller", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(createdApiDefinition)
+				return internal.AssertApiStatusIsSet(createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
@@ -273,7 +273,7 @@ var _ = Describe("API Definition Controller", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(createdApiDefinition)
+				return internal.AssertApiStatusIsSet(createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Updating the context ref in API definition, expecting no error")
