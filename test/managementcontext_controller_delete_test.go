@@ -15,11 +15,18 @@
 package test
 
 import (
+	"fmt"
+
+	model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
+	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 var _ = Describe("Deleting a management context", func() {
@@ -124,4 +131,137 @@ var _ = Describe("Deleting a management context", func() {
 			}, timeout, interval).Should(Succeed())
 		})
 	})
+
+	Context("With secret Reference", func() {
+		var ctx1 *gio.ManagementContext
+		var ctx2 *gio.ManagementContext
+		var secret *v1.Secret
+
+		var ctx1Key types.NamespacedName
+		var ctx2Key types.NamespacedName
+		var secretKey types.NamespacedName
+
+		secretName := "test-context-secret"
+
+		BeforeEach(func() {
+			secret = &v1.Secret{}
+			secret.Data = map[string][]byte{
+				"username": []byte("admin"),
+				"password": []byte("admin"),
+			}
+
+			secret.Name = secretName
+			secret.Namespace = namespace
+
+			Expect(k8sClient.Create(ctx, secret)).Should(Succeed())
+
+			secretKey = types.NamespacedName{
+				Name:      secret.Name,
+				Namespace: secret.Namespace,
+			}
+
+			fix1, err := internal.NewFixtureGenerator().NewFixtures(internal.FixtureFiles{
+				Context: internal.ContextWithSecretFile,
+			}, func(fix *internal.Fixtures) {
+				fix.Context.Spec.Auth.SecretRef = &model.NamespacedName{
+					Name:      secretName,
+					Namespace: namespace,
+				}
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			ctx1 = fix1.Context
+			ctx1Key = types.NamespacedName{
+				Name:      ctx1.Name,
+				Namespace: ctx1.Namespace,
+			}
+
+			Expect(k8sClient.Create(ctx, ctx1)).Should(Succeed())
+
+			fix2, err := internal.NewFixtureGenerator().NewFixtures(internal.FixtureFiles{
+				Context: internal.ContextWithSecretFile,
+			}, func(fix *internal.Fixtures) {
+				fix.Context.Spec.Auth.SecretRef = &model.NamespacedName{
+					Name:      "test-context-secret",
+					Namespace: namespace,
+				}
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			ctx2 = fix2.Context
+			ctx2Key = types.NamespacedName{
+				Name:      ctx2.Name,
+				Namespace: ctx2.Namespace,
+			}
+
+			Expect(k8sClient.Create(ctx, ctx2)).Should(Succeed())
+		})
+
+		It("Should keep secret finalizer while referenced", func() {
+			Expect(k8sClient.Delete(ctx, ctx1)).ToNot(HaveOccurred())
+
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, ctx1Key, ctx1)
+				if err == nil {
+					return fmt.Errorf("management context %s still exists", ctx1Key)
+				}
+				if !kErrors.IsNotFound(err) {
+					return err
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, secretKey, secret)
+				if err != nil {
+					return err
+				}
+				if !controllerutil.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
+					return fmt.Errorf("Expected secret to contain finalizer %s", keys.ManagementContextSecretFinalizer)
+				}
+				return nil
+			})
+
+			Expect(k8sClient.Delete(ctx, ctx2)).ToNot(HaveOccurred())
+
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, ctx2Key, ctx2)
+				if err == nil {
+					return fmt.Errorf("management context %s still exists", ctx2Key)
+				}
+				if !kErrors.IsNotFound(err) {
+					return err
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, secretKey, secret)
+				if err != nil {
+					return err
+				}
+				if controllerutil.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
+					return fmt.Errorf("Expected finalizer %s to be removed on secret", keys.ManagementContextSecretFinalizer)
+				}
+				return nil
+			})
+
+			Expect(k8sClient.Delete(ctx, secret)).ToNot(HaveOccurred())
+
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, secretKey, secret)
+				if err == nil {
+					return fmt.Errorf("secret %s still exists", secretKey)
+				}
+				if !kErrors.IsNotFound(err) {
+					return err
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+
+		})
+	})
+
 })
