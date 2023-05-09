@@ -23,7 +23,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"golang.org/x/net/context"
-	coreV1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -51,23 +50,6 @@ func Delete(
 		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apis.Items))
 	}
 
-	if instance.Spec.HasSecretRef() {
-		contextList := gio.ManagementContextList{}
-		if err := search.New(ctx, client).FindByFieldReferencing(
-			indexer.SecretRefField,
-			*instance.Spec.SecretRef(),
-			&contextList,
-		); err != nil {
-			return err
-		}
-
-		if len(contextList.Items) <= 1 {
-			if err := removeSecretFinalizer(ctx, client, instance); err != nil {
-				return err
-			}
-		}
-	}
-
 	apps := &gio.ApplicationList{}
 	err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.AppContextField,
@@ -88,19 +70,4 @@ func Delete(
 	util.RemoveFinalizer(instance, keys.ManagementContextFinalizer)
 
 	return client.Update(ctx, instance)
-}
-
-func removeSecretFinalizer(ctx context.Context, client client.Client, instance *gio.ManagementContext) error {
-	secret := &coreV1.Secret{}
-	key := instance.Spec.SecretRef()
-	key.Namespace = getSecretNamespace(instance)
-	ns := key.ToK8sType()
-	if err := client.Get(ctx, ns, secret); err != nil {
-		return err
-	}
-	if util.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
-		util.RemoveFinalizer(secret, keys.ManagementContextSecretFinalizer)
-		return client.Update(ctx, secret)
-	}
-	return nil
 }

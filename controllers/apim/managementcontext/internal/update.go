@@ -20,7 +20,6 @@ import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"golang.org/x/net/context"
-	coreV1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -40,27 +39,5 @@ func CreateOrUpdate(
 		}
 	}
 
-	spec := instance.Spec
-	if spec.HasSecretRef() {
-		secret := new(coreV1.Secret)
-		key := spec.SecretRef()
-		key.Namespace = getSecretNamespace(instance)
-		ns := key.ToK8sType()
-		if err := k8s.Get(ctx, ns, secret); err != nil {
-			return err
-		}
-		if !util.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
-			util.AddFinalizer(secret, keys.ManagementContextSecretFinalizer)
-			return k8s.Update(ctx, secret)
-		}
-	}
 	return nil
-}
-
-func getSecretNamespace(context *gio.ManagementContext) string {
-	secretRef := context.Spec.SecretRef()
-	if secretRef.Namespace != "" {
-		return secretRef.Namespace
-	}
-	return context.Namespace
 }
