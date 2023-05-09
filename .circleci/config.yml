@@ -246,12 +246,16 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - helm/install-helm-client
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           var-name: AZURE_DOCKER_REGISTRY_USERNAME
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - run:
+          name: Prepare Helm chart
+          command: IMG="<< parameters.image >>" make helm-prepare
       - run:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> make docker-build
