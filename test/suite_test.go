@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
@@ -45,6 +46,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	//+kubebuilder:scaffold:imports
 )
@@ -140,6 +142,13 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&secrets.Reconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+	}).SetupWithManager(k8sManager)
+
+	Expect(err).ToNot(HaveOccurred())
+
 	cache := k8sManager.GetCache()
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
@@ -169,6 +178,8 @@ var _ = SynchronizedBeforeSuite(func() {
 	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
 	err = cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
+
+	k8s.RegisterClient(k8sManager.GetClient())
 
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
