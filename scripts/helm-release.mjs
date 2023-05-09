@@ -76,6 +76,16 @@ async function checkRequirements() {
 }
 
 LOG.blue(`
+⎈ Preparing Helm charts ...
+`);
+
+await time(prepareHelmChart);
+
+async function prepareHelmChart() {
+  await $`make helm-prepare`;
+}
+
+LOG.blue(`
 🐳 Building docker image ...
 `);
 
@@ -101,16 +111,6 @@ if (!DRY_RUN) {
 
 async function pushDockerImage() {
   await $`make docker-push`;
-}
-
-LOG.blue(`
-⎈ Preparing Helm charts ...
-`);
-
-await time(prepareHelmChart);
-
-async function prepareHelmChart() {
-  await $`make helm-prepare`;
 }
 
 LOG.blue(`
