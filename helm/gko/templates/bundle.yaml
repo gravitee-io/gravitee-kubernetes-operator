@@ -63,6 +63,18 @@ metadata:
   name: gko-manager-role-crd-{{ .Release.Name }}-{{ .Release.Namespace }}
 rules:
   - apiGroups:
+      - apiextensions.k8s.io
+    resourceNames:
+      - managementcontexts.gravitee.io
+      - apidefinitions.gravitee.io
+      - apidefinitions.gravitee.io
+      - apiresources.gravitee.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - patch
+      - create
+  - apiGroups:
       - ""
     resources:
       - events
