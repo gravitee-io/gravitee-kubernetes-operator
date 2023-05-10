@@ -5,6 +5,18 @@ metadata:
   name: "manager-role-crd-{{ .Release.Name }}-{{ .Release.Namespace }}"
 rules:
 - apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  resourceNames:
+  - managementcontexts.gravitee.io
+  - apidefinitions.gravitee.io
+  - apidefinitions.gravitee.io
+  - apiresources.gravitee.io
+  verbs:
+  - patch
+  - create
+- apiGroups:
   - ""
   resources:
   - events
