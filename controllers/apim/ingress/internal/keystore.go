@@ -29,6 +29,7 @@ import (
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netV1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -146,85 +147,71 @@ func (d *Delegate) getKeystoreCredentials(ns string) (*keystoreCredentials, erro
 
 func (d *Delegate) autoDiscoverGatewayKeystore(ns string) (*keystoreCredentials, error) {
 	// get gravitee.yml from the configmap
-	keystoreYaml, err := d.unmarshalGatewayConfig(ns)
+	cfg := &gateway.Config{}
+	if err := d.unmarshalGatewayConfig(ns, cfg); err != nil {
+		return nil, err
+	}
+
+	ks := cfg.HTTP.TLS.Keystore
+
+	if err := ks.Validate(); err != nil {
+		return nil, err
+	}
+
+	ksNS := ks.Location.Namespace()
+	ksName := ks.Location.Name()
+	ksKey := ks.Location.Key()
+	ksPassword := ks.Password
+
+	if ksNS != ns {
+		return nil, fmt.Errorf("keystore is outside of the current namespace")
+	}
+
+	kubernetesPassword := gateway.GraviteeKubeProperty(ksPassword)
+
+	if !kubernetesPassword.IsValid() {
+		return &keystoreCredentials{
+			name: ksName,
+			key:  ksKey,
+			pass: []byte(ksPassword),
+		}, nil
+	}
+
+	if kubernetesPassword.Namespace() != ns {
+		return nil, fmt.Errorf(
+			"password location is outside of the current namespace",
+		)
+	}
+
+	password, err := d.resolveKubernetesPassword(kubernetesPassword)
 	if err != nil {
 		return nil, err
 	}
 
-	ksType, ok := keystoreYaml["type"].(string)
-	if !ok || ksType == "" {
-		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore.type", graviteeConfigFile)
-	}
-
-	if ksType != "jks" {
-		return nil, fmt.Errorf("unsupported keystore type. GKO only supports jks keystores at this moment")
-	}
-
-	kubernetes, ok := keystoreYaml["kubernetes"].(string)
-	if !ok || kubernetes == "" {
-		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore.kubernetes", graviteeConfigFile)
-	}
-
-	password, ok := keystoreYaml["password"].(string)
-	if !ok || password == "" {
-		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore.password", graviteeConfigFile)
-	}
-
-	ksName := strings.Split(kubernetes, "/")
-	// example: /default/secrets/api-custom-cert-opaque/keystore
-	k8sPropertyLength := 5
-	if len(ksName) != k8sPropertyLength {
-		return nil, fmt.Errorf("wrong keystore name. it should be like /${NAMESPACE}/secrets/${SECRET_NAME}/${KEY_NAME}")
-	}
-
-	if ksName[1] != ns {
-		return nil, fmt.Errorf("keystore is outside of the current namespace")
-	}
-
-	if strings.HasPrefix(password, "kubernetes://") {
-		return d.resolveKubernetesProperty(ns, password, ksName)
-	}
-
-	return &keystoreCredentials{name: ksName[3], key: ksName[4], pass: []byte(password)}, nil
+	return &keystoreCredentials{
+		name: ksName,
+		key:  ksKey,
+		pass: password,
+	}, nil
 }
 
-func (d *Delegate) resolveKubernetesProperty(ns string, pass string, ksName []string) (*keystoreCredentials, error) {
-	// kubernetes properties must have a length of 6 if you split them with "kubernetes://"
-	// example: kubernetes://default/secret/gateway-secret/my_key
-	ksPass := strings.Split(pass, "/")
-	ksPropertyLength := 6
-	if len(ksPass) != ksPropertyLength {
-		return nil, fmt.Errorf("%s%s", "wrong Gateway keystore password",
-			"if you reference a secret it should be like	kubernetes://${NAMESPACE}/secrets/${SECRET_NAME}/${SECRET_KEY}")
+func (d *Delegate) resolveKubernetesPassword(prop gateway.GraviteeKubeProperty) ([]byte, error) {
+	location := types.NamespacedName{
+		Namespace: prop.Namespace(),
+		Name:      prop.Name(),
 	}
-
-	if ksPass[0] != "kubernetes:" {
-		return nil, fmt.Errorf("unsupported property type %s", ksPass[0])
+	obj := prop.NewReceiver()
+	if err := d.k8s.Get(d.ctx, location, obj); err != nil {
+		return nil, err
 	}
-
-	if ksPass[2] != ns {
-		return nil, fmt.Errorf("keystore password is outside the current namespace")
+	password := prop.Get(obj)
+	if password == nil {
+		return nil, fmt.Errorf("can't resolve password from %s", location)
 	}
-
-	switch ksPass[3] {
-	case "secret":
-		sec := new(v1.Secret)
-		if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: ksPass[4]}, sec); err != nil {
-			return nil, err
-		}
-		return &keystoreCredentials{name: ksName[3], key: ksName[4], pass: sec.Data[ksPass[5]]}, nil
-	case "configmaps":
-		cm := new(v1.ConfigMap)
-		if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: ksPass[4]}, cm); err != nil {
-			return nil, err
-		}
-		return &keystoreCredentials{name: ksName[3], key: ksName[4], pass: []byte(cm.Data[ksPass[5]])}, nil
-	default:
-		return nil, fmt.Errorf("unsupported resource type %s", ksPass[3])
-	}
+	return password, nil
 }
 
-func (d *Delegate) unmarshalGatewayConfig(ns string) (map[string]interface{}, error) {
+func (d *Delegate) unmarshalGatewayConfig(ns string, cfg *gateway.Config) error {
 	cl := &v1.ConfigMapList{}
 	if err := d.k8s.List(
 		d.ctx, cl,
@@ -232,35 +219,15 @@ func (d *Delegate) unmarshalGatewayConfig(ns string) (map[string]interface{}, er
 		client.MatchingLabels{
 			keys.GraviteeComponentLabel: keys.IngressComponentLabelValue,
 		}); err != nil {
-		return nil, client.IgnoreNotFound(err)
+		return client.IgnoreNotFound(err)
 	}
 
 	if len(cl.Items) != 1 || cl.Items[0].Data[graviteeConfigFile] == "" {
 		d.log.Info("can't automatically find gateway gravitee.yml config")
-		return nil, kerrors.NewNotFound(v1.Resource(graviteeConfigFile), graviteeConfigFile)
+		return kerrors.NewNotFound(v1.Resource(graviteeConfigFile), graviteeConfigFile)
 	}
 
-	yml := make(map[string]interface{})
-	if err := yaml.Unmarshal([]byte(cl.Items[0].Data[graviteeConfigFile]), yml); err != nil {
-		return nil, err
-	}
-
-	http, ok := yml["http"].(map[string]interface{})
-	if !ok || http == nil {
-		return nil, fmt.Errorf("%s doesn't include a http section", graviteeConfigFile)
-	}
-
-	ssl, ok := http["ssl"].(map[string]interface{})
-	if !ok || ssl == nil {
-		return nil, fmt.Errorf("%s doesn't include a http.ssl section", graviteeConfigFile)
-	}
-
-	ks, ok := ssl["keystore"].(map[string]interface{})
-	if !ok || ks == nil {
-		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore section", graviteeConfigFile)
-	}
-
-	return ks, nil
+	return yaml.Unmarshal([]byte(cl.Items[0].Data[graviteeConfigFile]), cfg)
 }
 
 // convert K8S tls secret to a keypair.
