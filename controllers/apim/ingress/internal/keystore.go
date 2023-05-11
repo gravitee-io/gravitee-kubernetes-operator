@@ -33,8 +33,8 @@ import (
 	netV1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/pavlo-v-chernykh/keystore-go/v4"
-	core "k8s.io/api/core/v1"
+	ks "github.com/pavlo-v-chernykh/keystore-go/v4"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -42,6 +42,7 @@ const graviteeConfigFile = "gravitee.yml"
 
 type keystoreCredentials struct {
 	name string
+	key  string
 	pass []byte
 }
 
@@ -64,8 +65,8 @@ func (d *Delegate) retrieveIngressListWithTLS(ctx context.Context, ns string) (*
 	return result, nil
 }
 
-func (d *Delegate) removeKeyFromKeystore(secret *core.Secret) error {
-	ks, err := d.getKeystoreCredentials(secret.Namespace)
+func (d *Delegate) removeKeyFromKeystore(secret *v1.Secret) error {
+	ksc, err := d.getKeystoreCredentials(secret.Namespace)
 	if err != nil {
 		return err
 	}
@@ -75,19 +76,19 @@ func (d *Delegate) removeKeyFromKeystore(secret *core.Secret) error {
 		return err
 	}
 
-	nn := &types.NamespacedName{Namespace: secret.Namespace, Name: ks.name}
-	gwKeyStoreSecret, jks, err := d.readKeyStore(nn, ks.pass)
+	nn := &types.NamespacedName{Namespace: secret.Namespace, Name: ksc.name}
+	gwKeyStoreSecret, jks, err := d.readKeyStore(nn, ksc)
 	if err != nil {
 		return err
 	}
 
 	jks.DeleteEntry(pki.CommonName)
 
-	return d.writeToKeyStore(gwKeyStoreSecret, jks, ks.pass)
+	return d.writeToKeyStore(gwKeyStoreSecret, jks, ksc)
 }
 
-func (d *Delegate) updateKeyInKeystore(secret *core.Secret) error {
-	ks, err := d.getKeystoreCredentials(secret.Namespace)
+func (d *Delegate) updateKeyInKeystore(secret *v1.Secret) error {
+	ksc, err := d.getKeystoreCredentials(secret.Namespace)
 	if err != nil {
 		return err
 	}
@@ -97,30 +98,30 @@ func (d *Delegate) updateKeyInKeystore(secret *core.Secret) error {
 		return err
 	}
 
-	nn := &types.NamespacedName{Namespace: secret.Namespace, Name: ks.name}
-	gwKeyStoreSecret, jks, err := d.readKeyStore(nn, ks.pass)
+	nn := &types.NamespacedName{Namespace: secret.Namespace, Name: ksc.name}
+	gwKeyStoreSecret, jks, err := d.readKeyStore(nn, ksc)
 	if err != nil {
 		return err
 	}
 
-	if err = jks.SetPrivateKeyEntry(pki.CommonName, *keyPair, ks.pass); err != nil {
+	if err = jks.SetPrivateKeyEntry(pki.CommonName, *keyPair, ksc.pass); err != nil {
 		return err
 	}
 
-	return d.writeToKeyStore(gwKeyStoreSecret, jks, ks.pass)
+	return d.writeToKeyStore(gwKeyStoreSecret, jks, ksc)
 }
 
 // returns the name of gw keystore and the password to open it.
 func (d *Delegate) getKeystoreCredentials(ns string) (*keystoreCredentials, error) {
 	// This secret will give us the name and the password for opening the gateway keystore
 	// The keystore should be jks format
-	if ks, err := d.autoDiscoverGatewayKeystore(ns); client.IgnoreNotFound(err) != nil {
+	if ksc, err := d.autoDiscoverGatewayKeystore(ns); client.IgnoreNotFound(err) != nil {
 		return nil, err
-	} else if ks != nil {
-		return ks, nil
+	} else if ksc != nil {
+		return ksc, nil
 	}
 
-	sl := &core.SecretList{}
+	sl := &v1.SecretList{}
 	if err := d.k8s.List(
 		d.ctx, sl,
 		client.InNamespace(ns),
@@ -140,7 +141,7 @@ func (d *Delegate) getKeystoreCredentials(ns string) (*keystoreCredentials, erro
 		return nil, fmt.Errorf("no credentials provided to access the gateway keystore")
 	}
 
-	return &keystoreCredentials{name: string(s.Data["name"]), pass: s.Data["password"]}, nil
+	return &keystoreCredentials{name: string(s.Data["name"]), key: string(s.Data["key"]), pass: s.Data["password"]}, nil
 }
 
 func (d *Delegate) autoDiscoverGatewayKeystore(ns string) (*keystoreCredentials, error) {
@@ -169,43 +170,62 @@ func (d *Delegate) autoDiscoverGatewayKeystore(ns string) (*keystoreCredentials,
 		return nil, fmt.Errorf("%s doesn't include a http.ssl.keystore.password", graviteeConfigFile)
 	}
 
-	// kubernetes properties must have a length of 4 if you split them with "/"
+	ksName := strings.Split(kubernetes, "/")
 	// example: /default/secrets/api-custom-cert-opaque/keystore
 	k8sPropertyLength := 5
-	ksName := strings.Split(kubernetes, "/")
 	if len(ksName) != k8sPropertyLength {
-		return nil, fmt.Errorf("wrong Gateway keystore name. it should be like /${NAMESPACE}/secrets/${SECRET_NAME}/keystore")
+		return nil, fmt.Errorf("wrong keystore name. it should be like /${NAMESPACE}/secrets/${SECRET_NAME}/${KEY_NAME}")
 	}
 
 	if ksName[1] != ns {
 		return nil, fmt.Errorf("keystore is outside of the current namespace")
 	}
 
-	if strings.ContainsAny(password, "/") {
-		// example: /default/secrets/gt-keystore-secret/password
-		ksPass := strings.Split(password, "/")
-		if len(ksPass) != k8sPropertyLength {
-			return nil,
-				fmt.Errorf("%s%s", "wrong Gateway keystore password",
-					"if you reference a secret it should be like	/${NAMESPACE}/secrets/${SECRET_NAME}/${SECRET_KEY}")
-		}
-
-		if ksPass[1] != ns {
-			return nil, fmt.Errorf("keystore password is outside the current namespace")
-		}
-
-		s := new(core.Secret)
-		if err = d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: ksPass[3]}, s); err != nil {
-			return nil, err
-		}
-		return &keystoreCredentials{name: ksName[3], pass: s.Data[ksName[4]]}, nil
+	if strings.HasPrefix(password, "kubernetes://") {
+		return d.resolveKubernetesProperty(ns, password, ksName)
 	}
 
-	return &keystoreCredentials{name: ksName[3], pass: []byte(password)}, nil
+	return &keystoreCredentials{name: ksName[3], key: ksName[4], pass: []byte(password)}, nil
+}
+
+func (d *Delegate) resolveKubernetesProperty(ns string, pass string, ksName []string) (*keystoreCredentials, error) {
+	// kubernetes properties must have a length of 6 if you split them with "kubernetes://"
+	// example: kubernetes://default/secret/gateway-secret/my_key
+	ksPass := strings.Split(pass, "/")
+	ksPropertyLength := 6
+	if len(ksPass) != ksPropertyLength {
+		return nil, fmt.Errorf("%s%s", "wrong Gateway keystore password",
+			"if you reference a secret it should be like	kubernetes://${NAMESPACE}/secrets/${SECRET_NAME}/${SECRET_KEY}")
+	}
+
+	if ksPass[0] != "kubernetes:" {
+		return nil, fmt.Errorf("unsupported property type %s", ksPass[0])
+	}
+
+	if ksPass[2] != ns {
+		return nil, fmt.Errorf("keystore password is outside the current namespace")
+	}
+
+	switch ksPass[3] {
+	case "secret":
+		sec := new(v1.Secret)
+		if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: ksPass[4]}, sec); err != nil {
+			return nil, err
+		}
+		return &keystoreCredentials{name: ksName[3], key: ksName[4], pass: sec.Data[ksPass[5]]}, nil
+	case "configmaps":
+		cm := new(v1.ConfigMap)
+		if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: ksPass[4]}, cm); err != nil {
+			return nil, err
+		}
+		return &keystoreCredentials{name: ksName[3], key: ksName[4], pass: []byte(cm.Data[ksPass[5]])}, nil
+	default:
+		return nil, fmt.Errorf("unsupported resource type %s", ksPass[3])
+	}
 }
 
 func (d *Delegate) unmarshalGatewayConfig(ns string) (map[string]interface{}, error) {
-	cl := &core.ConfigMapList{}
+	cl := &v1.ConfigMapList{}
 	if err := d.k8s.List(
 		d.ctx, cl,
 		client.InNamespace(ns),
@@ -217,7 +237,7 @@ func (d *Delegate) unmarshalGatewayConfig(ns string) (map[string]interface{}, er
 
 	if len(cl.Items) != 1 || cl.Items[0].Data[graviteeConfigFile] == "" {
 		d.log.Info("can't automatically find gateway gravitee.yml config")
-		return nil, kerrors.NewNotFound(core.Resource(graviteeConfigFile), graviteeConfigFile)
+		return nil, kerrors.NewNotFound(v1.Resource(graviteeConfigFile), graviteeConfigFile)
 	}
 
 	yml := make(map[string]interface{})
@@ -244,7 +264,7 @@ func (d *Delegate) unmarshalGatewayConfig(ns string) (map[string]interface{}, er
 }
 
 // convert K8S tls secret to a keypair.
-func (d *Delegate) generateKeyPair(secret *core.Secret) (*pkix.Name, *keystore.PrivateKeyEntry, error) {
+func (d *Delegate) generateKeyPair(secret *v1.Secret) (*pkix.Name, *ks.PrivateKeyEntry, error) {
 	// get the key and certificate (The TLS secret must contain keys named tls.crt and tls.key
 	// https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
 	pemKeyBytes, ok := secret.Data["tls.key"]
@@ -280,10 +300,10 @@ func (d *Delegate) generateKeyPair(secret *core.Secret) (*pkix.Name, *keystore.P
 		return nil, nil, fmt.Errorf("%s", "wrong tls certification type")
 	}
 
-	pke := &keystore.PrivateKeyEntry{
+	pke := &ks.PrivateKeyEntry{
 		CreationTime: time.Now(),
 		PrivateKey:   tlsKey.Bytes,
-		CertificateChain: []keystore.Certificate{
+		CertificateChain: []ks.Certificate{
 			{
 				Type:    "X509",
 				Content: tlsCrt.Bytes,
@@ -294,29 +314,29 @@ func (d *Delegate) generateKeyPair(secret *core.Secret) (*pkix.Name, *keystore.P
 	return &cert.Subject, pke, nil
 }
 
-func (d *Delegate) readKeyStore(nn *types.NamespacedName, pass []byte) (*core.Secret, *keystore.KeyStore, error) {
-	gwKeystoreSecret := &core.Secret{}
+func (d *Delegate) readKeyStore(nn *types.NamespacedName, ksc *keystoreCredentials) (*v1.Secret, *ks.KeyStore, error) {
+	gwKeystoreSecret := &v1.Secret{}
 	if err := d.k8s.Get(d.ctx, *nn, gwKeystoreSecret); err != nil {
 		return nil, nil, err
 	}
 
-	data := gwKeystoreSecret.Data["keystore"]
+	data := gwKeystoreSecret.Data[ksc.key]
 	if data == nil {
 		return nil, nil, fmt.Errorf("unable to find keystore data for the gateway")
 	}
 
-	jks := keystore.New()
-	if err := jks.Load(bytes.NewReader(data), pass); err != nil { // should come from a variable
+	jks := ks.New()
+	if err := jks.Load(bytes.NewReader(data), ksc.pass); err != nil { // should come from a variable
 		return nil, nil, err
 	}
 
 	return gwKeystoreSecret, &jks, nil
 }
 
-func (d *Delegate) writeToKeyStore(ksSecret *core.Secret, jks *keystore.KeyStore, pass []byte) error {
+func (d *Delegate) writeToKeyStore(ksSecret *v1.Secret, jks *ks.KeyStore, ksc *keystoreCredentials) error {
 	var b bytes.Buffer
 	writer := bufio.NewWriter(&b)
-	err := jks.Store(writer, pass)
+	err := jks.Store(writer, ksc.pass)
 	if err != nil {
 		return err
 	}
@@ -325,7 +345,7 @@ func (d *Delegate) writeToKeyStore(ksSecret *core.Secret, jks *keystore.KeyStore
 		return err
 	}
 
-	ksSecret.Data["keystore"] = b.Bytes()
+	ksSecret.Data[ksc.key] = b.Bytes()
 
 	return d.k8s.Update(d.ctx, ksSecret)
 }
