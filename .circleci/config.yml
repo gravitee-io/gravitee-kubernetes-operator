@@ -239,7 +239,7 @@ jobs:
 
   publish-private-image:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     parameters:
       image:
         type: string
