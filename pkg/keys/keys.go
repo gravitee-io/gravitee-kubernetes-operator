@@ -40,10 +40,13 @@ const Extends = "gravitee.io/extends"
 
 // Kubernetes Finalizers.
 const (
-	ApiDefinitionDeletionFinalizer     = "finalizers.gravitee.io/apidefinitiondeletion"
-	ApiDefinitionTemplateFinalizer     = "finalizers.gravitee.io/apidefinitiontemplate"
-	ManagementContextDeletionFinalizer = "finalizers.gravitee.io/managementcontextdeletion"
-	IngressFinalizer                   = "finalizers.gravitee.io/ingress"
-	KeyPairFinalizer                   = "finalizers.gravitee.io/keypair"
-	ApplicationDeletionFinalizer       = "finalizers.gravitee.io/applicationdeletion"
+	ApiDefinitionDeletionFinalizer = "finalizers.gravitee.io/apidefinitiondeletion"
+	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
+	ManagementContextFinalizer     = "finalizers.gravitee.io/managementcontextdeletion"
+	ApiResourceFinalizer           = "finalizers.gravitee.io/apiresource"
+	//nolint:gosec // This is not an hardcoded secret
+	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
+	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
+	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
+	ApplicationDeletionFinalizer     = "finalizers.gravitee.io/applicationdeletion"
 )

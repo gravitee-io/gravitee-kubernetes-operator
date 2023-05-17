@@ -20,6 +20,7 @@ import (
 	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/types/list"
@@ -66,6 +67,33 @@ func (w *Type) WatchContexts(index indexer.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		UpdateFunc: w.UpdateFromLookup(index),
 		CreateFunc: w.CreateFromLookup(index),
+	}
+}
+
+func ContextSecrets() *handler.Funcs {
+	queueSecrets := func(obj client.Object, q workqueue.RateLimitingInterface) {
+		ctx, ok := obj.(*v1alpha1.ManagementContext)
+		if !ok {
+			return
+		}
+
+		if ctx.Spec.HasSecretRef() {
+			q.Add(reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      ctx.Spec.Auth.SecretRef.Name,
+					Namespace: ctx.Spec.Auth.SecretRef.Namespace,
+				},
+			})
+		}
+	}
+
+	return &handler.Funcs{
+		CreateFunc: func(e event.CreateEvent, q workqueue.RateLimitingInterface) {
+			queueSecrets(e.Object, q)
+		},
+		DeleteFunc: func(e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+			queueSecrets(e.Object, q)
+		},
 	}
 }
 

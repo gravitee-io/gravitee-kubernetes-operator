@@ -82,7 +82,7 @@ var _ = Describe("Creating an ingress", func() {
 
 			By("Checking events")
 			Eventually(
-				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+				getEventReasons(ingressFixture), timeout, interval,
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
@@ -246,7 +246,8 @@ var _ = Describe("Creating an ingress", func() {
 
 			By("Checking events")
 			Eventually(
-				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+				getEventReasons(ingressFixture),
+				timeout, interval,
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
@@ -344,7 +345,7 @@ var _ = Describe("Creating an ingress", func() {
 
 			By("Checking events")
 			Eventually(
-				getEventsReason(ingressFixture.GetNamespace(), ingressFixture.GetName()),
+				getEventReasons(ingressFixture), timeout, interval,
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)

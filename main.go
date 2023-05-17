@@ -28,11 +28,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 
 	v1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
@@ -139,6 +141,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	k8s.RegisterClient(mgr.GetClient())
+
 	setupLog.Info("starting manager")
 	if startErr := mgr.Start(ctrl.SetupSignalHandler()); startErr != nil {
 		setupLog.Error(startErr, "problem running manager")
@@ -161,6 +165,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
 		os.Exit(1)
@@ -175,8 +180,9 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 	if err := (&apiresource.Reconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiResource")
 		os.Exit(1)
@@ -190,12 +196,25 @@ func registerControllers(mgr manager.Manager) {
 		setupLog.Error(err, "unable to create controller", "controller", "Application")
 		os.Exit(1)
 	}
+
+	if err := (&secrets.Reconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Secret")
+		os.Exit(1)
+	}
 }
 
 func addIndexer(mgr manager.Manager) error {
 	err := indexApiDefinitionFields(mgr)
 	if err != nil {
 		return fmt.Errorf("unable to start manager (Indexing fields in API definition)")
+	}
+
+	err = indexSecretRefs(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in context resources)")
 	}
 
 	err = indexIngressFields(mgr)
@@ -233,6 +252,14 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	}
 
 	return nil
+}
+
+func indexSecretRefs(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	secretRefIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
+	return cache.IndexField(ctx, &gio.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
 }
 
 func indexIngressFields(manager ctrl.Manager) error {

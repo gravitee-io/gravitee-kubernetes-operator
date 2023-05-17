@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package filter
+package k8s
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sync"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// NoFinalizerUpdateFilter filters out update event that are coming from internal updates such as adding finalizers.
-type NoFinalizerUpdateFilter struct {
-	predicate.Funcs
+var cli client.Client
+var once sync.Once
+
+func RegisterClient(c client.Client) {
+	once.Do(func() {
+		cli = c
+	})
 }
 
-func (NoFinalizerUpdateFilter) Update(e event.UpdateEvent) bool {
-	if e.ObjectOld == nil || e.ObjectNew == nil {
-		return false
-	}
-	if len(e.ObjectOld.GetFinalizers()) != len(e.ObjectNew.GetFinalizers()) {
-		return false
-	}
-	return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
+func GetClient() client.Client {
+	return cli
 }

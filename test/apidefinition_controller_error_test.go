@@ -118,7 +118,8 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			By("Check events")
 
 			Eventually(
-				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
+				getEventReasons(apiDefinitionFixture),
+				timeout, interval,
 			).Should(ContainElements([]string{"UpdateStarted", "UpdateFailed"}))
 
 			By("Set right credentials in ManagementContext")
@@ -155,7 +156,8 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Check events")
 			Eventually(
-				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
+				getEventReasons(apiDefinitionFixture),
+				timeout, interval,
 			).Should(ContainElements([]string{"UpdateSucceeded"}))
 		})
 

@@ -3,7 +3,6 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-http-auth-provider-ref"
-  
 spec:
     name: "with-http-auth-provider-ref"
     version: "1"
@@ -15,7 +14,7 @@ spec:
     resources:
         - ref:
             name: reusable-resource-http-auth-provider
-          
+            namespace: default
     properties: []
     plans:
         - name: "free"

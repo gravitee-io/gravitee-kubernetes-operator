@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
@@ -45,6 +46,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	//+kubebuilder:scaffold:imports
 )
@@ -109,13 +111,15 @@ var _ = SynchronizedBeforeSuite(func() {
 		Client:   k8sManager.GetClient(),
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: k8sManager.GetEventRecorderFor("managementcontext_controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &gio.ManagementContextList{}),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&apiresource.Reconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("apiresource-controller"),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
@@ -138,10 +142,21 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&secrets.Reconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+	}).SetupWithManager(k8sManager)
+
+	Expect(err).ToNot(HaveOccurred())
+
 	cache := k8sManager.GetCache()
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
+	contextSecretsIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
+	err = cache.IndexField(ctx, &gio.ManagementContext{}, contextSecretsIndexer.Field, contextSecretsIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
@@ -163,6 +178,8 @@ var _ = SynchronizedBeforeSuite(func() {
 	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
 	err = cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
+
+	k8s.RegisterClient(k8sManager.GetClient())
 
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
@@ -223,23 +240,26 @@ func addEventIndexes() error {
 	return err
 }
 
-func getEventsReason(namespace string, name string) []string {
-	eventsReason := []string{}
+func getEventReasons(obj client.Object) func() []string {
+	return func() []string {
+		eventsReason := []string{}
 
-	events := &v1.EventList{}
+		events := &v1.EventList{}
 
-	err := k8sClient.List(
-		ctx,
-		events,
-		&client.ListOptions{Namespace: namespace},
-		client.MatchingFields{"involvedObject.name": name},
-	)
-	Expect(err).ToNot(HaveOccurred())
+		if err := k8sClient.List(
+			ctx,
+			events,
+			&client.ListOptions{Namespace: obj.GetNamespace()},
+			client.MatchingFields{"involvedObject.name": obj.GetName()},
+		); err != nil {
+			return nil
+		}
 
-	for _, event := range events.Items {
-		eventsReason = append(eventsReason, event.Reason)
+		for _, event := range events.Items {
+			eventsReason = append(eventsReason, event.Reason)
+		}
+		return eventsReason
 	}
-	return eventsReason
 }
 
 func template404() *v1.ConfigMap {

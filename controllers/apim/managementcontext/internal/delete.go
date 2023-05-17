@@ -32,18 +32,16 @@ func Delete(
 	client client.Client,
 	instance *gio.ManagementContext,
 ) error {
-	if !util.ContainsFinalizer(instance, keys.ManagementContextDeletionFinalizer) {
+	if !util.ContainsFinalizer(instance, keys.ManagementContextFinalizer) {
 		return nil
 	}
 
 	apis := &gio.ApiDefinitionList{}
-	err := search.New(ctx, client).FindByFieldReferencing(
+	if err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.ContextField,
 		model.NewNamespacedName(instance.Namespace, instance.Name),
 		apis,
-	)
-
-	if err != nil {
+	); err != nil {
 		err = fmt.Errorf("an error occurred while checking if the management context is linked to an api definition: %w", err)
 		return err
 	}
@@ -53,7 +51,7 @@ func Delete(
 	}
 
 	apps := &gio.ApplicationList{}
-	err = search.New(ctx, client).FindByFieldReferencing(
+	err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.AppContextField,
 		model.NewNamespacedName(instance.Namespace, instance.Name),
 		apps,
@@ -69,7 +67,7 @@ func Delete(
 			instance.Name, len(apps.Items))
 	}
 
-	util.RemoveFinalizer(instance, keys.ManagementContextDeletionFinalizer)
+	util.RemoveFinalizer(instance, keys.ManagementContextFinalizer)
 
 	return client.Update(ctx, instance)
 }
