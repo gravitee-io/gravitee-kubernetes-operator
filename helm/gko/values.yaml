@@ -23,6 +23,8 @@ manager:
     # -- If true, the manager listens to resources created in the whole cluster.
     # Use false to listen only in the release namespace.
     cluster: true
+  # -- If true, the manager will apply custom resource definitions on startup.
+  applyCRDs: true
 
 ingress:
   templates:

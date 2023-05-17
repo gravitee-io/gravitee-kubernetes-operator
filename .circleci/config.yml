@@ -6,7 +6,7 @@ orbs:
   helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.3
   gravitee: gravitee-io/gravitee@2.5.0
-  slack: circleci/slack@4.12.3
+  slack: circleci/slack@4.12.5
 
 parameters:
   go-version:
@@ -98,7 +98,7 @@ jobs:
 
   lint-resources:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     steps:
       - checkout
@@ -109,14 +109,19 @@ jobs:
             make generate
             git diff --quiet HEAD
       - run:
-          name: Check that make manifests have been executed
+          name: Check that make manifests has been executed
           command: |
             make manifests
             git diff --quiet HEAD
       - run:
-          name: Check that make reference have been executed
+          name: Check that make reference has been executed
           command: |
             make reference
+            git diff --quiet HEAD
+      - run:
+          name: Check that make helm-reference has been executed
+          command: |
+            make helm-reference
             git diff --quiet HEAD
 
   test:
@@ -241,12 +246,16 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - helm/install-helm-client
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           var-name: AZURE_DOCKER_REGISTRY_USERNAME
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - run:
+          name: Prepare Helm chart
+          command: IMG="<< parameters.image >>" make helm-prepare
       - run:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> make docker-build
