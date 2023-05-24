@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/onsi/ginkgo/v2 v2.9.5
-	github.com/onsi/gomega v1.27.6
+	github.com/onsi/gomega v1.27.7
 	github.com/pavlo-v-chernykh/keystore-go/v4 v4.4.1
 	k8s.io/apimachinery v0.26.3
 	k8s.io/client-go v0.26.3
@@ -19,7 +19,7 @@ require (
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
-	github.com/google/pprof v0.0.0-20230222194610-99052d3372e7 // indirect
+	github.com/google/pprof v0.0.0-20230510103437-eeec1cb781c3 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
