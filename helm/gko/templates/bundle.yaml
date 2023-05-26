@@ -365,7 +365,7 @@ spec:
             - configMapRef:
                 name: '{{ .Values.manager.configMap.name }}'
                 optional: true
-          image: controller:latest
+          image: graviteeio/kubernetes-operator:0.6.0
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
