@@ -3,7 +3,6 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-keycloak-adapter-ref"
-    namespace: default
 spec:
     name: "with-keycloak-adapter-ref"
     version: "1"
@@ -91,5 +90,4 @@ spec:
                   useCompression: true
                   followRedirects: false
     response_templates: {}
-
-
+    local: true

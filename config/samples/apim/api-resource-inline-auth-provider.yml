@@ -2,7 +2,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiResource
 metadata:
   name: reusable-resource-inline-auth-provider
-  namespace: default
 spec:
   name: "inline-auth"
   type: "auth-provider-inline-resource"

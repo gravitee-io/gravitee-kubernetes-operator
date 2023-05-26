@@ -27,7 +27,12 @@ func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
 		return err
 	}
 
-	operation, apiDefinitionError := d.CreateOrUpdateApiDefinition(desired)
+	if err := d.createUpdateTLSSecret(desired); err != nil {
+		d.log.Error(err, "An error occurred while updating the TLS secretes")
+		return err
+	}
+
+	operation, apiDefinitionError := d.createOrUpdateApiDefinition(desired)
 	if apiDefinitionError != nil {
 		d.log.Error(
 			apiDefinitionError,

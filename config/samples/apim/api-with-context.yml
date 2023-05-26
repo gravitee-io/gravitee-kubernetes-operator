@@ -17,7 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: api-with-context
-  namespace: default
 spec:
   name: "Echo API"
   contextRef: 
@@ -36,3 +35,4 @@ spec:
       - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
+  local: true

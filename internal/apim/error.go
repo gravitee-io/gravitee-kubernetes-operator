@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apim
 
 import (
 	"errors"
@@ -31,7 +31,7 @@ func (e ContextError) Is(err error) bool {
 	return errors.As(err, new(ContextError))
 }
 
-func newContextError(err error) error {
+func NewContextError(err error) error {
 	return ContextError{err}
 }
 

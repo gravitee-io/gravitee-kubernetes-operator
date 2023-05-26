@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build the manager binary
-FROM golang:1.19 as builder
+FROM golang:1.20 AS builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -29,6 +29,9 @@ COPY api/ api/
 COPY internal/ internal/
 COPY controllers/ controllers/
 COPY pkg/ pkg/
+
+# Copy the CRD manifests
+COPY helm/gko/crds/ helm/gko/crds/
 
 
 # Build

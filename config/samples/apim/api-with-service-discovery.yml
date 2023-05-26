@@ -17,7 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: with-service-discovery
-  namespace: default
 spec:
   name: "With service-discovery"
   version: "1.0"
@@ -48,3 +47,4 @@ spec:
             trustStoreType: "NONE"
             keyStoreType: "NONE"
             service: "test"
+  local: true

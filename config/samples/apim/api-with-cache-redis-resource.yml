@@ -3,7 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-cache-redis-resource"
-    namespace: default
+  
 spec:
     name: "with-cache-redis-resource"
     version: "1"
@@ -93,5 +93,4 @@ spec:
                   useCompression: true
                   followRedirects: false
     response_templates: {}
-
-
+    local: true

@@ -1,18 +1,16 @@
-/*
-Copyright 2022 DAVID BRASSELY.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//         http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package test
 
@@ -21,14 +19,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+
 	netv1 "k8s.io/api/networking/v1"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,7 +44,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -96,20 +102,24 @@ var _ = SynchronizedBeforeSuite(func() {
 		Client:   k8sManager.GetClient(),
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: k8sManager.GetEventRecorderFor("apidefinition_controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &gio.ApiDefinitionList{}),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&managementcontext.Reconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("managementcontext_controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &gio.ManagementContextList{}),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&apiresource.Reconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("apiresource-controller"),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
@@ -118,6 +128,23 @@ var _ = SynchronizedBeforeSuite(func() {
 		Client:   k8sManager.GetClient(),
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: k8sManager.GetEventRecorderFor("ingress-controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &netv1.IngressList{}),
+	}).SetupWithManager(k8sManager)
+
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&application.Reconciler{
+		Client:   k8sManager.GetClient(),
+		Scheme:   k8sManager.GetScheme(),
+		Recorder: k8sManager.GetEventRecorderFor("application-controller"),
+		Watcher:  watch.New(context.Background(), k8sManager.GetClient(), &gio.ApplicationList{}),
+	}).SetupWithManager(k8sManager)
+
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&secrets.Reconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
 	}).SetupWithManager(k8sManager)
 
 	Expect(err).ToNot(HaveOccurred())
@@ -128,9 +155,31 @@ var _ = SynchronizedBeforeSuite(func() {
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
 
+	contextSecretsIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
+	err = cache.IndexField(ctx, &gio.ManagementContext{}, contextSecretsIndexer.Field, contextSecretsIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
 	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
 	Expect(err).ToNot(HaveOccurred())
+
+	apiTemplateIndexer := indexer.NewIndexer(indexer.ApiTemplateField, indexer.IndexApiTemplate)
+	err = cache.IndexField(ctx, &netv1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
+	tlsSecretIndexer := indexer.NewIndexer(indexer.TLSSecretField, indexer.IndexTLSSecret)
+	err = cache.IndexField(ctx, &netv1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
+	// Set initial values for env variables
+	env.Config.CMTemplate404NS = namespace
+	env.Config.CMTemplate404Name = "template-404"
+
+	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
+	err = cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
+	Expect(err).ToNot(HaveOccurred())
+
+	k8s.RegisterClient(k8sManager.GetClient())
 
 	go func() {
 		err = k8sManager.Start(ctrl.SetupSignalHandler())
@@ -145,6 +194,8 @@ var _ = SynchronizedBeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 	k8sClient = cli
 	ctx = context.Background()
+
+	Expect(k8sClient.Create(ctx, template404())).Should(Succeed())
 })
 
 var _ = SynchronizedAfterSuite(func() {
@@ -156,9 +207,20 @@ var _ = SynchronizedAfterSuite(func() {
 		client.InNamespace(namespace),
 		client.MatchingLabels{keys.IngressLabel: keys.IngressLabelValue}),
 	).To(Succeed())
-	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiDefinition{}, client.InNamespace(namespace))).To(Succeed())
-	Expect(k8sClient.DeleteAllOf(ctx, &gio.ManagementContext{}, client.InNamespace(namespace))).To(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.ApiDefinition{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.Application{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.ManagementContext{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
+	Expect(k8sClient.Delete(ctx, template404())).Should(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 	// NOSONAR ignore this noop func
@@ -178,21 +240,37 @@ func addEventIndexes() error {
 	return err
 }
 
-func getEventsReason(namespace string, name string) []string {
-	eventsReason := []string{}
+func getEventReasons(obj client.Object) func() []string {
+	return func() []string {
+		eventsReason := []string{}
 
-	events := &v1.EventList{}
+		events := &v1.EventList{}
 
-	err := k8sClient.List(
-		ctx,
-		events,
-		&client.ListOptions{Namespace: namespace},
-		client.MatchingFields{"involvedObject.name": name},
-	)
-	Expect(err).ToNot(HaveOccurred())
+		if err := k8sClient.List(
+			ctx,
+			events,
+			&client.ListOptions{Namespace: obj.GetNamespace()},
+			client.MatchingFields{"involvedObject.name": obj.GetName()},
+		); err != nil {
+			return nil
+		}
 
-	for _, event := range events.Items {
-		eventsReason = append(eventsReason, event.Reason)
+		for _, event := range events.Items {
+			eventsReason = append(eventsReason, event.Reason)
+		}
+		return eventsReason
 	}
-	return eventsReason
+}
+
+func template404() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "template-404",
+			Namespace: namespace,
+		},
+		Data: map[string]string{
+			"content":     `{ "message": "not-found-test" }`,
+			"contentType": "application/json",
+		},
+	}
 }

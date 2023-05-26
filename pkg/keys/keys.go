@@ -16,12 +16,14 @@ package keys
 
 // Kubernetes Ingresses.
 const (
+	GraviteeComponentLabel      = "gravitee.io/component"
+	IngressComponentLabelValue  = "ingress"
 	IngressLabel                = "gravitee.io/ingress"
 	IngressLabelValue           = "graviteeio"
 	IngressClassAnnotation      = "kubernetes.io/ingress.class"
 	IngressClassAnnotationValue = "graviteeio"
 	IngressTemplateAnnotation   = "gravitee.io/template"
-	IngressFinalizer            = "finalizers.gravitee.io/ingress"
+	GatewayKeystoreConfigSecret = "gravitee.io/gw-keystore-config" //nolint:gosec // GW keystore credentials
 )
 
 // Gravitee.io CRDs.
@@ -34,8 +36,17 @@ const (
 	CrdApiDefinitionTemplate     = "template"
 )
 
+const Extends = "gravitee.io/extends"
+
 // Kubernetes Finalizers.
 const (
 	ApiDefinitionDeletionFinalizer = "finalizers.gravitee.io/apidefinitiondeletion"
 	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
+	ManagementContextFinalizer     = "finalizers.gravitee.io/managementcontextdeletion"
+	ApiResourceFinalizer           = "finalizers.gravitee.io/apiresource"
+	//nolint:gosec // This is not an hardcoded secret
+	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
+	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
+	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
+	ApplicationDeletionFinalizer     = "finalizers.gravitee.io/applicationdeletion"
 )

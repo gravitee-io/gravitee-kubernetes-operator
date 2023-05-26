@@ -21,8 +21,17 @@ import (
 )
 
 func (d *Delegate) Delete(ingress *v1.Ingress) error {
+	if err := d.deleteTLSSecret(ingress); err != nil {
+		d.log.Error(err, "An error occurred while updating the TLS secrets")
+		return err
+	}
+
 	if util.ContainsFinalizer(ingress, keys.IngressFinalizer) {
 		util.RemoveFinalizer(ingress, keys.IngressFinalizer)
 	}
+
+	// because we set SetOwnerReference during phase, we don't need to delete the
+	// api definition manually because it will be automatically deleted once the
+	// parent is deleted so we just need to remove the finalizer
 	return d.k8s.Update(d.ctx, ingress)
 }

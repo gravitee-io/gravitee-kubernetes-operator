@@ -12,19 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-	http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package test
 
 import (
@@ -115,8 +102,9 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check events")
-			Expect(
-				getEventsReason(apiDefinitionFixture.GetNamespace(), apiDefinitionFixture.GetName()),
+			Eventually(
+				getEventReasons(apiDefinitionFixture),
+				timeout, interval,
 			).Should(
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
@@ -164,7 +152,7 @@ var _ = Describe("API Definition Controller", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(createdApiDefinition)
+				return internal.AssertApiStatusIsSet(createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
@@ -286,7 +274,7 @@ var _ = Describe("API Definition Controller", func() {
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
-				return internal.AssertStatusIsSet(createdApiDefinition)
+				return internal.AssertApiStatusIsSet(createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Updating the context ref in API definition, expecting no error")

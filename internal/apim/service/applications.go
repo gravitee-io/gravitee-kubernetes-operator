@@ -15,6 +15,12 @@
 package service
 
 import (
+	"fmt"
+	"net/http"
+
+	errors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+
+	kModel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
@@ -38,4 +44,80 @@ func (svc *Applications) Search(query string, status string) ([]model.Applicatio
 	}
 
 	return *applications, nil
+}
+
+func (svc *Applications) GetByID(appId string) (*model.Application, error) {
+	if appId == "" {
+		return nil, errors.NewNotFoundError()
+	}
+
+	url := svc.EnvTarget(fmt.Sprintf("applications/%s", appId))
+	application := new(model.Application)
+
+	if err := svc.HTTP.Get(url.String(), application); err != nil {
+		return nil, err
+	}
+
+	return application, nil
+}
+
+func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.ApplicationMetaData, error) {
+	if appId == "" {
+		return nil, fmt.Errorf("can't retrieve metadata without application id")
+	}
+
+	url := svc.EnvTarget(fmt.Sprintf("applications/%s/metadata", appId))
+	application := new([]model.ApplicationMetaData)
+
+	if err := svc.HTTP.Get(url.String(), application); err != nil {
+		return nil, err
+	}
+
+	return application, nil
+}
+
+func (svc *Applications) CreateUpdate(method string, spec *kModel.Application) (*model.Application, error) {
+	url := svc.EnvTarget("applications")
+	if spec.ID != "" {
+		url = svc.EnvTarget(fmt.Sprintf("applications/%s", spec.ID))
+	}
+
+	fun := svc.HTTP.Post
+	if method == http.MethodPut {
+		fun = svc.HTTP.Put
+	}
+
+	application := new(model.Application)
+	if err := fun(url.String(), spec, application); err != nil {
+		return nil, err
+	}
+
+	return application, nil
+}
+
+func (svc *Applications) Delete(appId string) error {
+	url := svc.EnvTarget(fmt.Sprintf("applications/%s", appId))
+	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func (svc *Applications) CreateUpdateMetadata(method string, appId string,
+	spec kModel.ApplicationMetaData) (*model.ApplicationMetaData, error) {
+	url := svc.EnvTarget(fmt.Sprintf("applications/%s/metadata", appId))
+	fun := svc.HTTP.Post
+	if method == http.MethodPut {
+		url = svc.EnvTarget(fmt.Sprintf("applications/%s/metadata/%s", appId, spec.Key))
+		fun = svc.HTTP.Put
+	}
+
+	md := new(model.ApplicationMetaData)
+	if err := fun(url.String(), spec, md); err != nil {
+		return nil, err
+	}
+
+	return md, nil
+}
+
+func (svc *Applications) DeleteMetadata(appId string, key string) error {
+	url := svc.EnvTarget(fmt.Sprintf("applications/%s/metadata/%s", appId, key))
+	return svc.HTTP.Delete(url.String(), nil)
 }

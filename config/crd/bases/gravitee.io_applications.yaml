@@ -1,0 +1,192 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.11.1
+  creationTimestamp: null
+  name: applications.gravitee.io
+spec:
+  group: gravitee.io
+  names:
+    kind: Application
+    listKind: ApplicationList
+    plural: applications
+    shortNames:
+    - graviteeapplications
+    singular: application
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .spec.applicationType
+      name: Type
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Application is the main resource handled by the Kubernetes
+              Operator
+            properties:
+              app_key_mode:
+                enum:
+                - SHARED
+                - EXCLUSIVE
+                - UNSPECIFIED
+                type: string
+              applicationMetaData:
+                items:
+                  properties:
+                    applicationId:
+                      type: string
+                    defaultValue:
+                      type: string
+                    format:
+                      enum:
+                      - STRING
+                      - NUMERIC
+                      - BOOLEAN
+                      - DATE
+                      - MAIL
+                      - URL
+                      type: string
+                    hidden:
+                      type: boolean
+                    key:
+                      type: string
+                    name:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+              background:
+                type: string
+              clientId:
+                type: string
+              contextRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                type: object
+              description:
+                type: string
+              disable_membership_notifications:
+                type: boolean
+              domain:
+                type: string
+              groups:
+                items:
+                  type: string
+                type: array
+              id:
+                description: io.gravitee.definition.model.Application
+                type: string
+              metadata:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              name:
+                type: string
+              origin:
+                description: The origin which is used to create this Application
+                enum:
+                - kubernetes
+                type: string
+              picture:
+                type: string
+              picture_url:
+                type: string
+              redirectUris:
+                items:
+                  type: string
+                type: array
+              settings:
+                properties:
+                  app:
+                    properties:
+                      client_id:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  oauth:
+                    properties:
+                      application_type:
+                        type: string
+                      client_id:
+                        type: string
+                      client_secret:
+                        type: string
+                      client_uri:
+                        type: string
+                      grant_types:
+                        items:
+                          type: string
+                        type: array
+                      logo_uri:
+                        type: string
+                      redirect_uris:
+                        items:
+                          type: string
+                        type: array
+                      renew_client_secret_supported:
+                        type: boolean
+                      response_types:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
+              type:
+                type: string
+            required:
+            - name
+            type: object
+          status:
+            description: ApplicationStatus defines the observed state of Application.
+            properties:
+              environmentId:
+                type: string
+              id:
+                description: The ID of the Application in the Gravitee API Management
+                  instance (if an API context has been configured).
+                type: string
+              observedGeneration:
+                format: int64
+                type: integer
+              organizationId:
+                type: string
+              processingStatus:
+                description: The processing status of the Application.
+                enum:
+                - Completed
+                - Failed
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -3,7 +3,6 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-cache-resource-ref"
-    namespace: default
 spec:
     name: "with-cache-ref"
     version: "1"
@@ -15,7 +14,7 @@ spec:
     resources:
         - ref: 
             name: reusable-resource-cache
-            namespace: default
+            namespace: default       
     properties: []
     plans:
         - name: "free"
@@ -79,5 +78,4 @@ spec:
                   useCompression: true
                   followRedirects: false
     response_templates: {}
-
-
+    local: true

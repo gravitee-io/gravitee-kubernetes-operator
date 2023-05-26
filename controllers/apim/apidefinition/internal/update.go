@@ -17,6 +17,8 @@ package internal
 import (
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -48,7 +50,7 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 		apiDefinition.Status.State = spec.State
 	}
 
-	if err := d.updateConfigMap(cp); err != nil {
+	if err := d.deploy(cp); err != nil {
 		return err
 	}
 
@@ -64,7 +66,7 @@ func (d *Delegate) updateWithContext(api *gio.ApiDefinition) error {
 
 	_, findErr := d.apim.APIs.GetByCrossID(spec.CrossID)
 	if errors.IgnoreNotFound(findErr) != nil {
-		return newContextError(findErr)
+		return apim.NewContextError(findErr)
 	}
 
 	importMethod := http.MethodPost
@@ -74,7 +76,7 @@ func (d *Delegate) updateWithContext(api *gio.ApiDefinition) error {
 
 	mgmtApi, mgmtErr := d.apim.APIs.Import(importMethod, &spec.Api)
 	if mgmtErr != nil {
-		return newContextError(mgmtErr)
+		return apim.NewContextError(mgmtErr)
 	}
 
 	retrieveMgmtPlanIds(spec, mgmtApi)
@@ -82,7 +84,7 @@ func (d *Delegate) updateWithContext(api *gio.ApiDefinition) error {
 
 	if mgmtApi.ShouldSetKubernetesContext() {
 		if err := d.apim.APIs.SetKubernetesContext(mgmtApi.ID); err != nil {
-			return newContextError(err)
+			return apim.NewContextError(err)
 		}
 	}
 

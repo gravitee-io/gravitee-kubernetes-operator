@@ -2,16 +2,16 @@ version: 2.1
 
 orbs:
   kubernetes: circleci/kubernetes@1.3.1
-  go: circleci/go@1.7.2
+  go: circleci/go@1.7.3
   helm: circleci/helm@2.0.1
-  keeper: gravitee-io/keeper@0.6.2
-  gravitee: gravitee-io/gravitee@2.2.0
-  slack: circleci/slack@4.12.1
+  keeper: gravitee-io/keeper@0.6.3
+  gravitee: gravitee-io/gravitee@2.5.0
+  slack: circleci/slack@4.12.5
 
 parameters:
   go-version:
     type: string
-    default: "1.19.4"
+    default: "1.20.1"
 
 executors:
   azure-cli:
@@ -24,7 +24,7 @@ executors:
     docker:
       # Version can be found here https://docs.microsoft.com/en-us/cli/azure/release-notes-azure-cli
       # be careful when updating the version as it looks it is not following semver
-      - image: mcr.microsoft.com/azure-cli:2.44.1
+      - image: mcr.microsoft.com/azure-cli:2.48.1
     resource_class: <<parameters.resource_class>>
 
 commands:
@@ -98,7 +98,7 @@ jobs:
 
   lint-resources:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     steps:
       - checkout
@@ -109,14 +109,19 @@ jobs:
             make generate
             git diff --quiet HEAD
       - run:
-          name: Check that make manifests have been executed
+          name: Check that make manifests has been executed
           command: |
             make manifests
             git diff --quiet HEAD
       - run:
-          name: Check that make reference have been executed
+          name: Check that make reference has been executed
           command: |
             make reference
+            git diff --quiet HEAD
+      - run:
+          name: Check that make helm-reference has been executed
+          command: |
+            make helm-reference
             git diff --quiet HEAD
 
   test:
@@ -234,19 +239,23 @@ jobs:
 
   publish-private-image:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     parameters:
       image:
         type: string
     steps:
       - checkout
       - setup_remote_docker
+      - helm/install-helm-client
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           var-name: AZURE_DOCKER_REGISTRY_USERNAME
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - run:
+          name: Prepare Helm chart
+          command: IMG="<< parameters.image >>" make helm-prepare
       - run:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> make docker-build
@@ -346,7 +355,7 @@ jobs:
           command: make helm-prepare
       - run:
           name: Run Helm unit tests
-          command: cd helm && helm unittest -3 gko
+          command: cd helm && helm unittest gko
       - go/save-cache
 
   helm-install:
@@ -487,7 +496,9 @@ workflows:
           context: cicd-orchestrator
           matrix:
             parameters:
-              namespace: [apim-apim-master]
+              namespace:
+              - apim-apim-master
+              - apim-apim-3-21-x
               image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
           requires:
             - Stage image
@@ -512,7 +523,8 @@ workflows:
       - add-docker-images-to-snyk:
           name: Add Docker images to snyk
           context: cicd-orchestrator
-
+          requires:
+            - Semantic Release
   notify-release:
     jobs:
       - notify-release-slack:

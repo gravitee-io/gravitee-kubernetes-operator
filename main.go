@@ -18,34 +18,56 @@ package main
 
 import (
 	"context"
+	"embed"
 	"flag"
+	"fmt"
+	"io/fs"
 	"os"
+
+	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
+
+	v1 "k8s.io/api/networking/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"k8s.io/client-go/dynamic"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+
+	//go:embed helm
+	helm embed.FS
 )
 
 const managerPort = 9443
@@ -69,7 +91,7 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 
 	opts := zap.Options{
-		Development:          os.Getenv("DEV_MODE") == "true",
+		Development:          env.Config.Development,
 		EncoderConfigOptions: logging.NewEncoderConfigOption(),
 	}
 
@@ -85,7 +107,7 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
-		Namespace:              os.Getenv("NAMESPACE"),
+		Namespace:              env.Config.NS,
 	})
 
 	if err != nil {
@@ -93,59 +115,124 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = indexApiDefinitionFields(mgr)
-
-	if err != nil {
-		setupLog.Error(err, "unable to start manager (Indexing fields in API definition)")
-		os.Exit(1)
+	if env.Config.ApplyCRDs {
+		if err = applyCRDs(); err != nil {
+			setupLog.Error(err, "unable to apply custom resource definitions")
+			os.Exit(1)
+		}
 	}
 
-	if err = (&apidefinition.Reconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
+	if err = addIndexer(mgr); err != nil {
+		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
-	if err = (&managementcontext.Reconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
-		os.Exit(1)
-	}
-	if err = (&ingress.Reconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
-		os.Exit(1)
-	}
-	if err = (&apiresource.Reconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiResource")
-		os.Exit(1)
-	}
+
+	registerControllers(mgr)
+
 	//+kubebuilder:scaffold:builder
 
 	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
 		setupLog.Error(healthCheckErr, "unable to set up health check")
 		os.Exit(1)
 	}
+
 	if readyCheckErr := mgr.AddReadyzCheck("readyz", healthz.Ping); readyCheckErr != nil {
 		setupLog.Error(readyCheckErr, "unable to set up ready check")
 		os.Exit(1)
 	}
+
+	k8s.RegisterClient(mgr.GetClient())
 
 	setupLog.Info("starting manager")
 	if startErr := mgr.Start(ctrl.SetupSignalHandler()); startErr != nil {
 		setupLog.Error(startErr, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+func registerControllers(mgr manager.Manager) {
+	if err := (&apidefinition.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApiDefinitionList{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
+		os.Exit(1)
+	}
+
+	if err := (&managementcontext.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ManagementContextList{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
+		os.Exit(1)
+	}
+	if err := (&ingress.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1.IngressList{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
+		os.Exit(1)
+	}
+	if err := (&apiresource.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApiResource")
+		os.Exit(1)
+	}
+	if err := (&application.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("application-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApplicationList{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Application")
+		os.Exit(1)
+	}
+
+	if err := (&secrets.Reconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Secret")
+		os.Exit(1)
+	}
+}
+
+func addIndexer(mgr manager.Manager) error {
+	err := indexApiDefinitionFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in API definition)")
+	}
+
+	err = indexSecretRefs(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in context resources)")
+	}
+
+	err = indexIngressFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
+	}
+
+	err = indexTLSSecretFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
+	}
+
+	err = indexApplicationFields(mgr)
+	if err != nil {
+		return fmt.Errorf("unable to start manager (Indexing fields in application resources)")
+	}
+
+	return nil
 }
 
 func indexApiDefinitionFields(manager ctrl.Manager) error {
@@ -165,4 +252,91 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	}
 
 	return nil
+}
+
+func indexSecretRefs(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	secretRefIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
+	return cache.IndexField(ctx, &gio.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
+}
+
+func indexIngressFields(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	apiTemplateIndexer := indexer.NewIndexer(indexer.ApiTemplateField, indexer.IndexApiTemplate)
+	err := cache.IndexField(ctx, &v1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func indexTLSSecretFields(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	tlsSecretIndexer := indexer.NewIndexer(indexer.TLSSecretField, indexer.IndexTLSSecret)
+	err := cache.IndexField(ctx, &v1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func indexApplicationFields(manager ctrl.Manager) error {
+	cache := manager.GetCache()
+	ctx := context.Background()
+
+	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
+	err := cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func applyCRDs() error {
+	client := dynamic.NewForConfigOrDie(ctrl.GetConfigOrDie())
+	ctx := context.Background()
+
+	version := schema.GroupVersionResource{
+		Group:    "apiextensions.k8s.io",
+		Version:  "v1",
+		Resource: "customresourcedefinitions",
+	}
+
+	return fs.WalkDir(helm, "helm/gko/crds", func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		b, err := fs.ReadFile(helm, path)
+		if err != nil {
+			return err
+		}
+
+		obj := make(map[string]interface{})
+		if err = yaml.Unmarshal(b, &obj); err != nil {
+			return err
+		}
+
+		opts := metav1.ApplyOptions{Force: true, FieldManager: "gravitee.io/operator"}
+		crd := &unstructured.Unstructured{Object: obj}
+
+		if crd, err = client.Resource(version).Apply(ctx, crd.GetName(), crd, opts); err == nil {
+			setupLog.Info("applied resource definition", "name", crd.GetName())
+		}
+
+		return err
+	})
 }

@@ -24,8 +24,8 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) CreateOrUpdateApiDefinition(ingress *v1.Ingress) (util.OperationResult, error) {
-	apiDefinition, err := d.ResolveApiDefinitionTemplate(ingress)
+func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.OperationResult, error) {
+	apiDefinition, err := d.resolveApiDefinitionTemplate(ingress)
 	if err != nil {
 		d.log.Error(err, "ResolveApiDefinition error")
 		return util.OperationResultNone, err
@@ -38,7 +38,7 @@ func (d *Delegate) CreateOrUpdateApiDefinition(ingress *v1.Ingress) (util.Operat
 	}
 
 	if err != nil {
-		d.log.Error(err, "Get ApiDefinition error")
+		d.log.Error(err, "unable to create api definition from template")
 		return util.OperationResultNone, err
 	}
 

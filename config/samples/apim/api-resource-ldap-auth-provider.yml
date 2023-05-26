@@ -2,7 +2,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiResource
 metadata:
   name: reusable-resource-ldap-auth-provider
-  namespace: default
 spec:
   name: "ldap-auth"
   type: "auth-provider-ldap-resource"

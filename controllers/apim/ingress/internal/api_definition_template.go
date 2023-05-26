@@ -16,19 +16,22 @@ package internal
 
 import (
 	"fmt"
+	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal/mapper"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	v1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	coreV1 "k8s.io/api/core/v1"
+	netV1 "k8s.io/api/networking/v1"
 )
 
-func (d *Delegate) ResolveApiDefinitionTemplate(ingress *v1.Ingress) (*v1alpha1.ApiDefinition, error) {
+func (d *Delegate) resolveApiDefinitionTemplate(ingress *netV1.Ingress) (*v1alpha1.ApiDefinition, error) {
 	var apiDefinition *v1alpha1.ApiDefinition
+
 	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
 		apiDefinition = &v1alpha1.ApiDefinition{}
 		if err := d.k8s.Get(
@@ -40,14 +43,55 @@ func (d *Delegate) ResolveApiDefinitionTemplate(ingress *v1.Ingress) (*v1alpha1.
 		apiDefinition = defaultApiDefinitionTemplate()
 	}
 
-	return mergeApiDefinition(d.log, apiDefinition, ingress), nil
+	return mapper.New(d.getMapperOpts()).Map(apiDefinition, ingress), nil
+}
+
+func (d *Delegate) getMapperOpts() mapper.Opts {
+	opts := mapper.NewOpts()
+	d.setNotFoundTemplate(&opts)
+	return opts
+}
+
+func (d *Delegate) setNotFoundTemplate(opts *mapper.Opts) {
+	ns, name := env.Config.CMTemplate404NS, env.Config.CMTemplate404Name
+
+	if name == "" {
+		return
+	}
+
+	cm := coreV1.ConfigMap{}
+	if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
+		d.log.Error(err, "unable to access config map, using default HTTP not found template")
+		return
+	}
+
+	if err := checkData(cm.Data); err != nil {
+		d.log.Error(err, "missing key in config map, using default HTTP not found template")
+		return
+	}
+
+	opts.Templates[http.StatusNotFound] = mapper.ResponseTemplate{
+		Content:     cm.Data["content"],
+		ContentType: cm.Data["contentType"],
+	}
+}
+
+func checkData(template map[string]string) error {
+	if _, ok := template["content"]; !ok {
+		return fmt.Errorf("missing content in template")
+	}
+
+	if _, ok := template["contentType"]; !ok {
+		return fmt.Errorf("missing contentType in template")
+	}
+
+	return nil
 }
 
 func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 	return &v1alpha1.ApiDefinition{
 		Spec: v1alpha1.ApiDefinitionSpec{
 			Api: model.Api{
-				Name: "default-keyless",
 				Plans: []*model.Plan{
 					{
 						Name:     "Default keyless plan",
@@ -55,57 +99,10 @@ func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 						Status:   "PUBLISHED",
 					},
 				},
+				Version:     "1.0.0",
+				Description: "A default keyless API",
+				IsLocal:     true,
 			},
 		},
 	}
-}
-
-// MergeApiDefinition
-// Transform the ingress as an API Definition as per https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
-func mergeApiDefinition(
-	log logr.Logger,
-	apiDefinition *v1alpha1.ApiDefinition,
-	ingress *v1.Ingress,
-) *v1alpha1.ApiDefinition {
-	api := &v1alpha1.ApiDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ingress.Name,
-			Namespace: ingress.Namespace,
-		},
-		Spec: *apiDefinition.Spec.DeepCopy(),
-	}
-
-	api.Spec.Proxy = &model.Proxy{
-		VirtualHosts: []*model.VirtualHost{},
-		Groups: []*model.EndpointGroup{
-			{
-				Name:      "default",
-				Endpoints: []*model.HttpEndpoint{},
-			},
-		},
-	}
-
-	log.Info("Merge Ingress with API Definition")
-
-	for _, rule := range ingress.Spec.Rules {
-		for _, path := range rule.HTTP.Paths {
-			service := path.Backend.Service
-
-			//TODO: How-to dedal with PathType ?
-
-			api.Spec.Proxy.VirtualHosts = append(
-				api.Spec.Proxy.VirtualHosts,
-				&model.VirtualHost{Host: rule.Host, Path: path.Path},
-			)
-
-			api.Spec.Proxy.Groups[0].Endpoints = append(
-				api.Spec.Proxy.Groups[0].Endpoints,
-				&model.HttpEndpoint{
-					Name:   service.Name,
-					Target: fmt.Sprintf("http://%s.%s.svc.cluster.local:%d", service.Name, ingress.Namespace, service.Port.Number),
-				},
-			)
-		}
-	}
-	return api
 }

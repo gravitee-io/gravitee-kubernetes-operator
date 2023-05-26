@@ -18,11 +18,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+
 	netV1 "k8s.io/api/networking/v1"
 
 	"k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
@@ -30,17 +33,19 @@ import (
 var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
-	Api      *gio.ApiDefinition
-	Context  *gio.ManagementContext
-	Resource *gio.ApiResource
-	Ingress  *netV1.Ingress
+	Api         *gio.ApiDefinition
+	Context     *gio.ManagementContext
+	Resource    *gio.ApiResource
+	Ingress     *netV1.Ingress
+	Application *gio.Application
 }
 
 type FixtureFiles struct {
-	Api      string
-	Context  string
-	Resource string
-	Ingress  string
+	Api         string
+	Context     string
+	Resource    string
+	Ingress     string
+	Application string
 }
 
 type FixtureGenerator struct {
@@ -84,7 +89,7 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 		fixtures.Resource = resource
 	}
 
-	if fixtures.Context != nil {
+	if fixtures.Context != nil && fixtures.Api != nil {
 		fixtures.Api.Spec.Context = fixtures.Context.GetNamespacedName()
 	}
 
@@ -100,11 +105,17 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	if files.Ingress != "" {
-		ingress, err := f.NewIngress(files.Ingress)
+		ingress, err := f.NewIngress(files.Ingress, ingressHttpPathTransformer(f))
+
 		if err != nil {
 			return nil, err
 		}
 		fixtures.Ingress = ingress
+	}
+
+	err := f.addApplication(files, fixtures)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, transform := range transforms {
@@ -112,6 +123,32 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	return fixtures, nil
+}
+
+func (f *FixtureGenerator) addApplication(files FixtureFiles, fixtures *Fixtures) error {
+	if files.Application != "" {
+		application, err := f.NewApplication(files.Application)
+		if err != nil {
+			return err
+		}
+		fixtures.Application = application
+	}
+
+	if fixtures.Context != nil && fixtures.Application != nil {
+		fixtures.Application.Spec.Context = fixtures.Context.GetNamespacedName()
+	}
+
+	return nil
+}
+
+func ingressHttpPathTransformer(f *FixtureGenerator) func(ingress *netV1.Ingress) {
+	return func(ingress *netV1.Ingress) {
+		for i := range ingress.Spec.Rules {
+			for j := range ingress.Spec.Rules[i].HTTP.Paths {
+				ingress.Spec.Rules[i].HTTP.Paths[j].Path += f.Suffix
+			}
+		}
+	}
 }
 
 func (f *FixtureGenerator) NewApiDefinition(
@@ -123,12 +160,15 @@ func (f *FixtureGenerator) NewApiDefinition(
 	}
 
 	api.Name += f.Suffix
+	api.Namespace = Namespace
 	api.Spec.Name += f.Suffix
-	api.Spec.Proxy.VirtualHosts[0].Path += f.Suffix
+
+	if !isTemplate(api) {
+		api.Spec.Proxy.VirtualHosts[0].Path += f.Suffix
+	}
 
 	return api, nil
 }
-
 func (f *FixtureGenerator) NewManagementContext(
 	path string, transforms ...func(*gio.ManagementContext),
 ) (*gio.ManagementContext, error) {
@@ -138,6 +178,7 @@ func (f *FixtureGenerator) NewManagementContext(
 	}
 
 	ctx.Name += f.Suffix
+	ctx.Namespace = Namespace
 
 	return ctx, nil
 }
@@ -148,6 +189,7 @@ func (f *FixtureGenerator) NewApiResource(path string, transforms ...func(*gio.A
 		return nil, err
 	}
 	resource.Name += f.Suffix
+	resource.Namespace = Namespace
 
 	return resource, nil
 }
@@ -230,6 +272,7 @@ func (f *FixtureGenerator) NewIngress(path string, transforms ...func(*netV1.Ing
 		return nil, err
 	}
 	ingress.Name += f.Suffix
+	ingress.Namespace = Namespace
 
 	return ingress, nil
 }
@@ -258,6 +301,45 @@ func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress
 	return resource, nil
 }
 
+func (f *FixtureGenerator) NewApplication(path string,
+	transforms ...func(application *gio.Application)) (*gio.Application, error) {
+	application, err := newApplication(path, transforms...)
+	if err != nil {
+		return nil, err
+	}
+	application.Name += f.Suffix
+
+	return application, nil
+}
+
+func newApplication(path string, transforms ...func(application *gio.Application)) (*gio.Application, error) {
+	crd, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := gio.GroupVersion.WithKind("Application")
+	decoded, _, err := decode(crd, &gvk, new(gio.Application))
+	if err != nil {
+		return nil, err
+	}
+
+	application, ok := decoded.(*gio.Application)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of Application CRD")
+	}
+
+	for _, transform := range transforms {
+		transform(application)
+	}
+
+	return application, nil
+}
+
 func randomSuffix() string {
 	return "-" + uuid.NewV4().String()[:7]
+}
+
+func isTemplate(api *gio.ApiDefinition) bool {
+	return api.Labels[keys.IngressTemplateAnnotation] == "true"
 }

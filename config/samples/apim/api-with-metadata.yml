@@ -17,7 +17,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: with-metadata
-  namespace: default
 spec:
   name: "With metadata"
   version: "1.0"
@@ -38,3 +37,4 @@ spec:
     name: "build-version"
     format: "STRING"
     value: "0.0.1"
+  local: true

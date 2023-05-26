@@ -17,8 +17,7 @@ package http
 import "net/http"
 
 const (
-	AuthorizationHeader = "Authorization"
-	BearerPrefix        = "Bearer "
+	BearerPrefix = "Bearer "
 )
 
 type BearerToken string

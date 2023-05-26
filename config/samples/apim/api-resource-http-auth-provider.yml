@@ -2,7 +2,6 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiResource
 metadata:
   name: reusable-resource-http-auth-provider
-  namespace: default
 spec:
   name: "http-auth"
   type: "auth-provider-http-resource"

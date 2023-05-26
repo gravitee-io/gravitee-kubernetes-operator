@@ -3,7 +3,6 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-http-auth-provider-ref"
-    namespace: default
 spec:
     name: "with-http-auth-provider-ref"
     version: "1"
@@ -74,5 +73,4 @@ spec:
                   useCompression: true
                   followRedirects: false
     response_templates: {}
-
-
+    local: true

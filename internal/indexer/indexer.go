@@ -16,14 +16,20 @@ package indexer
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	v1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type IndexField string
 
 const (
-	ContextField  IndexField = "context"
-	ResourceField IndexField = "resource"
+	ContextField     IndexField = "context"
+	SecretRefField   IndexField = "secretRef"
+	ResourceField    IndexField = "resource"
+	ApiTemplateField IndexField = "api-template"
+	TLSSecretField   IndexField = "tls-secret"
+	AppContextField  IndexField = "app-context"
 )
 
 func (f IndexField) String() string {
@@ -37,7 +43,7 @@ type Indexer struct {
 
 type Func = func(obj client.Object) []string
 
-func CreateIndexerFunc[T client.Object](field IndexField, doIndex func(T, *[]string)) Func {
+func CreateIndexerFunc[T client.Object](doIndex func(T, *[]string)) Func {
 	return func(obj client.Object) []string {
 		fields := []string{}
 		o, ok := obj.(T)
@@ -55,7 +61,7 @@ func CreateIndexerFunc[T client.Object](field IndexField, doIndex func(T, *[]str
 func NewIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) Indexer {
 	return Indexer{
 		Field: string(field),
-		Func:  CreateIndexerFunc(field, doIndex),
+		Func:  CreateIndexerFunc(doIndex),
 	}
 }
 
@@ -65,6 +71,12 @@ func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	}
 
 	*fields = append(*fields, api.Spec.Context.String())
+}
+
+func IndexManagementContextSecrets(context *gio.ManagementContext, fields *[]string) {
+	if context.Spec.HasSecretRef() {
+		*fields = append(*fields, context.Spec.SecretRef().String())
+	}
 }
 
 func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
@@ -77,4 +89,34 @@ func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
 			*fields = append(*fields, resource.Ref.String())
 		}
 	}
+}
+
+func IndexApiTemplate(ing *v1.Ingress, fields *[]string) {
+	if ing.Annotations[keys.IngressTemplateAnnotation] == "" {
+		return
+	}
+
+	*fields = append(*fields, ing.Namespace+"/"+ing.Annotations[keys.IngressTemplateAnnotation])
+}
+
+func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
+	if ing.Annotations[keys.IngressClassAnnotation] != keys.IngressClassAnnotationValue {
+		return
+	}
+
+	if ing.Spec.TLS == nil || len(ing.Spec.TLS) == 0 {
+		return
+	}
+
+	for i := range ing.Spec.TLS {
+		*fields = append(*fields, ing.Namespace+"/"+ing.Spec.TLS[i].SecretName)
+	}
+}
+
+func IndexApplicationManagementContexts(application *gio.Application, fields *[]string) {
+	if application.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, application.Spec.Context.String())
 }

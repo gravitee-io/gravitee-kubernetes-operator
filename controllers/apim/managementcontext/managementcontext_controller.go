@@ -19,10 +19,16 @@ package managementcontext
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
@@ -30,20 +36,40 @@ import (
 // Reconciler reconciles a ManagementContext object.
 type Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
+	Watcher  watch.Interface
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	instance := &gio.ManagementContext{}
-
-	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+	log := log.FromContext(ctx)
+	managementContext := &gio.ManagementContext{}
+	if err := r.Get(ctx, req.NamespacedName, managementContext); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	return ctrl.Result{}, nil
+	events := event.NewRecorder(r.Recorder)
+	var reconcileErr error
+	if managementContext.IsBeingDeleted() {
+		reconcileErr = events.Record(event.Delete, managementContext, func() error {
+			return internal.Delete(ctx, r.Client, managementContext)
+		})
+	} else {
+		reconcileErr = events.Record(event.Update, managementContext, func() error {
+			return internal.CreateOrUpdate(ctx, r.Client, managementContext)
+		})
+	}
+
+	if reconcileErr == nil {
+		log.Info("Management context has been reconciled")
+		return ctrl.Result{}, nil
+	}
+
+	// There was an error reconciling the Management Context
+	return ctrl.Result{}, reconcileErr
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -3,7 +3,7 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-am-oauth2-resource"
-    namespace: default
+  
 spec:
     name: "with-am-oauth2-resource"
     version: "1"
@@ -99,5 +99,4 @@ spec:
                   useCompression: true
                   followRedirects: false
     response_templates: {}
-
-
+    local: true

@@ -4,7 +4,6 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
     name: "with-ldap-auth-provider"
-    namespace: default
 spec:
     name: "with-ldap-auth-provider"
     version: "1"
@@ -75,5 +74,4 @@ spec:
                   useCompression: true
                   followRedirects: false
     response_templates: {}
-
-
+    local: true

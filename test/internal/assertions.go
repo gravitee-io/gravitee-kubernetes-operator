@@ -23,7 +23,14 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
-func AssertStatusIsSet(apiDefinition *gio.ApiDefinition) error {
+func AssertApplicationStatusIsSet(application *gio.Application) error {
+	if application.Status.ID == "" {
+		return fmt.Errorf("id should not be empty in status")
+	}
+	return nil
+}
+
+func AssertApiStatusIsSet(apiDefinition *gio.ApiDefinition) error {
 	status := apiDefinition.Status
 
 	if status.ID == "" {
@@ -93,6 +100,13 @@ func AssertNoErrorAndObservedGenerationEquals(
 func AssertEquals(property string, expected, actual interface{}) error {
 	if !reflect.DeepEqual(expected, actual) {
 		return NewAssertionError(property, expected, actual)
+	}
+	return nil
+}
+
+func AssertHostPrefix(hostname *Host, prefix string) error {
+	if !hostname.StartsWith(prefix) {
+		return fmt.Errorf("hostname %s does not start with %s", hostname, prefix)
 	}
 	return nil
 }
