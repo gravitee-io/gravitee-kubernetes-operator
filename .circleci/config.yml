@@ -372,6 +372,7 @@ jobs:
     steps:
       - checkout
       - helm/install-helm-client
+      - kubernetes/install-kubectl
       - go/load-cache
       - run:
           name: Prepare Helm chart
@@ -386,6 +387,9 @@ jobs:
               gko helm/gko \
               --set manager.scope.cluster=false \
               -n << parameters.namespace >>
+      - run:
+          name: Rollout controller deployment
+          command: kubectl rollout restart deployment gko-controller-manager
       - go/save-cache
       - notify-on-failure
 
