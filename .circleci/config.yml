@@ -389,7 +389,9 @@ jobs:
               -n << parameters.namespace >>
       - run:
           name: Rollout controller deployment
-          command: kubectl rollout restart deployment gko-controller-manager
+          command: |
+            kubectl rollout restart deployment gko-controller-manager \
+              -n << parameters.namespace >>
       - go/save-cache
       - notify-on-failure
 
