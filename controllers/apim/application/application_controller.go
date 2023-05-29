@@ -34,7 +34,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -118,6 +117,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.Application{}).
-		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
 		Complete(r)
 }
