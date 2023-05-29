@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -121,8 +120,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ApiDefinition{}).
-		Watches(&source.Kind{Type: &gio.ManagementContext{}}, r.Watcher.WatchContexts(indexer.ContextField)).
-		Watches(&source.Kind{Type: &gio.ApiResource{}}, r.Watcher.WatchResources()).
+		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
+		Watches(&gio.ApiResource{}, r.Watcher.WatchResources()).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }
