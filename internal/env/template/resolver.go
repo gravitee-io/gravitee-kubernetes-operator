@@ -52,7 +52,7 @@ func NewResolver(ctx context.Context, c client.Client, l logr.Logger, obj runtim
 
 func (r *Resolver) Resolve() error {
 	switch t := r.obj.(type) {
-	case *gio.ApiDefinition, *gio.ManagementContext, *gio.Application, *netv1.Ingress:
+	case *gio.ApiDefinition, *gio.ManagementContext, *gio.Application, *gio.ApiResource, *netv1.Ingress:
 		return r.exec()
 	default:
 		return fmt.Errorf("unsupported object type %v", t)
