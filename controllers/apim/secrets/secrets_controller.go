@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // Reconciler reconciles a secret object.
@@ -57,6 +56,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Secret{}).
-		Watches(&source.Kind{Type: &v1alpha1.ManagementContext{}}, watch.ContextSecrets()).
+		Watches(&v1alpha1.ManagementContext{}, watch.ContextSecrets()).
 		Complete(r)
 }
