@@ -16,6 +16,7 @@ package model
 
 import (
 	"encoding/json"
+	"reflect"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -30,6 +31,12 @@ func (in *GenericStringMap) DeepCopyInto(out *GenericStringMap) {
 	// thus we write our own DeepCopyInto function.
 	if out != nil {
 		casted := in.Unstructured
+		for k, v := range casted.Object {
+			if reflect.TypeOf(v).Kind() == reflect.Int {
+				casted.Object[k] = int64(v.(int))
+			}
+		}
+
 		deepCopy := casted.DeepCopy()
 		out.Object = deepCopy.Object
 	}
