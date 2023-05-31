@@ -71,7 +71,7 @@ func (r *Resolver) exec() error {
 	}
 	tmpl, err := template.New("gko").Funcs(template.FuncMap(funcMap)).Delims("[[", "]]").Parse(string(text))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	buf := new(bytes.Buffer)
