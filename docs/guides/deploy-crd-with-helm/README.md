@@ -1,6 +1,6 @@
 # Deploy Gravitee Kubernetes Operator Resources using Helm
 
-The purpose of this guide is to give you an over idea of how to use [Helm](https://helm.sh/docs/) templates capabilities to reuse properties across you Gravitee Kubernetes Operator resources.
+The purpose of this guide is to give you an overview of how to use [Helm](https://helm.sh/docs/) templates capabilities to reuse properties across you Gravitee Kubernetes Operator resources.
 
 ## Disclaimer
 
