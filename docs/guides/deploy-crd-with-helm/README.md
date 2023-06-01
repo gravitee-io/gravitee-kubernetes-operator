@@ -109,7 +109,7 @@ resources:
 
 ## The API definition template
 
-Without getting into too much details, here is an overview of how we can build an API definition resource that will play nicely with set of values.
+Without getting into too much details, here is an overview of how we can build an API definition resource that will play nicely with our set of values.
 
 ```yaml
 {{- $common := .Values }}
@@ -128,7 +128,7 @@ spec:
 {{- end}}
 ```
 
-The whole API definition is wrapped inside a [range](https://helm.sh/docs/chart_template_guide/control_structures/#looping-with-the-range-action) loop. Inside this loop, we can merge the API definition coming from our `apis.yaml` file with a set of common property defined in the `common.yaml` file defined for our environment (plans, flows, resources ...), giving precedence to what has been defined in the `apis` file.
+The whole API definition is wrapped inside a [range](https://helm.sh/docs/chart_template_guide/control_structures/#looping-with-the-range-action) loop. Inside this loop, we can merge the API definition coming from our `apis.yaml` file with the set of common property defined in the `common.yaml` file (plans, flows, resources ...), giving precedence to what has been defined in the `apis` file.
 
 💡 Because of Helm internals, we need to capture the global scope of our template values in order to be able to reuse those references inside the range loop. This is done using the following instructions.
 
