@@ -34,7 +34,7 @@ The values directory is split into two sub directories:
   - The `dev` directory will be used to deploy our APIs in the dev namespace.
   - The `staging` directory will be used to deploy our APIs in the staging namespace.
 
-In each of those directories, a `common.yaml` files defines values to be reused across each APIs deployed with the release, and the `apis.yaml` file contains a simple set of specific properties for each API (`name`, `version`, and `proxy`).
+In each of those directories, a `common.yaml` files defines values to be reused across each API deployed with the release, and the `apis.yaml` file contains a simple set of specific properties for each API (`name`, `version`, and `proxy`).
 
 Here is, for instance, the structure of the `dev` values directory.
 
@@ -48,7 +48,7 @@ values/dev
 
 The Gravitee Kubernetes Operator resources allow you to simply source sensitive values from an existing secret (more on that later).
 
-For this reason, we need to create one secret for each of our namespace containing this token.
+For this reason, we need to create one secret for each of our namespaces containing this token.
 
 ```bash
 kubectl create namespace dev
