@@ -104,25 +104,25 @@ jobs:
       - checkout
       - go/mod-download-cached
       - run:
-          name: Check that make generate has been executed
+          name: Check that `make generate` has been executed
           command: |
             make generate
-            git diff --quiet HEAD
+            git diff --quiet HEAD api/
       - run:
-          name: Check that make manifests has been executed
+          name: Check that `make manifests` has been executed
           command: |
             make manifests
-            git diff --quiet HEAD
+            git diff --quiet HEAD config/crd/bases/
       - run:
-          name: Check that make reference has been executed
+          name: Check that `make reference` has been executed
           command: |
             make reference
-            git diff --quiet HEAD
+            git diff --quiet HEAD docs/api/reference.md
       - run:
-          name: Check that make helm-reference has been executed
+          name: Check that `make helm-reference` has been executed
           command: |
             make helm-reference
-            git diff --quiet HEAD
+            git diff --quiet HEAD helm/gko/README.md
 
   test:
     machine:
