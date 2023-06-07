@@ -42,8 +42,13 @@ jobs:
       - name: "Trigger merge from ${{ inputs.source_branch }} to ${{ inputs.target_branch }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INTERMEDIATE_BRANCH: "ci-prepare-release"
           SOURCE_BRANCH: ${{ github.event.inputs.source_branch }}
           TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
+          GIT_AUTHOR_NAME: "Gravitee.io Bot"
+          GIT_COMMITTER_NAME: "Gravitee.io Bot"
+          GIT_AUTHOR_EMAIL: "contact@gravitee.io"
+          GIT_COMMITTER_EMAIL: "contact@gravitee.io"
         run: |
           git checkout ${TARGET_BRANCH}
           git checkout ${SOURCE_BRANCH}
@@ -56,13 +61,19 @@ jobs:
             echo 'git diff failed unexpectedly.'
             exit 1
           fi
+
+          echo "🚀 Setting up release branch"
           
-          echo "🚀 Creating pull request from ${SOURCE_BRANCH} to ${TARGET_BRANCH}"
+          git checkout -b ${INTERMEDIATE_BRANCH}
+          git fetch && git rebase origin/${TARGET_BRANCH}
+          git push --set-upstream origin ${INTERMEDIATE_BRANCH}
+          
+          echo "🚀 Creating pull request from ${INTERMEDIATE_BRANCH} to ${TARGET_BRANCH}"
 
-          PR_TITLE="chore: merge ${SOURCE_BRANCH} into ${TARGET_BRANCH}"
-          PR_BODY="⚠️ This pull request has been created to trigger a release on ${TARGET_BRANCH} an should merge automatically"
+          PR_TITLE="ci: prepare release"
+          PR_BODY="This pull request has been created to trigger a release on ${TARGET_BRANCH} an should merge automatically when all requirements are met."
 
-          pr_url=$( gh pr create --base ${TARGET_BRANCH} --head ${SOURCE_BRANCH} --title "${PR_TITLE}" --body "${PR_BODY}" --no-maintainer-edit )
+          pr_url=$( gh pr create --base ${TARGET_BRANCH} --head ${INTERMEDIATE_BRANCH} --title "${PR_TITLE}" --body "${PR_BODY}" --no-maintainer-edit )
 
           if [[ -z "${pr_url}" ]]; then
             echo "failed to create pull request unexpectedly."
