@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -61,6 +60,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	d := internal.NewDelegate(ctx, r.Client, logger)
+	if err := d.ResolveTemplate(ingress); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	events := e.NewRecorder(r.Recorder)
 	var reconcileErr error
@@ -135,8 +137,8 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
 		Owns(&v1alpha1.ApiDefinition{}).
-		Watches(&source.Kind{Type: &v1alpha1.ApiDefinition{}}, r.Watcher.WatchApiTemplate()).
-		Watches(&source.Kind{Type: &corev1.Secret{}}, r.Watcher.WatchTLSSecret()).
+		Watches(&v1alpha1.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
+		Watches(&corev1.Secret{}, r.Watcher.WatchTLSSecret()).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)
 }

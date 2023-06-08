@@ -24,7 +24,9 @@ import {
     createSecret,
     createGwKeystoreSecret,
     createGwKeystoreSecretCredentials,
-    createHttpBinSecret
+    createHttpBinSecret,
+    createTemplatingSecret,
+    createTemplatingConfigmap
 } from "./util/k3d.mjs";
 import {addHelmRepos, helmInstall, updateGraviteeRepo} from "./util/helm.mjs";
 import * as env from "./util/env.mjs";
@@ -89,6 +91,18 @@ LOG.blue(`
 `);
 
 await time(createGwKeystoreSecretCredentials);
+
+LOG.blue(`
+  ☸ Storing Templating secret ...
+`);
+
+await time(createTemplatingSecret);
+
+LOG.blue(`
+  ☸ Storing Templating configmap ...
+`);
+
+await time(createTemplatingConfigmap);
 
 LOG.blue(`
   ☸ Storing httpbin.example.com keypair as a secret ...

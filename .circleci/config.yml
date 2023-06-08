@@ -5,13 +5,13 @@ orbs:
   go: circleci/go@1.7.3
   helm: circleci/helm@2.0.1
   keeper: gravitee-io/keeper@0.6.3
-  gravitee: gravitee-io/gravitee@2.5.0
+  gravitee: gravitee-io/gravitee@4.0.0
   slack: circleci/slack@4.12.5
 
 parameters:
   go-version:
     type: string
-    default: "1.20.1"
+    default: "1.20.4"
 
 executors:
   azure-cli:
@@ -24,7 +24,7 @@ executors:
     docker:
       # Version can be found here https://docs.microsoft.com/en-us/cli/azure/release-notes-azure-cli
       # be careful when updating the version as it looks it is not following semver
-      - image: mcr.microsoft.com/azure-cli:2.48.1
+      - image: mcr.microsoft.com/azure-cli:2.49.0
     resource_class: <<parameters.resource_class>>
 
 commands:
@@ -104,25 +104,25 @@ jobs:
       - checkout
       - go/mod-download-cached
       - run:
-          name: Check that make generate has been executed
+          name: Check that `make generate` has been executed
           command: |
             make generate
-            git diff --quiet HEAD
+            git diff --quiet HEAD api/
       - run:
-          name: Check that make manifests has been executed
+          name: Check that `make manifests` has been executed
           command: |
             make manifests
-            git diff --quiet HEAD
+            git diff --quiet HEAD config/crd/bases/
       - run:
-          name: Check that make reference has been executed
+          name: Check that `make reference` has been executed
           command: |
             make reference
-            git diff --quiet HEAD
+            git diff --quiet HEAD docs/api/reference.md
       - run:
-          name: Check that make helm-reference has been executed
+          name: Check that `make helm-reference` has been executed
           command: |
             make helm-reference
-            git diff --quiet HEAD
+            git diff --quiet HEAD helm/gko/README.md
 
   test:
     machine:
@@ -372,6 +372,7 @@ jobs:
     steps:
       - checkout
       - helm/install-helm-client
+      - kubernetes/install-kubectl
       - go/load-cache
       - run:
           name: Prepare Helm chart
@@ -385,6 +386,11 @@ jobs:
             helm upgrade --install \
               gko helm/gko \
               --set manager.scope.cluster=false \
+              -n << parameters.namespace >>
+      - run:
+          name: Rollout controller deployment
+          command: |
+            kubectl rollout restart deployment gko-controller-manager \
               -n << parameters.namespace >>
       - go/save-cache
       - notify-on-failure
@@ -498,7 +504,6 @@ workflows:
             parameters:
               namespace:
               - apim-apim-master
-              - apim-apim-3-21-x
               image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
           requires:
             - Stage image

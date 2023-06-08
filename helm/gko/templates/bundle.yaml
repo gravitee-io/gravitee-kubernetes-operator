@@ -67,7 +67,7 @@ rules:
     resourceNames:
       - managementcontexts.gravitee.io
       - apidefinitions.gravitee.io
-      - apidefinitions.gravitee.io
+      - applications.gravitee.io
       - apiresources.gravitee.io
     resources:
       - customresourcedefinitions
