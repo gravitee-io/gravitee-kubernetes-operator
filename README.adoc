@@ -1,7 +1,7 @@
 = Gravitee.io Kubernetes Operator
 
 image:https://img.shields.io/badge/License-Apache%202.0-blue.svg["License", link="https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/LICENSE.txt"]
-image:https://dl.circleci.com/status-badge/img/gh/gravitee-io/gravitee-kubernetes-operator/tree/master.svg?style=svg&circle-token=fede14bc30847f9ef01ae44c12c44edbe817c3b0["CircleCI", link="https://app.circleci.com/pipelines/github/gravitee-io/gravitee-kubernetes-operator?branch=master"]
+image:https://circleci.com/gh/gravitee-io/gravitee-kubernetes-operator/tree/alpha.svg?style=svg[link="https://app.circleci.com/pipelines/github/gravitee-io/gravitee-kubernetes-operator?branch=alpha"]
 image:https://img.shields.io/badge/semantic--release-📦🚀-e10079?logo=semantic-release["semantic-release: 📦🚀", link="https://github.com/semantic-release/semantic-release"]
 image:https://goreportcard.com/badge/github.com/gravitee-io/gravitee-kubernetes-operator["Go Report Card", link="https://goreportcard.com/report/github.com/gravitee-io/gravitee-kubernetes-operator"]
 
