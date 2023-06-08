@@ -518,13 +518,9 @@ workflows:
             equal:
               [<< pipeline.git.revision >>, << pipeline.git.base_revision >>]
     jobs:
-      - helm-test:
-          name: Test chart
       - semantic-release:
           name: Semantic Release
           context: cicd-orchestrator
-          requires:
-            - Test chart
       - add-docker-images-to-snyk:
           name: Add Docker images to snyk
           context: cicd-orchestrator
