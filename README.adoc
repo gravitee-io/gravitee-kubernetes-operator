@@ -111,17 +111,19 @@ When committing your contributions, please follow link:https://www.conventionalc
 
 === Release process
 
-/!\ All new changes should be committed to the `alpha` branch.
+To release a new version of the operator go to the dedicated https://github.com/gravitee-io/gravitee-kubernetes-operator/actions/workflows/trigger-release.yml[Trigger Release] workflow and run it with the default parameters.
 
-To create a new release, we need to merge `alpha` into `master`. 
-A github action do the job. 
+This will:
 
-Go in the `Actions` tab and select the `Trigger Release` workflow. Run it with the following parameters:
+* checkout a new `ci-prepare-release` branch from alpha
+* rebase the master branch on top of it
+* open a pull request from `ci-prepare-release` to `master`
 
-* `Source branch`: `alpha`
-* `Target branch`: `master`
+Once the pull request is merged, semantic release will automatically create a new release, which includes:
 
-A new release is automatically created on `master` and a new tag is pushed. When a new tag is pushed, a github action `Sync Branches` is triggered to rebase `alpha` on `master`.
+* updating the changelog using conventional commits
+* publishing a new docker image on docker hub with the new version tag
+* publishing a new helm chart on https://helm.gravitee.io/index.yaml[helm.gravitee.io] with the new version tag
 
 == Troubleshooting
 
