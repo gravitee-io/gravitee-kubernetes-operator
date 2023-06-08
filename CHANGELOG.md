@@ -1,3 +1,16 @@
+# [0.7.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.6.0...0.7.0) (2023-06-08)
+
+
+### Bug Fixes
+
+* remove hard-coded "keystore" key ([8ba89a5](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/8ba89a5b1a2ee9105f9611c12954a1ebfb191fce))
+* wrong data type while unmarshalling ([8c4e0e9](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/8c4e0e9a03a9d1d4d8006065fb4d04101e6b06d6))
+
+
+### Features
+
+* template resolver ([5a93e6a](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/5a93e6a91442cda82e9a40b1268d12a5ba482207))
+
 # [0.6.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.5.1...0.6.0) (2023-05-26)
 
 
