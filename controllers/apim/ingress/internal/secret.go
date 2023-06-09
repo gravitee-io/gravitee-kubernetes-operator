@@ -22,7 +22,6 @@ import (
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -52,7 +51,7 @@ func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, keys.KeyPairFinalizer)
 			if err := d.k8s.Update(d.ctx, secret); err != nil {
-				return client.IgnoreNotFound(err)
+				return err
 			}
 		}
 
@@ -67,7 +66,7 @@ func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 		}
 	}
 
-	d.log.Info("gateway keystore has been successfully update.")
+	d.log.Info("gateway keystore has been successfully updated.")
 	return nil
 }
 

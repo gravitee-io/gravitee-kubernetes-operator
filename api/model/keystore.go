@@ -29,6 +29,7 @@ type TrustStore struct {
 type KeyStore struct {
 	KeyStoreType KeyStoreType `json:"type,omitempty"`
 }
+
 type PEMTrustStore struct {
 	Type    KeyStoreType `json:"type,omitempty"`
 	Path    string       `json:"path,omitempty"`

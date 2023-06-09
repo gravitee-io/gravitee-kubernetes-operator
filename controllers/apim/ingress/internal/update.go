@@ -28,7 +28,7 @@ func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
 	}
 
 	if err := d.createUpdateTLSSecret(desired); err != nil {
-		d.log.Error(err, "An error occurred while updating the TLS secretes")
+		d.log.Error(err, "An error occurred while updating the TLS secrets")
 		return err
 	}
 

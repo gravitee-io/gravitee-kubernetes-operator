@@ -244,6 +244,14 @@ func (d *Delegate) generateKeyPair(secret *v1.Secret) (*pkix.Name, *ks.PrivateKe
 		return nil, nil, fmt.Errorf("%s", "can not decode the tls key")
 	}
 
+	if pkcs1, err := x509.ParsePKCS1PrivateKey(tlsKey.Bytes); err == nil {
+		pkcs8, mErr := x509.MarshalPKCS8PrivateKey(pkcs1)
+		if mErr != nil {
+			return nil, nil, mErr
+		}
+		tlsKey.Bytes = pkcs8
+	}
+
 	if !strings.Contains(tlsKey.Type, "PRIVATE KEY") {
 		return nil, nil, fmt.Errorf("%s", "wrong tls key type")
 	}
@@ -303,16 +311,16 @@ func (d *Delegate) readKeyStore(nn *types.NamespacedName, ksc *keystoreCredentia
 func (d *Delegate) writeToKeyStore(ksSecret *v1.Secret, jks *ks.KeyStore, ksc *keystoreCredentials) error {
 	var b bytes.Buffer
 	writer := bufio.NewWriter(&b)
+
 	err := jks.Store(writer, ksc.pass)
 	if err != nil {
 		return err
 	}
-	err = writer.Flush()
-	if err != nil {
+
+	if err = writer.Flush(); err != nil {
 		return err
 	}
 
 	ksSecret.Data[ksc.key] = b.Bytes()
-
 	return d.k8s.Update(d.ctx, ksSecret)
 }

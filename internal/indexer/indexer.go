@@ -92,11 +92,14 @@ func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
 }
 
 func IndexApiTemplate(ing *v1.Ingress, fields *[]string) {
-	if ing.Annotations[keys.IngressTemplateAnnotation] == "" {
+	template, ok := ing.Annotations[keys.IngressTemplateAnnotation]
+	if !ok {
 		return
 	}
 
-	*fields = append(*fields, ing.Namespace+"/"+ing.Annotations[keys.IngressTemplateAnnotation])
+	field := ing.Namespace + "/" + template
+
+	*fields = append(*fields, field)
 }
 
 func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {

@@ -20,7 +20,7 @@ metadata:
     kubernetes.io/ingress.class: graviteeio
     gravitee.io/template: api-template-with-api-key-plan
   labels:
-    gravitee.io/ingress: graviteeio
+    gravitee.io/ingress: graviteeio # this marker is used to perform deletion in tests
 spec:
   rules:
     - host: example.com

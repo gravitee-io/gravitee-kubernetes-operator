@@ -341,5 +341,5 @@ func randomSuffix() string {
 }
 
 func isTemplate(api *gio.ApiDefinition) bool {
-	return api.Labels[keys.IngressTemplateAnnotation] == "true"
+	return api.Annotations[keys.IngressTemplateAnnotation] == "true"
 }
