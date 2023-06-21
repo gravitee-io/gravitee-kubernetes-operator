@@ -20,6 +20,16 @@ import { K3D_IMAGES_REGISTRY } from "./docker.mjs";
 import * as env from "./env.mjs";
 
 export async function helmInstall() {
+const helmInstallElastic = $`
+helm install \
+    --version "7.17.1" \
+    --namespace ${env.K3D_NAMESPACE_NAME} \
+    --set replicas=1 \
+    --set "image=${K3D_IMAGES_REGISTRY}/elasticsearch" \
+    --set "imageTag=${env.ELASTIC_IMAGE_TAG}" \
+    elastic elastic/elasticsearch > /dev/null
+`;
+
 const helmInstallNginx = $`
 helm install \
     --namespace ${env.K3D_NAMESPACE_NAME} \
@@ -65,7 +75,6 @@ helm install \
     --set "gateway.env[0].value=1024m" \
     --set "gateway.env[1].name=GIO_MAX_MEM" \
     --set "gateway.env[1].value=1024m" \
-    --set "gateway.reporters.elasticsearch.enabled=false" \
     --set "gateway.image.tag=${env.APIM_IMAGE_TAG}" \
     --set "api.ingress.management.hosts[0]=localhost" \
     --set "api.ingress.management.tls=false" \
@@ -78,8 +87,6 @@ helm install \
     --set "api.env[0].value=1024m" \
     --set "api.env[1].name=GIO_MAX_MEM" \
     --set "api.env[1].value=1024m" \
-    --set "api.env[2].name=ANALYTICS_TYPE" \
-    --set "api.env[2].value=none" \
     --set "api.startupProbe.initialDelaySeconds=5" \
     --set "api.startupProbe.timeoutSeconds=10" \
     --set "api.image.tag=${env.APIM_IMAGE_TAG}" \
@@ -102,12 +109,14 @@ helm install \
 
     await Promise.all([
         helmInstallApim,
+        helmInstallElastic,
         helmInstallMongo,
         helmInstallNginx,
     ]);
 }
 
 export async function addHelmRepos() {
+    await $`helm repo add elastic https://helm.elastic.co`;
     await $`helm repo add bitnami https://charts.bitnami.com/bitnami`;
     await $`helm repo add graviteeio https://helm.gravitee.io`;
 }
