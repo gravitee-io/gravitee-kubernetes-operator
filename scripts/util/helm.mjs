@@ -65,6 +65,8 @@ helm install \
     --set "gateway.env[0].value=1024m" \
     --set "gateway.env[1].name=GIO_MAX_MEM" \
     --set "gateway.env[1].value=1024m" \
+    --set "gateway.env[2].name=license.key" \
+    --set "gateway.env[2].value=<BASE_64>" \
     --set "gateway.reporters.elasticsearch.enabled=false" \
     --set "gateway.image.tag=${env.APIM_IMAGE_TAG}" \
     --set "api.ingress.management.hosts[0]=localhost" \
@@ -80,6 +82,8 @@ helm install \
     --set "api.env[1].value=1024m" \
     --set "api.env[2].name=ANALYTICS_TYPE" \
     --set "api.env[2].value=none" \
+    --set "api.env[2].name=license.key" \
+    --set "api.env[2].value=<BASE_64>" \
     --set "api.startupProbe.initialDelaySeconds=5" \
     --set "api.startupProbe.timeoutSeconds=10" \
     --set "api.image.tag=${env.APIM_IMAGE_TAG}" \
