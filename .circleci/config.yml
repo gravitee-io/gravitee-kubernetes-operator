@@ -503,6 +503,8 @@ workflows:
           matrix:
             parameters:
               namespace:
+              - apim-apim-3-19-x
+              - apim-apim-3-20-x
               - apim-apim-master
               image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
           requires:
