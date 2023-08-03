@@ -16,8 +16,11 @@ package http
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"time"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -158,10 +161,18 @@ func (client *Client) newJSONRequest(method, url string, entity any) (*http.Requ
 }
 
 func NewClient(ctx context.Context, auth *Auth) *Client {
-	httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	// #nosec G402
+	transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: env.Config.InsecureSkipVerify,
+	}
+
+	httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second, Transport: transport}
+
 	if auth != nil {
-		authRoundTripper := NewAuthenticatedRoundTripper(auth, http.DefaultTransport)
+		authRoundTripper := NewAuthenticatedRoundTripper(auth, transport)
 		httpClient.Transport = authRoundTripper
 	}
+
 	return &Client{ctx, httpClient}
 }
