@@ -27,4 +27,3 @@ Kubernetes: `>=1.14.0-0`
 | manager.configMap.name | string | `"gko-config"` | The name of the config map used to set the manager config from this values. |
 | manager.logs.json | bool | `true` | Whether to output manager logs in JSON format. |
 | manager.scope.cluster | bool | `true` | If true, the manager listens to resources created in the whole cluster. Use false to listen only in the release namespace. |
-
