@@ -47,6 +47,8 @@ type EndpointHealthCheckService struct {
 	// HealthCheckService
 	Steps    []Step `json:"steps,omitempty"`
 	Schedule string `json:"schedule,omitempty"`
+	// +kubebuilder:default:=false
+	Enabled bool `json:"enabled"`
 }
 
 func NewEndpointHealthCheckService() *EndpointHealthCheckService {
@@ -68,7 +70,7 @@ type HttpEndpoint struct {
 	HttpClientOptions    *HttpClientOptions          `json:"http,omitempty"`
 	HttpClientSslOptions *HttpClientSslOptions       `json:"ssl,omitempty"`
 	Headers              []HttpHeader                `json:"headers,omitempty"`
-	HealthCheck          *EndpointHealthCheckService `json:"healthCheck,omitempty"`
+	HealthCheck          *EndpointHealthCheckService `json:"healthcheck,omitempty"`
 }
 
 type EndpointDiscoveryService struct {
