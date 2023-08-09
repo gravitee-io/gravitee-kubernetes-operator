@@ -96,7 +96,10 @@ var _ = Describe("Creating an Application", func() {
 			By("Getting created application and expect to find it")
 			createdApplication := &gio.Application{}
 			Eventually(func() error {
-				return k8sClient.Get(ctx, appLookupKey, createdApplication)
+				if err = k8sClient.Get(ctx, appLookupKey, createdApplication); err != nil {
+					return err
+				}
+				return internal.AssertApplicationStatusIsSet(createdApplication)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			expectedApiName := applicationFixture.Name

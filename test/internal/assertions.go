@@ -27,6 +27,7 @@ func AssertApplicationStatusIsSet(application *gio.Application) error {
 	if application.Status.ID == "" {
 		return fmt.Errorf("id should not be empty in status")
 	}
+
 	return nil
 }
 
