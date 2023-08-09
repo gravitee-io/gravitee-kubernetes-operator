@@ -405,6 +405,13 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>methods</b></td>
         <td>[]enum</td>
         <td>
@@ -883,6 +890,13 @@ The definition context is used to inform a management API instance that this API
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
