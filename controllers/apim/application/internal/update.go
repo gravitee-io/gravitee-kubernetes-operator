@@ -57,6 +57,8 @@ func (d *Delegate) createUpdateApplication(application *gio.Application) error {
 
 	spec.ID = mgmtApp.Id
 	application.Status.ID = mgmtApp.Id
+	application.Status.EnvID = d.apim.EnvID()
+	application.Status.OrgID = d.apim.OrgID()
 
 	return nil
 }
