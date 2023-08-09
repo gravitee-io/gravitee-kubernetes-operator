@@ -24,8 +24,22 @@ import (
 )
 
 func AssertApplicationStatusIsSet(application *gio.Application) error {
+	status := application.Status
+
 	if application.Status.ID == "" {
 		return fmt.Errorf("id should not be empty in status")
+	}
+
+	if status.EnvID == "" {
+		return fmt.Errorf("envId should not be empty in status")
+	}
+
+	if status.OrgID == "" {
+		return fmt.Errorf("envId should not be empty in status")
+	}
+
+	if status.Status == "" {
+		return fmt.Errorf("status should not be empty in status")
 	}
 
 	return nil
