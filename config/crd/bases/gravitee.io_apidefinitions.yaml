@@ -102,6 +102,8 @@ spec:
                       type: array
                     enabled:
                       type: boolean
+                    id:
+                      type: string
                     methods:
                       items:
                         enum:
@@ -260,6 +262,8 @@ spec:
                             type: array
                           enabled:
                             type: boolean
+                          id:
+                            type: string
                           methods:
                             items:
                               enum:
