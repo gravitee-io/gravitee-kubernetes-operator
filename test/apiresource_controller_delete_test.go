@@ -28,7 +28,6 @@ import (
 
 var _ = Describe("API Resource Controller", func() {
 	Context("Delete an API Resource with no reference to an API", func() {
-
 		var apiLookupKey types.NamespacedName
 		var resourceLookupKey types.NamespacedName
 
@@ -44,21 +43,34 @@ var _ = Describe("API Resource Controller", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
-
-			Expect(k8sClient.Create(ctx, fixtures.Api)).Should(Succeed())
-
 			apiLookupKey = types.NamespacedName{Name: fixtures.Api.Name, Namespace: namespace}
 			resourceLookupKey = types.NamespacedName{Name: fixtures.Resource.Name, Namespace: namespace}
+
+			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
+			createdResource := new(gio.ApiResource)
+			Eventually(func() error {
+				err = k8sClient.Get(ctx, resourceLookupKey, createdResource)
+				if err != nil {
+					return err
+				}
+				if len(createdResource.Finalizers) == 0 {
+					return fmt.Errorf("Resource does not have any finalizer: %s", resourceLookupKey)
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sClient.Create(ctx, fixtures.Api)).Should(Succeed())
+			createdApi := new(gio.ApiDefinition)
+			Eventually(func() error {
+				return k8sClient.Get(ctx, apiLookupKey, createdApi)
+			}, timeout, interval).Should(Succeed())
 		})
 
 		It("Should delete the resource once not referenced", func() {
 			createdResource := new(gio.ApiResource)
-
 			Eventually(func() error {
 				return k8sClient.Get(ctx, resourceLookupKey, createdResource)
 			}, timeout, interval).Should(Succeed())
-
 			Expect(k8sClient.Delete(ctx, createdResource)).Should(Succeed())
 
 			Eventually(func() error {
@@ -71,6 +83,13 @@ var _ = Describe("API Resource Controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			Expect(k8sClient.Delete(ctx, createdApi)).Should(Succeed())
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, apiLookupKey, createdApi)
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("Should not find api: %s", apiLookupKey)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Eventually(func() error {
 				err := k8sClient.Get(ctx, resourceLookupKey, createdResource)
