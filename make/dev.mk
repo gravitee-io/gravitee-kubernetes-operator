@@ -1,7 +1,8 @@
 ##@ 💻 Development
 
 # Image URL to use to push to k3d local registry
-K3D_IMG ?= k3d-graviteeio.docker.localhost:12345/gko:latest
+K3D_IMG ?= k3d-graviteeio.docker.localhost:12345/gko
+K3D_TAG ?= latest
 
 K3DARGS ?= ""
 .PHONY: k3d-init
@@ -22,16 +23,19 @@ k3d-clean: ## Delete the k3d cluster and docker registry
 
 .PHONY: k3d-gko-build
 k3d-build: ## Build the controller image for k3d
-	$(MAKE) docker-build IMG=$(K3D_IMG)
+	$(MAKE) docker-build IMG=$(K3D_IMG) TAG=$(K3D_TAG)
 
 .PHONY: k3d-push
 k3d-push: ## Push the controller image to the k3d registry
-	$(MAKE) docker-push IMG=$(K3D_IMG)
+	$(MAKE) docker-push IMG=$(K3D_IMG) TAG=$(K3D_TAG)
 
 .PHONY: k3d-deploy
 k3d-deploy: ## Install operator helm chart to the k3d cluster
-	$(MAKE) helm-prepare IMG=$(K3D_IMG)
-	helm upgrade --install --create-namespace gko helm/gko -n default --set manager.scope.cluster=false
+	$(MAKE) helm-prepare
+	helm upgrade --install -n default --create-namespace gko helm/gko \
+		--set manager.scope.cluster=false \
+		--set manager.image.repository=$(K3D_IMG) \
+		--set manager.image.tag=$(K3D_TAG)
 
 .PHONY:
 k3d-admin: ## Gain a kubernetes context with admin role on the k3d cluster
