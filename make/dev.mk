@@ -31,8 +31,8 @@ k3d-push: ## Push the controller image to the k3d registry
 
 .PHONY: k3d-deploy
 k3d-deploy: ## Install operator helm chart to the k3d cluster
+	$(MAKE) helm-prepare
 	helm upgrade --install -n default --create-namespace gko helm/gko \
-	    --set manager.httpClient.insecureSkipCertVerify=true \
 		--set manager.scope.cluster=false \
 		--set manager.image.repository=$(K3D_IMG) \
 		--set manager.image.tag=$(K3D_TAG)

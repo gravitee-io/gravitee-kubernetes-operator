@@ -48,10 +48,10 @@ rbacProxy:
 ## @descriptionEnd
 manager:
   image:
-    ## @param manager.image.repository Specifies the docker registry and image name to use.
+    # -- Specifies the docker registry and image name to use.
     repository: graviteeio/kubernetes-operator
-    ## @param manager.image.tag Specifies the docker image tag to use. If no value is set, the chart version will be used.
-    tag: ""
+    # -- Specifies the docker image tag to use.
+    tag: latest
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
     json: true

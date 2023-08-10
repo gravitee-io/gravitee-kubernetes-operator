@@ -290,6 +290,9 @@ jobs:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
+          name: Prepare Helm chart
+          command: make helm-prepare
+      - run:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
       - run:
@@ -422,6 +425,47 @@ jobs:
           name: Run Helm unit tests
           command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
       - go/save-cache
+
+  helm-install:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    resource_class: small
+    parameters:
+      namespace:
+        type: string
+        default: "apim-apim-master"
+        description: The kubernetes namespace in which the operator is deployed
+      image:
+        type: string
+      tag:
+        type: string
+    steps:
+      - checkout
+      - helm/install-helm-client
+      - kubernetes/install-kubectl
+      - go/load-cache
+      - run:
+          name: Prepare Helm chart
+          command: make helm-prepare
+      - attach_workspace:
+          name: Restore Kubernetes config
+          at: ~/
+      - run:
+          name: Helm install the operator
+          command: |
+            helm upgrade --install \
+              gko helm/gko \
+              --set manager.scope.cluster=false \
+              --set manager.image.repository=<< parameters.image >> \
+              --set manager.image.tag=<< parameters.tag >> \
+              -n << parameters.namespace >>
+      - run:
+          name: Rollout controller deployment
+          command: |
+            kubectl rollout restart deployment gko-controller-manager \
+              -n << parameters.namespace >>
+      - go/save-cache
+      - notify-on-failure
 
   sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
