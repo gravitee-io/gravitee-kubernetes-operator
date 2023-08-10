@@ -768,6 +768,13 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>excluded_groups</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexflowsindex">flows</a></b></td>
         <td>[]object</td>
         <td>
@@ -1603,7 +1610,7 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheck">healthCheck</a></b></td>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheck">healthcheck</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -1710,7 +1717,7 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthCheck
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck
 <sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
 
 
@@ -1727,6 +1734,15 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>inherit</b></td>
         <td>boolean</td>
         <td>
@@ -1751,7 +1767,7 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthCheck.steps[index]
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index]
 <sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheck)</sup></sup>
 
 
@@ -1792,7 +1808,7 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthCheck.steps[index].request
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index].request
 <sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex)</sup></sup>
 
 
@@ -1849,7 +1865,7 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthCheck.steps[index].request.headers[index]
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index].request.headers[index]
 <sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindexrequest)</sup></sup>
 
 
@@ -1883,7 +1899,7 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthCheck.steps[index].response
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index].response
 <sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex)</sup></sup>
 
 
