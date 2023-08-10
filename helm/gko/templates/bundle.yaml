@@ -365,7 +365,7 @@ spec:
             - configMapRef:
                 name: '{{ .Values.manager.configMap.name }}'
                 optional: true
-          image: graviteeio/kubernetes-operator:0.7.0
+          image: '{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag }}'
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
