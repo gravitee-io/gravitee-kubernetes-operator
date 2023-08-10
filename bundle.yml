@@ -1,5 +1,5 @@
 ---
-# Source: crds/api-context.yaml
+# Source: crds/api-definition.yaml
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,122 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
-  name: apicontexts.gravitee.io
-spec:
-  group: gravitee.io
-  names:
-    kind: ApiContext
-    listKind: ApiContextList
-    plural: apicontexts
-    shortNames:
-      - graviteecontexts
-    singular: apicontext
-  scope: Namespaced
-  versions:
-    - additionalPrinterColumns:
-        - jsonPath: .spec.name
-          name: Name
-          type: string
-        - jsonPath: .spec.baseUrl
-          name: BaseUrl
-          type: string
-      name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          properties:
-            apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation of
-                an object. Servers should convert recognized schemas to the
-                latest internal value, and may reject unrecognized values. More
-                info:
-                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-              type: string
-            kind:
-              description: 'Kind is a string value representing the REST resource this object
-                represents. Servers may infer this from the endpoint the client
-                submits requests to. Cannot be updated. In CamelCase. More info:
-                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-              type: string
-            metadata:
-              type: object
-            spec:
-              description: ApiContext represents the configuration for a specific environment
-              properties:
-                management:
-                  properties:
-                    auth:
-                      description: Auth defines the authentication method used to connect to the API
-                        Management. Can be either basic authentication
-                        credentials, a bearer token or a reference to a
-                        kubernetes secret holding one of these two
-                        configurations.
-                      properties:
-                        bearerToken:
-                          description: The bearer token used to authenticate against the API Management
-                            instance (must be generated from an admin account)
-                          type: string
-                        credentials:
-                          description: The Basic credentials used to authenticate against the API
-                            Management instance.
-                          properties:
-                            password:
-                              type: string
-                            username:
-                              type: string
-                          type: object
-                        secretRef:
-                          description: A secret reference holding either a bearer token or the user name
-                            and password used for basic authentication
-                          properties:
-                            name:
-                              type: string
-                            namespace:
-                              type: string
-                          required:
-                            - name
-                          type: object
-                      type: object
-                    baseUrl:
-                      description: The URL of a management API instance
-                      pattern: ^http(s?):\/\/.+$
-                      type: string
-                    environmentId:
-                      description: An existing environment id targeted by the context within the
-                        organization.
-                      type: string
-                    organizationId:
-                      description: An existing organization id targeted by the context on the
-                        management API instance.
-                      type: string
-                  required:
-                    - auth
-                    - baseUrl
-                    - environmentId
-                    - organizationId
-                  type: object
-                values:
-                  additionalProperties:
-                    type: string
-                  type: object
-              type: object
-            status:
-              description: ApiContextStatus defines the observed state of an API Context.
-              type: object
-          type: object
-      served: true
-      storage: true
-      subresources:
-        status: {}
-
----
-# Source: crds/api-definition.yaml
----
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -322,6 +206,21 @@ spec:
                     - DEPRECATED
                     - ARCHIVED
                   type: string
+                local:
+                  default: true
+                  description: "local defines if the api is local or not.\ 
+
+                    \ If true, the Operator will create the
+                    ConfigMaps for the Gateway and pushes the API to the
+                    Management API but without setting the update flag in the
+                    datastore.\ 
+
+                    \ If false, the Operator will not create
+                    the ConfigMaps for the Gateway. Instead, it pushes the API
+                    to the Management API and forces it to update the event in
+                    the datastore. This will cause Gateways to fetch the APIs
+                    from the datastore"
+                  type: boolean
                 metadata:
                   items:
                     properties:
@@ -369,6 +268,10 @@ spec:
                         type: string
                       description:
                         type: string
+                      excluded_groups:
+                        items:
+                          type: string
+                        type: array
                       flows:
                         items:
                           properties:
@@ -619,8 +522,11 @@ spec:
                                         type: string
                                     type: object
                                   type: array
-                                healthCheck:
+                                healthcheck:
                                   properties:
+                                    enabled:
+                                      default: false
+                                      type: boolean
                                     inherit:
                                       type: boolean
                                     schedule:
@@ -671,6 +577,8 @@ spec:
                                             type: object
                                         type: object
                                       type: array
+                                  required:
+                                    - enabled
                                   type: object
                                 http:
                                   properties:
@@ -1086,6 +994,11 @@ spec:
                   type: string
                 environmentId:
                   type: string
+                generation:
+                  description: This field is kept for backward compatibility and shall be removed
+                    in future versions. Use observedGeneration instead.
+                  format: int64
+                  type: integer
                 id:
                   description: The ID of the API definition in the Gravitee API Management
                     instance (if an API context has been configured).
@@ -1095,11 +1008,18 @@ spec:
                   type: integer
                 organizationId:
                   type: string
+                processingStatus:
+                  description: The processing status of the API definition.
+                  enum:
+                    - Completed
+                    - Failed
+                  type: string
                 state:
                   description: The state of the API. Can be either STARTED or STOPPED.
                   type: string
                 status:
-                  description: The processing status of the API definition.
+                  description: This field is kept for backward compatibility and shall be removed
+                    in future versions. Use processingStatus instead.
                   enum:
                     - Completed
                     - Failed
@@ -1113,6 +1033,20 @@ spec:
 
 ---
 # Source: crds/api-resource.yaml
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -1171,7 +1105,232 @@ spec:
         status: {}
 
 ---
+# Source: crds/application.yaml
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.11.1
+  creationTimestamp: null
+  name: applications.gravitee.io
+spec:
+  group: gravitee.io
+  names:
+    kind: Application
+    listKind: ApplicationList
+    plural: applications
+    shortNames:
+      - graviteeapplications
+    singular: application
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .spec.name
+          name: Name
+          type: string
+        - jsonPath: .spec.applicationType
+          name: Type
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation of
+                an object. Servers should convert recognized schemas to the
+                latest internal value, and may reject unrecognized values. More
+                info:
+                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this object
+                represents. Servers may infer this from the endpoint the client
+                submits requests to. Cannot be updated. In CamelCase. More info:
+                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: Application is the main resource handled by the Kubernetes Operator
+              properties:
+                app_key_mode:
+                  enum:
+                    - SHARED
+                    - EXCLUSIVE
+                    - UNSPECIFIED
+                  type: string
+                applicationMetaData:
+                  items:
+                    properties:
+                      applicationId:
+                        type: string
+                      defaultValue:
+                        type: string
+                      format:
+                        enum:
+                          - STRING
+                          - NUMERIC
+                          - BOOLEAN
+                          - DATE
+                          - MAIL
+                          - URL
+                        type: string
+                      hidden:
+                        type: boolean
+                      key:
+                        type: string
+                      name:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  type: array
+                background:
+                  type: string
+                clientId:
+                  type: string
+                contextRef:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                description:
+                  type: string
+                disable_membership_notifications:
+                  type: boolean
+                domain:
+                  type: string
+                groups:
+                  items:
+                    type: string
+                  type: array
+                id:
+                  description: io.gravitee.definition.model.Application
+                  type: string
+                metadata:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                name:
+                  type: string
+                origin:
+                  description: The origin which is used to create this Application
+                  enum:
+                    - kubernetes
+                  type: string
+                picture:
+                  type: string
+                picture_url:
+                  type: string
+                redirectUris:
+                  items:
+                    type: string
+                  type: array
+                settings:
+                  properties:
+                    app:
+                      properties:
+                        client_id:
+                          type: string
+                        type:
+                          type: string
+                      type: object
+                    oauth:
+                      properties:
+                        application_type:
+                          type: string
+                        client_id:
+                          type: string
+                        client_secret:
+                          type: string
+                        client_uri:
+                          type: string
+                        grant_types:
+                          items:
+                            type: string
+                          type: array
+                        logo_uri:
+                          type: string
+                        redirect_uris:
+                          items:
+                            type: string
+                          type: array
+                        renew_client_secret_supported:
+                          type: boolean
+                        response_types:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                  type: object
+                type:
+                  type: string
+              required:
+                - name
+              type: object
+            status:
+              description: ApplicationStatus defines the observed state of Application.
+              properties:
+                environmentId:
+                  type: string
+                id:
+                  description: The ID of the Application in the Gravitee API Management instance
+                    (if an API context has been configured).
+                  type: string
+                observedGeneration:
+                  format: int64
+                  type: integer
+                organizationId:
+                  type: string
+                processingStatus:
+                  description: The processing status of the Application.
+                  enum:
+                    - Completed
+                    - Failed
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+
+---
 # Source: crds/management-context.yaml
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -1283,14 +1442,6 @@ spec:
 ---
 # Source: gko/templates/bundle.yaml
 apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-  name: 'gko-system'
----
-# Source: gko/templates/bundle.yaml
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: gko-controller-manager
@@ -1316,6 +1467,7 @@ apiVersion: v1
 metadata:
   name: gko-config
 data:
+  APPLY_CRDS: "true"
 ---
 # Source: gko/templates/bundle.yaml
 apiVersion: v1
@@ -1355,21 +1507,20 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
-  name: gko-manager-role-release-name-gko-system
+  name: gko-manager-role-crd-release-name-gko-system
 rules:
   - apiGroups:
-      - ""
+      - apiextensions.k8s.io
+    resourceNames:
+      - managementcontexts.gravitee.io
+      - apidefinitions.gravitee.io
+      - applications.gravitee.io
+      - apiresources.gravitee.io
     resources:
-      - configmaps
+      - customresourcedefinitions
     verbs:
-      - create
-      - delete
-      - get
-      - list
       - patch
-      - update
-      - watch
+      - create
   - apiGroups:
       - ""
     resources:
@@ -1377,14 +1528,6 @@ rules:
     verbs:
       - create
       - patch
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - get
-      - list
-      - watch
   - apiGroups:
       - gravitee.io
     resources:
@@ -1476,6 +1619,33 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - applications
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - applications/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - applications/status
+    verbs:
+      - get
+      - patch
+      - update
 ---
 # Source: gko/templates/bundle.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1509,13 +1679,35 @@ rules:
 ---
 # Source: gko/templates/bundle.yaml
 apiVersion: rbac.authorization.k8s.io/v1
+kind: 'ClusterRole'
+metadata:
+  creationTimestamp: null
+  name: gko-manager-role-release-name-gko-system
+  namespace: 'gko-system'
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+---
+# Source: gko/templates/bundle.yaml
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: gko-manager-rolebinding-release-name-gko-system
+  name: gko-manager-rolebinding-crd-release-name-gko-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: gko-manager-role-release-name-gko-system
+  name: gko-manager-role-crd-release-name-gko-system
 subjects:
   - kind: ServiceAccount
     name: gko-controller-manager
@@ -1530,6 +1722,21 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: gko-proxy-role-release-name-gko-system
+subjects:
+  - kind: ServiceAccount
+    name: gko-controller-manager
+    namespace: 'gko-system'
+---
+# Source: gko/templates/bundle.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: 'ClusterRoleBinding'
+metadata:
+  name: gko-manager-rolebinding-release-name-gko-system
+  namespace: 'gko-system'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: 'ClusterRole'
+  name: gko-manager-role-release-name-gko-system
 subjects:
   - kind: ServiceAccount
     name: gko-controller-manager
@@ -1655,7 +1862,7 @@ spec:
             - configMapRef:
                 name: 'gko-config'
                 optional: true
-          image: graviteeio.azurecr.io/kubernetes-operator:0.5.1
+          image: 'graviteeio/kubernetes-operator:latest'
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
@@ -1683,3 +1890,18 @@ spec:
         runAsNonRoot: true
       serviceAccountName: gko-controller-manager
       terminationGracePeriodSeconds: 10
+---
+# Source: gko/templates/bundle.yaml
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.

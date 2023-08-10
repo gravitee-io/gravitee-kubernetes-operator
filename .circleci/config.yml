@@ -243,6 +243,8 @@ jobs:
     parameters:
       image:
         type: string
+      tag:
+        type: string
     steps:
       - checkout
       - setup_remote_docker
@@ -255,17 +257,17 @@ jobs:
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
           name: Prepare Helm chart
-          command: IMG="<< parameters.image >>" make helm-prepare
+          command: make helm-prepare
       - run:
           name: Build image << parameters.image >>
-          command: IMG=<< parameters.image >> make docker-build
+          command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
       - run:
-          name: Publish image << parameters.image >>
+          name: Publish image << parameters.image >>:<<parameters.tag >>
           command: |
             echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login \
               --username $AZURE_DOCKER_REGISTRY_USERNAME \
               --password-stdin graviteeio.azurecr.io
-            IMG=<< parameters.image >> make docker-push
+            IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-push
             docker logout graviteeio.azurecr.io
 
   semantic-release:
@@ -369,6 +371,8 @@ jobs:
         description: The kubernetes namespace in which the operator is deployed
       image:
         type: string
+      tag:
+        type: string
     steps:
       - checkout
       - helm/install-helm-client
@@ -376,7 +380,7 @@ jobs:
       - go/load-cache
       - run:
           name: Prepare Helm chart
-          command: IMG="<< parameters.image >>" make helm-prepare
+          command: make helm-prepare
       - attach_workspace:
           name: Restore Kubernetes config
           at: ~/
@@ -386,6 +390,8 @@ jobs:
             helm upgrade --install \
               gko helm/gko \
               --set manager.scope.cluster=false \
+              --set manager.image.repository=<< parameters.image >> \
+              --set manager.image.tag=<< parameters.tag >> \
               -n << parameters.namespace >>
       - run:
           name: Rollout controller deployment
@@ -491,7 +497,8 @@ workflows:
             - Test operator
       - publish-private-image:
           name: Stage image
-          image: graviteeio.azurecr.io/kubernetes-operator:alpha-latest
+          image: graviteeio.azurecr.io/kubernetes-operator
+          tag: alpha-latest
           context: cicd-orchestrator
           requires:
             - Test operator
@@ -507,7 +514,8 @@ workflows:
               - apim-apim-3-20-x
               - apim-apim-4-0-x
               - apim-apim-master
-              image: [graviteeio.azurecr.io/kubernetes-operator:alpha-latest]
+              image: [graviteeio.azurecr.io/kubernetes-operator]
+              tag: [alpha-latest]
           requires:
             - Stage image
 
