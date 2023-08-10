@@ -34,6 +34,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -122,5 +123,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.Application{}).
 		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }
