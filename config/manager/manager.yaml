@@ -37,7 +37,7 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: controller:latest
+        image: '{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag }}'
         imagePullPolicy: Always
         name: manager
         securityContext:

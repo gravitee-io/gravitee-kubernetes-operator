@@ -102,6 +102,8 @@ spec:
                       type: array
                     enabled:
                       type: boolean
+                    id:
+                      type: string
                     methods:
                       items:
                         enum:
@@ -244,6 +246,10 @@ spec:
                       type: string
                     description:
                       type: string
+                    excluded_groups:
+                      items:
+                        type: string
+                      type: array
                     flows:
                       items:
                         properties:
@@ -260,6 +266,8 @@ spec:
                             type: array
                           enabled:
                             type: boolean
+                          id:
+                            type: string
                           methods:
                             items:
                               enum:
@@ -494,8 +502,11 @@ spec:
                                       type: string
                                   type: object
                                 type: array
-                              healthCheck:
+                              healthcheck:
                                 properties:
+                                  enabled:
+                                    default: false
+                                    type: boolean
                                   inherit:
                                     type: boolean
                                   schedule:
@@ -546,6 +557,8 @@ spec:
                                           type: object
                                       type: object
                                     type: array
+                                required:
+                                - enabled
                                 type: object
                               http:
                                 properties:

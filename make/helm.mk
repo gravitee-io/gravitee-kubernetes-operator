@@ -5,7 +5,6 @@ KUSTOMIZE_ARGS ?= ""
 
 .PHONY:helm-prepare
 helm-prepare: manifests kustomize ## Prepare helm chart from kustomize resources
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default -o helm/gko/templates/bundle.yaml 
 	npx zx scripts/helm-transform.mjs
 	$(MAKE) add-license

@@ -13,6 +13,11 @@
 # limitations under the License.
 
 manager:
+  image:
+    # -- Specifies the docker registry and image name to use.
+    repository: graviteeio/kubernetes-operator
+    # -- Specifies the docker image tag to use.
+    tag: latest
   logs:
     # -- Whether to output manager logs in JSON format.
     json: true

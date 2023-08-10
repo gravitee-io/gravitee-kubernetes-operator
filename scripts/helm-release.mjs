@@ -32,7 +32,8 @@ const DRY_RUN = argv["dry-run"];
 
 const GITHUB_TOKEN=$.env.GITHUB_TOKEN
 
-$.env["IMG"] = `${IMG}:${VERSION}`;
+$.env["IMG"] = `${IMG}`;
+$.env["TAG"] = `${VERSION}`;
 
 LOG.magenta(`
 🚀 Releasing version ${VERSION} ...
@@ -96,7 +97,7 @@ if (!DRY_RUN) {
 }
 
 async function buildDockerImage() {
-  await $`make docker-build`;
+  await $`make docker-build-release`;
 }
 
 LOG.blue(`
@@ -110,7 +111,7 @@ if (!DRY_RUN) {
 }
 
 async function pushDockerImage() {
-  await $`make docker-push`;
+  await $`make docker-push-release`;
 }
 
 LOG.blue(`

@@ -15,12 +15,19 @@
 package internal
 
 import (
+	"errors"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 func (d *Delegate) deploy(api *gio.ApiDefinition) error {
 	if api.Spec.IsLocal {
 		return d.updateConfigMap(api)
+	}
+
+	// Is a not-local and need to deploy it directly on APIM Console, no ConfigMap needed
+	if !d.HasContext() {
+		return errors.New("a non-local API definition must have a reference to a ManagementContext")
 	}
 
 	if err := d.deleteConfigMap(api); err != nil {

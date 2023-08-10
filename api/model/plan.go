@@ -102,6 +102,7 @@ type Consumer struct {
 }
 
 type Flow struct {
+	ID           string        `json:"id,omitempty"`
 	Name         string        `json:"name,omitempty"`
 	PathOperator *PathOperator `json:"path-operator,omitempty"`
 	Pre          []FlowStep    `json:"pre,omitempty"`
@@ -160,7 +161,8 @@ type Plan struct {
 	CommentRequired bool           `json:"comment_required,omitempty"`
 	Order           int            `json:"order,omitempty"`
 	// +kubebuilder:default:=API
-	Type PlanType `json:"type,omitempty"`
+	Type           PlanType `json:"type,omitempty"`
+	ExcludedGroups []string `json:"excluded_groups,omitempty"`
 }
 
 type Path struct {
