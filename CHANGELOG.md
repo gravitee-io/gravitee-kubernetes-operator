@@ -1,3 +1,19 @@
+# [0.8.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.7.0...0.8.0) (2023-08-10)
+
+
+### Bug Fixes
+
+* add flow id property ([b46cc43](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/b46cc430e2c79edc55800dca541e1d99492ecdf8))
+* allow insecure skip verify in HTTPClient ([76f5268](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/76f52688e19ce7d6be576cee6d77a8ca99d4c8db))
+* handle UI exports with endpoint level healthchecks ([3332554](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/33325543cf101c0d933f840df8953c2ab95613c5))
+* management context check for non-local APIs ([68f58d7](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/68f58d74e12302b7a4569321c52e516d632aa139))
+* set env and org id in application status on updates ([f978120](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/f978120cd2875764d698b3c3516fdfed032c7ab6))
+
+
+### Features
+
+* allow custom manager image and tag ([2529646](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/25296467e68b9258fc78a795d8d232718652ef24))
+
 # [0.7.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.6.0...0.7.0) (2023-06-08)
 
 
