@@ -16,6 +16,7 @@ kind: ConfigMap
 apiVersion: v1 
 metadata:
   name: {{ .Values.manager.configMap.name }}
+  namespace: {{ .Release.Namespace }}
 data:
   {{- if not .Values.manager.scope.cluster }}
   NAMESPACE: {{ .Release.Namespace }}

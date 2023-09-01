@@ -28,6 +28,9 @@ tests:
           path: metadata.name
           value: gko-config
       - equal:
+          path: metadata.namespace
+          value: NAMESPACE
+      - equal:
           # It should not contain environment variable by default
           path: data.APPLY_CRDS
           value: "true"
