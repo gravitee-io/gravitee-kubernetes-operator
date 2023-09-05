@@ -97,6 +97,9 @@ spec:
                   type: integer
                 description:
                   type: string
+                execution_mode:
+                  default: v4-emulation-engine
+                  type: string
                 flow_mode:
                   default: DEFAULT
                   enum:

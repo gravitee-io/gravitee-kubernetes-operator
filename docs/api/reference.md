@@ -127,6 +127,15 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>execution_mode</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: v4-emulation-engine<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>flow_mode</b></td>
         <td>enum</td>
         <td>

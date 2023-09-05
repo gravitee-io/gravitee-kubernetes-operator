@@ -53,7 +53,8 @@ type Api struct {
 	Visibility   ApiVisibility `json:"visibility,omitempty"`
 	Metadata     []*Metadata   `json:"metadata,omitempty"`
 	PrimaryOwner *Member       `json:"primaryOwner,omitempty"`
-
+	// +kubebuilder:default:=v4-emulation-engine
+	ExecutionMode string `json:"execution_mode,omitempty"`
 	// local defines if the api is local or not.
 	//
 	// If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
