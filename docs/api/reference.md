@@ -51,7 +51,7 @@ ApiDefinition is the Schema for the apidefinitions API.
       <td>true</td>
       </tr>
       <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
       <td>object</td>
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
@@ -3484,7 +3484,7 @@ ApiDefinitionStatus defines the observed state of API Definition.
       <td>true</td>
       </tr>
       <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
       <td>object</td>
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
@@ -3585,7 +3585,7 @@ ApiResourceSpec defines the desired state of ApiResource.
       <td>true</td>
       </tr>
       <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
       <td>object</td>
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
@@ -4103,7 +4103,7 @@ ApplicationStatus defines the observed state of Application.
       <td>true</td>
       </tr>
       <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#objectmeta-v1-meta">metadata</a></b></td>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
       <td>object</td>
       <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
       <td>true</td>
