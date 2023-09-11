@@ -1,3 +1,11 @@
+## [0.8.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.0...0.8.1) (2023-09-11)
+
+
+### Bug Fixes
+
+* reconcile applications on generation change only ([b04e935](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/b04e93592717933ab1b80a4b47d44c5277acb2e8))
+* set config namespace to release namespace ([69aab41](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/69aab4130f3d4ea306f66fb2c21334bd8fd75f7d))
+
 # [0.8.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.7.0...0.8.0) (2023-08-10)
 
 
