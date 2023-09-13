@@ -332,6 +332,8 @@ spec:
   template:
     metadata:
       annotations:
+        checksum/config: '{{ include (print $.Template.BasePath "/bundle-config.yaml") .
+          | sha256sum }}'
         kubectl.kubernetes.io/default-container: manager
       labels:
         control-plane: controller-manager

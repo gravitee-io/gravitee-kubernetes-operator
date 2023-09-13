@@ -27,6 +27,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
+        checksum/config: '{{ include (print $.Template.BasePath "/bundle-config.yaml") . | sha256sum }}'
       labels:
         control-plane: controller-manager
     spec:
