@@ -107,10 +107,11 @@ type Flow struct {
 	PathOperator *PathOperator `json:"path-operator,omitempty"`
 	Pre          []FlowStep    `json:"pre,omitempty"`
 	Post         []FlowStep    `json:"post,omitempty"`
-	Enabled      bool          `json:"enabled,omitempty"`
-	Methods      []HttpMethod  `json:"methods,omitempty"`
-	Condition    string        `json:"condition,omitempty"`
-	Consumers    []Consumer    `json:"consumers,omitempty"`
+	// +kubebuilder:default:=true
+	Enabled   bool         `json:"enabled"`
+	Methods   []HttpMethod `json:"methods,omitempty"`
+	Condition string       `json:"condition,omitempty"`
+	Consumers []Consumer   `json:"consumers,omitempty"`
 }
 
 func NewFlow() *Flow {
