@@ -1,3 +1,11 @@
+## [0.8.2](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.1...0.8.2) (2023-09-14)
+
+
+### Bug Fixes
+
+* disable flows when `enabled` is false ([29d7438](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/29d7438ad71cfcdea463a2e153e933277a2c0d87))
+* rollout on helm upgrades when config changes ([ee274b5](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ee274b565661feb4f8330d7f6123a8a3bc4cced3))
+
 ## [0.8.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.0...0.8.1) (2023-09-11)
 
 
