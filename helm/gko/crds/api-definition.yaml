@@ -118,6 +118,7 @@ spec:
                           type: object
                         type: array
                       enabled:
+                        default: true
                         type: boolean
                       id:
                         type: string
@@ -185,6 +186,8 @@ spec:
                               type: string
                           type: object
                         type: array
+                    required:
+                      - enabled
                     type: object
                   type: array
                 gravitee:
@@ -287,6 +290,7 @@ spec:
                                 type: object
                               type: array
                             enabled:
+                              default: true
                               type: boolean
                             id:
                               type: string
@@ -354,6 +358,8 @@ spec:
                                     type: string
                                 type: object
                               type: array
+                          required:
+                            - enabled
                           type: object
                         type: array
                       id:

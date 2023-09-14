@@ -160,7 +160,7 @@ func (m *Mapper) buildPathFlows(rule v1.IngressRule, ruleIndex int) []model.Flow
 // the condition will check that none of the host we have processed matches the Host header
 // of the incoming request.
 func (m *Mapper) buildRoutingFlow(rule v1.IngressRule, path *indexedPath) model.Flow {
-	flow := model.Flow{}
+	flow := model.Flow{Enabled: true}
 	flow.Name = rule.Host + path.Path
 	flow.PathOperator = buildPathOperator(path)
 	flow.Pre = buildRouting(path)

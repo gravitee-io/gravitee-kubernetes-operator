@@ -31,7 +31,6 @@ tests:
           path: metadata.namespace
           value: NAMESPACE
       - equal:
-          # It should not contain environment variable by default
           path: data.APPLY_CRDS
           value: "true"
 
@@ -44,7 +43,6 @@ tests:
       - hasDocuments:
           count: 1
       - equal:
-          # It should not contain environment variable by default
           path: data.DEV_MODE
           value: "true"
 
@@ -64,7 +62,6 @@ tests:
           path: metadata.name
           value: gko-config
       - equal:
-          # It should not contain environment variable by default
           path: data.NAMESPACE
           value: NAMESPACE
 
