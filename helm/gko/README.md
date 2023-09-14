@@ -23,7 +23,7 @@ Kubernetes: `>=1.14.0-0`
 |-----|------|---------|-------------|
 | ingress.templates.404.name | string | `""` | name of the config map storing the HTTP 404 ingress response template. A default template is used if this entry is empty. The config map should contain a content key and a contentType key. The default template is used if one of the key is missing. |
 | ingress.templates.404.namespace | string | `""` | namespace of the config map storing the HTTP 404 ingress response template. A default template is used if this entry is empty. The config map should contain a content key and a contentType key. The default template is used if one of the key is missing.        |
-| manager.applyCRDs | bool | `true` | If true, the manager will apply custom resource definitions on startup. |
+| manager.applyCRDs | bool | `true` | If true, the manager will apply Custom Resource Definitions on startup. Please be aware that this will apply to Custom Resource Definitions  (which are the Open API model for Custom Resources such as API Definitions),  not to Custom Resources themselves. Custom Resources will be reconciled if the manager restarts whatever the value of this flag is. Because helm upgrades do not update CRDs once they have been installed, it is recommended to set this flag to true. |
 | manager.configMap.name | string | `"gko-config"` | The name of the config map used to set the manager config from this values. |
 | manager.image.repository | string | `"graviteeio/kubernetes-operator"` | Specifies the docker registry and image name to use. |
 | manager.image.tag | string | `"latest"` | Specifies the docker image tag to use. |
