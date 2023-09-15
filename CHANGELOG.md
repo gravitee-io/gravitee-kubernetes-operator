@@ -1,3 +1,10 @@
+## [0.8.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.2...0.8.3) (2023-09-15)
+
+
+### Bug Fixes
+
+* use PUT when setting definition context on APIM ([979b6d2](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/979b6d215814f37b6882151a4f0cc7473473c5b9))
+
 ## [0.8.2](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.1...0.8.2) (2023-09-14)
 
 
