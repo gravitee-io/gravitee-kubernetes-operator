@@ -28,7 +28,13 @@ manager:
     # -- If true, the manager listens to resources created in the whole cluster.
     # Use false to listen only in the release namespace.
     cluster: true
-  # -- If true, the manager will apply custom resource definitions on startup.
+  # -- If true, the manager will apply Custom Resource Definitions on startup.
+  # Please be aware that this will apply to Custom Resource Definitions 
+  # (which are the Open API model for Custom Resources such as API Definitions), 
+  # not to Custom Resources themselves.
+  # Custom Resources will be reconciled if the manager restarts whatever the value
+  # of this flag is. Because helm upgrades do not update CRDs once they have been
+  # installed, it is recommended to set this flag to true.
   applyCRDs: true
 
 ingress:
