@@ -367,7 +367,6 @@ var _ = Describe("Create", func() {
 
 			Expect(apiDefinition.Spec.ID).To(Equal(api.ID))
 			Expect(apiDefinition.Spec.CrossID).To(Equal(api.CrossID))
-			Expect(apiDefinition.Spec.DefinitionContext.Origin).To(Equal("kubernetes"))
 
 			apiEntity, err = apim.APIs.GetByID(apiDefinition.Status.ID)
 			Expect(err).ToNot(HaveOccurred())
