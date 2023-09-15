@@ -108,7 +108,7 @@ func (svc *APIs) Delete(apiID string) error {
 
 func (svc *APIs) SetKubernetesContext(apiID string) error {
 	url := svc.EnvTarget("apis").WithPath(apiID).WithPath("definition-context")
-	return svc.HTTP.Post(url.String(), model.NewKubernetesContext(), nil)
+	return svc.HTTP.Put(url.String(), model.NewKubernetesContext(), nil)
 }
 
 func (svc *APIs) Deploy(id string) error {
