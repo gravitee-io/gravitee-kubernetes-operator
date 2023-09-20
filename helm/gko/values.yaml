@@ -12,6 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+serviceAccount:
+  # -- Specifies if a service account should be created for the manager pod.
+  create: true
+  # -- Specifies the service account name to use.
+  name: gko-controller-manager
+rbac:
+  # -- Specifies if RBAC resources should be created.
+  create: true
+  # -- Specifies if cluster roles should be created when RBAC resources are created.
+  skipClusterRoles: false
+
+rbacProxy:
+  # -- Specifies if the kube-rbac-proxy sidecar should be enabled. 
+  # Note that if this is disabled, the prometheus metrics endpoint
+  # will be exposed with no access control at all.
+  enabled: true
+  image:
+    # -- Specifies the docker registry and image name to use.
+    repository: quay.io/brancz/kube-rbac-proxy
+    # -- Specifies the docker image tag to use.
+    tag: v0.14.3
+
 manager:
   image:
     # -- Specifies the docker registry and image name to use.
@@ -36,6 +58,10 @@ manager:
   # of this flag is. Because helm upgrades do not update CRDs once they have been
   # installed, it is recommended to set this flag to true.
   applyCRDs: true
+  metrics:
+  # -- If true, a metrics server will be created so that metrics can be scraped using prometheus.
+
+    enabled: true
 
 ingress:
   templates:

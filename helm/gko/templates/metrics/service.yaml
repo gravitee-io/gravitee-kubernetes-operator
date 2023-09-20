@@ -11,25 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-# Prometheus Monitor Service (Metrics)
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+{{- if .Values.manager.metrics.enabled }}
+---
+apiVersion: v1
+kind: Service
 metadata:
   labels:
     control-plane: controller-manager
-    release: prometheus
-  name: controller-manager-metrics-monitor
-  namespace: gko-system
+  name: gko-controller-manager-metrics-service
+  namespace: '{{ .Release.Namespace }}'
 spec:
-  endpoints:
-    - path: /metrics
-      port: https
-      scheme: https
-      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      tlsConfig:
-        insecureSkipVerify: true
+  ports:
+    - name: https
+      port: 8443
+      protocol: TCP
+      targetPort: https
   selector:
-    matchLabels:
-      control-plane: controller-manager
+    control-plane: controller-manager
+{{- end }}  
