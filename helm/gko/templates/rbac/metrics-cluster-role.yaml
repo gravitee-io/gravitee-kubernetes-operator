@@ -12,24 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# Prometheus Monitor Service (Metrics)
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+{{- if .Values.rbac.create }}
+{{- if not .Values.rbac.skipClusterRoles }}
+{{- if .Values.manager.metrics.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
 metadata:
-  labels:
-    control-plane: controller-manager
-    release: prometheus
-  name: controller-manager-metrics-monitor
-  namespace: gko-system
-spec:
-  endpoints:
-    - path: /metrics
-      port: https
-      scheme: https
-      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      tlsConfig:
-        insecureSkipVerify: true
-  selector:
-    matchLabels:
-      control-plane: controller-manager
+  name: {{ template "rbac.MetricsClusterRoleName" . }}
+rules:
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+{{- end }}
+{{- end }}
+{{- end }}

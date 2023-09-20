@@ -256,9 +256,6 @@ jobs:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
-          name: Prepare Helm chart
-          command: make helm-prepare
-      - run:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
       - run:
@@ -335,9 +332,6 @@ jobs:
       - checkout
       - helm/install-helm-client
       - run:
-          name: Prepare Helm chart
-          command: make helm-prepare
-      - run:
           name: Lint Helm chart
           command: helm lint helm/gko
 
@@ -353,11 +347,8 @@ jobs:
           name: Install Helm unit test plugin
           command: helm plugin install https://github.com/quintush/helm-unittest
       - run:
-          name: Prepare Helm chart
-          command: make helm-prepare
-      - run:
           name: Run Helm unit tests
-          command: cd helm && helm unittest gko
+          command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
       - go/save-cache
 
   helm-install:
@@ -378,9 +369,6 @@ jobs:
       - helm/install-helm-client
       - kubernetes/install-kubectl
       - go/load-cache
-      - run:
-          name: Prepare Helm chart
-          command: make helm-prepare
       - attach_workspace:
           name: Restore Kubernetes config
           at: ~/
