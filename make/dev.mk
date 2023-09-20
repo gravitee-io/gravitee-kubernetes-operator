@@ -31,7 +31,6 @@ k3d-push: ## Push the controller image to the k3d registry
 
 .PHONY: k3d-deploy
 k3d-deploy: ## Install operator helm chart to the k3d cluster
-	$(MAKE) helm-prepare
 	helm upgrade --install -n default --create-namespace gko helm/gko \
 		--set manager.scope.cluster=false \
 		--set manager.image.repository=$(K3D_IMG) \
@@ -47,11 +46,11 @@ ifndef ignore-not-found
 endif
 
 .PHONY: install
-install: kustomize manifests helm-prepare ## Install CRDss into the current cluster
+install: kustomize manifests ## Install CRDss into the current cluster
 	kubectl apply -f helm/gko/crds
 
 .PHONY: uninstall
-uninstall: manifests kustomize  helm-prepare ## Uninstall CRDs from the current cluster
+uninstall: ## Uninstall CRDs from the current cluster
 	kubectl delete -f helm/gko/crds
 
 .PHONY: run

@@ -29,5 +29,13 @@ Kubernetes: `>=1.14.0-0`
 | manager.image.repository | string | `"graviteeio/kubernetes-operator"` | Specifies the docker registry and image name to use. |
 | manager.image.tag | string | `"latest"` | Specifies the docker image tag to use. |
 | manager.logs.json | bool | `true` | Whether to output manager logs in JSON format. |
+| manager.metrics.enabled | bool | `true` |  |
 | manager.scope.cluster | bool | `true` | If true, the manager listens to resources created in the whole cluster. Use false to listen only in the release namespace. |
+| rbac.create | bool | `true` | Specifies if RBAC resources should be created. |
+| rbac.skipClusterRoles | bool | `false` | Specifies if cluster roles should be created when RBAC resources are created. |
+| rbacProxy.enabled | bool | `true` | Specifies if the kube-rbac-proxy sidecar should be enabled.  Note that if this is disabled, the prometheus metrics endpoint will be exposed with no access control at all. |
+| rbacProxy.image.repository | string | `"quay.io/brancz/kube-rbac-proxy"` | Specifies the docker registry and image name to use. |
+| rbacProxy.image.tag | string | `"v0.14.3"` | Specifies the docker image tag to use. |
+| serviceAccount.create | bool | `true` | Specifies if a service account should be created for the manager pod. |
+| serviceAccount.name | string | `"gko-controller-manager"` | Specifies the service account name to use. |
 
