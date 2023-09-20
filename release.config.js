@@ -20,6 +20,8 @@ const config = {
 };
 const changelogFile = "CHANGELOG.md";
 const chartDirectory = "helm/gko"
+const crdDirectory = "helm/gko/crds"
+const bundleFile = "bundle.yml"
 
 const plugins = [
   "@semantic-release/commit-analyzer",
@@ -40,7 +42,14 @@ const plugins = [
   [
     "@semantic-release/github",
     {
-      assets: [{ path: "bundle.yml", label: "Operator resources bundle" }],
+      assets: [
+        { 
+          path: bundleFile, label: "Operator resources bundle"
+        },
+        { 
+          path: crdDirectory, label: "Operator Custom Resource Definitions"
+        },
+      ],
     },
   ],
   [

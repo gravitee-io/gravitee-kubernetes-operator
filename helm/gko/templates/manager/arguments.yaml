@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# Prometheus Monitor Service (Metrics)
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+# TODO: we should move every thing listed in there to main config map template
+---
+apiVersion: v1
+data:
+  controller_manager_config.yaml: |
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: 24d975d3.gravitee.io
+kind: ConfigMap
 metadata:
-  labels:
-    control-plane: controller-manager
-    release: prometheus
-  name: controller-manager-metrics-monitor
-  namespace: gko-system
-spec:
-  endpoints:
-    - path: /metrics
-      port: https
-      scheme: https
-      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      tlsConfig:
-        insecureSkipVerify: true
-  selector:
-    matchLabels:
-      control-plane: controller-manager
+  name: gko-manager-config
+  namespace: '{{ .Release.Namespace }}'

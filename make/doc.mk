@@ -6,5 +6,5 @@ reference: crdoc ## Generate the CRDs reference documentation
 
 
 .PHONY: helm-reference
-helm-reference: helm-docs helm-prepare ## Generates helm chart documentation
+helm-reference: helm-docs ## Generates helm chart documentation
 	@$(HELMDOCS) --chart-search-root=helm --dry-run > helm/gko/README.md

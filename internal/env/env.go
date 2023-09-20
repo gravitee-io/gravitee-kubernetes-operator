@@ -24,6 +24,7 @@ const (
 	Development            = "DEV_MODE"
 	NS                     = "NAMESPACE"
 	ApplyCRDs              = "APPLY_CRDS"
+	EnableMetrics          = "ENABLE_METRICS"
 	InsecureSkipCertVerify = "INSECURE_SKIP_CERT_VERIFY"
 	trueString             = "true"
 )
@@ -31,6 +32,7 @@ const (
 var Config = struct {
 	NS                 string
 	ApplyCRDs          bool
+	EnableMetrics      bool
 	Development        bool
 	CMTemplate404Name  string
 	CMTemplate404NS    string
@@ -44,4 +46,5 @@ func init() {
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
 	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == trueString
+	Config.EnableMetrics = os.Getenv(EnableMetrics) == trueString
 }
