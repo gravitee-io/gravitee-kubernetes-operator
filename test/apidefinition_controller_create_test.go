@@ -84,6 +84,11 @@ var _ = Describe("Create", func() {
 			internal.BasicApiFileTemplating,
 			200,
 		),
+		Entry(
+			"should make basic api with Rate-Limit available",
+			internal.BasicApiWithRateLimit,
+			200,
+		),
 	)
 
 	Context("a basic spec with a management context", func() {
