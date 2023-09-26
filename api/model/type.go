@@ -34,6 +34,13 @@ func (in *GenericStringMap) DeepCopyInto(out *GenericStringMap) {
 		for k, v := range casted.Object {
 			if reflect.TypeOf(v).Kind() == reflect.Int {
 				casted.Object[k] = int64(v.(int))
+			} else if reflect.TypeOf(v).Kind() == reflect.Map {
+				if innerMap, ok := v.(map[string]interface{}); ok {
+					nestedIn := GenericStringMap{Unstructured: unstructured.Unstructured{Object: innerMap}}
+					nestedOut := GenericStringMap{}
+					nestedIn.DeepCopyInto(&nestedOut)
+					casted.Object[k] = nestedOut.Object
+				}
 			}
 		}
 
