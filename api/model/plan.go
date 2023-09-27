@@ -80,8 +80,10 @@ type FlowStep struct {
 	Policy        string            `json:"policy,omitempty"`
 	Description   string            `json:"description,omitempty"`
 	Configuration *GenericStringMap `json:"configuration,omitempty"`
-	Enabled       bool              `json:"enabled,omitempty"`
-	Condition     string            `json:"condition,omitempty"`
+
+	// +kubebuilder:default:=true
+	Enabled   bool   `json:"enabled"`
+	Condition string `json:"condition,omitempty"`
 }
 
 func NewFlowStep() *FlowStep {

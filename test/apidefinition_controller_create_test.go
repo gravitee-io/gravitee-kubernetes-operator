@@ -89,6 +89,11 @@ var _ = Describe("Create", func() {
 			internal.BasicApiWithRateLimit,
 			200,
 		),
+		Entry(
+			"should make basic api disabled Validation Request available",
+			internal.BasicApiWithDisabledPolicy,
+			200,
+		),
 	)
 
 	Context("a basic spec with a management context", func() {
