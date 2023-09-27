@@ -16,40 +16,49 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: basic-api-rate-limit
+  name: basic-api-disabled-policy
 spec:
-  name: "K8s Basic Example With Rate-Limit"
+  name: "K8s Basic Example With Disabled Policy"
   version: "1.0"
-  description: "Basic api with Rate-Limit managed by Gravitee Kubernetes Operator"
+  description: "Basic api with disabled policy managed by Gravitee Kubernetes Operator"
+  properties:
+    - key: "my_api_key"
+      value: "YBDGOQ448GEsYBRkYBBDqQ=="
+      encrypted: true
   plans:
     - name: "KEY_LESS"
-      description: "FREE"
+      description: "KEY_LESS"
+      validation: "AUTO"
       security: "KEY_LESS"
+      type: "API"
       flows:
-        - name: ""
+        - name: "APIKEY"
           path-operator:
             path: "/"
             operator: "STARTS_WITH"
+          condition: ""
+          consumers: [ ]
+          methods: [ ]
           pre:
-            - name: "spike-arrest"
-              description: "spike-arrest"
-              enabled: true
-              policy: "spike-arrest"
+            - name: "Validate Request"
+              description: "validate API Key"
+              policy: "policy-request-validation"
+              enabled: false
               configuration:
-                async: false
-                addHeaders: false
-                spike:
-                  dynamicLimit: 20
-                  periodTime: 1
-                  limit: 10
-                  periodTimeUnit: "SECONDS"
-                  key: "test"
-          post: []
+                scope: "REQUEST"
+                rules:
+                  - isRequired: true
+                    input: "{#request.headers['X-API-KEY']}"
+                    constraint:
+                      type: "PATTERN"
+                      message: "api key"
+                      parameters:
+                        - "^{#properties['my_api_key']}$"
+                status: "401"
           enabled: true
-      comment_required: false
   proxy:
     virtual_hosts:
-      - path: "/k8s-basic-rate-limit"
+      - path: "/k8s-basic-disabled-policy"
     groups:
       - endpoints:
           - name: "Default"

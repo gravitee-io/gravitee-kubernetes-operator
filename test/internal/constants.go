@@ -26,6 +26,7 @@ const (
 
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
 	BasicApiWithRateLimit               = SamplesPath + "/apim/basic-api-with-rate-limit.yml"
+	BasicApiWithDisabledPolicy          = SamplesPath + "/apim/basic-api-with-disabled-policy.yml"
 	BasicApiFileWithTemplate            = SamplesPath + "/apim/basic-api-with-template.yml"
 	BasicApiFileTemplating              = SamplesPath + "/apim/basic-api-templating.yml"
 	ExportedApi                         = SamplesPath + "/apim/exported-api.yml"
