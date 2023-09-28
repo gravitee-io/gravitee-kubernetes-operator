@@ -25,8 +25,11 @@ const (
 	ContextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yml"
 
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
+	BasicApiWithRateLimit               = SamplesPath + "/apim/basic-api-with-rate-limit.yml"
+	BasicApiWithDisabledPolicy          = SamplesPath + "/apim/basic-api-with-disabled-policy.yml"
 	BasicApiFileWithTemplate            = SamplesPath + "/apim/basic-api-with-template.yml"
 	BasicApiFileTemplating              = SamplesPath + "/apim/basic-api-templating.yml"
+	ExportedApi                         = SamplesPath + "/apim/exported-api.yml"
 	ApiWithContextFile                  = SamplesPath + "/apim/api-with-context.yml"
 	ApiWithContextNoPlanFile            = SamplesPath + "/apim/api-with-no-plan.yml"
 	ApiWithDisabledHCFile               = SamplesPath + "/apim/api-with-health-check-disabled.yml"

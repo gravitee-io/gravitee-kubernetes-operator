@@ -84,6 +84,16 @@ var _ = Describe("Create", func() {
 			internal.BasicApiFileTemplating,
 			200,
 		),
+		Entry(
+			"should make basic api with Rate-Limit available",
+			internal.BasicApiWithRateLimit,
+			200,
+		),
+		Entry(
+			"should make basic api disabled Validation Request available",
+			internal.BasicApiWithDisabledPolicy,
+			200,
+		),
 	)
 
 	Context("a basic spec with a management context", func() {
@@ -285,6 +295,92 @@ var _ = Describe("Create", func() {
 				}
 				return internal.AssertApiEntityMatchesStatus(api, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
+		})
+
+		It("should update an exported API, setting it to read only", func() {
+			By("Creating an API in APIM")
+			apim, err := internal.NewAPIM(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
+			api := &model.Api{
+				Name:        "export",
+				Version:     "1",
+				Description: "This is to mimic what happens when applying an existing API",
+				ID:          "258198cb-bd66-4010-b3d4-9f7bee97763b",
+				CrossID:     "1cac491c-acd2-4530-bf97-0627ccf94060",
+				Plans: []*model.Plan{
+					{
+						Id:          "ff3b2730-84b5-41b4-9c64-558df4f87080",
+						Name:        "key-less",
+						Description: "Free Plan",
+						Security:    "KEY_LESS",
+					},
+				},
+				Proxy: &model.Proxy{
+					VirtualHosts: []*model.VirtualHost{
+						{
+							Path: "/export",
+						},
+					},
+					Groups: []*model.EndpointGroup{
+						{
+							Name: "default-group",
+							Endpoints: []*model.HttpEndpoint{
+								{
+									Name:   "default-endpoint",
+									Target: "https://api.gravitee.io/echo",
+								},
+							},
+						},
+					},
+				},
+				IsLocal: true,
+			}
+
+			apiEntity, err := apim.APIs.Import(http.MethodPost, api)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(apiEntity.DefinitionContext.Origin).To(Equal("management"))
+
+			By("Applying an API definition with the same IDs with a context referencing the same environment")
+
+			fixtureGenerator := internal.NewFixtureGenerator()
+
+			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
+				Api:     internal.ExportedApi,
+				Context: internal.ContextWithSecretFile,
+			})
+
+			apiDefinitionFixture = fixtures.Api
+			managementContextFixture = fixtures.Context
+
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+
+			Expect(k8sClient.Create(ctx, fixtures.Context)).Should(Succeed())
+
+			managementContext := new(gio.ManagementContext)
+			Eventually(func() error {
+				return k8sClient.Get(ctx, contextLookupKey, managementContext)
+			}, timeout, interval).Should(Succeed())
+
+			Expect(k8sClient.Create(ctx, fixtures.Api)).Should(Succeed())
+
+			By("Checking that the API has been made read only")
+
+			apiDefinition := new(gio.ApiDefinition)
+			Eventually(func() error {
+				if err = k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertApiStatusIsSet(apiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Expect(apiDefinition.Spec.ID).To(Equal(api.ID))
+			Expect(apiDefinition.Spec.CrossID).To(Equal(api.CrossID))
+
+			apiEntity, err = apim.APIs.GetByID(apiDefinition.Status.ID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(apiEntity.DefinitionContext.Origin).To(Equal("kubernetes"))
 		})
 
 	})
