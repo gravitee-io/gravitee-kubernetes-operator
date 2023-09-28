@@ -1,3 +1,12 @@
+## [0.8.4](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.3...0.8.4) (2023-09-28)
+
+
+### Bug Fixes
+
+* let users disable flow-steps ([a50d237](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/a50d23793dc60f519029af3dfc50e44d5a1ca247))
+* unmarshal int values in GenericMap ([6ba35fc](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/6ba35fcb666cbaf920cb172547e7005465e5ec6b))
+* update kube-rbac-proxy version ([2a27e41](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/2a27e41f5b73468d29bbac8fc462f77935aa085a))
+
 ## [0.8.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.2...0.8.3) (2023-09-15)
 
 
