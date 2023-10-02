@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: kube-rbac-proxy
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.11.0
+        image: quay.io/brancz/kube-rbac-proxy:v0.14.3
         args:
         - "--secure-listen-address=0.0.0.0:8443"
         - "--upstream=http://127.0.0.1:8080/"
@@ -34,6 +34,8 @@ spec:
         - containerPort: 8443
           protocol: TCP
           name: https
+        securityContext:
+          allowPrivilegeEscalation: false
         resources:
           limits:
             cpu: 500m
