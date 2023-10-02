@@ -84,6 +84,7 @@ helm install \
     --set "api.startupProbe.timeoutSeconds=10" \
     --set "api.image.tag=${env.APIM_IMAGE_TAG}" \
     --set "api.image.repository=${K3D_IMAGES_REGISTRY}/apim-management-api" \
+    --set "api.notifiers.smtp.enabled=false" \
     --set "ui.ingress.hosts[0]=localhost" \
     --set "ui.ingress.tls=false" \
     --set "ui.autoscaling.enabled=false" \
