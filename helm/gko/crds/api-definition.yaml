@@ -161,11 +161,14 @@ spec:
                             description:
                               type: string
                             enabled:
+                              default: true
                               type: boolean
                             name:
                               type: string
                             policy:
                               type: string
+                          required:
+                            - enabled
                           type: object
                         type: array
                       pre:
@@ -179,11 +182,14 @@ spec:
                             description:
                               type: string
                             enabled:
+                              default: true
                               type: boolean
                             name:
                               type: string
                             policy:
                               type: string
+                          required:
+                            - enabled
                           type: object
                         type: array
                     required:
@@ -333,11 +339,14 @@ spec:
                                   description:
                                     type: string
                                   enabled:
+                                    default: true
                                     type: boolean
                                   name:
                                     type: string
                                   policy:
                                     type: string
+                                required:
+                                  - enabled
                                 type: object
                               type: array
                             pre:
@@ -351,11 +360,14 @@ spec:
                                   description:
                                     type: string
                                   enabled:
+                                    default: true
                                     type: boolean
                                   name:
                                     type: string
                                   policy:
                                     type: string
+                                required:
+                                  - enabled
                                 type: object
                               type: array
                           required:
