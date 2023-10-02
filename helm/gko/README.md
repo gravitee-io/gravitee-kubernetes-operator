@@ -28,6 +28,7 @@ Kubernetes: `>=1.16.0-0`
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| httpClient.insecureSkipCertVerify | bool | `false` | If true, the manager will apply custom resource definitions on startup. |
 | ingress.templates.404.name | string | `""` | name of the config map storing the HTTP 404 ingress response template. A default template is used if this entry is empty. The config map should contain a content key and a contentType key. The default template is used if one of the key is missing. |
 | ingress.templates.404.namespace | string | `""` | namespace of the config map storing the HTTP 404 ingress response template. A default template is used if this entry is empty. The config map should contain a content key and a contentType key. The default template is used if one of the key is missing.        |
 | manager.applyCRDs | bool | `true` | If true, the manager will apply custom resource definitions on startup. |
