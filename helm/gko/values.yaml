@@ -108,12 +108,6 @@ ingress:
       name: ""
       ## @param ingress.templates.404.namespace Namespace of the config map storing the HTTP 404 ingress response template.     
       namespace: ""
-
-## @section HTTP Client
-## @descriptionStart
-## 👎 This section is deprecated and will be removed in version 1.0.0 The httpClient property
-## should now be set under the manager section instead.
-## @descriptionEnd
 httpClient:
-   ## @param httpClient.insecureSkipCertVerify see manager.httpClient.insecureSkipCertVerify
+  # -- If true, the manager HTTP client will not verify the certificate used by the Management API.
   insecureSkipCertVerify: false
