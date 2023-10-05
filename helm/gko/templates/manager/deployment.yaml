@@ -15,13 +15,21 @@
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata:
-  annotations:
-    helm.sh/condition: .Values.manager.metrics.enabled
-  labels:
-    control-plane: controller-manager
+metadata:    
   name: gko-controller-manager
   namespace: '{{ .Release.Namespace }}'
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
 spec:
   replicas: 1
   selector:
