@@ -1,3 +1,16 @@
+# [0.9.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.4...0.9.0) (2023-10-06)
+
+
+### Bug Fixes
+
+* add missing config key, update API Definition CRD ([6d82332](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/6d82332a1a9c74e3bd2748e19cdd2c6dd569db99))
+* use annotation for ingress templates everywhere ([4b28c00](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/4b28c003a5569e6a40b57053ff34608d73a54d82))
+
+
+### Features
+
+* allow install without any cluster role ([60cc29c](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/60cc29c89d380ca442b76c28f9a252eceebbbc38))
+
 ## [0.8.4](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.3...0.8.4) (2023-09-28)
 
 
