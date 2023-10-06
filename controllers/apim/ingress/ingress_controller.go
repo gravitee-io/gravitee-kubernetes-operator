@@ -91,7 +91,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 		case *netV1.Ingress:
 			return isGraviteeIngress(t)
 		case *v1alpha1.ApiDefinition:
-			return t.GetLabels()[keys.IngressTemplateAnnotation] == "true"
+			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == "true"
 		case *corev1.Secret:
 			return t.Type == "kubernetes.io/tls"
 		default:
