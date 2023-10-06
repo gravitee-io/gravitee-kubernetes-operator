@@ -18,7 +18,7 @@ kind: ApiDefinition
 metadata:
   name: api-template-with-api-key-plan
   namespace: "default"
-  labels:
+  annotations:
     gravitee.io/template: "true"
 spec:
   name: "K8s ApiKey Example"
