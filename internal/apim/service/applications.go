@@ -25,6 +25,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
+const (
+	applicationsPath = "/applications"
+	metadataPath     = "/metadata"
+)
+
 // Applications brings support for managing gravitee.io APIM applications
 // This service is used for testing purposes only and not initialized by the operator manager.
 type Applications struct {
@@ -36,7 +41,7 @@ func NewApplications(client *client.Client) *Applications {
 }
 
 func (svc *Applications) Search(query string, status string) ([]model.Application, error) {
-	url := svc.EnvTarget("/applications").WithQueryParam("query", query).WithQueryParam("status", status)
+	url := svc.EnvTarget(applicationsPath).WithQueryParam("query", query).WithQueryParam("status", status)
 	applications := new([]model.Application)
 
 	if err := svc.HTTP.Get(url.String(), applications); err != nil {
@@ -51,7 +56,7 @@ func (svc *Applications) GetByID(appId string) (*model.Application, error) {
 		return nil, errors.NewNotFoundError()
 	}
 
-	url := svc.EnvTarget(fmt.Sprintf("applications/%s", appId))
+	url := svc.EnvTarget(applicationsPath).WithPath(appId)
 	application := new(model.Application)
 
 	if err := svc.HTTP.Get(url.String(), application); err != nil {
@@ -66,7 +71,7 @@ func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.Appl
 		return nil, fmt.Errorf("can't retrieve metadata without application id")
 	}
 
-	url := svc.EnvTarget(fmt.Sprintf("applications/%s/metadata", appId))
+	url := svc.EnvTarget(applicationsPath).WithPath(appId).WithPath(metadataPath)
 	application := new([]model.ApplicationMetaData)
 
 	if err := svc.HTTP.Get(url.String(), application); err != nil {
@@ -77,9 +82,9 @@ func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.Appl
 }
 
 func (svc *Applications) CreateUpdate(method string, spec *kModel.Application) (*model.Application, error) {
-	url := svc.EnvTarget("applications")
+	url := svc.EnvTarget(applicationsPath)
 	if spec.ID != "" {
-		url = svc.EnvTarget(fmt.Sprintf("applications/%s", spec.ID))
+		url = svc.EnvTarget(applicationsPath).WithPath(spec.ID)
 	}
 
 	fun := svc.HTTP.Post
@@ -96,16 +101,16 @@ func (svc *Applications) CreateUpdate(method string, spec *kModel.Application) (
 }
 
 func (svc *Applications) Delete(appId string) error {
-	url := svc.EnvTarget(fmt.Sprintf("applications/%s", appId))
+	url := svc.EnvTarget(applicationsPath).WithPath(appId)
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
 func (svc *Applications) CreateUpdateMetadata(method string, appId string,
 	spec kModel.ApplicationMetaData) (*model.ApplicationMetaData, error) {
-	url := svc.EnvTarget(fmt.Sprintf("applications/%s/metadata", appId))
+	url := svc.EnvTarget(applicationsPath).WithPath(appId).WithPath(metadataPath)
 	fun := svc.HTTP.Post
 	if method == http.MethodPut {
-		url = svc.EnvTarget(fmt.Sprintf("applications/%s/metadata/%s", appId, spec.Key))
+		url = url.WithPath(spec.Key)
 		fun = svc.HTTP.Put
 	}
 
@@ -118,6 +123,6 @@ func (svc *Applications) CreateUpdateMetadata(method string, appId string,
 }
 
 func (svc *Applications) DeleteMetadata(appId string, key string) error {
-	url := svc.EnvTarget(fmt.Sprintf("applications/%s/metadata/%s", appId, key))
+	url := svc.EnvTarget(applicationsPath).WithPath(appId).WithPath(metadataPath).WithPath(key)
 	return svc.HTTP.Delete(url.String(), nil)
 }
