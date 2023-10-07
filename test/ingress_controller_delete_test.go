@@ -150,14 +150,12 @@ var _ = Describe("Deleting an ingress", func() {
 			It("Should NOT delete the API Template", func() {
 				By("Deleting the API definition template")
 				Expect(k8sClient.Delete(ctx, apiDefinitionTemplate)).ToNot(HaveOccurred())
-				Eventually(func() error {
+				Consistently(func() error {
 					By("Expect the API Template to be still available")
 
 					savedAPITemplate := new(gio.ApiDefinition)
 					return k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate)
-				}).Should(Succeed())
-
-				Expect(k8sClient.Delete(ctx, createdIngress)).ToNot(HaveOccurred())
+				}, timeout).Should(Succeed())
 			})
 		})
 
