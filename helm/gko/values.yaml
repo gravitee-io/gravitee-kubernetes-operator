@@ -48,9 +48,9 @@ rbacProxy:
 ## @descriptionEnd
 manager:
   image:
-    # -- Specifies the docker registry and image name to use.
+    ## @param manager.image.repository Specifies the docker registry and image name to use.
     repository: graviteeio/kubernetes-operator
-    # -- Specifies the docker image tag to use.
+    ## @param manager.image.tag Specifies the docker image tag to use.
     tag: latest
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
@@ -73,7 +73,7 @@ manager:
   scope:
     ## @param manager.scope.cluster Use false to listen only in the release namespace.
     cluster: true
-  ## @param manager.applyCRDs 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup.
+  ## @param manager.applyCRDs If true, the manager will patch Custom Resource Definitions on startup.
   ## Please be aware that this will apply to Custom Resource Definitions 
   ## (which are the Open API model for Custom Resources such as API Definitions), 
   ## not to Custom Resources themselves.
@@ -108,6 +108,12 @@ ingress:
       name: ""
       ## @param ingress.templates.404.namespace Namespace of the config map storing the HTTP 404 ingress response template.     
       namespace: ""
+
+## @section HTTP Client
+## @descriptionStart
+## 👎 This section is deprecated and will be removed in version 1.0.0 The httpClient property
+## should now be set under the manager section instead.
+## @descriptionEnd
 httpClient:
-  # -- If true, the manager HTTP client will not verify the certificate used by the Management API.
+   ## @param httpClient.insecureSkipCertVerify see manager.httpClient.insecureSkipCertVerify
   insecureSkipCertVerify: false
