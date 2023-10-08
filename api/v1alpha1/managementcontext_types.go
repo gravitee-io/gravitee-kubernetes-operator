@@ -38,6 +38,10 @@ type ManagementContextStatus struct {
 // +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.metadata.name`
 // +kubebuilder:printcolumn:name="BaseUrl",type=string,JSONPath=`.spec.baseUrl`
 // +kubebuilder:resource:shortName=graviteecontexts
+// The Management Context is used to sync resources with an APIM environment.
+// The APIM instance is identified by a URL, an organization ID and an environment ID.
+// Authentication can be defined under the form of an access token or basic authentication credentials,
+// or using a reference to a Kubernetes secret holding one of those authentication methods.
 type ManagementContext struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

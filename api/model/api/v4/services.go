@@ -17,10 +17,17 @@ package v4
 import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 type Service struct {
-	Enabled        bool                    `json:"enabled"`
-	Type           string                  `json:"type,omitempty"`
-	OverrideConfig bool                    `json:"overrideConfiguration"`
-	Config         *utils.GenericStringMap `json:"configuration,omitempty"`
+	// Is the service enabled or not ?
+	Enabled bool `json:"enabled"`
+
+	// Service Type
+	Type string `json:"type,omitempty"`
+
+	// Service Override Configuration or not?
+	OverrideConfig bool `json:"overrideConfiguration"`
+
+	// Service Configuration, a map of arbitrary key-values
+	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 func NewService(kind string, enabled bool) *Service {
@@ -31,14 +38,19 @@ func NewService(kind string, enabled bool) *Service {
 }
 
 type EndpointServices struct {
+	// Health check service
 	HealthCheck *Service `json:"healthCheck,omitempty"`
 }
 
 type EndpointGroupServices struct {
-	Discovery   *Service `json:"discovery,omitempty"`
+	// Endpoint group discovery service
+	Discovery *Service `json:"discovery,omitempty"`
+
+	// Endpoint group health check service
 	HealthCheck *Service `json:"healthCheck,omitempty"`
 }
 
 type ApiServices struct {
+	// API dynamic property service
 	DynamicProperty *Service `json:"dynamicProperty,omitempty"`
 }

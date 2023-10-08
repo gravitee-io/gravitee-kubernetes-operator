@@ -30,9 +30,10 @@ type ApiResourceSpec struct {
 type ApiResourceStatus struct {
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// API resources can be defined once and reused across multiple API definitions,
+// allowing to share common configuration between multiple APIs.
 type ApiResource struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

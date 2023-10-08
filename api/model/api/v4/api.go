@@ -31,23 +31,35 @@ type Api struct {
 	*base.ApiBase `json:",inline"`
 	// +kubebuilder:default:=`V4`
 	// +kubebuilder:validation:Enum=`V4`;
+	// The definition version of the API.
 	DefinitionVersion base.DefinitionVersion `json:"definitionVersion,omitempty"`
-	DefinitionContext *DefinitionContext     `json:"definitionContext,omitempty"`
+	// The API Definition context is used to identify the Kubernetes origin of the API,
+	// and define whether the API definition should be synchronized
+	// from an API instance or from a config map created in the cluster (which is the default)
+	DefinitionContext *DefinitionContext `json:"definitionContext,omitempty"`
 	// +kubebuilder:validation:Required
+	// Api Type (proxy or message)
 	Type ApiType `json:"type,omitempty"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems:=1
+	// List of listeners for this API
 	Listeners []*Listener `json:"listeners,omitempty"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems:=1
+	// List of Endpoint groups
 	EndpointGroups []*EndpointGroup `json:"endpointGroups,omitempty"`
 	// +kubebuilder:default:={}
-	Plans         map[string]*Plan `json:"plans,omitempty"`
-	FlowExecution *FlowExecution   `json:"flowExecution,omitempty"`
+	// List of API plans
+	Plans map[string]*Plan `json:"plans,omitempty"`
+	// API Flow Execution
+	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
 	// +kubebuilder:default:={}
-	Flows     []*Flow      `json:"flows"`
-	Analytics *Analytics   `json:"analytics,omitempty"`
-	Services  *ApiServices `json:"services,omitempty"`
+	// List of flows for the API
+	Flows []*Flow `json:"flows"`
+	// API Analytics
+	Analytics *Analytics `json:"analytics,omitempty"`
+	// API Services
+	Services *ApiServices `json:"services,omitempty"`
 }
 
 type GatewayDefinitionApi struct {
@@ -69,7 +81,17 @@ const (
 
 type DefinitionContext struct {
 	// +kubebuilder:validation:Enum=KUBERNETES;
+	// The definition context origin where the API definition is managed.
+	// The value is always `KUBERNETES` for an API managed by the operator.
 	Origin DefinitionContextOrigin `json:"origin,omitempty"`
+	// The syncFrom field defines where the gateways should source the API definition from.
+	// If the value is `MANAGEMENT`, the API definition will be sourced from an APIM instance.
+	// This means that the API definition *must* hold a context reference in that case.
+	// Setting the value to `MANAGEMENT` allows to make an API definition available on
+	// gateways deployed across multiple clusters / regions.
+	// If the value is `KUBERNETES`, the API definition will be sourced from a config map.
+	// This means that only gateways deployed in the same cluster will be able to sync the API definition.
+	// +kubebuilder:default:=`KUBERNETES`
 	// +kubebuilder:validation:Enum=KUBERNETES;MANAGEMENT;
 	SyncFrom DefinitionContextOrigin `json:"syncFrom,omitempty"`
 }

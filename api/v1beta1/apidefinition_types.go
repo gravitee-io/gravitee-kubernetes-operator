@@ -44,13 +44,13 @@ const (
 
 // ApiDefinitionStatus defines the observed state of API Definition.
 type ApiDefinitionStatus struct {
+	// The organisation ID, if a management context has been defined to sync the API with an APIM instance
 	OrgID string `json:"organizationId,omitempty"`
-
+	// The environment ID, if a management context has been defined to sync the API with an APIM instance
 	EnvID string `json:"environmentId,omitempty"`
-
-	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
+	// The ID of the API definition if a management context has been defined to sync the API with an APIM instance
 	ID string `json:"id,omitempty"`
-
+	// The Cross ID of the API definition if a management context has been defined to sync the API with an APIM instance
 	CrossID string `json:"crossId,omitempty"`
 
 	// The processing status of the API definition.
@@ -59,10 +59,11 @@ type ApiDefinitionStatus struct {
 	// The state of the API. Can be either STARTED or STOPPED.
 	State string `json:"state,omitempty"`
 
-	// This field is used to store the list of plans that have been created for the API definition.
-	// Especially when the API is synced with an APIM instance
+	// This field is used to store the list of plans that have been created
+	// for the API definition if a management context has been defined
+	// to sync the API with an APIM instance
 	Plans map[string]string `json:"plans,omitempty"`
-
+	// Last generation of the CRD resource
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 

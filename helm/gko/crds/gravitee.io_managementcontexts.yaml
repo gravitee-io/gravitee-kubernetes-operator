@@ -40,6 +40,11 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: The Management Context is used to sync resources with an APIM
+          environment. The APIM instance is identified by a URL, an organization ID
+          and an environment ID. Authentication can be defined under the form of an
+          access token or basic authentication credentials, or using a reference to
+          a Kubernetes secret holding one of those authentication methods.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -78,7 +83,9 @@ spec:
                     type: object
                   secretRef:
                     description: A secret reference holding either a bearer token
-                      or the user name and password used for basic authentication
+                      or the user name and password used for basic authentication.
+                      Omitting the namespace field will default to the namespace of
+                      the resource.
                     properties:
                       name:
                         type: string
@@ -163,7 +170,9 @@ spec:
                     type: object
                   secretRef:
                     description: A secret reference holding either a bearer token
-                      or the user name and password used for basic authentication
+                      or the user name and password used for basic authentication.
+                      Omitting the namespace field will default to the namespace of
+                      the resource.
                     properties:
                       name:
                         type: string

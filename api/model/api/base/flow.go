@@ -24,11 +24,22 @@ const (
 )
 
 type FlowStep struct {
+	// Indicate if this FlowStep is enabled or not
 	// +kubebuilder:default:=true
-	Enabled       bool                    `json:"enabled"`
-	Policy        string                  `json:"policy,omitempty"`
-	Name          string                  `json:"name,omitempty"`
-	Description   string                  `json:"description,omitempty"`
+	Enabled bool `json:"enabled"`
+
+	// FlowStep policy
+	Policy string `json:"policy,omitempty"`
+
+	// FlowStep name
+	Name string `json:"name,omitempty"`
+
+	// FlowStep description
+	Description string `json:"description,omitempty"`
+
+	// FlowStep configuration is a map of arbitrary key-values
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
-	Condition     string                  `json:"condition,omitempty"`
+
+	// FlowStep condition
+	Condition string `json:"condition,omitempty"`
 }

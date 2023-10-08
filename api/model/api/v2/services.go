@@ -20,22 +20,36 @@ import (
 )
 
 type Service struct {
+	// Service name
 	Name string `json:"name,omitempty"`
+
 	// +kubebuilder:default:=false
+	// Service is enabled or not?
 	Enabled bool `json:"enabled"`
 }
 
 type ScheduledService struct {
+	// Service
 	*Service `json:",inline"`
+
+	// Schedule
 	Schedule string `json:"schedule,omitempty"`
 }
 
 type EndpointDiscoveryService struct {
-	*Service  `json:",inline"`
-	Provider  string                  `json:"provider,omitempty"`
-	Config    *utils.GenericStringMap `json:"configuration,omitempty"`
-	Secondary bool                    `json:"secondary,omitempty"`
-	Tenants   []string                `json:"tenants,omitempty"`
+	*Service `json:",inline"`
+
+	// Provider name
+	Provider string `json:"provider,omitempty"`
+
+	// Configuration, arbitrary map of key-values
+	Config *utils.GenericStringMap `json:"configuration,omitempty"`
+
+	// Is it secondary or not?
+	Secondary bool `json:"secondary,omitempty"`
+
+	// List of tenants
+	Tenants []string `json:"tenants,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;
@@ -47,38 +61,65 @@ const (
 
 type DynamicPropertyService struct {
 	*ScheduledService `json:",inline"`
-	Provider          DynamicPropertyProvider `json:"provider,omitempty"`
-	Config            *utils.GenericStringMap `json:"configuration,omitempty"`
+
+	// Provider
+	Provider DynamicPropertyProvider `json:"provider,omitempty"`
+
+	// Configuration, arbitrary map of key-values
+	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 type Services struct {
+	// Endpoint Discovery Service
 	EndpointDiscoveryService *EndpointDiscoveryService `json:"discovery,omitempty"`
-	HealthCheckService       *HealthCheckService       `json:"health-check,omitempty"`
-	DynamicPropertyService   *DynamicPropertyService   `json:"dynamic-property,omitempty"`
+
+	// Health Check Service
+	HealthCheckService *HealthCheckService `json:"health-check,omitempty"`
+
+	// Dynamic Property Service
+	DynamicPropertyService *DynamicPropertyService `json:"dynamic-property,omitempty"`
 }
 
 type HealthCheckService struct {
 	*ScheduledService `json:",inline"`
-	Steps             []*HealthCheckStep `json:"steps,omitempty"`
+
+	// List of health check steps
+	Steps []*HealthCheckStep `json:"steps,omitempty"`
 }
 
 type EndpointHealthCheckService struct {
 	*HealthCheckService `json:",inline"`
-	Inherit             bool `json:"inherit"`
+
+	// Is service inherited or not?
+	Inherit bool `json:"inherit"`
 }
 
 type HealthCheckStep struct {
-	Name     string              `json:"name,omitempty"`
-	Request  HealthCheckRequest  `json:"request,omitempty"`
+	// Health Check Step Name
+	Name string `json:"name,omitempty"`
+
+	// Health Check Step Request
+	Request HealthCheckRequest `json:"request,omitempty"`
+
+	// Health Check Step Response
 	Response HealthCheckResponse `json:"response,omitempty"`
 }
 
 type HealthCheckRequest struct {
-	Path     string            `json:"path,omitempty"`
-	Method   base.HttpMethod   `json:"method,omitempty"`
-	Headers  []base.HttpHeader `json:"headers,omitempty"`
-	Body     string            `json:"body,omitempty"`
-	FromRoot bool              `json:"fromRoot"`
+	// The path of the endpoint handling the health check request
+	Path string `json:"path,omitempty"`
+
+	// The HTTP method to use when issuing the health check request
+	Method base.HttpMethod `json:"method,omitempty"`
+
+	// List of HTTP headers to include in the health check request
+	Headers []base.HttpHeader `json:"headers,omitempty"`
+
+	// Health Check Request Body
+	Body string `json:"body,omitempty"`
+
+	// If true, the health check request will be issued without prepending the context path of the API.
+	FromRoot bool `json:"fromRoot"`
 }
 
 type HealthCheckResponse struct {

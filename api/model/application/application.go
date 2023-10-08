@@ -21,21 +21,39 @@ import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 type KeyMode string
 
 type SimpleSettings struct {
+	// Application Type
 	AppType string `json:"type,omitempty"`
 	// ClientId is the client id of the application
 	ClientId string `json:"client_id,omitempty"`
 }
 
 type OAuthClientSettings struct {
-	ApplicationType            string   `json:"application_type,omitempty"`
-	ClientId                   string   `json:"client_id,omitempty"`
-	ClientSecret               string   `json:"client_secret,omitempty"`
-	ClientURI                  string   `json:"client_uri,omitempty"`
-	GrantTypes                 []string `json:"grant_types,omitempty"`
-	LogoURI                    string   `json:"logo_uri,omitempty"`
-	RedirectUris               []string `json:"redirect_uris,omitempty"`
-	RenewClientSecretSupported bool     `json:"renew_client_secret_supported,omitempty"`
-	ResponseTypes              []string `json:"response_types,omitempty"`
+	// Oauth client application type
+	ApplicationType string `json:"application_type,omitempty"`
+
+	// Oauth client id
+	ClientId string `json:"client_id,omitempty"`
+
+	// Oauth client secret
+	ClientSecret string `json:"client_secret,omitempty"`
+
+	// Oauth client uri
+	ClientURI string `json:"client_uri,omitempty"`
+
+	// List of Oauth client grant types
+	GrantTypes []string `json:"grant_types,omitempty"`
+
+	// Oauth client logo uri
+	LogoURI string `json:"logo_uri,omitempty"`
+
+	// List of Oauth client redirect uris
+	RedirectUris []string `json:"redirect_uris,omitempty"`
+
+	// Whether client secret renewing is supported or not
+	RenewClientSecretSupported bool `json:"renew_client_secret_supported,omitempty"`
+
+	// List of Oauth client response types
+	ResponseTypes []string `json:"response_types,omitempty"`
 }
 
 type Setting struct {
@@ -48,38 +66,80 @@ type MetaDataFormat string
 
 type MetaData struct {
 	// +kubebuilder:validation:Required
-	Name          string          `json:"name"`
-	ApplicationId string          `json:"applicationId,omitempty"`
-	Value         string          `json:"value,omitempty"`
-	DefaultValue  string          `json:"defaultValue,omitempty"`
-	Format        *MetaDataFormat `json:"format,omitempty"`
-	Hidden        bool            `json:"hidden,omitempty"`
-	Key           string          `json:"key,omitempty"`
+	// Meta data Name
+	Name string `json:"name"`
+
+	// Meta data ApplicationId
+	ApplicationId string `json:"applicationId,omitempty"`
+
+	// Meta data Value
+	Value string `json:"value,omitempty"`
+
+	// Meta data DefaultValue
+	DefaultValue string `json:"defaultValue,omitempty"`
+
+	// Meta data Format
+	Format *MetaDataFormat `json:"format,omitempty"`
+
+	// Meta data is hidden or not?
+	Hidden bool `json:"hidden,omitempty"`
+
+	// Meta data Key
+	Key string `json:"key,omitempty"`
 }
 
 type Application struct {
 	// +kubebuilder:validation:Required
+	// Application name
 	Name string `json:"name"`
 
 	// +kubebuilder:validation:Required
-	Description     string                  `json:"description,omitempty"`
-	ApplicationType string                  `json:"type,omitempty"`
-	ClientId        string                  `json:"clientId,omitempty"`
-	RedirectUris    []string                `json:"redirectUris,omitempty"`
-	Metadata        *utils.GenericStringMap `json:"metadata,omitempty"`
+	// Application Description
+	Description string `json:"description,omitempty"`
 
-	// The origin which is used to create this Application
+	// Application Type
+	ApplicationType string `json:"type,omitempty"`
+
+	// The ClientId identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.
+	ClientId string `json:"clientId,omitempty"`
+
+	// List of application Redirect Uris
+	RedirectUris []string `json:"redirectUris,omitempty"`
+
+	// Application Metadata, a map of arbitrary key-values
+	Metadata *utils.GenericStringMap `json:"metadata,omitempty"`
+
 	// +kubebuilder:validation:Enum=kubernetes;
+	// The origin which is used to create this Application
 	Origin string `json:"origin,omitempty"`
-	// io.gravitee.definition.model.Application
-	ID                             string      `json:"id,omitempty"`
-	Background                     string      `json:"background,omitempty"`
-	Domain                         string      `json:"domain,omitempty"`
-	Groups                         []string    `json:"groups,omitempty"`
-	Picture                        string      `json:"picture,omitempty"`
-	PictureURL                     string      `json:"picture_url,omitempty"`
-	Settings                       *Setting    `json:"settings,omitempty"`
-	AppKeyMode                     *KeyMode    `json:"app_key_mode,omitempty"`
-	DisableMembershipNotifications bool        `json:"disable_membership_notifications,omitempty"`
-	ApplicationMetaData            *[]MetaData `json:"applicationMetaData,omitempty"`
+
+	// Application ID
+	ID string `json:"id,omitempty"`
+
+	// The base64 encoded background to use for this application when displaying it on the portal
+	Background string `json:"background,omitempty"`
+
+	// Application domain
+	Domain string `json:"domain,omitempty"`
+
+	// Application groups
+	Groups []string `json:"groups,omitempty"`
+
+	// The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL)
+	Picture string `json:"picture,omitempty"`
+
+	// An URL pointing to the picture to use when displaying the application on the portal
+	PictureURL string `json:"picture_url,omitempty"`
+
+	// Application settings
+	Settings *Setting `json:"settings,omitempty"`
+
+	// The API key mode to use. If shared, the application will reuse the same API key across various subscriptions.
+	AppKeyMode *KeyMode `json:"app_key_mode,omitempty"`
+
+	// Should membership notifications be disabled or not ?
+	DisableMembershipNotifications bool `json:"disable_membership_notifications,omitempty"`
+
+	// Application meta data
+	ApplicationMetaData *[]MetaData `json:"applicationMetaData,omitempty"`
 }

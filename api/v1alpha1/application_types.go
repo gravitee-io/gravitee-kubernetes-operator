@@ -24,18 +24,22 @@ import (
 	kUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
 type ApplicationSpec struct {
 	application.Application `json:",inline"`
-	Context                 *refs.NamespacedName `json:"contextRef,omitempty"`
+	// The contextRef field allows to reference a previously created ManagementContext.
+	// See <a href="#managementcontext">ManagementContext</a> for more information.
+	// +kubebuilder:validation:Required
+	Context *refs.NamespacedName `json:"contextRef,omitempty"`
 }
 
 // ApplicationStatus defines the observed state of Application.
 type ApplicationStatus struct {
+	// The Organization ID of the Application in the Gravitee API Management instance.
 	OrgID string `json:"organizationId,omitempty"`
+	// The Environment ID of the Application in the Gravitee API Management instance.
 	EnvID string `json:"environmentId,omitempty"`
-	// The ID of the Application in the Gravitee API Management instance (if an API context has been configured).
+	// The ID of the Application in the Gravitee API Management instance.
 	ID string `json:"id,omitempty"`
 	// The processing status of the Application.
 	Status ProcessingStatus `json:"processingStatus,omitempty"`
@@ -49,6 +53,8 @@ type ApplicationStatus struct {
 // +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
 // +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.applicationType`
 // +kubebuilder:resource:shortName=graviteeapplications
+// Applications resource allows to use the operator to create and manage applications in Gravitee API Management.
+// This means that a management context must be define in the specification when creating an application.
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

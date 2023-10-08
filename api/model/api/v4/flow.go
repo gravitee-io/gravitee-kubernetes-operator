@@ -20,15 +20,30 @@ import (
 )
 
 type Flow struct {
+	// Flow name
 	Name string `json:"name,omitempty"`
+
 	// +kubebuilder:default:=true
-	Enabled   bool            `json:"enabled"`
+	// Is flow enabled or not?
+	Enabled bool `json:"enabled"`
+
+	// List of Flow selectors
 	Selectors []*FlowSelector `json:"selectors,omitempty"`
-	Request   []*FlowStep     `json:"request,omitempty"`
-	Response  []*FlowStep     `json:"response,omitempty"`
-	Subscribe []*FlowStep     `json:"subscribe,omitempty"`
-	Publish   []*FlowStep     `json:"publish,omitempty"`
-	Tags      []string        `json:"tags,omitempty"`
+
+	// List of Request flow steps
+	Request []*FlowStep `json:"request,omitempty"`
+
+	// List of Response flow steps
+	Response []*FlowStep `json:"response,omitempty"`
+
+	// List of Subscribe flow steps
+	Subscribe []*FlowStep `json:"subscribe,omitempty"`
+
+	// List of Publish flow steps
+	Publish []*FlowStep `json:"publish,omitempty"`
+
+	// List of tags
+	Tags []string `json:"tags,omitempty"`
 }
 
 func NewFlow(name string) *Flow {
@@ -52,7 +67,8 @@ func (fl Flow) ToGatewayDefinition() *Flow {
 }
 
 type FlowStep struct {
-	base.FlowStep    `json:",inline"`
+	base.FlowStep `json:",inline"`
+	// The message condition (supports EL expressions)
 	MessageCondition string `json:"messageCondition,omitempty"`
 }
 
@@ -75,8 +91,10 @@ const (
 )
 
 type FlowExecution struct {
-	Mode          FlowMode `json:"mode,omitempty"`
-	MatchRequired bool     `json:"matchRequired"`
+	// The flow mode to use
+	Mode FlowMode `json:"mode,omitempty"`
+	// Is match required or not ? If set to true, a 404 status response will be returned if no matching flow was found.
+	MatchRequired bool `json:"matchRequired"`
 }
 
 func DefaultFlowExecution() *FlowExecution {

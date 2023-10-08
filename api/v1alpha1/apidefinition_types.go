@@ -32,18 +32,33 @@ import (
 // See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
 // +kubebuilder:object:generate=true
 type ApiDefinitionSpec struct {
-	v2.Api  `json:",inline"`
+	v2.Api `json:",inline"`
+	// The contextRef field allows to reference a previously created ManagementContext.
+	// This allows to sync API definitions with an APIM environment.
+	// See <a href="#managementcontext">ManagementContext</a> for more information.
+	// Omitting the namespace field will default to the namespace of the resource.
 	Context *refs.NamespacedName `json:"contextRef,omitempty"`
 }
 
 // ApiDefinitionStatus defines the observed state of API Definition.
+// If a management context has been defined, the `processingStatus` field will
+// indicate wether the API has been successfully synced with APIM or not.
 type ApiDefinitionStatus struct {
+	// The organization ID of the API in APIM. This field is only set if
+	// the API has been successfully synced with APIM.
 	OrgID string `json:"organizationId,omitempty"`
+	// The environment ID of the API in APIM. This field is only set if
+	// the API has been successfully synced with APIM.
 	EnvID string `json:"environmentId,omitempty"`
-	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
-	ID      string `json:"id,omitempty"`
+	// The ID of the API definition in the Gravitee API Management instance.
+	// This field is set even if the API has not been synced with APIM.
+	ID string `json:"id,omitempty"`
+	// The crossId field allows to identify an API definition across multiple environments.
+	// If not found in the spec, this field will be set in a predictable manner using the
+	// namespaced name of the API resource.
 	CrossID string `json:"crossId,omitempty"`
-	// The processing status of the API definition.
+	// The processing status of the API definition. The value is either `Completed` or `Failed`.
+	// depending on the result of the resource reconciliation.
 	Status ProcessingStatus `json:"processingStatus,omitempty"`
 	// This field is kept for backward compatibility and shall be removed in future versions.
 	// Use processingStatus instead.
@@ -68,6 +83,8 @@ var _ list.Item = &ApiDefinition{}
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
 // +kubebuilder:resource:shortName=graviteeapis
 // ApiDefinition is the Schema for the apidefinitions API.
+// The corresponding API definition version is 2.0.0.
+// This version is still compatible with APIM 4.x but does not support v4 API features.
 type ApiDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

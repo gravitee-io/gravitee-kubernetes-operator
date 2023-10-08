@@ -28,8 +28,10 @@ const (
 )
 
 type PathOperator struct {
+	// Operator path
 	Path string `json:"path,omitempty"`
 	// +kubebuilder:default:=STARTS_WITH
+	// Operator (possible values STARTS_WITH or EQUALS)
 	Operator string `json:"operator,omitempty"`
 }
 
@@ -41,16 +43,33 @@ func NewPathOperator(path, operator string) *PathOperator {
 }
 
 type Flow struct {
-	ID           string          `json:"id,omitempty"`
-	Name         string          `json:"name,omitempty"`
-	PathOperator *PathOperator   `json:"path-operator,omitempty"`
-	Pre          []base.FlowStep `json:"pre,omitempty"`
-	Post         []base.FlowStep `json:"post,omitempty"`
+	// Flow ID
+	ID string `json:"id,omitempty"`
+
+	// Flow name
+	Name string `json:"name,omitempty"`
+
+	// List of path operators
+	PathOperator *PathOperator `json:"path-operator,omitempty"`
+
+	// Flow pre step
+	Pre []base.FlowStep `json:"pre,omitempty"`
+
+	// Flow post step
+	Post []base.FlowStep `json:"post,omitempty"`
+
 	// +kubebuilder:default:=true
-	Enabled   bool              `json:"enabled"`
-	Methods   []base.HttpMethod `json:"methods,omitempty"`
-	Condition string            `json:"condition,omitempty"`
-	Consumers []Consumer        `json:"consumers,omitempty"`
+	// Indicate if this flow is enabled or disabled
+	Enabled bool `json:"enabled"`
+
+	// A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
+	Methods []base.HttpMethod `json:"methods,omitempty"`
+
+	// Flow condition
+	Condition string `json:"condition,omitempty"`
+
+	// List of the consumers of this Flow
+	Consumers []Consumer `json:"consumers,omitempty"`
 }
 
 func NewFlow(name string) Flow {
@@ -66,13 +85,23 @@ func NewFlow(name string) Flow {
 }
 
 type Policy struct {
-	Name          string                  `json:"name,omitempty"`
+	// Policy name
+	Name string `json:"name,omitempty"`
+
+	// Policy configuration is a map of arbitrary key-values
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 type Rule struct {
-	Methods     []base.HttpMethod `json:"methods,omitempty"`
-	Policy      *Policy           `json:"policy,omitempty"`
-	Description string            `json:"description,omitempty"`
-	Enabled     bool              `json:"enabled,omitempty"`
+	// List of http methods for this Rule (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
+	Methods []base.HttpMethod `json:"methods,omitempty"`
+
+	// Rule policy
+	Policy *Policy `json:"policy,omitempty"`
+
+	// Rule description
+	Description string `json:"description,omitempty"`
+
+	// Indicate if the Rule is enabled or not
+	Enabled bool `json:"enabled,omitempty"`
 }

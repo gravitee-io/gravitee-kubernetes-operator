@@ -45,8 +45,17 @@ const (
 )
 
 type Logging struct {
-	Mode      LoggingMode    `json:"mode,omitempty"`
-	Scope     LoggingScope   `json:"scope,omitempty"`
-	Content   LoggingContent `json:"content,omitempty"`
-	Condition string         `json:"condition,omitempty"`
+	// The logging mode.
+	// CLIENT identifies the inbound request issued to the gateway,
+	// while PROXY identifies the request issued to the upstream service.
+	Mode LoggingMode `json:"mode,omitempty"`
+
+	// The logging scope (which phase of the request roundtrip should be included in each log entry.
+	Scope LoggingScope `json:"scope,omitempty"`
+
+	// Which part of the request/response should be logged ?
+	Content LoggingContent `json:"content,omitempty"`
+
+	// The logging condition (supports EL expressions)
+	Condition string `json:"condition,omitempty"`
 }
