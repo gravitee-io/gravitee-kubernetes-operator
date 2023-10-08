@@ -33,12 +33,22 @@ const (
 )
 
 type Plan struct {
-	*base.Plan        `json:",inline"`
+	*base.Plan `json:",inline"`
+
+	// Plan definition version
 	DefinitionVersion definitionVersion `json:"definitionVersion,omitempty"`
-	Security          PlanSecurity      `json:"security,omitempty"`
-	Mode              PlanMode          `json:"mode,omitempty"`
-	SelectionRule     string            `json:"selectionRule,omitempty"`
-	Flows             []*Flow           `json:"flows,omitempty"`
+
+	// Plan security
+	Security PlanSecurity `json:"security,omitempty"`
+
+	// The plan mode
+	Mode PlanMode `json:"mode,omitempty"`
+
+	// Plan selection rule
+	SelectionRule string `json:"selectionRule,omitempty"`
+
+	// List of plan flows
+	Flows []*Flow `json:"flows,omitempty"`
 }
 
 type GatewayDefinitionPlan struct {
@@ -73,7 +83,10 @@ func (plan *Plan) ToGatewayDefinition(name string) *GatewayDefinitionPlan {
 
 type PlanSecurity struct {
 	// +kubebuilder:validation:Required
-	Type   string                  `json:"type"`
+	// Plan Security type
+	Type string `json:"type"`
+
+	// Plan security configuration, a map of arbitrary key-values
 	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 

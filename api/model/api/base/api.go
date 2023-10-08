@@ -16,28 +16,48 @@
 package base
 
 type ApiBase struct {
-	ID      string `json:"id,omitempty"`
+	// The API ID. If empty, this field will take the value of the `metadata.uid`
+	// field of the resource.
+	ID string `json:"id,omitempty"`
+	// When promoting an API from one environment to the other,
+	// this ID identifies the API across those different environments.
+	// Setting this ID also allows to take control over an existing API on an APIM instance
+	// (by setting the same value as defined in APIM).
+	// If empty, a UUID will be generated based on the namespace and name of the resource.
 	CrossID string `json:"crossId,omitempty"`
-	Name    string `json:"name,omitempty"`
+	// API name
+	Name string `json:"name,omitempty"`
 	// +kubebuilder:validation:Required
-	Version     string `json:"version,omitempty"`
+	Version string `json:"version,omitempty"`
+	// API description
 	Description string `json:"description,omitempty"`
 	// +kubebuilder:default:=`STARTED`
 	// +kubebuilder:validation:Enum=STARTED;STOPPED;
+	// The state of API (setting the value to `STOPPED` will make the API un-reachable from the gateway)
 	State string `json:"state,omitempty"`
 	// +kubebuilder:default:=`CREATED`
+	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
-	Tags           []string       `json:"tags,omitempty"`
-	Labels         []string       `json:"labels,omitempty"`
+	// List of Tags of the API
+	Tags []string `json:"tags,omitempty"`
+	// List of labels of the API
+	Labels []string `json:"labels,omitempty"`
 	// +kubebuilder:default:=PRIVATE
-	Visibility   ApiVisibility `json:"visibility,omitempty"`
-	PrimaryOwner *Member       `json:"primaryOwner,omitempty"`
+	// Should the API be publicly available from the portal or not ?
+	Visibility ApiVisibility `json:"visibility,omitempty"`
+	// Specify the primary member that owns the API
+	PrimaryOwner *Member `json:"primaryOwner,omitempty"`
 	// +kubebuilder:default:={}
+	// List of Properties for the API
 	Properties []*Property `json:"properties,omitempty"`
 	// +kubebuilder:default:={}
-	Metadata          []*MetadataEntry                        `json:"metadata,omitempty"`
+	// List of API metadata entries
+	Metadata []*MetadataEntry `json:"metadata,omitempty"`
+	// A list of Response Templates for the API
 	ResponseTemplates map[string]map[string]*ResponseTemplate `json:"response_templates,omitempty"`
 	// +kubebuilder:default:={}
+	// Resources can be either inlined or reference the namespace and name
+	// of an <a href="#apiresource">existing API resource definition</a>.
 	Resources []*ResourceOrRef `json:"resources,omitempty"`
 }
 
@@ -62,7 +82,12 @@ const (
 )
 
 type ResponseTemplate struct {
-	StatusCode int               `json:"status,omitempty"`
-	Headers    map[string]string `json:"headers,omitempty"`
-	Body       string            `json:"body,omitempty"`
+	// Response Template status code
+	StatusCode int `json:"status,omitempty"`
+
+	// Response Template headers, arbitrary map of string key-value headers
+	Headers map[string]string `json:"headers,omitempty"`
+
+	// Response Template body
+	Body string `json:"body,omitempty"`
 }

@@ -21,20 +21,29 @@ import (
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
-	DeployedAt    uint64 `json:"deployedAt,omitempty"`
+	// Shows the time that the API is deployed
+	DeployedAt uint64 `json:"deployedAt,omitempty"`
+
 	// +kubebuilder:default:=`2.0.0`
+	// The definition version of the API. For v1alpha1 resources, this field should always set to `2.0.0`.
 	DefinitionVersion base.DefinitionVersion `json:"gravitee,omitempty"`
 	// The definition context is used to inform a management API instance that this API definition
 	// is managed using a kubernetes operator
 	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 	// +kubebuilder:default:=DEFAULT
-	FlowMode FlowMode  `json:"flow_mode,omitempty"`
-	Proxy    *Proxy    `json:"proxy,omitempty"`
+	// The flow mode of the API. The value is either `DEFAULT` or `BEST_MATCH`.
+	FlowMode FlowMode `json:"flow_mode,omitempty"`
+	// The proxy of the API that specifies its VirtualHosts and Groups.
+	Proxy *Proxy `json:"proxy,omitempty"`
+	// Contains different services for the API (EndpointDiscovery, HealthCheck ...)
 	Services *Services `json:"services,omitempty"`
 	// +kubebuilder:default:={}
-	Flows        []Flow   `json:"flows,omitempty"`
+	// The flow of the API
+	Flows []Flow `json:"flows,omitempty"`
+	// API Path mapping
 	PathMappings []string `json:"path_mappings,omitempty"`
 	// +kubebuilder:default:={}
+	// API plans
 	Plans []*Plan `json:"plans,omitempty"`
 	// local defines if the api is local or not.
 	//

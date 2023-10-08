@@ -25,18 +25,33 @@ const (
 )
 
 type Consumer struct {
+	// Consumer type (possible values TAG)
 	ConsumerType ConsumerType `json:"consumerType,omitempty"`
-	ConsumerId   string       `json:"consumerId,omitempty"`
+
+	// Consumer ID
+	ConsumerId string `json:"consumerId,omitempty"`
 }
 
 type Plan struct {
-	*base.Plan         `json:",inline"`
-	Security           string            `json:"security"`
-	SecurityDefinition string            `json:"securityDefinition,omitempty"`
-	Paths              map[string][]Rule `json:"paths,omitempty"`
-	Api                string            `json:"api,omitempty"`
-	SelectionRule      string            `json:"selectionRule,omitempty"`
-	Flows              []Flow            `json:"flows,omitempty"`
+	*base.Plan `json:",inline"`
+
+	// Plan Security
+	Security string `json:"security"`
+
+	// Plan Security definition
+	SecurityDefinition string `json:"securityDefinition,omitempty"`
+
+	// A map of different paths (alongside their Rules) for this Plan
+	Paths map[string][]Rule `json:"paths,omitempty"`
+
+	// Specify the API associated with this plan
+	Api string `json:"api,omitempty"`
+
+	// Plan selection rule
+	SelectionRule string `json:"selectionRule,omitempty"`
+
+	// List of different flows for this Plan
+	Flows []Flow `json:"flows,omitempty"`
 }
 
 func NewPlan(base *base.Plan) *Plan {

@@ -31,6 +31,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
+        description: API resources can be defined once and reused across multiple
+          API definitions, allowing to share common configuration between multiple
+          APIs.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -48,13 +51,17 @@ spec:
             description: ApiResourceSpec defines the desired state of ApiResource.
             properties:
               configuration:
+                description: Resource Configuration, arbitrary map of key-values
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               enabled:
+                description: Resource Enabled or not?
                 type: boolean
               name:
+                description: Resource Name
                 type: string
               type:
+                description: Resource Type
                 type: string
             type: object
           status:

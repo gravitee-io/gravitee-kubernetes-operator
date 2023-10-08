@@ -34,6 +34,7 @@ const (
 )
 
 type DLQ struct {
+	// The endpoint to use when a message should be sent to the dead letter queue.
 	Endpoint string `json:"endpoint,omitempty"`
 }
 

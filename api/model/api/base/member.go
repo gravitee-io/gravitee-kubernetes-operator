@@ -15,8 +15,12 @@
 package base
 
 type Member struct {
-	Id          string `json:"id"`
-	Email       string `json:"email"`
+	// Member ID
+	Id string `json:"id"`
+	// Member email
+	Email string `json:"email"`
+	// Member Display Name
 	DisplayName string `json:"displayName"`
-	Type        string `json:"type"`
+	// Member type
+	Type string `json:"type"`
 }

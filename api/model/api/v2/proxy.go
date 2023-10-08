@@ -17,9 +17,13 @@ package v2
 import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
 type VirtualHost struct {
-	Host               string `json:"host,omitempty"`
-	Path               string `json:"path,omitempty"`
-	OverrideEntrypoint bool   `json:"override_entrypoint,omitempty"`
+	// Host name
+	Host string `json:"host,omitempty"`
+	// Path
+	Path string `json:"path,omitempty"`
+
+	// Indicate if Entrypoint should be overridden or not
+	OverrideEntrypoint bool `json:"override_entrypoint,omitempty"`
 }
 
 func NewVirtualHost(host, path string) *VirtualHost {
@@ -30,11 +34,18 @@ func NewVirtualHost(host, path string) *VirtualHost {
 }
 
 type Proxy struct {
-	VirtualHosts     []*VirtualHost   `json:"virtual_hosts,omitempty"`
-	Groups           []*EndpointGroup `json:"groups,omitempty"`
-	Failover         *Failover        `json:"failover,omitempty"`
-	Cors             *base.Cors       `json:"cors,omitempty"`
-	Logging          *Logging         `json:"logging,omitempty"`
-	StripContextPath bool             `json:"strip_context_path,omitempty"`
-	PreserveHost     bool             `json:"preserve_host,omitempty"`
+	// list of Virtual hosts fot the proxy
+	VirtualHosts []*VirtualHost `json:"virtual_hosts,omitempty"`
+
+	// List of endpoint groups of the proxy
+	Groups []*EndpointGroup `json:"groups,omitempty"`
+
+	// Proxy Failover
+	Failover *Failover `json:"failover,omitempty"`
+
+	// Proxy Cors
+	Cors             *base.Cors `json:"cors,omitempty"`
+	Logging          *Logging   `json:"logging,omitempty"`
+	StripContextPath bool       `json:"strip_context_path,omitempty"`
+	PreserveHost     bool       `json:"preserve_host,omitempty"`
 }

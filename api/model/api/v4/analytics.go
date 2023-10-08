@@ -15,15 +15,32 @@
 package v4
 
 type Logging struct {
-	Condition        string          `json:"condition,omitempty"`
-	MessageCondition string          `json:"messageCondition,omitempty"`
-	Content          *LoggingContent `json:"content,omitempty"`
-	Mode             *LoggingMode    `json:"mode,omitempty"`
-	Phase            *LoggingPhase   `json:"phase,omitempty"`
+	// The logging condition. This field is evaluated for HTTP requests and supports EL expressions.
+	Condition string `json:"condition,omitempty"`
+
+	// The logging message condition. This field is evaluated for messages and supports EL expressions.
+	MessageCondition string `json:"messageCondition,omitempty"`
+
+	// Defines which component of the request should be included in the log payload.
+	Content *LoggingContent `json:"content,omitempty"`
+
+	// The logging mode defines which "hop" of the request roundtrip
+	// should be included in the log payload.
+	// This can be either the inbound request to the gateway,
+	// the request issued by the gateway to the upstream service, or both.
+	Mode *LoggingMode `json:"mode,omitempty"`
+
+	// Defines which phase of the request roundtrip
+	// should be included in the log payload.
+	// This can be either the request phase, the response phase, or both.
+	Phase *LoggingPhase `json:"phase,omitempty"`
 }
 
 type LoggingPhase struct {
-	Request  bool `json:"request"`
+	// Should the request phase of the request roundtrip be included in the log payload or not ?
+	Request bool `json:"request"`
+
+	// Should the response phase of the request roundtrip be included in the log payload or not ?
 	Response bool `json:"response"`
 }
 
@@ -35,8 +52,11 @@ func NewLoggingPhase(request, response bool) *LoggingPhase {
 }
 
 type LoggingMode struct {
+	// If true, the inbound request to the gateway will be included in the log payload
 	Entrypoint bool `json:"entrypoint"`
-	Endpoint   bool `json:"endpoint"`
+
+	// If true, the request to the upstream service will be included in the log payload
+	Endpoint bool `json:"endpoint"`
 }
 
 func NewLoggingMode(entrypoint, endpoint bool) *LoggingMode {
@@ -47,10 +67,19 @@ func NewLoggingMode(entrypoint, endpoint bool) *LoggingMode {
 }
 
 type LoggingContent struct {
-	Headers         bool `json:"headers"`
-	MessageHeaders  bool `json:"messageHeaders"`
-	Payload         bool `json:"payload"`
-	MessagePayload  bool `json:"messagePayload"`
+	// Should HTTP headers be logged or not ?
+	Headers bool `json:"headers"`
+
+	// Should message headers be logged or not ?
+	MessageHeaders bool `json:"messageHeaders"`
+
+	// Should HTTP payloads be logged or not ?
+	Payload bool `json:"payload"`
+
+	// Should message payloads be logged or not ?
+	MessagePayload bool `json:"messagePayload"`
+
+	// Should message metadata be logged or not ?
 	MessageMetadata bool `json:"messageMetadata"`
 }
 
@@ -68,9 +97,14 @@ func NewLoggingContent(
 
 type Analytics struct {
 	// +kubebuilder:default:=true
-	Enabled  bool      `json:"enabled"`
+	// Analytics Enabled or not?
+	Enabled bool `json:"enabled"`
+
+	// Analytics Sampling
 	Sampling *Sampling `json:"sampling,omitempty"`
-	Logging  *Logging  `json:"logging,omitempty"`
+
+	// Analytics Logging
+	Logging *Logging `json:"logging,omitempty"`
 }
 
 func NewAnalytics() *Analytics {
@@ -89,6 +123,9 @@ const (
 )
 
 type Sampling struct {
-	Type  SamplingType `json:"type"`
-	Value string       `json:"value"`
+	// The sampling type to use
+	Type SamplingType `json:"type"`
+
+	// Sampling Value
+	Value string `json:"value"`
 }

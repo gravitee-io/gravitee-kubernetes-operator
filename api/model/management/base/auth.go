@@ -22,7 +22,8 @@ type Auth struct {
 	BearerToken string `json:"bearerToken,omitempty"`
 	// The Basic credentials used to authenticate against the API Management instance.
 	Credentials *BasicAuth `json:"credentials,omitempty"`
-	// A secret reference holding either a bearer token or the user name and password used for basic authentication
+	// A secret reference holding either a bearer token or the user name and password used for basic authentication.
+	// Omitting the namespace field will default to the namespace of the resource.
 	SecretRef *refs.NamespacedName `json:"secretRef,omitempty"`
 }
 

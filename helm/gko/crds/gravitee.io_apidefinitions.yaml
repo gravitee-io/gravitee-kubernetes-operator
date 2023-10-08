@@ -46,7 +46,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ApiDefinition is the Schema for the apidefinitions API.
+        description: ApiDefinition is the Schema for the apidefinitions API. The corresponding
+          API definition version is 2.0.0. This version is still compatible with APIM
+          4.x but does not support v4 API features.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -66,6 +68,11 @@ spec:
               documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
             properties:
               contextRef:
+                description: The contextRef field allows to reference a previously
+                  created ManagementContext. This allows to sync API definitions with
+                  an APIM environment. See <a href="#managementcontext">ManagementContext</a>
+                  for more information. Omitting the namespace field will default
+                  to the namespace of the resource.
                 properties:
                   name:
                     type: string
@@ -75,6 +82,12 @@ spec:
                 - name
                 type: object
               crossId:
+                description: When promoting an API from one environment to the other,
+                  this ID identifies the API across those different environments.
+                  Setting this ID also allows to take control over an existing API
+                  on an APIM instance (by setting the same value as defined in APIM).
+                  If empty, a UUID will be generated based on the namespace and name
+                  of the resource.
                 type: string
               definition_context:
                 description: The definition context is used to inform a management
@@ -89,36 +102,48 @@ spec:
                     type: string
                 type: object
               deployedAt:
+                description: Shows the time that the API is deployed
                 format: int64
                 type: integer
               description:
+                description: API description
                 type: string
               flow_mode:
                 default: DEFAULT
+                description: The flow mode of the API. The value is either `DEFAULT`
+                  or `BEST_MATCH`.
                 enum:
                 - DEFAULT
                 - BEST_MATCH
                 type: string
               flows:
+                description: The flow of the API
                 items:
                   properties:
                     condition:
+                      description: Flow condition
                       type: string
                     consumers:
+                      description: List of the consumers of this Flow
                       items:
                         properties:
                           consumerId:
+                            description: Consumer ID
                             type: string
                           consumerType:
+                            description: Consumer type (possible values TAG)
                             type: integer
                         type: object
                       type: array
                     enabled:
                       default: true
+                      description: Indicate if this flow is enabled or disabled
                       type: boolean
                     id:
+                      description: Flow ID
                       type: string
                     methods:
+                      description: A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
                       items:
                         enum:
                         - GET
@@ -134,52 +159,72 @@ spec:
                         type: string
                       type: array
                     name:
+                      description: Flow name
                       type: string
                     path-operator:
+                      description: List of path operators
                       properties:
                         operator:
                           default: STARTS_WITH
+                          description: Operator (possible values STARTS_WITH or EQUALS)
                           type: string
                         path:
+                          description: Operator path
                           type: string
                       type: object
                     post:
+                      description: Flow post step
                       items:
                         properties:
                           condition:
+                            description: FlowStep condition
                             type: string
                           configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           description:
+                            description: FlowStep description
                             type: string
                           enabled:
                             default: true
+                            description: Indicate if this FlowStep is enabled or not
                             type: boolean
                           name:
+                            description: FlowStep name
                             type: string
                           policy:
+                            description: FlowStep policy
                             type: string
                         required:
                         - enabled
                         type: object
                       type: array
                     pre:
+                      description: Flow pre step
                       items:
                         properties:
                           condition:
+                            description: FlowStep condition
                             type: string
                           configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           description:
+                            description: FlowStep description
                             type: string
                           enabled:
                             default: true
+                            description: Indicate if this FlowStep is enabled or not
                             type: boolean
                           name:
+                            description: FlowStep name
                             type: string
                           policy:
+                            description: FlowStep policy
                             type: string
                         required:
                         - enabled
@@ -191,15 +236,22 @@ spec:
                 type: array
               gravitee:
                 default: 2.0.0
+                description: The definition version of the API. For v1alpha1 resources,
+                  this field should always set to `2.0.0`.
                 type: string
               id:
+                description: The API ID. If empty, this field will take the value
+                  of the `metadata.uid` field of the resource.
                 type: string
               labels:
+                description: List of labels of the API
                 items:
                   type: string
                 type: array
               lifecycle_state:
                 default: CREATED
+                description: API life cycle state can be one of the values CREATED,
+                  PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
                 enum:
                 - CREATED
                 - PUBLISHED
@@ -218,11 +270,14 @@ spec:
                   cause Gateways to fetch the APIs from the datastore"
                 type: boolean
               metadata:
+                description: List of API metadata entries
                 items:
                   properties:
                     defaultValue:
+                      description: MetaData Default value
                       type: string
                     format:
+                      description: MetaData Format
                       enum:
                       - STRING
                       - NUMERIC
@@ -232,10 +287,13 @@ spec:
                       - URL
                       type: string
                     key:
+                      description: MetaData Key
                       type: string
                     name:
+                      description: MetaData Name
                       type: string
                     value:
+                      description: MetaData Value
                       type: string
                   required:
                   - format
@@ -244,50 +302,70 @@ spec:
                   type: object
                 type: array
               name:
+                description: API name
                 type: string
               path_mappings:
+                description: API Path mapping
                 items:
                   type: string
                 type: array
               plans:
+                description: API plans
                 items:
                   properties:
                     api:
+                      description: Specify the API associated with this plan
                       type: string
                     characteristics:
+                      description: List of plan characteristics
                       items:
                         type: string
                       type: array
                     comment_required:
+                      description: Indicate of comment is required for this plan or
+                        not
                       type: boolean
                     crossId:
+                      description: The plan Cross ID. This field is used to identify
+                        plans defined for an API that has been promoted between different
+                        environments.
                       type: string
                     description:
+                      description: Plan Description
                       type: string
                     excluded_groups:
+                      description: List of excluded groups for this plan
                       items:
                         type: string
                       type: array
                     flows:
+                      description: List of different flows for this Plan
                       items:
                         properties:
                           condition:
+                            description: Flow condition
                             type: string
                           consumers:
+                            description: List of the consumers of this Flow
                             items:
                               properties:
                                 consumerId:
+                                  description: Consumer ID
                                   type: string
                                 consumerType:
+                                  description: Consumer type (possible values TAG)
                                   type: integer
                               type: object
                             type: array
                           enabled:
                             default: true
+                            description: Indicate if this flow is enabled or disabled
                             type: boolean
                           id:
+                            description: Flow ID
                             type: string
                           methods:
+                            description: A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
                             items:
                               enum:
                               - GET
@@ -303,52 +381,75 @@ spec:
                               type: string
                             type: array
                           name:
+                            description: Flow name
                             type: string
                           path-operator:
+                            description: List of path operators
                             properties:
                               operator:
                                 default: STARTS_WITH
+                                description: Operator (possible values STARTS_WITH
+                                  or EQUALS)
                                 type: string
                               path:
+                                description: Operator path
                                 type: string
                             type: object
                           post:
+                            description: Flow post step
                             items:
                               properties:
                                 condition:
+                                  description: FlowStep condition
                                   type: string
                                 configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 description:
+                                  description: FlowStep description
                                   type: string
                                 enabled:
                                   default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
                                   type: boolean
                                 name:
+                                  description: FlowStep name
                                   type: string
                                 policy:
+                                  description: FlowStep policy
                                   type: string
                               required:
                               - enabled
                               type: object
                             type: array
                           pre:
+                            description: Flow pre step
                             items:
                               properties:
                                 condition:
+                                  description: FlowStep condition
                                   type: string
                                 configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 description:
+                                  description: FlowStep description
                                   type: string
                                 enabled:
                                   default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
                                   type: boolean
                                 name:
+                                  description: FlowStep name
                                   type: string
                                 policy:
+                                  description: FlowStep policy
                                   type: string
                               required:
                               - enabled
@@ -359,20 +460,26 @@ spec:
                         type: object
                       type: array
                     id:
+                      description: Plan ID
                       type: string
                     name:
+                      description: Plan name
                       type: string
                     order:
+                      description: Plan order
                       type: integer
                     paths:
                       additionalProperties:
                         items:
                           properties:
                             description:
+                              description: Rule description
                               type: string
                             enabled:
+                              description: Indicate if the Rule is enabled or not
                               type: boolean
                             methods:
+                              description: List of http methods for this Rule (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
                               items:
                                 enum:
                                 - GET
@@ -388,24 +495,34 @@ spec:
                                 type: string
                               type: array
                             policy:
+                              description: Rule policy
                               properties:
                                 configuration:
+                                  description: Policy configuration is a map of arbitrary
+                                    key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 name:
+                                  description: Policy name
                                   type: string
                               type: object
                           type: object
                         type: array
+                      description: A map of different paths (alongside their Rules)
+                        for this Plan
                       type: object
                     security:
+                      description: Plan Security
                       type: string
                     securityDefinition:
+                      description: Plan Security definition
                       type: string
                     selectionRule:
+                      description: Plan selection rule
                       type: string
                     status:
                       default: PUBLISHED
+                      description: The plan status
                       enum:
                       - STAGING
                       - PUBLISHED
@@ -413,17 +530,20 @@ spec:
                       - DEPRECATED
                       type: string
                     tags:
+                      description: List of plan tags
                       items:
                         type: string
                       type: array
                     type:
                       default: API
+                      description: Plan type
                       enum:
                       - API
                       - CATALOG
                       type: string
                     validation:
                       default: MANUAL
+                      description: Plan validation strategy
                       enum:
                       - AUTO
                       - MANUAL
@@ -435,14 +555,19 @@ spec:
                   type: object
                 type: array
               primaryOwner:
+                description: Specify the primary member that owns the API
                 properties:
                   displayName:
+                    description: Member Display Name
                     type: string
                   email:
+                    description: Member email
                     type: string
                   id:
+                    description: Member ID
                     type: string
                   type:
+                    description: Member type
                     type: string
                 required:
                 - displayName
@@ -451,44 +576,59 @@ spec:
                 - type
                 type: object
               properties:
+                description: List of Properties for the API
                 items:
                   properties:
                     encrypted:
+                      description: Property Encrypted or not?
                       type: boolean
                     key:
+                      description: Property Key
                       type: string
                     value:
+                      description: Property Value
                       type: string
                   type: object
                 type: array
               proxy:
+                description: The proxy of the API that specifies its VirtualHosts
+                  and Groups.
                 properties:
                   cors:
+                    description: Proxy Cors
                     properties:
                       allowCredentials:
+                        description: Access Control - Allow credentials or not
                         type: boolean
                       allowHeaders:
+                        description: Access Control - List of allowed headers
                         items:
                           type: string
                         type: array
                       allowMethods:
+                        description: Access Control - List of allowed methods
                         items:
                           type: string
                         type: array
                       allowOrigin:
+                        description: Access Control -  List of Allowed origins
                         items:
                           type: string
                         type: array
                       enabled:
+                        description: Indicate if the cors enabled or not
                         type: boolean
                       exposeHeaders:
+                        description: Access Control - List of Exposed Headers
                         items:
                           type: string
                         type: array
                       maxAge:
+                        description: Access Control -  Max age
                         type: integer
                       runPolicies:
                         default: false
+                        description: Run policies or not
                         type: boolean
                     required:
                     - allowCredentials
@@ -496,69 +636,99 @@ spec:
                     - maxAge
                     type: object
                   failover:
+                    description: Proxy Failover
                     properties:
                       cases:
+                        description: List of Failover cases
                         items:
                           type: string
                         type: array
                       maxAttempts:
+                        description: Maximum number of attempts
                         type: integer
                       retryTimeout:
+                        description: Retry timeout
                         format: int64
                         type: integer
                     type: object
                   groups:
+                    description: List of endpoint groups of the proxy
                     items:
                       properties:
                         endpoints:
+                          description: List of Endpoints belonging to this group
                           items:
                             properties:
                               '-':
+                                description: The status of the endpoint (Down, TransitionallyDown,
+                                  TransitionallyUp, Up)
                                 type: integer
                               backup:
                                 default: false
+                                description: Indicate that this ia a back-end endpoint
                                 type: boolean
                               headers:
+                                description: List of headers needed for this endpoint
                                 items:
                                   properties:
                                     name:
+                                      description: The HTTP header name
                                       type: string
                                     value:
+                                      description: The HTTP header value
                                       type: string
                                   type: object
                                 type: array
                               healthcheck:
+                                description: Specify EndpointHealthCheck service settings
                                 properties:
                                   enabled:
                                     default: false
+                                    description: Service is enabled or not?
                                     type: boolean
                                   inherit:
+                                    description: Is service inherited or not?
                                     type: boolean
                                   name:
+                                    description: Service name
                                     type: string
                                   schedule:
+                                    description: Schedule
                                     type: string
                                   steps:
+                                    description: List of health check steps
                                     items:
                                       properties:
                                         name:
+                                          description: Health Check Step Name
                                           type: string
                                         request:
+                                          description: Health Check Step Request
                                           properties:
                                             body:
+                                              description: Health Check Request Body
                                               type: string
                                             fromRoot:
+                                              description: If true, the health check
+                                                request will be issued without prepending
+                                                the context path of the API.
                                               type: boolean
                                             headers:
+                                              description: List of HTTP headers to
+                                                include in the health check request
                                               items:
                                                 properties:
                                                   name:
+                                                    description: The HTTP header name
                                                     type: string
                                                   value:
+                                                    description: The HTTP header value
                                                     type: string
                                                 type: object
                                               type: array
                                             method:
+                                              description: The HTTP method to use
+                                                when issuing the health check request
                                               enum:
                                               - GET
                                               - POST
@@ -572,11 +742,14 @@ spec:
                                               - OTHER
                                               type: string
                                             path:
+                                              description: The path of the endpoint
+                                                handling the health check request
                                               type: string
                                           required:
                                           - fromRoot
                                           type: object
                                         response:
+                                          description: Health Check Step Response
                                           properties:
                                             assertions:
                                               items:
@@ -590,115 +763,188 @@ spec:
                                 - inherit
                                 type: object
                               http:
+                                description: Custom HTTP client options used for this
+                                  endpoint
                                 properties:
                                   clearTextUpgrade:
+                                    description: Should HTTP/2 clear text upgrade
+                                      be used or not ?
                                     type: boolean
                                   connectTimeout:
+                                    description: Connection timeout of the http connection
                                     format: int64
                                     type: integer
                                   followRedirects:
+                                    description: Should HTTP redirects be followed
+                                      or not ?
                                     type: boolean
                                   idleTimeout:
+                                    description: Idle Timeout for the http connection
                                     format: int64
                                     type: integer
                                   keepAlive:
+                                    description: Should keep alive be used for the
+                                      HTTP connection ?
                                     type: boolean
                                   maxConcurrentConnections:
+                                    description: HTTP max concurrent connections
                                     type: integer
                                   pipelining:
+                                    description: Should HTTP/1.1 pipelining be used
+                                      for the connection or not ?
                                     type: boolean
                                   readTimeout:
+                                    description: Read timeout
                                     format: int64
                                     type: integer
                                   useCompression:
+                                    description: Should compression be used or not
+                                      ?
                                     type: boolean
                                   version:
+                                    description: HTTP Protocol Version (Possible values
+                                      Http1 or Http2)
                                     type: string
                                 type: object
                               inherit:
+                                description: Is endpoint inherited or not
                                 type: boolean
                               name:
+                                description: Name of the endpoint
                                 type: string
                               proxy:
+                                description: Configure the HTTP Proxy settings to
+                                  reach target if needed
                                 properties:
                                   enabled:
+                                    description: Specifies that the HTTP connection
+                                      will be established through a proxy
                                     type: boolean
                                   host:
+                                    description: Proxy host name
                                     type: string
                                   password:
+                                    description: The HTTP proxy password (if the proxy
+                                      requires authentication)
                                     type: string
                                   port:
+                                    description: The HTTP proxy port
                                     type: integer
                                   type:
+                                    description: The HTTP proxy type (possible values
+                                      Http, Socks4, Socks5)
                                     type: string
                                   useSystemProxy:
+                                    description: If true, the proxy defined at the
+                                      system level will be used
                                     type: boolean
                                   username:
+                                    description: The HTTP proxy username (if the proxy
+                                      requires authentication)
                                     type: string
                                 type: object
                               ssl:
+                                description: Custom HTTP SSL client options used for
+                                  this endpoint
                                 properties:
                                   hostnameVerifier:
+                                    description: Verify Hostname when establishing
+                                      connection
                                     type: boolean
                                   keyStore:
+                                    description: KeyStore type (possible values PEM,
+                                      PKCS12, JKS)
                                     properties:
                                       type:
+                                        description: The KeyStore type to use (possible
+                                          values are PEM, PKCS12, JKS)
                                         type: string
                                     type: object
                                   trustAll:
+                                    description: Whether to trust all issuers or not
                                     type: boolean
                                   trustStore:
+                                    description: TrustStore type (possible values
+                                      PEM, PKCS12, JKS)
                                     properties:
                                       type:
+                                        description: The TrustStore type to use (possible
+                                          values are PEM, PKCS12, JKS)
                                         type: string
                                     type: object
                                 type: object
                               target:
+                                description: The end target of this endpoint (backend)
                                 type: string
                               tenants:
+                                description: The endpoint tenants
                                 items:
                                   type: string
                                 type: array
                               type:
+                                description: The type of endpoint (HttpEndpointType
+                                  or GrpcEndpointType)
                                 type: string
                               weight:
+                                description: Endpoint weight used for load-balancing
                                 type: integer
                             type: object
                           type: array
                         headers:
                           additionalProperties:
                             type: string
+                          description: List of headers needed for this EndpointGroup
                           type: object
                         http:
+                          description: Custom HTTP SSL client options used for this
+                            EndpointGroup
                           properties:
                             clearTextUpgrade:
+                              description: Should HTTP/2 clear text upgrade be used
+                                or not ?
                               type: boolean
                             connectTimeout:
+                              description: Connection timeout of the http connection
                               format: int64
                               type: integer
                             followRedirects:
+                              description: Should HTTP redirects be followed or not
+                                ?
                               type: boolean
                             idleTimeout:
+                              description: Idle Timeout for the http connection
                               format: int64
                               type: integer
                             keepAlive:
+                              description: Should keep alive be used for the HTTP
+                                connection ?
                               type: boolean
                             maxConcurrentConnections:
+                              description: HTTP max concurrent connections
                               type: integer
                             pipelining:
+                              description: Should HTTP/1.1 pipelining be used for
+                                the connection or not ?
                               type: boolean
                             readTimeout:
+                              description: Read timeout
                               format: int64
                               type: integer
                             useCompression:
+                              description: Should compression be used or not ?
                               type: boolean
                             version:
+                              description: HTTP Protocol Version (Possible values
+                                Http1 or Http2)
                               type: string
                           type: object
                         load_balancing:
+                          description: The LoadBalancer Type
                           properties:
                             type:
                               default: ROUND_ROBIN
+                              description: Type of the LoadBalancer (RoundRobin, Random,
+                                WeightedRoundRobin, WeightedRandom)
                               enum:
                               - ROUND_ROBIN
                               - RANDOM
@@ -707,41 +953,64 @@ spec:
                               type: string
                           type: object
                         name:
+                          description: EndpointGroup name
                           type: string
                         proxy:
+                          description: Configure the HTTP Proxy settings for this
+                            EndpointGroup if needed
                           properties:
                             enabled:
+                              description: Specifies that the HTTP connection will
+                                be established through a proxy
                               type: boolean
                             host:
+                              description: Proxy host name
                               type: string
                             password:
+                              description: The HTTP proxy password (if the proxy requires
+                                authentication)
                               type: string
                             port:
+                              description: The HTTP proxy port
                               type: integer
                             type:
+                              description: The HTTP proxy type (possible values Http,
+                                Socks4, Socks5)
                               type: string
                             useSystemProxy:
+                              description: If true, the proxy defined at the system
+                                level will be used
                               type: boolean
                             username:
+                              description: The HTTP proxy username (if the proxy requires
+                                authentication)
                               type: string
                           type: object
                         services:
+                          description: Specify different Endpoint Services
                           properties:
                             discovery:
+                              description: Endpoint Discovery Service
                               properties:
                                 configuration:
+                                  description: Configuration, arbitrary map of key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 enabled:
                                   default: false
+                                  description: Service is enabled or not?
                                   type: boolean
                                 name:
+                                  description: Service name
                                   type: string
                                 provider:
+                                  description: Provider name
                                   type: string
                                 secondary:
+                                  description: Is it secondary or not?
                                   type: boolean
                                 tenants:
+                                  description: List of tenants
                                   items:
                                     type: string
                                   type: array
@@ -749,54 +1018,77 @@ spec:
                               - enabled
                               type: object
                             dynamic-property:
+                              description: Dynamic Property Service
                               properties:
                                 configuration:
+                                  description: Configuration, arbitrary map of key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 enabled:
                                   default: false
+                                  description: Service is enabled or not?
                                   type: boolean
                                 name:
+                                  description: Service name
                                   type: string
                                 provider:
+                                  description: Provider
                                   enum:
                                   - HTTP
                                   type: string
                                 schedule:
+                                  description: Schedule
                                   type: string
                               required:
                               - enabled
                               type: object
                             health-check:
+                              description: Health Check Service
                               properties:
                                 enabled:
                                   default: false
+                                  description: Service is enabled or not?
                                   type: boolean
                                 name:
+                                  description: Service name
                                   type: string
                                 schedule:
+                                  description: Schedule
                                   type: string
                                 steps:
+                                  description: List of health check steps
                                   items:
                                     properties:
                                       name:
+                                        description: Health Check Step Name
                                         type: string
                                       request:
+                                        description: Health Check Step Request
                                         properties:
                                           body:
+                                            description: Health Check Request Body
                                             type: string
                                           fromRoot:
+                                            description: If true, the health check
+                                              request will be issued without prepending
+                                              the context path of the API.
                                             type: boolean
                                           headers:
+                                            description: List of HTTP headers to include
+                                              in the health check request
                                             items:
                                               properties:
                                                 name:
+                                                  description: The HTTP header name
                                                   type: string
                                                 value:
+                                                  description: The HTTP header value
                                                   type: string
                                               type: object
                                             type: array
                                           method:
+                                            description: The HTTP method to use when
+                                              issuing the health check request
                                             enum:
                                             - GET
                                             - POST
@@ -810,11 +1102,14 @@ spec:
                                             - OTHER
                                             type: string
                                           path:
+                                            description: The path of the endpoint
+                                              handling the health check request
                                             type: string
                                         required:
                                         - fromRoot
                                         type: object
                                       response:
+                                        description: Health Check Step Response
                                         properties:
                                           assertions:
                                             items:
@@ -828,19 +1123,31 @@ spec:
                               type: object
                           type: object
                         ssl:
+                          description: Custom HTTP SSL client options used for this
+                            EndpointGroup
                           properties:
                             hostnameVerifier:
+                              description: Verify Hostname when establishing connection
                               type: boolean
                             keyStore:
+                              description: KeyStore type (possible values PEM, PKCS12,
+                                JKS)
                               properties:
                                 type:
+                                  description: The KeyStore type to use (possible
+                                    values are PEM, PKCS12, JKS)
                                   type: string
                               type: object
                             trustAll:
+                              description: Whether to trust all issuers or not
                               type: boolean
                             trustStore:
+                              description: TrustStore type (possible values PEM, PKCS12,
+                                JKS)
                               properties:
                                 type:
+                                  description: The TrustStore type to use (possible
+                                    values are PEM, PKCS12, JKS)
                                   type: string
                               type: object
                           type: object
@@ -849,8 +1156,11 @@ spec:
                   logging:
                     properties:
                       condition:
+                        description: The logging condition (supports EL expressions)
                         type: string
                       content:
+                        description: Which part of the request/response should be
+                          logged ?
                         enum:
                         - NONE
                         - HEADERS
@@ -858,6 +1168,9 @@ spec:
                         - HEADERS_PAYLOADS
                         type: string
                       mode:
+                        description: The logging mode. CLIENT identifies the inbound
+                          request issued to the gateway, while PROXY identifies the
+                          request issued to the upstream service.
                         enum:
                         - NONE
                         - CLIENT
@@ -865,6 +1178,8 @@ spec:
                         - CLIENT_PROXY
                         type: string
                       scope:
+                        description: The logging scope (which phase of the request
+                          roundtrip should be included in each log entry.
                         enum:
                         - NONE
                         - REQUEST
@@ -877,28 +1192,39 @@ spec:
                   strip_context_path:
                     type: boolean
                   virtual_hosts:
+                    description: list of Virtual hosts fot the proxy
                     items:
                       properties:
                         host:
+                          description: Host name
                           type: string
                         override_entrypoint:
+                          description: Indicate if Entrypoint should be overridden
+                            or not
                           type: boolean
                         path:
+                          description: Path
                           type: string
                       type: object
                     type: array
                 type: object
               resources:
+                description: Resources can be either inlined or reference the namespace
+                  and name of an <a href="#apiresource">existing API resource definition</a>.
                 items:
                   properties:
                     configuration:
+                      description: Resource Configuration, arbitrary map of key-values
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                     enabled:
+                      description: Resource Enabled or not?
                       type: boolean
                     name:
+                      description: Resource Name
                       type: string
                     ref:
+                      description: Reference to a resource
                       properties:
                         name:
                           type: string
@@ -908,6 +1234,7 @@ spec:
                       - name
                       type: object
                     type:
+                      description: Resource Type
                       type: string
                   type: object
                 type: array
@@ -916,33 +1243,47 @@ spec:
                   additionalProperties:
                     properties:
                       body:
+                        description: Response Template body
                         type: string
                       headers:
                         additionalProperties:
                           type: string
+                        description: Response Template headers, arbitrary map of string
+                          key-value headers
                         type: object
                       status:
+                        description: Response Template status code
                         type: integer
                     type: object
                   type: object
+                description: A list of Response Templates for the API
                 type: object
               services:
+                description: Contains different services for the API (EndpointDiscovery,
+                  HealthCheck ...)
                 properties:
                   discovery:
+                    description: Endpoint Discovery Service
                     properties:
                       configuration:
+                        description: Configuration, arbitrary map of key-values
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       enabled:
                         default: false
+                        description: Service is enabled or not?
                         type: boolean
                       name:
+                        description: Service name
                         type: string
                       provider:
+                        description: Provider name
                         type: string
                       secondary:
+                        description: Is it secondary or not?
                         type: boolean
                       tenants:
+                        description: List of tenants
                         items:
                           type: string
                         type: array
@@ -950,54 +1291,77 @@ spec:
                     - enabled
                     type: object
                   dynamic-property:
+                    description: Dynamic Property Service
                     properties:
                       configuration:
+                        description: Configuration, arbitrary map of key-values
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       enabled:
                         default: false
+                        description: Service is enabled or not?
                         type: boolean
                       name:
+                        description: Service name
                         type: string
                       provider:
+                        description: Provider
                         enum:
                         - HTTP
                         type: string
                       schedule:
+                        description: Schedule
                         type: string
                     required:
                     - enabled
                     type: object
                   health-check:
+                    description: Health Check Service
                     properties:
                       enabled:
                         default: false
+                        description: Service is enabled or not?
                         type: boolean
                       name:
+                        description: Service name
                         type: string
                       schedule:
+                        description: Schedule
                         type: string
                       steps:
+                        description: List of health check steps
                         items:
                           properties:
                             name:
+                              description: Health Check Step Name
                               type: string
                             request:
+                              description: Health Check Step Request
                               properties:
                                 body:
+                                  description: Health Check Request Body
                                   type: string
                                 fromRoot:
+                                  description: If true, the health check request will
+                                    be issued without prepending the context path
+                                    of the API.
                                   type: boolean
                                 headers:
+                                  description: List of HTTP headers to include in
+                                    the health check request
                                   items:
                                     properties:
                                       name:
+                                        description: The HTTP header name
                                         type: string
                                       value:
+                                        description: The HTTP header value
                                         type: string
                                     type: object
                                   type: array
                                 method:
+                                  description: The HTTP method to use when issuing
+                                    the health check request
                                   enum:
                                   - GET
                                   - POST
@@ -1011,11 +1375,14 @@ spec:
                                   - OTHER
                                   type: string
                                 path:
+                                  description: The path of the endpoint handling the
+                                    health check request
                                   type: string
                               required:
                               - fromRoot
                               type: object
                             response:
+                              description: Health Check Step Response
                               properties:
                                 assertions:
                                   items:
@@ -1030,11 +1397,14 @@ spec:
                 type: object
               state:
                 default: STARTED
+                description: The state of API (setting the value to `STOPPED` will
+                  make the API un-reachable from the gateway)
                 enum:
                 - STARTED
                 - STOPPED
                 type: string
               tags:
+                description: List of Tags of the API
                 items:
                   type: string
                 type: array
@@ -1042,6 +1412,8 @@ spec:
                 type: string
               visibility:
                 default: PRIVATE
+                description: Should the API be publicly available from the portal
+                  or not ?
                 enum:
                 - PUBLIC
                 - PRIVATE
@@ -1049,10 +1421,19 @@ spec:
             type: object
           status:
             description: ApiDefinitionStatus defines the observed state of API Definition.
+              If a management context has been defined, the `processingStatus` field
+              will indicate wether the API has been successfully synced with APIM
+              or not.
             properties:
               crossId:
+                description: The crossId field allows to identify an API definition
+                  across multiple environments. If not found in the spec, this field
+                  will be set in a predictable manner using the namespaced name of
+                  the API resource.
                 type: string
               environmentId:
+                description: The environment ID of the API in APIM. This field is
+                  only set if the API has been successfully synced with APIM.
                 type: string
               generation:
                 description: This field is kept for backward compatibility and shall
@@ -1061,15 +1442,20 @@ spec:
                 type: integer
               id:
                 description: The ID of the API definition in the Gravitee API Management
-                  instance (if an API context has been configured).
+                  instance. This field is set even if the API has not been synced
+                  with APIM.
                 type: string
               observedGeneration:
                 format: int64
                 type: integer
               organizationId:
+                description: The organization ID of the API in APIM. This field is
+                  only set if the API has been successfully synced with APIM.
                 type: string
               processingStatus:
-                description: The processing status of the API definition.
+                description: The processing status of the API definition. The value
+                  is either `Completed` or `Failed`. depending on the result of the
+                  resource reconciliation.
                 enum:
                 - Completed
                 - Failed
@@ -1112,25 +1498,39 @@ spec:
             description: ApiDefinitionSpec defines the desired state of ApiDefinition.
             properties:
               analytics:
+                description: API Analytics
                 properties:
                   enabled:
                     default: true
+                    description: Analytics Enabled or not?
                     type: boolean
                   logging:
+                    description: Analytics Logging
                     properties:
                       condition:
+                        description: The logging condition. This field is evaluated
+                          for HTTP requests and supports EL expressions.
                         type: string
                       content:
+                        description: Defines which component of the request should
+                          be included in the log payload.
                         properties:
                           headers:
+                            description: Should HTTP headers be logged or not ?
                             type: boolean
                           messageHeaders:
+                            description: Should message headers be logged or not ?
                             type: boolean
                           messageMetadata:
+                            description: Should message metadata be logged or not
+                              ?
                             type: boolean
                           messagePayload:
+                            description: Should message payloads be logged or not
+                              ?
                             type: boolean
                           payload:
+                            description: Should HTTP payloads be logged or not ?
                             type: boolean
                         required:
                         - headers
@@ -1140,22 +1540,39 @@ spec:
                         - payload
                         type: object
                       messageCondition:
+                        description: The logging message condition. This field is
+                          evaluated for messages and supports EL expressions.
                         type: string
                       mode:
+                        description: The logging mode defines which "hop" of the request
+                          roundtrip should be included in the log payload. This can
+                          be either the inbound request to the gateway, the request
+                          issued by the gateway to the upstream service, or both.
                         properties:
                           endpoint:
+                            description: If true, the request to the upstream service
+                              will be included in the log payload
                             type: boolean
                           entrypoint:
+                            description: If true, the inbound request to the gateway
+                              will be included in the log payload
                             type: boolean
                         required:
                         - endpoint
                         - entrypoint
                         type: object
                       phase:
+                        description: Defines which phase of the request roundtrip
+                          should be included in the log payload. This can be either
+                          the request phase, the response phase, or both.
                         properties:
                           request:
+                            description: Should the request phase of the request roundtrip
+                              be included in the log payload or not ?
                             type: boolean
                           response:
+                            description: Should the response phase of the request
+                              roundtrip be included in the log payload or not ?
                             type: boolean
                         required:
                         - request
@@ -1163,10 +1580,13 @@ spec:
                         type: object
                     type: object
                   sampling:
+                    description: Analytics Sampling
                     properties:
                       type:
+                        description: The sampling type to use
                         type: string
                       value:
+                        description: Sampling Value
                         type: string
                     required:
                     - type
@@ -1185,8 +1605,18 @@ spec:
                 - name
                 type: object
               crossId:
+                description: When promoting an API from one environment to the other,
+                  this ID identifies the API across those different environments.
+                  Setting this ID also allows to take control over an existing API
+                  on an APIM instance (by setting the same value as defined in APIM).
+                  If empty, a UUID will be generated based on the namespace and name
+                  of the resource.
                 type: string
               definitionContext:
+                description: The API Definition context is used to identify the Kubernetes
+                  origin of the API, and define whether the API definition should
+                  be synchronized from an API instance or from a config map created
+                  in the cluster (which is the default)
                 properties:
                   origin:
                     allOf:
@@ -1195,6 +1625,9 @@ spec:
                       - MANAGEMENT
                     - enum:
                       - KUBERNETES
+                    description: The definition context origin where the API definition
+                      is managed. The value is always `KUBERNETES` for an API managed
+                      by the operator.
                     type: string
                   syncFrom:
                     allOf:
@@ -1204,42 +1637,71 @@ spec:
                     - enum:
                       - KUBERNETES
                       - MANAGEMENT
+                    default: KUBERNETES
+                    description: The syncFrom field defines where the gateways should
+                      source the API definition from. If the value is `MANAGEMENT`,
+                      the API definition will be sourced from an APIM instance. This
+                      means that the API definition *must* hold a context reference
+                      in that case. Setting the value to `MANAGEMENT` allows to make
+                      an API definition available on gateways deployed across multiple
+                      clusters / regions. If the value is `KUBERNETES`, the API definition
+                      will be sourced from a config map. This means that only gateways
+                      deployed in the same cluster will be able to sync the API definition.
                     type: string
                 type: object
               definitionVersion:
                 default: V4
+                description: The definition version of the API.
                 enum:
                 - V4
                 type: string
               description:
+                description: API description
                 type: string
               endpointGroups:
+                description: List of Endpoint groups
                 items:
                   properties:
                     endpoints:
+                      description: List of endpoint for the group
                       items:
                         properties:
                           configuration:
+                            description: Endpoint Configuration, arbitrary map of
+                              key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           inheritConfiguration:
+                            description: Should endpoint group configuration be inherited
+                              or not ?
                             type: boolean
                           name:
+                            description: The endpoint name (this value should be unique
+                              across endpoints)
                             type: string
                           secondary:
+                            description: Endpoint is secondary or not?
                             type: boolean
                           services:
+                            description: Endpoint Services
                             properties:
                               healthCheck:
+                                description: Health check service
                                 properties:
                                   configuration:
+                                    description: Service Configuration, a map of arbitrary
+                                      key-values
                                     type: object
                                     x-kubernetes-preserve-unknown-fields: true
                                   enabled:
+                                    description: Is the service enabled or not ?
                                     type: boolean
                                   overrideConfiguration:
+                                    description: Service Override Configuration or
+                                      not?
                                     type: boolean
                                   type:
+                                    description: Service Type
                                     type: string
                                 required:
                                 - enabled
@@ -1247,15 +1709,20 @@ spec:
                                 type: object
                             type: object
                           sharedConfigurationOverride:
+                            description: Endpoint Configuration Override, arbitrary
+                              map of key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           tenants:
+                            description: List of endpoint tenants
                             items:
                               type: string
                             type: array
                           type:
+                            description: Endpoint Type
                             type: string
                           weight:
+                            description: Endpoint Weight
                             type: integer
                         required:
                         - inheritConfiguration
@@ -1265,34 +1732,51 @@ spec:
                     headers:
                       additionalProperties:
                         type: string
+                      description: Endpoint group headers, arbitrary map of key-values
                       type: object
                     http:
+                      description: Endpoint group http client options
                       properties:
                         clearTextUpgrade:
+                          description: Should HTTP/2 clear text upgrade be used or
+                            not ?
                           type: boolean
                         connectTimeout:
+                          description: Connection timeout of the http connection
                           format: int64
                           type: integer
                         followRedirects:
+                          description: Should HTTP redirects be followed or not ?
                           type: boolean
                         idleTimeout:
+                          description: Idle Timeout for the http connection
                           format: int64
                           type: integer
                         keepAlive:
+                          description: Should keep alive be used for the HTTP connection
+                            ?
                           type: boolean
                         maxConcurrentConnections:
+                          description: HTTP max concurrent connections
                           type: integer
                         pipelining:
+                          description: Should HTTP/1.1 pipelining be used for the
+                            connection or not ?
                           type: boolean
                         readTimeout:
+                          description: Read timeout
                           format: int64
                           type: integer
                         useCompression:
+                          description: Should compression be used or not ?
                           type: boolean
                         version:
+                          description: HTTP Protocol Version (Possible values Http1
+                            or Http2)
                           type: string
                       type: object
                     loadBalancer:
+                      description: Endpoint group load balancer
                       properties:
                         type:
                           default: ROUND_ROBIN
@@ -1306,34 +1790,48 @@ spec:
                       - type
                       type: object
                     name:
+                      description: Endpoint group name
                       type: string
                     services:
+                      description: Endpoint group services
                       properties:
                         discovery:
+                          description: Endpoint group discovery service
                           properties:
                             configuration:
+                              description: Service Configuration, a map of arbitrary
+                                key-values
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             enabled:
+                              description: Is the service enabled or not ?
                               type: boolean
                             overrideConfiguration:
+                              description: Service Override Configuration or not?
                               type: boolean
                             type:
+                              description: Service Type
                               type: string
                           required:
                           - enabled
                           - overrideConfiguration
                           type: object
                         healthCheck:
+                          description: Endpoint group health check service
                           properties:
                             configuration:
+                              description: Service Configuration, a map of arbitrary
+                                key-values
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             enabled:
+                              description: Is the service enabled or not ?
                               type: boolean
                             overrideConfiguration:
+                              description: Service Override Configuration or not?
                               type: boolean
                             type:
+                              description: Service Type
                               type: string
                           required:
                           - enabled
@@ -1341,26 +1839,40 @@ spec:
                           type: object
                       type: object
                     sharedConfiguration:
+                      description: Endpoint group shared configuration, arbitrary
+                        map of key-values
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                     ssl:
+                      description: Endpoint group http client SSL options
                       properties:
                         hostnameVerifier:
+                          description: Verify Hostname when establishing connection
                           type: boolean
                         keyStore:
+                          description: KeyStore type (possible values PEM, PKCS12,
+                            JKS)
                           properties:
                             type:
+                              description: The KeyStore type to use (possible values
+                                are PEM, PKCS12, JKS)
                               type: string
                           type: object
                         trustAll:
+                          description: Whether to trust all issuers or not
                           type: boolean
                         trustStore:
+                          description: TrustStore type (possible values PEM, PKCS12,
+                            JKS)
                           properties:
                             type:
+                              description: The TrustStore type to use (possible values
+                                are PEM, PKCS12, JKS)
                               type: string
                           type: object
                       type: object
                     type:
+                      description: Endpoint group type
                       type: string
                   required:
                   - name
@@ -1368,120 +1880,165 @@ spec:
                 minItems: 1
                 type: array
               flowExecution:
+                description: API Flow Execution
                 properties:
                   matchRequired:
+                    description: Is match required or not ? If set to true, a 404
+                      status response will be returned if no matching flow was found.
                     type: boolean
                   mode:
+                    description: The flow mode to use
                     type: string
                 required:
                 - matchRequired
                 type: object
               flows:
+                description: List of flows for the API
                 items:
                   properties:
                     enabled:
                       default: true
+                      description: Is flow enabled or not?
                       type: boolean
                     name:
+                      description: Flow name
                       type: string
                     publish:
+                      description: List of Publish flow steps
                       items:
                         properties:
                           condition:
+                            description: FlowStep condition
                             type: string
                           configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           description:
+                            description: FlowStep description
                             type: string
                           enabled:
                             default: true
+                            description: Indicate if this FlowStep is enabled or not
                             type: boolean
                           messageCondition:
+                            description: The message condition (supports EL expressions)
                             type: string
                           name:
+                            description: FlowStep name
                             type: string
                           policy:
+                            description: FlowStep policy
                             type: string
                         required:
                         - enabled
                         type: object
                       type: array
                     request:
+                      description: List of Request flow steps
                       items:
                         properties:
                           condition:
+                            description: FlowStep condition
                             type: string
                           configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           description:
+                            description: FlowStep description
                             type: string
                           enabled:
                             default: true
+                            description: Indicate if this FlowStep is enabled or not
                             type: boolean
                           messageCondition:
+                            description: The message condition (supports EL expressions)
                             type: string
                           name:
+                            description: FlowStep name
                             type: string
                           policy:
+                            description: FlowStep policy
                             type: string
                         required:
                         - enabled
                         type: object
                       type: array
                     response:
+                      description: List of Response flow steps
                       items:
                         properties:
                           condition:
+                            description: FlowStep condition
                             type: string
                           configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           description:
+                            description: FlowStep description
                             type: string
                           enabled:
                             default: true
+                            description: Indicate if this FlowStep is enabled or not
                             type: boolean
                           messageCondition:
+                            description: The message condition (supports EL expressions)
                             type: string
                           name:
+                            description: FlowStep name
                             type: string
                           policy:
+                            description: FlowStep policy
                             type: string
                         required:
                         - enabled
                         type: object
                       type: array
                     selectors:
+                      description: List of Flow selectors
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       type: array
                     subscribe:
+                      description: List of Subscribe flow steps
                       items:
                         properties:
                           condition:
+                            description: FlowStep condition
                             type: string
                           configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           description:
+                            description: FlowStep description
                             type: string
                           enabled:
                             default: true
+                            description: Indicate if this FlowStep is enabled or not
                             type: boolean
                           messageCondition:
+                            description: The message condition (supports EL expressions)
                             type: string
                           name:
+                            description: FlowStep name
                             type: string
                           policy:
+                            description: FlowStep policy
                             type: string
                         required:
                         - enabled
                         type: object
                       type: array
                     tags:
+                      description: List of tags
                       items:
                         type: string
                       type: array
@@ -1490,13 +2047,18 @@ spec:
                   type: object
                 type: array
               id:
+                description: The API ID. If empty, this field will take the value
+                  of the `metadata.uid` field of the resource.
                 type: string
               labels:
+                description: List of labels of the API
                 items:
                   type: string
                 type: array
               lifecycle_state:
                 default: CREATED
+                description: API life cycle state can be one of the values CREATED,
+                  PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
                 enum:
                 - CREATED
                 - PUBLISHED
@@ -1505,17 +2067,21 @@ spec:
                 - ARCHIVED
                 type: string
               listeners:
+                description: List of listeners for this API
                 items:
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
                 minItems: 1
                 type: array
               metadata:
+                description: List of API metadata entries
                 items:
                   properties:
                     defaultValue:
+                      description: MetaData Default value
                       type: string
                     format:
+                      description: MetaData Format
                       enum:
                       - STRING
                       - NUMERIC
@@ -1525,10 +2091,13 @@ spec:
                       - URL
                       type: string
                     key:
+                      description: MetaData Key
                       type: string
                     name:
+                      description: MetaData Name
                       type: string
                     value:
+                      description: MetaData Value
                       type: string
                   required:
                   - format
@@ -1537,132 +2106,191 @@ spec:
                   type: object
                 type: array
               name:
+                description: API name
                 type: string
               plans:
                 additionalProperties:
                   properties:
                     characteristics:
+                      description: List of plan characteristics
                       items:
                         type: string
                       type: array
                     comment_required:
+                      description: Indicate of comment is required for this plan or
+                        not
                       type: boolean
                     crossId:
+                      description: The plan Cross ID. This field is used to identify
+                        plans defined for an API that has been promoted between different
+                        environments.
                       type: string
                     definitionVersion:
+                      description: Plan definition version
                       type: string
                     description:
+                      description: Plan Description
                       type: string
                     excluded_groups:
+                      description: List of excluded groups for this plan
                       items:
                         type: string
                       type: array
                     flows:
+                      description: List of plan flows
                       items:
                         properties:
                           enabled:
                             default: true
+                            description: Is flow enabled or not?
                             type: boolean
                           name:
+                            description: Flow name
                             type: string
                           publish:
+                            description: List of Publish flow steps
                             items:
                               properties:
                                 condition:
+                                  description: FlowStep condition
                                   type: string
                                 configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 description:
+                                  description: FlowStep description
                                   type: string
                                 enabled:
                                   default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
                                   type: boolean
                                 messageCondition:
+                                  description: The message condition (supports EL
+                                    expressions)
                                   type: string
                                 name:
+                                  description: FlowStep name
                                   type: string
                                 policy:
+                                  description: FlowStep policy
                                   type: string
                               required:
                               - enabled
                               type: object
                             type: array
                           request:
+                            description: List of Request flow steps
                             items:
                               properties:
                                 condition:
+                                  description: FlowStep condition
                                   type: string
                                 configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 description:
+                                  description: FlowStep description
                                   type: string
                                 enabled:
                                   default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
                                   type: boolean
                                 messageCondition:
+                                  description: The message condition (supports EL
+                                    expressions)
                                   type: string
                                 name:
+                                  description: FlowStep name
                                   type: string
                                 policy:
+                                  description: FlowStep policy
                                   type: string
                               required:
                               - enabled
                               type: object
                             type: array
                           response:
+                            description: List of Response flow steps
                             items:
                               properties:
                                 condition:
+                                  description: FlowStep condition
                                   type: string
                                 configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 description:
+                                  description: FlowStep description
                                   type: string
                                 enabled:
                                   default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
                                   type: boolean
                                 messageCondition:
+                                  description: The message condition (supports EL
+                                    expressions)
                                   type: string
                                 name:
+                                  description: FlowStep name
                                   type: string
                                 policy:
+                                  description: FlowStep policy
                                   type: string
                               required:
                               - enabled
                               type: object
                             type: array
                           selectors:
+                            description: List of Flow selectors
                             items:
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             type: array
                           subscribe:
+                            description: List of Subscribe flow steps
                             items:
                               properties:
                                 condition:
+                                  description: FlowStep condition
                                   type: string
                                 configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
                                   type: object
                                   x-kubernetes-preserve-unknown-fields: true
                                 description:
+                                  description: FlowStep description
                                   type: string
                                 enabled:
                                   default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
                                   type: boolean
                                 messageCondition:
+                                  description: The message condition (supports EL
+                                    expressions)
                                   type: string
                                 name:
+                                  description: FlowStep name
                                   type: string
                                 policy:
+                                  description: FlowStep policy
                                   type: string
                               required:
                               - enabled
                               type: object
                             type: array
                           tags:
+                            description: List of tags
                             items:
                               type: string
                             type: array
@@ -1671,27 +2299,37 @@ spec:
                         type: object
                       type: array
                     id:
+                      description: Plan ID
                       type: string
                     mode:
+                      description: The plan mode
                       type: string
                     name:
+                      description: Plan name
                       type: string
                     order:
+                      description: Plan order
                       type: integer
                     security:
+                      description: Plan security
                       properties:
                         configuration:
+                          description: Plan security configuration, a map of arbitrary
+                            key-values
                           type: object
                           x-kubernetes-preserve-unknown-fields: true
                         type:
+                          description: Plan Security type
                           type: string
                       required:
                       - type
                       type: object
                     selectionRule:
+                      description: Plan selection rule
                       type: string
                     status:
                       default: PUBLISHED
+                      description: The plan status
                       enum:
                       - STAGING
                       - PUBLISHED
@@ -1699,17 +2337,20 @@ spec:
                       - DEPRECATED
                       type: string
                     tags:
+                      description: List of plan tags
                       items:
                         type: string
                       type: array
                     type:
                       default: API
+                      description: Plan type
                       enum:
                       - API
                       - CATALOG
                       type: string
                     validation:
                       default: MANUAL
+                      description: Plan validation strategy
                       enum:
                       - AUTO
                       - MANUAL
@@ -1718,16 +2359,22 @@ spec:
                   - description
                   - name
                   type: object
+                description: List of API plans
                 type: object
               primaryOwner:
+                description: Specify the primary member that owns the API
                 properties:
                   displayName:
+                    description: Member Display Name
                     type: string
                   email:
+                    description: Member email
                     type: string
                   id:
+                    description: Member ID
                     type: string
                   type:
+                    description: Member type
                     type: string
                 required:
                 - displayName
@@ -1736,27 +2383,37 @@ spec:
                 - type
                 type: object
               properties:
+                description: List of Properties for the API
                 items:
                   properties:
                     encrypted:
+                      description: Property Encrypted or not?
                       type: boolean
                     key:
+                      description: Property Key
                       type: string
                     value:
+                      description: Property Value
                       type: string
                   type: object
                 type: array
               resources:
+                description: Resources can be either inlined or reference the namespace
+                  and name of an <a href="#apiresource">existing API resource definition</a>.
                 items:
                   properties:
                     configuration:
+                      description: Resource Configuration, arbitrary map of key-values
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                     enabled:
+                      description: Resource Enabled or not?
                       type: boolean
                     name:
+                      description: Resource Name
                       type: string
                     ref:
+                      description: Reference to a resource
                       properties:
                         name:
                           type: string
@@ -1766,6 +2423,7 @@ spec:
                       - name
                       type: object
                     type:
+                      description: Resource Type
                       type: string
                   type: object
                 type: array
@@ -1774,28 +2432,39 @@ spec:
                   additionalProperties:
                     properties:
                       body:
+                        description: Response Template body
                         type: string
                       headers:
                         additionalProperties:
                           type: string
+                        description: Response Template headers, arbitrary map of string
+                          key-value headers
                         type: object
                       status:
+                        description: Response Template status code
                         type: integer
                     type: object
                   type: object
+                description: A list of Response Templates for the API
                 type: object
               services:
+                description: API Services
                 properties:
                   dynamicProperty:
+                    description: API dynamic property service
                     properties:
                       configuration:
+                        description: Service Configuration, a map of arbitrary key-values
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       enabled:
+                        description: Is the service enabled or not ?
                         type: boolean
                       overrideConfiguration:
+                        description: Service Override Configuration or not?
                         type: boolean
                       type:
+                        description: Service Type
                         type: string
                     required:
                     - enabled
@@ -1804,15 +2473,19 @@ spec:
                 type: object
               state:
                 default: STARTED
+                description: The state of API (setting the value to `STOPPED` will
+                  make the API un-reachable from the gateway)
                 enum:
                 - STARTED
                 - STOPPED
                 type: string
               tags:
+                description: List of Tags of the API
                 items:
                   type: string
                 type: array
               type:
+                description: Api Type (proxy or message)
                 enum:
                 - PROXY
                 - MESSAGE
@@ -1821,6 +2494,8 @@ spec:
                 type: string
               visibility:
                 default: PRIVATE
+                description: Should the API be publicly available from the portal
+                  or not ?
                 enum:
                 - PUBLIC
                 - PRIVATE
@@ -1832,24 +2507,31 @@ spec:
             description: ApiDefinitionStatus defines the observed state of API Definition.
             properties:
               crossId:
+                description: The Cross ID of the API definition if a management context
+                  has been defined to sync the API with an APIM instance
                 type: string
               environmentId:
+                description: The environment ID, if a management context has been
+                  defined to sync the API with an APIM instance
                 type: string
               id:
-                description: The ID of the API definition in the Gravitee API Management
-                  instance (if an API context has been configured).
+                description: The ID of the API definition if a management context
+                  has been defined to sync the API with an APIM instance
                 type: string
               observedGeneration:
+                description: Last generation of the CRD resource
                 format: int64
                 type: integer
               organizationId:
+                description: The organisation ID, if a management context has been
+                  defined to sync the API with an APIM instance
                 type: string
               plans:
                 additionalProperties:
                   type: string
                 description: This field is used to store the list of plans that have
-                  been created for the API definition. Especially when the API is
-                  synced with an APIM instance
+                  been created for the API definition if a management context has
+                  been defined to sync the API with an APIM instance
                 type: object
               processingStatus:
                 description: The processing status of the API definition.

@@ -27,16 +27,33 @@ const (
 )
 
 type Endpoint struct {
+	// The endpoint name (this value should be unique across endpoints)
 	Name string `json:"name,omitempty"`
+
 	// +kubebuilder:validation:Required
-	Type           string                  `json:"type,omitempty"`
-	Weight         int                     `json:"weight,omitempty"`
-	Inherit        bool                    `json:"inheritConfiguration"`
-	Config         *utils.GenericStringMap `json:"configuration,omitempty"`
+	// Endpoint Type
+	Type string `json:"type,omitempty"`
+
+	// Endpoint Weight
+	Weight int `json:"weight,omitempty"`
+
+	// Should endpoint group configuration be inherited or not ?
+	Inherit bool `json:"inheritConfiguration"`
+
+	// Endpoint Configuration, arbitrary map of key-values
+	Config *utils.GenericStringMap `json:"configuration,omitempty"`
+
+	// Endpoint Configuration Override, arbitrary map of key-values
 	ConfigOverride *utils.GenericStringMap `json:"sharedConfigurationOverride,omitempty"`
-	Services       *EndpointServices       `json:"services,omitempty"`
-	Secondary      bool                    `json:"secondary"`
-	Tenants        []string                `json:"tenants,omitempty"`
+
+	// Endpoint Services
+	Services *EndpointServices `json:"services,omitempty"`
+
+	// Endpoint is secondary or not?
+	Secondary bool `json:"secondary"`
+
+	// List of endpoint tenants
+	Tenants []string `json:"tenants,omitempty"`
 }
 
 func NewHttpEndpoint(name string) *Endpoint {
@@ -73,15 +90,24 @@ func NewLoadBalancer(algo LoadBalancerType) *LoadBalancer {
 
 type EndpointGroup struct {
 	// +kubebuilder:validation:Required
-	Name                 string                     `json:"name"`
-	Type                 string                     `json:"type,omitempty"`
-	LoadBalancer         *LoadBalancer              `json:"loadBalancer,omitempty"`
-	SharedConfig         *utils.GenericStringMap    `json:"sharedConfiguration,omitempty"`
-	Endpoints            []*Endpoint                `json:"endpoints,omitempty"`
-	Services             *EndpointGroupServices     `json:"services,omitempty"`
-	HttpClientOptions    *base.HttpClientOptions    `json:"http,omitempty"`
+	// Endpoint group name
+	Name string `json:"name"`
+	// Endpoint group type
+	Type string `json:"type,omitempty"`
+	// Endpoint group load balancer
+	LoadBalancer *LoadBalancer `json:"loadBalancer,omitempty"`
+	// Endpoint group shared configuration, arbitrary map of key-values
+	SharedConfig *utils.GenericStringMap `json:"sharedConfiguration,omitempty"`
+	// List of endpoint for the group
+	Endpoints []*Endpoint `json:"endpoints,omitempty"`
+	// Endpoint group services
+	Services *EndpointGroupServices `json:"services,omitempty"`
+	// Endpoint group http client options
+	HttpClientOptions *base.HttpClientOptions `json:"http,omitempty"`
+	// Endpoint group http client SSL options
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
-	Headers              map[string]string          `json:"headers,omitempty"`
+	// Endpoint group headers, arbitrary map of key-values
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 func NewHttpEndpointGroup(name string) *EndpointGroup {

@@ -23,48 +23,92 @@ const (
 )
 
 type TrustStore struct {
+	// The TrustStore type to use (possible values are PEM, PKCS12, JKS)
 	TrustStoreType KeyStoreType `json:"type,omitempty"`
 }
 
 type KeyStore struct {
+	// The KeyStore type to use (possible values are PEM, PKCS12, JKS)
 	KeyStoreType KeyStoreType `json:"type,omitempty"`
 }
 type PEMTrustStore struct {
-	Type    KeyStoreType `json:"type,omitempty"`
-	Path    string       `json:"path,omitempty"`
-	Content string       `json:"content,omitempty"`
+	// The TrustStore type (should be set to PEM in that case)
+	Type KeyStoreType `json:"type,omitempty"`
+
+	// The path to the TrustStore
+	Path string `json:"path,omitempty"`
+
+	// The base64 encoded trustStore content, if not relying on a path to a file
+	Content string `json:"content,omitempty"`
 }
 
 type PKCS12TrustStore struct {
-	Type     KeyStoreType `json:"type,omitempty"`
-	Path     string       `json:"path,omitempty"`
-	Content  string       `json:"content,omitempty"`
-	Password string       `json:"password,omitempty"`
+	// // The trustStore type (should be set to PKCS12 in that case)
+	Type KeyStoreType `json:"type,omitempty"`
+
+	// The TrustStore path
+	Path string `json:"path,omitempty"`
+
+	// The base64 encoded trustStore content, if not relying on a path to a file
+	Content string `json:"content,omitempty"`
+
+	// TrustStore password
+	Password string `json:"password,omitempty"`
 }
 type JKSTrustStore struct {
-	Type     KeyStoreType `json:"type,omitempty"`
-	Path     string       `json:"path,omitempty"`
-	Content  string       `json:"content,omitempty"`
-	Password string       `json:"password,omitempty"`
+	// The TrustStore type (should be JKS in that case)
+	Type KeyStoreType `json:"type,omitempty"`
+
+	// TrustStore path
+	Path string `json:"path,omitempty"`
+
+	// The base64 encoded trustStore content, if not relying on a path to a file
+	Content string `json:"content,omitempty"`
+
+	// TrustStore password
+	Password string `json:"password,omitempty"`
 }
 type PEMKeyStore struct {
-	Type        KeyStoreType `json:"type,omitempty"`
-	KeyPath     string       `json:"keyPath,omitempty"`
-	KeyContent  string       `json:"keyContent,omitempty"`
-	CertPath    string       `json:"certPath,omitempty"`
-	CertContent string       `json:"certContent,omitempty"`
+	// KeyStore type (should be PEM in that case)
+	Type KeyStoreType `json:"type,omitempty"`
+
+	// KeyStore key path
+	KeyPath string `json:"keyPath,omitempty"`
+
+	// The base64 encoded trustStore content, if not relying on a path to a file
+	KeyContent string `json:"keyContent,omitempty"`
+
+	// KeyStore cert path
+	CertPath string `json:"certPath,omitempty"`
+
+	// KeyStore cert content
+	CertContent string `json:"certContent,omitempty"`
 }
 
 type PKCS12KeyStore struct {
-	Type     KeyStoreType `json:"type,omitempty"`
-	Path     string       `json:"path,omitempty"`
-	Content  string       `json:"content,omitempty"`
-	Password string       `json:"password,omitempty"`
+	// KeyStore type (should be PKCS12 in that case)
+	Type KeyStoreType `json:"type,omitempty"`
+
+	// KeyStore path
+	Path string `json:"path,omitempty"`
+
+	// The base64 encoded trustStore content, if not relying on a path to a file
+	Content string `json:"content,omitempty"`
+
+	// KeyStore password
+	Password string `json:"password,omitempty"`
 }
 
 type JKSKeyStore struct {
-	Type     KeyStoreType `json:"type,omitempty"`
-	Path     string       `json:"path,omitempty"`
-	Content  string       `json:"content,omitempty"`
-	Password string       `json:"password,omitempty"`
+	// KeyStore type (should be JKS in that case)
+	Type KeyStoreType `json:"type,omitempty"`
+
+	// KeyStore path
+	Path string `json:"path,omitempty"`
+
+	// The base64 encoded trustStore content, if not relying on a path to a file
+	Content string `json:"content,omitempty"`
+
+	// KeyStore password
+	Password string `json:"password,omitempty"`
 }
