@@ -91,7 +91,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 		case *netV1.Ingress:
 			return isGraviteeIngress(t)
 		case *v1alpha1.ApiDefinition:
-			return t.GetLabels()[keys.IngressTemplateAnnotation] == "true"
+			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == "true"
 		case *corev1.Secret:
 			return t.Type == "kubernetes.io/tls"
 		default:
@@ -107,6 +107,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			if !reconcilable(e.ObjectNew) {
 				return false
 			}
+
 			if e.ObjectOld == nil || e.ObjectNew == nil {
 				return false
 			}
@@ -114,6 +115,12 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			// for some reasons "generation" is not set for the TLS secretes
 			if _, ok := e.ObjectNew.(*corev1.Secret); ok &&
 				e.ObjectOld.GetResourceVersion() != e.ObjectNew.GetResourceVersion() {
+				return true
+			}
+
+			// generation is not updated for annotations
+			if e.ObjectNew.GetAnnotations()[keys.IngressTemplateAnnotation] !=
+				e.ObjectOld.GetAnnotations()[keys.IngressTemplateAnnotation] {
 				return true
 			}
 
