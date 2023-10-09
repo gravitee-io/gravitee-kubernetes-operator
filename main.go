@@ -25,7 +25,9 @@ import (
 	"os"
 
 	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
@@ -59,6 +61,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -96,6 +99,7 @@ func main() {
 	}
 
 	opts.BindFlags(flag.CommandLine)
+
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
@@ -104,14 +108,18 @@ func main() {
 		metricsAddr = "0" // disables metrics
 	}
 
+	metrics := metricsserver.Options{BindAddress: metricsAddr}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		MetricsBindAddress:     metricsAddr,
-		Port:                   managerPort,
+		Scheme:  scheme,
+		Metrics: metrics,
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port: managerPort,
+		}),
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
-		Namespace:              env.Config.NS,
+		Cache:                  buildCacheOptions(env.Config.NS),
 	})
 
 	if err != nil {
@@ -151,6 +159,17 @@ func main() {
 	if startErr := mgr.Start(ctrl.SetupSignalHandler()); startErr != nil {
 		setupLog.Error(startErr, "problem running manager")
 		os.Exit(1)
+	}
+}
+
+func buildCacheOptions(ns string) cache.Options {
+	if ns == "" {
+		return cache.Options{}
+	}
+	return cache.Options{
+		DefaultNamespaces: map[string]cache.Config{
+			ns: {},
+		},
 	}
 }
 
