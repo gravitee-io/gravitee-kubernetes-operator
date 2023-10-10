@@ -102,8 +102,8 @@ var _ = Describe("Creating an Application", func() {
 				return internal.AssertApplicationStatusIsSet(createdApplication)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			expectedApiName := applicationFixture.Name
-			Expect(createdApplication.Name).Should(Equal(expectedApiName))
+			expectedApplicationName := applicationFixture.Name
+			Expect(createdApplication.Name).Should(Equal(expectedApplicationName))
 
 			Expect(createdApplication.Spec.Name).Should(Equal(applicationFixture.Spec.Name))
 			Expect(len(*createdApplication.Spec.ApplicationMetaData)).Should(Equal(2))

@@ -34,9 +34,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/onsi/gomega/gexec"
 
@@ -48,6 +50,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+	metricsServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -60,7 +63,7 @@ var ctx context.Context
 
 // Define utility constants for object names and testing timeouts/durations and intervals.
 const (
-	metricsAddr = ":10000"
+	metricsAddr = ":0"
 	probeAddr   = ":10001"
 	managerPort = 10002
 
@@ -86,10 +89,13 @@ var _ = SynchronizedBeforeSuite(func() {
 	//+kubebuilder:scaffold:scheme
 
 	k8sManager, err = ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme.Scheme,
-		Port:                   managerPort,
-		MetricsBindAddress:     metricsAddr,
+		Scheme: scheme.Scheme,
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port: managerPort,
+		}),
+		Metrics:                metricsServer.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
+		Cache:                  cache.Options{},
 	})
 
 	Expect(err).ToNot(HaveOccurred())

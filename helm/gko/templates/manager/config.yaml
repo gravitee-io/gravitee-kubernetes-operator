@@ -17,6 +17,14 @@ apiVersion: v1
 metadata:
   name: {{ .Values.manager.configMap.name }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 data:
   {{- if not .Values.manager.scope.cluster }}
   NAMESPACE: {{ .Release.Namespace }}
@@ -38,5 +46,5 @@ data:
   TEMPLATE_404_CONFIG_MAP_NAMESPACE: {{ $template404.namespace }}
   {{- end }}
   {{- if .Values.httpClient.insecureSkipCertVerify }}
-  INSECURE_SKIP_CERT_VERIFY: {{ .Values.httpClient.insecureSkipCertVerify }}
+  INSECURE_SKIP_CERT_VERIFY: "true"
   {{- end }}
