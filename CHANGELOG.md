@@ -1,3 +1,17 @@
+# [0.10.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.9.0...0.10.0) (2023-10-10)
+
+
+### Bug Fixes
+
+* **helm:** avoid conflicting type in manager config map ([700d9f6](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/700d9f6f455f74087936f3fe7b708e7e7c7fc780))
+* reconcile ingress when the template annotation is updated ([3040691](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/304069151b152f9d5b606ed3db42a3cb0563981f))
+
+
+### Features
+
+* allow custom manager image and tag ([ea3b120](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ea3b1201e1de5cc2d1790db5382a8704f3c5ab9e))
+* **helm:** add helm standard labels ([363064d](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/363064dd2c76bcc48a8dd2bd3b6fb3d5a9377cfb))
+
 # [0.9.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.8.4...0.9.0) (2023-10-06)
 
 
