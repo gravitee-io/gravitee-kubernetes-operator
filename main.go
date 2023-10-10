@@ -108,6 +108,10 @@ func main() {
 		metricsAddr = "0" // disables metrics
 	}
 
+	if env.Config.InsecureSkipVerify {
+		setupLog.Info("TLS verification is skipped for APIM HTTP client")
+	}
+
 	metrics := metricsserver.Options{BindAddress: metricsAddr}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
