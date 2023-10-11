@@ -1,0 +1,25 @@
+{
+  "type": "proxy",
+  "definitionVersion": "4.0.0",
+  "flowExecution": {
+    "mode": "default",
+    "matchRequired": false
+  },
+  "listeners": [
+    {
+      "type": "http",
+      "entrypoints": [
+        {
+          "type": "http-proxy",
+          "qos": "auto",
+          "configuration": {}
+        }
+      ],
+      "paths": [
+        {
+          "path": "/echo/"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "gravitee": "2.0.0",
+  "flow_mode": "DEFAULT",
+  "services": {
+    "dynamic-property": {
+      "enabled": false,
+      "schedule": "0 */4 * * * *",
+      "provider": "HTTP",
+      "configuration": {
+        "url": "http://properties.gravitee.io",
+        "specification": "[{\n  \"operation\": \"default\",\n  \"spec\": {}\n}]",
+        "method": "GET"
+      }
+    }
+  },
+  "proxy": {
+    "groups": [
+      {
+        "name": "default-group",
+        "load_balancing": {
+          "type": "ROUND_ROBIN"
+        },
+        "endpoints": [
+          {
+            "healthcheck": {
+              "schedule": "*/1 * * * * *",
+              "inherit": false,
+              "steps": [
+                {
+                  "request": {
+                    "path": "/_health",
+                    "headers": [
+                      {
+                        "name": "Accept",
+                        "value": "application/json"
+                      }
+                    ],
+                    "method": "GET",
+                    "fromRoot": false
+                  },
+                  "response": {
+                    "assertions": ["#response.status == 200"]
+                  }
+                }
+              ],
+              "enabled": true
+            },
+            "backup": false,
+            "inherit": true,
+            "name": "default",
+            "weight": 1,
+            "type": "http",
+            "target": "https://api.gravitee.io/echo"
+          }
+        ]
+      }
+    ]
+  }
+}
