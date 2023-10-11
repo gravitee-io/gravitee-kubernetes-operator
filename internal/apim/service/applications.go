@@ -20,7 +20,7 @@ import (
 
 	errors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
-	kModel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
@@ -81,7 +81,7 @@ func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.Appl
 	return application, nil
 }
 
-func (svc *Applications) CreateUpdate(method string, spec *kModel.Application) (*model.Application, error) {
+func (svc *Applications) CreateUpdate(method string, spec *application.Application) (*model.Application, error) {
 	url := svc.EnvTarget(applicationsPath)
 	if spec.ID != "" {
 		url = svc.EnvTarget(applicationsPath).WithPath(spec.ID)
@@ -106,7 +106,7 @@ func (svc *Applications) Delete(appId string) error {
 }
 
 func (svc *Applications) CreateUpdateMetadata(method string, appId string,
-	spec kModel.ApplicationMetaData) (*model.ApplicationMetaData, error) {
+	spec application.MetaData) (*model.ApplicationMetaData, error) {
 	url := svc.EnvTarget(applicationsPath).WithPath(appId).WithPath(metadataPath)
 	fun := svc.HTTP.Post
 	if method == http.MethodPut {

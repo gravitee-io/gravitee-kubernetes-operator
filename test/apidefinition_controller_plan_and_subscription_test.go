@@ -26,7 +26,8 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
@@ -150,12 +151,14 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Update ApiDefinition add ApiKey plan")
 
 			secondPlanCrossId := uuid.FromStrings("second-plan-cross-id")
-			updatedApiDefinition.Spec.Plans = append(savedApiDefinition.Spec.Plans, &model.Plan{
-				CrossId:  secondPlanCrossId,
-				Name:     "G.K.O. Second ApiKey",
-				Security: "API_KEY",
-				Status:   "PUBLISHED",
-			})
+			updatedApiDefinition.Spec.Plans = append(savedApiDefinition.Spec.Plans,
+				v2.NewPlan(
+					base.
+						NewPlan("G.K.O. Second ApiKey", "").
+						WithCrossID(secondPlanCrossId).
+						WithStatus(base.PublishedPlanStatus),
+				).WithSecurity("API_KEY"),
+			)
 
 			Eventually(func() error {
 				update := new(gio.ApiDefinition)
@@ -284,12 +287,13 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			By("Update ApiDefinition add KeyLess plan")
 			updatedApiDefinition := savedApiDefinition.DeepCopy()
 			keyLessPlanCrossId := uuid.FromStrings("key-less-plan-cross-id")
-			updatedApiDefinition.Spec.Plans = append(savedApiDefinition.Spec.Plans, &model.Plan{
-				CrossId:  keyLessPlanCrossId,
-				Name:     "G.K.O. KeyLess Plan",
-				Security: "KEY_LESS",
-				Status:   "PUBLISHED",
-			})
+			updatedApiDefinition.Spec.Plans = append(savedApiDefinition.Spec.Plans,
+				v2.NewPlan(
+					base.NewPlan("G.K.O. KeyLess Plan", "").
+						WithStatus(base.PublishedPlanStatus).
+						WithCrossID(keyLessPlanCrossId),
+				).WithSecurity("KEY_LESS"),
+			)
 
 			Eventually(func() error {
 				update := new(gio.ApiDefinition)

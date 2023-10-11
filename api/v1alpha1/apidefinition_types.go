@@ -17,7 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
@@ -31,8 +33,8 @@ import (
 // See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
 // +kubebuilder:object:generate=true
 type ApiDefinitionSpec struct {
-	model.Api `json:",inline"`
-	Context   *model.NamespacedName `json:"contextRef,omitempty"`
+	v2.Api  `json:",inline"`
+	Context *refs.NamespacedName `json:"contextRef,omitempty"`
 }
 
 // ApiDefinitionStatus defines the observed state of API Definition.
@@ -67,6 +69,7 @@ var _ list.Item = &ApiDefinition{}
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
 // +kubebuilder:resource:shortName=graviteeapis
 // ApiDefinition is the Schema for the apidefinitions API.
+// +kubebuilder:storageversion
 type ApiDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -124,14 +127,14 @@ func (api *ApiDefinition) GetOrGenerateCrossID() string {
 	return uuid.FromStrings(api.GetNamespacedName().String())
 }
 
-func (api *ApiDefinition) GetNamespacedName() model.NamespacedName {
-	return model.NamespacedName{Namespace: api.Namespace, Name: api.Name}
+func (api *ApiDefinition) GetNamespacedName() refs.NamespacedName {
+	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
 func (spec *ApiDefinitionSpec) SetDefinitionContext() {
-	spec.DefinitionContext = &model.DefinitionContext{
-		Mode:   model.ModeFullyManaged,
-		Origin: model.OriginKubernetes,
+	spec.DefinitionContext = &base.DefinitionContext{
+		Mode:   base.ModeFullyManaged,
+		Origin: base.OriginKubernetes,
 	}
 }
 

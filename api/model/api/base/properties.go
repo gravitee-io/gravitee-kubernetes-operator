@@ -12,23 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package base
 
-import "k8s.io/apimachinery/pkg/types"
-
-type NamespacedName struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace,omitempty"`
-}
-
-func NewNamespacedName(namespace, name string) NamespacedName {
-	return NamespacedName{Namespace: namespace, Name: name}
-}
-
-func (n NamespacedName) ToK8sType() types.NamespacedName {
-	return types.NamespacedName{Namespace: n.Namespace, Name: n.Name}
-}
-
-func (n NamespacedName) String() string {
-	return n.Namespace + "/" + n.Name
+type Property struct {
+	Key       string `json:"key,omitempty"`
+	Value     string `json:"value,omitempty"`
+	Encrypted bool   `json:"encrypted,omitempty"`
 }

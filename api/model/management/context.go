@@ -13,7 +13,11 @@
 // limitations under the License.
 
 // +kubebuilder:object:generate=true
-package model
+package management
+
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+)
 
 type Context struct {
 	// The URL of a management API instance
@@ -39,7 +43,7 @@ type Auth struct {
 	// The Basic credentials used to authenticate against the API Management instance.
 	Credentials *BasicAuth `json:"credentials,omitempty"`
 	// A secret reference holding either a bearer token or the user name and password used for basic authentication
-	SecretRef *NamespacedName `json:"secretRef,omitempty"`
+	SecretRef *refs.NamespacedName `json:"secretRef,omitempty"`
 }
 
 type BasicAuth struct {
@@ -61,7 +65,7 @@ func (c *Context) HasSecretRef() bool {
 	return c.Auth.SecretRef != nil
 }
 
-func (c *Context) SecretRef() *NamespacedName {
+func (c *Context) SecretRef() *refs.NamespacedName {
 	if !c.HasSecretRef() {
 		return nil
 	}
