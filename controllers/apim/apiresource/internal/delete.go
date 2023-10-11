@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -41,7 +41,7 @@ func Delete(
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := search.FindByFieldReferencing(
 		indexer.ResourceField,
-		model.NewNamespacedName(resource.Namespace, resource.Name),
+		refs.NewNamespacedName(resource.Namespace, resource.Name),
 		apis,
 	); err != nil {
 		err = fmt.Errorf("an error occurred while checking if the api resource is linked to an api definition: %w", err)

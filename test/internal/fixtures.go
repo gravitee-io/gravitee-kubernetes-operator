@@ -20,12 +20,12 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
-
 	netV1 "k8s.io/api/networking/v1"
 
 	"k8s.io/client-go/kubernetes/scheme"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
@@ -94,9 +94,9 @@ func (f *FixtureGenerator) NewFixtures(files FixtureFiles, transforms ...func(*F
 	}
 
 	if fixtures.Resource != nil {
-		fixtures.Api.Spec.Resources = []*model.ResourceOrRef{
+		fixtures.Api.Spec.Resources = []*base.ResourceOrRef{
 			{
-				Ref: &model.NamespacedName{
+				Ref: &refs.NamespacedName{
 					Name:      fixtures.Resource.Name,
 					Namespace: fixtures.Resource.Namespace,
 				},

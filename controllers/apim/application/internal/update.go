@@ -17,7 +17,7 @@ package internal
 import (
 	"net/http"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -115,7 +115,7 @@ func (d *Delegate) findMetadataKey(appMetadata *[]apimModel.ApplicationMetaData,
 	return ""
 }
 
-func (d *Delegate) metadataIsRemoved(metaData *[]model.ApplicationMetaData, name string) bool {
+func (d *Delegate) metadataIsRemoved(metaData *[]application.MetaData, name string) bool {
 	for _, md := range *metaData {
 		if md.Name == name {
 			return false

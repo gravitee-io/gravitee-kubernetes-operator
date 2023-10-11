@@ -27,9 +27,9 @@ import (
 	"github.com/pavlo-v-chernykh/keystore-go/v4"
 	core "k8s.io/api/core/v1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -72,7 +72,7 @@ var _ = Describe("Creating an ingress", func() {
 
 			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get" + fixtureGenerator.Suffix))
 			Expect(createdAPIDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
-				[]*model.HttpEndpoint{
+				[]*v2.Endpoint{
 					{
 						Name:   "rule01-path01",
 						Target: "http://httpbin.default.svc.cluster.local:8000",
@@ -115,7 +115,7 @@ var _ = Describe("Creating an ingress", func() {
 			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts).Should(HaveLen(3))
 
 			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts).Should(
-				Equal([]*model.VirtualHost{
+				Equal([]*v2.VirtualHost{
 					{
 						Host: "foo.example.com",
 						Path: "/ingress/foo" + fixtureGenerator.Suffix,
@@ -132,7 +132,7 @@ var _ = Describe("Creating an ingress", func() {
 			)
 
 			Expect(createdAPIDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
-				[]*model.HttpEndpoint{
+				[]*v2.Endpoint{
 					{
 						Name:   "rule01-path01",
 						Target: "http://httpbin-1.default.svc.cluster.local:8080",
@@ -236,7 +236,7 @@ var _ = Describe("Creating an ingress", func() {
 
 			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get-tls" + fixtureGenerator.Suffix))
 			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
-				[]*model.HttpEndpoint{
+				[]*v2.Endpoint{
 					{
 						Name:   "rule01-path01",
 						Target: "http://httpbin.default.svc.cluster.local:8000",

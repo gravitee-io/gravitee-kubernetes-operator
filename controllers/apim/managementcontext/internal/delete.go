@@ -17,7 +17,7 @@ package internal
 import (
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -39,7 +39,7 @@ func Delete(
 	apis := &gio.ApiDefinitionList{}
 	if err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.ContextField,
-		model.NewNamespacedName(instance.Namespace, instance.Name),
+		refs.NewNamespacedName(instance.Namespace, instance.Name),
 		apis,
 	); err != nil {
 		err = fmt.Errorf("an error occurred while checking if the management context is linked to an api definition: %w", err)
@@ -53,7 +53,7 @@ func Delete(
 	apps := &gio.ApplicationList{}
 	err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.AppContextField,
-		model.NewNamespacedName(instance.Namespace, instance.Name),
+		refs.NewNamespacedName(instance.Namespace, instance.Name),
 		apps,
 	)
 

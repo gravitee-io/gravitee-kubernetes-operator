@@ -23,7 +23,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	coreV1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
@@ -91,17 +92,18 @@ func checkData(template map[string]string) error {
 func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 	return &v1alpha1.ApiDefinition{
 		Spec: v1alpha1.ApiDefinitionSpec{
-			Api: model.Api{
-				Plans: []*model.Plan{
-					{
-						Name:     "Default keyless plan",
-						Security: "KEY_LESS",
-						Status:   "PUBLISHED",
-					},
+			Api: v2.Api{
+				Plans: []*v2.Plan{
+					v2.NewPlan(
+						base.NewPlan("Default keyless plan", "").
+							WithStatus(base.PublishedPlanStatus),
+					).WithSecurity("KEY_LESS"),
 				},
-				Version:     "1.0.0",
-				Description: "A default keyless API",
-				IsLocal:     true,
+				ApiBase: &base.ApiBase{
+					Description: "A default keyless API",
+					IsLocal:     true,
+				},
+				Version: "1.0.0",
 			},
 		},
 	}

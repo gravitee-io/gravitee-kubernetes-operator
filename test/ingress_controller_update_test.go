@@ -18,7 +18,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
@@ -154,11 +155,12 @@ var _ = Describe("Updating an ingress", func() {
 				By("update api template")
 
 				updatedAPITemplate := currentAPITemplate.DeepCopy()
-				updatedAPITemplate.Spec.Plans = append(updatedAPITemplate.Spec.Plans, &model.Plan{
-					Name:     "Default keyless plan",
-					Security: "KEY_LESS",
-					Status:   "PUBLISHED",
-				})
+				updatedAPITemplate.Spec.Plans = append(updatedAPITemplate.Spec.Plans,
+					v2.NewPlan(
+						base.NewPlan("Default keyless plan", "").
+							WithStatus(base.PublishedPlanStatus),
+					).WithSecurity("KEY_LESS"),
+				)
 
 				Eventually(func() error {
 					update := new(gio.ApiDefinition)

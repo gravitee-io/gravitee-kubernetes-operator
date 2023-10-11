@@ -17,14 +17,15 @@
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
 type ManagementContextSpec struct {
-	model.Context `json:",inline"`
+	management.Context `json:",inline"`
 }
 
 // ManagementContextStatus defines the observed state of an API Context.
@@ -45,8 +46,8 @@ type ManagementContext struct {
 	Status ManagementContextStatus `json:"status,omitempty"`
 }
 
-func (context *ManagementContext) GetNamespacedName() *model.NamespacedName {
-	return &model.NamespacedName{Namespace: context.Namespace, Name: context.Name}
+func (context *ManagementContext) GetNamespacedName() *refs.NamespacedName {
+	return &refs.NamespacedName{Namespace: context.Namespace, Name: context.Name}
 }
 
 // +kubebuilder:object:root=true
