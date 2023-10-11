@@ -1,0 +1,29 @@
+{
+  "type": "proxy",
+  "definitionVersion": "4.0.0",
+  "flowExecution": {
+    "mode": "default",
+    "matchRequired": false
+  },
+  "endpointGroups": [
+    {
+      "name": "default-group",
+      "type": "http-proxy",
+      "loadBalancer": {
+        "type": "round-robin"
+      },
+      "endpoints": [
+        {
+          "name": "default",
+          "type": "http-proxy",
+          "secondary": false,
+          "weight": 1,
+          "inheritConfiguration": true,
+          "configuration": {
+            "target": "https://api.gravitee.io/echo"
+          }
+        }
+      ]
+    }
+  ]
+}

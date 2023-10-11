@@ -1,0 +1,65 @@
+{
+  "definitionVersion": "4.0.0",
+  "type": "proxy",
+  "flowExecution": {
+    "mode": "default",
+    "matchRequired": false
+  },
+  "services": {
+    "dynamicProperty": {
+      "type": "http-dynamic-property",
+      "overrideConfiguration": false,
+      "configuration": {
+        "method": "GET",
+        "schedule": "0 */4 * * * *",
+        "specification": "[{\n  \"operation\": \"default\",\n  \"spec\": {}\n}]",
+        "url": "http://properties.gravitee.io"
+      },
+      "enabled": false
+    }
+  },
+  "endpointGroups": [
+    {
+      "name": "default-group",
+      "type": "http-proxy",
+      "loadBalancer": {
+        "type": "round-robin"
+      },
+      "endpoints": [
+        {
+          "name": "default",
+          "type": "http-proxy",
+          "weight": 1,
+          "inheritConfiguration": true,
+          "configuration": {
+            "target": "https://api.gravitee.io/echo"
+          },
+          "services": {
+            "healthCheck": {
+              "overrideConfiguration": true,
+              "configuration": {
+                "schedule": "*/1 * * * * *",
+                "headers": [
+                  {
+                    "name": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": "",
+                "overrideEndpointPath": false,
+                "method": "GET",
+                "failureThreshold": 1,
+                "assertion": "{#response.status == 200}",
+                "successThreshold": 1,
+                "target": "/_health"
+              },
+              "enabled": true,
+              "type": "http-health-check"
+            }
+          },
+          "secondary": false
+        }
+      ]
+    }
+  ]
+}
