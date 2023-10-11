@@ -17,7 +17,7 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -30,7 +30,7 @@ import (
 func getReferences(ctx context.Context, secret *v1.Secret, referenceType client.ObjectList) ([]runtime.Object, error) {
 	k8s := k8s.GetClient()
 
-	ref := model.NamespacedName{
+	ref := refs.NamespacedName{
 		Namespace: secret.Namespace,
 		Name:      secret.Name,
 	}
