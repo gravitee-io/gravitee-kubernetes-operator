@@ -19,7 +19,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/el"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
@@ -99,7 +101,7 @@ func (m *Mapper) Map(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio
 	cp.Spec.Proxy = buildProxy(ingress)
 	cp.Spec.Flows = m.buildFlows(ingress.Spec.Rules)
 	if apiDefinition.Spec.Flows != nil {
-		cp.Spec.FlowMode = model.DefaultFlowMode
+		cp.Spec.FlowMode = v2.DefaultFlowMode
 		cp.Spec.Flows = append(cp.Spec.Flows, apiDefinition.Spec.Flows...)
 	}
 	return cp
@@ -137,16 +139,16 @@ func buildApiCopy(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio.Ap
 	}
 }
 
-func (m *Mapper) buildFlows(rules []v1.IngressRule) []model.Flow {
-	flows := make([]model.Flow, 0)
+func (m *Mapper) buildFlows(rules []v1.IngressRule) []v2.Flow {
+	flows := make([]v2.Flow, 0)
 	for ruleIndex, rule := range rules {
 		flows = append(flows, m.buildPathFlows(rule, ruleIndex)...)
 	}
 	return append(flows, m.buildNotFoundFlow())
 }
 
-func (m *Mapper) buildPathFlows(rule v1.IngressRule, ruleIndex int) []model.Flow {
-	flows := make([]model.Flow, 0)
+func (m *Mapper) buildPathFlows(rule v1.IngressRule, ruleIndex int) []v2.Flow {
+	flows := make([]v2.Flow, 0)
 	for i := range rule.HTTP.Paths {
 		path := rule.HTTP.Paths[i]
 		flows = append(flows, m.buildRoutingFlow(rule, newIndexedPath(&path, ruleIndex, i)))
@@ -159,8 +161,8 @@ func (m *Mapper) buildPathFlows(rule v1.IngressRule, ruleIndex int) []model.Flow
 // based on the host of the rule. If no host is defined for the rule, then
 // the condition will check that none of the host we have processed matches the Host header
 // of the incoming request.
-func (m *Mapper) buildRoutingFlow(rule v1.IngressRule, path *indexedPath) model.Flow {
-	flow := model.Flow{Enabled: true}
+func (m *Mapper) buildRoutingFlow(rule v1.IngressRule, path *indexedPath) v2.Flow {
+	flow := v2.Flow{Enabled: true}
 	flow.Name = rule.Host + path.Path
 	flow.PathOperator = buildPathOperator(path)
 	flow.Pre = buildRouting(path)
@@ -174,21 +176,21 @@ func (m *Mapper) buildRoutingFlow(rule v1.IngressRule, path *indexedPath) model.
 	return flow
 }
 
-func buildPathOperator(path *indexedPath) *model.PathOperator {
+func buildPathOperator(path *indexedPath) *v2.PathOperator {
 	if *path.PathType == v1.PathTypeExact {
-		return &model.PathOperator{
-			Operator: model.EqualsOperator,
+		return &v2.PathOperator{
+			Operator: base.EqualsOperator,
 			Path:     rootPath,
 		}
 	}
-	return &model.PathOperator{
-		Operator: model.StartWithOperator,
+	return &v2.PathOperator{
+		Operator: base.StartWithOperator,
 		Path:     rootPath,
 	}
 }
 
-func buildRouting(path *indexedPath) []model.FlowStep {
-	return append([]model.FlowStep{}, buildRoutingStep(path))
+func buildRouting(path *indexedPath) []base.FlowStep {
+	return append([]base.FlowStep{}, buildRoutingStep(path))
 }
 
 func (m *Mapper) buildNoHostCondition(path *indexedPath) string {
@@ -213,18 +215,13 @@ func (m *Mapper) storeCondition(condition el.Expression) string {
 	return condition.Closed().String()
 }
 
-func buildRoutingStep(path *indexedPath) model.FlowStep {
-	return model.FlowStep{
+func buildRoutingStep(path *indexedPath) base.FlowStep {
+	return base.FlowStep{
 		Name:    routingStepName,
 		Policy:  routingPolicyName,
 		Enabled: true,
-		Configuration: &model.GenericStringMap{
-			Unstructured: unstructured.Unstructured{
-				Object: map[string]interface{}{
-					routingRulesKey: buildRoutingRules(path),
-				},
-			},
-		},
+		Configuration: utils.NewGenericStringMap().
+			Put(routingRulesKey, buildRoutingRules(path)),
 	}
 }
 
@@ -242,13 +239,13 @@ func buildRoutingTarget(path *indexedPath) string {
 }
 
 // This flow is used to return a 404 HTTP response when no route is found.
-func (m *Mapper) buildNotFoundFlow() model.Flow {
-	flow := model.Flow{
+func (m *Mapper) buildNotFoundFlow() v2.Flow {
+	flow := v2.Flow{
 		Name:    mockStepName,
-		Pre:     []model.FlowStep{m.buildNotFoundStep()},
+		Pre:     []base.FlowStep{m.buildNotFoundStep()},
 		Enabled: true,
-		PathOperator: &model.PathOperator{
-			Operator: model.StartWithOperator,
+		PathOperator: &v2.PathOperator{
+			Operator: base.StartWithOperator,
 			Path:     rootPath,
 		},
 	}
@@ -264,14 +261,14 @@ func (m *Mapper) buildNotFoundFlow() model.Flow {
 	return flow
 }
 
-func (m *Mapper) buildNotFoundStep() model.FlowStep {
+func (m *Mapper) buildNotFoundStep() base.FlowStep {
 	template := m.opts.Templates[http.StatusNotFound]
 
-	return model.FlowStep{
+	return base.FlowStep{
 		Name:    mockStepName,
 		Policy:  mockPolicyName,
 		Enabled: true,
-		Configuration: &model.GenericStringMap{
+		Configuration: &utils.GenericStringMap{
 			Unstructured: unstructured.Unstructured{
 				Object: map[string]interface{}{
 					mockContentKey: template.Content,
@@ -288,10 +285,10 @@ func (m *Mapper) buildNotFoundStep() model.FlowStep {
 	}
 }
 
-func buildProxy(ingress *v1.Ingress) *model.Proxy {
-	return &model.Proxy{
+func buildProxy(ingress *v1.Ingress) *v2.Proxy {
+	return &v2.Proxy{
 		VirtualHosts: buildVirtualHosts(ingress),
-		Groups: []*model.EndpointGroup{
+		Groups: []*v2.EndpointGroup{
 			{
 				Name:      proxyName,
 				Endpoints: buildEndpoints(ingress),
@@ -300,8 +297,8 @@ func buildProxy(ingress *v1.Ingress) *model.Proxy {
 	}
 }
 
-func buildEndpoints(ingress *v1.Ingress) []*model.HttpEndpoint {
-	eps := make([]*model.HttpEndpoint, 0)
+func buildEndpoints(ingress *v1.Ingress) []*v2.Endpoint {
+	eps := make([]*v2.Endpoint, 0)
 	for ruleIndex, rule := range ingress.Spec.Rules {
 		for pathIndex := range rule.HTTP.Paths {
 			path := &rule.HTTP.Paths[pathIndex]
@@ -313,8 +310,8 @@ func buildEndpoints(ingress *v1.Ingress) []*model.HttpEndpoint {
 
 // For each rule and path of an ingress, build an endpoint identified by the position of the path in the rule,
 // in order to be able to match it in the routing step when handling an incoming request for routing.
-func buildEndpoint(ingress *v1.Ingress, path *indexedPath) *model.HttpEndpoint {
-	return &model.HttpEndpoint{
+func buildEndpoint(ingress *v1.Ingress, path *indexedPath) *v2.Endpoint {
+	return &v2.Endpoint{
 		Name:   path.String(),
 		Target: buildEndpointTarget(ingress, path),
 	}
@@ -326,8 +323,8 @@ func buildEndpointTarget(ingress *v1.Ingress, path *indexedPath) string {
 }
 
 // For each ingress host and path, build a virtual host.
-func buildVirtualHosts(ingress *v1.Ingress) []*model.VirtualHost {
-	vhs := make([]*model.VirtualHost, 0)
+func buildVirtualHosts(ingress *v1.Ingress) []*v2.VirtualHost {
+	vhs := make([]*v2.VirtualHost, 0)
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			vhs = append(vhs, buildVirtualHost(rule, path))
@@ -336,6 +333,6 @@ func buildVirtualHosts(ingress *v1.Ingress) []*model.VirtualHost {
 	return vhs
 }
 
-func buildVirtualHost(rule v1.IngressRule, path v1.HTTPIngressPath) *model.VirtualHost {
-	return &model.VirtualHost{Host: rule.Host, Path: path.Path}
+func buildVirtualHost(rule v1.IngressRule, path v1.HTTPIngressPath) *v2.VirtualHost {
+	return &v2.VirtualHost{Host: rule.Host, Path: path.Path}
 }

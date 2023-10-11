@@ -15,7 +15,7 @@
 package search
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/fields"
@@ -36,7 +36,7 @@ func New(ctx context.Context, k8s client.Client) *Type {
 
 func (s *Type) FindByFieldReferencing(
 	field indexer.IndexField,
-	ref model.NamespacedName,
+	ref refs.NamespacedName,
 	result client.ObjectList,
 ) error {
 	filter := &client.ListOptions{

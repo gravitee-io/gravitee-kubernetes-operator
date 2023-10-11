@@ -156,7 +156,7 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          io.gravitee.definition.model.Api<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1601,15 +1601,15 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>-</b></td>
-        <td>integer</td>
+        <td><b>backup</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>backup</b></td>
-        <td>boolean</td>
+        <td><b>-</b></td>
+        <td>integer</td>
         <td>
           <br/>
         </td>
@@ -1646,7 +1646,7 @@ The definition context is used to inform a management API instance that this API
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          From Endpoint<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1760,6 +1760,13 @@ The definition context is used to inform a management API instance that this API
         <td>
           <br/>
         </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
         <td>false</td>
       </tr><tr>
         <td><b>schedule</b></td>
@@ -1772,7 +1779,7 @@ The definition context is used to inform a management API instance that this API
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex">steps</a></b></td>
         <td>[]object</td>
         <td>
-          HealthCheckService<br/>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1837,15 +1844,15 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>body</b></td>
-        <td>string</td>
+        <td><b>fromRoot</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>fromRoot</b></td>
-        <td>boolean</td>
+        <td><b>body</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -2459,6 +2466,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -2478,6 +2487,20 @@ The definition context is used to inform a management API instance that this API
       </tr><tr>
         <td><b>provider</b></td>
         <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>secondary</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tenants</b></td>
+        <td>[]string</td>
         <td>
           <br/>
         </td>
@@ -2503,10 +2526,35 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>provider</b></td>
-        <td>integer</td>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>provider</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: HTTP<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2545,6 +2593,13 @@ The definition context is used to inform a management API instance that this API
             <i>Default</i>: false<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
@@ -2621,15 +2676,15 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>body</b></td>
-        <td>string</td>
+        <td><b>fromRoot</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>fromRoot</b></td>
-        <td>boolean</td>
+        <td><b>body</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
@@ -3111,6 +3166,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3130,6 +3187,20 @@ The definition context is used to inform a management API instance that this API
       </tr><tr>
         <td><b>provider</b></td>
         <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>secondary</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tenants</b></td>
+        <td>[]string</td>
         <td>
           <br/>
         </td>
@@ -3155,10 +3226,35 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>provider</b></td>
-        <td>integer</td>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>provider</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: HTTP<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3197,6 +3293,13 @@ The definition context is used to inform a management API instance that this API
             <i>Default</i>: false<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>schedule</b></td>
         <td>string</td>
@@ -3273,15 +3376,15 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>body</b></td>
-        <td>string</td>
+        <td><b>fromRoot</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
-        <td><b>fromRoot</b></td>
-        <td>boolean</td>
+        <td><b>body</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>

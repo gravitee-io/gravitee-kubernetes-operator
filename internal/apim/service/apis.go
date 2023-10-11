@@ -17,8 +17,7 @@ package service
 import (
 	"net/http"
 
-	kModel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
-
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -77,7 +76,7 @@ func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
 	return api, nil
 }
 
-func (svc *APIs) Import(method string, spec *kModel.Api) (*model.ApiEntity, error) {
+func (svc *APIs) Import(method string, spec *v2.Api) (*model.ApiEntity, error) {
 	url := svc.EnvTarget("apis/import").WithQueryParams(importParams)
 	api := new(model.ApiEntity)
 	fun := svc.getImportFunc(method)

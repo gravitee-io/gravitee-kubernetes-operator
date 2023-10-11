@@ -14,28 +14,30 @@
 
 package model
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+)
 
 type Application struct {
-	Id          string                    `json:"id,omitempty"`
-	Name        string                    `json:"name,omitempty"`
-	Status      string                    `json:"status,omitempty"`
-	Description string                    `json:"description,omitempty"`
-	Settings    *model.ApplicationSetting `json:"settings,omitempty"`
-	Background  string                    `json:"background,omitempty"`
-	Domain      string                    `json:"domain,omitempty"`
-	Groups      []string                  `json:"groups,omitempty"`
-	Picture     string                    `json:"picture,omitempty"`
-	AppKeyMode  *model.ApplicationKeyMode `json:"app_key_mode,omitempty"`
-	AppType     string                    `json:"type,omitempty"`
+	Id          string               `json:"id,omitempty"`
+	Name        string               `json:"name,omitempty"`
+	Status      string               `json:"status,omitempty"`
+	Description string               `json:"description,omitempty"`
+	Settings    *application.Setting `json:"settings,omitempty"`
+	Background  string               `json:"background,omitempty"`
+	Domain      string               `json:"domain,omitempty"`
+	Groups      []string             `json:"groups,omitempty"`
+	Picture     string               `json:"picture,omitempty"`
+	AppKeyMode  *application.KeyMode `json:"app_key_mode,omitempty"`
+	AppType     string               `json:"type,omitempty"`
 }
 
 type ApplicationMetaData struct {
-	Name          string                           `json:"name"`
-	ApplicationId string                           `json:"applicationId,omitempty"`
-	Value         string                           `json:"value,omitempty"`
-	DefaultValue  string                           `json:"defaultValue,omitempty"`
-	Format        *model.ApplicationMetaDataFormat `json:"format,omitempty"`
-	Hidden        bool                             `json:"hidden,omitempty"`
-	Key           string                           `json:"key,omitempty"`
+	Name          string                      `json:"name"`
+	ApplicationId string                      `json:"applicationId,omitempty"`
+	Value         string                      `json:"value,omitempty"`
+	DefaultValue  string                      `json:"defaultValue,omitempty"`
+	Format        *application.MetaDataFormat `json:"format,omitempty"`
+	Hidden        bool                        `json:"hidden,omitempty"`
+	Key           string                      `json:"key,omitempty"`
 }
