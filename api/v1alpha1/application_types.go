@@ -17,7 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -26,8 +27,8 @@ import (
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
 type ApplicationSpec struct {
-	model.Application `json:",inline"`
-	Context           *model.NamespacedName `json:"contextRef,omitempty"`
+	application.Application `json:",inline"`
+	Context                 *refs.NamespacedName `json:"contextRef,omitempty"`
 }
 
 // ApplicationStatus defines the observed state of Application.

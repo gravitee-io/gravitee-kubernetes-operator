@@ -23,7 +23,8 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
@@ -175,7 +176,7 @@ var _ = Describe("Create", func() {
 		})
 
 		It("should create a STOPPED API Definition", func() {
-			apiDefinitionFixture.Spec.State = model.StateStopped
+			apiDefinitionFixture.Spec.State = base.StateStopped
 
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
@@ -239,17 +240,17 @@ var _ = Describe("Create", func() {
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
 			existingApiSpec.ID = uuid.NewV4String()
 			existingApiSpec.CrossID = uuid.FromStrings(apiDefinitionFixture.GetNamespacedName().String())
-			existingApiSpec.DefinitionContext = &model.DefinitionContext{
+			existingApiSpec.DefinitionContext = &base.DefinitionContext{
 				Origin: origin,
 				Mode:   mode,
 			}
-			existingApiSpec.Plans = []*model.Plan{
-				{
-					Id:       uuid.NewV4String(),
-					Name:     "G.K.O. Default",
-					Security: "KEY_LESS",
-					Status:   "PUBLISHED",
-				},
+			existingApiSpec.Plans = []*v2.Plan{
+				v2.NewPlan(
+					base.
+						NewPlan("G.K.O. Default", "").
+						WithID(uuid.NewV4String()).
+						WithStatus(base.PublishedPlanStatus),
+				).WithSecurity("KEY_LESS"),
 			}
 
 			_, err = apim.APIs.Import(http.MethodPost, &existingApiSpec.Api)
@@ -302,30 +303,32 @@ var _ = Describe("Create", func() {
 			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			api := &model.Api{
-				Name:        "export",
-				Version:     "1",
-				Description: "This is to mimic what happens when applying an existing API",
-				ID:          "258198cb-bd66-4010-b3d4-9f7bee97763b",
-				CrossID:     "1cac491c-acd2-4530-bf97-0627ccf94060",
-				Plans: []*model.Plan{
-					{
-						Id:          "ff3b2730-84b5-41b4-9c64-558df4f87080",
-						Name:        "key-less",
-						Description: "Free Plan",
-						Security:    "KEY_LESS",
-					},
+			api := &v2.Api{
+				ApiBase: &base.ApiBase{
+					Name:        "export",
+					Description: "This is to mimic what happens when applying an existing API",
+					ID:          "258198cb-bd66-4010-b3d4-9f7bee97763b",
+					CrossID:     "1cac491c-acd2-4530-bf97-0627ccf94060",
+					IsLocal:     true,
 				},
-				Proxy: &model.Proxy{
-					VirtualHosts: []*model.VirtualHost{
+				Version: "1",
+				Plans: []*v2.Plan{
+					v2.NewPlan(
+						base.NewPlan("key-less", "Free Plan").
+							WithID("ff3b2730-84b5-41b4-9c64-558df4f87080").
+							WithStatus(base.PublishedPlanStatus),
+					).WithSecurity("KEY_LESS"),
+				},
+				Proxy: &v2.Proxy{
+					VirtualHosts: []*v2.VirtualHost{
 						{
 							Path: "/export",
 						},
 					},
-					Groups: []*model.EndpointGroup{
+					Groups: []*v2.EndpointGroup{
 						{
 							Name: "default-group",
-							Endpoints: []*model.HttpEndpoint{
+							Endpoints: []*v2.Endpoint{
 								{
 									Name:   "default-endpoint",
 									Target: "https://api.gravitee.io/echo",
@@ -334,7 +337,6 @@ var _ = Describe("Create", func() {
 						},
 					},
 				},
-				IsLocal: true,
 			}
 
 			apiEntity, err := apim.APIs.Import(http.MethodPost, api)

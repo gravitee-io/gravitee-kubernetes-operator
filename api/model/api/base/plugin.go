@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package base
+
+import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+
+type Plugin struct {
+	Policy        string                  `json:"policy,omitempty"`
+	Resource      string                  `json:"resource,omitempty"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
+}
 
 type PluginReference struct {
 	Namespace string `json:"namespace,omitempty"`
 	Resource  string `json:"resource,omitempty"`
 	Name      string `json:"name,omitempty"`
-}
-
-func NewPluginReference() *PluginReference {
-	return &PluginReference{
-		Namespace: "default",
-	}
 }
 
 type PluginRevision struct {

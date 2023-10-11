@@ -17,7 +17,7 @@ package internal
 import (
 	"encoding/json"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
@@ -37,7 +37,7 @@ const (
 )
 
 func (d *Delegate) updateConfigMap(api *gio.ApiDefinition) error {
-	if api.Spec.State == model.StateStopped {
+	if api.Spec.State == base.StateStopped {
 		if err := d.deleteConfigMap(api); err != nil {
 			d.log.Error(err, "Unable to delete ConfigMap from API definition")
 			return err
@@ -55,7 +55,7 @@ func (d *Delegate) updateConfigMap(api *gio.ApiDefinition) error {
 func (d *Delegate) saveConfigMap(
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	if apiDefinition.Spec.State == model.StateStopped {
+	if apiDefinition.Spec.State == base.StateStopped {
 		return nil
 	}
 

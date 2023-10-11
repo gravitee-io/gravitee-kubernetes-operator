@@ -17,7 +17,7 @@ package test
 import (
 	"fmt"
 
-	model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
@@ -163,7 +163,7 @@ var _ = Describe("Deleting a management context", func() {
 			fix1, err := internal.NewFixtureGenerator().NewFixtures(internal.FixtureFiles{
 				Context: internal.ContextWithSecretFile,
 			}, func(fix *internal.Fixtures) {
-				fix.Context.Spec.Auth.SecretRef = &model.NamespacedName{
+				fix.Context.Spec.Auth.SecretRef = &refs.NamespacedName{
 					Name:      secretName,
 					Namespace: namespace,
 				}
@@ -182,7 +182,7 @@ var _ = Describe("Deleting a management context", func() {
 			fix2, err := internal.NewFixtureGenerator().NewFixtures(internal.FixtureFiles{
 				Context: internal.ContextWithSecretFile,
 			}, func(fix *internal.Fixtures) {
-				fix.Context.Spec.Auth.SecretRef = &model.NamespacedName{
+				fix.Context.Spec.Auth.SecretRef = &refs.NamespacedName{
 					Name:      "test-context-secret",
 					Namespace: namespace,
 				}

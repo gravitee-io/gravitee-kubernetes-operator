@@ -17,14 +17,14 @@
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ApiResourceSpec defines the desired state of ApiResource.
 // +kubebuilder:object:generate=true
 type ApiResourceSpec struct {
-	*model.Resource `json:",inline"`
+	*base.Resource `json:",inline"`
 }
 
 type ApiResourceStatus struct {
