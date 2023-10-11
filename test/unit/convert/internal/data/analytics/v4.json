@@ -1,0 +1,45 @@
+{
+  "definitionVersion": "4.0.0",
+  "type": "proxy",
+  "flowExecution": {
+    "mode": "default",
+    "matchRequired": false
+  },
+  "listeners": [
+    {
+      "type": "http",
+      "entrypoints": [
+        {
+          "type": "http-proxy",
+          "qos": "auto",
+          "configuration": {}
+        }
+      ],
+      "paths": [
+        {
+          "path": "/echo/"
+        }
+      ]
+    }
+  ],
+  "analytics": {
+    "enabled": true,
+    "logging": {
+      "content": {
+        "headers": true,
+        "messageHeaders": false,
+        "payload": true,
+        "messagePayload": false,
+        "messageMetadata": false
+      },
+      "phase": {
+        "request": true,
+        "response": true
+      },
+      "mode": {
+        "endpoint": true,
+        "entrypoint": true
+      }
+    }
+  }
+}

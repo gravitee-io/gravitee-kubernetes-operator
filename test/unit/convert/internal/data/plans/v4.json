@@ -1,0 +1,31 @@
+{
+  "definitionVersion": "4.0.0",
+  "type": "proxy",
+  "flowExecution": {
+    "mode": "default",
+    "matchRequired": false
+  },
+  "plans": [
+    {
+      "definitionVersion": "V4",
+      "mode": "STANDARD",
+      "name": "oauth2",
+      "description": "oauth2 plan",
+      "security": {
+        "type": "OAUTH2",
+        "configuration": {
+          "oauthResource": "oauth2-am",
+          "extractPayload": false,
+          "checkRequiredScopes": false,
+          "requiredScopes": [],
+          "modeStrict": true,
+          "propagateAuthHeader": true
+        }
+      },
+      "status": "PUBLISHED",
+      "type": "API",
+      "validation": "MANUAL",
+      "order": 3
+    }
+  ]
+}

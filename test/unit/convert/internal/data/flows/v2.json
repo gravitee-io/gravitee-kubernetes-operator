@@ -1,0 +1,47 @@
+{
+  "gravitee": "2.0.0",
+  "flow_mode": "DEFAULT",
+  "flows": [
+    {
+      "name": "common",
+      "path-operator": {
+        "path": "/",
+        "operator": "STARTS_WITH"
+      },
+      "pre": [
+        {
+          "enabled": true,
+          "policy": "transform-headers",
+          "name": "Transform Headers",
+          "description": "set standard correlation id header",
+          "configuration": {
+            "whitelistHeaders": [],
+            "addHeaders": [
+              {
+                "name": "x-correlation-id",
+                "value": "{#request.headers['x-gravitee-transaction-id']}"
+              }
+            ],
+            "scope": "REQUEST",
+            "removeHeaders": ["x-gravitee-transaction-id"]
+          }
+        }
+      ],
+      "post": [
+        {
+          "enabled": true,
+          "policy": "transform-headers",
+          "name": "Transform Headers",
+          "description": "keep required headers only",
+          "configuration": {
+            "whitelistHeaders": ["content-type", "content-length"],
+            "addHeaders": [],
+            "removeHeaders": [],
+            "scope": "RESPONSE"
+          }
+        }
+      ],
+      "enabled": true
+    }
+  ]
+}
