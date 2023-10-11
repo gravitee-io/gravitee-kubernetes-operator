@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -129,7 +129,7 @@ func (w *Type) WatchTLSSecret() *handler.Funcs {
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
 func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
 	return func(ctx context.Context, e event.UpdateEvent, q workqueue.RateLimitingInterface) {
-		ref := model.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
+		ref := refs.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
 		w.queueByFieldReferencing(field, ref, q)
 	}
 }
@@ -142,14 +142,14 @@ func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
 // For example, when an API is created before the management context it references.
 func (w *Type) CreateFromLookup(field indexer.IndexField) CreateFunc {
 	return func(ctx context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
-		ref := model.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
+		ref := refs.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
 		w.queueByFieldReferencing(field, ref, q)
 	}
 }
 
 func (w *Type) queueByFieldReferencing(
 	field indexer.IndexField,
-	ref model.NamespacedName,
+	ref refs.NamespacedName,
 	q workqueue.RateLimitingInterface,
 ) {
 	objectList, err := list.OfType(w.objectList)

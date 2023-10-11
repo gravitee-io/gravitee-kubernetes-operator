@@ -15,7 +15,7 @@
 package internal
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
@@ -33,7 +33,7 @@ func (d *Delegate) resolveResources(spec *gio.ApiDefinitionSpec) error {
 	return nil
 }
 
-func (d *Delegate) resolveIfRef(resourceOrRef *model.ResourceOrRef) error {
+func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
 	if !resourceOrRef.IsRef() {
 		return nil
 	}

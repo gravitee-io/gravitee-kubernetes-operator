@@ -283,7 +283,7 @@ issues:
       linters: [ errorlint ]
     - source: "^//"
       linters: [ lll ]
-    - path: "_test\\.go"
+    - path: "(_test\\.go|fixtures.go)"
       linters:
         - bodyclose
         - dupl
@@ -292,3 +292,5 @@ issues:
         - gosec
         - noctx
         - wrapcheck
+        - revive
+        - stylecheck

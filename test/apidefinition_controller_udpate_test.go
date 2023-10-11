@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
@@ -281,7 +281,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 
-			updatedApiDefinition.Spec.Context = &model.NamespacedName{
+			updatedApiDefinition.Spec.Context = &refs.NamespacedName{
 				Name:      contextFixture.Name,
 				Namespace: contextFixture.Namespace,
 			}
