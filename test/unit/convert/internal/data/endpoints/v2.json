@@ -1,0 +1,24 @@
+{
+  "gravitee": "2.0.0",
+  "flow_mode": "DEFAULT",
+  "proxy": {
+    "groups": [
+      {
+        "name": "default-group",
+        "load_balancing": {
+          "type": "ROUND_ROBIN"
+        },
+        "endpoints": [
+          {
+            "name": "default",
+            "target": "https://api.gravitee.io/echo",
+            "weight": 1,
+            "backup": false,
+            "type": "http",
+            "inherit": true
+          }
+        ]
+      }
+    ]
+  }
+}

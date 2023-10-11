@@ -1,0 +1,54 @@
+{
+  "type": "proxy",
+  "definitionVersion": "4.0.0",
+  "flowExecution": {
+    "mode": "default",
+    "matchRequired": false
+  },
+  "flows": [
+    {
+      "name": "common",
+      "enabled": true,
+      "selectors": [
+        {
+          "type": "http",
+          "path": "/",
+          "pathOperator": "STARTS_WITH"
+        }
+      ],
+      "request": [
+        {
+          "enabled": true,
+          "policy": "transform-headers",
+          "name": "Transform Headers",
+          "description": "set standard correlation id header",
+          "configuration": {
+            "whitelistHeaders": [],
+            "addHeaders": [
+              {
+                "name": "x-correlation-id",
+                "value": "{#request.headers['x-gravitee-transaction-id']}"
+              }
+            ],
+            "removeHeaders": ["x-gravitee-transaction-id"],
+            "scope": "REQUEST"
+          }
+        }
+      ],
+      "response": [
+        {
+          "enabled": true,
+          "policy": "transform-headers",
+          "name": "Transform Headers",
+          "description": "keep required headers only",
+          "configuration": {
+            "whitelistHeaders": ["content-type", "content-length"],
+            "addHeaders": [],
+            "removeHeaders": [],
+            "scope": "RESPONSE"
+          }
+        }
+      ]
+    }
+  ]
+}

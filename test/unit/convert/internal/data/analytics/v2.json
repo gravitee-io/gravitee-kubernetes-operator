@@ -1,0 +1,16 @@
+{
+  "gravitee": "2.0.0",
+  "flow_mode": "DEFAULT",
+  "proxy": {
+    "virtual_hosts": [
+      {
+        "path": "/echo/"
+      }
+    ],
+    "logging": {
+      "mode": "CLIENT_PROXY",
+      "content": "HEADERS_PAYLOADS",
+      "scope": "REQUEST_RESPONSE"
+    }
+  }
+}

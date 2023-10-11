@@ -1,0 +1,16 @@
+{
+  "gravitee": "2.0.0",
+  "flow_mode": "DEFAULT",
+  "plans": [
+    {
+      "name": "oauth2",
+      "description": "oauth2 plan",
+      "validation": "MANUAL",
+      "security": "OAUTH2",
+      "securityDefinition": "{\"checkRequiredScopes\":false,\"extractPayload\":false,\"modeStrict\":true,\"oauthResource\":\"oauth2-am\",\"propagateAuthHeader\":true,\"requiredScopes\":[]}",
+      "type": "API",
+      "status": "PUBLISHED",
+      "order": 3
+    }
+  ]
+}
