@@ -21,6 +21,7 @@ import (
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
+	DeployedAt    uint64 `json:"deployedAt,omitempty"`
 	// +kubebuilder:default:=`2.0.0`
 	DefinitionVersion base.DefinitionVersion `json:"gravitee,omitempty"`
 	// +kubebuilder:validation:Required
