@@ -1077,3 +1077,739 @@ spec:
     storage: true
     subresources:
       status: {}
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: ApiDefinition is the Schema for the apidefinitions API. The v1beta1
+          API version is compatible with APIM 4.x features.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ApiDefinitionSpec defines the desired state of ApiDefinition.
+            properties:
+              analytics:
+                properties:
+                  enabled:
+                    default: true
+                    type: boolean
+                  logging:
+                    properties:
+                      condition:
+                        type: string
+                      content:
+                        properties:
+                          headers:
+                            type: boolean
+                          messageHeaders:
+                            type: boolean
+                          messageMetadata:
+                            type: boolean
+                          messagePayload:
+                            type: boolean
+                          payload:
+                            type: boolean
+                        required:
+                        - headers
+                        - messageHeaders
+                        - messageMetadata
+                        - messagePayload
+                        - payload
+                        type: object
+                      messageCondition:
+                        type: string
+                      mode:
+                        properties:
+                          endpoint:
+                            type: boolean
+                          entrypoint:
+                            type: boolean
+                        required:
+                        - endpoint
+                        - entrypoint
+                        type: object
+                      phase:
+                        properties:
+                          request:
+                            type: boolean
+                          response:
+                            type: boolean
+                        required:
+                        - request
+                        - response
+                        type: object
+                    type: object
+                  sampling:
+                    properties:
+                      type:
+                        type: string
+                      value:
+                        type: string
+                    required:
+                    - type
+                    - value
+                    type: object
+                required:
+                - enabled
+                type: object
+              apiVersion:
+                type: string
+              crossId:
+                type: string
+              definition_context:
+                description: The definition context is used to inform a management
+                  API instance that this API definition is managed using a kubernetes
+                  operator
+                properties:
+                  mode:
+                    default: fully_managed
+                    type: string
+                  origin:
+                    default: kubernetes
+                    type: string
+                type: object
+              definitionVersion:
+                default: 4.0.0
+                enum:
+                - 4.0.0
+                type: string
+              deployedAt:
+                format: int64
+                type: integer
+              description:
+                type: string
+              endpointGroups:
+                items:
+                  properties:
+                    endpoints:
+                      items:
+                        properties:
+                          configuration:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          inheritConfiguration:
+                            type: boolean
+                          name:
+                            type: string
+                          secondary:
+                            type: boolean
+                          services:
+                            properties:
+                              healthCheck:
+                                properties:
+                                  configuration:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                  enabled:
+                                    type: boolean
+                                  overrideConfiguration:
+                                    type: boolean
+                                  type:
+                                    type: string
+                                required:
+                                - enabled
+                                - overrideConfiguration
+                                type: object
+                            type: object
+                          sharedConfigurationOverride:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          tenants:
+                            items:
+                              type: string
+                            type: array
+                          type:
+                            type: string
+                          weight:
+                            type: integer
+                        required:
+                        - inheritConfiguration
+                        - secondary
+                        type: object
+                      type: array
+                    headers:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    http:
+                      properties:
+                        clearTextUpgrade:
+                          type: boolean
+                        connectTimeout:
+                          format: int64
+                          type: integer
+                        followRedirects:
+                          type: boolean
+                        idleTimeout:
+                          format: int64
+                          type: integer
+                        keepAlive:
+                          type: boolean
+                        maxConcurrentConnections:
+                          type: integer
+                        pipelining:
+                          type: boolean
+                        readTimeout:
+                          format: int64
+                          type: integer
+                        useCompression:
+                          type: boolean
+                        version:
+                          type: string
+                      type: object
+                    loadBalancer:
+                      properties:
+                        type:
+                          type: string
+                      type: object
+                    name:
+                      type: string
+                    services:
+                      properties:
+                        discovery:
+                          properties:
+                            configuration:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            enabled:
+                              type: boolean
+                            overrideConfiguration:
+                              type: boolean
+                            type:
+                              type: string
+                          required:
+                          - enabled
+                          - overrideConfiguration
+                          type: object
+                        healthCheck:
+                          properties:
+                            configuration:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                            enabled:
+                              type: boolean
+                            overrideConfiguration:
+                              type: boolean
+                            type:
+                              type: string
+                          required:
+                          - enabled
+                          - overrideConfiguration
+                          type: object
+                      type: object
+                    sharedConfiguration:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    ssl:
+                      properties:
+                        hostnameVerifier:
+                          type: boolean
+                        keyStore:
+                          properties:
+                            type:
+                              type: string
+                          type: object
+                        trustAll:
+                          type: boolean
+                        trustStore:
+                          properties:
+                            type:
+                              type: string
+                          type: object
+                      type: object
+                    type:
+                      type: string
+                  type: object
+                minItems: 1
+                type: array
+              flowExecution:
+                properties:
+                  matchRequired:
+                    type: boolean
+                  mode:
+                    type: string
+                required:
+                - matchRequired
+                type: object
+              flows:
+                items:
+                  properties:
+                    enabled:
+                      default: true
+                      type: boolean
+                    name:
+                      type: string
+                    publish:
+                      items:
+                        properties:
+                          condition:
+                            type: string
+                          configuration:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          description:
+                            type: string
+                          enabled:
+                            default: true
+                            type: boolean
+                          messageCondition:
+                            type: string
+                          name:
+                            type: string
+                          policy:
+                            type: string
+                        required:
+                        - enabled
+                        type: object
+                      type: array
+                    request:
+                      items:
+                        properties:
+                          condition:
+                            type: string
+                          configuration:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          description:
+                            type: string
+                          enabled:
+                            default: true
+                            type: boolean
+                          messageCondition:
+                            type: string
+                          name:
+                            type: string
+                          policy:
+                            type: string
+                        required:
+                        - enabled
+                        type: object
+                      type: array
+                    response:
+                      items:
+                        properties:
+                          condition:
+                            type: string
+                          configuration:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          description:
+                            type: string
+                          enabled:
+                            default: true
+                            type: boolean
+                          messageCondition:
+                            type: string
+                          name:
+                            type: string
+                          policy:
+                            type: string
+                        required:
+                        - enabled
+                        type: object
+                      type: array
+                    selectors:
+                      items:
+                        properties:
+                          inline:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                        type: object
+                      type: array
+                    subscribe:
+                      items:
+                        properties:
+                          condition:
+                            type: string
+                          configuration:
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          description:
+                            type: string
+                          enabled:
+                            default: true
+                            type: boolean
+                          messageCondition:
+                            type: string
+                          name:
+                            type: string
+                          policy:
+                            type: string
+                        required:
+                        - enabled
+                        type: object
+                      type: array
+                    tags:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - enabled
+                  type: object
+                type: array
+              id:
+                type: string
+              labels:
+                items:
+                  type: string
+                type: array
+              lifecycle_state:
+                default: CREATED
+                enum:
+                - CREATED
+                - PUBLISHED
+                - UNPUBLISHED
+                - DEPRECATED
+                - ARCHIVED
+                type: string
+              listeners:
+                items:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                minItems: 1
+                type: array
+              local:
+                default: true
+                description: "local defines if the api is local or not. \n If true,
+                  the Operator will create the ConfigMaps for the Gateway and pushes
+                  the API to the Management API but without setting the update flag
+                  in the datastore. \n If false, the Operator will not create the
+                  ConfigMaps for the Gateway. Instead, it pushes the API to the Management
+                  API and forces it to update the event in the datastore. This will
+                  cause Gateways to fetch the APIs from the datastore"
+                type: boolean
+              metadata:
+                items:
+                  properties:
+                    defaultValue:
+                      type: string
+                    format:
+                      enum:
+                      - STRING
+                      - NUMERIC
+                      - BOOLEAN
+                      - DATE
+                      - MAIL
+                      - URL
+                      type: string
+                    key:
+                      type: string
+                    name:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                  - format
+                  - key
+                  - name
+                  type: object
+                type: array
+              name:
+                type: string
+              plans:
+                items:
+                  properties:
+                    characteristics:
+                      items:
+                        type: string
+                      type: array
+                    comment_required:
+                      type: boolean
+                    crossId:
+                      type: string
+                    definitionVersion:
+                      type: string
+                    description:
+                      type: string
+                    excluded_groups:
+                      items:
+                        type: string
+                      type: array
+                    flows:
+                      items:
+                        properties:
+                          enabled:
+                            default: true
+                            type: boolean
+                          name:
+                            type: string
+                          publish:
+                            items:
+                              properties:
+                                condition:
+                                  type: string
+                                configuration:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                description:
+                                  type: string
+                                enabled:
+                                  default: true
+                                  type: boolean
+                                messageCondition:
+                                  type: string
+                                name:
+                                  type: string
+                                policy:
+                                  type: string
+                              required:
+                              - enabled
+                              type: object
+                            type: array
+                          request:
+                            items:
+                              properties:
+                                condition:
+                                  type: string
+                                configuration:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                description:
+                                  type: string
+                                enabled:
+                                  default: true
+                                  type: boolean
+                                messageCondition:
+                                  type: string
+                                name:
+                                  type: string
+                                policy:
+                                  type: string
+                              required:
+                              - enabled
+                              type: object
+                            type: array
+                          response:
+                            items:
+                              properties:
+                                condition:
+                                  type: string
+                                configuration:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                description:
+                                  type: string
+                                enabled:
+                                  default: true
+                                  type: boolean
+                                messageCondition:
+                                  type: string
+                                name:
+                                  type: string
+                                policy:
+                                  type: string
+                              required:
+                              - enabled
+                              type: object
+                            type: array
+                          selectors:
+                            items:
+                              properties:
+                                inline:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                              type: object
+                            type: array
+                          subscribe:
+                            items:
+                              properties:
+                                condition:
+                                  type: string
+                                configuration:
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                description:
+                                  type: string
+                                enabled:
+                                  default: true
+                                  type: boolean
+                                messageCondition:
+                                  type: string
+                                name:
+                                  type: string
+                                policy:
+                                  type: string
+                              required:
+                              - enabled
+                              type: object
+                            type: array
+                          tags:
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - enabled
+                        type: object
+                      type: array
+                    id:
+                      type: string
+                    mode:
+                      type: string
+                    name:
+                      type: string
+                    order:
+                      type: integer
+                    security:
+                      properties:
+                        configuration:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        type:
+                          type: string
+                      required:
+                      - type
+                      type: object
+                    selectionRule:
+                      type: string
+                    status:
+                      default: PUBLISHED
+                      enum:
+                      - STAGING
+                      - PUBLISHED
+                      - CLOSED
+                      - DEPRECATED
+                      type: string
+                    tags:
+                      items:
+                        type: string
+                      type: array
+                    type:
+                      default: API
+                      enum:
+                      - API
+                      - CATALOG
+                      type: string
+                    validation:
+                      default: AUTO
+                      enum:
+                      - AUTO
+                      - MANUAL
+                      type: string
+                  required:
+                  - description
+                  - name
+                  type: object
+                type: array
+              primaryOwner:
+                properties:
+                  displayName:
+                    type: string
+                  email:
+                    type: string
+                  id:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - displayName
+                - email
+                - id
+                - type
+                type: object
+              properties:
+                items:
+                  properties:
+                    encrypted:
+                      type: boolean
+                    key:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
+              resources:
+                items:
+                  properties:
+                    configuration:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    enabled:
+                      type: boolean
+                    name:
+                      type: string
+                    ref:
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type:
+                      type: string
+                  type: object
+                type: array
+              response_templates:
+                additionalProperties:
+                  additionalProperties:
+                    properties:
+                      body:
+                        type: string
+                      headers:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      status:
+                        type: integer
+                    type: object
+                  type: object
+                type: object
+              services:
+                properties:
+                  dynamicProperty:
+                    properties:
+                      configuration:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      enabled:
+                        type: boolean
+                      overrideConfiguration:
+                        type: boolean
+                      type:
+                        type: string
+                    required:
+                    - enabled
+                    - overrideConfiguration
+                    type: object
+                type: object
+              state:
+                default: STARTED
+                enum:
+                - STARTED
+                - STOPPED
+                type: string
+              tags:
+                items:
+                  type: string
+                type: array
+              type:
+                enum:
+                - PROXY
+                - MESSAGE
+                type: string
+              visibility:
+                default: PRIVATE
+                enum:
+                - PUBLIC
+                - PRIVATE
+                type: string
+            type: object
+          status:
+            description: ApiDefinitionStatus defines the observed state of ApiDefinition.
+            type: object
+        type: object
+    served: true
+    storage: false
+    subresources:
+      status: {}
