@@ -21,8 +21,8 @@ const (
 	ManagementUrl = "http://localhost:9000/management"
 	SamplesPath   = "../config/samples"
 
-	ContextWithSecretFile      = SamplesPath + "/context/dev/management-context-with-secret-ref.yml"
-	ContextWithCredentialsFile = SamplesPath + "/context/dev/management-context-with-credentials.yml"
+	ClusterContextFile = SamplesPath + "/context/k3d/management-context-with-secret-ref.yml"
+	ClientContextFile  = SamplesPath + "/context/dev/management-context-with-credentials.yml"
 
 	BasicApiFile                        = SamplesPath + "/apim/basic-api.yml"
 	BasicApiWithRateLimit               = SamplesPath + "/apim/basic-api-with-rate-limit.yml"

@@ -179,6 +179,15 @@ jobs:
             export APIM_IMAGE_TAG=master-latest
             K3DARGS="--pull=${K3D_PULL}" make k3d-init
       - run:
+          name: Update cert-manager dependency
+          command: helm dependency update helm/gko
+      - run:
+          name: Create cert-manager namespace
+          command: kubectl create namespace cert-manager
+      - run:
+          name: Deploy the Operator
+          command: make k3d-build k3d-push k3d-deploy
+      - run:
           name: Run tests
           command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
       - run:

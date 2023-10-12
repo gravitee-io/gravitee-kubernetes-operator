@@ -108,7 +108,7 @@ var _ = Describe("Create", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.ApiWithContextFile,
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
@@ -349,7 +349,7 @@ var _ = Describe("Create", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.ExportedApi,
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			apiDefinitionFixture = fixtures.Api
@@ -393,7 +393,7 @@ var _ = Describe("Create", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     specFile,
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
@@ -469,7 +469,7 @@ var _ = Describe("Create", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:      specFile,
-				Context:  internal.ContextWithSecretFile,
+				Context:  internal.ClusterContextFile,
 				Resource: resourceFile,
 			})
 
