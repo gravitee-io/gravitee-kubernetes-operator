@@ -28,3 +28,9 @@ keywords:
   - kubernetes
   - operator
   - API management
+dependencies:
+  - name: cert-manager
+    version: v1.13.1
+    repository: https://charts.jetstack.io
+    alias: cert-manager
+    condition: cert-manager.enabled
