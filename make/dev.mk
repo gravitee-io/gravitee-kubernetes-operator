@@ -36,7 +36,12 @@ k3d-deploy: ## Install operator helm chart to the k3d cluster
 		--set manager.scope.cluster=false \
 		--set manager.image.repository=$(K3D_IMG) \
 		--set manager.image.tag=$(K3D_TAG) \
-		--set cert-manager.enabled=true
+		--set manager.logs.json=false \
+		--set cert-manager.enabled=true \
+		--set cert-manager.installCRDs=true \
+		--set cert-manager.startupapicheck.timeout=10m \
+		--set ingress.templates.404.name=template-404 \
+		--set ingress.templates.404.namespace=default
 
 .PHONY:
 k3d-admin: ## Gain a kubernetes context with admin role on the k3d cluster

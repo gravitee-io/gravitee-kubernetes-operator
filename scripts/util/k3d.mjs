@@ -94,6 +94,11 @@ export async function createTemplatingConfigmap() {
   `;
 }
 
+export async function createNotFoundTemplateForIngress() {
+  await $`kubectl apply -f ${__dirname}/resources/template-404.yaml \
+  -n ${env.K3D_NAMESPACE_NAME}`;
+}
+
 export async function createHttpBinSecret() {
     await $`kubectl create secret tls ${env.HTTPBIN_EXAMPLE_COM} \
     -n ${env.K3D_NAMESPACE_NAME} \

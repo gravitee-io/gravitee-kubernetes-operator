@@ -294,3 +294,8 @@ issues:
         - wrapcheck
         - revive
         - stylecheck
+        - revive
+    - path: "(internal/k8s.go)"
+      linters:
+        - revive
+        - stylecheck

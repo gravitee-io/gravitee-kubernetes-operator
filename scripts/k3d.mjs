@@ -26,7 +26,8 @@ import {
     createGwKeystoreSecretCredentials,
     createHttpBinSecret,
     createTemplatingSecret,
-    createTemplatingConfigmap
+    createTemplatingConfigmap,
+    createNotFoundTemplateForIngress
 } from "./util/k3d.mjs";
 import {addHelmRepos, helmInstall, updateGraviteeRepo} from "./util/helm.mjs";
 import * as env from "./util/env.mjs";
@@ -97,6 +98,12 @@ LOG.blue(`
 `);
 
 await time(createTemplatingSecret);
+
+LOG.blue(`
+  ☸ Storing ingress 404 template ...
+`);
+
+await time(createNotFoundTemplateForIngress);
 
 LOG.blue(`
   ☸ Storing Templating configmap ...

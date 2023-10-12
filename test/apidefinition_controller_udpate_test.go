@@ -123,7 +123,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.BasicApiFile,
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
@@ -244,7 +244,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.BasicApiFile,
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())

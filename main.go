@@ -79,8 +79,6 @@ const managerPort = 9443
 
 func init() {
 	utilRuntime.Must(clientScheme.AddToScheme(scheme))
-
-	utilRuntime.Must(gioV1Alpha1.AddToScheme(scheme))
 	utilRuntime.Must(gioV1Alpha1.AddToScheme(scheme))
 	utilRuntime.Must(gioV1Beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
@@ -111,10 +109,6 @@ func main() {
 		metricsAddr = "0" // disables metrics
 	}
 
-	if env.Config.InsecureSkipVerify {
-		setupLog.Info("TLS verification is skipped for APIM HTTP client")
-	}
-
 	metrics := metricsServer.Options{BindAddress: metricsAddr}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -139,6 +133,10 @@ func main() {
 			setupLog.Error(err, "unable to apply custom resource definitions")
 			os.Exit(1)
 		}
+	}
+
+	if env.Config.InsecureSkipVerify {
+		setupLog.Info("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
 	if err = addIndexer(mgr); err != nil {
@@ -171,8 +169,11 @@ func main() {
 
 func buildCacheOptions(ns string) cache.Options {
 	if ns == "" {
+		setupLog.Info("no namespace defined, watching all namespaces")
 		return cache.Options{}
 	}
+
+	setupLog.Info("watching on dedicated namespace", "namespace", ns)
 	return cache.Options{
 		DefaultNamespaces: map[string]cache.Config{
 			ns: {},
