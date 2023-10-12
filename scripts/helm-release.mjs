@@ -117,6 +117,15 @@ async function checkoutHelmCharts() {
     --depth 1 ${WORKING_DIR}`;
 }
 
+LOG.blue(`
+⎈ Updating chart dependencies ...
+`);
+
+await time(updateChartDependencies);
+
+async function updateChartDependencies() {
+  await $`helm dependency update ${HELM.chartDir}`;
+}
 
 LOG.blue(`
 ⎈ Packaging chart ...
