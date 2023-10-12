@@ -3,6 +3,7 @@
 Packages:
 
 - [gravitee.io/v1alpha1](#graviteeiov1alpha1)
+- [gravitee.io/v1beta1](#graviteeiov1beta1)
 
 # gravitee.io/v1alpha1
 
@@ -4388,6 +4389,2531 @@ A secret reference holding either a bearer token or the user name and password u
         <td>true</td>
       </tr><tr>
         <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+# gravitee.io/v1beta1
+
+Resource Types:
+
+- [ApiDefinition](#apidefinition)
+
+
+
+
+## ApiDefinition
+<sup><sup>[↩ Parent](#graviteeiov1beta1 )</sup></sup>
+
+
+
+
+
+
+ApiDefinition is the Schema for the apidefinitions API. The v1beta1 API version is compatible with APIM 4.x features.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>gravitee.io/v1beta1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ApiDefinition</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspec-1">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ApiDefinitionSpec defines the desired state of ApiDefinition.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>object</td>
+        <td>
+          ApiDefinitionStatus defines the observed state of ApiDefinition.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec
+<sup><sup>[↩ Parent](#apidefinition-1)</sup></sup>
+
+
+
+ApiDefinitionSpec defines the desired state of ApiDefinition.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#apidefinitionspecanalytics">analytics</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>apiVersion</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>definitionVersion</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: 4.0.0<br/>
+            <i>Default</i>: 4.0.0<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecdefinition_context-1">definition_context</a></b></td>
+        <td>object</td>
+        <td>
+          The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>deployedAt</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindex">endpointGroups</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowexecution">flowExecution</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindex-1">flows</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>labels</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>lifecycle_state</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
+            <i>Default</i>: CREATED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>listeners</b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>local</b></td>
+        <td>boolean</td>
+        <td>
+          local defines if the api is local or not. 
+ If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API but without setting the update flag in the datastore. 
+ If false, the Operator will not create the ConfigMaps for the Gateway. Instead, it pushes the API to the Management API and forces it to update the event in the datastore. This will cause Gateways to fetch the APIs from the datastore<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecmetadataindex-1">metadata</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindex-1">plans</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecprimaryowner-1">primaryOwner</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecpropertiesindex-1">properties</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecresourcesindex-1">resources</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecresponse_templateskeykey-1">response_templates</a></b></td>
+        <td>map[string]map[string]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecservices-1">services</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>state</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: STARTED, STOPPED<br/>
+            <i>Default</i>: STARTED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tags</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: PROXY, MESSAGE<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>visibility</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: PUBLIC, PRIVATE<br/>
+            <i>Default</i>: PRIVATE<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.analytics
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecanalyticslogging">logging</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecanalyticssampling">sampling</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.analytics.logging
+<sup><sup>[↩ Parent](#apidefinitionspecanalytics)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecanalyticsloggingcontent">content</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecanalyticsloggingmode">mode</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecanalyticsloggingphase">phase</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.analytics.logging.content
+<sup><sup>[↩ Parent](#apidefinitionspecanalyticslogging)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>headers</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>messageHeaders</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>messageMetadata</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>messagePayload</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>payload</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.analytics.logging.mode
+<sup><sup>[↩ Parent](#apidefinitionspecanalyticslogging)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>endpoint</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>entrypoint</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.analytics.logging.phase
+<sup><sup>[↩ Parent](#apidefinitionspecanalyticslogging)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>request</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>response</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.analytics.sampling
+<sup><sup>[↩ Parent](#apidefinitionspecanalytics)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.definition_context
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>mode</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: fully_managed<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>origin</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: kubernetes<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexendpointsindex">endpoints</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>map[string]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexhttp">http</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexloadbalancer">loadBalancer</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexservices">services</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sharedConfiguration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexssl">ssl</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].endpoints[index]
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>inheritConfiguration</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>secondary</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexendpointsindexservices">services</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sharedConfigurationOverride</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tenants</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>weight</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].endpoints[index].services
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindexendpointsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexendpointsindexserviceshealthcheck">healthCheck</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].endpoints[index].services.healthCheck
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindexendpointsindexservices)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>overrideConfiguration</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].http
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>clearTextUpgrade</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>connectTimeout</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>followRedirects</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>idleTimeout</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxConcurrentConnections</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>pipelining</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>readTimeout</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>useCompression</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>version</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].loadBalancer
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].services
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexservicesdiscovery">discovery</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexserviceshealthcheck">healthCheck</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].services.discovery
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindexservices)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>overrideConfiguration</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].services.healthCheck
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindexservices)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>overrideConfiguration</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].ssl
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindex)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>hostnameVerifier</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexsslkeystore">keyStore</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>trustAll</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecendpointgroupsindexssltruststore">trustStore</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].ssl.keyStore
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindexssl)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.endpointGroups[index].ssl.trustStore
+<sup><sup>[↩ Parent](#apidefinitionspecendpointgroupsindexssl)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flowExecution
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>matchRequired</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexpublishindex">publish</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexrequestindex">request</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexresponseindex">response</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexselectorsindex">selectors</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexsubscribeindex">subscribe</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tags</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].publish[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].request[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].response[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].selectors[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>inline</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].subscribe[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.metadata[index]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>format</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>defaultValue</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>characteristics</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>comment_required</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>definitionVersion</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>excluded_groups</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindexflowsindex-1">flows</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>order</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindexsecurity">security</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectionRule</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: STAGING, PUBLISHED, CLOSED, DEPRECATED<br/>
+            <i>Default</i>: PUBLISHED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tags</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: API, CATALOG<br/>
+            <i>Default</i>: API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>validation</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: AUTO, MANUAL<br/>
+            <i>Default</i>: AUTO<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index].flows[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplansindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindexflowsindexpublishindex">publish</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindexflowsindexrequestindex">request</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindexflowsindexresponseindex">response</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindexflowsindexselectorsindex">selectors</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecplansindexflowsindexsubscribeindex">subscribe</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tags</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index].flows[index].publish[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index].flows[index].request[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index].flows[index].response[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index].flows[index].selectors[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>inline</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index].flows[index].subscribe[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.plans[index].security
+<sup><sup>[↩ Parent](#apidefinitionspecplansindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.primaryOwner
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>displayName</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>email</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.properties[index]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>encrypted</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.resources[index]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecresourcesindexref-1">ref</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.resources[index].ref
+<sup><sup>[↩ Parent](#apidefinitionspecresourcesindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.response_templates[key][key]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>body</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>headers</b></td>
+        <td>map[string]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.services
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#apidefinitionspecservicesdynamicproperty">dynamicProperty</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.services.dynamicProperty
+<sup><sup>[↩ Parent](#apidefinitionspecservices-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>overrideConfiguration</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
         <td>string</td>
         <td>
           <br/>
