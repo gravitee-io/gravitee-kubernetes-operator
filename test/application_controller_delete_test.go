@@ -37,7 +37,7 @@ var _ = Describe("Deleting an Application", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Application: internal.BasicApplication,
-				Context:     internal.ContextWithCredentialsFile,
+				Context:     internal.ClusterContextFile,
 			})
 			Expect(err).ToNot(HaveOccurred())
 			managementContextFixture = fixtures.Context

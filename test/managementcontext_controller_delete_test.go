@@ -39,7 +39,7 @@ var _ = Describe("Deleting a management context", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Context: internal.ContextWithCredentialsFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
@@ -83,7 +83,7 @@ var _ = Describe("Deleting a management context", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.ApiWithContextFile,
-				Context: internal.ContextWithCredentialsFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
@@ -161,7 +161,7 @@ var _ = Describe("Deleting a management context", func() {
 			}
 
 			fix1, err := internal.NewFixtureGenerator().NewFixtures(internal.FixtureFiles{
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			}, func(fix *internal.Fixtures) {
 				fix.Context.Spec.Auth.SecretRef = &refs.NamespacedName{
 					Name:      secretName,
@@ -180,7 +180,7 @@ var _ = Describe("Deleting a management context", func() {
 			Expect(k8sClient.Create(ctx, ctx1)).Should(Succeed())
 
 			fix2, err := internal.NewFixtureGenerator().NewFixtures(internal.FixtureFiles{
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			}, func(fix *internal.Fixtures) {
 				fix.Context.Spec.Auth.SecretRef = &refs.NamespacedName{
 					Name:      "test-context-secret",

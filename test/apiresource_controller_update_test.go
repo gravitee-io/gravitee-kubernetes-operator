@@ -40,7 +40,7 @@ var _ = Describe("API Resource Controller", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:      internal.BasicApiFile,
-				Context:  internal.ContextWithSecretFile,
+				Context:  internal.ClusterContextFile,
 				Resource: internal.ApiResourceCacheFile,
 			})
 

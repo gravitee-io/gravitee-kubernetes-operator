@@ -42,7 +42,7 @@ var _ = Describe("Create a basic API", func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.ApiWithContextFile,
-				Context: internal.ContextWithCredentialsFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())

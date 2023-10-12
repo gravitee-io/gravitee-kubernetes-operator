@@ -25,7 +25,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	"github.com/pavlo-v-chernykh/keystore-go/v4"
-	core "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
@@ -203,7 +203,7 @@ var _ = Describe("Creating an ingress", func() {
 				if !errors.As(callErr, nfErr) {
 					return internal.NewAssertionError("error", nfErr, callErr)
 				}
-				return internal.AssertEquals("message", "not-found-test", nfErr.Message)
+				return internal.AssertEquals("message", "not-found", nfErr.Message)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
@@ -252,7 +252,7 @@ var _ = Describe("Creating an ingress", func() {
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
 
-			ksCredentials := &core.Secret{}
+			ksCredentials := &coreV1.Secret{}
 			Eventually(func() error {
 				ksObjectKey := types.NamespacedName{
 					Namespace: namespace,
@@ -261,7 +261,7 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ksObjectKey, ksCredentials)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			ksSecret := &core.Secret{}
+			ksSecret := &coreV1.Secret{}
 			Eventually(func() error {
 				ksObjectKey := types.NamespacedName{
 					Namespace: namespace,

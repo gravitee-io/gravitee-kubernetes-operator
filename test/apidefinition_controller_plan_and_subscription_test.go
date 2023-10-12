@@ -54,7 +54,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.ApiWithApiKeyPlanFile,
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
@@ -236,7 +236,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
 				Api:     internal.ApiWithContextNoPlanFile,
-				Context: internal.ContextWithSecretFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
