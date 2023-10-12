@@ -35,7 +35,8 @@ k3d-deploy: ## Install operator helm chart to the k3d cluster
 	    --set manager.httpClient.insecureSkipCertVerify=true \
 		--set manager.scope.cluster=false \
 		--set manager.image.repository=$(K3D_IMG) \
-		--set manager.image.tag=$(K3D_TAG)
+		--set manager.image.tag=$(K3D_TAG) \
+		--set cert-manager.enabled=true
 
 .PHONY:
 k3d-admin: ## Gain a kubernetes context with admin role on the k3d cluster

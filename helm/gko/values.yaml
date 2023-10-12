@@ -76,7 +76,7 @@ manager:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
 
-## @section ingress
+## @section Ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.
 ## 
@@ -93,6 +93,28 @@ ingress:
       name: ""
       ## @param ingress.templates.404.namespace Namespace of the config map storing the HTTP 404 ingress response template.     
       namespace: ""
+
+## @section Cert Manager
+## @descriptionStart
+## This section allows you to enable and configure the cert-manager dependency.
+## cert-manager is required to enabled webhook conversions and validation needed by the operator.
+##
+## ⚠️ cert-manager manages non-namespaced resources in your cluster 
+## and care must be taken to ensure that it is installed exactly once.
+## Enabling the cert-manager dependency will tie the lifecycle of cert-manager to the operator.
+## This property is essentially available for testing facility purposes.
+## When deploying in production, it is recommended that you install cert-manager as a separate component.
+##
+## If enabling the dependency, please note that the namespace defined to install cert-manager
+## must have been created beforehand.
+##
+## See https://cert-manager.io/docs/installation/helm
+## @descriptionEnd
+cert-manager:
+  ## @param cert-manager.enabled If true, cert-manager will be installed as a dependency.
+  enabled: false
+  ## @param cert-manager.namespace Defines the namespace where cert-manager will be installed. 
+  namespace: cert-manager
 
 ## @section HTTP Client
 ## @descriptionStart
