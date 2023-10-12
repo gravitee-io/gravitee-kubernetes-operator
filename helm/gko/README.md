@@ -29,7 +29,7 @@ Kubernetes: `>=1.14.0-0`
 | manager.image.repository | string | `"graviteeio/kubernetes-operator"` | Specifies the docker registry and image name to use. |
 | manager.image.tag | string | `"latest"` | Specifies the docker image tag to use. |
 | manager.logs.json | bool | `true` | Whether to output manager logs in JSON format. |
-| manager.metrics.enabled | bool | `true` |  |
+| manager.metrics.enabled | bool | `true` | If true, a metrics server will be created so that metrics can be scraped using prometheus. |
 | manager.scope.cluster | bool | `true` | If true, the manager listens to resources created in the whole cluster. Use false to listen only in the release namespace. |
 | rbac.create | bool | `true` | Specifies if RBAC resources should be created. |
 | rbac.skipClusterRoles | bool | `false` | Specifies if cluster roles should be created when RBAC resources are created. |
