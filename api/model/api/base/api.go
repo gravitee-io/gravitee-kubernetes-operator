@@ -20,7 +20,6 @@ type ApiBase struct {
 	CrossID     string `json:"crossId,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	DeployedAt  uint64 `json:"deployedAt,omitempty"`
 	// +kubebuilder:validation:Required
 	// The definition context is used to inform a management API instance that this API definition
 	// is managed using a kubernetes operator
