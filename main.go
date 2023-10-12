@@ -48,20 +48,22 @@ import (
 	"k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientScheme "k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+
+	gioV1Alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	gioV1Beta1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -76,10 +78,11 @@ var (
 const managerPort = 9443
 
 func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilRuntime.Must(clientScheme.AddToScheme(scheme))
 
-	utilruntime.Must(gio.AddToScheme(scheme))
-	utilruntime.Must(gio.AddToScheme(scheme))
+	utilRuntime.Must(gioV1Alpha1.AddToScheme(scheme))
+	utilRuntime.Must(gioV1Alpha1.AddToScheme(scheme))
+	utilRuntime.Must(gioV1Beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -112,7 +115,7 @@ func main() {
 		setupLog.Info("TLS verification is skipped for APIM HTTP client")
 	}
 
-	metrics := metricsserver.Options{BindAddress: metricsAddr}
+	metrics := metricsServer.Options{BindAddress: metricsAddr}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
@@ -182,7 +185,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApiDefinitionList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
 		os.Exit(1)
@@ -192,7 +195,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ManagementContextList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
 		os.Exit(1)
@@ -218,7 +221,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("application-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApplicationList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Application")
 		os.Exit(1)
@@ -267,13 +270,13 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	ctx := context.Background()
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
-	err := cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
+	err := cache.IndexField(ctx, &gioV1Alpha1.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	if err != nil {
 		return err
 	}
 
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
-	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
+	err = cache.IndexField(ctx, &gioV1Alpha1.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
 	if err != nil {
 		return err
 	}
@@ -286,7 +289,7 @@ func indexSecretRefs(manager ctrl.Manager) error {
 	ctx := context.Background()
 
 	secretRefIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
-	return cache.IndexField(ctx, &gio.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
+	return cache.IndexField(ctx, &gioV1Alpha1.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
 }
 
 func indexIngressFields(manager ctrl.Manager) error {
@@ -320,7 +323,7 @@ func indexApplicationFields(manager ctrl.Manager) error {
 	ctx := context.Background()
 
 	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
-	err := cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
+	err := cache.IndexField(ctx, &gioV1Alpha1.Application{}, appContextIndexer.Field, appContextIndexer.Func)
 	if err != nil {
 		return err
 	}
