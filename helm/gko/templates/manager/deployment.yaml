@@ -30,6 +30,7 @@ metadata:
     app.kubernetes.io/name: {{ template "helm.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    checksum/config: '{{ include (print $.Template.BasePath "/manager/config.yaml") . | sha256sum }}'
 spec:
   replicas: 1
   selector:
