@@ -78,10 +78,14 @@ func ContextSecrets() *handler.Funcs {
 		}
 
 		if ctx.Spec.HasSecretRef() {
+			ns := ctx.Spec.Auth.SecretRef.Namespace
+			if ns == "" {
+				ns = ctx.Namespace
+			}
 			q.Add(reconcile.Request{
 				NamespacedName: types.NamespacedName{
 					Name:      ctx.Spec.Auth.SecretRef.Name,
-					Namespace: ctx.Spec.Auth.SecretRef.Namespace,
+					Namespace: ns,
 				},
 			})
 		}
