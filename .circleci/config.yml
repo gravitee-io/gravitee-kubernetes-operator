@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   kubernetes: circleci/kubernetes@1.3.1
   go: circleci/go@1.9.0
-  helm: circleci/helm@2.0.1
+  helm: circleci/helm@3.0.0
   keeper: gravitee-io/keeper@0.6.3
   gravitee: gravitee-io/gravitee@4.1.0
   slack: circleci/slack@4.12.5
@@ -135,7 +135,7 @@ jobs:
           version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
       - kubernetes/install-kubectl
-      - helm/install-helm-client
+      - helm/install_helm_client
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           var-name: AZURE_DOCKER_REGISTRY_USERNAME
@@ -248,7 +248,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - helm/install-helm-client
+      - helm/install_helm_client
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           var-name: AZURE_DOCKER_REGISTRY_USERNAME
@@ -295,7 +295,7 @@ jobs:
             export BINARY=operator-sdk_${OS}_${ARCH}
             curl -OJL ${DOWNLOAD_URL}/${BINARY}
             chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
-      - helm/install-helm-client
+      - helm/install_helm_client
       - keeper/exec:
           step-name: "Run Semantic Release"
           command: npx semantic-release
@@ -330,7 +330,7 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - helm/install-helm-client
+      - helm/install_helm_client
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
@@ -341,11 +341,10 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - helm/install-helm-client
+      - helm/install_helm_client
       - go/load-cache
-      - run:
-          name: Install Helm unit test plugin
-          command: helm plugin install https://github.com/quintush/helm-unittest
+      - helm/install_helm_plugin:
+          helm_plugin_url: https://github.com/quintush/helm-unittest
       - run:
           name: Run Helm unit tests
           command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
@@ -366,7 +365,7 @@ jobs:
         type: string
     steps:
       - checkout
-      - helm/install-helm-client
+      - helm/install_helm_client
       - kubernetes/install-kubectl
       - go/load-cache
       - attach_workspace:
