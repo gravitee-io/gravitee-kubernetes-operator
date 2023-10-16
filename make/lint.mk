@@ -19,12 +19,20 @@ lint-sources: golangci-lint ## Run golangci-lint and fail on error
 .PHONY: lint-licenses
 lint-licenses: addlicense ## Run addlicense linter and fail on error
 	@echo "Checking license headers ..."
-	@$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" -ignore "helm/crds/**" -ignore ".idea/**" .
+	@$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt \
+		-ignore ".circleci/**" \
+		-ignore ".mergify.yml" \
+		-ignore "config/**" \
+		-ignore ".idea/**" .
 
 .PHONY: add-license
 add-license: addlicense ## Add license headers to files
 	@echo "Adding license headers ..."
-	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
+	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt \
+		-ignore ".circleci/**" \
+		-ignore ".mergify.yml" \
+		-ignore "config/**" \
+		-ignore ".idea/**" .
 
 .PHONY: clean-tools ## Run all linters
 lint: $(ALL_LINT)
@@ -32,4 +40,4 @@ lint: $(ALL_LINT)
 .PHONY: lint-fix
 lint-fix: golangci-lint addlicense ## Fix whatever golangci-lint can fix and add licenses headers
 	$(GOLANGCILINT) run ./... --fix
-	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt -ignore ".circleci/**" -ignore "config/**" .
+	$(MAKE) add-license
