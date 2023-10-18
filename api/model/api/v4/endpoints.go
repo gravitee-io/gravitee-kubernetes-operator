@@ -45,6 +45,7 @@ func NewHttpEndpoint(name string) *Endpoint {
 	}
 }
 
+// +kubebuilder:validation:Enum=round-robin;random;weighted-round-robin;weighted-random;
 type LoadBalancerType string
 
 const (
@@ -55,7 +56,8 @@ const (
 )
 
 type LoadBalancer struct {
-	Type LoadBalancerType `json:"type,omitempty"`
+	// +kubebuilder:default:=`round-robin`
+	Type LoadBalancerType `json:"type"`
 }
 
 func NewLoadBalancer(algo LoadBalancerType) *LoadBalancer {

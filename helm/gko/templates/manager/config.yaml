@@ -27,13 +27,13 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 data:
   {{- if not .Values.manager.scope.cluster }}
-  NAMESPACE: {{ .Release.Namespace }}
+  WATCH_NAMESPACE: {{ .Release.Namespace }}
   {{- end }}
   {{- if .Values.manager.applyCRDs }}
   APPLY_CRDS: "true"
   {{- end }}
   {{- if not .Values.manager.logs.json }}
-  DEV_MODE: "true"
+  DISABLE_JSON_LOGS: "true"
   {{- end }}
   {{- if not .Values.manager.metrics.enabled }}
   ENABLE_METRICS: "false"
@@ -48,3 +48,11 @@ data:
   {{- if or .Values.manager.httpClient.insecureSkipCertVerify .Values.httpClient.insecureSkipCertVerify }}
   INSECURE_SKIP_CERT_VERIFY: "true"
   {{- end }}
+  {{- if .Values.manager.webhook.enabled }}
+  ENABLE_WEBHOOK: "true"
+  WEBHOOK_CERT_SECRET_NAME: {{ .Values.manager.webhook.cert.secret.name }}
+  WEBHOOK_NAMESPACE: {{ .Release.Namespace }}
+  WEBHOOK_SERVICE_NAME: {{ .Values.manager.webhook.service.name }}
+  WEBHOOK_SERVICE_PORT: {{ quote .Values.manager.webhook.service.port }}
+  {{- end }}
+

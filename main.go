@@ -26,14 +26,18 @@ import (
 
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/extensions"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
 	v1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiExtensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -45,12 +49,10 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 
-	"k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientScheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -75,8 +77,6 @@ var (
 	helm embed.FS
 )
 
-const managerPort = 9443
-
 func init() {
 	utilRuntime.Must(clientScheme.AddToScheme(scheme))
 	utilRuntime.Must(gioV1Alpha1.AddToScheme(scheme))
@@ -95,7 +95,7 @@ func main() {
 			"Enabling this will ensure there is only one active controller manager.")
 
 	opts := zap.Options{
-		Development:          env.Config.Development,
+		Development:          env.Config.DisableJSONLogs,
 		EncoderConfigOptions: logging.NewEncoderConfigOption(),
 	}
 
@@ -106,37 +106,40 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	if !env.Config.EnableMetrics {
+		setupLog.Info("metrics are disabled")
 		metricsAddr = "0" // disables metrics
 	}
 
 	metrics := metricsServer.Options{BindAddress: metricsAddr}
 
+	if env.Config.InsecureSkipVerify {
+		setupLog.Info("TLS certificates verification is skipped for APIM HTTP client")
+	}
+
+	var webhookServer webhook.Server
+	if env.Config.EnableWebhook {
+		if err := patchCRDs(); err != nil {
+			setupLog.Error(err, "unable to apply custom resource definitions")
+			os.Exit(1)
+		}
+		webhookServer = webhook.NewServer(webhook.Options{
+			Port: env.Config.WebhookPort,
+		})
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:  scheme,
-		Metrics: metrics,
-		WebhookServer: webhook.NewServer(webhook.Options{
-			Port: managerPort,
-		}),
+		Scheme:                 scheme,
+		Metrics:                metrics,
+		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
-		Cache:                  buildCacheOptions(env.Config.NS),
+		Cache:                  buildCacheOptions(env.Config.WatchNS),
 	})
 
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
-	}
-
-	if env.Config.ApplyCRDs {
-		if err = applyCRDs(); err != nil {
-			setupLog.Error(err, "unable to apply custom resource definitions")
-			os.Exit(1)
-		}
-	}
-
-	if env.Config.InsecureSkipVerify {
-		setupLog.Info("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
 	if err = addIndexer(mgr); err != nil {
@@ -145,6 +148,13 @@ func main() {
 	}
 
 	registerControllers(mgr)
+
+	if env.Config.EnableWebhook {
+		if err = (&gioV1Beta1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "ApiDefinition")
+			os.Exit(1)
+		}
+	}
 
 	//+kubebuilder:scaffold:builder
 
@@ -332,17 +342,21 @@ func indexApplicationFields(manager ctrl.Manager) error {
 	return nil
 }
 
-func applyCRDs() error {
-	client := dynamic.NewForConfigOrDie(ctrl.GetConfigOrDie())
+func patchCRDs() error {
 	ctx := context.Background()
 
-	version := schema.GroupVersionResource{
-		Group:    "apiextensions.k8s.io",
-		Version:  "v1",
-		Resource: "customresourcedefinitions",
+	setupLog.Info("extending scheme for CRD patch")
+	sErr := apiExtensions.AddToScheme(scheme)
+	if sErr != nil {
+		return sErr
 	}
 
-	return fs.WalkDir(helm, "helm/gko/crds", func(path string, d fs.DirEntry, walkErr error) error {
+	cli, cErr := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme})
+	if cErr != nil {
+		return cErr
+	}
+
+	return fs.WalkDir(helm, keys.CRDBase, func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
@@ -361,11 +375,31 @@ func applyCRDs() error {
 			return err
 		}
 
-		opts := metav1.ApplyOptions{Force: true, FieldManager: "gravitee.io/operator"}
-		crd := &unstructured.Unstructured{Object: obj}
+		unstructured := &unstructured.Unstructured{Object: obj}
+		if err = yaml.Unmarshal(b, unstructured); err != nil {
+			return err
+		}
 
-		if crd, err = client.Resource(version).Apply(ctx, crd.GetName(), crd, opts); err == nil {
-			setupLog.Info("applied resource definition", "name", crd.GetName())
+		setupLog.Info("patching custom resource definition", "name", unstructured.GetName())
+
+		existing := &apiExtensions.CustomResourceDefinition{}
+		if err = cli.Get(ctx, types.NamespacedName{Name: unstructured.GetName()}, existing); err != nil {
+			return err
+		}
+
+		desired := &apiExtensions.CustomResourceDefinition{}
+		if err = runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured.Object, desired); err != nil {
+			return err
+		}
+
+		extensions.ExtendWithWebhook(desired)
+		extensions.InjectCA(desired)
+
+		desired.Spec.DeepCopyInto(&existing.Spec)
+		existing.ObjectMeta.Annotations = desired.GetAnnotations()
+
+		if err = cli.Update(ctx, existing); err != nil {
+			return err
 		}
 
 		return err

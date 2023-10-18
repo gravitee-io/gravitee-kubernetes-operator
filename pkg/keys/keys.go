@@ -35,6 +35,11 @@ const (
 	CrdApiDefinitionResource     = "apidefinitions"
 )
 
+const (
+	CRDBase            = "helm/gko/crds"
+	InjectCAAnnotation = "cert-manager.io/inject-ca-from"
+)
+
 const Extends = "gravitee.io/extends"
 
 // Kubernetes Finalizers.

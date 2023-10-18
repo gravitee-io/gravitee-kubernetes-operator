@@ -63,6 +63,12 @@ This is where you can configure the deployment itself and the way the operator w
 | `manager.applyCRDs`                         | If true, the manager will patch Custom Resource Definitions on startup.                      | `true`                           |
 | `manager.metrics.enabled`                   | If true, a metrics server will be created so that metrics can be scraped using prometheus.   | `true`                           |
 | `manager.httpClient.insecureSkipCertVerify` | If true, the manager HTTP client will not verify the certificate used by the Management API. | `false`                          |
+| `manager.webhook.enabled`                   | If true, the manager will register a webhook server operating on custom resources.           | `true`                           |
+| `manager.webhook.service.name`              | The service used to expose the webhook server.                                               | `gko-webhook`                    |
+| `manager.webhook.service.port`              | The port on which the webhook server will listen.                                            | `9443`                           |
+| `manager.webhook.cert.create`               | If true, a secret will be created to store the webhook server certificate.                   | `true`                           |
+| `manager.webhook.cert.name`                 | The name of the cert-manager certificate used by the webhook server.                         | `gko-webhook-cert`               |
+| `manager.webhook.cert.secret.name`          | The name of the secret storing the webhook server certificate.                               | `gko-webhook-cert`               |
 
 ### Ingress
 
@@ -78,27 +84,6 @@ contentType: application/json
 | --------------------------------- | -------------------------------------------------------------------------------- | ----- |
 | `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`  |
 | `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`  |
-
-### Cert Manager
-
-This section allows you to enable and configure the cert-manager dependency.
-cert-manager is required to enabled webhook conversions and validation needed by the operator.
-
-⚠️ cert-manager manages non-namespaced resources in your cluster 
-and care must be taken to ensure that it is installed exactly once.
-Enabling the cert-manager dependency will tie the lifecycle of cert-manager to the operator.
-This property is essentially available for testing facility purposes.
-When deploying in production, it is recommended that you install cert-manager as a separate component.
-
-If enabling the dependency, please note that the namespace defined to install cert-manager
-must have been created beforehand.
-
-See https://cert-manager.io/docs/installation/helm
-
-| Name                     | Description                                                  | Value          |
-| ------------------------ | ------------------------------------------------------------ | -------------- |
-| `cert-manager.enabled`   | If true, cert-manager will be installed as a dependency.     | `false`        |
-| `cert-manager.namespace` | Defines the namespace where cert-manager will be installed.  | `cert-manager` |
 
 ### HTTP Client
 

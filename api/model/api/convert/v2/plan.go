@@ -34,8 +34,10 @@ func toPlan(v4Plan *v4.Plan) *v2.Plan {
 	plan := v2.NewPlan(v4Plan.Plan)
 	security := v4Plan.Security
 	plan.Security = security.Type
-	if json, err := security.Config.MarshalJSON(); err == nil {
-		plan.SecurityDefinition = string(json)
+	if security.Config != nil {
+		if json, err := security.Config.MarshalJSON(); err == nil {
+			plan.SecurityDefinition = string(json)
+		}
 	}
 	plan.Tags = v4Plan.Tags
 	plan.Flows = toFlows(v4Plan.Flows)

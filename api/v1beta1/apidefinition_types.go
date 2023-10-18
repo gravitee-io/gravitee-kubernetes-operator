@@ -21,21 +21,47 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// Mark as hub version.
+func (*ApiDefinition) Hub() {}
+
 // ApiDefinitionSpec defines the desired state of ApiDefinition.
 type ApiDefinitionSpec struct {
 	v4.Api `json:",inline"`
 	// We don't add the context here because APIM is not ready for that.
 }
 
-// ApiDefinitionStatus defines the observed state of ApiDefinition.
-type ApiDefinitionStatus struct {
-}
+// +kubebuilder:validation:Enum=Completed;Failed;
+type ProcessingStatus string
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+const (
+	ProcessingStatusCompleted ProcessingStatus = "Completed"
+	ProcessingStatusFailed    ProcessingStatus = "Failed"
+)
+
+// ApiDefinitionStatus defines the observed state of API Definition.
+type ApiDefinitionStatus struct {
+	OrgID string `json:"organizationId,omitempty"`
+
+	EnvID string `json:"environmentId,omitempty"`
+	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
+	ID string `json:"id,omitempty"`
+
+	CrossID string `json:"crossId,omitempty"`
+
+	// The processing status of the API definition.
+	Status ProcessingStatus `json:"processingStatus,omitempty"`
+
+	// The state of the API. Can be either STARTED or STOPPED.
+	State string `json:"state,omitempty"`
+
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+}
 
 // ApiDefinition is the Schema for the apidefinitions API.
 // The v1beta1 API version is compatible with APIM 4.x features.
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:storageversion
 type ApiDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
