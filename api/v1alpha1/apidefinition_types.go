@@ -69,7 +69,6 @@ var _ list.Item = &ApiDefinition{}
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
 // +kubebuilder:resource:shortName=graviteeapis
 // ApiDefinition is the Schema for the apidefinitions API.
-// +kubebuilder:storageversion
 type ApiDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

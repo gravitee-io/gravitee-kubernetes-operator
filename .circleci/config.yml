@@ -179,11 +179,16 @@ jobs:
             export APIM_IMAGE_TAG=master-latest
             K3DARGS="--pull=${K3D_PULL}" make k3d-init
       - run:
-          name: Update cert-manager dependency
-          command: helm dependency update helm/gko
+          name: Add cert-manager repository
+          command: helm repo add jetstack https://charts.jetstack.io
       - run:
-          name: Create cert-manager namespace
-          command: kubectl create namespace cert-manager
+          name: Install cert-manager
+          command: |
+            helm install cert-manager jetstack/cert-manager \
+              --namespace cert-manager \
+              --create-namespace \
+              --version v1.13.1 \
+              --set installCRDs=true
       - run:
           name: Deploy the Operator
           command: make k3d-build k3d-push k3d-deploy

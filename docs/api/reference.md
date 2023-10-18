@@ -1602,17 +1602,19 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>backup</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>-</b></td>
         <td>integer</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>backup</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2327,9 +2329,12 @@ The definition context is used to inform a management API instance that this API
     </thead>
     <tbody><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: ROUND_ROBIN, RANDOM, WEIGHTED_ROUND_ROBIN, WEIGHTED_RANDOM<br/>
+            <i>Default</i>: ROUND_ROBIN<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4450,10 +4455,10 @@ ApiDefinition is the Schema for the apidefinitions API. The v1beta1 API version 
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>status</b></td>
+        <td><b><a href="#apidefinitionstatus-1">status</a></b></td>
         <td>object</td>
         <td>
-          ApiDefinitionStatus defines the observed state of ApiDefinition.<br/>
+          ApiDefinitionStatus defines the observed state of API Definition.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4512,15 +4517,6 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         <td>object</td>
         <td>
           The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>deployedAt</b></td>
-        <td>integer</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5337,11 +5333,14 @@ The definition context is used to inform a management API instance that this API
     </thead>
     <tbody><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: round-robin, random, weighted-round-robin, weighted-random<br/>
+            <i>Default</i>: round-robin<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -6917,6 +6916,79 @@ The definition context is used to inform a management API instance that this API
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.status
+<sup><sup>[↩ Parent](#apidefinition-1)</sup></sup>
+
+
+
+ApiDefinitionStatus defines the observed state of API Definition.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>environmentId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>organizationId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>processingStatus</b></td>
+        <td>enum</td>
+        <td>
+          The processing status of the API definition.<br/>
+          <br/>
+            <i>Enum</i>: Completed, Failed<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>state</b></td>
+        <td>string</td>
+        <td>
+          The state of the API. Can be either STARTED or STOPPED.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

@@ -1,0 +1,56 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- if .Values.manager.webhook.enabled }}
+{{- if .Values.manager.webhook.cert.create }}
+# The following manifests contain a self-signed issuer CR and a certificate CR.
+# More document can be found at https://docs.cert-manager.io
+# WARNING: Targets CertManager v1.0. Check https://cert-manager.io/docs/installation/upgrading/ for breaking changes.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+  name: selfsigned-issuer
+  namespace: '{{ .Release.Namespace }}'
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app.kubernetes.io/component: webhook
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+  name: {{ .Values.manager.webhook.cert.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  dnsNames:
+  - {{ .Values.manager.webhook.service.name }}
+  - {{ .Values.manager.webhook.service.name }}.{{ .Release.Namespace }}
+  - {{ .Values.manager.webhook.service.name }}.{{ .Release.Namespace }}.svc
+  - {{ .Values.manager.webhook.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: selfsigned-issuer
+  secretName: {{ .Values.manager.webhook.cert.secret.name }}
+{{- end }}
+{{- end }}

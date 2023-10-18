@@ -16,35 +16,69 @@ package env
 
 import (
 	"os"
+	"strconv"
+
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
+
+var log = logf.Log.WithName("env")
 
 const (
 	CMTemplate404Name      = "TEMPLATE_404_CONFIG_MAP_NAME"
 	CMTemplate404NS        = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
-	Development            = "DEV_MODE"
-	NS                     = "NAMESPACE"
+	DisableJSONLogs        = "DISABLE_JSON_LOGS"
+	WatchNS                = "WATCH_NAMESPACE"
 	ApplyCRDs              = "APPLY_CRDS"
 	EnableMetrics          = "ENABLE_METRICS"
 	InsecureSkipCertVerify = "INSECURE_SKIP_CERT_VERIFY"
-	trueString             = "true"
+	EnableWebhook          = "ENABLE_WEBHOOK"
+	WebhookNS              = "WEBHOOK_NAMESPACE"
+	WebhookServiceName     = "WEBHOOK_SERVICE_NAME"
+	WebhookPort            = "WEBHOOK_SERVICE_PORT"
+	WebhookCertSecret      = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not an hardcoded secret
+
+	trueString         = "true"
+	defaultWebhookPort = 9443
 )
 
 var Config = struct {
-	NS                 string
+	WatchNS            string
+	ReleaseNS          string
 	ApplyCRDs          bool
 	EnableMetrics      bool
-	Development        bool
+	DisableJSONLogs    bool
 	CMTemplate404Name  string
 	CMTemplate404NS    string
 	InsecureSkipVerify bool
+	EnableWebhook      bool
+	WebhookNS          string
+	WebhookService     string
+	WebhookPort        int
+	WebhookCertSecret  string
 }{}
 
 func init() {
-	Config.NS = os.Getenv(NS)
+	Config.WatchNS = os.Getenv(WatchNS)
+	Config.ReleaseNS = os.Getenv(WebhookNS)
 	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == trueString
-	Config.Development = os.Getenv(Development) == trueString
+	Config.DisableJSONLogs = os.Getenv(DisableJSONLogs) == trueString
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
 	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == trueString
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == trueString
+	Config.EnableWebhook = os.Getenv(EnableWebhook) == trueString
+	Config.WebhookNS = os.Getenv(WebhookNS)
+	Config.WebhookService = os.Getenv(WebhookServiceName)
+	Config.WebhookCertSecret = os.Getenv(WebhookCertSecret)
+	Config.WebhookPort = parseInt(WebhookPort, defaultWebhookPort)
+}
+
+func parseInt(key string, defaultValue int) int {
+	value, err := strconv.Atoi(os.Getenv(key))
+	if err != nil {
+		log.Error(err, "unable to parse key", "key", key, "value", os.Getenv(key))
+		log.Info("setting default value for environment property", "value", defaultValue)
+		return defaultValue
+	}
+	return value
 }

@@ -33,7 +33,9 @@ func toEndpointGroups(v4EndpointGroups []*v4.EndpointGroup) []*v2.EndpointGroup 
 func toEndpointGroup(v4EndpointGroup *v4.EndpointGroup) *v2.EndpointGroup {
 	endpointGroup := v2.NewHttpEndpointGroup(v4EndpointGroup.Name)
 	endpointGroup.Endpoints = toEndpoints(v4EndpointGroup.Endpoints)
-	endpointGroup.LoadBalancer = *toLoadBalancer(v4EndpointGroup.LoadBalancer)
+	if v4EndpointGroup.LoadBalancer != nil {
+		endpointGroup.LoadBalancer = *toLoadBalancer(v4EndpointGroup.LoadBalancer)
+	}
 	endpointGroup.Services = toEndpointGroupServices(v4EndpointGroup.Services)
 	return endpointGroup
 }

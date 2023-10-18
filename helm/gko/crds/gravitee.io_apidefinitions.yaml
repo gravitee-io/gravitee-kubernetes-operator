@@ -522,6 +522,7 @@ spec:
                               '-':
                                 type: integer
                               backup:
+                                default: false
                                 type: boolean
                               headers:
                                 items:
@@ -668,8 +669,6 @@ spec:
                                 type: string
                               weight:
                                 type: integer
-                            required:
-                            - backup
                             type: object
                           type: array
                         headers:
@@ -705,6 +704,12 @@ spec:
                         load_balancing:
                           properties:
                             type:
+                              default: ROUND_ROBIN
+                              enum:
+                              - ROUND_ROBIN
+                              - RANDOM
+                              - WEIGHTED_ROUND_ROBIN
+                              - WEIGHTED_RANDOM
                               type: string
                           type: object
                         name:
@@ -1088,7 +1093,7 @@ spec:
             type: object
         type: object
     served: true
-    storage: true
+    storage: false
     subresources:
       status: {}
   - name: v1beta1
@@ -1197,9 +1202,6 @@ spec:
                 enum:
                 - 4.0.0
                 type: string
-              deployedAt:
-                format: int64
-                type: integer
               description:
                 type: string
               endpointGroups:
@@ -1284,7 +1286,15 @@ spec:
                     loadBalancer:
                       properties:
                         type:
+                          default: round-robin
+                          enum:
+                          - round-robin
+                          - random
+                          - weighted-round-robin
+                          - weighted-random
                           type: string
+                      required:
+                      - type
                       type: object
                     name:
                       type: string
@@ -1820,10 +1830,33 @@ spec:
                 type: string
             type: object
           status:
-            description: ApiDefinitionStatus defines the observed state of ApiDefinition.
+            description: ApiDefinitionStatus defines the observed state of API Definition.
+            properties:
+              crossId:
+                type: string
+              environmentId:
+                type: string
+              id:
+                description: The ID of the API definition in the Gravitee API Management
+                  instance (if an API context has been configured).
+                type: string
+              observedGeneration:
+                format: int64
+                type: integer
+              organizationId:
+                type: string
+              processingStatus:
+                description: The processing status of the API definition.
+                enum:
+                - Completed
+                - Failed
+                type: string
+              state:
+                description: The state of the API. Can be either STARTED or STOPPED.
+                type: string
             type: object
         type: object
     served: true
-    storage: false
+    storage: true
     subresources:
       status: {}

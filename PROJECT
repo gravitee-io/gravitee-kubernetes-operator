@@ -42,4 +42,7 @@ resources:
   kind: ApiDefinition
   path: github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1
   version: v1beta1
+  webhooks:
+    conversion: true
+    webhookVersion: v1
 version: "3"

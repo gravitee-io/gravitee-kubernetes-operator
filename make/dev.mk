@@ -23,7 +23,7 @@ k3d-clean: ## Delete the k3d cluster and docker registry
 
 .PHONY: k3d-gko-build
 k3d-build: ## Build the controller image for k3d
-	$(MAKE) docker-build IMG=$(K3D_IMG) TAG=$(K3D_TAG)
+	docker build -t ${K3D_IMG}:${K3D_TAG} .
 
 .PHONY: k3d-push
 k3d-push: ## Push the controller image to the k3d registry
@@ -33,13 +33,11 @@ k3d-push: ## Push the controller image to the k3d registry
 k3d-deploy: ## Install operator helm chart to the k3d cluster
 	helm upgrade --install -n default --create-namespace gko helm/gko \
 	    --set manager.httpClient.insecureSkipCertVerify=true \
+		--set manager.metrics.enabled=false \
 		--set manager.scope.cluster=false \
 		--set manager.image.repository=$(K3D_IMG) \
 		--set manager.image.tag=$(K3D_TAG) \
 		--set manager.logs.json=false \
-		--set cert-manager.enabled=true \
-		--set cert-manager.installCRDs=true \
-		--set cert-manager.startupapicheck.timeout=10m \
 		--set ingress.templates.404.name=template-404 \
 		--set ingress.templates.404.namespace=default
 

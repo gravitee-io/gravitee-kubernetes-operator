@@ -35,10 +35,11 @@ const (
 )
 
 type Endpoint struct {
-	Name    string         `json:"name,omitempty"`
-	Target  string         `json:"target,omitempty"`
-	Weight  int            `json:"weight,omitempty"`
-	Backup  bool           `json:"backup"`
+	Name   string `json:"name,omitempty"`
+	Target string `json:"target,omitempty"`
+	Weight int    `json:"weight,omitempty"`
+	// +kubebuilder:default:=false
+	Backup  bool           `json:"backup,omitempty"`
 	Status  EndpointStatus `json:"-,omitempty"`
 	Tenants []string       `json:"tenants,omitempty"`
 	Type    EndpointType   `json:"type,omitempty"`
@@ -58,6 +59,7 @@ func NewHttpEndpoint(name string) *Endpoint {
 	}
 }
 
+// +kubebuilder:validation:Enum=ROUND_ROBIN;RANDOM;WEIGHTED_ROUND_ROBIN;WEIGHTED_RANDOM;
 type LoadBalancerType string
 
 const (
@@ -68,6 +70,7 @@ const (
 )
 
 type LoadBalancer struct {
+	// +kubebuilder:default:=`ROUND_ROBIN`
 	Type LoadBalancerType `json:"type,omitempty"`
 }
 

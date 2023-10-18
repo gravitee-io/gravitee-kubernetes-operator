@@ -43,7 +43,7 @@ tests:
       - hasDocuments:
           count: 1
       - equal:
-          path: data.DEV_MODE
+          path: data.DISABLE_JSON_LOGS
           value: "true"
 
   - it: Should have metrics disabled
@@ -74,7 +74,7 @@ tests:
           path: metadata.name
           value: gko-config
       - equal:
-          path: data.NAMESPACE
+          path: data.WATCH_NAMESPACE
           value: NAMESPACE
 
 
