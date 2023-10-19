@@ -53,16 +53,16 @@ Kube RBAC Proxy is deployed as a sidecar container and restricts access to the p
 
 This is where you can configure the deployment itself and the way the operator will interact with APIM and Custom Resources in your cluster.
 
-| Name                                        | Description                                                                                  | Value                            |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------- |
-| `manager.image.repository`                  | Specifies the docker registry and image name to use.                                         | `graviteeio/kubernetes-operator` |
-| `manager.image.tag`                         | Specifies the docker image tag to use.                                                       | `latest`                         |
-| `manager.logs.json`                         | Whether to output manager logs in JSON format.                                               | `true`                           |
-| `manager.configMap.name`                    | The name of the config map used to set the manager config from this values.                  | `gko-config`                     |
-| `manager.scope.cluster`                     | Use false to listen only in the release namespace.                                           | `true`                           |
-| `manager.applyCRDs`                         | If true, the manager will patch Custom Resource Definitions on startup.                      | `true`                           |
-| `manager.metrics.enabled`                   | If true, a metrics server will be created so that metrics can be scraped using prometheus.   | `true`                           |
-| `manager.httpClient.insecureSkipCertVerify` | If true, the manager HTTP client will not verify the certificate used by the Management API. | `false`                          |
+| Name                                        | Description                                                                                                                                     | Value                            |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `manager.image.repository`                  | Specifies the docker registry and image name to use.                                                                                            | `graviteeio/kubernetes-operator` |
+| `manager.image.tag`                         | Specifies the docker image tag to use.                                                                                                          | `latest`                         |
+| `manager.logs.json`                         | Whether to output manager logs in JSON format.                                                                                                  | `true`                           |
+| `manager.configMap.name`                    | The name of the config map used to set the manager config from this values.                                                                     | `gko-config`                     |
+| `manager.scope.cluster`                     | Use false to listen only in the release namespace.                                                                                              | `true`                           |
+| `manager.applyCRDs`                         | 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup. | `true`                           |
+| `manager.metrics.enabled`                   | If true, a metrics server will be created so that metrics can be scraped using prometheus.                                                      | `true`                           |
+| `manager.httpClient.insecureSkipCertVerify` | If true, the manager HTTP client will not verify the certificate used by the Management API.                                                    | `false`                          |
 
 ### ingress
 
