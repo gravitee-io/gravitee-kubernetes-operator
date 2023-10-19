@@ -1,12 +1,17 @@
 {
-  "definitionVersion": "4.0.0",
-  "type": "proxy",
+  "definitionVersion": "V4",
+  "type": "PROXY",
   "flowExecution": {
-    "mode": "default",
+    "mode": "DEFAULT",
     "matchRequired": false
   },
-  "plans": [
-    {
+  "flows": [],
+  "definitionContext": {
+    "origin": "KUBERNETES",
+    "syncFrom": "MANAGEMENT"
+  },
+  "plans": {
+    "oauth2": {
       "definitionVersion": "V4",
       "mode": "STANDARD",
       "name": "oauth2",
@@ -27,5 +32,6 @@
       "validation": "MANUAL",
       "order": 3
     }
-  ]
+  }
+    
 }

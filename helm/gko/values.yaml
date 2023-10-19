@@ -41,6 +41,8 @@ rbacProxy:
     repository: quay.io/brancz/kube-rbac-proxy
     ## @param rbacProxy.image.tag Specifies the docker image tag to use.
     tag: v0.14.3
+    ## @param rbacProxy.image.pullPolicy Specifies the pull policy to apply to the controller manager image
+    pullPolicy: Always
 
 ## @section Controller Manager
 ## @descriptionStart
@@ -52,9 +54,18 @@ manager:
     repository: graviteeio/kubernetes-operator
     ## @param manager.image.tag Specifies the docker image tag to use.
     tag: latest
-  logs:
-    ## @param manager.logs.json Whether to output manager logs in JSON format.
-    json: true
+    ## @param manager.image.pullPolicy Specifies the pull policy to apply to the controller manager image
+    pullPolicy: Always
+  log:
+    ## @param manager.log.format Specifies log output format. Can be either json or console.
+    format: json
+    ## @param manager.log.level Specifies log level. Can be either debug, info, warn, or error.
+    level: info
+    timestamp:
+      ## @param manager.log.timestamp.field Specifies the name of the field to use for the timestamp.
+      field: timestamp
+      ## @param manager.log.timestamp.format Specifies the format to use for the timestamp. Can be either iso-8601, epoch-second, epoch-millis or epoch-nano.
+      format: epoch-second
   configMap:
     ## @param manager.configMap.name The name of the config map used to set the manager config from this values.
     name: gko-config
@@ -82,8 +93,13 @@ manager:
   ## installed, it is recommended to set this flag to true.
   applyCRDs: true
   metrics:
-   ## @param manager.metrics.enabled If true, a metrics server will be created so that metrics can be scraped using prometheus.
+    ## @param manager.metrics.enabled If true, a metrics server will be created so that metrics can be scraped using prometheus.
     enabled: true
+    ## @param manager.metrics.port Which port the metric server will bind to.
+    port: 8080
+  probe:
+     ## @param manager.probe.port Which port the readiness and liveness probes will listen to.
+    port: 8081
   httpClient:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
@@ -93,7 +109,7 @@ manager:
     service:
       ## @param manager.webhook.service.name The service used to expose the webhook server.
       name: gko-webhook
-      ## @param manager.webhook.service.port The port on which the webhook server will listen.
+      ## @param manager.webhook.service.port Which port the webhook server will listen to.
       port: 9443
     cert:
       ## @param manager.webhook.cert.create If true, a secret will be created to store the webhook server certificate.

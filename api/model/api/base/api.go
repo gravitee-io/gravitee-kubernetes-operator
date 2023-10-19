@@ -16,14 +16,12 @@
 package base
 
 type ApiBase struct {
-	ID          string `json:"id,omitempty"`
-	CrossID     string `json:"crossId,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
+	ID      string `json:"id,omitempty"`
+	CrossID string `json:"crossId,omitempty"`
+	Name    string `json:"name,omitempty"`
 	// +kubebuilder:validation:Required
-	// The definition context is used to inform a management API instance that this API definition
-	// is managed using a kubernetes operator
-	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
+	Version     string `json:"version,omitempty"`
+	Description string `json:"description,omitempty"`
 	// +kubebuilder:default:=`STARTED`
 	// +kubebuilder:validation:Enum=STARTED;STOPPED;
 	State string `json:"state,omitempty"`
@@ -32,24 +30,15 @@ type ApiBase struct {
 	Tags           []string       `json:"tags,omitempty"`
 	Labels         []string       `json:"labels,omitempty"`
 	// +kubebuilder:default:=PRIVATE
-	Visibility        ApiVisibility                           `json:"visibility,omitempty"`
-	PrimaryOwner      *Member                                 `json:"primaryOwner,omitempty"`
-	Properties        []*Property                             `json:"properties,omitempty"`
+	Visibility   ApiVisibility `json:"visibility,omitempty"`
+	PrimaryOwner *Member       `json:"primaryOwner,omitempty"`
+	// +kubebuilder:default:={}
+	Properties []*Property `json:"properties,omitempty"`
+	// +kubebuilder:default:={}
 	Metadata          []*MetadataEntry                        `json:"metadata,omitempty"`
 	ResponseTemplates map[string]map[string]*ResponseTemplate `json:"response_templates,omitempty"`
-	Resources         []*ResourceOrRef                        `json:"resources,omitempty"`
-	// local defines if the api is local or not.
-	//
-	// If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
-	// but without setting the update flag in the datastore.
-	//
-	// If false, the Operator will not create the ConfigMaps for the Gateway.
-	// Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
-	// This will cause Gateways to fetch the APIs from the datastore
-	//
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
-	IsLocal bool `json:"local"`
+	// +kubebuilder:default:={}
+	Resources []*ResourceOrRef `json:"resources,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;
@@ -60,7 +49,8 @@ type DefinitionVersion string
 const (
 	DefinitionVersionV1 DefinitionVersion = "1.0.0"
 	DefinitionVersionV2 DefinitionVersion = "2.0.0"
-	DefinitionVersionV4 DefinitionVersion = "4.0.0"
+	DefinitionVersionV4 DefinitionVersion = "V4"
+	GatewayDefinitionV4 DefinitionVersion = "4.0.0"
 )
 
 // +kubebuilder:validation:Enum=CREATED;PUBLISHED;UNPUBLISHED;DEPRECATED;ARCHIVED;
@@ -70,18 +60,6 @@ const (
 	StateStarted string = "STARTED"
 	StateStopped string = "STOPPED"
 )
-
-const (
-	ModeFullyManaged = "fully_managed"
-	OriginKubernetes = "kubernetes"
-)
-
-type DefinitionContext struct {
-	// +kubebuilder:default:=kubernetes
-	Origin string `json:"origin,omitempty"`
-	// +kubebuilder:default:=fully_managed
-	Mode string `json:"mode,omitempty"`
-}
 
 type ResponseTemplate struct {
 	StatusCode int               `json:"status,omitempty"`

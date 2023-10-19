@@ -20,6 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -38,7 +39,7 @@ func Delete(
 
 	search := search.New(ctx, client)
 
-	apis := &v1alpha1.ApiDefinitionList{}
+	apis := &v1beta1.ApiDefinitionList{}
 	if err := search.FindByFieldReferencing(
 		indexer.ResourceField,
 		refs.NewNamespacedName(resource.Namespace, resource.Name),

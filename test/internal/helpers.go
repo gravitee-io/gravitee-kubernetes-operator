@@ -27,7 +27,9 @@ func NewAssertionError(field string, expected, given any) error {
 	return fmt.Errorf("expected %s to be %v, got %v", field, expected, given)
 }
 
-func UpdateSafely[T client.Object](client client.Client, objNew T) error {
+func UpdateSafely[T client.Object](objNew T) error {
+	ctx := context.Background()
+
 	key := types.NamespacedName{
 		Namespace: objNew.GetNamespace(),
 		Name:      objNew.GetName(),
@@ -39,12 +41,12 @@ func UpdateSafely[T client.Object](client client.Client, objNew T) error {
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		if err := client.Get(context.Background(), key, objLast); err != nil {
+		if err := ClusterClient().Get(ctx, key, objLast); err != nil {
 			return err
 		}
 
 		objNew.SetResourceVersion(objLast.GetResourceVersion())
 
-		return client.Update(context.Background(), objNew)
+		return ClusterClient().Update(ctx, objNew)
 	})
 }

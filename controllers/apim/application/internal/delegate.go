@@ -18,9 +18,10 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
-	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	coreV1 "k8s.io/api/core/v1"
@@ -37,27 +38,26 @@ const (
 type Delegate struct {
 	ctx  context.Context
 	k8s  k8s.Client
-	log  logr.Logger
 	apim *apim.APIM
 }
 
-func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate {
+func NewDelegate(ctx context.Context, k8s k8s.Client) *Delegate {
 	return &Delegate{
-		ctx, k8s, log, nil,
+		ctx, k8s, nil,
 	}
 }
 
 func (d *Delegate) ResolveTemplate(application *gio.Application) error {
-	return template.NewResolver(d.ctx, d.k8s, d.log, application).Resolve()
+	return template.NewResolver(d.ctx, d.k8s, application).Resolve()
 }
 
 func (d *Delegate) ResolveContext(application *gio.Application) error {
-	managementContext := new(gio.ManagementContext)
+	managementContext := new(v1beta1.ManagementContext)
 
 	ref := application.Spec.Context
 	ns := ref.ToK8sType()
 
-	d.log.Info("Resolving Management context", "namespace", ref.Namespace, "name", ref.Name)
+	log.Debug(d.ctx, "Resolving Management context", "ref", ref)
 
 	if err := d.k8s.Get(d.ctx, ns, managementContext); err != nil {
 		return err
@@ -85,7 +85,7 @@ func (d *Delegate) AddDeletionFinalizer(application *gio.Application) error {
 	return d.k8s.Update(d.ctx, application)
 }
 
-func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
+func (d *Delegate) resolveContextSecrets(context *v1beta1.ManagementContext) error {
 	management := context.Spec
 
 	if management.HasSecretRef() {
@@ -109,7 +109,7 @@ func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
 	return nil
 }
 
-func getSecretNamespace(context *gio.ManagementContext) string {
+func getSecretNamespace(context *v1beta1.ManagementContext) string {
 	secretRef := context.Spec.SecretRef()
 	if secretRef.Namespace != "" {
 		return secretRef.Namespace

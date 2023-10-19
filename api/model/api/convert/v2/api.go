@@ -23,12 +23,16 @@ import (
 func FromV4(v4Api *v4.Api) *v2.Api {
 	return &v2.Api{
 		ApiBase:           v4Api.ApiBase,
-		Version:           v4Api.ApiVersion,
 		DefinitionVersion: base.DefinitionVersionV2,
 		FlowMode:          v2.DefaultFlowMode,
 		Proxy:             toProxy(v4Api.Listeners, v4Api.EndpointGroups, v4Api.Analytics),
 		Plans:             toPlans(v4Api.Plans),
 		Flows:             toFlows(v4Api.Flows),
 		Services:          toApiServices(v4Api.Services),
+		IsLocal:           computeLocalFlag(v4Api),
 	}
+}
+
+func computeLocalFlag(api *v4.Api) bool {
+	return api.DefinitionContext == nil || api.DefinitionContext.SyncFrom == v4.OriginKubernetes
 }

@@ -23,16 +23,16 @@ import (
 type ApiType string
 
 const (
-	ProxyType   = ApiType("proxy")
-	MessageType = ApiType("message")
+	ProxyType   = ApiType("PROXY")
+	MessageType = ApiType("MESSAGE")
 )
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
-	// +kubebuilder:default:=`4.0.0`
-	// +kubebuilder:validation:Enum=`4.0.0`;
+	// +kubebuilder:default:=`V4`
+	// +kubebuilder:validation:Enum=`V4`;
 	DefinitionVersion base.DefinitionVersion `json:"definitionVersion,omitempty"`
-	ApiVersion        string                 `json:"apiVersion,omitempty"`
+	DefinitionContext *DefinitionContext     `json:"definitionContext,omitempty"`
 	// +kubebuilder:validation:Required
 	Type ApiType `json:"type,omitempty"`
 	// +kubebuilder:validation:Required
@@ -41,9 +41,104 @@ type Api struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems:=1
 	EndpointGroups []*EndpointGroup `json:"endpointGroups,omitempty"`
-	Plans          []*Plan          `json:"plans,omitempty"`
-	FlowExecution  *FlowExecution   `json:"flowExecution,omitempty"`
-	Flows          []*Flow          `json:"flows,omitempty"`
-	Analytics      *Analytics       `json:"analytics,omitempty"`
-	Services       *ApiServices     `json:"services,omitempty"`
+	// +kubebuilder:default:={}
+	Plans         map[string]*Plan `json:"plans,omitempty"`
+	FlowExecution *FlowExecution   `json:"flowExecution,omitempty"`
+	// +kubebuilder:default:={}
+	Flows     []*Flow      `json:"flows"`
+	Analytics *Analytics   `json:"analytics,omitempty"`
+	Services  *ApiServices `json:"services,omitempty"`
+}
+
+type GatewayDefinitionApi struct {
+	*Api  `json:",inline"`
+	Plans []*GatewayDefinitionPlan `json:"plans,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=FULLY_MANAGED;
+type DefinitionContextMode string
+
+// +kubebuilder:validation:Enum=KUBERNETES;MANAGEMENT;
+type DefinitionContextOrigin string
+
+const (
+	ModeFullyManaged = DefinitionContextMode("FULLY_MANAGED")
+	OriginKubernetes = DefinitionContextOrigin("KUBERNETES")
+	OriginManagement = DefinitionContextOrigin("MANAGEMENT")
+)
+
+type DefinitionContext struct {
+	// +kubebuilder:validation:Enum=KUBERNETES;
+	Origin DefinitionContextOrigin `json:"origin,omitempty"`
+	// +kubebuilder:validation:Enum=KUBERNETES;MANAGEMENT;
+	SyncFrom DefinitionContextOrigin `json:"syncFrom,omitempty"`
+}
+
+func NewDefaultKubernetesContext() *DefinitionContext {
+	return &DefinitionContext{
+		Origin:   OriginKubernetes,
+		SyncFrom: OriginKubernetes,
+	}
+}
+
+func (ctx DefinitionContext) MergeWith(rhs *DefinitionContext) *DefinitionContext {
+	lhs := new(DefinitionContext)
+	ctx.DeepCopyInto(lhs)
+	if rhs == nil {
+		return lhs
+	}
+	if rhs.Origin != "" {
+		lhs.Origin = rhs.Origin
+	}
+	if rhs.SyncFrom != "" {
+		lhs.SyncFrom = rhs.SyncFrom
+	}
+	return lhs
+}
+
+// Converts the API to its gateway definition equivalent.
+func (api Api) ToGatewayDefinition() GatewayDefinitionApi {
+	def := GatewayDefinitionApi{Api: &api}
+	def.DefinitionVersion = base.GatewayDefinitionV4
+	def.Type = ApiType(Enum(api.Type).ToGatewayDefinition())
+	def.Listeners = api.getGatewayDefinitionListener()
+	def.EndpointGroups = api.getGatewayDefinitionEndpointGroups()
+	def.Plans = api.getGatewayDefinitionPlans()
+	def.Flows = api.getApiDefinitionFlows()
+	if api.FlowExecution != nil {
+		api.FlowExecution.Mode = FlowMode(Enum(api.FlowExecution.Mode).ToGatewayDefinition())
+	}
+	return def
+}
+
+func (api Api) getGatewayDefinitionPlans() []*GatewayDefinitionPlan {
+	plans := make([]*GatewayDefinitionPlan, 0)
+	for name, plan := range api.Plans {
+		plans = append(plans, plan.ToGatewayDefinition(name))
+	}
+	return plans
+}
+
+func (api Api) getGatewayDefinitionListener() []*Listener {
+	listeners := make([]*Listener, len(api.Listeners))
+	for i, listener := range api.Listeners {
+		listeners[i] = listener.ToGatewayDefinition()
+	}
+	return listeners
+}
+
+func (api Api) getApiDefinitionFlows() []*Flow {
+	flows := make([]*Flow, len(api.Flows))
+	for i, flow := range api.Flows {
+		flows[i] = flow.ToGatewayDefinition()
+	}
+	return flows
+}
+
+func (api Api) getGatewayDefinitionEndpointGroups() []*EndpointGroup {
+	endpointGroups := make([]*EndpointGroup, len(api.EndpointGroups))
+	for i, endpointGroup := range api.EndpointGroups {
+		endpointGroups[i] = endpointGroup.ToGatewayDefinition()
+	}
+	return endpointGroups
 }

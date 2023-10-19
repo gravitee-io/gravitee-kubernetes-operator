@@ -50,23 +50,3 @@ type Logging struct {
 	Content   LoggingContent `json:"content,omitempty"`
 	Condition string         `json:"condition,omitempty"`
 }
-
-type Analytics struct {
-	Enabled  bool      `json:"enabled"`
-	Sampling *Sampling `json:"sampling,omitempty"`
-	Logging  *Logging  `json:"logging,omitempty"`
-}
-
-type SamplingType string
-
-const (
-	ProbabilitySamplingType = SamplingType("PROBABILITY")
-	TemporalSamplingType    = SamplingType("TEMPORAL")
-	CountSamplingType       = SamplingType("COUNT")
-	QuerySamplingType       = SamplingType("QUERY")
-)
-
-type Sampling struct {
-	Type  SamplingType `json:"type"`
-	Value string       `json:"value"`
-}

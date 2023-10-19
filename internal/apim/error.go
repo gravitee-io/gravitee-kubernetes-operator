@@ -63,6 +63,5 @@ func isRecoverable(err error) bool {
 			return serverError.IsRecoverable()
 		}
 	}
-
 	return true
 }

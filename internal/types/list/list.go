@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,6 +28,8 @@ func OfType(obj interface{}) (client.ObjectList, error) {
 	switch obj.(type) {
 	case *v1alpha1.ApiDefinitionList:
 		return &v1alpha1.ApiDefinitionList{}, nil
+	case *v1beta1.ApiDefinitionList:
+		return &v1beta1.ApiDefinitionList{}, nil
 	case *v1alpha1.ManagementContextList:
 		return &v1alpha1.ManagementContextList{}, nil
 	case *netv1.IngressList:

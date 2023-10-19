@@ -19,6 +19,10 @@ resources:
   kind: ApiDefinition
   path: github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -44,5 +48,7 @@ resources:
   version: v1beta1
   webhooks:
     conversion: true
+    defaulting: true
+    validation: true
     webhookVersion: v1
 version: "3"

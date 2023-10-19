@@ -25,7 +25,7 @@ func toListeners(proxy *v2.Proxy) []*v4.Listener {
 	}
 
 	listener := v4.NewHttpListenerBase()
-	paths := make([]*v4.Path, 0)
+	paths := make([]interface{}, 0)
 	for _, vHost := range proxy.VirtualHosts {
 		paths = append(paths, v4.NewPath(vHost.Host, vHost.Path))
 	}

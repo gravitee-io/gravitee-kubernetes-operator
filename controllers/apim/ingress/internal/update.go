@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,18 +24,19 @@ import (
 
 func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
 	if err := d.addFinalizer(desired); err != nil {
-		d.log.Error(err, "An error occurs while adding finalizer to the Ingress", "Ingress", desired)
+		log.Error(d.ctx, err, "An error occurs while adding finalizer to the Ingress", "Ingress", desired)
 		return err
 	}
 
 	if err := d.createUpdateTLSSecret(desired); err != nil {
-		d.log.Error(err, "An error occurred while updating the TLS secretes")
+		log.Error(d.ctx, err, "An error occurred while updating the TLS secrets")
 		return err
 	}
 
 	operation, apiDefinitionError := d.createOrUpdateApiDefinition(desired)
 	if apiDefinitionError != nil {
-		d.log.Error(
+		log.Error(
+			d.ctx,
 			apiDefinitionError,
 			"An error occurs while creating or updating the ApiDefinition",
 			"Operation", operation,

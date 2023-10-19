@@ -19,13 +19,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -33,7 +32,7 @@ var _ = Describe("API Definition Controller", func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("With basic ApiDefinition", func() {
-		var apiDefinitionFixture *gio.ApiDefinition
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 
 		BeforeEach(func() {
@@ -56,7 +55,7 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should update an API Definition", func() {
-			createdApiDefinition := new(gio.ApiDefinition)
+			createdApiDefinition := new(v1alpha1.ApiDefinition)
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
@@ -84,7 +83,7 @@ var _ = Describe("API Definition Controller", func() {
 			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
 
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
+				update := new(v1alpha1.ApiDefinition)
 				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
 					return err
 				}
@@ -112,7 +111,7 @@ var _ = Describe("API Definition Controller", func() {
 	})
 
 	Context("With basic ApiDefinition & ManagementContext", func() {
-		var apiDefinitionFixture *gio.ApiDefinition
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -146,19 +145,11 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should update an API Definition", func() {
-			createdApiDefinition := new(gio.ApiDefinition)
-
-			Eventually(func() error {
-				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(createdApiDefinition)
-			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
 
 			// Check created api is callable
-			var endpointInitial = internal.GatewayUrl + createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path
+			var endpointInitial = internal.GatewayUrl + apiDefinitionFixture.Spec.Proxy.VirtualHosts[0].Path
 
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpointInitial)
@@ -167,7 +158,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			By("Update the context path in API definition and expect no error")
 
-			updatedApiDefinition := createdApiDefinition.DeepCopy()
+			updatedApiDefinition := apiDefinitionFixture.DeepCopy()
 
 			expectedPath := updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path + "-updated"
 			expectedName := updatedApiDefinition.Spec.Name + "-updated"
@@ -175,22 +166,22 @@ var _ = Describe("API Definition Controller", func() {
 			updatedApiDefinition.Spec.Name = expectedName
 
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
-				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
-					return err
-				}
-				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
-				return k8sClient.Update(ctx, update)
+				return internal.UpdateSafely(updatedApiDefinition)
+			}, timeout, interval).ShouldNot(HaveOccurred())
+
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, updatedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect no error")
 
 			var endpointUpdated = internal.GatewayUrl + expectedPath
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				res, callErr := httpClient.Get(endpointUpdated)
-				return callErr == nil && res.StatusCode == 200
-			}, timeout, interval).Should(BeTrue())
+				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call rest API and expect one API matching status cross ID & updated name")
 
@@ -218,12 +209,8 @@ var _ = Describe("API Definition Controller", func() {
 					return cliErr
 				}
 
-				if api.DefinitionContext.Mode != "fully_managed" {
-					return fmt.Errorf("API mode mismatch: %s != %s", api.DefinitionContext.Mode, "fully_managed")
-				}
-
-				if api.DefinitionContext.Origin != "kubernetes" {
-					return fmt.Errorf("API origin mismatch: %s != %s", api.DefinitionContext.Mode, "kubernetes")
+				if api.DefinitionContext.Origin != "KUBERNETES" {
+					return internal.NewAssertionError("origin", "KUBERNETES", api.DefinitionContext.Origin)
 				}
 
 				return nil
@@ -232,8 +219,8 @@ var _ = Describe("API Definition Controller", func() {
 	})
 
 	Context("With basic ApiDefinition & ManagementContext adding context ref on update", func() {
-		var contextFixture *gio.ManagementContext
-		var apiDefinitionFixture *gio.ApiDefinition
+		var contextFixture *v1alpha1.ManagementContext
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -268,13 +255,10 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should update an API Definition, adding a management context", func() {
-			createdApiDefinition := new(gio.ApiDefinition)
-
+			createdApiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
-				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(createdApiDefinition)
+				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Updating the context ref in API definition, expecting no error")
@@ -287,7 +271,7 @@ var _ = Describe("API Definition Controller", func() {
 			}
 
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
+				update := new(v1alpha1.ApiDefinition)
 				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
 					return err
 				}

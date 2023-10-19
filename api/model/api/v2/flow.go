@@ -30,10 +30,10 @@ const (
 type PathOperator struct {
 	Path string `json:"path,omitempty"`
 	// +kubebuilder:default:=STARTS_WITH
-	Operator base.Operator `json:"operator,omitempty"`
+	Operator string `json:"operator,omitempty"`
 }
 
-func NewPathOperator(path string, operator base.Operator) *PathOperator {
+func NewPathOperator(path, operator string) *PathOperator {
 	return &PathOperator{
 		Path:     path,
 		Operator: operator,

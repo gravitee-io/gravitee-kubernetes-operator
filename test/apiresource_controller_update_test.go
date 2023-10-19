@@ -80,13 +80,15 @@ var _ = Describe("API Resource Controller", func() {
 				}
 
 				return internal.AssertStatusMatches(createdApi, gio.ApiDefinitionStatus{
-					EnvID:              "DEFAULT",
-					OrgID:              "DEFAULT",
-					CrossID:            createdApi.GetOrGenerateCrossID(),
-					ID:                 createdApi.PickID(),
-					Status:             gio.ProcessingStatusCompleted,
-					State:              "STARTED",
-					ObservedGeneration: 1,
+					EnvID:                        "DEFAULT",
+					OrgID:                        "DEFAULT",
+					CrossID:                      createdApi.GetOrGenerateCrossID(),
+					ID:                           createdApi.PickID(),
+					Status:                       gio.ProcessingStatusCompleted,
+					DeprecatedStatus:             gio.ProcessingStatusCompleted,
+					State:                        "STARTED",
+					ObservedGeneration:           1,
+					DeprecatedObservedGeneration: 1,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 

@@ -26,6 +26,7 @@ import (
 )
 
 const (
+	// TODO make this configurable from env / helm
 	requestTimeoutSeconds = 5
 )
 
@@ -50,10 +51,10 @@ func WithHost(host string) RequestTransformer {
 
 // Get returns the result of a GET request to the specified URL, marshaled into the target.
 // If the target is nil, the response is discarded.
-func (client *Client) Get(url string, target any, transformers ...RequestTransformer) error {
-	req, err := client.prepareGet(url)
+func (client *Client) Get(url *URL, target any, transformers ...RequestTransformer) error {
+	req, err := client.prepareGet(url.String())
 	if err != nil {
-		return errors.FromNewRequestError(http.MethodGet, url, err)
+		return errors.FromNewRequestError(http.MethodGet, url.String(), err)
 	}
 
 	for _, transform := range transformers {
@@ -66,10 +67,11 @@ func (client *Client) Get(url string, target any, transformers ...RequestTransfo
 // Post returns the result of a POST request to the specified URL,
 // using entity as the body of the request, marshaling the result into target.
 // If the target is nil, the response is discarded.
-func (client *Client) Post(url string, entity, target any, transformers ...RequestTransformer) error {
-	req, err := client.preparePost(url, entity)
+func (client *Client) Post(url *URL, entity, target any, transformers ...RequestTransformer) error {
+	req, err := client.preparePost(url.String(), entity)
+
 	if err != nil {
-		return errors.FromNewRequestError(http.MethodPost, url, err)
+		return errors.FromNewRequestError(http.MethodPost, url.String(), err)
 	}
 
 	for _, transform := range transformers {
@@ -82,10 +84,10 @@ func (client *Client) Post(url string, entity, target any, transformers ...Reque
 // Post returns the result of a PUT request to the specified URL,
 // using entity as the body of the request, marshaling the result into target.
 // If the target is nil, the response is discarded.
-func (client *Client) Put(url string, entity, target any, transformers ...RequestTransformer) error {
-	req, err := client.preparePut(url, entity)
+func (client *Client) Put(url *URL, entity, target any, transformers ...RequestTransformer) error {
+	req, err := client.preparePut(url.String(), entity)
 	if err != nil {
-		return errors.FromNewRequestError(http.MethodPut, url, err)
+		return errors.FromNewRequestError(http.MethodPut, url.String(), err)
 	}
 
 	for _, transform := range transformers {
@@ -97,10 +99,10 @@ func (client *Client) Put(url string, entity, target any, transformers ...Reques
 
 // Delete returns the result of a DELETE request to the specified URL, marshaling the result into target.
 // If the target is nil, the response is discarded.
-func (client *Client) Delete(url string, target any, transformers ...RequestTransformer) error {
-	req, err := client.prepareDelete(url)
+func (client *Client) Delete(url *URL, target any, transformers ...RequestTransformer) error {
+	req, err := client.prepareDelete(url.String())
 	if err != nil {
-		return errors.FromNewRequestError(http.MethodDelete, url, err)
+		return errors.FromNewRequestError(http.MethodDelete, url.String(), err)
 	}
 
 	for _, transform := range transformers {

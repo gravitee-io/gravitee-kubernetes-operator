@@ -39,7 +39,7 @@ spec:
                 async: false
                 addHeaders: false
                 spike:
-                  dynamicLimit: 20
+                  dynamicLimit: "20"
                   periodTime: 1
                   limit: 10
                   periodTimeUnit: "SECONDS"

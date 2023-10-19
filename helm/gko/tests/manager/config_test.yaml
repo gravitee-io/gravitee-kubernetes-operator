@@ -34,17 +34,17 @@ tests:
           path: data.APPLY_CRDS
           value: "true"
 
-  - it: Should have json logs disabled
+  - it: Should have console log format
     set:
       manager:
-        logs:
-            json: false
+        log:
+            format: console
     asserts:
       - hasDocuments:
           count: 1
       - equal:
-          path: data.DISABLE_JSON_LOGS
-          value: "true"
+          path: data.LOG_FORMAT
+          value: "console"
 
   - it: Should have metrics disabled
     set:

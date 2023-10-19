@@ -23,7 +23,6 @@ import (
 func FromV2(api *v2.Api) *v4.Api {
 	return &v4.Api{
 		ApiBase:           api.ApiBase,
-		ApiVersion:        api.Version,
 		DefinitionVersion: base.DefinitionVersionV4,
 		Type:              v4.ProxyType,
 		Listeners:         toListeners(api.Proxy),
@@ -33,5 +32,16 @@ func FromV2(api *v2.Api) *v4.Api {
 		Flows:             toFlows(api.Flows),
 		Analytics:         toAnalytics(api.Proxy),
 		Services:          toApiServices(api.Services),
+		DefinitionContext: toDefinitionContext(api),
+	}
+}
+
+func toDefinitionContext(api *v2.Api) *v4.DefinitionContext {
+	if api.IsLocal {
+		return v4.NewDefaultKubernetesContext()
+	}
+	return &v4.DefinitionContext{
+		Origin:   v4.OriginKubernetes,
+		SyncFrom: v4.OriginManagement,
 	}
 }

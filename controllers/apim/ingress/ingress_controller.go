@@ -17,6 +17,7 @@ package ingress
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	corev1 "k8s.io/api/core/v1"
@@ -26,10 +27,9 @@ import (
 	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -52,14 +52,13 @@ type Reconciler struct {
 // Reconcile perform reconciliation logic for Ingress resource that is managed
 // by the operator.
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
+	log.InfoInitReconcile(ctx)
 	ingress := &netV1.Ingress{}
 	if err := r.Get(ctx, req.NamespacedName, ingress); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	d := internal.NewDelegate(ctx, r.Client, logger)
+	d := internal.NewDelegate(ctx, r.Client)
 	if err := d.ResolveTemplate(ingress); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -77,11 +76,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr != nil {
-		logger.Error(reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)
+		log.ErrorRequeuingReconcile(ctx, reconcileErr)
 		return ctrl.Result{}, reconcileErr
 	}
 
-	logger.Info("Sync ingress DONE")
+	log.InfoEndReconcile(ctx)
 	return ctrl.Result{}, nil
 }
 
@@ -90,7 +89,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 		switch t := o.(type) {
 		case *netV1.Ingress:
 			return isGraviteeIngress(t)
-		case *v1alpha1.ApiDefinition:
+		case *v1beta1.ApiDefinition:
 			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == "true"
 		case *corev1.Secret:
 			return t.Type == "kubernetes.io/tls"
@@ -143,8 +142,8 @@ func isGraviteeIngress(ingress *netV1.Ingress) bool {
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
-		Owns(&v1alpha1.ApiDefinition{}).
-		Watches(&v1alpha1.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
+		Owns(&v1beta1.ApiDefinition{}).
+		Watches(&v1beta1.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
 		Watches(&corev1.Secret{}, r.Watcher.WatchTLSSecret()).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)

@@ -21,7 +21,8 @@ import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 type KeyMode string
 
 type SimpleSettings struct {
-	AppType  string `json:"type,omitempty"`
+	AppType string `json:"type,omitempty"`
+	// ClientId is the client id of the application
 	ClientId string `json:"client_id,omitempty"`
 }
 

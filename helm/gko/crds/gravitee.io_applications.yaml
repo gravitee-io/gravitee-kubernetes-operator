@@ -140,6 +140,7 @@ spec:
                   app:
                     properties:
                       client_id:
+                        description: ClientId is the client id of the application
                         type: string
                       type:
                         type: string

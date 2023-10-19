@@ -505,11 +505,10 @@ The definition context is used to inform a management API instance that this API
     </thead>
     <tbody><tr>
         <td><b>operator</b></td>
-        <td>enum</td>
+        <td>string</td>
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: STARTS_WITH, EQUALS<br/>
             <i>Default</i>: STARTS_WITH<br/>
         </td>
         <td>false</td>
@@ -857,7 +856,7 @@ The definition context is used to inform a management API instance that this API
           <br/>
           <br/>
             <i>Enum</i>: AUTO, MANUAL<br/>
-            <i>Default</i>: AUTO<br/>
+            <i>Default</i>: MANUAL<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1001,11 +1000,10 @@ The definition context is used to inform a management API instance that this API
     </thead>
     <tbody><tr>
         <td><b>operator</b></td>
-        <td>enum</td>
+        <td>string</td>
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: STARTS_WITH, EQUALS<br/>
             <i>Default</i>: STARTS_WITH<br/>
         </td>
         <td>false</td>
@@ -4037,7 +4035,7 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>client_id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          ClientId is the client id of the application<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4273,7 +4271,7 @@ ManagementContext represents the configuration for a specific environment
         <td><b>baseUrl</b></td>
         <td>string</td>
         <td>
-          The URL of a management API instance<br/>
+          The baseURL of a management API instance<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4287,7 +4285,7 @@ ManagementContext represents the configuration for a specific environment
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
-          An existing organization id targeted by the context on the management API instance.<br/>
+          The Gravitee APIM organization targeted by the management context.<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -4408,6 +4406,8 @@ Resource Types:
 
 - [ApiDefinition](#apidefinition)
 
+- [ManagementContext](#managementcontext)
+
 
 
 
@@ -4482,6 +4482,13 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#apidefinitionspecflowsindex-1">flows</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspecanalytics">analytics</a></b></td>
         <td>object</td>
         <td>
@@ -4489,8 +4496,8 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>apiVersion</b></td>
-        <td>string</td>
+        <td><b><a href="#apidefinitionspeccontextref-1">contextRef</a></b></td>
+        <td>object</td>
         <td>
           <br/>
         </td>
@@ -4503,20 +4510,20 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionspecdefinitioncontext">definitionContext</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>definitionVersion</b></td>
         <td>enum</td>
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: 4.0.0<br/>
-            <i>Default</i>: 4.0.0<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecdefinition_context-1">definition_context</a></b></td>
-        <td>object</td>
-        <td>
-          The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator<br/>
+            <i>Enum</i>: V4<br/>
+            <i>Default</i>: V4<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4536,13 +4543,6 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
       </tr><tr>
         <td><b><a href="#apidefinitionspecflowexecution">flowExecution</a></b></td>
         <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecflowsindex-1">flows</a></b></td>
-        <td>[]object</td>
         <td>
           <br/>
         </td>
@@ -4579,17 +4579,6 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>local</b></td>
-        <td>boolean</td>
-        <td>
-          local defines if the api is local or not. 
- If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API but without setting the update flag in the datastore. 
- If false, the Operator will not create the ConfigMaps for the Gateway. Instead, it pushes the API to the Management API and forces it to update the event in the datastore. This will cause Gateways to fetch the APIs from the datastore<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#apidefinitionspecmetadataindex-1">metadata</a></b></td>
         <td>[]object</td>
         <td>
@@ -4604,8 +4593,8 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindex-1">plans</a></b></td>
-        <td>[]object</td>
+        <td><b><a href="#apidefinitionspecplanskey">plans</a></b></td>
+        <td>map[string]object</td>
         <td>
           <br/>
         </td>
@@ -4672,6 +4661,13 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>version</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>visibility</b></td>
         <td>enum</td>
         <td>
@@ -4679,6 +4675,368 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
           <br/>
             <i>Enum</i>: PUBLIC, PRIVATE<br/>
             <i>Default</i>: PRIVATE<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index]
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexpublishindex">publish</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexrequestindex">request</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexresponseindex">response</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectors</b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecflowsindexsubscribeindex">subscribe</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tags</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].publish[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].request[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].response[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.flows[index].subscribe[index]
+<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4940,12 +5298,12 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
 </table>
 
 
-### ApiDefinition.spec.definition_context
+### ApiDefinition.spec.contextRef
 <sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
 
 
 
-The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator
+
 
 <table>
     <thead>
@@ -4957,21 +5315,51 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>mode</b></td>
+        <td><b>name</b></td>
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
           <br/>
-            <i>Default</i>: fully_managed<br/>
         </td>
         <td>false</td>
-      </tr><tr>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.definitionContext
+<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
         <td><b>origin</b></td>
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>syncFrom</b></td>
+        <td>string</td>
+        <td>
           <br/>
-            <i>Default</i>: kubernetes<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4995,6 +5383,13 @@ The definition context is used to inform a management API instance that this API
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspecendpointgroupsindexendpointsindex">endpoints</a></b></td>
         <td>[]object</td>
         <td>
@@ -5018,13 +5413,6 @@ The definition context is used to inform a management API instance that this API
       </tr><tr>
         <td><b><a href="#apidefinitionspecendpointgroupsindexloadbalancer">loadBalancer</a></b></td>
         <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
         <td>
           <br/>
         </td>
@@ -5337,8 +5725,8 @@ The definition context is used to inform a management API instance that this API
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: round-robin, random, weighted-round-robin, weighted-random<br/>
-            <i>Default</i>: round-robin<br/>
+            <i>Enum</i>: ROUND_ROBIN, RANDOM, WEIGHTED_ROUND_ROBIN, WEIGHTED_RANDOM<br/>
+            <i>Default</i>: ROUND_ROBIN<br/>
         </td>
         <td>true</td>
       </tr></tbody>
@@ -5611,395 +5999,6 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.flows[index]
-<sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecflowsindexpublishindex">publish</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecflowsindexrequestindex">request</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecflowsindexresponseindex">response</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecflowsindexselectorsindex">selectors</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecflowsindexsubscribeindex">subscribe</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>tags</b></td>
-        <td>[]string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.flows[index].publish[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.flows[index].request[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.flows[index].response[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.flows[index].selectors[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>inline</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.flows[index].subscribe[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex-1)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
 ### ApiDefinition.spec.metadata[index]
 <sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
 
@@ -6057,7 +6056,7 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.plans[index]
+### ApiDefinition.spec.plans[key]
 <sup><sup>[↩ Parent](#apidefinitionspec-1)</sup></sup>
 
 
@@ -6123,7 +6122,7 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindexflowsindex-1">flows</a></b></td>
+        <td><b><a href="#apidefinitionspecplanskeyflowsindex">flows</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
@@ -6151,7 +6150,7 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindexsecurity">security</a></b></td>
+        <td><b><a href="#apidefinitionspecplanskeysecurity">security</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -6198,15 +6197,15 @@ The definition context is used to inform a management API instance that this API
           <br/>
           <br/>
             <i>Enum</i>: AUTO, MANUAL<br/>
-            <i>Default</i>: AUTO<br/>
+            <i>Default</i>: MANUAL<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### ApiDefinition.spec.plans[index].flows[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindex-1)</sup></sup>
+### ApiDefinition.spec.plans[key].flows[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplanskey)</sup></sup>
 
 
 
@@ -6238,35 +6237,35 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindexflowsindexpublishindex">publish</a></b></td>
+        <td><b><a href="#apidefinitionspecplanskeyflowsindexpublishindex">publish</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindexflowsindexrequestindex">request</a></b></td>
+        <td><b><a href="#apidefinitionspecplanskeyflowsindexrequestindex">request</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindexflowsindexresponseindex">response</a></b></td>
+        <td><b><a href="#apidefinitionspecplanskeyflowsindexresponseindex">response</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindexflowsindexselectorsindex">selectors</a></b></td>
+        <td><b>selectors</b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecplansindexflowsindexsubscribeindex">subscribe</a></b></td>
+        <td><b><a href="#apidefinitionspecplanskeyflowsindexsubscribeindex">subscribe</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
@@ -6283,8 +6282,8 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.plans[index].flows[index].publish[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+### ApiDefinition.spec.plans[key].flows[index].publish[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplanskeyflowsindex)</sup></sup>
 
 
 
@@ -6354,8 +6353,8 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.plans[index].flows[index].request[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+### ApiDefinition.spec.plans[key].flows[index].request[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplanskeyflowsindex)</sup></sup>
 
 
 
@@ -6425,8 +6424,8 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.plans[index].flows[index].response[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+### ApiDefinition.spec.plans[key].flows[index].response[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplanskeyflowsindex)</sup></sup>
 
 
 
@@ -6496,35 +6495,8 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.plans[index].flows[index].selectors[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>inline</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.plans[index].flows[index].subscribe[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex-1)</sup></sup>
+### ApiDefinition.spec.plans[key].flows[index].subscribe[index]
+<sup><sup>[↩ Parent](#apidefinitionspecplanskeyflowsindex)</sup></sup>
 
 
 
@@ -6594,8 +6566,8 @@ The definition context is used to inform a management API instance that this API
 </table>
 
 
-### ApiDefinition.spec.plans[index].security
-<sup><sup>[↩ Parent](#apidefinitionspecplansindex-1)</sup></sup>
+### ApiDefinition.spec.plans[key].security
+<sup><sup>[↩ Parent](#apidefinitionspecplanskey)</sup></sup>
 
 
 
@@ -6976,6 +6948,13 @@ ApiDefinitionStatus defines the observed state of API Definition.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>plans</b></td>
+        <td>map[string]string</td>
+        <td>
+          This field is used to store the list of plans that have been created for the API definition. Especially when the API is synced with an APIM instance<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>processingStatus</b></td>
         <td>enum</td>
         <td>
@@ -6989,6 +6968,243 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td>string</td>
         <td>
           The state of the API. Can be either STARTED or STOPPED.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## ManagementContext
+<sup><sup>[↩ Parent](#graviteeiov1beta1 )</sup></sup>
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+      <td><b>apiVersion</b></td>
+      <td>string</td>
+      <td>gravitee.io/v1beta1</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b>kind</b></td>
+      <td>string</td>
+      <td>ManagementContext</td>
+      <td>true</td>
+      </tr>
+      <tr>
+      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
+      <td>object</td>
+      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
+      <td>true</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspec-1">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ManagementContext represents the configuration for a specific environment<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          ManagementContextStatus defines the observed state of an API Context.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec
+<sup><sup>[↩ Parent](#managementcontext-1)</sup></sup>
+
+
+
+ManagementContext represents the configuration for a specific environment
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#managementcontextspecauth-1">auth</a></b></td>
+        <td>object</td>
+        <td>
+          Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>baseUrl</b></td>
+        <td>string</td>
+        <td>
+          The baseURL of a management API instance<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>environmentId</b></td>
+        <td>string</td>
+        <td>
+          An existing environment id targeted by the context within the organization.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>organizationId</b></td>
+        <td>string</td>
+        <td>
+          The Gravitee APIM organization targeted by the management context.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth
+<sup><sup>[↩ Parent](#managementcontextspec-1)</sup></sup>
+
+
+
+Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>bearerToken</b></td>
+        <td>string</td>
+        <td>
+          The bearer token used to authenticate against the API Management instance (must be generated from an admin account)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthcredentials-1">credentials</a></b></td>
+        <td>object</td>
+        <td>
+          The Basic credentials used to authenticate against the API Management instance.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthsecretref-1">secretRef</a></b></td>
+        <td>object</td>
+        <td>
+          A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.credentials
+<sup><sup>[↩ Parent](#managementcontextspecauth-1)</sup></sup>
+
+
+
+The Basic credentials used to authenticate against the API Management instance.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>username</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.secretRef
+<sup><sup>[↩ Parent](#managementcontextspecauth-1)</sup></sup>
+
+
+
+A secret reference holding either a bearer token or the user name and password used for basic authentication
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.status
+<sup><sup>[↩ Parent](#managementcontext-1)</sup></sup>
+
+
+
+ManagementContextStatus defines the observed state of an API Context.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>orgId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>

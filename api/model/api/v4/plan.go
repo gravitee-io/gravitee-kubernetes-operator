@@ -41,6 +41,11 @@ type Plan struct {
 	Flows             []*Flow           `json:"flows,omitempty"`
 }
 
+type GatewayDefinitionPlan struct {
+	*Plan `json:",inline"`
+	Name  string `json:"name"`
+}
+
 func NewPlan(base *base.Plan) *Plan {
 	return &Plan{
 		Plan:              base,
@@ -48,6 +53,22 @@ func NewPlan(base *base.Plan) *Plan {
 		Mode:              StandardPlanMode,
 		Flows:             []*Flow{},
 	}
+}
+
+func (plan *Plan) WithSecurity(security PlanSecurity) *Plan {
+	plan.Security = security
+	return plan
+}
+
+func (plan *Plan) ToGatewayDefinition(name string) *GatewayDefinitionPlan {
+	def := &GatewayDefinitionPlan{Plan: plan, Name: name}
+	def.Security.Type = Enum(plan.Security.Type).ToGatewayDefinition()
+	def.Mode = PlanMode(Enum(plan.Mode).ToGatewayDefinition())
+	def.Status = base.PlanStatus(Enum(plan.Status).ToGatewayDefinition())
+	for i := range def.Flows {
+		def.Flows[i] = def.Flows[i].ToGatewayDefinition()
+	}
+	return def
 }
 
 type PlanSecurity struct {
@@ -58,6 +79,7 @@ type PlanSecurity struct {
 
 func NewPlanSecurity(kind string) PlanSecurity {
 	return PlanSecurity{
-		Type: kind,
+		Type:   kind,
+		Config: utils.NewGenericStringMap(),
 	}
 }

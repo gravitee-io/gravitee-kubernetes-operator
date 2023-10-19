@@ -66,14 +66,12 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			managementContextFixture = managementContext
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
-			By("Expect the API Definition is Ready")
+			By("Expect the API Definition to be Ready")
 
 			savedApiDefinition = new(gio.ApiDefinition)
 			Eventually(func() error {
-				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(savedApiDefinition)
+				err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
@@ -100,7 +98,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiDefinition.Spec.Name = "new-name"
 
 			Eventually(func() error {
-				return internal.UpdateSafely(k8sClient, apiDefinition)
+				return internal.UpdateSafely(apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Check API definition processing status")
@@ -166,7 +164,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			By("Set bad BaseUrl in ManagementContext")
 
 			managementContextBad := managementContextFixture.DeepCopy()
-			managementContextBad.Spec.BaseUrl = "http://bad-url:8083"
+			managementContextBad.Spec.BaseURL = "http://bad-url:8083"
 
 			Eventually(func() error {
 				update := new(gio.ManagementContext)
@@ -199,13 +197,15 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 				}
 
 				return internal.AssertStatusMatches(savedApiDefinition, gio.ApiDefinitionStatus{
-					Status:             gio.ProcessingStatusFailed,
-					EnvID:              "DEFAULT",
-					OrgID:              "DEFAULT",
-					CrossID:            apiDefinition.GetOrGenerateCrossID(),
-					ID:                 apiDefinition.PickID(),
-					State:              "STARTED",
-					ObservedGeneration: 1,
+					Status:                       gio.ProcessingStatusFailed,
+					DeprecatedStatus:             gio.ProcessingStatusFailed,
+					EnvID:                        "DEFAULT",
+					OrgID:                        "DEFAULT",
+					CrossID:                      apiDefinition.GetOrGenerateCrossID(),
+					ID:                           apiDefinition.PickID(),
+					State:                        "STARTED",
+					ObservedGeneration:           1,
+					DeprecatedObservedGeneration: 1,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 

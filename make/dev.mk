@@ -32,14 +32,15 @@ k3d-push: ## Push the controller image to the k3d registry
 .PHONY: k3d-deploy
 k3d-deploy: ## Install operator helm chart to the k3d cluster
 	helm upgrade --install -n default --create-namespace gko helm/gko \
-	    --set manager.httpClient.insecureSkipCertVerify=true \
-		--set manager.metrics.enabled=false \
 		--set manager.scope.cluster=false \
 		--set manager.image.repository=$(K3D_IMG) \
 		--set manager.image.tag=$(K3D_TAG) \
-		--set manager.logs.json=false \
+		--set manager.log.format=console \
+		--set manager.log.level=debug \
+		--set manager.log.timestamp.format=iso-8601 \
 		--set ingress.templates.404.name=template-404 \
-		--set ingress.templates.404.namespace=default
+		--set ingress.templates.404.namespace=default \
+		--wait
 
 .PHONY:
 k3d-admin: ## Gain a kubernetes context with admin role on the k3d cluster

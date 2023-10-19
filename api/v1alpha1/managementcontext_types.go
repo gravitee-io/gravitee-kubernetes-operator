@@ -17,7 +17,7 @@
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
+	v1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/v1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -25,7 +25,7 @@ import (
 // ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
 type ManagementContextSpec struct {
-	management.Context `json:",inline"`
+	v1.Context `json:",inline"`
 }
 
 // ManagementContextStatus defines the observed state of an API Context.
@@ -46,8 +46,8 @@ type ManagementContext struct {
 	Status ManagementContextStatus `json:"status,omitempty"`
 }
 
-func (context *ManagementContext) GetNamespacedName() *refs.NamespacedName {
-	return &refs.NamespacedName{Namespace: context.Namespace, Name: context.Name}
+func (ctx *ManagementContext) GetNamespacedName() *refs.NamespacedName {
+	return &refs.NamespacedName{Namespace: ctx.Namespace, Name: ctx.Name}
 }
 
 // +kubebuilder:object:root=true
@@ -62,6 +62,6 @@ func init() {
 	SchemeBuilder.Register(&ManagementContext{}, &ManagementContextList{})
 }
 
-func (context *ManagementContext) IsBeingDeleted() bool {
-	return !context.ObjectMeta.DeletionTimestamp.IsZero()
+func (ctx *ManagementContext) IsBeingDeleted() bool {
+	return !ctx.ObjectMeta.DeletionTimestamp.IsZero()
 }

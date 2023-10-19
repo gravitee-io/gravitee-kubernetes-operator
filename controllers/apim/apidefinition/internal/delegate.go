@@ -17,10 +17,10 @@ package internal
 import (
 	"context"
 
-	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	coreV1 "k8s.io/api/core/v1"
 	k8s "sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,8 +28,6 @@ import (
 )
 
 const (
-	separator = "/"
-
 	bearerTokenSecretKey = "bearerToken"
 	usernameSecretKey    = "username"
 	passwordSecretKey    = "password"
@@ -38,27 +36,33 @@ const (
 type Delegate struct {
 	ctx  context.Context
 	k8s  k8s.Client
-	log  logr.Logger
 	apim *apim.APIM
 }
 
-func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate {
+func NewDelegate(ctx context.Context, k8s k8s.Client) *Delegate {
 	return &Delegate{
-		ctx, k8s, log, nil,
+		ctx, k8s, nil,
 	}
 }
 
-func (d *Delegate) ResolveTemplate(api *gio.ApiDefinition) error {
-	return template.NewResolver(d.ctx, d.k8s, d.log, api).Resolve()
+func (d *Delegate) ResolveTemplate(api *v1beta1.ApiDefinition) error {
+	if err := template.NewResolver(d.ctx, d.k8s, api).Resolve(); err != nil {
+		log.Error(d.ctx, err, "Error resolving template expressions")
+		return err
+	}
+	return nil
 }
 
-func (d *Delegate) ResolveContext(api *gio.ApiDefinition) error {
-	managementContext := new(gio.ManagementContext)
+func (d *Delegate) ResolveContext(api *v1beta1.ApiDefinition) error {
+	managementContext := new(v1beta1.ManagementContext)
 
 	ref := api.Spec.Context
 	ns := ref.ToK8sType()
+	if ns.Namespace == "" {
+		ns.Namespace = api.Namespace
+	}
 
-	d.log.Info("Resolving API context", "namespace", ref.Namespace, "name", ref.Name)
+	log.Debug(d.ctx, "Resolving management context", "ref", ref)
 
 	if err := d.k8s.Get(d.ctx, ns, managementContext); err != nil {
 		return err
@@ -81,16 +85,16 @@ func (d *Delegate) HasContext() bool {
 	return d.apim != nil
 }
 
-func (d *Delegate) AddDeletionFinalizer(api *gio.ApiDefinition) {
+func (d *Delegate) AddDeletionFinalizer(api *v1beta1.ApiDefinition) {
 	if api.IsMissingDeletionFinalizer() {
 		util.AddFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
 		if err := d.k8s.Update(d.ctx, api); err != nil {
-			d.log.Error(err, "Unable to add deletion finalizer to API definition")
+			log.Error(d.ctx, err, "Unable to add deletion finalizer")
 		}
 	}
 }
 
-func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
+func (d *Delegate) resolveContextSecrets(context *v1beta1.ManagementContext) error {
 	management := context.Spec
 
 	if management.HasSecretRef() {
@@ -114,7 +118,7 @@ func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
 	return nil
 }
 
-func getSecretNamespace(context *gio.ManagementContext) string {
+func getSecretNamespace(context *v1beta1.ManagementContext) string {
 	secretRef := context.Spec.SecretRef()
 	if secretRef.Namespace != "" {
 		return secretRef.Namespace

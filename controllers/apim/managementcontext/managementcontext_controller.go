@@ -53,7 +53,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if err := template.NewResolver(ctx, r.Client, logger, managementContext).Resolve(); err != nil {
+	if err := template.NewResolver(ctx, r.Client, managementContext).Resolve(); err != nil {
 		return ctrl.Result{}, err
 	}
 

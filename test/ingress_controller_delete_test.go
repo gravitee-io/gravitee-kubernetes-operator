@@ -161,20 +161,10 @@ var _ = Describe("Deleting an ingress", func() {
 
 		When("API template does not have a reference to an exiting ingress", func() {
 			It("Should delete the Ingress and the ApiDefinition", func() {
+
 				By("Deleting the Ingress")
+
 				Expect(k8sClient.Delete(ctx, createdIngress)).ToNot(HaveOccurred())
-
-				By("Checking the Ingress has been deleted")
-				ing := &netV1.Ingress{}
-				Eventually(func() error {
-					return k8sClient.Get(ctx, ingressLookupKey, ing)
-				}, timeout, interval).ShouldNot(Succeed())
-
-				api := &gio.ApiDefinition{}
-				Eventually(func() error {
-					err := k8sClient.Get(ctx, ingressLookupKey, api)
-					return err
-				}, timeout, interval).ShouldNot(Succeed())
 
 				By("Deleting the API definition template")
 

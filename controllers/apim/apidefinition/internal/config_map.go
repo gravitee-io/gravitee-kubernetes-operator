@@ -17,8 +17,8 @@ package internal
 import (
 	"encoding/json"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -36,29 +36,9 @@ const (
 	envKey               = "environmentId"
 )
 
-func (d *Delegate) updateConfigMap(api *gio.ApiDefinition) error {
-	if api.Spec.State == base.StateStopped {
-		if err := d.deleteConfigMap(api); err != nil {
-			d.log.Error(err, "Unable to delete ConfigMap from API definition")
-			return err
-		}
-	} else {
-		if err := d.saveConfigMap(api); err != nil {
-			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (d *Delegate) saveConfigMap(
-	apiDefinition *gio.ApiDefinition,
+	apiDefinition *v1beta1.ApiDefinition,
 ) error {
-	if apiDefinition.Spec.State == base.StateStopped {
-		return nil
-	}
-
 	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
 
@@ -83,27 +63,23 @@ func (d *Delegate) saveConfigMap(
 		gioTypeKey:   keys.CrdApiDefinitionResource + "." + keys.CrdGroup,
 	}
 
+	definition := apiDefinition.ToGatewayDefinition()
+
 	cm.Data = map[string]string{
 		definitionVersionKey: apiDefinition.ResourceVersion,
 	}
-
-	spec := &(apiDefinition.Spec)
 
 	if d.apim != nil {
 		cm.Data[orgKey] = d.apim.OrgID()
 		cm.Data[envKey] = d.apim.EnvID()
 	}
 
-	if spec.ID == "" {
-		spec.ID = string(apiDefinition.UID)
-	}
-
-	jsonSpec, err := json.Marshal(spec)
+	jsonDefinition, err := json.Marshal(definition)
 	if err != nil {
 		return err
 	}
 
-	cm.Data[definitionKey] = string(jsonSpec)
+	cm.Data[definitionKey] = string(jsonDefinition)
 
 	currentApiDefinition := &v1.ConfigMap{}
 
@@ -111,7 +87,7 @@ func (d *Delegate) saveConfigMap(
 
 	err = d.k8s.Get(d.ctx, lookupKey, currentApiDefinition)
 	if errors.IsNotFound(err) {
-		d.log.Info("Creating config map for API.", "id", apiDefinition.Spec.ID, "name", apiDefinition.Name)
+		log.Debug(d.ctx, "Storing API definition to config map")
 		return d.k8s.Create(d.ctx, cm)
 	}
 
@@ -121,15 +97,15 @@ func (d *Delegate) saveConfigMap(
 
 	// Only update the config map if resource version has changed (means api definition has changed).
 	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.ResourceVersion {
-		d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.ID)
+		log.Debug(d.ctx, "Updating API definition in config map")
 		return d.k8s.Update(d.ctx, cm)
 	}
 
-	d.log.Info("No change detected on API. Skipped.", "id", apiDefinition.Spec.ID)
+	log.Debug(d.ctx, "Skipping config map update as API definition has not changed")
 	return nil
 }
 
-func (d *Delegate) deleteConfigMap(api *gio.ApiDefinition) error {
+func (d *Delegate) deleteConfigMap(api *v1beta1.ApiDefinition) error {
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      api.Name,
@@ -137,6 +113,6 @@ func (d *Delegate) deleteConfigMap(api *gio.ApiDefinition) error {
 		},
 	}
 
-	d.log.Info("Deleting Config Map associated to API if exists")
+	log.Debug(d.ctx, "Deleting config map associated to API (if exists)")
 	return client.IgnoreNotFound(d.k8s.Delete(d.ctx, configMap))
 }

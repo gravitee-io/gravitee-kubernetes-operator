@@ -20,28 +20,29 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal/mapper"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	coreV1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 )
 
-func (d *Delegate) resolveApiDefinitionTemplate(ingress *netV1.Ingress) (*v1alpha1.ApiDefinition, error) {
-	var apiDefinition *v1alpha1.ApiDefinition
+func (d *Delegate) resolveApiDefinitionTemplate(ingress *netV1.Ingress) (*v1beta1.ApiDefinition, error) {
+	var apiDefinition *v1beta1.ApiDefinition
 
 	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
-		apiDefinition = &v1alpha1.ApiDefinition{}
+		apiDefinition = &v1beta1.ApiDefinition{}
 		if err := d.k8s.Get(
 			d.ctx, types.NamespacedName{Name: name, Namespace: ingress.Namespace}, apiDefinition,
 		); err != nil {
 			return nil, err
 		}
 	} else {
-		apiDefinition = defaultApiDefinitionTemplate()
+		apiDefinition = defaultApiDefinitionTemplate(ingress)
 	}
 
 	return mapper.New(d.getMapperOpts()).Map(apiDefinition, ingress), nil
@@ -62,12 +63,12 @@ func (d *Delegate) setNotFoundTemplate(opts *mapper.Opts) {
 
 	cm := coreV1.ConfigMap{}
 	if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
-		d.log.Error(err, "unable to access config map, using default HTTP not found template")
+		log.Error(d.ctx, err, "Unable to access config map, using default HTTP not found template")
 		return
 	}
 
 	if err := checkData(cm.Data); err != nil {
-		d.log.Error(err, "missing key in config map, using default HTTP not found template")
+		log.Error(d.ctx, err, "missing key in config map, using default HTTP not found template")
 		return
 	}
 
@@ -89,22 +90,27 @@ func checkData(template map[string]string) error {
 	return nil
 }
 
-func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
-	return &v1alpha1.ApiDefinition{
-		Spec: v1alpha1.ApiDefinitionSpec{
-			Api: v2.Api{
-				Plans: []*v2.Plan{
-					v2.NewPlan(
-						base.NewPlan("Default keyless plan", "").
+func defaultApiDefinitionTemplate(ingress *netV1.Ingress) *v1beta1.ApiDefinition {
+	return &v1beta1.ApiDefinition{
+		Spec: v1beta1.ApiDefinitionSpec{
+			Api: v4.Api{
+				Type: v4.ProxyType,
+				Plans: map[string]*v4.Plan{
+					"Default Keyless (UNSECURED)": v4.NewPlan(
+						base.NewPlan("Keyless (UNSECURED)", "Default ingress plan").
 							WithStatus(base.PublishedPlanStatus),
-					).WithSecurity("KEY_LESS"),
+					).WithSecurity(v4.NewPlanSecurity("KEY_LESS")),
 				},
+				FlowExecution: v4.DefaultFlowExecution(),
 				ApiBase: &base.ApiBase{
-					Description: "A default keyless API",
-					IsLocal:     true,
+					Version:     "v1beta1",
+					Description: generateDescription(ingress),
 				},
-				Version: "1.0.0",
 			},
 		},
 	}
+}
+
+func generateDescription(ingress *netV1.Ingress) string {
+	return fmt.Sprintf("This API has been generated to handle Ingress %s", ingress.Name)
 }

@@ -1,6 +1,7 @@
 {
   "gravitee": "2.0.0",
   "flow_mode": "DEFAULT",
+  "local": false,
   "proxy": {
     "groups": [
       {
@@ -13,7 +14,6 @@
             "name": "default",
             "target": "https://api.gravitee.io/echo",
             "weight": 1,
-            "backup": false,
             "type": "http",
             "inherit": true
           }

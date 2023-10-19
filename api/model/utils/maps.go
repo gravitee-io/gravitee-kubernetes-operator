@@ -34,10 +34,22 @@ func NewGenericStringMap() *GenericStringMap {
 	}
 }
 
+func ToStringInterfaceMap(in interface{}) map[string]interface{} {
+	b, err := json.Marshal(in)
+	if err != nil {
+		return nil
+	}
+	impl := make(map[string]interface{})
+	if err = json.Unmarshal(b, &impl); err != nil {
+		return nil
+	}
+	return impl
+}
+
 func ToGenericStringMap(impl interface{}) *GenericStringMap {
 	obj, ok := impl.(map[string]interface{})
 	if !ok {
-		return nil
+		obj = ToStringInterfaceMap(impl)
 	}
 
 	return &GenericStringMap{
@@ -99,24 +111,28 @@ func (in *GenericStringMap) GetSlice(key string) []interface{} {
 func (in *GenericStringMap) DeepCopyInto(out *GenericStringMap) {
 	// controller-gen cannot handle the interface{} type of an aliased Unstructured,
 	// thus we write our own DeepCopyInto function.
-	if out != nil {
-		casted := in.Unstructured
-		for k, v := range casted.Object {
-			if reflect.TypeOf(v).Kind() == reflect.Int {
-				casted.Object[k] = int64(v.(int))
-			} else if reflect.TypeOf(v).Kind() == reflect.Map {
-				if innerMap, ok := v.(map[string]interface{}); ok {
-					nestedIn := GenericStringMap{Unstructured: unstructured.Unstructured{Object: innerMap}}
-					nestedOut := GenericStringMap{}
-					nestedIn.DeepCopyInto(&nestedOut)
-					casted.Object[k] = nestedOut.Object
-				}
+	if out == nil {
+		return
+	}
+	casted := in.Unstructured
+	for k, v := range casted.Object {
+		switch {
+		case v == nil:
+			continue
+		case reflect.TypeOf(v).Kind() == reflect.Int:
+			casted.Object[k] = int64(v.(int))
+		case reflect.TypeOf(v).Kind() == reflect.Map:
+			if innerMap, ok := v.(map[string]interface{}); ok {
+				nestedIn := GenericStringMap{Unstructured: unstructured.Unstructured{Object: innerMap}}
+				nestedOut := GenericStringMap{}
+				nestedIn.DeepCopyInto(&nestedOut)
+				casted.Object[k] = nestedOut.Object
 			}
 		}
-
-		deepCopy := casted.DeepCopy()
-		out.Object = deepCopy.Object
 	}
+
+	deepCopy := casted.DeepCopy()
+	out.Object = deepCopy.Object
 }
 
 func (in *GenericStringMap) UnmarshalJSON(data []byte) error {

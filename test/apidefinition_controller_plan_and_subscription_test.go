@@ -29,14 +29,14 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/api"
 )
 
 var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
-	Context("Checking ApiKey plan and subscription", Ordered, func() {
+	Context("with plan and subscription", Ordered, func() {
 		var apiDefinitionFixture *gio.ApiDefinition
 
 		var savedApiDefinition *gio.ApiDefinition
@@ -67,7 +67,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
-			By("Create an API definition resource stared by default")
+			By("Creating an API definition resource started by default")
 
 			apiDefinition := fixtures.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
@@ -75,16 +75,13 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiDefinitionFixture = apiDefinition
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
-			By("Expect the API Definition is Ready")
+			By("Expecting the API Definition to be Ready")
 
 			savedApiDefinition = new(gio.ApiDefinition)
 			Eventually(func() error {
-				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(savedApiDefinition)
+				err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
-
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
 			apim, err = internal.NewAPIM(ctx)
@@ -104,7 +101,12 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiKey := createSubscriptionAndGetApiKey(
 				apim,
 				savedApiDefinition,
-				func(mgmtApi *apimModel.ApiEntity) string { return mgmtApi.Plans[0].Id },
+				func(mgmtApi *api.Entity) string {
+					plans, err := apim.Plans.ListByAPI(mgmtApi.ID)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(len(plans.Data)).To(Equal(1))
+					return plans.Data[0].ID
+				},
 			)
 
 			By("Call gateway with subscription api key")
@@ -115,49 +117,21 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 		})
 
-		It("Should update ApiDefinition resource", func() {
-
-			By("Update ApiDefinition path & name")
-
-			updatedApiDefinition := savedApiDefinition.DeepCopy()
-
-			expectedPath := updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path + "-updated"
-			expectedName := updatedApiDefinition.Spec.Name + "-updated"
-			updatedApiDefinition.Spec.Proxy.VirtualHosts[0].Path = expectedPath
-			updatedApiDefinition.Spec.Name = expectedName
-
-			Eventually(func() error {
-				update := new(gio.ApiDefinition)
-				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
-					return err
-				}
-				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
-				return k8sClient.Update(ctx, update)
-			}, timeout, interval).ShouldNot(HaveOccurred())
-
-			// Wait for the ApiDefinition to be updated
-			Eventually(func() error {
-				expectedGeneration := savedApiDefinition.Status.ObservedGeneration + 1
-				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
-				return internal.AssertNoErrorAndObservedGenerationEquals(
-					k8sErr, updatedApiDefinition, expectedGeneration,
-				)
-			}, timeout, interval).ShouldNot(HaveOccurred())
-
+		It("should validate API key", func() {
 			// Update savedApiDefinition & global var with last Get
-			savedApiDefinition = updatedApiDefinition.DeepCopy()
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
 
-			By("Update ApiDefinition add ApiKey plan")
+			By("Updating ApiDefinition to add ApiKey plan")
 
-			secondPlanCrossId := uuid.FromStrings("second-plan-cross-id")
+			newApiKeyPlan := v2.NewPlan(
+				base.
+					NewPlan("G.K.O. API Key Plan - 2", "").
+					WithStatus(base.PublishedPlanStatus),
+			).WithSecurity("API_KEY")
+
+			updatedApiDefinition := savedApiDefinition.DeepCopy()
 			updatedApiDefinition.Spec.Plans = append(savedApiDefinition.Spec.Plans,
-				v2.NewPlan(
-					base.
-						NewPlan("G.K.O. Second ApiKey", "").
-						WithCrossID(secondPlanCrossId).
-						WithStatus(base.PublishedPlanStatus),
-				).WithSecurity("API_KEY"),
+				newApiKeyPlan,
 			)
 
 			Eventually(func() error {
@@ -171,26 +145,27 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			// Wait for the ApiDefinition to be updated
 			Eventually(func() error {
-				expectedGeneration := savedApiDefinition.Status.ObservedGeneration + 1
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
-				return internal.AssertNoErrorAndObservedGenerationEquals(
-					k8sErr, updatedApiDefinition, expectedGeneration,
-				)
+				return internal.AssertNoErrorAndStatusCompleted(k8sErr, updatedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			// Update savedApiDefinition & global var with last Get
-			savedApiDefinition = updatedApiDefinition.DeepCopy()
+			By("Subscribing to the API Key plan")
 
 			apiKey := createSubscriptionAndGetApiKey(
 				apim,
-				savedApiDefinition,
-				func(mgmtApi *apimModel.ApiEntity) string {
-					for _, plan := range mgmtApi.Plans {
-						if plan.CrossId == secondPlanCrossId {
-							return plan.Id
+				updatedApiDefinition,
+				func(mgmtApi *api.Entity) string {
+					plans, err := apim.Plans.ListByAPI(mgmtApi.ID)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(len(plans.Data)).To(Equal(2))
+					planID := ""
+					for _, plan := range plans.Data {
+						if plan.Name == newApiKeyPlan.Name {
+							planID = plan.ID
 						}
 					}
-					return ""
+					Expect(planID).ToNot(BeEmpty())
+					return planID
 				},
 			)
 
@@ -221,7 +196,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 		})
 	})
 
-	Context("Checking Api with no plan", Ordered, func() {
+	Context("with no plan", Ordered, func() {
 		var apiDefinitionFixture *gio.ApiDefinition
 		var savedApiDefinition *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
@@ -257,14 +232,12 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			apiDefinitionFixture = apiDefinition
 			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
 
-			By("Expect the API Definition is Ready")
+			By("Expecting the API Definition to be Ready")
 
 			savedApiDefinition = new(gio.ApiDefinition)
 			Eventually(func() error {
-				if err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(savedApiDefinition)
+				err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, savedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			gatewayEndpoint = internal.GatewayUrl + savedApiDefinition.Spec.Proxy.VirtualHosts[0].Path
@@ -306,11 +279,8 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			// Wait for the ApiDefinition to be updated
 			Eventually(func() error {
-				expectedGeneration := savedApiDefinition.Status.ObservedGeneration + 1
 				k8sErr := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
-				return internal.AssertNoErrorAndObservedGenerationEquals(
-					k8sErr, updatedApiDefinition, expectedGeneration,
-				)
+				return internal.AssertNoErrorAndStatusCompleted(k8sErr, updatedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			// Update savedApiDefinition & global var with last Get
@@ -347,7 +317,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 func createSubscriptionAndGetApiKey(
 	apim *internal.APIM,
 	createdApiDefinition *gio.ApiDefinition,
-	planSelector func(*apimModel.ApiEntity) string,
+	planSelector func(*api.Entity) string,
 ) string {
 	// Get first active application
 	mgmtApplications, mgmtErr := apim.Applications.Search("", "ACTIVE")

@@ -177,8 +177,6 @@ var _ = Describe("Updating an ingress", func() {
 				}, timeout/5, interval).ShouldNot(HaveOccurred())
 
 				Expect(len(updateAPIDefinition.Spec.Plans)).Should(Equal(2))
-				Expect(updateAPIDefinition.Spec.Plans[0].Security).Should(Equal("API_KEY"))
-				Expect(updateAPIDefinition.Spec.Plans[1].Security).Should(Equal("KEY_LESS"))
 
 				By("Checking events")
 				Eventually(

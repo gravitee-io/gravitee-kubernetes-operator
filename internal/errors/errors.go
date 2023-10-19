@@ -23,18 +23,26 @@ import (
 )
 
 type ServerError struct {
-	StatusCode int    `json:"status"`
-	URL        string `json:"url"`
-	Method     string `json:"method"`
-	Message    string `json:"message"`
+	StatusCode    int    `json:"httpStatus"`
+	URL           string `json:"url"`
+	Method        string `json:"method"`
+	Message       string `json:"message"`
+	TechnicalCode string `json:"technicalCode"`
 }
 
 var unRecoverableStatusCodes = []int{http.StatusBadRequest, http.StatusUnauthorized}
 
 func (err ServerError) Error() string {
 	message := err.Message
+	code := err.TechnicalCode
 	if message == "" {
-		message = http.StatusText(err.StatusCode)
+		if code == "" {
+			message = http.StatusText(err.StatusCode)
+		} else {
+			message = code
+		}
+	} else if code != "" {
+		message = code + ": " + message
 	}
 	return fmt.Sprintf("request [%s] %s failed with status %d (%s)", err.Method, err.URL, err.StatusCode, message)
 }
@@ -53,12 +61,13 @@ func NewServerError(resp *http.Response) ServerError {
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-
 	if err != nil {
+		serverError.Message = err.Error()
 		return serverError
 	}
 
 	if err = json.Unmarshal(body, &serverError); err != nil {
+		serverError.Message = string(body)
 		return serverError
 	}
 

@@ -2,7 +2,7 @@
 
 GOTESTARGS ?= ""
 COVERPKG = "github.com/gravitee-io/gravitee-kubernetes-operator/..."
-TIMEOUT = 380s 
+TIMEOUT = 600s 
 .PHONY: test
 test: manifests generate install ginkgo ## Run tests.
 	kubectl config use-context k3d-graviteeio

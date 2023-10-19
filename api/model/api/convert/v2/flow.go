@@ -45,13 +45,13 @@ func toPathOperator(selectors []*v4.FlowSelector) *v2.PathOperator {
 		return nil
 	}
 	selector := selectors[0]
-	if selector.GetString("type") != "http" {
+	if selector.GetString("type") != "HTTP" {
 		return nil
 	}
 
 	path := selector.GetString("path")
 	operator := selector.GetString("pathOperator")
-	return v2.NewPathOperator(path, base.Operator(operator))
+	return v2.NewPathOperator(path, operator)
 }
 
 func toFlowSteps(v4Steps []*v4.FlowStep) []base.FlowStep {

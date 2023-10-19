@@ -20,12 +20,12 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -49,13 +49,13 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
+	log.InfoInitReconcile(ctx)
 	apiResource := &gio.ApiResource{}
 	if err := r.Get(ctx, req.NamespacedName, apiResource); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if err := template.NewResolver(ctx, r.Client, logger, apiResource).Resolve(); err != nil {
+	if err := template.NewResolver(ctx, r.Client, apiResource).Resolve(); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -72,11 +72,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr == nil {
-		logger.Info("API Resource has been reconciled")
+		log.InfoEndReconcile(ctx)
 		return ctrl.Result{}, nil
 	}
-
-	// There was an error reconciling the Management Context
 	return ctrl.Result{}, reconcileErr
 }
 

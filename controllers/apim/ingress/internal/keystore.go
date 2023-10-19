@@ -30,6 +30,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netV1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -223,7 +224,7 @@ func (d *Delegate) unmarshalGatewayConfig(ns string, cfg *gateway.Config) error 
 	}
 
 	if len(cl.Items) != 1 || cl.Items[0].Data[graviteeConfigFile] == "" {
-		d.log.Info("can't automatically find gateway gravitee.yml config")
+		log.Info(d.ctx, "Unable to discover gateway config")
 		return kerrors.NewNotFound(v1.Resource(graviteeConfigFile), graviteeConfigFile)
 	}
 

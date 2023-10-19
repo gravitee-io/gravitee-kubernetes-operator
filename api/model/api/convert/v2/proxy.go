@@ -48,13 +48,13 @@ func toVirtualHosts(listeners []*v4.Listener) []*v2.VirtualHost {
 	return virtualHosts
 }
 
-func getPaths(listener *v4.Listener) []*v4.Path {
+func getPaths(listener *v4.Listener) []interface{} {
 	impl := listener.GetSlice("paths")
 	if impl == nil {
 		return nil
 	}
 
-	paths := make([]*v4.Path, 0)
+	paths := make([]interface{}, 0)
 	for _, p := range impl {
 		pImpl := utils.ToGenericStringMap(p)
 		path := v4.NewPath(pImpl.GetString("host"), pImpl.GetString("path"))
@@ -64,6 +64,18 @@ func getPaths(listener *v4.Listener) []*v4.Path {
 	return paths
 }
 
-func toVirtualHost(path *v4.Path) *v2.VirtualHost {
-	return v2.NewVirtualHost(path.Host, path.Path)
+func toVirtualHost(path interface{}) *v2.VirtualHost {
+	m, mok := path.(map[string]interface{})
+	if !mok {
+		return nil
+	}
+	h, hok := m["host"].(string)
+	if !hok {
+		h = ""
+	}
+	p, pok := m["path"].(string)
+	if !pok {
+		p = "/"
+	}
+	return v2.NewVirtualHost(h, p)
 }

@@ -14,7 +14,7 @@
 
 {{- if .Values.rbac.create }}
 {{- if not .Values.rbac.skipClusterRoles }}
-{{- if .Values.manager.applyCRDs }}
+{{- if .Values.manager.webhook.enabled }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
