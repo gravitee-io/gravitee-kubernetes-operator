@@ -35,6 +35,18 @@ import (
 type ApiDefinitionSpec struct {
 	v2.Api  `json:",inline"`
 	Context *refs.NamespacedName `json:"contextRef,omitempty"`
+	// local defines if the api is local or not.
+	//
+	// If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
+	// but without setting the update flag in the datastore.
+	//
+	// If false, the Operator will not create the ConfigMaps for the Gateway.
+	// Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
+	// This will cause Gateways to fetch the APIs from the datastore
+	//
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=true
+	IsLocal bool `json:"local"`
 }
 
 // ApiDefinitionStatus defines the observed state of API Definition.

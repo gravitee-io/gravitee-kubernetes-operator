@@ -101,10 +101,10 @@ func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 				},
 				ApiBase: &base.ApiBase{
 					Description: "A default keyless API",
-					IsLocal:     true,
 				},
 				Version: "1.0.0",
 			},
+			IsLocal: true,
 		},
 	}
 }
