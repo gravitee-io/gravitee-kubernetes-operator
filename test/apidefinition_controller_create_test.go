@@ -309,7 +309,6 @@ var _ = Describe("Create", func() {
 					Description: "This is to mimic what happens when applying an existing API",
 					ID:          "258198cb-bd66-4010-b3d4-9f7bee97763b",
 					CrossID:     "1cac491c-acd2-4530-bf97-0627ccf94060",
-					IsLocal:     true,
 				},
 				Version: "1",
 				Plans: []*v2.Plan{
