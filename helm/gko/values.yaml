@@ -61,7 +61,7 @@ manager:
   scope:
     ## @param manager.scope.cluster Use false to listen only in the release namespace.
     cluster: true
-  ## @param manager.applyCRDs If true, the manager will patch Custom Resource Definitions on startup.
+  ## @param manager.applyCRDs 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup.
   ## Please be aware that this will apply to Custom Resource Definitions 
   ## (which are the Open API model for Custom Resources such as API Definitions), 
   ## not to Custom Resources themselves.
