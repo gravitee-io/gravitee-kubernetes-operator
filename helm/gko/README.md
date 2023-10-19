@@ -53,22 +53,22 @@ Kube RBAC Proxy is deployed as a sidecar container and restricts access to the p
 
 This is where you can configure the deployment itself and the way the operator will interact with APIM and Custom Resources in your cluster.
 
-| Name                                        | Description                                                                                  | Value                            |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------- |
-| `manager.image.repository`                  | Specifies the docker registry and image name to use.                                         | `graviteeio/kubernetes-operator` |
-| `manager.image.tag`                         | Specifies the docker image tag to use.                                                       | `latest`                         |
-| `manager.logs.json`                         | Whether to output manager logs in JSON format.                                               | `true`                           |
-| `manager.configMap.name`                    | The name of the config map used to set the manager config from this values.                  | `gko-config`                     |
-| `manager.scope.cluster`                     | Use false to listen only in the release namespace.                                           | `true`                           |
-| `manager.applyCRDs`                         | If true, the manager will patch Custom Resource Definitions on startup.                      | `true`                           |
-| `manager.metrics.enabled`                   | If true, a metrics server will be created so that metrics can be scraped using prometheus.   | `true`                           |
-| `manager.httpClient.insecureSkipCertVerify` | If true, the manager HTTP client will not verify the certificate used by the Management API. | `false`                          |
-| `manager.webhook.enabled`                   | If true, the manager will register a webhook server operating on custom resources.           | `true`                           |
-| `manager.webhook.service.name`              | The service used to expose the webhook server.                                               | `gko-webhook`                    |
-| `manager.webhook.service.port`              | The port on which the webhook server will listen.                                            | `9443`                           |
-| `manager.webhook.cert.create`               | If true, a secret will be created to store the webhook server certificate.                   | `true`                           |
-| `manager.webhook.cert.name`                 | The name of the cert-manager certificate used by the webhook server.                         | `gko-webhook-cert`               |
-| `manager.webhook.cert.secret.name`          | The name of the secret storing the webhook server certificate.                               | `gko-webhook-cert`               |
+| Name                                        | Description                                                                                                                                     | Value                            |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `manager.image.repository`                  | Specifies the docker registry and image name to use.                                                                                            | `graviteeio/kubernetes-operator` |
+| `manager.image.tag`                         | Specifies the docker image tag to use.                                                                                                          | `latest`                         |
+| `manager.logs.json`                         | Whether to output manager logs in JSON format.                                                                                                  | `true`                           |
+| `manager.configMap.name`                    | The name of the config map used to set the manager config from this values.                                                                     | `gko-config`                     |
+| `manager.scope.cluster`                     | Use false to listen only in the release namespace.                                                                                              | `true`                           |
+| `manager.applyCRDs`                         | 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup. | `true`                           |
+| `manager.metrics.enabled`                   | If true, a metrics server will be created so that metrics can be scraped using prometheus.                                                      | `true`                           |
+| `manager.httpClient.insecureSkipCertVerify` | If true, the manager HTTP client will not verify the certificate used by the Management API.                                                    | `false`                          |
+| `manager.webhook.enabled`                   | If true, the manager will register a webhook server operating on custom resources.                                                              | `true`                           |
+| `manager.webhook.service.name`              | The service used to expose the webhook server.                                                                                                  | `gko-webhook`                    |
+| `manager.webhook.service.port`              | The port on which the webhook server will listen.                                                                                               | `9443`                           |
+| `manager.webhook.cert.create`               | If true, a secret will be created to store the webhook server certificate.                                                                      | `true`                           |
+| `manager.webhook.cert.name`                 | The name of the cert-manager certificate used by the webhook server.                                                                            | `gko-webhook-cert`               |
+| `manager.webhook.cert.secret.name`          | The name of the secret storing the webhook server certificate.                                                                                  | `gko-webhook-cert`               |
 
 ### Ingress
 
