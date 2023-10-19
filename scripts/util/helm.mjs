@@ -53,6 +53,7 @@ const helmInstallApim = $`
 helm install \
     --namespace ${env.K3D_NAMESPACE_NAME} \
     --set "portal.enabled=false" \
+    --set "ratelimit.type=none" \
     --set "gateway.image.repository=${K3D_IMAGES_REGISTRY}/apim-gateway" \
     --set "gateway.services.sync.kubernetes.enabled=true" \
     --set "gateway.services.sync.kubernetes.namespaces=default" \

@@ -1,6 +1,7 @@
 {
   "gravitee": "2.0.0",
   "flow_mode": "DEFAULT",
+  "local": false,
   "services": {
     "dynamic-property": {
       "enabled": false,
@@ -45,7 +46,6 @@
               ],
               "enabled": true
             },
-            "backup": false,
             "inherit": true,
             "name": "default",
             "weight": 1,

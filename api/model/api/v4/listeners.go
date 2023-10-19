@@ -21,18 +21,16 @@ import (
 type ListenerType string
 
 const (
-	HTTPListenerType         = ListenerType("http")
-	SubscriptionListenerType = ListenerType("subscription")
-	TCPListenerType          = ListenerType("tcp")
+	HTTPListenerType         = "HTTP"
+	SubscriptionListenerType = "SUBSCRIPTION"
+	TCPListenerType          = "TCP"
 )
 
-type QOS string
-
 const (
-	AutoQOS        = QOS("auto")
-	NoQOS          = QOS("none")
-	AtMostOnceQOS  = QOS("at-most-once")
-	AtLeastOnceQOS = QOS("at-least-once")
+	AutoQOS        = "AUTO"
+	NoQOS          = "NONE"
+	AtMostOnceQOS  = "AT_MOST_ONCE"
+	AtLeastOnceQOS = "AT_LEAST_ONCE"
 )
 
 type DLQ struct {
@@ -45,39 +43,26 @@ const (
 	EntryPointTypeHTTP = EntryPointType("http-proxy")
 )
 
-type Entrypoint struct {
-	Type   string                  `json:"type,omitempty"`
-	QOS    QOS                     `json:"qos,omitempty"`
-	DLQ    *DLQ                    `json:"dlq,omitempty"`
-	Config *utils.GenericStringMap `json:"configuration,omitempty"`
-}
-
-func NewHttpEntryPoint() Entrypoint {
-	return Entrypoint{
-		Type:   string(EntryPointTypeHTTP),
-		QOS:    AutoQOS,
-		Config: utils.NewGenericStringMap(),
+func NewHttpEntryPoint() map[string]interface{} {
+	return map[string]interface{}{
+		"type":          string(EntryPointTypeHTTP),
+		"qos":           string(AutoQOS),
+		"configuration": map[string]interface{}{},
 	}
 }
 
-type Path struct {
-	Host string `json:"host,omitempty"`
-	// +kubebuilder:default:="/"
-	Path           string `json:"path,omitempty"`
-	OverrideAccess bool   `json:"overrideAccess,omitempty"`
-}
-
-func NewPath(host, path string) *Path {
-	return &Path{
-		Host: host,
-		Path: path,
+func NewPath(host, path string) map[string]interface{} {
+	out := map[string]interface{}{"path": path}
+	if host != "" {
+		out["host"] = host
 	}
+	return out
 }
 
 func NewHttpListenerBase() *Listener {
 	impl := utils.NewGenericStringMap()
 	impl.Put("type", string(HTTPListenerType))
-	impl.Put("entrypoints", []Entrypoint{NewHttpEntryPoint()})
+	impl.Put("entrypoints", []interface{}{NewHttpEntryPoint()})
 	return &Listener{impl}
 }
 
@@ -90,4 +75,22 @@ func (l *Listener) UnmarshalJSON(data []byte) error {
 		l.GenericStringMap = utils.NewGenericStringMap()
 	}
 	return l.GenericStringMap.UnmarshalJSON(data)
+}
+
+func (l *Listener) ToGatewayDefinition() *Listener {
+	listener := l.DeepCopy()
+	listener.Put("type", Enum(listener.GetString("type")).ToGatewayDefinition())
+	listener.Put("entrypoints", listener.GetGatewayDefinitionEntryPoints())
+	return listener
+}
+
+func (l *Listener) GetGatewayDefinitionEntryPoints() []interface{} {
+	var entrypoints []interface{}
+	for _, entrypoint := range l.GetSlice("entrypoints") {
+		entrypoint := utils.ToGenericStringMap(entrypoint)
+		qos := Enum(entrypoint.GetString("qos")).ToGatewayDefinition()
+		entrypoint.Put("qos", Enum(qos).ToGatewayDefinition())
+		entrypoints = append(entrypoints, entrypoint)
+	}
+	return entrypoints
 }

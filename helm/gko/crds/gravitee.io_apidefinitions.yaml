@@ -139,9 +139,6 @@ spec:
                       properties:
                         operator:
                           default: STARTS_WITH
-                          enum:
-                          - STARTS_WITH
-                          - EQUALS
                           type: string
                         path:
                           type: string
@@ -311,9 +308,6 @@ spec:
                             properties:
                               operator:
                                 default: STARTS_WITH
-                                enum:
-                                - STARTS_WITH
-                                - EQUALS
                                 type: string
                               path:
                                 type: string
@@ -429,7 +423,7 @@ spec:
                       - CATALOG
                       type: string
                     validation:
-                      default: AUTO
+                      default: MANUAL
                       enum:
                       - AUTO
                       - MANUAL
@@ -1181,26 +1175,41 @@ spec:
                 required:
                 - enabled
                 type: object
-              apiVersion:
-                type: string
+              contextRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                type: object
               crossId:
                 type: string
-              definition_context:
-                description: The definition context is used to inform a management
-                  API instance that this API definition is managed using a kubernetes
-                  operator
+              definitionContext:
                 properties:
-                  mode:
-                    default: fully_managed
-                    type: string
                   origin:
-                    default: kubernetes
+                    allOf:
+                    - enum:
+                      - KUBERNETES
+                      - MANAGEMENT
+                    - enum:
+                      - KUBERNETES
+                    type: string
+                  syncFrom:
+                    allOf:
+                    - enum:
+                      - KUBERNETES
+                      - MANAGEMENT
+                    - enum:
+                      - KUBERNETES
+                      - MANAGEMENT
                     type: string
                 type: object
               definitionVersion:
-                default: 4.0.0
+                default: V4
                 enum:
-                - 4.0.0
+                - V4
                 type: string
               description:
                 type: string
@@ -1286,12 +1295,12 @@ spec:
                     loadBalancer:
                       properties:
                         type:
-                          default: round-robin
+                          default: ROUND_ROBIN
                           enum:
-                          - round-robin
-                          - random
-                          - weighted-round-robin
-                          - weighted-random
+                          - ROUND_ROBIN
+                          - RANDOM
+                          - WEIGHTED_ROUND_ROBIN
+                          - WEIGHTED_RANDOM
                           type: string
                       required:
                       - type
@@ -1353,6 +1362,8 @@ spec:
                       type: object
                     type:
                       type: string
+                  required:
+                  - name
                   type: object
                 minItems: 1
                 type: array
@@ -1444,11 +1455,8 @@ spec:
                       type: array
                     selectors:
                       items:
-                        properties:
-                          inline:
-                            type: object
-                            x-kubernetes-preserve-unknown-fields: true
                         type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       type: array
                     subscribe:
                       items:
@@ -1502,16 +1510,6 @@ spec:
                   x-kubernetes-preserve-unknown-fields: true
                 minItems: 1
                 type: array
-              local:
-                default: true
-                description: "local defines if the api is local or not. \n If true,
-                  the Operator will create the ConfigMaps for the Gateway and pushes
-                  the API to the Management API but without setting the update flag
-                  in the datastore. \n If false, the Operator will not create the
-                  ConfigMaps for the Gateway. Instead, it pushes the API to the Management
-                  API and forces it to update the event in the datastore. This will
-                  cause Gateways to fetch the APIs from the datastore"
-                type: boolean
               metadata:
                 items:
                   properties:
@@ -1541,7 +1539,7 @@ spec:
               name:
                 type: string
               plans:
-                items:
+                additionalProperties:
                   properties:
                     characteristics:
                       items:
@@ -1638,11 +1636,8 @@ spec:
                             type: array
                           selectors:
                             items:
-                              properties:
-                                inline:
-                                  type: object
-                                  x-kubernetes-preserve-unknown-fields: true
                               type: object
+                              x-kubernetes-preserve-unknown-fields: true
                             type: array
                           subscribe:
                             items:
@@ -1714,7 +1709,7 @@ spec:
                       - CATALOG
                       type: string
                     validation:
-                      default: AUTO
+                      default: MANUAL
                       enum:
                       - AUTO
                       - MANUAL
@@ -1723,7 +1718,7 @@ spec:
                   - description
                   - name
                   type: object
-                type: array
+                type: object
               primaryOwner:
                 properties:
                   displayName:
@@ -1822,12 +1817,16 @@ spec:
                 - PROXY
                 - MESSAGE
                 type: string
+              version:
+                type: string
               visibility:
                 default: PRIVATE
                 enum:
                 - PUBLIC
                 - PRIVATE
                 type: string
+            required:
+            - flows
             type: object
           status:
             description: ApiDefinitionStatus defines the observed state of API Definition.
@@ -1845,6 +1844,13 @@ spec:
                 type: integer
               organizationId:
                 type: string
+              plans:
+                additionalProperties:
+                  type: string
+                description: This field is used to store the list of plans that have
+                  been created for the API definition. Especially when the API is
+                  synced with an APIM instance
+                type: object
               processingStatus:
                 description: The processing status of the API definition.
                 enum:

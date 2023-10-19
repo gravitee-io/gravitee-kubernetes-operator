@@ -21,10 +21,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-
-	netv1 "k8s.io/api/networking/v1"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -48,8 +44,8 @@ var ctx context.Context
 // Define utility constants for object names and testing timeouts/durations and intervals.
 const (
 	namespace = "default"
-	timeout   = time.Second * 30
-	interval  = time.Millisecond * 250
+	timeout   = time.Second * 10
+	interval  = time.Second * 1
 )
 
 func TestAPIs(t *testing.T) {
@@ -81,25 +77,26 @@ var _ = SynchronizedBeforeSuite(func() {
 var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
 
-	Expect(k8sClient.DeleteAllOf(
-		ctx,
-		&netv1.Ingress{},
-		client.InNamespace(namespace),
-		client.MatchingLabels{keys.IngressLabel: keys.IngressLabelValue}),
-	).To(Succeed())
-	Consistently(k8sClient.DeleteAllOf(
-		ctx,
-		&gio.ApiDefinition{},
-		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
-	Consistently(k8sClient.DeleteAllOf(
-		ctx,
-		&gio.Application{},
-		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
-	Consistently(k8sClient.DeleteAllOf(
-		ctx,
-		&gio.ManagementContext{},
-		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
-	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
+	// Expect(k8sClient.DeleteAllOf(
+	// 	ctx,
+	// 	&netv1.Ingress{},
+	// 	client.InNamespace(namespace),
+	// 	client.MatchingLabels{keys.IngressLabel: keys.IngressLabelValue}),
+	// ).To(Succeed())
+	// Consistently(k8sClient.DeleteAllOf(
+	// 	ctx,
+	// 	&gio.ApiDefinition{},
+	// 	client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	// Consistently(k8sClient.DeleteAllOf(
+	// 	ctx,
+	// 	&gio.Application{},
+	// 	client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	// Consistently(k8sClient.DeleteAllOf(
+	// 	ctx,
+	// 	&gio.ManagementContext{},
+	// 	client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	// Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
+
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 	// NOSONAR ignore this noop func

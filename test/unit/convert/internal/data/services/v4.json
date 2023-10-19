@@ -1,9 +1,14 @@
 {
-  "definitionVersion": "4.0.0",
-  "type": "proxy",
+  "definitionVersion": "V4",
+  "type": "PROXY",
   "flowExecution": {
-    "mode": "default",
+    "mode": "DEFAULT",
     "matchRequired": false
+  },
+  "flows": [],
+  "definitionContext": {
+    "origin": "KUBERNETES",
+    "syncFrom": "MANAGEMENT"
   },
   "services": {
     "dynamicProperty": {
@@ -23,8 +28,9 @@
       "name": "default-group",
       "type": "http-proxy",
       "loadBalancer": {
-        "type": "round-robin"
+        "type": "ROUND_ROBIN"
       },
+      "sharedConfiguration": {},
       "endpoints": [
         {
           "name": "default",

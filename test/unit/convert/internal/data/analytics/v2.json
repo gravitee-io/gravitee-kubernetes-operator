@@ -1,6 +1,8 @@
 {
   "gravitee": "2.0.0",
   "flow_mode": "DEFAULT",
+  "local": false,
+  "version": "v1",
   "proxy": {
     "virtual_hosts": [
       {

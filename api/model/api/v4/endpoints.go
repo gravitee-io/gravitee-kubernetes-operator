@@ -17,6 +17,7 @@ package v4
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	nameGen "github.com/moby/moby/pkg/namesgenerator"
 )
 
 type EndpointType string
@@ -45,18 +46,22 @@ func NewHttpEndpoint(name string) *Endpoint {
 	}
 }
 
-// +kubebuilder:validation:Enum=round-robin;random;weighted-round-robin;weighted-random;
+// +kubebuilder:validation:Enum=ROUND_ROBIN;RANDOM;WEIGHTED_ROUND_ROBIN;WEIGHTED_RANDOM;
 type LoadBalancerType string
 
+func (lt LoadBalancerType) toGatewayDefinition() LoadBalancerType {
+	return LoadBalancerType(Enum(lt).ToGatewayDefinition())
+}
+
 const (
-	RoundRobin         LoadBalancerType = "round-robin"
-	Random             LoadBalancerType = "random"
-	WeightedRoundRobin LoadBalancerType = "weighted-round-robin"
-	WeightedRandom     LoadBalancerType = "weighted-random"
+	RoundRobin         LoadBalancerType = "ROUND_ROBIN"
+	Random             LoadBalancerType = "RANDOM"
+	WeightedRoundRobin LoadBalancerType = "WEIGHTED_ROUND_ROBIN"
+	WeightedRandom     LoadBalancerType = "WEIGHTED_RANDOM"
 )
 
 type LoadBalancer struct {
-	// +kubebuilder:default:=`round-robin`
+	// +kubebuilder:default:=`ROUND_ROBIN`
 	Type LoadBalancerType `json:"type"`
 }
 
@@ -67,7 +72,8 @@ func NewLoadBalancer(algo LoadBalancerType) *LoadBalancer {
 }
 
 type EndpointGroup struct {
-	Name                 string                     `json:"name,omitempty"`
+	// +kubebuilder:validation:Required
+	Name                 string                     `json:"name"`
 	Type                 string                     `json:"type,omitempty"`
 	LoadBalancer         *LoadBalancer              `json:"loadBalancer,omitempty"`
 	SharedConfig         *utils.GenericStringMap    `json:"sharedConfiguration,omitempty"`
@@ -83,4 +89,17 @@ func NewHttpEndpointGroup(name string) *EndpointGroup {
 		Name: name,
 		Type: string(EndpointTypeHTTP),
 	}
+}
+
+// If the API has been converted from a v1alpha1 version, the name might be empty
+// Because a name is required by the GW for v4 API deserialization, we generate a random name
+// using the docker name generator.
+func (e EndpointGroup) ToGatewayDefinition() *EndpointGroup {
+	if e.Name == "" {
+		e.Name = nameGen.GetRandomName(0)
+	}
+	if e.LoadBalancer != nil {
+		e.LoadBalancer.Type = e.LoadBalancer.Type.toGatewayDefinition()
+	}
+	return &e
 }

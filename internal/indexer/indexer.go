@@ -15,7 +15,8 @@
 package indexer
 
 import (
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -65,7 +66,7 @@ func NewIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) I
 	}
 }
 
-func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
+func IndexManagementContexts(api *v1beta1.ApiDefinition, fields *[]string) {
 	if api.Spec.Context == nil {
 		return
 	}
@@ -73,13 +74,13 @@ func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	*fields = append(*fields, api.Spec.Context.String())
 }
 
-func IndexManagementContextSecrets(context *gio.ManagementContext, fields *[]string) {
+func IndexManagementContextSecrets(context *v1alpha1.ManagementContext, fields *[]string) {
 	if context.Spec.HasSecretRef() {
 		*fields = append(*fields, context.Spec.SecretRef().String())
 	}
 }
 
-func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
+func IndexApiResourceRefs(api *v1beta1.ApiDefinition, fields *[]string) {
 	if api.Spec.Resources == nil {
 		return
 	}
@@ -113,7 +114,7 @@ func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
 	}
 }
 
-func IndexApplicationManagementContexts(application *gio.Application, fields *[]string) {
+func IndexApplicationManagementContexts(application *v1alpha1.Application, fields *[]string) {
 	if application.Spec.Context == nil {
 		return
 	}

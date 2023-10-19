@@ -20,14 +20,14 @@ import (
 
 	errors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	v1alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/application"
+	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
 const (
-	applicationsPath = "/applications"
-	metadataPath     = "/metadata"
+	metadataPath = "/metadata"
 )
 
 // Applications brings support for managing gravitee.io APIM applications
@@ -40,51 +40,55 @@ func NewApplications(client *client.Client) *Applications {
 	return &Applications{Client: client}
 }
 
-func (svc *Applications) Search(query string, status string) ([]model.Application, error) {
-	url := svc.EnvTarget(applicationsPath).WithQueryParam("query", query).WithQueryParam("status", status)
-	applications := new([]model.Application)
+func (svc *Applications) Target() *xhttp.URL {
+	return svc.EnvV1("applications")
+}
 
-	if err := svc.HTTP.Get(url.String(), applications); err != nil {
+func (svc *Applications) Search(query string, status string) ([]application.Entity, error) {
+	url := svc.Target().WithQueryParam("query", query).WithQueryParam("status", status)
+	applications := new([]application.Entity)
+
+	if err := svc.HTTP.Get(url, applications); err != nil {
 		return nil, err
 	}
 
 	return *applications, nil
 }
 
-func (svc *Applications) GetByID(appId string) (*model.Application, error) {
+func (svc *Applications) GetByID(appId string) (*application.Entity, error) {
 	if appId == "" {
 		return nil, errors.NewNotFoundError()
 	}
 
-	url := svc.EnvTarget(applicationsPath).WithPath(appId)
-	application := new(model.Application)
+	url := svc.Target().WithPath(appId)
+	application := new(application.Entity)
 
-	if err := svc.HTTP.Get(url.String(), application); err != nil {
+	if err := svc.HTTP.Get(url, application); err != nil {
 		return nil, err
 	}
 
 	return application, nil
 }
 
-func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.ApplicationMetaData, error) {
+func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]application.MetaData, error) {
 	if appId == "" {
 		return nil, fmt.Errorf("can't retrieve metadata without application id")
 	}
 
-	url := svc.EnvTarget(applicationsPath).WithPath(appId).WithPath(metadataPath)
-	application := new([]model.ApplicationMetaData)
+	url := svc.Target().WithPath(appId).WithPath(metadataPath)
+	application := new([]application.MetaData)
 
-	if err := svc.HTTP.Get(url.String(), application); err != nil {
+	if err := svc.HTTP.Get(url, application); err != nil {
 		return nil, err
 	}
 
 	return application, nil
 }
 
-func (svc *Applications) CreateUpdate(method string, spec *application.Application) (*model.Application, error) {
-	url := svc.EnvTarget(applicationsPath)
+func (svc *Applications) CreateUpdate(method string, spec *v1alpha1.Application) (*application.Entity, error) {
+	url := svc.Target()
 	if spec.ID != "" {
-		url = svc.EnvTarget(applicationsPath).WithPath(spec.ID)
+		url = svc.Target().WithPath(spec.ID)
 	}
 
 	fun := svc.HTTP.Post
@@ -92,8 +96,8 @@ func (svc *Applications) CreateUpdate(method string, spec *application.Applicati
 		fun = svc.HTTP.Put
 	}
 
-	application := new(model.Application)
-	if err := fun(url.String(), spec, application); err != nil {
+	application := new(application.Entity)
+	if err := fun(url, spec, application); err != nil {
 		return nil, err
 	}
 
@@ -101,21 +105,21 @@ func (svc *Applications) CreateUpdate(method string, spec *application.Applicati
 }
 
 func (svc *Applications) Delete(appId string) error {
-	url := svc.EnvTarget(applicationsPath).WithPath(appId)
-	return svc.HTTP.Delete(url.String(), nil)
+	url := svc.Target().WithPath(appId)
+	return svc.HTTP.Delete(url, nil)
 }
 
 func (svc *Applications) CreateUpdateMetadata(method string, appId string,
-	spec application.MetaData) (*model.ApplicationMetaData, error) {
-	url := svc.EnvTarget(applicationsPath).WithPath(appId).WithPath(metadataPath)
+	spec v1alpha1.MetaData) (*application.MetaData, error) {
+	url := svc.Target().WithPath(appId).WithPath(metadataPath)
 	fun := svc.HTTP.Post
 	if method == http.MethodPut {
 		url = url.WithPath(spec.Key)
 		fun = svc.HTTP.Put
 	}
 
-	md := new(model.ApplicationMetaData)
-	if err := fun(url.String(), spec, md); err != nil {
+	md := new(application.MetaData)
+	if err := fun(url, spec, md); err != nil {
 		return nil, err
 	}
 
@@ -123,6 +127,6 @@ func (svc *Applications) CreateUpdateMetadata(method string, appId string,
 }
 
 func (svc *Applications) DeleteMetadata(appId string, key string) error {
-	url := svc.EnvTarget(applicationsPath).WithPath(appId).WithPath(metadataPath).WithPath(key)
-	return svc.HTTP.Delete(url.String(), nil)
+	url := svc.Target().WithPath(appId).WithPath(metadataPath).WithPath(key)
+	return svc.HTTP.Delete(url, nil)
 }

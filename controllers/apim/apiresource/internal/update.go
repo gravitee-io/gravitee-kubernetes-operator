@@ -16,7 +16,6 @@ package internal
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -33,7 +32,6 @@ func CreateOrUpdate(
 		util.AddFinalizer(instance, keys.ApiResourceFinalizer)
 
 		if err := k8s.Update(ctx, instance); err != nil {
-			err = fmt.Errorf("an error occurs while adding finalizer to the resource: %w", err)
 			return err
 		}
 	}

@@ -44,6 +44,13 @@ func NewFlow(name string) *Flow {
 	}
 }
 
+func (fl Flow) ToGatewayDefinition() *Flow {
+	for i := range fl.Selectors {
+		fl.Selectors[i] = fl.Selectors[i].ToGatewayDefinition()
+	}
+	return &fl
+}
+
 type FlowStep struct {
 	base.FlowStep    `json:",inline"`
 	MessageCondition string `json:"messageCondition,omitempty"`
@@ -63,8 +70,8 @@ func (step *FlowStep) WithMessageCondition(messageCondition string) *FlowStep {
 type FlowMode string
 
 const (
-	FlowModeDefault   = FlowMode("default")
-	FlowModeBestMatch = FlowMode("best-match")
+	FlowModeDefault   = FlowMode("DEFAULT")
+	FlowModeBestMatch = FlowMode("BEST_MATCH")
 )
 
 type FlowExecution struct {
@@ -72,24 +79,37 @@ type FlowExecution struct {
 	MatchRequired bool     `json:"matchRequired"`
 }
 
-type SelectorType string
+func DefaultFlowExecution() *FlowExecution {
+	return &FlowExecution{
+		Mode: FlowModeDefault,
+	}
+}
 
 const (
-	HTTPSelectorType      = SelectorType("http")
-	ChannelSelectorType   = SelectorType("channel")
-	ConditionSelectorType = SelectorType("condition")
+	HTTPSelectorType      = "HTTP"
+	ChannelSelectorType   = "CHANNEL"
+	ConditionSelectorType = "CONDITION"
 )
 
-func NewHTTPSelector(path string, operator base.Operator, methods []base.HttpMethod) *FlowSelector {
-	selector := utils.NewGenericStringMap()
-	selector.Put("path", path)
-	selector.Put("pathOperator", operator)
-	selector.Put("type", HTTPSelectorType)
+func NewHTTPSelector(path, operator string, methods []base.HttpMethod) *FlowSelector {
+	impl := utils.NewGenericStringMap()
+	impl.Put("type", HTTPSelectorType)
+	impl.Put("path", path)
+	impl.Put("pathOperator", operator)
 	if methods != nil {
-		selector.Put("methods", methods)
+		impl.Put("methods", methods)
 	}
 	return &FlowSelector{
-		GenericStringMap: selector,
+		GenericStringMap: impl,
+	}
+}
+
+func NewConditionSelector(condition string) *FlowSelector {
+	impl := utils.NewGenericStringMap()
+	impl.Put("type", ConditionSelectorType)
+	impl.Put("condition", condition)
+	return &FlowSelector{
+		GenericStringMap: impl,
 	}
 }
 
@@ -101,12 +121,17 @@ const (
 )
 
 type FlowSelector struct {
-	*utils.GenericStringMap `json:"inline,omitempty"`
+	*utils.GenericStringMap `json:",inline"`
 }
 
-func (l *FlowSelector) UnmarshalJSON(data []byte) error {
-	if l.GenericStringMap == nil {
-		l.GenericStringMap = utils.NewGenericStringMap()
+func (fls FlowSelector) ToGatewayDefinition() *FlowSelector {
+	fls.Put("type", Enum(fls.GetString("type")).ToGatewayDefinition())
+	return &fls
+}
+
+func (fls *FlowSelector) UnmarshalJSON(data []byte) error {
+	if fls.GenericStringMap == nil {
+		fls.GenericStringMap = utils.NewGenericStringMap()
 	}
-	return l.GenericStringMap.UnmarshalJSON(data)
+	return fls.GenericStringMap.UnmarshalJSON(data)
 }

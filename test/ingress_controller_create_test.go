@@ -76,6 +76,7 @@ var _ = Describe("Creating an ingress", func() {
 					{
 						Name:   "rule01-path01",
 						Target: "http://httpbin.default.svc.cluster.local:8000",
+						Type:   "http",
 					},
 				},
 			))
@@ -136,14 +137,17 @@ var _ = Describe("Creating an ingress", func() {
 					{
 						Name:   "rule01-path01",
 						Target: "http://httpbin-1.default.svc.cluster.local:8080",
+						Type:   "http",
 					},
 					{
 						Name:   "rule02-path01",
 						Target: "http://httpbin-2.default.svc.cluster.local:8080",
+						Type:   "http",
 					},
 					{
 						Name:   "rule03-path01",
 						Target: "http://httpbin-3.default.svc.cluster.local:8080",
+						Type:   "http",
 					},
 				},
 			))
@@ -155,7 +159,13 @@ var _ = Describe("Creating an ingress", func() {
 			host := new(internal.Host)
 
 			Eventually(func() error {
-				url := fmt.Sprintf("%s/ingress/foo%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
+				base, xErr := xhttp.NewURL(internal.GatewayUrl)
+				Expect(xErr).ToNot(HaveOccurred())
+
+				rulePath := "/foo" + fixtureGenerator.Suffix
+
+				url := base.WithPath("/ingress").WithPath(rulePath).WithPath("/hostname")
+
 				return cli.Get(url, host, xhttp.WithHost("foo.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -166,7 +176,14 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := fmt.Sprintf("%s/ingress/bar%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
+
+				base, xErr := xhttp.NewURL(internal.GatewayUrl)
+				Expect(xErr).ToNot(HaveOccurred())
+
+				rulePath := "/bar" + fixtureGenerator.Suffix
+
+				url := base.WithPath("/ingress").WithPath(rulePath).WithPath("/hostname")
+
 				return cli.Get(url, host, xhttp.WithHost("bar.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -177,7 +194,13 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := fmt.Sprintf("%s/ingress/baz%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
+				base, xErr := xhttp.NewURL(internal.GatewayUrl)
+				Expect(xErr).ToNot(HaveOccurred())
+
+				rulePath := "/baz" + fixtureGenerator.Suffix
+
+				url := base.WithPath("/ingress").WithPath(rulePath).WithPath("/hostname")
+
 				return cli.Get(url, host)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -188,7 +211,13 @@ var _ = Describe("Creating an ingress", func() {
 			host = new(internal.Host)
 
 			Eventually(func() error {
-				url := fmt.Sprintf("%s/ingress/baz%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
+				base, xErr := xhttp.NewURL(internal.GatewayUrl)
+				Expect(xErr).ToNot(HaveOccurred())
+
+				rulePath := "/baz" + fixtureGenerator.Suffix
+
+				url := base.WithPath("/ingress").WithPath(rulePath).WithPath("/hostname")
+
 				return cli.Get(url, host, xhttp.WithHost("unknown.example.com"))
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -197,7 +226,13 @@ var _ = Describe("Creating an ingress", func() {
 			By("Checking that a 404 is returned if no rule matches, using a custom template")
 
 			Eventually(func() error {
-				url := fmt.Sprintf("%s/ingress/baz%s/hostname", internal.GatewayUrl, fixtureGenerator.Suffix)
+				base, xErr := xhttp.NewURL(internal.GatewayUrl)
+				Expect(xErr).ToNot(HaveOccurred())
+
+				rulePath := "/baz" + fixtureGenerator.Suffix
+
+				url := base.WithPath("/ingress").WithPath(rulePath).WithPath("/hostname")
+
 				callErr := cli.Get(url, host, xhttp.WithHost("foo.example.com"))
 				nfErr := new(apimErrors.ServerError)
 				if !errors.As(callErr, nfErr) {
@@ -240,6 +275,7 @@ var _ = Describe("Creating an ingress", func() {
 					{
 						Name:   "rule01-path01",
 						Target: "http://httpbin.default.svc.cluster.local:8000",
+						Type:   "http",
 					},
 				},
 			))

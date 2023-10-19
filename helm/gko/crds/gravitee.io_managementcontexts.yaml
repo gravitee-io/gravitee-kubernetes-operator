@@ -89,7 +89,7 @@ spec:
                     type: object
                 type: object
               baseUrl:
-                description: The URL of a management API instance
+                description: The baseURL of a management API instance
                 pattern: ^http(s?):\/\/.+$
                 type: string
               environmentId:
@@ -97,8 +97,8 @@ spec:
                   the organization.
                 type: string
               organizationId:
-                description: An existing organization id targeted by the context on
-                  the management API instance.
+                description: The Gravitee APIM organization targeted by the management
+                  context.
                 type: string
             required:
             - auth
@@ -109,6 +109,94 @@ spec:
           status:
             description: ManagementContextStatus defines the observed state of an
               API Context.
+            type: object
+        type: object
+    served: true
+    storage: false
+    subresources:
+      status: {}
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.name
+      name: Name
+      type: string
+    - jsonPath: .spec.baseUrl
+      name: BaseUrl
+      type: string
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ManagementContext represents the configuration for a specific
+              environment
+            properties:
+              auth:
+                description: Auth defines the authentication method used to connect
+                  to the API Management. Can be either basic authentication credentials,
+                  a bearer token or a reference to a kubernetes secret holding one
+                  of these two configurations.
+                properties:
+                  bearerToken:
+                    description: The bearer token used to authenticate against the
+                      API Management instance (must be generated from an admin account)
+                    type: string
+                  credentials:
+                    description: The Basic credentials used to authenticate against
+                      the API Management instance.
+                    properties:
+                      password:
+                        type: string
+                      username:
+                        type: string
+                    type: object
+                  secretRef:
+                    description: A secret reference holding either a bearer token
+                      or the user name and password used for basic authentication
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                type: object
+              baseUrl:
+                description: The baseURL of a management API instance
+                pattern: ^http(s?):\/\/.+$
+                type: string
+              environmentId:
+                description: An existing environment id targeted by the context within
+                  the organization.
+                type: string
+              organizationId:
+                description: The Gravitee APIM organization targeted by the management
+                  context.
+                type: string
+            required:
+            - auth
+            - baseUrl
+            - environmentId
+            - organizationId
+            type: object
+          status:
+            description: ManagementContextStatus defines the observed state of an
+              API Context.
+            properties:
+              orgId:
+                type: string
             type: object
         type: object
     served: true

@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -22,7 +23,7 @@ import (
 
 func (d *Delegate) Delete(ingress *v1.Ingress) error {
 	if err := d.deleteTLSSecret(ingress); err != nil {
-		d.log.Error(err, "An error occurred while updating the TLS secrets")
+		log.Error(d.ctx, err, "An error occurred while updating the TLS secrets")
 		return err
 	}
 

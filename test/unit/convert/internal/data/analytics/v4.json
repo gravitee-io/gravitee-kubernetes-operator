@@ -1,17 +1,23 @@
 {
-  "definitionVersion": "4.0.0",
-  "type": "proxy",
+  "definitionVersion": "V4",
+  "type": "PROXY",
+  "version": "v1",
+  "definitionContext": {
+    "origin": "KUBERNETES",
+    "syncFrom": "MANAGEMENT"
+  },
   "flowExecution": {
-    "mode": "default",
+    "mode": "DEFAULT",
     "matchRequired": false
   },
+  "flows": [],
   "listeners": [
     {
-      "type": "http",
+      "type": "HTTP",
       "entrypoints": [
         {
           "type": "http-proxy",
-          "qos": "auto",
+          "qos": "AUTO",
           "configuration": {}
         }
       ],

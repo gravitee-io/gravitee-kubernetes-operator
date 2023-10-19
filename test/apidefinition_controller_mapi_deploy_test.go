@@ -69,12 +69,9 @@ var _ = Describe("Create a basic API", func() {
 
 			apiDefinition := new(gio.ApiDefinition)
 			Eventually(func() error {
-				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(apiDefinition)
+				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
-			Expect(apiDefinition.Spec.IsLocal).To(BeTrue())
 
 			By("Expecting the ConfigMap has been created")
 			cm := &v1.ConfigMap{}
@@ -106,9 +103,11 @@ var _ = Describe("Create a basic API", func() {
 
 			apiDefinition := new(gio.ApiDefinition)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertEquals("local", apiDefinition.Spec.IsLocal, false)
 			}, timeout, interval).Should(Succeed())
-			Expect(apiDefinition.Spec.IsLocal).To(BeFalse())
 
 			By("Expecting the ConfigMap has not been created")
 			cm := &v1.ConfigMap{}
@@ -161,9 +160,11 @@ var _ = Describe("Create a basic API", func() {
 
 			updatedApiDefinition := new(gio.ApiDefinition)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
+				if err := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition); err != nil {
+					return err
+				}
+				return internal.AssertEquals("local", updatedApiDefinition.Spec.IsLocal, false)
 			}, timeout, interval).Should(Succeed())
-			Expect(updatedApiDefinition.Spec.IsLocal).To(BeFalse())
 
 			By("Expecting the ConfigMap has been removed")
 			removedConfigMap := &v1.ConfigMap{}

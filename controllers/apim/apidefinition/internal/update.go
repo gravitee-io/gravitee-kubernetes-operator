@@ -15,85 +15,51 @@
 package internal
 
 import (
-	"net/http"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
-func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
+func (d *Delegate) CreateOrUpdate(apiDefinition *v1beta1.ApiDefinition) error {
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec
 	spec.ID = cp.PickID()
+	spec.CrossID = cp.PickCrossID()
+	spec.Plans = cp.PickPlanIDs()
+	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
-	apiDefinition.Status.ID = cp.Spec.ID
-
-	if err := d.resolveResources(spec); err != nil {
-		d.log.Error(err, "unable to resolve resources")
+	if err := d.resolveResources(cp); err != nil {
+		log.Error(d.ctx, err, "Unable to resolve API resources from references")
 		return err
 	}
 
-	generateEmptyPlanCrossIds(spec)
-	stateUpdated := false
 	if d.HasContext() {
-		spec.CrossID = cp.PickCrossID()
-		stateUpdated = apiDefinition.Status.State != spec.State
-		apiDefinition.Status.EnvID = d.apim.EnvID()
-		apiDefinition.Status.OrgID = d.apim.OrgID()
-		apiDefinition.Status.CrossID = spec.CrossID
-		if err := d.updateWithContext(cp); err != nil {
+		log.Info(d.ctx, "Syncing API with APIM")
+		status, err := d.apim.APIs.Import(&spec.Api)
+		if err != nil {
 			return err
 		}
-		apiDefinition.Status.ID = spec.ID
-		apiDefinition.Status.State = spec.State
+		apiDefinition.Status = *status
+		log.Debug(d.ctx, "API ID: "+spec.ID)
 	}
 
-	if err := d.deploy(cp); err != nil {
-		return err
-	}
-
-	if stateUpdated {
-		if err := d.updateState(cp); err != nil {
+	if spec.DefinitionContext.SyncFrom == v4.OriginManagement || spec.State == base.StateStopped {
+		log.Debug(
+			d.ctx,
+			"Deleting config map as API is not managed by operator or is stopped",
+			"syncFrom", spec.DefinitionContext.SyncFrom,
+			"state", spec.State,
+		)
+		if err := d.deleteConfigMap(cp); err != nil {
+			return err
+		}
+	} else {
+		log.Debug(d.ctx, "Saving config map")
+		if err := d.saveConfigMap(cp); err != nil {
 			return err
 		}
 	}
-
-	apiDefinition.Status.Status = gio.ProcessingStatusCompleted
-
-	return nil
-}
-
-func (d *Delegate) updateWithContext(api *gio.ApiDefinition) error {
-	spec := &api.Spec
-
-	spec.SetDefinitionContext()
-
-	_, findErr := d.apim.APIs.GetByCrossID(spec.CrossID)
-	if errors.IgnoreNotFound(findErr) != nil {
-		return apim.NewContextError(findErr)
-	}
-
-	importMethod := http.MethodPost
-	if findErr == nil {
-		importMethod = http.MethodPut
-	}
-
-	mgmtApi, mgmtErr := d.apim.APIs.Import(importMethod, &spec.Api)
-	if mgmtErr != nil {
-		return apim.NewContextError(mgmtErr)
-	}
-
-	retrieveMgmtPlanIds(spec, mgmtApi)
-	spec.ID = mgmtApi.ID
-
-	if mgmtApi.ShouldSetKubernetesContext() {
-		if err := d.apim.APIs.SetKubernetesContext(mgmtApi.ID); err != nil {
-			return apim.NewContextError(err)
-		}
-	}
-
 	return nil
 }

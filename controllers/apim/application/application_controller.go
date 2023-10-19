@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
-	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -33,7 +33,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
@@ -42,7 +41,6 @@ const requeueAfterTime = time.Second * 5
 // Reconciler reconciles a Application object.
 type Reconciler struct {
 	client.Client
-	Log      logr.Logger
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 	Watcher  watch.Interface
@@ -55,15 +53,14 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=applications/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
+	log.InfoEndReconcile(ctx)
 	application := &gio.Application{}
 
 	if err := r.Get(ctx, req.NamespacedName, application); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	delegate := internal.NewDelegate(ctx, r.Client, logger)
+	delegate := internal.NewDelegate(ctx, r.Client)
 	if err := delegate.ResolveTemplate(application); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -71,19 +68,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 
 	if application.Spec.Context == nil {
-		logger.Error(fmt.Errorf("no context is provided, no attempt will be made to sync with APIM"), "Aborting reconcile")
+		log.Error(ctx, fmt.Errorf("management context missing"), "Applications without context are not supported")
 		return ctrl.Result{}, nil
 	}
 
 	if err := delegate.ResolveContext(application); err != nil {
-		logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
+		log.Error(ctx, fmt.Errorf("unable to resolve context"), "Applications without context are not supported")
 		return ctrl.Result{}, err
 	}
 
 	if application.IsMissingDeletionFinalizer() {
 		err := delegate.AddDeletionFinalizer(application)
 		if err != nil {
-			logger.Error(err, "Unable to add deletion finalizer to Application")
+			log.Error(ctx, err, "Unable to add deletion finalizer")
 			return ctrl.Result{}, err
 		}
 	}
@@ -101,7 +98,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr == nil {
-		logger.Info("Application has been reconciled")
+		log.InfoEndReconcile(ctx)
 		return ctrl.Result{}, delegate.UpdateStatusSuccess(application)
 	}
 
@@ -111,11 +108,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if apim.IsRecoverable(reconcileErr) {
-		logger.Error(reconcileErr, "Requeuing reconcile")
+		log.Error(ctx, reconcileErr, "Requeuing because of a recoverable error")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}
 
-	logger.Error(reconcileErr, "Aborting reconcile")
+	log.Error(ctx, reconcileErr, "Aborting reconcile because of an unrecoverable error")
 	return ctrl.Result{}, nil
 }
 

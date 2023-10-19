@@ -30,15 +30,16 @@ const (
 type PlanValidation string
 
 type Plan struct {
-	Id          string   `json:"id,omitempty"`
-	CrossId     string   `json:"crossId,omitempty"`
+	ID string `json:"id,omitempty"`
+	// +kubebuilder:validation:Required
 	Name        string   `json:"name"`
+	CrossID     string   `json:"crossId,omitempty"`
 	Description string   `json:"description"`
 	Tags        []string `json:"tags,omitempty"`
 	// +kubebuilder:default:=PUBLISHED
 	Status          PlanStatus `json:"status,omitempty"`
 	Characteristics []string   `json:"characteristics,omitempty"`
-	// +kubebuilder:default:=AUTO
+	// +kubebuilder:default:=MANUAL
 	Validation      PlanValidation `json:"validation,omitempty"`
 	CommentRequired bool           `json:"comment_required,omitempty"`
 	Order           int            `json:"order,omitempty"`
@@ -51,6 +52,7 @@ func NewPlan(name, description string) *Plan {
 	return &Plan{
 		Name:            name,
 		Description:     description,
+		Type:            "API",
 		Tags:            []string{},
 		Characteristics: []string{},
 		ExcludedGroups:  []string{},
@@ -63,11 +65,16 @@ func (plan *Plan) WithStatus(status PlanStatus) *Plan {
 }
 
 func (plan *Plan) WithID(id string) *Plan {
-	plan.Id = id
+	plan.ID = id
 	return plan
 }
 
 func (plan *Plan) WithCrossID(id string) *Plan {
-	plan.CrossId = id
+	plan.CrossID = id
+	return plan
+}
+
+func (plan *Plan) WithValidation(validation PlanValidation) *Plan {
+	plan.Validation = validation
 	return plan
 }

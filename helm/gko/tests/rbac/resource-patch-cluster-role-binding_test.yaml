@@ -45,10 +45,11 @@ tests:
       - hasDocuments:
           count: 0
 
-  - it: Should not have cluster role binding with crd patch disabled
+  - it: Should not have cluster role binding with webhook disabled
     set:
       manager:
-        applyCRDs: false
+        webhook: 
+          enabled: false
     asserts:
       - hasDocuments:
           count: 0

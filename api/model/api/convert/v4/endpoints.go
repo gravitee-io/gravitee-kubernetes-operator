@@ -36,10 +36,35 @@ func toEndpointGroup(v2Group *v2.EndpointGroup) *v4.EndpointGroup {
 	endpointGroup := v4.NewHttpEndpointGroup(v2Group.Name)
 	endpointGroup.LoadBalancer = toLoadBalancer(v2Group.LoadBalancer)
 	endpointGroup.Services = toEndpointGroupServices(v2Group.Services)
+	endpointGroup.SharedConfig = toSharedConfiguration(v2Group)
 	for _, v3Endpoint := range v2Group.Endpoints {
 		endpointGroup.Endpoints = append(endpointGroup.Endpoints, toEndpoint(v3Endpoint))
 	}
 	return endpointGroup
+}
+
+func toSharedConfiguration(v2Group *v2.EndpointGroup) *utils.GenericStringMap {
+	config := utils.NewGenericStringMap()
+
+	if v2Group.HttpClientOptions != nil {
+		http := utils.ToStringInterfaceMap(v2Group.HttpClientOptions)
+		if _, ok := http["version"]; !ok {
+			http["version"] = "HTTP_1_1"
+		}
+		config.Put("http", http)
+	}
+
+	if v2Group.HttpClientSslOptions != nil {
+		ssl := utils.ToStringInterfaceMap(v2Group.HttpClientSslOptions)
+		config.Put("ssl", ssl)
+	}
+
+	if v2Group.HttpProxy != nil {
+		proxy := utils.ToStringInterfaceMap(v2Group.HttpProxy)
+		config.Put("proxy", proxy)
+	}
+
+	return config
 }
 
 func toLoadBalancer(v2LB v2.LoadBalancer) *v4.LoadBalancer {

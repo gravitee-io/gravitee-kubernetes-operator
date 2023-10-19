@@ -19,7 +19,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 )
 
-func toPlans(v4Plans []*v4.Plan) []*v2.Plan {
+func toPlans(v4Plans map[string]*v4.Plan) []*v2.Plan {
 	if len(v4Plans) == 0 {
 		return []*v2.Plan{}
 	}

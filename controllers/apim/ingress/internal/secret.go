@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/networking/v1"
@@ -28,7 +29,7 @@ import (
 
 func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 	if ingress.Spec.TLS == nil || len(ingress.Spec.TLS) == 0 {
-		d.log.Info("no TLS will be configured")
+		log.Info(d.ctx, "No TLS to configure")
 		return nil
 	}
 
@@ -48,7 +49,7 @@ func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 
 		// If finalizer not present, add it; This is a new object
 		if !util.ContainsFinalizer(secret, keys.KeyPairFinalizer) {
-			d.log.Info("adding finalizer to the tls secret")
+			log.Info(d.ctx, "Adding finalizer to the tls secret")
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, keys.KeyPairFinalizer)
 			if err := d.k8s.Update(d.ctx, secret); err != nil {
@@ -61,13 +62,13 @@ func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 			return fmt.Errorf("secret can't be deleted because it has reference to an existing ingress [%s]", ingress.Name)
 		}
 
-		d.log.Info("Update GW keystore with new key pairs")
+		log.Info(d.ctx, "Updating GW keystore with new key pairs")
 		if err := d.updateKeyInKeystore(secret); err != nil {
 			return err
 		}
 	}
 
-	d.log.Info("gateway keystore has been successfully update.")
+	log.Info(d.ctx, "Gateway keystore has been successfully updated")
 	return nil
 }
 
@@ -89,16 +90,17 @@ func (d *Delegate) deleteTLSSecret(ingress *v1.Ingress) error {
 		}
 
 		if hasReferenceToOtherIngress {
-			d.log.Error(
+			log.Error(
+				d.ctx,
 				errors.New("secret has reference"),
-				"secret is used by another ingress, it will not be deleted from the keystore")
+				"Secret is used by another ingress, it will not be deleted from the keystore")
 		} else {
 			// no reference to this secret, we can remove it from the keystore
 			if err = d.removeKeyFromKeystore(secret); err != nil {
 				return err
 			}
 
-			d.log.Info("removing finalizer from secret", "secret", secret.Name)
+			log.Info(d.ctx, "removing finalizer from secret", "secret", secret.Name)
 			util.RemoveFinalizer(secret, keys.KeyPairFinalizer)
 
 			if err = d.k8s.Update(d.ctx, secret); err != nil {
@@ -107,7 +109,7 @@ func (d *Delegate) deleteTLSSecret(ingress *v1.Ingress) error {
 		}
 	}
 
-	d.log.Info("gateway keystore has been successfully updated.")
+	log.Info(d.ctx, "Gateway keystore has been successfully updated.")
 	return nil
 }
 
@@ -120,7 +122,7 @@ func (d *Delegate) secretHasReference(ing *v1.Ingress, secret *core.Secret) (boo
 	for i := range il.Items {
 		for _, tls := range il.Items[i].Spec.TLS {
 			if tls.SecretName == secret.Name && il.Items[i].DeletionTimestamp.IsZero() {
-				d.log.Info("the secret is already used inside an ingress resource", "resource", il.Items[i].Name)
+				log.Info(d.ctx, "The secret is already used inside an ingress resource", "resource", il.Items[i].Name)
 				return true, nil
 			}
 		}

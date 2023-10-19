@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package v4
 
-type ApiKeyEntity struct {
-	Id  string `json:"id"`
-	Key string `json:"key"`
+import "strings"
+
+type Enum string
+
+func (e Enum) ToGatewayDefinition() string {
+	return strings.ReplaceAll(strings.ToLower(string(e)), "_", "-")
 }

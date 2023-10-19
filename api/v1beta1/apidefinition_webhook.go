@@ -26,22 +26,22 @@ import (
 var _ webhook.Defaulter = &ApiDefinition{}
 var _ webhook.Validator = &ApiDefinition{}
 
-func (r *ApiDefinition) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (api *ApiDefinition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
+		For(api).
 		Complete()
 }
 
-func (r *ApiDefinition) Default() {}
+func (api *ApiDefinition) Default() {}
 
-func (*ApiDefinition) ValidateCreate() (admission.Warnings, error) {
+func (api *ApiDefinition) ValidateCreate() (admission.Warnings, error) {
+	return admission.Warnings{}, nil
+}
+
+func (api *ApiDefinition) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
 	return admission.Warnings{}, nil
 }
 
 func (*ApiDefinition) ValidateDelete() (admission.Warnings, error) {
-	return admission.Warnings{}, nil
-}
-
-func (*ApiDefinition) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
 	return admission.Warnings{}, nil
 }

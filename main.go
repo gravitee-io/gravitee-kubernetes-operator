@@ -19,7 +19,6 @@ package main
 import (
 	"context"
 	"embed"
-	"flag"
 	"fmt"
 	"io/fs"
 	"os"
@@ -32,7 +31,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/extensions"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/extensions"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
 	v1 "k8s.io/api/networking/v1"
@@ -43,7 +43,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -57,7 +56,6 @@ import (
 	clientScheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	gioV1Alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -70,8 +68,7 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 
 	//go:embed helm
 	helm embed.FS
@@ -86,40 +83,24 @@ func init() {
 
 func main() {
 	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-
-	opts := zap.Options{
-		Development:          env.Config.DisableJSONLogs,
-		EncoderConfigOptions: logging.NewEncoderConfigOption(),
-	}
-
-	opts.BindFlags(flag.CommandLine)
-
-	flag.Parse()
-
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
-
 	if !env.Config.EnableMetrics {
-		setupLog.Info("metrics are disabled")
+		log.Global.Info("metrics are disabled")
 		metricsAddr = "0" // disables metrics
+	} else {
+		metricsAddr = fmt.Sprintf(":%d", env.Config.MetricsPort)
 	}
-
 	metrics := metricsServer.Options{BindAddress: metricsAddr}
 
+	probeAddr := fmt.Sprintf(":%d", env.Config.ProbePort)
+
 	if env.Config.InsecureSkipVerify {
-		setupLog.Info("TLS certificates verification is skipped for APIM HTTP client")
+		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
 	var webhookServer webhook.Server
 	if env.Config.EnableWebhook {
-		if err := patchCRDs(); err != nil {
-			setupLog.Error(err, "unable to apply custom resource definitions")
+		if err := extendResources(); err != nil {
+			log.Global.Error(err, "unable to apply custom resource definitions")
 			os.Exit(1)
 		}
 		webhookServer = webhook.NewServer(webhook.Options{
@@ -132,18 +113,18 @@ func main() {
 		Metrics:                metrics,
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		LeaderElection:         env.Config.EnableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.WatchNS),
 	})
 
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		log.Global.Error(err, "unable to create manager")
 		os.Exit(1)
 	}
 
 	if err = addIndexer(mgr); err != nil {
-		setupLog.Error(err, "unable to start manager")
+		log.Global.Error(err, "unable to index required fields")
 		os.Exit(1)
 	}
 
@@ -151,7 +132,12 @@ func main() {
 
 	if env.Config.EnableWebhook {
 		if err = (&gioV1Beta1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create webhook", "webhook", "ApiDefinition")
+			log.Global.Error(err, "unable to setup webhook for API definitions v1beta1")
+			os.Exit(1)
+		}
+
+		if err = (&gioV1Alpha1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
+			log.Global.Error(err, "unable to setup webhook for API definitions v1alpha1")
 			os.Exit(1)
 		}
 	}
@@ -159,31 +145,31 @@ func main() {
 	//+kubebuilder:scaffold:builder
 
 	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
-		setupLog.Error(healthCheckErr, "unable to set up health check")
+		log.Global.Error(healthCheckErr, "unable to set up health check")
 		os.Exit(1)
 	}
 
 	if readyCheckErr := mgr.AddReadyzCheck("readyz", healthz.Ping); readyCheckErr != nil {
-		setupLog.Error(readyCheckErr, "unable to set up ready check")
+		log.Global.Error(readyCheckErr, "unable to set up ready check")
 		os.Exit(1)
 	}
 
 	k8s.RegisterClient(mgr.GetClient())
 
-	setupLog.Info("starting manager")
+	log.Global.Info("starting manager")
 	if startErr := mgr.Start(ctrl.SetupSignalHandler()); startErr != nil {
-		setupLog.Error(startErr, "problem running manager")
+		log.Global.Error(startErr, "unable to run manager")
 		os.Exit(1)
 	}
 }
 
 func buildCacheOptions(ns string) cache.Options {
 	if ns == "" {
-		setupLog.Info("no namespace defined, watching all namespaces")
+		log.Global.Info("manager is watching all cluster namespaces")
 		return cache.Options{}
 	}
 
-	setupLog.Info("watching on dedicated namespace", "namespace", ns)
+	log.Global.Infof("manager is watching namespace %s", ns)
 	return cache.Options{
 		DefaultNamespaces: map[string]cache.Config{
 			ns: {},
@@ -196,9 +182,9 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ApiDefinitionList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Beta1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
+		log.Global.Error(err, "unable to create controller for API definitions")
 		os.Exit(1)
 	}
 
@@ -208,7 +194,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
+		log.Global.Error(err, "unable to create controller for management contexts")
 		os.Exit(1)
 	}
 	if err := (&ingress.Reconciler{
@@ -217,7 +203,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1.IngressList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
+		log.Global.Error(err, "unable to create controller for ingresses")
 		os.Exit(1)
 	}
 	if err := (&apiresource.Reconciler{
@@ -225,7 +211,7 @@ func registerControllers(mgr manager.Manager) {
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiResource")
+		log.Global.Error(err, "unable to create controller for API resources")
 		os.Exit(1)
 	}
 	if err := (&application.Reconciler{
@@ -234,7 +220,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("application-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Application")
+		log.Global.Error(err, "unable to create controller for applications")
 		os.Exit(1)
 	}
 
@@ -242,7 +228,7 @@ func registerControllers(mgr manager.Manager) {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Secret")
+		log.Global.Error(err, "unable to create controller for secrets")
 		os.Exit(1)
 	}
 }
@@ -250,27 +236,27 @@ func registerControllers(mgr manager.Manager) {
 func addIndexer(mgr manager.Manager) error {
 	err := indexApiDefinitionFields(mgr)
 	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in API definition)")
+		return err
 	}
 
 	err = indexSecretRefs(mgr)
 	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in context resources)")
+		return err
 	}
 
 	err = indexIngressFields(mgr)
 	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
+		return err
 	}
 
 	err = indexTLSSecretFields(mgr)
 	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
+		return err
 	}
 
 	err = indexApplicationFields(mgr)
 	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in application resources)")
+		return err
 	}
 
 	return nil
@@ -281,13 +267,13 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	ctx := context.Background()
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
-	err := cache.IndexField(ctx, &gioV1Alpha1.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
+	err := cache.IndexField(ctx, &gioV1Beta1.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	if err != nil {
 		return err
 	}
 
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
-	err = cache.IndexField(ctx, &gioV1Alpha1.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
+	err = cache.IndexField(ctx, &gioV1Beta1.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
 	if err != nil {
 		return err
 	}
@@ -342,10 +328,10 @@ func indexApplicationFields(manager ctrl.Manager) error {
 	return nil
 }
 
-func patchCRDs() error {
+func extendResources() error {
 	ctx := context.Background()
 
-	setupLog.Info("extending scheme for CRD patch")
+	log.Global.Info("extending scheme for CRD patch")
 	sErr := apiExtensions.AddToScheme(scheme)
 	if sErr != nil {
 		return sErr
@@ -354,6 +340,11 @@ func patchCRDs() error {
 	cli, cErr := client.New(ctrl.GetConfigOrDie(), client.Options{Scheme: scheme})
 	if cErr != nil {
 		return cErr
+	}
+
+	vErr := extensions.InitValidatingWebhookConfig(ctx, cli)
+	if vErr != nil {
+		return vErr
 	}
 
 	return fs.WalkDir(helm, keys.CRDBase, func(path string, d fs.DirEntry, walkErr error) error {
@@ -380,7 +371,7 @@ func patchCRDs() error {
 			return err
 		}
 
-		setupLog.Info("patching custom resource definition", "name", unstructured.GetName())
+		log.Global.Infof("patching custom resource definition %s", unstructured.GetName())
 
 		existing := &apiExtensions.CustomResourceDefinition{}
 		if err = cli.Get(ctx, types.NamespacedName{Name: unstructured.GetName()}, existing); err != nil {
@@ -392,7 +383,7 @@ func patchCRDs() error {
 			return err
 		}
 
-		extensions.ExtendWithWebhook(desired)
+		extensions.AddConversionWebhook(desired)
 		extensions.InjectCA(desired)
 
 		desired.Spec.DeepCopyInto(&existing.Spec)
@@ -402,6 +393,6 @@ func patchCRDs() error {
 			return err
 		}
 
-		return err
+		return extensions.CreateValidatingWebhooks(ctx, cli, existing)
 	})
 }

@@ -16,7 +16,7 @@ package service
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/plan"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
@@ -30,34 +30,32 @@ func NewSubscriptions(client *client.Client) *Subscriptions {
 	return &Subscriptions{Client: client}
 }
 
-func (svc *Subscriptions) APITarget(apiID string) *http.URL {
-	return svc.EnvTarget("apis").WithPath(apiID).WithPath("subscriptions")
+func (svc *Subscriptions) API(apiID string) *http.URL {
+	return svc.EnvV2("apis").WithPath(apiID).WithPath("subscriptions")
 }
 
-func (svc *Subscriptions) Subscribe(apiID, applicationID, planID string) (*model.Subscription, error) {
-	url := svc.APITarget(apiID).WithQueryParams(
-		map[string]string{
-			planParam:        planID,
-			applicationParam: applicationID,
-		},
-	)
+func (svc *Subscriptions) Subscribe(apiID, applicationID, planID string) (*plan.Subscription, error) {
+	request := &plan.SubscriptionRequest{
+		PlanID:        planID,
+		ApplicationID: applicationID,
+	}
 
-	subscription := new(model.Subscription)
+	subscription := new(plan.Subscription)
 
-	if err := svc.HTTP.Post(url.String(), nil, subscription); err != nil {
+	if err := svc.HTTP.Post(svc.API(apiID), request, subscription); err != nil {
 		return nil, err
 	}
 
 	return subscription, nil
 }
 
-func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiKeyEntity, error) {
-	url := svc.APITarget(apiID).WithPath(subscriptionID).WithPath("apikeys")
-	apiKeys := new([]model.ApiKeyEntity)
+func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]plan.ApiKey, error) {
+	url := svc.API(apiID).WithPath(subscriptionID).WithPath("api-keys")
+	apiKeys := new(plan.ApiKeyList)
 
-	if err := svc.HTTP.Get(url.String(), apiKeys); err != nil {
+	if err := svc.HTTP.Get(url, apiKeys); err != nil {
 		return nil, err
 	}
 
-	return *apiKeys, nil
+	return apiKeys.Data, nil
 }

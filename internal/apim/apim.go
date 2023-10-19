@@ -17,7 +17,8 @@ package apim
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/base"
+	v1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/v1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
@@ -27,6 +28,7 @@ import (
 type APIM struct {
 	APIs         *service.APIs
 	Applications *service.Applications
+	Plans        *service.Plans
 
 	orgID string
 	envID string
@@ -43,9 +45,10 @@ func (apim *APIM) OrgID() string {
 }
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
-func FromContext(ctx context.Context, managementContext management.Context) (*APIM, error) {
-	orgID, envID := managementContext.OrgId, managementContext.EnvId
-	urls, err := client.NewURLs(managementContext.BaseUrl, orgID, envID)
+func FromContext(ctx context.Context, managementContext v1.Context) (*APIM, error) {
+	envID := managementContext.EnvID
+	orgID := managementContext.OrgID
+	urls, err := client.NewURLs(managementContext.BaseURL, orgID, envID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +60,14 @@ func FromContext(ctx context.Context, managementContext management.Context) (*AP
 
 	return &APIM{
 		APIs:         service.NewAPIs(client),
+		Plans:        service.NewPlans(client),
 		Applications: service.NewApplications(client),
 		orgID:        orgID,
 		envID:        envID,
 	}, nil
 }
 
-func toHttpAuth(management management.Context) *http.Auth {
+func toHttpAuth(management v1.Context) *http.Auth {
 	if !management.HasAuthentication() {
 		return nil
 	}
@@ -74,7 +78,7 @@ func toHttpAuth(management management.Context) *http.Auth {
 	}
 }
 
-func toBasicAuth(auth *management.Auth) *http.BasicAuth {
+func toBasicAuth(auth *base.Auth) *http.BasicAuth {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -85,7 +89,7 @@ func toBasicAuth(auth *management.Auth) *http.BasicAuth {
 	}
 }
 
-func toBearer(auth *management.Auth) http.BearerToken {
+func toBearer(auth *base.Auth) http.BearerToken {
 	if auth == nil {
 		return ""
 	}

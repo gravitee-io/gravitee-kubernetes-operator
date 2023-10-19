@@ -15,102 +15,54 @@
 package service
 
 import (
-	"net/http"
-
-	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/api"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
-
-const (
-	crossIDParam     = "crossId"
-	stateActionParam = "action"
-	planParam        = "plan"
-	applicationParam = "application"
-)
-
-var importParams = map[string]string{
-	"definitionVersion": "2.0.0",
-}
-
-var deleteParams = map[string]string{
-	"closePlans": "true",
-}
 
 // APIs brings support for managing gravitee.io APIM APIs.
 type APIs struct {
 	*client.Client
 }
 
-type httpImportMethod = func(string, any, any, ...xhttp.RequestTransformer) error
-
 func NewAPIs(client *client.Client) *APIs {
 	return &APIs{Client: client}
 }
 
-func (svc *APIs) GetByCrossID(crossID string) (*model.ApiListItem, error) {
-	url := svc.EnvTarget("apis").WithQueryParam(crossIDParam, crossID)
-	apis := new([]model.ApiListItem)
-
-	if err := svc.HTTP.Get(url.String(), apis); err != nil {
-		return nil, err
-	}
-
-	if len(*apis) == 0 {
-		return nil, errors.NewNotFoundError()
-	}
-
-	return &(*apis)[0], nil
+func (svc *APIs) baseURL() *http.URL {
+	return svc.EnvV2("apis")
 }
 
-func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
-	url := svc.EnvTarget("apis").WithPath(apiID)
-	api := new(model.ApiEntity)
+func (svc *APIs) GetByID(apiID string) (*api.Entity, error) {
+	url := svc.baseURL().WithPath(apiID)
+	api := new(api.Entity)
 
-	if err := svc.HTTP.Get(url.String(), api); err != nil {
+	if err := svc.HTTP.Get(url, api); err != nil {
 		return nil, err
 	}
 
 	return api, nil
 }
 
-func (svc *APIs) Import(method string, spec *v2.Api) (*model.ApiEntity, error) {
-	url := svc.EnvTarget("apis/import").WithQueryParams(importParams)
-	api := new(model.ApiEntity)
-	fun := svc.getImportFunc(method)
+func (svc *APIs) Import(spec *v4.Api) (*v1beta1.ApiDefinitionStatus, error) {
+	url := svc.baseURL().WithPath("_import/crd")
 
-	if err := fun(url.String(), spec, api); err != nil {
+	status := new(v1beta1.ApiDefinitionStatus)
+	if err := svc.HTTP.Put(url, spec, status); err != nil {
 		return nil, err
 	}
 
-	return api, nil
-}
-
-func (svc *APIs) getImportFunc(method string) httpImportMethod {
-	if method == http.MethodPost {
-		return svc.HTTP.Post
-	}
-	return svc.HTTP.Put
-}
-
-func (svc *APIs) UpdateState(apiID string, action model.Action) error {
-	url := svc.EnvTarget("apis").WithPath(apiID).WithQueryParam(stateActionParam, string(action))
-	return svc.HTTP.Post(url.String(), nil, nil)
+	return status, nil
 }
 
 func (svc *APIs) Delete(apiID string) error {
-	url := svc.EnvTarget("apis").WithPath(apiID).WithQueryParams(deleteParams)
-	return svc.HTTP.Delete(url.String(), nil)
+	url := svc.baseURL().WithPath(apiID).WithQueryParam("closePlans", "true")
+	return svc.HTTP.Delete(url, nil)
 }
 
-func (svc *APIs) SetKubernetesContext(apiID string) error {
-	url := svc.EnvTarget("apis").WithPath(apiID).WithPath("definition-context")
-	return svc.HTTP.Put(url.String(), model.NewKubernetesContext(), nil)
-}
-
-func (svc *APIs) Deploy(id string) error {
-	url := svc.EnvTarget("apis").WithPath(id).WithPath("deploy")
-	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
+func (svc *APIs) Stop(apiID string) error {
+	url := svc.baseURL().WithPath(apiID).WithPath("_stop")
+	return svc.HTTP.Post(url, nil, nil)
 }

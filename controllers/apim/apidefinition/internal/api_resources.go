@@ -17,14 +17,16 @@ package internal
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
-func (d *Delegate) resolveResources(spec *gio.ApiDefinitionSpec) error {
-	if spec.Resources == nil {
+func (d *Delegate) resolveResources(api *v1beta1.ApiDefinition) error {
+	if api.Spec.Resources == nil {
 		return nil
 	}
 
-	for _, resource := range spec.Resources {
+	for _, resource := range api.Spec.Resources {
 		if err := d.resolveIfRef(resource); err != nil {
 			return err
 		}
@@ -41,7 +43,11 @@ func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
 	namespacedName := resourceOrRef.Ref.ToK8sType()
 	resource := new(gio.ApiResource)
 
-	d.log.Info("Looking for api resource from", "namespace", namespacedName.Namespace, "name", namespacedName.Name)
+	log.Debug(
+		d.ctx,
+		"Looking for resource reference",
+		"ref", namespacedName,
+	)
 
 	if err := d.k8s.Get(d.ctx, namespacedName, resource); err != nil {
 		return err

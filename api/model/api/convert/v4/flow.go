@@ -20,52 +20,59 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 )
 
-func toFlowExecution(v3FlowMode v2.FlowMode) *v4.FlowExecution {
-	if v3FlowMode == "" {
-		return nil
-	}
-	if v3FlowMode == v2.DefaultFlowMode {
+func toFlowExecution(v2FlowMode v2.FlowMode) *v4.FlowExecution {
+	if v2FlowMode == v2.BestMatchFlowMode {
 		return &v4.FlowExecution{
-			Mode: v4.FlowModeDefault,
+			Mode: v4.FlowModeBestMatch,
 		}
 	}
 	return &v4.FlowExecution{
-		Mode: v4.FlowModeBestMatch,
+		Mode: v4.FlowModeDefault,
 	}
 }
 
-func toFlows(v3Flows []v2.Flow) []*v4.Flow {
-	if len(v3Flows) == 0 {
+func toFlows(v2Flows []v2.Flow) []*v4.Flow {
+	if len(v2Flows) == 0 {
 		return []*v4.Flow{}
 	}
 	var flows []*v4.Flow
-	for _, v3Flow := range v3Flows {
-		flows = append(flows, toFlow(v3Flow))
+	for i := range v2Flows {
+		flows = append(flows, toFlow(v2Flows[i]))
 	}
 	return flows
 }
 
-func toFlow(v3Flow v2.Flow) *v4.Flow {
-	flow := v4.NewFlow(v3Flow.Name)
-	flow.Selectors = append(flow.Selectors, toHttpSelector(v3Flow))
-	flow.Request = toFlowSteps(v3Flow.Pre)
-	flow.Response = toFlowSteps(v3Flow.Post)
-	flow.Enabled = v3Flow.Enabled
+func toFlow(v2Flow v2.Flow) *v4.Flow {
+	flow := v4.NewFlow(v2Flow.Name)
+	flow.Selectors = append(flow.Selectors, toHttpSelector(v2Flow))
+	if v2Flow.Condition != "" {
+		flow.Selectors = append(flow.Selectors, v4.NewConditionSelector(v2Flow.Condition))
+	}
+	flow.Request = toFlowSteps(v2Flow.Pre)
+	flow.Response = toFlowSteps(v2Flow.Post)
+	flow.Enabled = v2Flow.Enabled
 	return flow
 }
 
-func toFlowSteps(v3Step []base.FlowStep) []*v4.FlowStep {
-	if v3Step == nil {
+func toFlowSteps(v2Step []base.FlowStep) []*v4.FlowStep {
+	if v2Step == nil {
 		return []*v4.FlowStep{}
 	}
 	var flowSteps []*v4.FlowStep
-	for i := range v3Step {
-		flowSteps = append(flowSteps, v4.NewFlowStep(v3Step[i]))
+	for i := range v2Step {
+		flowSteps = append(flowSteps, v4.NewFlowStep(v2Step[i]))
 	}
 	return flowSteps
 }
 
-func toHttpSelector(v3Flow v2.Flow) *v4.FlowSelector {
-	path, operator, methods := v3Flow.PathOperator.Path, v3Flow.PathOperator.Operator, v3Flow.Methods
-	return v4.NewHTTPSelector(path, operator, methods)
+func toHttpSelector(v2Flow v2.Flow) *v4.FlowSelector {
+	path, operator := getPathAndOperator(v2Flow.PathOperator)
+	return v4.NewHTTPSelector(path, operator, v2Flow.Methods)
+}
+
+func getPathAndOperator(pathOperator *v2.PathOperator) (string, string) {
+	if pathOperator == nil {
+		return "", ""
+	}
+	return pathOperator.Path, pathOperator.Operator
 }

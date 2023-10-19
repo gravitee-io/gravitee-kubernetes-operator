@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+// +kubebuilder:object:generate=true
+package v1
 
 import (
-	"testing"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/base"
 )
 
-func TestErrors(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "API definition internal")
+type Context struct {
+	base.Context `json:",inline"`
+
+	// The Gravitee APIM organization targeted by the management context.
+	// +kubebuilder:validation:Required
+	OrgID string `json:"organizationId"`
 }

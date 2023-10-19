@@ -15,7 +15,6 @@
 package test
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -39,12 +38,20 @@ var _ = Describe("API Definition Controller", func() {
 			fixtureGenerator := internal.NewFixtureGenerator()
 
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
-				Api: internal.BasicApiFile,
+				Api:     internal.BasicApiFile,
+				Context: internal.ClusterContextFile,
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			By("Create an API definition resource stared by default")
+			By("Creating a management context")
+			Expect(k8sClient.Create(ctx, fixtures.Context)).Should(Succeed())
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{Name: fixtures.Context.Name, Namespace: namespace}, fixtures.Context)
+			}, timeout, interval).Should(Succeed())
+
+			By("Creating an API definition stared by default")
 			apiDefinition := fixtures.Api
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
@@ -72,12 +79,7 @@ var _ = Describe("API Definition Controller", func() {
 			updatedApiDefinition := createdApiDefinition.DeepCopy()
 			updatedApiDefinition.Spec.State = "STOPPED"
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
-				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
-					return err
-				}
-				updatedApiDefinition.Spec.DeepCopyInto(&update.Spec)
-				return k8sClient.Update(ctx, update)
+				return internal.UpdateSafely(updatedApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call updated API definition URL and expect 404")
@@ -86,21 +88,21 @@ var _ = Describe("API Definition Controller", func() {
 				return internal.AssertNoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			By("Call rest API and expect STOPPED state")
+			By("Calling rest API and expecting state to be 'STOPPED'")
 			apimClient, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(func() error {
+				err = k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition)
+				return internal.AssertEquals("API state", "STOPPED", updatedApiDefinition.Status.State)
+			}, timeout, interval)
+
+			Eventually(func() error {
 				api, cliErr := apimClient.APIs.GetByID(updatedApiDefinition.Status.ID)
 				if cliErr != nil {
-					return err
+					return cliErr
 				}
-
-				if api.State != "STOPPED" {
-					return fmt.Errorf("API state should be STOPPED")
-				}
-
-				return nil
+				return internal.AssertEquals("API state", "STOPPED", api.State)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 	})

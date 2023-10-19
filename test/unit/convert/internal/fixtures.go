@@ -47,10 +47,6 @@ func Marshal(api interface{}) []byte {
 	return data
 }
 
-func ReadJSONString(path string) string {
-	return string(ReadJSON(path))
-}
-
 func ReadJSON(path string) []byte {
 	data, err := os.ReadFile(dataBase + "/" + path)
 	Expect(err).NotTo(HaveOccurred())

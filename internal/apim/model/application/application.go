@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package application
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 )
 
-type Application struct {
+type Entity struct {
 	Id          string               `json:"id,omitempty"`
 	Name        string               `json:"name,omitempty"`
 	Status      string               `json:"status,omitempty"`
@@ -32,7 +32,7 @@ type Application struct {
 	AppType     string               `json:"type,omitempty"`
 }
 
-type ApplicationMetaData struct {
+type MetaData struct {
 	Name          string                      `json:"name"`
 	ApplicationId string                      `json:"applicationId,omitempty"`
 	Value         string                      `json:"value,omitempty"`

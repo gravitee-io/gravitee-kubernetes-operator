@@ -15,7 +15,8 @@
 package internal
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -27,18 +28,18 @@ import (
 func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.OperationResult, error) {
 	apiDefinition, err := d.resolveApiDefinitionTemplate(ingress)
 	if err != nil {
-		d.log.Error(err, "ResolveApiDefinition error")
+		log.Error(d.ctx, err, "Unable to resolve ingress definition template")
 		return util.OperationResultNone, err
 	}
 
-	var existingApiDefinition *v1alpha1.ApiDefinition
+	var existingApiDefinition *v1beta1.ApiDefinition
 	existingApiDefinition, err = d.getApiDefinition(types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name})
 	if errors.IsNotFound(err) {
 		return d.createApiDefinition(ingress, apiDefinition)
 	}
 
 	if err != nil {
-		d.log.Error(err, "unable to create api definition from template")
+		log.Error(d.ctx, err, "Unable to create API definition from template")
 		return util.OperationResultNone, err
 	}
 
@@ -47,8 +48,9 @@ func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.Operat
 		return d.updateApiDefinition(ingress, existingApiDefinition)
 	}
 
-	d.log.Info(
-		"No change detected on ApiDefinition. Skipped.",
+	log.Debug(
+		d.ctx,
+		"No change detected in API definition. Skipped.",
 		"name", apiDefinition.Name,
 		"namespace", apiDefinition.Namespace,
 	)
@@ -56,9 +58,9 @@ func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.Operat
 }
 
 func (d *Delegate) createApiDefinition(
-	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
+	ingress *v1.Ingress, apiDefinition *v1beta1.ApiDefinition,
 ) (util.OperationResult, error) {
-	d.log.Info("Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+	log.Info(d.ctx, "Creating API definition", "definition", apiDefinition.GetNamespacedName())
 
 	if err := util.SetOwnerReference(ingress, apiDefinition, d.k8s.Scheme()); err != nil {
 		return util.OperationResultNone, err
@@ -68,16 +70,16 @@ func (d *Delegate) createApiDefinition(
 }
 
 func (d *Delegate) updateApiDefinition(
-	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
+	ingress *v1.Ingress, apiDefinition *v1beta1.ApiDefinition,
 ) (util.OperationResult, error) {
-	d.log.Info("Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+	log.Info(d.ctx, "Updating API definition", "definition", apiDefinition.GetNamespacedName())
 
 	err := util.SetOwnerReference(ingress, apiDefinition, d.k8s.Scheme())
 	if err != nil {
 		return util.OperationResultNone, err
 	}
 
-	var existingApiDefinition *v1alpha1.ApiDefinition
+	var existingApiDefinition *v1beta1.ApiDefinition
 	existingApiDefinition, err = d.getApiDefinition(types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name})
 	if err != nil {
 		return util.OperationResultNone, err
@@ -87,8 +89,8 @@ func (d *Delegate) updateApiDefinition(
 	return util.OperationResultUpdated, d.k8s.Update(d.ctx, existingApiDefinition)
 }
 
-func (d *Delegate) getApiDefinition(key client.ObjectKey) (*v1alpha1.ApiDefinition, error) {
-	api := &v1alpha1.ApiDefinition{}
+func (d *Delegate) getApiDefinition(key client.ObjectKey) (*v1beta1.ApiDefinition, error) {
+	api := &v1beta1.ApiDefinition{}
 	err := d.k8s.Get(d.ctx, key, api)
 	if err != nil {
 		return nil, err

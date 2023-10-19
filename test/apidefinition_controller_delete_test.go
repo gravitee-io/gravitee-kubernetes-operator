@@ -32,7 +32,7 @@ var _ = Describe("API Definition Controller", func() {
 
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
-	Context("With Started basic ApiDefinition & ManagementContext", func() {
+	Context("With STARTED ApiDefinition & ManagementContext", func() {
 		var apiDefinitionFixture *gio.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
@@ -61,7 +61,7 @@ var _ = Describe("API Definition Controller", func() {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
-			By("Create an API definition resource stared by default")
+			By("Create an API definition resource in the STARTED state")
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
@@ -75,14 +75,12 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should Delete an API Definition", func() {
-			createdApiDefinition := new(gio.ApiDefinition)
 
 			// Expect the API Definition is Ready
+			createdApiDefinition := new(gio.ApiDefinition)
 			Eventually(func() error {
-				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(createdApiDefinition)
+				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")
@@ -135,15 +133,13 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should detect when API has already been deleted", func() {
-			createdApiDefinition := new(gio.ApiDefinition)
 			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
+			createdApiDefinition := new(gio.ApiDefinition)
 			Eventually(func() error {
-				if err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
-					return err
-				}
-				return internal.AssertApiStatusIsSet(createdApiDefinition)
+				err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
+				return internal.AssertNoErrorAndStatusCompleted(err, createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Call initial API definition URL and expect no error")

@@ -26,18 +26,18 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
 
 var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
-	Api         *gio.ApiDefinition
-	Context     *gio.ManagementContext
-	Resource    *gio.ApiResource
+	Api         *v1alpha1.ApiDefinition
+	Context     *v1alpha1.ManagementContext
+	Resource    *v1alpha1.ApiResource
 	Ingress     *netV1.Ingress
-	Application *gio.Application
+	Application *v1alpha1.Application
 }
 
 type FixtureFiles struct {
@@ -152,8 +152,8 @@ func ingressHttpPathTransformer(f *FixtureGenerator) func(ingress *netV1.Ingress
 }
 
 func (f *FixtureGenerator) NewApiDefinition(
-	path string, transforms ...func(*gio.ApiDefinition),
-) (*gio.ApiDefinition, error) {
+	path string, transforms ...func(*v1alpha1.ApiDefinition),
+) (*v1alpha1.ApiDefinition, error) {
 	api, err := newApiDefinition(path, transforms...)
 	if err != nil {
 		return nil, err
@@ -170,8 +170,8 @@ func (f *FixtureGenerator) NewApiDefinition(
 	return api, nil
 }
 func (f *FixtureGenerator) NewManagementContext(
-	path string, transforms ...func(*gio.ManagementContext),
-) (*gio.ManagementContext, error) {
+	path string, transforms ...func(*v1alpha1.ManagementContext),
+) (*v1alpha1.ManagementContext, error) {
 	ctx, err := newManagementContext(path, transforms...)
 	if err != nil {
 		return nil, err
@@ -183,7 +183,9 @@ func (f *FixtureGenerator) NewManagementContext(
 	return ctx, nil
 }
 
-func (f *FixtureGenerator) NewApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.ApiResource, error) {
+func (f *FixtureGenerator) NewApiResource(
+	path string, transforms ...func(*v1alpha1.ApiResource),
+) (*v1alpha1.ApiResource, error) {
 	resource, err := newApiResource(path, transforms...)
 	if err != nil {
 		return nil, err
@@ -194,19 +196,19 @@ func (f *FixtureGenerator) NewApiResource(path string, transforms ...func(*gio.A
 	return resource, nil
 }
 
-func newApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio.ApiDefinition, error) {
+func newApiDefinition(path string, transforms ...func(*v1alpha1.ApiDefinition)) (*v1alpha1.ApiDefinition, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("ApiDefinition")
-	decoded, _, err := decode(crd, &gvk, new(gio.ApiDefinition))
+	gvk := v1alpha1.GroupVersion.WithKind("ApiDefinition")
+	decoded, _, err := decode(crd, &gvk, new(v1alpha1.ApiDefinition))
 	if err != nil {
 		return nil, err
 	}
 
-	api, ok := decoded.(*gio.ApiDefinition)
+	api, ok := decoded.(*v1alpha1.ApiDefinition)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of API CRD")
 	}
@@ -218,19 +220,19 @@ func newApiDefinition(path string, transforms ...func(*gio.ApiDefinition)) (*gio
 	return api, nil
 }
 
-func newApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.ApiResource, error) {
+func newApiResource(path string, transforms ...func(*v1alpha1.ApiResource)) (*v1alpha1.ApiResource, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("ApiResource")
-	decoded, _, err := decode(crd, &gvk, new(gio.ApiResource))
+	gvk := v1alpha1.GroupVersion.WithKind("ApiResource")
+	decoded, _, err := decode(crd, &gvk, new(v1alpha1.ApiResource))
 	if err != nil {
 		return nil, err
 	}
 
-	resource, ok := decoded.(*gio.ApiResource)
+	resource, ok := decoded.(*v1alpha1.ApiResource)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of API Resource CRD")
 	}
@@ -242,19 +244,21 @@ func newApiResource(path string, transforms ...func(*gio.ApiResource)) (*gio.Api
 	return resource, nil
 }
 
-func newManagementContext(path string, transforms ...func(*gio.ManagementContext)) (*gio.ManagementContext, error) {
+func newManagementContext(
+	path string, transforms ...func(*v1alpha1.ManagementContext),
+) (*v1alpha1.ManagementContext, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("ManagementContext")
-	decoded, _, err := decode(crd, &gvk, new(gio.ManagementContext))
+	gvk := v1alpha1.GroupVersion.WithKind("ManagementContext")
+	decoded, _, err := decode(crd, &gvk, new(v1alpha1.ManagementContext))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, ok := decoded.(*gio.ManagementContext)
+	ctx, ok := decoded.(*v1alpha1.ManagementContext)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of ManagementContext CRD")
 	}
@@ -283,7 +287,7 @@ func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("Ingress")
+	gvk := v1alpha1.GroupVersion.WithKind("Ingress")
 	decoded, _, err := decode(crd, &gvk, new(netV1.Ingress))
 	if err != nil {
 		return nil, err
@@ -302,7 +306,7 @@ func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress
 }
 
 func (f *FixtureGenerator) NewApplication(path string,
-	transforms ...func(application *gio.Application)) (*gio.Application, error) {
+	transforms ...func(application *v1alpha1.Application)) (*v1alpha1.Application, error) {
 	application, err := newApplication(path, transforms...)
 	if err != nil {
 		return nil, err
@@ -312,19 +316,19 @@ func (f *FixtureGenerator) NewApplication(path string,
 	return application, nil
 }
 
-func newApplication(path string, transforms ...func(application *gio.Application)) (*gio.Application, error) {
+func newApplication(path string, transforms ...func(application *v1alpha1.Application)) (*v1alpha1.Application, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := gio.GroupVersion.WithKind("Application")
-	decoded, _, err := decode(crd, &gvk, new(gio.Application))
+	gvk := v1alpha1.GroupVersion.WithKind("Application")
+	decoded, _, err := decode(crd, &gvk, new(v1alpha1.Application))
 	if err != nil {
 		return nil, err
 	}
 
-	application, ok := decoded.(*gio.Application)
+	application, ok := decoded.(*v1alpha1.Application)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of Application CRD")
 	}
@@ -340,6 +344,6 @@ func randomSuffix() string {
 	return "-" + uuid.NewV4().String()[:7]
 }
 
-func isTemplate(api *gio.ApiDefinition) bool {
+func isTemplate(api *v1alpha1.ApiDefinition) bool {
 	return api.Annotations[keys.IngressTemplateAnnotation] == "true"
 }

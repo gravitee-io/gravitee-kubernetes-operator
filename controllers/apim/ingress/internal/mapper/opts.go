@@ -20,7 +20,7 @@ import (
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
-const notFoundStatusText = "No context-path matches the request URI."
+const notFoundStatusText = "Service not found."
 
 type ResponseTemplate struct {
 	Content     string

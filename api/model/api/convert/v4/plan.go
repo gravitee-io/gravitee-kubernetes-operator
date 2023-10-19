@@ -15,15 +15,21 @@
 package v4
 
 import (
+	"fmt"
+
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
-func toV4Plans(v2Plans []*v2.Plan) []*v4.Plan {
-	var plans []*v4.Plan
-	for _, v3Plan := range v2Plans {
-		plans = append(plans, toPlan(v3Plan))
+func toV4Plans(v2Plans []*v2.Plan) map[string]*v4.Plan {
+	plans := make(map[string]*v4.Plan)
+	for i := range v2Plans {
+		k := v2Plans[i].Name
+		if _, ok := plans[k]; ok {
+			k = fmt.Sprintf("%s-%d", v2Plans[i].Name, i)
+		}
+		plans[k] = toPlan(v2Plans[i])
 	}
 	return plans
 }

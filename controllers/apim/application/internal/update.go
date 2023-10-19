@@ -18,13 +18,13 @@ import (
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	apimApplication "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func (d *Delegate) CreateOrUpdate(application *gio.Application) error {
+func (d *Delegate) CreateOrUpdate(application *v1alpha1.Application) error {
 	if err := d.createUpdateApplication(application); err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (d *Delegate) CreateOrUpdate(application *gio.Application) error {
 	return d.createUpdateApplicationMetadata(application)
 }
 
-func (d *Delegate) createUpdateApplication(application *gio.Application) error {
+func (d *Delegate) createUpdateApplication(application *v1alpha1.Application) error {
 	spec := &application.Spec
 	spec.Origin = "KUBERNETES"
 	app, err := d.apim.Applications.GetByID(application.Status.ID)
@@ -63,10 +63,10 @@ func (d *Delegate) createUpdateApplication(application *gio.Application) error {
 	return nil
 }
 
-func (d *Delegate) createUpdateApplicationMetadata(application *gio.Application) error {
+func (d *Delegate) createUpdateApplicationMetadata(application *v1alpha1.Application) error {
 	spec := &application.Spec
 	if spec.ApplicationMetaData == nil {
-		application.Status.Status = gio.ProcessingStatusCompleted
+		application.Status.Status = v1alpha1.ProcessingStatusCompleted
 		return nil
 	}
 
@@ -100,12 +100,12 @@ func (d *Delegate) createUpdateApplicationMetadata(application *gio.Application)
 		}
 	}
 
-	application.Status.Status = gio.ProcessingStatusCompleted
+	application.Status.Status = v1alpha1.ProcessingStatusCompleted
 
 	return nil
 }
 
-func (d *Delegate) findMetadataKey(appMetadata *[]apimModel.ApplicationMetaData, name string) string {
+func (d *Delegate) findMetadataKey(appMetadata *[]apimApplication.MetaData, name string) string {
 	for _, md := range *appMetadata {
 		if md.Name == name {
 			return md.Key

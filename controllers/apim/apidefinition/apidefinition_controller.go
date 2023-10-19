@@ -18,10 +18,10 @@ package apidefinition
 
 import (
 	"context"
-	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
@@ -29,22 +29,18 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 )
 
-const requeueAfterTime = time.Second * 5
-
 // Reconciler reconciles a ApiDefinition object.
 type Reconciler struct {
 	client.Client
-	Log      logr.Logger
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 	Watcher  watch.Interface
@@ -57,15 +53,15 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=apidefinitions/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
+	log.InfoInitReconcile(ctx)
 
-	apiDefinition := &gio.ApiDefinition{}
+	apiDefinition := &v1beta1.ApiDefinition{}
 
 	if err := r.Get(ctx, req.NamespacedName, apiDefinition); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	delegate := internal.NewDelegate(ctx, r.Client, logger)
+	delegate := internal.NewDelegate(ctx, r.Client)
 	if err := delegate.ResolveTemplate(apiDefinition); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -73,14 +69,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 
 	if apiDefinition.GetAnnotations()[keys.IngressTemplateAnnotation] == "true" {
-		logger.Info("syncing template", "template", apiDefinition.Name)
+		log.Info(ctx, "Definition is an ingress template")
 
 		if err := delegate.SyncApiDefinitionTemplate(apiDefinition, req.Namespace); err != nil {
-			logger.Error(err, "Failed to sync API definition template")
-			return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+			log.Error(ctx, err, "Failed to sync API definition template")
+			return ctrl.Result{}, err
 		}
 
-		logger.Info("template synced successfully.", "template:", apiDefinition.Name)
+		log.Info(ctx, "Ingress template has been reconciled")
 		return ctrl.Result{}, nil
 	}
 
@@ -88,7 +84,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if apiDefinition.Spec.Context != nil {
 		if err := delegate.ResolveContext(apiDefinition); err != nil {
-			logger.Info("Unable to resolve context, no attempt will be made to sync with APIM")
+			log.Error(ctx, err, "Unable to resolve context, requeuing reconcile")
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -105,7 +102,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr == nil {
-		logger.Info("API definition has been reconciled")
+		log.InfoEndReconcile(ctx)
 		return ctrl.Result{}, delegate.UpdateStatusSuccess(apiDefinition)
 	}
 
@@ -114,19 +111,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if apim.IsRecoverable(reconcileErr) {
-		logger.Error(reconcileErr, "Requeuing reconcile")
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
+		log.ErrorRequeuingReconcile(ctx, reconcileErr)
+		return ctrl.Result{}, reconcileErr
 	}
 
-	logger.Error(reconcileErr, "Aborting reconcile")
+	log.ErrorAbortingReconcile(ctx, reconcileErr)
 	return ctrl.Result{}, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.ApiDefinition{}).
-		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
-		Watches(&gio.ApiResource{}, r.Watcher.WatchResources()).
+		For(&v1beta1.ApiDefinition{}).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
+		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources()).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

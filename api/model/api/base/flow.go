@@ -17,11 +17,10 @@ package base
 import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 // +kubebuilder:validation:Enum=STARTS_WITH;EQUALS;
-type Operator string
 
 const (
-	StartWithOperator = Operator("STARTS_WITH")
-	EqualsOperator    = Operator("EQUALS")
+	StartWithOperator = "STARTS_WITH"
+	EqualsOperator    = "EQUALS"
 )
 
 type FlowStep struct {

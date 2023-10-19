@@ -112,7 +112,7 @@ jobs:
           name: Check that `make manifests` has been executed
           command: |
             make manifests
-            git diff --quiet HEAD config/crd/bases/
+            git diff --quiet HEAD helm/gko/crds
       - run:
           name: Check that `make reference` has been executed
           command: |
@@ -176,8 +176,20 @@ jobs:
           name: Start APIM using k3d
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=master-latest
+            export APIM_IMAGE_TAG=apim2427-update-run-e2e-latest
             K3DARGS="--pull=${K3D_PULL}" make k3d-init
+      - run:
+          name: add cert-manager images to local registry
+          command: |
+            docker pull quay.io/jetstack/cert-manager-controller:v1.13.1 
+            docker pull quay.io/jetstack/cert-manager-webhook:v1.13.1
+            docker pull quay.io/jetstack/cert-manager-cainjector:v1.13.1
+            docker tag quay.io/jetstack/cert-manager-controller:v1.13.1 k3d-graviteeio.docker.localhost:12345/cert-manager-controller:v1.13.1
+            docker tag quay.io/jetstack/cert-manager-webhook:v1.13.1 k3d-graviteeio.docker.localhost:12345/cert-manager-webhook:v1.13.1
+            docker tag quay.io/jetstack/cert-manager-cainjector:v1.13.1 k3d-graviteeio.docker.localhost:12345/cert-manager-cainjector:v1.13.1
+            docker push k3d-graviteeio.docker.localhost:12345/cert-manager-controller:v1.13.1
+            docker push k3d-graviteeio.docker.localhost:12345/cert-manager-webhook:v1.13.1
+            docker push k3d-graviteeio.docker.localhost:12345/cert-manager-cainjector:v1.13.1
       - run:
           name: Add cert-manager repository
           command: helm repo add jetstack https://charts.jetstack.io
@@ -188,10 +200,18 @@ jobs:
               --namespace cert-manager \
               --create-namespace \
               --version v1.13.1 \
-              --set installCRDs=true
+              --set installCRDs=true \
+              --set image.repository=k3d-graviteeio.docker.localhost:12345/cert-manager-controller \
+              --set webhook.image.repository=k3d-graviteeio.docker.localhost:12345/cert-manager-webhook \
+              --set cainjector.image.repository=k3d-graviteeio.docker.localhost:12345/cert-manager-cainjector \
+              --wait
       - run:
           name: Deploy the Operator
           command: make k3d-build k3d-push k3d-deploy
+      - run:
+          name: Wait for webhook certificate to be created
+          command: |
+            while ! kubectl get secret gko-webhook-cert --namespace default; do echo "Waiting for webhook cert secret"; sleep 1; done
       - run:
           name: Run tests
           command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
@@ -512,10 +532,9 @@ workflows:
           matrix:
             parameters:
               namespace:
-              - apim-apim-3-19-x
-              - apim-apim-3-20-x
               - apim-apim-4-0-x
               - apim-apim-4-1-x
+              - apim-apim-4-2-x
               - apim-apim-master
               image: [graviteeio.azurecr.io/kubernetes-operator]
               tag: [alpha-latest]

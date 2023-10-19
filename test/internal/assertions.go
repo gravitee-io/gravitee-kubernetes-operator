@@ -20,33 +20,11 @@ import (
 	"reflect"
 
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/api"
 )
 
 func AssertApplicationStatusIsSet(application *gio.Application) error {
 	status := application.Status
-
-	if application.Status.ID == "" {
-		return fmt.Errorf("id should not be empty in status")
-	}
-
-	if status.EnvID == "" {
-		return fmt.Errorf("envId should not be empty in status")
-	}
-
-	if status.OrgID == "" {
-		return fmt.Errorf("envId should not be empty in status")
-	}
-
-	if status.Status == "" {
-		return fmt.Errorf("status should not be empty in status")
-	}
-
-	return nil
-}
-
-func AssertApiStatusIsSet(apiDefinition *gio.ApiDefinition) error {
-	status := apiDefinition.Status
 
 	if status.ID == "" {
 		return fmt.Errorf("id should not be empty in status")
@@ -57,21 +35,17 @@ func AssertApiStatusIsSet(apiDefinition *gio.ApiDefinition) error {
 	}
 
 	if status.OrgID == "" {
-		return fmt.Errorf("envId should not be empty in status")
+		return fmt.Errorf("orgId should not be empty in status")
 	}
 
 	if status.Status == "" {
 		return fmt.Errorf("status should not be empty in status")
 	}
 
-	if status.State == "" {
-		return fmt.Errorf("state should not be empty in status")
-	}
-
 	return nil
 }
 
-func AssertApiEntityMatchesStatus(apiEntity *model.ApiEntity, apiDefinition *gio.ApiDefinition) error {
+func AssertApiEntityMatchesStatus(apiEntity *api.Entity, apiDefinition *gio.ApiDefinition) error {
 	if apiEntity.ID != apiDefinition.Status.ID {
 		return NewAssertionError("Status id", apiEntity.ID, apiDefinition.Status.ID)
 	}
@@ -81,8 +55,23 @@ func AssertApiEntityMatchesStatus(apiEntity *model.ApiEntity, apiDefinition *gio
 func AssertStatusMatches(
 	apiDefinition *gio.ApiDefinition, expectedStatus gio.ApiDefinitionStatus,
 ) error {
-	if !reflect.DeepEqual(apiDefinition.Status, expectedStatus) {
-		return NewAssertionError("status", expectedStatus, apiDefinition.Status.Status)
+	if apiDefinition.Status.ID != expectedStatus.ID {
+		return NewAssertionError("id", expectedStatus.ID, apiDefinition.Status.ID)
+	}
+	if apiDefinition.Status.CrossID != expectedStatus.CrossID {
+		return NewAssertionError("crossId", expectedStatus.CrossID, apiDefinition.Status.CrossID)
+	}
+	if apiDefinition.Status.EnvID != expectedStatus.EnvID {
+		return NewAssertionError("envId", expectedStatus.EnvID, apiDefinition.Status.EnvID)
+	}
+	if apiDefinition.Status.OrgID != expectedStatus.OrgID {
+		return NewAssertionError("orgId", expectedStatus.OrgID, apiDefinition.Status.OrgID)
+	}
+	if apiDefinition.Status.Status != expectedStatus.Status {
+		return NewAssertionError("status", expectedStatus.Status, apiDefinition.Status.Status)
+	}
+	if apiDefinition.Status.State != expectedStatus.State {
+		return NewAssertionError("state", expectedStatus.State, apiDefinition.Status.State)
 	}
 
 	return nil
@@ -98,18 +87,19 @@ func AssertNoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus in
 	return nil
 }
 
-func AssertNoErrorAndObservedGenerationEquals(
-	err error, apiDefinition *gio.ApiDefinition, expectedGeneration int64,
+func AssertStatusCompleted(
+	apiDefinition *gio.ApiDefinition,
+) error {
+	return AssertEquals("status", gio.ProcessingStatusCompleted, apiDefinition.Status.Status)
+}
+
+func AssertNoErrorAndStatusCompleted(
+	err error, apiDefinition *gio.ApiDefinition,
 ) error {
 	if err != nil {
 		return err
 	}
-	if apiDefinition.Status.ObservedGeneration != expectedGeneration {
-		return NewAssertionError(
-			"observedGeneration", expectedGeneration, apiDefinition.Status.ObservedGeneration,
-		)
-	}
-	return nil
+	return AssertEquals("status", gio.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
 func AssertEquals(property string, expected, actual interface{}) error {
