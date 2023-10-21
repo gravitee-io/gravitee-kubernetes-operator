@@ -15,18 +15,28 @@
 package internal
 
 import (
+	"context"
+	"crypto/x509"
+	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	core "k8s.io/api/core/v1"
-	v1 "k8s.io/api/networking/v1"
+	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
+func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 	if ingress.Spec.TLS == nil || len(ingress.Spec.TLS) == 0 {
 		d.log.Info("no TLS will be configured")
 		return nil
@@ -39,6 +49,8 @@ func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 				for _, host := range tls.Hosts
 					if rule.Host == host
 	*/
+	key := fmt.Sprintf("%s-%s", ingress.Namespace, ingress.Name)
+	values := make([]string, 0)
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
@@ -61,17 +73,20 @@ func (d *Delegate) createUpdateTLSSecret(ingress *v1.Ingress) error {
 			return fmt.Errorf("secret can't be deleted because it has reference to an existing ingress [%s]", ingress.Name)
 		}
 
-		d.log.Info("Update GW keystore with new key pairs")
-		if err := d.updateKeyInKeystore(secret); err != nil {
+		// parse the secrete just to make sure the data is valid before
+		// passing it to the gateway
+		if err := d.parseTLSSecret(secret); err != nil {
 			return err
 		}
+
+		values = append(values, fmt.Sprintf("%s/%s", secret.Namespace, secret.Name))
 	}
 
-	d.log.Info("gateway keystore has been successfully update.")
-	return nil
+	d.log.Info("Update GW PEM registry with the secret names")
+	return d.updatePemRegistry(ingress, key, values)
 }
 
-func (d *Delegate) deleteTLSSecret(ingress *v1.Ingress) error {
+func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
@@ -93,11 +108,6 @@ func (d *Delegate) deleteTLSSecret(ingress *v1.Ingress) error {
 				errors.New("secret has reference"),
 				"secret is used by another ingress, it will not be deleted from the keystore")
 		} else {
-			// no reference to this secret, we can remove it from the keystore
-			if err = d.removeKeyFromKeystore(secret); err != nil {
-				return err
-			}
-
 			d.log.Info("removing finalizer from secret", "secret", secret.Name)
 			util.RemoveFinalizer(secret, keys.KeyPairFinalizer)
 
@@ -107,11 +117,17 @@ func (d *Delegate) deleteTLSSecret(ingress *v1.Ingress) error {
 		}
 	}
 
-	d.log.Info("gateway keystore has been successfully updated.")
+	// no reference to this secret, we can remove it from the keystore
+	key := fmt.Sprintf("%s-%s", ingress.Namespace, ingress.Name)
+	if err := d.updatePemRegistry(ingress, key, nil); err != nil {
+		return err
+	}
+
+	d.log.Info("gateway pem registry has been successfully updated.")
 	return nil
 }
 
-func (d *Delegate) secretHasReference(ing *v1.Ingress, secret *core.Secret) (bool, error) {
+func (d *Delegate) secretHasReference(ing *netV1.Ingress, secret *core.Secret) (bool, error) {
 	il, err := d.retrieveIngressListWithTLS(d.ctx, ing.Namespace)
 	if err != nil {
 		return false, err
@@ -127,4 +143,151 @@ func (d *Delegate) secretHasReference(ing *v1.Ingress, secret *core.Secret) (boo
 	}
 
 	return false, nil
+}
+
+func (d *Delegate) retrieveIngressListWithTLS(ctx context.Context, ns string) (*netV1.IngressList, error) {
+	il := &netV1.IngressList{}
+	if err := d.k8s.List(ctx, il, client.InNamespace(ns)); err != nil {
+		return nil, client.IgnoreNotFound(err)
+	}
+
+	result := &netV1.IngressList{}
+	for i := range il.Items {
+		ingress := il.Items[i]
+		if k8s.IsGraviteeIngress(&ingress) {
+			if ingress.Spec.TLS != nil {
+				result.Items = append(result.Items, ingress)
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func (d *Delegate) updatePemRegistry(ing *netV1.Ingress, key string, values []string) error {
+	pemRegistriesToUpdate, err := d.getPemRegistryConfigMapsToUpdate(ing)
+	if err != nil {
+		return err
+	}
+
+	if !ing.DeletionTimestamp.IsZero() {
+		return d.deletePemRegistryEntry(pemRegistriesToUpdate, key)
+	}
+
+	return d.updatePemRegistryEntry(pemRegistriesToUpdate, key, values)
+}
+
+func (d *Delegate) getPemRegistryConfigMapsToUpdate(ing *netV1.Ingress) ([]*core.ConfigMap, error) {
+	pemRegistryConfigMaps := &core.ConfigMapList{}
+	filter := &client.ListOptions{
+		LabelSelector: labels.SelectorFromSet(labels.Set{keys.GraviteeComponentLabel: keys.GraviteePemRegistryLabel}),
+	}
+	var err error
+	if err = d.k8s.List(d.ctx, pemRegistryConfigMaps, filter); err != nil {
+		return nil, err
+	}
+
+	if len(pemRegistryConfigMaps.Items) == 0 {
+		return nil, fmt.Errorf("unable to find any pem-registry configmap in the cluster")
+	}
+
+	pemRegistriesToUpdate := make([]*core.ConfigMap, 0)
+	for i := range pemRegistryConfigMaps.Items {
+		item := pemRegistryConfigMaps.Items[i]
+		if (ing.Spec.IngressClassName != nil && item.Labels[keys.IngressClassAnnotation] == *ing.Spec.IngressClassName) ||
+			item.Labels[keys.IngressClassAnnotation] == ing.GetAnnotations()[keys.IngressClassAnnotation] {
+			pemRegistriesToUpdate = append(pemRegistriesToUpdate, &item)
+		}
+	}
+
+	return pemRegistriesToUpdate, nil
+}
+
+// parse K8S TLS secret and make sure it is valid.
+func (d *Delegate) parseTLSSecret(secret *core.Secret) error {
+	// get the key and certificate (The TLS secret must contain keys named tls.crt and tls.key
+	// https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+	pemKeyBytes, ok := secret.Data["tls.key"]
+	if !ok {
+		return fmt.Errorf("%s", "tls key not found in secret")
+	}
+
+	tlsKey, _ := pem.Decode(pemKeyBytes)
+	if tlsKey == nil {
+		return fmt.Errorf("%s", "can not decode the tls key")
+	}
+
+	if !strings.Contains(tlsKey.Type, "PRIVATE KEY") {
+		return fmt.Errorf("%s", "wrong tls key type")
+	}
+
+	pemCrtBytes, ok := secret.Data["tls.crt"]
+	if !ok {
+		return fmt.Errorf("%s", "tls cert not found in secret")
+	}
+
+	tlsCrt, _ := pem.Decode(pemCrtBytes)
+	if tlsCrt == nil {
+		return fmt.Errorf("%s", "can not decode the tls certificate")
+	}
+
+	_, err := x509.ParseCertificate(tlsCrt.Bytes)
+	if err != nil {
+		return err
+	}
+
+	if tlsCrt.Type != "CERTIFICATE" {
+		return fmt.Errorf("%s", "wrong tls certification type")
+	}
+
+	return nil
+}
+
+func (d *Delegate) updatePemRegistryEntry(configmaps []*core.ConfigMap, key string, values []string) error {
+	for _, configmap := range configmaps {
+		// a simple solution for dealing with secretes that were updated
+		// the gateway will receive an update event and will refresh the trust store
+		updateTimestamp(configmap)
+
+		if configmap.Data == nil {
+			configmap.Data = map[string]string{}
+		}
+
+		bytes, err := json.Marshal(values)
+		if err != nil {
+			return err
+		}
+
+		configmap.Data[key] = string(bytes)
+
+		err = d.k8s.Update(d.ctx, configmap)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *Delegate) deletePemRegistryEntry(configmaps []*core.ConfigMap, key string) error {
+	for _, configmap := range configmaps {
+		// a simple solution for dealing with secretes that were updated
+		// the gateway will receive an update event and will refresh the trust store
+		updateTimestamp(configmap)
+
+		delete(configmap.Data, key)
+		if err := d.k8s.Update(d.ctx, configmap); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func updateTimestamp(pemRegistryConfigMap *core.ConfigMap) {
+	if pemRegistryConfigMap.Annotations == nil {
+		pemRegistryConfigMap.Annotations = make(map[string]string)
+	}
+	pemRegistryConfigMap.Annotations["updateTimestamp"] = time.Now().Format("2006-01-02T15:04:05Z")
 }
