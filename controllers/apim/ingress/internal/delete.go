@@ -22,8 +22,13 @@ import (
 )
 
 func (d *Delegate) Delete(ingress *v1.Ingress) error {
+<<<<<<< HEAD
 	if err := d.deleteTLSSecret(ingress); err != nil {
 		log.Error(d.ctx, err, "An error occurred while updating the TLS secrets")
+=======
+	if err := d.deleteIngressTLSReference(ingress); err != nil {
+		d.log.Error(err, "An error occurred while updating the TLS secrets")
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 		return err
 	}
 

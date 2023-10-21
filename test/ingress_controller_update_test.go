@@ -15,8 +15,8 @@
 package test
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
@@ -25,7 +25,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/pavlo-v-chernykh/keystore-go/v4"
 	core "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -247,7 +246,7 @@ var _ = Describe("Updating an ingress", func() {
 		})
 	})
 
-	Describe("Should update an Ingress, the default ApiDefinition and the GW keystore", func() {
+	Describe("Should update an Ingress, the default ApiDefinition and the pem registry", func() {
 		var ingressFixture *netV1.Ingress
 		var ingressLookupKey types.NamespacedName
 
@@ -273,6 +272,7 @@ var _ = Describe("Updating an ingress", func() {
 			Expect(k8sClient.Delete(ctx, ingressFixture))
 		})
 
+<<<<<<< HEAD
 		When("there is no tls", func() {
 			It("the gw keystore must not include any keypair", func() {
 				By("Getting created resource and expect to find it")
@@ -330,8 +330,10 @@ var _ = Describe("Updating an ingress", func() {
 			})
 		})
 
+=======
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 		When("the ingress has tls", func() {
-			It("the gw keystore must include a keypair", func() {
+			It("the gravitee-pem-registry must include the secret name", func() {
 				By("Getting created resource and expect to find it")
 				createdIngress := &netV1.Ingress{}
 				Eventually(func() error {
@@ -374,43 +376,23 @@ var _ = Describe("Updating an ingress", func() {
 					return fmt.Errorf("%s finalizer is not added to the tls secret", keys.KeyPairFinalizer)
 				}, timeout, interval).ShouldNot(HaveOccurred())
 
-				ksCredentials := &core.Secret{}
 				Eventually(func() error {
-					ksObjectKey := types.NamespacedName{
-						Namespace: namespace,
-						Name:      "gw-keystore-credentials",
-					}
-					return k8sClient.Get(ctx, ksObjectKey, ksCredentials)
-				}, timeout, interval).ShouldNot(HaveOccurred())
-
-				ksSecret := &core.Secret{}
-				Eventually(func() error {
-					ksObjectKey := types.NamespacedName{
-						Namespace: namespace,
-						Name:      string(ksCredentials.Data["name"]),
-					}
-					return k8sClient.Get(ctx, ksObjectKey, ksSecret)
-				}, timeout, interval).ShouldNot(HaveOccurred())
-
-				Eventually(func() error {
-					data := ksSecret.Data["keystore"]
-					if data == nil {
-						return fmt.Errorf("gateway keystore not found")
-					}
-
-					ks := keystore.New()
-					err := ks.Load(bytes.NewReader(data), []byte("changeme"))
+					cm := &core.ConfigMap{}
+					err := k8sClient.Get(ctx, types.NamespacedName{Name: pemRegistryName, Namespace: namespace}, cm)
 					if err != nil {
-						return fmt.Errorf("can't load the gateway keystore")
+						return err
 					}
 
-					for _, a := range ks.Aliases() {
-						if a == TLSCN {
-							return nil
-						}
+					data := cm.Data[fmt.Sprintf("%s-%s", ingressFixture.Namespace, ingressFixture.Name)]
+					if data == "" {
+						return fmt.Errorf("gateway pem registry should include an entry for this ingress")
 					}
 
-					return fmt.Errorf("can't find tls keypair in the gwateway keystore")
+					if !strings.Contains(data, TLSCN) {
+						return fmt.Errorf("gateway pem registry should include the secret name")
+					}
+
+					return nil
 				}, timeout, interval).ShouldNot(HaveOccurred())
 			})
 		})

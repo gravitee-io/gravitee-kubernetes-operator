@@ -45,8 +45,12 @@ data:
   METRICS_CERT_DIR: {{ .Values.manager.metrics.certDir }}
   {{- end }}
   {{- end }}
+<<<<<<< HEAD
   {{- end }}
   PROBE_PORT: {{ quote .Values.manager.probe.port }}
+=======
+  INGRESS_CLASSES: {{ template "ingress.Classes" . }}
+>>>>>>> c3c1a19 (feat: introduce pem registry)
   {{- $template404 := get .Values.ingress.templates "404" }}
   {{- if $template404.name }}
   TEMPLATE_404_CONFIG_MAP_NAME: {{ $template404.name }}

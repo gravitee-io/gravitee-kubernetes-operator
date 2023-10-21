@@ -17,7 +17,13 @@ package ingress
 import (
 	"context"
 
+<<<<<<< HEAD
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+=======
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	corev1 "k8s.io/api/core/v1"
@@ -88,9 +94,15 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 	reconcilable := func(o runtime.Object) bool {
 		switch t := o.(type) {
 		case *netV1.Ingress:
+<<<<<<< HEAD
 			return isGraviteeIngress(t)
 		case *v1beta1.ApiDefinition:
 			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == "true"
+=======
+			return k8s.IsGraviteeIngress(t)
+		case *v1alpha1.ApiDefinition:
+			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 		case *corev1.Secret:
 			return t.Type == "kubernetes.io/tls"
 		default:
@@ -129,13 +141,6 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			return reconcilable(e.Object)
 		},
 	}
-}
-
-func isGraviteeIngress(ingress *netV1.Ingress) bool {
-	if ingress.Spec.IngressClassName != nil {
-		return *(ingress.Spec.IngressClassName) == keys.IngressClassAnnotationValue
-	}
-	return ingress.GetAnnotations()[keys.IngressClassAnnotation] == keys.IngressClassAnnotationValue
 }
 
 // SetupWithManager initializes ingress controller manager.

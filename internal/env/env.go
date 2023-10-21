@@ -17,6 +17,7 @@ package env
 import (
 	"fmt"
 	"os"
+<<<<<<< HEAD
 	"strconv"
 )
 
@@ -82,6 +83,34 @@ var Config = struct {
 	WebhookPort              int
 	WebhookCertSecret        string
 	EnableLeaderElection     bool
+=======
+	"strings"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+)
+
+const (
+	CMTemplate404Name      = "TEMPLATE_404_CONFIG_MAP_NAME"
+	CMTemplate404NS        = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
+	Development            = "DEV_MODE"
+	NS                     = "NAMESPACE"
+	ApplyCRDs              = "APPLY_CRDS"
+	EnableMetrics          = "ENABLE_METRICS"
+	InsecureSkipCertVerify = "INSECURE_SKIP_CERT_VERIFY"
+	TrueString             = "true"
+	IngressClasses         = "INGRESS_CLASSES"
+)
+
+var Config = struct {
+	NS                 string
+	ApplyCRDs          bool
+	EnableMetrics      bool
+	Development        bool
+	CMTemplate404Name  string
+	CMTemplate404NS    string
+	InsecureSkipVerify bool
+	IngressClasses     []string
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 }{}
 
 func GetMetricsAddr() string {
@@ -92,6 +121,7 @@ func GetMetricsAddr() string {
 }
 
 func init() {
+<<<<<<< HEAD
 	Config.WatchNS = os.Getenv(WatchNS)
 	Config.ReleaseNS = os.Getenv(WebhookNS)
 	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == trueString
@@ -131,4 +161,18 @@ func parseInt(key string, defaultValue int) int {
 		return defaultValue
 	}
 	return value
+=======
+	Config.NS = os.Getenv(NS)
+	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == TrueString
+	Config.Development = os.Getenv(Development) == TrueString
+	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
+	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
+	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == TrueString
+	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
+	var ingressClass string
+	if ingressClass = keys.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
+		ingressClass = os.Getenv(IngressClasses)
+	}
+	Config.IngressClasses = strings.Split(ingressClass, ",")
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 }

@@ -43,9 +43,20 @@ var ctx context.Context
 
 // Define utility constants for object names and testing timeouts/durations and intervals.
 const (
+<<<<<<< HEAD
 	namespace = "default"
 	timeout   = time.Second * 10
 	interval  = time.Second * 1
+=======
+	metricsAddr = ":0"
+	probeAddr   = ":10001"
+	managerPort = 10002
+
+	namespace       = "default"
+	timeout         = time.Second * 30
+	interval        = time.Millisecond * 250
+	pemRegistryName = "pem-registry"
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 )
 
 func TestAPIs(t *testing.T) {
@@ -71,12 +82,42 @@ var _ = SynchronizedBeforeSuite(func() {
 	Expect(v1alpha1.AddToScheme(scheme.Scheme)).NotTo(HaveOccurred())
 	Expect(v1beta1.AddToScheme(scheme.Scheme)).NotTo(HaveOccurred())
 
+<<<<<<< HEAD
 	k8sClient = internal.ClusterClient()
 	ctx = context.Background()
+=======
+	Expect(k8sClient.Create(ctx, template404())).Should(Succeed())
+	Expect(k8sClient.Create(ctx, pemRegistry())).Should(Succeed())
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 })
 
 var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
+<<<<<<< HEAD
+=======
+
+	Expect(k8sClient.DeleteAllOf(
+		ctx,
+		&netv1.Ingress{},
+		client.InNamespace(namespace),
+		client.MatchingLabels{keys.IngressLabel: keys.IngressLabelValue}),
+	).To(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.ApiDefinition{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.Application{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	Consistently(k8sClient.DeleteAllOf(
+		ctx,
+		&gio.ManagementContext{},
+		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
+	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
+	Expect(k8sClient.Delete(ctx, template404())).Should(Succeed())
+	Expect(k8sClient.Delete(ctx, pemRegistry())).Should(Succeed())
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 	// NOSONAR ignore this noop func
@@ -103,3 +144,32 @@ func getEventReasons(obj client.Object) func() []string {
 		return eventsReason
 	}
 }
+<<<<<<< HEAD
+=======
+
+func template404() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "template-404",
+			Namespace: namespace,
+		},
+		Data: map[string]string{
+			"content":     `{ "message": "not-found-test" }`,
+			"contentType": "application/json",
+		},
+	}
+}
+
+func pemRegistry() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pemRegistryName,
+			Namespace: namespace,
+			Labels: map[string]string{
+				keys.GraviteeComponentLabel: keys.GraviteePemRegistryLabel,
+				keys.IngressClassAnnotation: keys.IngressClassAnnotationValue,
+			},
+		},
+	}
+}
+>>>>>>> c3c1a19 (feat: introduce pem registry)

@@ -16,21 +16,28 @@ package test
 
 import (
 	"errors"
-
-	"bytes"
 	"fmt"
+	"strings"
 
 	apimErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+<<<<<<< HEAD
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	"github.com/pavlo-v-chernykh/keystore-go/v4"
 	coreV1 "k8s.io/api/core/v1"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+=======
+	core "k8s.io/api/core/v1"
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+<<<<<<< HEAD
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+=======
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	netV1 "k8s.io/api/networking/v1"
@@ -242,7 +249,7 @@ var _ = Describe("Creating an ingress", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})
 
-		It("Should create the ingress, default ApiDefinition and update GW keystore", func() {
+		It("Should create the ingress, default ApiDefinition and update the pem registry", func() {
 			By("Initializing the Ingress fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
 			fixtures, err := fixtureGenerator.NewFixtures(internal.FixtureFiles{
@@ -261,16 +268,19 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
+<<<<<<< HEAD
 			createdApiDefinition := &v1alpha1.ApiDefinition{}
+=======
+			createdAPIDefinition := &gio.ApiDefinition{}
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 			Eventually(func() error {
-				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
+				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			expectedApiName := ingressFixture.Name
-			Expect(createdApiDefinition.Name).Should(Equal(expectedApiName))
+			Expect(createdAPIDefinition.Name).Should(Equal(ingressFixture.Name))
 
-			Expect(createdApiDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get-tls" + fixtureGenerator.Suffix))
-			Expect(createdApiDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
+			Expect(createdAPIDefinition.Spec.Proxy.VirtualHosts[0].Path).Should(Equal("/get-tls" + fixtureGenerator.Suffix))
+			Expect(createdAPIDefinition.Spec.Proxy.Groups[0].Endpoints).Should(Equal(
 				[]*v2.Endpoint{
 					{
 						Name:   "rule01-path01",
@@ -288,6 +298,7 @@ var _ = Describe("Creating an ingress", func() {
 				ContainElements([]string{"UpdateSucceeded", "UpdateStarted"}),
 			)
 
+<<<<<<< HEAD
 			ksCredentials := &coreV1.Secret{}
 			Eventually(func() error {
 				ksObjectKey := types.NamespacedName{
@@ -314,17 +325,25 @@ var _ = Describe("Creating an ingress", func() {
 
 				ks := keystore.New()
 				err = ks.Load(bytes.NewReader(data), []byte("changeme"))
+=======
+			Eventually(func() error {
+				cm := &core.ConfigMap{}
+				err = k8sClient.Get(ctx, types.NamespacedName{Name: pemRegistryName, Namespace: namespace}, cm)
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 				if err != nil {
-					return fmt.Errorf("can't load the gateway keystore")
+					return err
 				}
 
-				for _, a := range ks.Aliases() {
-					if a == TLSCN {
-						return nil
-					}
+				data := cm.Data[fmt.Sprintf("%s-%s", ingressFixture.Namespace, ingressFixture.Name)]
+				if data == "" {
+					return fmt.Errorf("gateway pem registry should include an entry for this ingress")
 				}
 
-				return fmt.Errorf("no keyair found for %s in the keystore", TLSCN)
+				if !strings.Contains(data, TLSCN) {
+					return fmt.Errorf("gateway pem registry should include the secret name")
+				}
+
+				return nil
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			Expect(k8sClient.Delete(ctx, ingressFixture)).Should(Succeed())

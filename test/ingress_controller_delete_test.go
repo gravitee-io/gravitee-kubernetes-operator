@@ -15,16 +15,19 @@
 package test
 
 import (
-	"bytes"
 	"fmt"
 
+<<<<<<< HEAD
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+=======
+	core "k8s.io/api/core/v1"
+
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+>>>>>>> c3c1a19 (feat: introduce pem registry)
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/pavlo-v-chernykh/keystore-go/v4"
-	core "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -188,7 +191,7 @@ var _ = Describe("Deleting an ingress", func() {
 	})
 
 	Context("With API definition template", func() {
-		It("Should delete the Ingress, the default ApiDefinition and keypair in GW keystore", func() {
+		It("Should delete the Ingress, the default ApiDefinition and update pem registry", func() {
 			By("Initializing the Ingress fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
 
@@ -239,40 +242,16 @@ var _ = Describe("Deleting an ingress", func() {
 				ContainElements([]string{"DeleteSucceeded", "DeleteStarted"}),
 			)
 
-			ksCredentials := &core.Secret{}
 			Eventually(func() error {
-				ksObjectKey := types.NamespacedName{
-					Namespace: namespace,
-					Name:      "gw-keystore-credentials",
-				}
-				return k8sClient.Get(ctx, ksObjectKey, ksCredentials)
-			}, timeout, interval).ShouldNot(HaveOccurred())
-
-			ksSecret := &core.Secret{}
-			Eventually(func() error {
-				ksObjectKey := types.NamespacedName{
-					Namespace: namespace,
-					Name:      string(ksCredentials.Data["name"]),
-				}
-				return k8sClient.Get(ctx, ksObjectKey, ksSecret)
-			}, timeout, interval).ShouldNot(HaveOccurred())
-
-			Eventually(func() error {
-				data := ksSecret.Data["keystore"]
-				if data == nil {
-					return fmt.Errorf("gateway keystore not found")
-				}
-
-				ks := keystore.New()
-				err = ks.Load(bytes.NewReader(data), []byte("changeme"))
+				cm := &core.ConfigMap{}
+				err = k8sClient.Get(ctx, types.NamespacedName{Name: pemRegistryName, Namespace: namespace}, cm)
 				if err != nil {
-					return fmt.Errorf("can't load the gateway keystore")
+					return err
 				}
 
-				for _, a := range ks.Aliases() {
-					if a == TLSCN {
-						return fmt.Errorf("tls keypair shouldn't be in the gateway keystore")
-					}
+				data := cm.Data[fmt.Sprintf("%s-%s", ingressFixture.Namespace, ingressFixture.Name)]
+				if data != "" {
+					return fmt.Errorf("the gateway pem registry was not updated properly")
 				}
 
 				return nil

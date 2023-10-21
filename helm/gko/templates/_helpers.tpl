@@ -154,3 +154,10 @@ Create the name of the service account to use
 {{- define "rbac.ProxyClusterRoleBindingName" -}}
    {{ template "rbac.ProxyClusterRoleName" . }}-binding
 {{- end }}
+
+{{/*
+ merge list of ingress classes into a single string that will be parsed later in the code
+ */}}
+{{- define "ingress.Classes" -}}
+{{- join "," .Values.ingress.ingressClasses }}
+{{- end -}}
