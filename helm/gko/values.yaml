@@ -99,6 +99,9 @@ manager:
 ## ```
 ## @descriptionEnd
 ingress:
+  ## @param ingress.ingressClasses list of ingress classes that the gateway will handle.
+  ingressClasses:
+    - graviteeio
   templates:
     404:
       ## @param ingress.templates.404.name Name of the config map storing the HTTP 404 ingress response template.

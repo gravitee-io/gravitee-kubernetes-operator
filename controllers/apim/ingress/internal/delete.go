@@ -21,7 +21,7 @@ import (
 )
 
 func (d *Delegate) Delete(ingress *v1.Ingress) error {
-	if err := d.deleteTLSSecret(ingress); err != nil {
+	if err := d.deleteIngressTLSReference(ingress); err != nil {
 		d.log.Error(err, "An error occurred while updating the TLS secrets")
 		return err
 	}

@@ -38,6 +38,7 @@ data:
   {{- if not .Values.manager.metrics.enabled }}
   ENABLE_METRICS: "false"
   {{- end }}
+  INGRESS_CLASSES: {{ template "ingress.Classes" . }}
   {{- $template404 := get .Values.ingress.templates "404" }}
   {{- if $template404.name }}
   TEMPLATE_404_CONFIG_MAP_NAME: {{ $template404.name }}
