@@ -16,6 +16,9 @@ package env
 
 import (
 	"os"
+	"strings"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
 
 const (
@@ -26,7 +29,8 @@ const (
 	ApplyCRDs              = "APPLY_CRDS"
 	EnableMetrics          = "ENABLE_METRICS"
 	InsecureSkipCertVerify = "INSECURE_SKIP_CERT_VERIFY"
-	trueString             = "true"
+	TrueString             = "true"
+	IngressClasses         = "INGRESS_CLASSES"
 )
 
 var Config = struct {
@@ -37,14 +41,20 @@ var Config = struct {
 	CMTemplate404Name  string
 	CMTemplate404NS    string
 	InsecureSkipVerify bool
+	IngressClasses     []string
 }{}
 
 func init() {
 	Config.NS = os.Getenv(NS)
-	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == trueString
-	Config.Development = os.Getenv(Development) == trueString
+	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == TrueString
+	Config.Development = os.Getenv(Development) == TrueString
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
-	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == trueString
-	Config.EnableMetrics = os.Getenv(EnableMetrics) == trueString
+	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == TrueString
+	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
+	var ingressClass string
+	if ingressClass = keys.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
+		ingressClass = os.Getenv(IngressClasses)
+	}
+	Config.IngressClasses = strings.Split(ingressClass, ",")
 }

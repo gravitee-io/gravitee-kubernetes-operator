@@ -78,10 +78,11 @@ content: '{ "message": "Not Found" }'
 contentType: application/json
 ```
 
-| Name                              | Description                                                                      | Value |
-| --------------------------------- | -------------------------------------------------------------------------------- | ----- |
-| `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`  |
-| `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`  |
+| Name                              | Description                                                                      | Value            |
+| --------------------------------- | -------------------------------------------------------------------------------- | ---------------- |
+| `ingress.ingressClasses`          | list of ingress classes that the gateway will handle.                            | `["graviteeio"]` |
+| `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`             |
+| `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`             |
 
 ### HTTP Client
 

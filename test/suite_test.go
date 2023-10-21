@@ -67,9 +67,10 @@ const (
 	probeAddr   = ":10001"
 	managerPort = 10002
 
-	namespace = "default"
-	timeout   = time.Second * 30
-	interval  = time.Millisecond * 250
+	namespace       = "default"
+	timeout         = time.Second * 30
+	interval        = time.Millisecond * 250
+	pemRegistryName = "pem-registry"
 )
 
 func TestAPIs(t *testing.T) {
@@ -202,6 +203,7 @@ var _ = SynchronizedBeforeSuite(func() {
 	ctx = context.Background()
 
 	Expect(k8sClient.Create(ctx, template404())).Should(Succeed())
+	Expect(k8sClient.Create(ctx, pemRegistry())).Should(Succeed())
 })
 
 var _ = SynchronizedAfterSuite(func() {
@@ -227,6 +229,7 @@ var _ = SynchronizedAfterSuite(func() {
 		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
 	Expect(k8sClient.Delete(ctx, template404())).Should(Succeed())
+	Expect(k8sClient.Delete(ctx, pemRegistry())).Should(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 	// NOSONAR ignore this noop func
@@ -277,6 +280,19 @@ func template404() *v1.ConfigMap {
 		Data: map[string]string{
 			"content":     `{ "message": "not-found-test" }`,
 			"contentType": "application/json",
+		},
+	}
+}
+
+func pemRegistry() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pemRegistryName,
+			Namespace: namespace,
+			Labels: map[string]string{
+				keys.GraviteeComponentLabel: keys.GraviteePemRegistryLabel,
+				keys.IngressClassAnnotation: keys.IngressClassAnnotationValue,
+			},
 		},
 	}
 }
