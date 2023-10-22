@@ -37,9 +37,10 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 	}
 
 	generateEmptyPlanCrossIds(spec)
-
+	stateUpdated := false
 	if d.HasContext() {
 		spec.CrossID = cp.PickCrossID()
+		stateUpdated = apiDefinition.Status.State != spec.State
 		apiDefinition.Status.EnvID = d.apim.EnvID()
 		apiDefinition.Status.OrgID = d.apim.OrgID()
 		apiDefinition.Status.CrossID = spec.CrossID
@@ -52,6 +53,12 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 
 	if err := d.deploy(cp); err != nil {
 		return err
+	}
+
+	if stateUpdated {
+		if err := d.updateState(cp); err != nil {
+			return err
+		}
 	}
 
 	apiDefinition.Status.Status = gio.ProcessingStatusCompleted
