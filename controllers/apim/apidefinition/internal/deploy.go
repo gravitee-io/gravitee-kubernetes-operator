@@ -17,6 +17,9 @@ package internal
 import (
 	"errors"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
@@ -35,4 +38,20 @@ func (d *Delegate) deploy(api *gio.ApiDefinition) error {
 	}
 
 	return d.apim.APIs.Deploy(api.Spec.ID)
+}
+
+func (d *Delegate) updateState(api *gio.ApiDefinition) error {
+	if api.Spec.IsLocal {
+		return nil
+	}
+
+	action := ""
+	switch api.Spec.State {
+	case base.StateStarted:
+		action = "START"
+	case base.StateStopped:
+		action = "STOP"
+	}
+
+	return d.apim.APIs.UpdateState(api.Spec.ID, model.Action(action))
 }
