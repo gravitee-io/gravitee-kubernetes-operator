@@ -84,11 +84,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
+	delegate.AddDeletionFinalizer(apiDefinition)
+
 	if apiDefinition.Spec.Context != nil {
 		if err := delegate.ResolveContext(apiDefinition); err != nil {
 			logger.Info("Unable to resolve context, no attempt will be made to sync with APIM")
 		}
-		delegate.AddDeletionFinalizer(apiDefinition)
 	}
 
 	var reconcileErr error
