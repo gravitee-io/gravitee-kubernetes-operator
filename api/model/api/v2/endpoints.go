@@ -38,7 +38,7 @@ type Endpoint struct {
 	Name    string         `json:"name,omitempty"`
 	Target  string         `json:"target,omitempty"`
 	Weight  int            `json:"weight,omitempty"`
-	Backup  bool           `json:"backup"`
+	Backup  bool           `json:"backup,omitempty"`
 	Status  EndpointStatus `json:"-,omitempty"`
 	Tenants []string       `json:"tenants,omitempty"`
 	Type    EndpointType   `json:"type,omitempty"`
