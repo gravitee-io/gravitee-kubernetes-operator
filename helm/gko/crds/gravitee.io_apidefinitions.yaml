@@ -668,8 +668,6 @@ spec:
                                 type: string
                               weight:
                                 type: integer
-                            required:
-                            - backup
                             type: object
                           type: array
                         headers:
