@@ -66,10 +66,14 @@ manager:
   ##
   resources:
     limits:
+      ## @param manager.resources.limits.cpu The CPU resources limits for the GKO Manager container
       cpu: 500m
+      ## @param manager.resources.limits.memory The memory resources limits for the GKO Manager container
       memory: 128Mi
     requests:
+      ## @param manager.resources.requests.cpu The requested CPU for the GKO Manager container
       cpu: 5m
+      ## @param manager.resources.requests.memory The requested memory for the GKO Manager container
       memory: 64Mi
 
   scope:
