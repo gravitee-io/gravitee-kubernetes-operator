@@ -58,12 +58,6 @@ manager:
   configMap:
     ## @param manager.configMap.name The name of the config map used to set the manager config from this values.
     name: gko-config
-  ## GKO Manager resource requests and limits
-  ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
-  ## @param manager.resources.limits The resources limits for the GKO Manager containers
-  ## @param manager.resources.requests.memory The requested memory for the GKO Manager containers
-  ## @param manager.resources.requests.cpu The requested cpu for the GKO Manager containers
-  ##
   resources:
     limits:
       ## @param manager.resources.limits.cpu The CPU resources limits for the GKO Manager container
