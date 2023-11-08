@@ -58,13 +58,10 @@ spec:
             - containerPort: 8443
               name: https
               protocol: TCP
+          {{- with .Values.manager.resources }}
           resources:
-            limits:
-              cpu: 500m
-              memory: 128Mi
-            requests:
-              cpu: 5m
-              memory: 64Mi
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
 {{- end }}
         - args:
 {{- if .Values.manager.metrics.enabled }}
@@ -93,13 +90,10 @@ spec:
               port: 8081
             initialDelaySeconds: 5
             periodSeconds: 10
+          {{- with .Values.manager.resources }}
           resources:
-            limits:
-              cpu: 500m
-              memory: 128Mi
-            requests:
-              cpu: 10m
-              memory: 64Mi
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
       securityContext:
