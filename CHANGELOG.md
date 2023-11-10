@@ -1,3 +1,17 @@
+# [0.11.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.10.0...0.11.0) (2023-11-10)
+
+
+### Bug Fixes
+
+* enable/disable api when it is not local ([98d5b53](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/98d5b53d69501d63d39b60429e12da4c0d7fad75))
+* ensure ns is set on context secret requests ([c4492bf](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/c4492bffb6d0caa1974caa104b314c4a60e02080))
+* make endpoint backup optional ([df058fa](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/df058fa062b805722d42ab519c309d5d2e2851c6))
+
+
+### Features
+
+* define resources through values ([#494](https://github.com/gravitee-io/gravitee-kubernetes-operator/issues/494)) ([b1d41fa](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/b1d41fa3dcc158671d7eceda0a1f9445d7901907))
+
 # [0.10.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.9.0...0.10.0) (2023-10-10)
 
 
