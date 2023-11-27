@@ -21,8 +21,8 @@ export const APIM_IMAGE_REGISTRY = `${
     process.env.APIM_IMAGE_REGISTRY || "graviteeio"
 }`;
 export const APIM_IMAGE_TAG = `${process.env.APIM_IMAGE_TAG || "latest"}`;
-export const NGINX_CONTROLLER_IMAGE_TAG = "1.3.0";
-export const NGINX_BACKEND_IMAGE_TAG = "1.22.0";
+export const NGINX_CONTROLLER_IMAGE_TAG = "1.9.3";
+export const NGINX_BACKEND_IMAGE_TAG = "1.25.2";
 export const MONGO_IMAGE_TAG = "4.4";
 export const ELASTIC_IMAGE_TAG = "7.17.5";
 
