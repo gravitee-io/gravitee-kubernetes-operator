@@ -17,16 +17,16 @@ package env
 import (
 	"os"
 	"strconv"
-
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
-
-var log = logf.Log.WithName("env")
 
 const (
 	CMTemplate404Name      = "TEMPLATE_404_CONFIG_MAP_NAME"
 	CMTemplate404NS        = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
 	DisableJSONLogs        = "DISABLE_JSON_LOGS"
+	LogFormat              = "LOG_FORMAT"
+	LogLevel               = "LOG_LEVEL"
+	LogTimeFormat          = "LOG_TIME_FORMAT"
+	LogReconcileIdField    = "LOG_RECONCILE_ID_FIELD"
 	WatchNS                = "WATCH_NAMESPACE"
 	ApplyCRDs              = "APPLY_CRDS"
 	EnableMetrics          = "ENABLE_METRICS"
@@ -37,8 +37,14 @@ const (
 	WebhookPort            = "WEBHOOK_SERVICE_PORT"
 	WebhookCertSecret      = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not an hardcoded secret
 
-	trueString         = "true"
-	defaultWebhookPort = 9443
+	trueString             = "true"
+	defaultWebhookPort     = 9443
+	defaultMetricsPort     = 8080
+	defaultProbesPort      = 8080
+	defaultLogFormat       = "json"
+	defaultLogLevel        = "info"
+	defaultLogTimeFormat   = "EpochMillis"
+	defaultLogTraceIdField = "reconcile-id"
 )
 
 var Config = struct {
@@ -47,6 +53,10 @@ var Config = struct {
 	ApplyCRDs          bool
 	EnableMetrics      bool
 	DisableJSONLogs    bool
+	LogFormat          string
+	LogLevel           string
+	LogTimeFormat      string
+	LogTraceIdField    string
 	CMTemplate404Name  string
 	CMTemplate404NS    string
 	InsecureSkipVerify bool
@@ -62,6 +72,10 @@ func init() {
 	Config.ReleaseNS = os.Getenv(WebhookNS)
 	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == trueString
 	Config.DisableJSONLogs = os.Getenv(DisableJSONLogs) == trueString
+	Config.LogFormat = getStringOrDefault(LogFormat, defaultLogFormat)
+	Config.LogLevel = getStringOrDefault(LogLevel, defaultLogLevel)
+	Config.LogTimeFormat = getStringOrDefault(LogTimeFormat, defaultLogTimeFormat)
+	Config.LogTraceIdField = getStringOrDefault(LogReconcileIdField, defaultLogTraceIdField)
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
 	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == trueString
@@ -73,11 +87,17 @@ func init() {
 	Config.WebhookPort = parseInt(WebhookPort, defaultWebhookPort)
 }
 
+func getStringOrDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
 func parseInt(key string, defaultValue int) int {
 	value, err := strconv.Atoi(os.Getenv(key))
 	if err != nil {
-		log.Error(err, "unable to parse key", "key", key, "value", os.Getenv(key))
-		log.Info("setting default value for environment property", "value", defaultValue)
 		return defaultValue
 	}
 	return value
