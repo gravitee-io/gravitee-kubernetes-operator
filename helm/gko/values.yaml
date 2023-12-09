@@ -103,6 +103,8 @@ manager:
   httpClient:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
+    ## @param manager.httpClient.timeoutSeconds The timeout (in seconds) used when issuing requests to the Management API.
+    timeoutSeconds: 10
   webhook:
     ## @param manager.webhook.enabled If true, the manager will register a webhook server operating on custom resources.
     enabled: true

@@ -50,8 +50,9 @@ data:
   TEMPLATE_404_CONFIG_MAP_NAMESPACE: {{ $template404.namespace }}
   {{- end }}
   {{- if or .Values.manager.httpClient.insecureSkipCertVerify .Values.httpClient.insecureSkipCertVerify }}
-  INSECURE_SKIP_CERT_VERIFY: "true"
+  HTTP_CLIENT_SKIP_CERT_VERIFY: "true"
   {{- end }}
+  HTTP_CLIENT_TIMEOUT_SECONDS: {{ quote .Values.manager.httpClient.timeoutSeconds }}
   {{- if .Values.manager.webhook.enabled }}
   ENABLE_WEBHOOK: "true"
   WEBHOOK_CERT_SECRET_NAME: {{ .Values.manager.webhook.cert.secret.name }}
