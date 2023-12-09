@@ -25,11 +25,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-const (
-	// TODO make this configurable from env / helm
-	requestTimeoutSeconds = 5
-)
-
 type Client struct {
 	ctx  context.Context
 	http http.Client
@@ -166,10 +161,14 @@ func NewClient(ctx context.Context, auth *Auth) *Client {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	// #nosec G402
 	transport.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: env.Config.InsecureSkipVerify,
+		InsecureSkipVerify: env.Config.HTTPClientSkipCertVerify,
 	}
 
-	httpClient := http.Client{Timeout: requestTimeoutSeconds * time.Second, Transport: transport}
+	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
+	httpClient := http.Client{
+		Timeout:   timeout,
+		Transport: transport,
+	}
 
 	if auth != nil {
 		authRoundTripper := NewAuthenticatedRoundTripper(auth, transport)

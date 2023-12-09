@@ -93,7 +93,7 @@ func main() {
 
 	probeAddr := fmt.Sprintf(":%d", env.Config.ProbePort)
 
-	if env.Config.InsecureSkipVerify {
+	if env.Config.HTTPClientSkipCertVerify {
 		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
