@@ -176,7 +176,7 @@ jobs:
           name: Start APIM using k3d
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=apim2427-update-run-e2e-latest
+            export APIM_IMAGE_TAG=master-latest
             K3DARGS="--pull=${K3D_PULL}" make k3d-init
       - run:
           name: add cert-manager images to local registry
