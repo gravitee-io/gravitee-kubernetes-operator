@@ -101,11 +101,17 @@ spec:
           - mountPath: /tmp/k8s-webhook-server/serving-certs
             name: cert
             readOnly: true
+{{- with .Values.manager.volumeMounts }}
+{{-  . | toYaml | nindent 10 }}
+{{- end }}
       volumes:
       - name: cert
         secret:
           defaultMode: 420
           secretName: {{ .Values.manager.webhook.cert.secret.name }}
+{{- with .Values.manager.volumes }}
+{{-  . | toYaml | nindent 6 }}
+{{- end }}
 {{- end }}
       securityContext:
         runAsNonRoot: true

@@ -97,6 +97,7 @@ func main() {
 		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
+	log.Global.Debug("setting up webhook server")
 	var webhookServer webhook.Server
 	if env.Config.EnableWebhook {
 		if err := extendResources(); err != nil {
@@ -108,6 +109,7 @@ func main() {
 		})
 	}
 
+	log.Global.Debug("creating manager")
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metrics,
@@ -130,6 +132,7 @@ func main() {
 
 	registerControllers(mgr)
 
+	log.Global.Debug("setting up webhook handlers")
 	if env.Config.EnableWebhook {
 		if err = (&gioV1Beta1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
 			log.Global.Error(err, "unable to setup webhook for API definitions v1beta1")
@@ -144,11 +147,13 @@ func main() {
 
 	//+kubebuilder:scaffold:builder
 
+	log.Global.Debug("adding health probe")
 	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
 		log.Global.Error(healthCheckErr, "unable to set up health check")
 		os.Exit(1)
 	}
 
+	log.Global.Debug("adding readiness probe")
 	if readyCheckErr := mgr.AddReadyzCheck("readyz", healthz.Ping); readyCheckErr != nil {
 		log.Global.Error(readyCheckErr, "unable to set up ready check")
 		os.Exit(1)
@@ -157,7 +162,8 @@ func main() {
 	k8s.RegisterClient(mgr.GetClient())
 
 	log.Global.Info("starting manager")
-	if startErr := mgr.Start(ctrl.SetupSignalHandler()); startErr != nil {
+	ctx := ctrl.SetupSignalHandler()
+	if startErr := mgr.Start(ctx); startErr != nil {
 		log.Global.Error(startErr, "unable to run manager")
 		os.Exit(1)
 	}
@@ -331,7 +337,7 @@ func indexApplicationFields(manager ctrl.Manager) error {
 func extendResources() error {
 	ctx := context.Background()
 
-	log.Global.Info("extending scheme for CRD patch")
+	log.Global.Debug("extending scheme for CRD patch")
 	sErr := apiExtensions.AddToScheme(scheme)
 	if sErr != nil {
 		return sErr

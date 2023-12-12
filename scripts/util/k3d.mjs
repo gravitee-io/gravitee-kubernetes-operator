@@ -48,6 +48,7 @@ export async function initCluster() {
     -p "${env.NGINX_LOAD_BALANCER_PORT}:80@loadbalancer" \
     -p "${env.GATEWAY_LOAD_BALANCER_PORT}:82@loadbalancer" \
     --k3s-arg "--disable=traefik@server:*" \
+    --volume "/tmp/coverage:/tmp/coverage" \
     --registry-use=${env.K3D_IMAGES_REGISTRY_NAME} \
     --k3s-arg '--kubelet-arg=eviction-hard=imagefs.available<1%,nodefs.available<1%@agent:*' \
     --k3s-arg '--kubelet-arg=eviction-minimum-reclaim=imagefs.available=1%,nodefs.available=1%@agent:*' \

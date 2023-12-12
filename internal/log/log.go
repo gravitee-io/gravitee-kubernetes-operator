@@ -46,6 +46,10 @@ func (w raw) Infof(message string, args ...any) {
 	w.sink.Info(fmt.Sprintf(message, args...))
 }
 
+func (w raw) Debugf(message string, args ...any) {
+	w.sink.Debug(fmt.Sprintf(message, args...))
+}
+
 func (w raw) Warn(message string) {
 	w.sink.Warn(message)
 }

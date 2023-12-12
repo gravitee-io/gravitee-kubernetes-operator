@@ -121,7 +121,6 @@ manager:
       secret:
         ## @param manager.webhook.cert.secret.name The name of the secret storing the webhook server certificate.
         name: gko-webhook-cert
-
 ## @section Ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.

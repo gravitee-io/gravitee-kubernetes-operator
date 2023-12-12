@@ -143,9 +143,6 @@ jobs:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
-          name: Create junit reports directory
-          command: mkdir -p "/tmp/junit/reports"
-      - run:
           name: Docker login
           command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
       - run:
@@ -172,6 +169,11 @@ jobs:
               echo "No registry archive found. All images will be pulled from network."
               echo "export K3D_PULL=all" >> $BASH_ENV
             fi
+      - run: 
+          name: Prepare coverage directory
+          command: |
+            mkdir -p /tmp/coverage
+            chmod 777 /tmp/coverage
       - run:
           name: Start APIM using k3d
           command: |
@@ -206,15 +208,31 @@ jobs:
               --set cainjector.image.repository=k3d-graviteeio.docker.localhost:12345/cert-manager-cainjector \
               --wait
       - run:
+          name: Create volume for coverage reports
+          command: |
+            kubectl apply -f test/k8s/coverage-pv.yaml
+      - run:
+          name: Build image with cover profile enabled
+          command: IMG=k3d-graviteeio.docker.localhost:12345/gko TAG=latest make docker-build-it
+      - run:
           name: Deploy the Operator
-          command: make k3d-build k3d-push k3d-deploy
+          command: make k3d-push k3d-deploy
       - run:
           name: Wait for webhook certificate to be created
           command: |
             while ! kubectl get secret gko-webhook-cert --namespace default; do echo "Waiting for webhook cert secret"; sleep 1; done
       - run:
           name: Run tests
-          command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
+          command: make test
+      - run:
+          name: Terminate operator deployment
+          command: kubectl scale deployment gko-controller-manager --replicas=0
+      - run:
+          name: Generate coverage report
+          command: |
+            pushd /tmp/coverage
+            go tool covdata textfmt -i=. -o cover.out
+            popd
       - run:
           name: Archive k3d registry image and volume for caching
           command: |
@@ -231,9 +249,9 @@ jobs:
             - k3d-registry.volume.tar
           key: k3d-registry-docker-v1
       - store_test_results:
-          path: /tmp/junit/reports
+          path: /tmp/coverage
       - persist_to_workspace:
-          root: /tmp/junit/reports
+          root: /tmp/coverage
           paths:
             - cover.out
       - go/save-cache
@@ -434,7 +452,7 @@ jobs:
           command: apk add --no-cache openssh
       - checkout
       - attach_workspace:
-          at: /tmp/junit/reports
+          at: /tmp/coverage
       - keeper/env-export:
           secret-url: keeper://9x9YgyU6DWzux4DPoHAzDQ/field/password
           var-name: SONAR_TOKEN
