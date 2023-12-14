@@ -15,13 +15,16 @@
  */
 
 const config = {
-  branches: ["master"],
+  "branches": [
+    "+([0-9])?(.{+([0-9]),x}).x", 
+    "master", 
+    {"name": "beta", "prerelease": true},
+  ],
   tagFormat: "${version}",
 };
 const changelogFile = "CHANGELOG.md";
 const chartDirectory = "helm/gko"
 const crdDirectory = "helm/gko/crds"
-const bundleFile = "bundle.yml"
 
 const plugins = [
   "@semantic-release/commit-analyzer",
@@ -43,9 +46,6 @@ const plugins = [
     "@semantic-release/github",
     {
       assets: [
-        { 
-          path: bundleFile, label: "Operator resources bundle"
-        },
         { 
           path: crdDirectory, label: "Operator Custom Resource Definitions"
         },
