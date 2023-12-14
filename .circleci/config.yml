@@ -546,6 +546,7 @@ workflows:
       and:
         - or:
             - equal: [master, << pipeline.git.branch >>]
+            - equal: [beta, << pipeline.git.branch >>]
         - not:
             # Workflow will not run when we open a pull request from alpha to master to trigger a release
             equal:
@@ -559,13 +560,13 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Semantic Release
-  notify-release:
-    jobs:
-      - notify-release-slack:
-          name: Notify gravitee-release-alerts slack channel
-          context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
+  # notify-release:
+  #   jobs:
+  #     - notify-release-slack:
+  #         name: Notify gravitee-release-alerts slack channel
+  #         context: cicd-orchestrator
+  #         filters:
+  #           branches:
+  #             ignore: /.*/
+  #           tags:
+  #             only: /\d+\.\d+\.\d+/
