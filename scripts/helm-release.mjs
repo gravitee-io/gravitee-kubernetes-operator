@@ -172,16 +172,6 @@ async function publishRelease() {
 }
 
 LOG.blue(`
-📦 Generating legacy bundle.yml file ...
-`);
-
-await time(generateLegacyBundle);
-
-async function generateLegacyBundle() {
-  await $`make helm-template`;
-}
-
-LOG.blue(`
 ⎈ Setting chart version to ${VERSION} ...
 `);
 
