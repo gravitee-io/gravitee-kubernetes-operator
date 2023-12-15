@@ -1,3 +1,67 @@
+# [1.0.0-beta.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.5.0...1.0.0-beta.1) (2023-12-15)
+
+
+### Bug Fixes
+
+* add applications rbac ([1347acd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1347acd630ae840837466d8a180a6b744752e28c))
+* add CRDs to the docker image ([9b75ebf](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/9b75ebfaf1151375a0fabe08dacf6493a9201b31))
+* add deletion finalizer to context secret ([346501e](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/346501e350541fc69468ee7ec13e15402e2b1b19))
+* add finalizer to api resources ([9ab9b17](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/9ab9b178cc4933d3474c32b145b7e9a8fc4d192c))
+* add flow id property ([0b802e8](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0b802e80dfe9d7e9fa3648dbe38529306be8db89))
+* add missing config key, update API Definition CRD ([e21c229](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/e21c2293f9e4a2e4a9a5c2078caf147efec1305a))
+* add rbac for crd patch ([3da603c](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3da603c05ffb65a3b2d1f99ff0f97a4cc444edef))
+* add support for ingressClassName field ([e914b50](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/e914b504904f2ea44b89e088848be8228791e2ba))
+* allow insecure skip verify in HTTPClient ([3f600bb](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3f600bbdc5cee09ca422fdb6b5df126aaf5467ab))
+* disable flows when `enabled` is false ([1565797](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1565797efcaf223ea72c902bcac865c4ef368920))
+* enable/disable api when it is not local ([fa7c6f8](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/fa7c6f8743ef99973b5249b0f3d16009d8c78df3))
+* ensure ns is set on context secret requests ([3995fae](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3995faeb85246fb8c8eb40ee09b330e84b84fe62))
+* handle UI exports with endpoint level healthchecks ([3cc152a](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3cc152ad7b5bb446ae584ac318d9a3f433ca58f6))
+* **helm:** avoid conflicting type in manager config map ([0fcb28e](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0fcb28e76f0dc39029a7d4b5c5ae170b548e789b))
+* let users disable flow-steps ([d38a116](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/d38a11662c1a8d1c9ed8f8c567d2883d2d519c36))
+* management context check for non-local APIs ([55237dd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/55237dd350e744c9000b905e2acf1577af2ef753))
+* reconcile applications on generation change only ([f5ca10e](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/f5ca10ed4eb6cc968054057b722c9369de5d4799))
+* reconcile ingress when the template annotation is updated ([686d6c7](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/686d6c769171681ac61510943639e0e098630c6e))
+* remove hard-coded "keystore" key ([c33a634](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/c33a6349bf757ae08218eae7c77f9c3b7caba4fd))
+* remove local flag on ApiResource ([5456bf5](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/5456bf540aa674128dd89c2908b6b125f8ba6bd0))
+* resolve few bug ([46812f4](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/46812f4aea5897b923bc9512b701e6e483f6cc86))
+* resolve race conditions on helm deletion ([22240d0](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/22240d09098739854ddeaab6b83cd6b0c51117d9))
+* restore and deprecate v0.4.0 status fields ([536e806](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/536e806b567cf6c36d7ed64cf615f12a6804cecc))
+* restore namespaces in resource refs ([9089861](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/9089861c635204ca2a96d766d1e49471ecbd1885))
+* rollout on helm upgrades when config changes ([1416f5e](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1416f5ec63373a47bac11a85afb915b7fa09ef4b))
+* set config namespace to release namespace ([27e7c58](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/27e7c58cffa76354db3c51c432490812a5a4757b))
+* set env and org id in application status on updates ([5aaabbd](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/5aaabbdb09e9e965261a4d1baed980de6b63a689))
+* support different key type ([7d948c7](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/7d948c7369d2d293e6295abc68002ddefe06a333))
+* unmarshal int values in GenericMap ([a7f3e7c](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/a7f3e7cf95783b04bb7af8f3fa658c1fa8c0f93b))
+* update kube-rbac-proxy version ([d5c4a4e](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/d5c4a4e9ae7890ce098292ccf73014d721c6e74d))
+* use annotation for ingress templates everywhere ([e22ef46](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/e22ef46fe565a9b4089152b23fed581f8cdd3712))
+* use PUT when setting definition context on APIM ([b46adf5](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/b46adf53f164e66858fff7a5f833217fdf5a3512))
+* wrong data type while unmarshalling ([7e72a47](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/7e72a477ef120579c19439423c1e884e872a5408))
+
+
+### Features
+
+* add local flag in all samples ([4856932](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/4856932057248ef7c903605b3d7d5650a8588e52))
+* allow custom manager image and tag ([5ae681d](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/5ae681d81df907eeb490fc1aa48e98221efb4829))
+* allow install without any cluster role ([519ee04](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/519ee048fe7797b5e467fe1aae3461efaf10464f))
+* api definition template ([9f6dc4c](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/9f6dc4c35d68c11703517864bb9904405aa1cdfb))
+* application CRD ([0195f25](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0195f25cac6c4d41be3dce1f7b1ffa029e7dc2b2))
+* bring support for APIM v4 API definitions ([d52fc81](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/d52fc81efe9c6b14b7d57950fdf6e761113c8670))
+* define ApiDefinition visibility in Kubenetes clusters ([70e92ee](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/70e92eef790f26f0eb4797fb10c45cbf8d60a72c))
+* define custom not found response templates ([18c62b4](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/18c62b4dddd1542962c417a6f2d4a6cb11d2153f))
+* define resources through values ([#494](https://github.com/gravitee-io/gravitee-kubernetes-operator/issues/494)) ([0a92276](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0a92276e06796433340844eba19f8c899b89c870))
+* handle ingress resources with multiple hosts ([1e40555](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1e40555f5c39943e4154024703b8b1610ce42168))
+* handle ingress tls option ([c66e023](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/c66e023a7152ecc1ae767d89a75619031204f52c))
+* **helm:** add helm standard labels ([0301ad7](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/0301ad7171e05fcb830fdc8dd880cdd2c22e6acd))
+* make http client timeout configurable ([4b6a125](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/4b6a125389464aed4940244f0d80197fd0a342f3))
+* patch resource definitions on startup ([a523075](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/a52307530a1e3e705435f45fdfdf314f619b8bd2))
+* template resolver ([ca359cc](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ca359cc68c260a9b8161be44315180e5529ff30f))
+* use a role for configs and secrets if namespaced ([ca3d58b](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ca3d58bf98dfbce34ae54bb4a668a06cc7c95bd7))
+
+
+### BREAKING CHANGES
+
+* This version requires APIM 4.x and upper
+
 # [0.5.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.4.0...0.5.0) (2023-02-17)
 
 
