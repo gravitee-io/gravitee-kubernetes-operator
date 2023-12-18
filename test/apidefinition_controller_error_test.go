@@ -21,17 +21,18 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
 
 	Context("With basic ApiDefinition & ManagementContext", func() {
-		var managementContextFixture *gio.ManagementContext
-		var apiDefinitionFixture *gio.ApiDefinition
+		var managementContextFixture *v1beta1.ManagementContext
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
 
-		var savedApiDefinition *gio.ApiDefinition
+		var savedApiDefinition *v1alpha1.ApiDefinition
 
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
@@ -68,7 +69,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			By("Expect the API Definition to be Ready")
 
-			savedApiDefinition = new(gio.ApiDefinition)
+			savedApiDefinition = new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, savedApiDefinition)
@@ -84,7 +85,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			managementContextBad.Spec.Auth.BearerToken = "bad-token"
 
 			Eventually(func() error {
-				update := new(gio.ManagementContext)
+				update := new(v1beta1.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
@@ -107,8 +108,8 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 				if err := k8sClient.Get(ctx, apiLookupKey, savedApiDefinition); err != nil {
 					return err
 				}
-				if savedApiDefinition.Status.Status != gio.ProcessingStatusFailed {
-					return internal.NewAssertionError("status", gio.ProcessingStatusFailed, apiDefinition.Status.Status)
+				if savedApiDefinition.Status.Status != v1alpha1.ProcessingStatusFailed {
+					return internal.NewAssertionError("status", v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
 				}
 				return nil
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -126,7 +127,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			managementContextRight.Spec = managementContextFixture.Spec
 
 			Eventually(func() error {
-				update := new(gio.ManagementContext)
+				update := new(v1beta1.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
@@ -167,7 +168,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			managementContextBad.Spec.BaseURL = "http://bad-url:8083"
 
 			Eventually(func() error {
-				update := new(gio.ManagementContext)
+				update := new(v1beta1.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
@@ -181,7 +182,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			apiDefinition.Spec.Name = "new-name"
 
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
+				update := new(v1alpha1.ApiDefinition)
 				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
 					return err
 				}
@@ -196,9 +197,9 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					return err
 				}
 
-				return internal.AssertStatusMatches(savedApiDefinition, gio.ApiDefinitionStatus{
-					Status:                       gio.ProcessingStatusFailed,
-					DeprecatedStatus:             gio.ProcessingStatusFailed,
+				return internal.AssertStatusMatches(savedApiDefinition, v1alpha1.ApiDefinitionStatus{
+					Status:                       v1alpha1.ProcessingStatusFailed,
+					DeprecatedStatus:             v1alpha1.ProcessingStatusFailed,
 					EnvID:                        "DEFAULT",
 					OrgID:                        "DEFAULT",
 					CrossID:                      apiDefinition.GetOrGenerateCrossID(),
@@ -215,7 +216,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			managementContextRight.Spec = managementContextFixture.Spec
 
 			Eventually(func() error {
-				update := new(gio.ManagementContext)
+				update := new(v1beta1.ManagementContext)
 				if err := k8sClient.Get(ctx, contextLookupKey, update); err != nil {
 					return err
 				}
@@ -230,8 +231,8 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					return err
 				}
 
-				return internal.AssertStatusMatches(savedApiDefinition, gio.ApiDefinitionStatus{
-					Status:             gio.ProcessingStatusCompleted,
+				return internal.AssertStatusMatches(savedApiDefinition, v1alpha1.ApiDefinitionStatus{
+					Status:             v1alpha1.ProcessingStatusCompleted,
 					EnvID:              "DEFAULT",
 					OrgID:              "DEFAULT",
 					ID:                 apiDefinition.PickID(),

@@ -17,12 +17,10 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	coreV1 "k8s.io/api/core/v1"
 	k8s "sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,11 +45,11 @@ func NewDelegate(ctx context.Context, k8s k8s.Client) *Delegate {
 	}
 }
 
-func (d *Delegate) ResolveTemplate(application *gio.Application) error {
+func (d *Delegate) ResolveTemplate(application *v1beta1.Application) error {
 	return template.NewResolver(d.ctx, d.k8s, application).Resolve()
 }
 
-func (d *Delegate) ResolveContext(application *gio.Application) error {
+func (d *Delegate) ResolveContext(application *v1beta1.Application) error {
 	managementContext := new(v1beta1.ManagementContext)
 
 	ref := application.Spec.Context
@@ -80,7 +78,7 @@ func (d *Delegate) HasContext() bool {
 	return d.apim != nil
 }
 
-func (d *Delegate) AddDeletionFinalizer(application *gio.Application) error {
+func (d *Delegate) AddDeletionFinalizer(application *v1beta1.Application) error {
 	util.AddFinalizer(application, keys.ApplicationDeletionFinalizer)
 	return d.k8s.Update(d.ctx, application)
 }

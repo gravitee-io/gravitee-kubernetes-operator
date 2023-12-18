@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +33,7 @@ func Delete(ctx context.Context, secret *v1.Secret) error {
 func checkContextFinalizer(ctx context.Context, secret *v1.Secret) error {
 	k8s := k8s.GetClient()
 
-	contextRefs, err := getReferences(ctx, secret, new(v1alpha1.ManagementContextList))
+	contextRefs, err := getReferences(ctx, secret, new(v1beta1.ManagementContextList))
 
 	if err != nil {
 		return err

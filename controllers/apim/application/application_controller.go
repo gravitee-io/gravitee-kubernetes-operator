@@ -21,13 +21,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -54,7 +53,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log.InfoEndReconcile(ctx)
-	application := &gio.Application{}
+	application := &v1beta1.Application{}
 
 	if err := r.Get(ctx, req.NamespacedName, application); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -118,8 +117,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.Application{}).
-		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		For(&v1beta1.Application{}).
+		Watches(&v1beta1.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

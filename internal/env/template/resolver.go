@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
@@ -51,7 +50,7 @@ func NewResolver(ctx context.Context, c client.Client, obj runtime.Object) *Reso
 
 func (r *Resolver) Resolve() error {
 	switch t := r.obj.(type) {
-	case *v1beta1.ApiDefinition, *gio.ManagementContext, *gio.Application, *netv1.Ingress, *gio.ApiResource:
+	case *v1beta1.ApiDefinition, *v1beta1.ManagementContext, *v1beta1.Application, *netv1.Ingress, *v1beta1.ApiResource:
 		return r.exec()
 	default:
 		return fmt.Errorf("unsupported object type %v", t)

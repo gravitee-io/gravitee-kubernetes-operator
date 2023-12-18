@@ -19,6 +19,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -30,8 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/onsi/gomega/gexec"
-
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -59,8 +59,8 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
-	err := gio.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(v1alpha1.AddToScheme(scheme.Scheme)).NotTo(HaveOccurred())
+	Expect(v1beta1.AddToScheme(scheme.Scheme)).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
 
@@ -68,8 +68,9 @@ var _ = SynchronizedBeforeSuite(func() {
 
 }, func() {
 	//+kubebuilder:scaffold:scheme
-	err := gio.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(v1alpha1.AddToScheme(scheme.Scheme)).NotTo(HaveOccurred())
+	Expect(v1beta1.AddToScheme(scheme.Scheme)).NotTo(HaveOccurred())
+
 	k8sClient = internal.ClusterClient()
 	ctx = context.Background()
 })

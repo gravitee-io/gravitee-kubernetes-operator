@@ -16,7 +16,6 @@ package internal
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
@@ -41,7 +40,7 @@ func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
 	}
 
 	namespacedName := resourceOrRef.Ref.ToK8sType()
-	resource := new(gio.ApiResource)
+	resource := new(v1beta1.ApiResource)
 
 	log.Debug(
 		d.ctx,

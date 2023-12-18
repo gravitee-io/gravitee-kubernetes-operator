@@ -24,7 +24,8 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
@@ -32,8 +33,8 @@ var _ = Describe("Create a basic API", func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("with a management context", func() {
-		var apiDefinitionFixture *gio.ApiDefinition
-		var managementContextFixture *gio.ManagementContext
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
+		var managementContextFixture *v1beta1.ManagementContext
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -58,7 +59,7 @@ var _ = Describe("Create a basic API", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -67,7 +68,7 @@ var _ = Describe("Create a basic API", func() {
 			apiDefinitionFixture.Spec.IsLocal = true
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, apiDefinition)
@@ -92,7 +93,7 @@ var _ = Describe("Create a basic API", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -101,7 +102,7 @@ var _ = Describe("Create a basic API", func() {
 			apiDefinitionFixture.Spec.IsLocal = false
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, apiLookupKey, apiDefinition); err != nil {
 					return err
@@ -128,7 +129,7 @@ var _ = Describe("Create a basic API", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -136,7 +137,7 @@ var _ = Describe("Create a basic API", func() {
 			By("Creating an API definition resource referencing the management context")
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 			}, timeout, interval).Should(Succeed())
@@ -150,7 +151,7 @@ var _ = Describe("Create a basic API", func() {
 
 			By("Updating the ManagementContext to switch from `local` equals true to false")
 			Eventually(func() error {
-				createdApiDefinition := new(gio.ApiDefinition)
+				createdApiDefinition := new(v1alpha1.ApiDefinition)
 				if err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition); err != nil {
 					return err
 				}
@@ -158,7 +159,7 @@ var _ = Describe("Create a basic API", func() {
 				return k8sClient.Update(ctx, createdApiDefinition)
 			}).Should(Succeed())
 
-			updatedApiDefinition := new(gio.ApiDefinition)
+			updatedApiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, apiLookupKey, updatedApiDefinition); err != nil {
 					return err

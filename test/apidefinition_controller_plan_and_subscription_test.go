@@ -28,7 +28,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/api"
 )
 
@@ -37,9 +37,9 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("with plan and subscription", Ordered, func() {
-		var apiDefinitionFixture *gio.ApiDefinition
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
 
-		var savedApiDefinition *gio.ApiDefinition
+		var savedApiDefinition *v1alpha1.ApiDefinition
 
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
@@ -77,7 +77,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			By("Expecting the API Definition to be Ready")
 
-			savedApiDefinition = new(gio.ApiDefinition)
+			savedApiDefinition = new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, savedApiDefinition)
@@ -135,7 +135,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			)
 
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
+				update := new(v1alpha1.ApiDefinition)
 				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
 					return err
 				}
@@ -197,8 +197,8 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 	})
 
 	Context("with no plan", Ordered, func() {
-		var apiDefinitionFixture *gio.ApiDefinition
-		var savedApiDefinition *gio.ApiDefinition
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
+		var savedApiDefinition *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 		var gatewayEndpoint string
@@ -234,7 +234,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 			By("Expecting the API Definition to be Ready")
 
-			savedApiDefinition = new(gio.ApiDefinition)
+			savedApiDefinition = new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, apiLookupKey, savedApiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, savedApiDefinition)
@@ -269,7 +269,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			)
 
 			Eventually(func() error {
-				update := new(gio.ApiDefinition)
+				update := new(v1alpha1.ApiDefinition)
 				if err := k8sClient.Get(ctx, apiLookupKey, update); err != nil {
 					return err
 				}
@@ -316,7 +316,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 
 func createSubscriptionAndGetApiKey(
 	apim *internal.APIM,
-	createdApiDefinition *gio.ApiDefinition,
+	createdApiDefinition *v1alpha1.ApiDefinition,
 	planSelector func(*api.Entity) string,
 ) string {
 	// Get first active application

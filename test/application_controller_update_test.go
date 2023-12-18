@@ -15,7 +15,7 @@
 package test
 
 import (
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -23,8 +23,8 @@ import (
 )
 
 var _ = Describe("Update an Application", func() {
-	var applicationFixture *gio.Application
-	var managementContextFixture *gio.ManagementContext
+	var applicationFixture *v1beta1.Application
+	var managementContextFixture *v1beta1.ManagementContext
 	var contextLookupKey types.NamespacedName
 	var appLookupKey types.NamespacedName
 
@@ -44,7 +44,7 @@ var _ = Describe("Update an Application", func() {
 		By("Creating a management context to synchronize with the REST API")
 		Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-		managementContext := new(gio.ManagementContext)
+		managementContext := new(v1beta1.ManagementContext)
 		Eventually(func() error {
 			return k8sClient.Get(ctx, contextLookupKey, managementContext)
 		}, timeout, interval).Should(Succeed())
@@ -54,7 +54,7 @@ var _ = Describe("Update an Application", func() {
 		Expect(k8sClient.Create(ctx, applicationFixture)).Should(Succeed())
 
 		By("Getting created application and expect to find it")
-		createdApplication := &gio.Application{}
+		createdApplication := &v1beta1.Application{}
 		Eventually(func() error {
 			if fErr = k8sClient.Get(ctx, appLookupKey, createdApplication); fErr != nil {
 				return fErr
@@ -85,7 +85,7 @@ var _ = Describe("Update an Application", func() {
 		updatedApplication.Spec.Name += "-updated"
 
 		Eventually(func() error {
-			update := new(gio.Application)
+			update := new(v1beta1.Application)
 			if fErr = k8sClient.Get(ctx, appLookupKey, update); fErr != nil {
 				return fErr
 			}

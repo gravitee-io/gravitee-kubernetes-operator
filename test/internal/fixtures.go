@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	uuid "github.com/satori/go.uuid" //nolint:gomodguard // to replace with google implementation
 )
 
@@ -34,10 +35,10 @@ var decode = scheme.Codecs.UniversalDecoder().Decode
 
 type Fixtures struct {
 	Api         *v1alpha1.ApiDefinition
-	Context     *v1alpha1.ManagementContext
-	Resource    *v1alpha1.ApiResource
+	Context     *v1beta1.ManagementContext
+	Resource    *v1beta1.ApiResource
 	Ingress     *netV1.Ingress
-	Application *v1alpha1.Application
+	Application *v1beta1.Application
 }
 
 type FixtureFiles struct {
@@ -170,8 +171,8 @@ func (f *FixtureGenerator) NewApiDefinition(
 	return api, nil
 }
 func (f *FixtureGenerator) NewManagementContext(
-	path string, transforms ...func(*v1alpha1.ManagementContext),
-) (*v1alpha1.ManagementContext, error) {
+	path string, transforms ...func(*v1beta1.ManagementContext),
+) (*v1beta1.ManagementContext, error) {
 	ctx, err := newManagementContext(path, transforms...)
 	if err != nil {
 		return nil, err
@@ -184,8 +185,8 @@ func (f *FixtureGenerator) NewManagementContext(
 }
 
 func (f *FixtureGenerator) NewApiResource(
-	path string, transforms ...func(*v1alpha1.ApiResource),
-) (*v1alpha1.ApiResource, error) {
+	path string, transforms ...func(*v1beta1.ApiResource),
+) (*v1beta1.ApiResource, error) {
 	resource, err := newApiResource(path, transforms...)
 	if err != nil {
 		return nil, err
@@ -220,19 +221,19 @@ func newApiDefinition(path string, transforms ...func(*v1alpha1.ApiDefinition)) 
 	return api, nil
 }
 
-func newApiResource(path string, transforms ...func(*v1alpha1.ApiResource)) (*v1alpha1.ApiResource, error) {
+func newApiResource(path string, transforms ...func(*v1beta1.ApiResource)) (*v1beta1.ApiResource, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := v1alpha1.GroupVersion.WithKind("ApiResource")
-	decoded, _, err := decode(crd, &gvk, new(v1alpha1.ApiResource))
+	gvk := v1beta1.GroupVersion.WithKind("ApiResource")
+	decoded, _, err := decode(crd, &gvk, new(v1beta1.ApiResource))
 	if err != nil {
 		return nil, err
 	}
 
-	resource, ok := decoded.(*v1alpha1.ApiResource)
+	resource, ok := decoded.(*v1beta1.ApiResource)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of API Resource CRD")
 	}
@@ -245,20 +246,20 @@ func newApiResource(path string, transforms ...func(*v1alpha1.ApiResource)) (*v1
 }
 
 func newManagementContext(
-	path string, transforms ...func(*v1alpha1.ManagementContext),
-) (*v1alpha1.ManagementContext, error) {
+	path string, transforms ...func(*v1beta1.ManagementContext),
+) (*v1beta1.ManagementContext, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := v1alpha1.GroupVersion.WithKind("ManagementContext")
-	decoded, _, err := decode(crd, &gvk, new(v1alpha1.ManagementContext))
+	gvk := v1beta1.GroupVersion.WithKind("ManagementContext")
+	decoded, _, err := decode(crd, &gvk, new(v1beta1.ManagementContext))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, ok := decoded.(*v1alpha1.ManagementContext)
+	ctx, ok := decoded.(*v1beta1.ManagementContext)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of ManagementContext CRD")
 	}
@@ -306,7 +307,7 @@ func newIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress
 }
 
 func (f *FixtureGenerator) NewApplication(path string,
-	transforms ...func(application *v1alpha1.Application)) (*v1alpha1.Application, error) {
+	transforms ...func(application *v1beta1.Application)) (*v1beta1.Application, error) {
 	application, err := newApplication(path, transforms...)
 	if err != nil {
 		return nil, err
@@ -318,19 +319,19 @@ func (f *FixtureGenerator) NewApplication(path string,
 	return application, nil
 }
 
-func newApplication(path string, transforms ...func(application *v1alpha1.Application)) (*v1alpha1.Application, error) {
+func newApplication(path string, transforms ...func(application *v1beta1.Application)) (*v1beta1.Application, error) {
 	crd, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	gvk := v1alpha1.GroupVersion.WithKind("Application")
-	decoded, _, err := decode(crd, &gvk, new(v1alpha1.Application))
+	gvk := v1beta1.GroupVersion.WithKind("Application")
+	decoded, _, err := decode(crd, &gvk, new(v1beta1.Application))
 	if err != nil {
 		return nil, err
 	}
 
-	application, ok := decoded.(*v1alpha1.Application)
+	application, ok := decoded.(*v1beta1.Application)
 	if !ok {
 		return nil, fmt.Errorf("failed to assert type of Application CRD")
 	}

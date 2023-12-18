@@ -30,7 +30,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	netV1 "k8s.io/api/networking/v1"
@@ -63,7 +63,7 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdAPIDefinition := &gio.ApiDefinition{}
+			createdAPIDefinition := &v1alpha1.ApiDefinition{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -108,7 +108,7 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdAPIDefinition := &gio.ApiDefinition{}
+			createdAPIDefinition := &v1alpha1.ApiDefinition{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -261,7 +261,7 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdApiDefinition := &gio.ApiDefinition{}
+			createdApiDefinition := &v1alpha1.ApiDefinition{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -350,7 +350,7 @@ var _ = Describe("Creating an ingress", func() {
 			apiTemplateLookupKey := types.NamespacedName{Name: apiDefinitionTemplate.Name, Namespace: namespace}
 			By("Expect the API Template to be ready")
 
-			savedAPITemplate := new(gio.ApiDefinition)
+			savedAPITemplate := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate)
 			}, timeout, interval).Should(Succeed())
@@ -368,7 +368,7 @@ var _ = Describe("Creating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdApiDefinition := &gio.ApiDefinition{}
+			createdApiDefinition := &v1alpha1.ApiDefinition{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())

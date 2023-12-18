@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
@@ -122,8 +121,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1beta1.ApiDefinition{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
-		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources()).
+		Watches(&v1beta1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
+		Watches(&v1beta1.ApiResource{}, r.Watcher.WatchResources()).
 		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

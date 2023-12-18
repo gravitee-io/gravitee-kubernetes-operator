@@ -18,14 +18,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -33,7 +32,7 @@ var _ = Describe("API Definition Controller", func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("With STARTED ApiDefinition & ManagementContext", func() {
-		var apiDefinitionFixture *gio.ApiDefinition
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -77,7 +76,7 @@ var _ = Describe("API Definition Controller", func() {
 		It("Should Delete an API Definition", func() {
 
 			// Expect the API Definition is Ready
-			createdApiDefinition := new(gio.ApiDefinition)
+			createdApiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err := k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, createdApiDefinition)
@@ -136,7 +135,7 @@ var _ = Describe("API Definition Controller", func() {
 			apim, err := internal.NewAPIM(ctx)
 			Expect(err).ToNot(HaveOccurred())
 
-			createdApiDefinition := new(gio.ApiDefinition)
+			createdApiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, createdApiDefinition)

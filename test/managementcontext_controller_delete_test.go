@@ -18,7 +18,8 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
@@ -31,7 +32,7 @@ import (
 
 var _ = Describe("Deleting a management context", func() {
 	Context("Not linked to an api definition", func() {
-		var contextFixture *gio.ManagementContext
+		var contextFixture *v1beta1.ManagementContext
 		var contextLookupKey types.NamespacedName
 
 		BeforeEach(func() {
@@ -55,7 +56,7 @@ var _ = Describe("Deleting a management context", func() {
 
 			By("Getting created resource and expect to find it")
 
-			createdContext := new(gio.ManagementContext)
+			createdContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, createdContext)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -64,7 +65,7 @@ var _ = Describe("Deleting a management context", func() {
 			Expect(k8sClient.Delete(ctx, createdContext)).ToNot(HaveOccurred())
 
 			By("Checking the management context has been deleted")
-			context := &gio.ManagementContext{}
+			context := &v1beta1.ManagementContext{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, context)
 			}, timeout, interval).ShouldNot(Succeed())
@@ -72,9 +73,9 @@ var _ = Describe("Deleting a management context", func() {
 	})
 
 	Context("Linked to an api definition", func() {
-		var contextFixture *gio.ManagementContext
+		var contextFixture *v1beta1.ManagementContext
 		var contextLookupKey types.NamespacedName
-		var apiFixture *gio.ApiDefinition
+		var apiFixture *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 
 		BeforeEach(func() {
@@ -104,7 +105,7 @@ var _ = Describe("Deleting a management context", func() {
 			Expect(k8sClient.Create(ctx, contextFixture)).Should(Succeed())
 
 			By("Getting created resource and expect to find it")
-			createdContext := new(gio.ManagementContext)
+			createdContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, contextLookupKey, createdContext); err != nil {
 					return err
@@ -116,7 +117,7 @@ var _ = Describe("Deleting a management context", func() {
 			Expect(k8sClient.Create(ctx, apiFixture)).Should(Succeed())
 
 			By("Getting created resource and expect to find it")
-			createdApi := new(gio.ApiDefinition)
+			createdApi := new(v1alpha1.ApiDefinition)
 			Consistently(func() error { // just to let gko have time to configure API definition
 				return k8sClient.Get(ctx, apiLookupKey, createdApi)
 			}, timeout/10, interval).Should(Succeed())
@@ -125,7 +126,7 @@ var _ = Describe("Deleting a management context", func() {
 			Expect(k8sClient.Delete(ctx, createdContext)).ToNot(HaveOccurred())
 
 			By("Checking the management context has not been deleted")
-			context := &gio.ManagementContext{}
+			context := &v1beta1.ManagementContext{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, context)
 			}, timeout, interval).Should(Succeed())
@@ -133,8 +134,8 @@ var _ = Describe("Deleting a management context", func() {
 	})
 
 	Context("With secret Reference", func() {
-		var ctx1 *gio.ManagementContext
-		var ctx2 *gio.ManagementContext
+		var ctx1 *v1beta1.ManagementContext
+		var ctx2 *v1beta1.ManagementContext
 		var secret *v1.Secret
 
 		var ctx1Key types.NamespacedName

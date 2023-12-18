@@ -17,7 +17,7 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -26,7 +26,7 @@ import (
 func CreateOrUpdate(
 	ctx context.Context,
 	k8s client.Client,
-	instance *v1alpha1.ApiResource,
+	instance *v1beta1.ApiResource,
 ) error {
 	if !util.ContainsFinalizer(instance, keys.ApiResourceFinalizer) {
 		util.AddFinalizer(instance, keys.ApiResourceFinalizer)
