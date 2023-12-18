@@ -17,7 +17,7 @@
 package v1alpha1
 
 import (
-	v1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/v1"
+	v1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

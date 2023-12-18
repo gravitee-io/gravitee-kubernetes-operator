@@ -17,8 +17,7 @@ package apim
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/base"
-	v1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/v1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
@@ -45,7 +44,7 @@ func (apim *APIM) OrgID() string {
 }
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
-func FromContext(ctx context.Context, managementContext v1.Context) (*APIM, error) {
+func FromContext(ctx context.Context, managementContext management.Context) (*APIM, error) {
 	envID := managementContext.EnvID
 	orgID := managementContext.OrgID
 	urls, err := client.NewURLs(managementContext.BaseURL, orgID, envID)
@@ -67,7 +66,7 @@ func FromContext(ctx context.Context, managementContext v1.Context) (*APIM, erro
 	}, nil
 }
 
-func toHttpAuth(management v1.Context) *http.Auth {
+func toHttpAuth(management management.Context) *http.Auth {
 	if !management.HasAuthentication() {
 		return nil
 	}
@@ -78,7 +77,7 @@ func toHttpAuth(management v1.Context) *http.Auth {
 	}
 }
 
-func toBasicAuth(auth *base.Auth) *http.BasicAuth {
+func toBasicAuth(auth *management.Auth) *http.BasicAuth {
 	if auth == nil || auth.Credentials == nil {
 		return nil
 	}
@@ -89,7 +88,7 @@ func toBasicAuth(auth *base.Auth) *http.BasicAuth {
 	}
 }
 
-func toBearer(auth *base.Auth) http.BearerToken {
+func toBearer(auth *management.Auth) http.BearerToken {
 	if auth == nil {
 		return ""
 	}
