@@ -17,7 +17,7 @@ package secrets
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	v1 "k8s.io/api/core/v1"
@@ -56,6 +56,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Secret{}).
-		Watches(&v1alpha1.ManagementContext{}, watch.ContextSecrets()).
+		Watches(&v1beta1.ManagementContext{}, watch.ContextSecrets()).
 		Complete(r)
 }

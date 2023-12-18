@@ -15,7 +15,6 @@
 package indexer
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
@@ -74,7 +73,7 @@ func IndexManagementContexts(api *v1beta1.ApiDefinition, fields *[]string) {
 	*fields = append(*fields, api.Spec.Context.String())
 }
 
-func IndexManagementContextSecrets(context *v1alpha1.ManagementContext, fields *[]string) {
+func IndexManagementContextSecrets(context *v1beta1.ManagementContext, fields *[]string) {
 	if context.Spec.HasSecretRef() {
 		*fields = append(*fields, context.Spec.SecretRef().String())
 	}
@@ -114,7 +113,7 @@ func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
 	}
 }
 
-func IndexApplicationManagementContexts(application *v1alpha1.Application, fields *[]string) {
+func IndexApplicationManagementContexts(application *v1beta1.Application, fields *[]string) {
 	if application.Spec.Context == nil {
 		return
 	}

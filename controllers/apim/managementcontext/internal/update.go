@@ -17,7 +17,7 @@ package internal
 import (
 	"fmt"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"golang.org/x/net/context"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -27,7 +27,7 @@ import (
 func CreateOrUpdate(
 	ctx context.Context,
 	k8s client.Client,
-	instance *gio.ManagementContext,
+	instance *v1beta1.ManagementContext,
 ) error {
 	// We only add a finalizer to our ManagementContexts to keep track of their deletion
 	if !util.ContainsFinalizer(instance, keys.ManagementContextFinalizer) {

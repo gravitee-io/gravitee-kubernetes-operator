@@ -15,7 +15,7 @@
 package test
 
 import (
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,8 +28,8 @@ var _ = Describe("Deleting an Application", func() {
 
 	Context("Deleting an Application", func() {
 
-		var applicationFixture *gio.Application
-		var managementContextFixture *gio.ManagementContext
+		var applicationFixture *v1beta1.Application
+		var managementContextFixture *v1beta1.ManagementContext
 		var contextLookupKey types.NamespacedName
 		var appLookupKey types.NamespacedName
 		It("Should delete Application", func() {
@@ -48,7 +48,7 @@ var _ = Describe("Deleting an Application", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -58,7 +58,7 @@ var _ = Describe("Deleting an Application", func() {
 			Expect(k8sClient.Create(ctx, applicationFixture)).Should(Succeed())
 
 			By("Getting created application and expect to find it")
-			createdApplication := &gio.Application{}
+			createdApplication := &v1beta1.Application{}
 			Eventually(func() error {
 				if err = k8sClient.Get(ctx, appLookupKey, createdApplication); err != nil {
 					return err
@@ -84,7 +84,7 @@ var _ = Describe("Deleting an Application", func() {
 			Eventually(func() error {
 				By("Deleting the application")
 
-				savedApplication := new(gio.Application)
+				savedApplication := new(v1beta1.Application)
 				if err = k8sClient.Get(ctx, appLookupKey, savedApplication); err != nil {
 					return err
 				}
@@ -93,7 +93,7 @@ var _ = Describe("Deleting an Application", func() {
 			}).Should(Succeed())
 
 			By("Getting the deleted application")
-			deletedApplication := &gio.Application{}
+			deletedApplication := &v1beta1.Application{}
 			Eventually(func() error {
 				return client.IgnoreNotFound(k8sClient.Get(ctx, appLookupKey, deletedApplication))
 			}, timeout, interval).ShouldNot(HaveOccurred())

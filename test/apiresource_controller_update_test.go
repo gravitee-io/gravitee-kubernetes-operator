@@ -21,7 +21,8 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
@@ -63,7 +64,7 @@ var _ = Describe("API Resource Controller", func() {
 		})
 
 		It("Should update the API definition on resource update", func() {
-			createdResource := new(gio.ApiResource)
+			createdResource := new(v1beta1.ApiResource)
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, resourceLookupKey, createdResource)
@@ -71,7 +72,7 @@ var _ = Describe("API Resource Controller", func() {
 
 			Expect(createdResource.Spec.Enabled).To(BeTrue())
 
-			createdApi := new(gio.ApiDefinition)
+			createdApi := new(v1alpha1.ApiDefinition)
 
 			Eventually(func() error {
 				err := k8sClient.Get(ctx, apiLookupKey, createdApi)
@@ -79,13 +80,13 @@ var _ = Describe("API Resource Controller", func() {
 					return err
 				}
 
-				return internal.AssertStatusMatches(createdApi, gio.ApiDefinitionStatus{
+				return internal.AssertStatusMatches(createdApi, v1alpha1.ApiDefinitionStatus{
 					EnvID:                        "DEFAULT",
 					OrgID:                        "DEFAULT",
 					CrossID:                      createdApi.GetOrGenerateCrossID(),
 					ID:                           createdApi.PickID(),
-					Status:                       gio.ProcessingStatusCompleted,
-					DeprecatedStatus:             gio.ProcessingStatusCompleted,
+					Status:                       v1alpha1.ProcessingStatusCompleted,
+					DeprecatedStatus:             v1alpha1.ProcessingStatusCompleted,
 					State:                        "STARTED",
 					ObservedGeneration:           1,
 					DeprecatedObservedGeneration: 1,
@@ -98,7 +99,7 @@ var _ = Describe("API Resource Controller", func() {
 			updatedResource.Spec.Enabled = false
 
 			Eventually(func() error {
-				update := new(gio.ApiResource)
+				update := new(v1beta1.ApiResource)
 				if err := k8sClient.Get(ctx, resourceLookupKey, update); err != nil {
 					return err
 				}

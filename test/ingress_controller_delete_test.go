@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"fmt"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
@@ -60,7 +60,7 @@ var _ = Describe("Deleting an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdAPIDefinition := new(gio.ApiDefinition)
+			createdAPIDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -74,7 +74,7 @@ var _ = Describe("Deleting an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, ing)
 			}, timeout, interval).ShouldNot(Succeed())
 
-			api := &gio.ApiDefinition{}
+			api := &v1alpha1.ApiDefinition{}
 			Eventually(func() error {
 				err := k8sClient.Get(ctx, ingressLookupKey, api)
 				return err
@@ -90,7 +90,7 @@ var _ = Describe("Deleting an ingress", func() {
 	})
 
 	Context("With api definition template", func() {
-		var apiDefinitionTemplate *gio.ApiDefinition
+		var apiDefinitionTemplate *v1alpha1.ApiDefinition
 		var ingressFixture *netV1.Ingress
 		var createdIngress *netV1.Ingress
 		var ingressLookupKey types.NamespacedName
@@ -115,7 +115,7 @@ var _ = Describe("Deleting an ingress", func() {
 			apiTemplateLookupKey = types.NamespacedName{Name: apiDefinitionTemplate.Name, Namespace: namespace}
 			By("Expect the API Template to be ready")
 
-			savedAPITemplate := new(gio.ApiDefinition)
+			savedAPITemplate := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate)
 			}, timeout, interval).Should(Succeed())
@@ -134,7 +134,7 @@ var _ = Describe("Deleting an ingress", func() {
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
 			By("Getting created api definition and expected to find it")
-			createdAPIDefinition := &gio.ApiDefinition{}
+			createdAPIDefinition := &v1alpha1.ApiDefinition{}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -153,7 +153,7 @@ var _ = Describe("Deleting an ingress", func() {
 				Consistently(func() error {
 					By("Expect the API Template to be still available")
 
-					savedAPITemplate := new(gio.ApiDefinition)
+					savedAPITemplate := new(v1alpha1.ApiDefinition)
 					return k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate)
 				}, timeout).Should(Succeed())
 			})
@@ -169,7 +169,7 @@ var _ = Describe("Deleting an ingress", func() {
 				By("Deleting the API definition template")
 
 				Eventually(func() error {
-					savedAPITemplate := new(gio.ApiDefinition)
+					savedAPITemplate := new(v1alpha1.ApiDefinition)
 					if err := k8sClient.Get(ctx, apiTemplateLookupKey, savedAPITemplate); err != nil {
 						return err
 					}
@@ -212,7 +212,7 @@ var _ = Describe("Deleting an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdApiDefinition := new(gio.ApiDefinition)
+			createdApiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -226,7 +226,7 @@ var _ = Describe("Deleting an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, ing)
 			}, timeout, interval).ShouldNot(Succeed())
 
-			api := &gio.ApiDefinition{}
+			api := &v1alpha1.ApiDefinition{}
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, ingressLookupKey, api)
 				return err

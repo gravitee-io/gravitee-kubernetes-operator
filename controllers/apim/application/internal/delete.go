@@ -15,14 +15,14 @@
 package internal
 
 import (
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (d *Delegate) Delete(
-	application *gio.Application,
+	application *v1beta1.Application,
 ) error {
 	if !util.ContainsFinalizer(application, keys.ApplicationDeletionFinalizer) {
 		return nil

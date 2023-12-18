@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
@@ -31,7 +31,7 @@ var _ = Describe("API Definition Controller", func() {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
 	Context("With Started basic ApiDefinition", func() {
-		var apiDefinitionFixture *gio.ApiDefinition
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 
 		BeforeEach(func() {
@@ -60,7 +60,7 @@ var _ = Describe("API Definition Controller", func() {
 		})
 
 		It("Should Stop an API Definition", func() {
-			createdApiDefinition := new(gio.ApiDefinition)
+			createdApiDefinition := new(v1alpha1.ApiDefinition)
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, createdApiDefinition)

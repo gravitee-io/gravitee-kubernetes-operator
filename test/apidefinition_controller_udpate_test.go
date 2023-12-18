@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -219,7 +220,7 @@ var _ = Describe("API Definition Controller", func() {
 	})
 
 	Context("With basic ApiDefinition & ManagementContext adding context ref on update", func() {
-		var contextFixture *v1alpha1.ManagementContext
+		var contextFixture *v1beta1.ManagementContext
 		var apiDefinitionFixture *v1alpha1.ApiDefinition
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName

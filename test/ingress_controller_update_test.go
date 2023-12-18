@@ -20,7 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
@@ -61,7 +61,7 @@ var _ = Describe("Updating an ingress", func() {
 				return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
-			createdAPIDefinition := new(gio.ApiDefinition)
+			createdAPIDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -89,7 +89,7 @@ var _ = Describe("Updating an ingress", func() {
 			Expect(ingressWithUpdatedPath.Spec.Rules[0].HTTP.Paths[0].Path).To(Equal(fooPath))
 
 			Eventually(func() bool {
-				apiDefinitionWithUpdatedPath := new(gio.ApiDefinition)
+				apiDefinitionWithUpdatedPath := new(v1alpha1.ApiDefinition)
 				Eventually(func() error {
 					return k8sClient.Get(ctx, ingressLookupKey, apiDefinitionWithUpdatedPath)
 				}, timeout, interval).ShouldNot(HaveOccurred())
@@ -106,7 +106,7 @@ var _ = Describe("Updating an ingress", func() {
 	})
 
 	Context("With API definition template", func() {
-		var apiDefinitionTemplate *gio.ApiDefinition
+		var apiDefinitionTemplate *v1alpha1.ApiDefinition
 		var ingressFixture *netV1.Ingress
 		var ingressLookupKey types.NamespacedName
 		var apiTemplateLookupKey types.NamespacedName
@@ -139,7 +139,7 @@ var _ = Describe("Updating an ingress", func() {
 			It("it should update the ingress and final api definition", func() {
 				By("Getting created resource and expect to find it")
 
-				createdAPIDefinition := &gio.ApiDefinition{}
+				createdAPIDefinition := &v1alpha1.ApiDefinition{}
 				Eventually(func() error {
 					return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 				}, timeout, interval).ShouldNot(HaveOccurred())
@@ -147,7 +147,7 @@ var _ = Describe("Updating an ingress", func() {
 				Expect(len(createdAPIDefinition.Spec.Plans)).Should(Equal(1))
 				Expect(createdAPIDefinition.Spec.Plans[0].Security).Should(Equal("API_KEY"))
 
-				currentAPITemplate := new(gio.ApiDefinition)
+				currentAPITemplate := new(v1alpha1.ApiDefinition)
 				Eventually(func() error {
 					return k8sClient.Get(ctx, apiTemplateLookupKey, currentAPITemplate)
 				}).Should(Succeed())
@@ -163,7 +163,7 @@ var _ = Describe("Updating an ingress", func() {
 				)
 
 				Eventually(func() error {
-					update := new(gio.ApiDefinition)
+					update := new(v1alpha1.ApiDefinition)
 					if err := k8sClient.Get(ctx, apiTemplateLookupKey, update); err != nil {
 						return err
 					}
@@ -171,7 +171,7 @@ var _ = Describe("Updating an ingress", func() {
 					return k8sClient.Update(ctx, update)
 				}).ShouldNot(HaveOccurred())
 
-				updateAPIDefinition := &gio.ApiDefinition{}
+				updateAPIDefinition := &v1alpha1.ApiDefinition{}
 				Consistently(func() error {
 					return k8sClient.Get(ctx, ingressLookupKey, updateAPIDefinition)
 				}, timeout/5, interval).ShouldNot(HaveOccurred())
@@ -195,7 +195,7 @@ var _ = Describe("Updating an ingress", func() {
 					return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 				}, timeout, interval).ShouldNot(HaveOccurred())
 
-				createdAPIDefinition := new(gio.ApiDefinition)
+				createdAPIDefinition := new(v1alpha1.ApiDefinition)
 				Eventually(func() error {
 					return k8sClient.Get(ctx, ingressLookupKey, createdAPIDefinition)
 				}, timeout, interval).ShouldNot(HaveOccurred())
@@ -230,7 +230,7 @@ var _ = Describe("Updating an ingress", func() {
 				}, timeout, interval).ShouldNot(HaveOccurred())
 
 				Eventually(func() bool {
-					apiDefinitionWithUpdatedPath := new(gio.ApiDefinition)
+					apiDefinitionWithUpdatedPath := new(v1alpha1.ApiDefinition)
 					Eventually(func() error {
 						return k8sClient.Get(ctx, ingressLookupKey, apiDefinitionWithUpdatedPath)
 					}, timeout, interval).ShouldNot(HaveOccurred())
@@ -281,7 +281,7 @@ var _ = Describe("Updating an ingress", func() {
 					return k8sClient.Get(ctx, ingressLookupKey, createdIngress)
 				}, timeout, interval).ShouldNot(HaveOccurred())
 
-				createdApiDefinition := &gio.ApiDefinition{}
+				createdApiDefinition := &v1alpha1.ApiDefinition{}
 				Eventually(func() error {
 					return k8sClient.Get(ctx, ingressLookupKey, createdApiDefinition)
 				}, timeout, interval).ShouldNot(HaveOccurred())

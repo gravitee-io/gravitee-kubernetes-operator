@@ -26,7 +26,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/convert/v4"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
@@ -53,7 +54,7 @@ var _ = Describe("Create", func() {
 
 			By("Getting created resource and expect to find it")
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 			}, timeout, interval).ShouldNot(HaveOccurred())
@@ -93,8 +94,8 @@ var _ = Describe("Create", func() {
 	)
 
 	Context("a basic spec with a management context", func() {
-		var apiDefinitionFixture *gio.ApiDefinition
-		var managementContextFixture *gio.ManagementContext
+		var apiDefinitionFixture *v1alpha1.ApiDefinition
+		var managementContextFixture *v1beta1.ManagementContext
 		var apiLookupKey types.NamespacedName
 		var contextLookupKey types.NamespacedName
 
@@ -119,7 +120,7 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -127,7 +128,7 @@ var _ = Describe("Create", func() {
 			By("Create an API definition resource referencing the management context")
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, apiDefinition)
@@ -174,14 +175,14 @@ var _ = Describe("Create", func() {
 			By("Create a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
 
 			By("Create an API definition resource referencing the management context")
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err := k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, apiDefinition)
@@ -292,7 +293,7 @@ var _ = Describe("Create", func() {
 
 			Expect(k8sClient.Create(ctx, fixtures.Context)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -301,7 +302,7 @@ var _ = Describe("Create", func() {
 
 			By("Checking that the API has been made read only")
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, apiDefinition)
@@ -334,7 +335,7 @@ var _ = Describe("Create", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -342,7 +343,7 @@ var _ = Describe("Create", func() {
 			By("Creating an API definition referencing the management context")
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, apiDefinition)
@@ -413,7 +414,7 @@ var _ = Describe("Create", func() {
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
 
-			managementContext := new(gio.ManagementContext)
+			managementContext := new(v1beta1.ManagementContext)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -421,7 +422,7 @@ var _ = Describe("Create", func() {
 			By("Creating an API definition referencing the management context")
 			Expect(k8sClient.Create(ctx, apiDefinitionFixture)).Should(Succeed())
 
-			apiDefinition := new(gio.ApiDefinition)
+			apiDefinition := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, apiLookupKey, apiDefinition)
 				return internal.AssertNoErrorAndStatusCompleted(err, apiDefinition)

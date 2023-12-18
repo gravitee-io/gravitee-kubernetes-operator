@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -31,7 +30,7 @@ import (
 func Delete(
 	ctx context.Context,
 	client client.Client,
-	resource *v1alpha1.ApiResource,
+	resource *v1beta1.ApiResource,
 ) error {
 	if !util.ContainsFinalizer(resource, keys.ApiResourceFinalizer) {
 		return nil

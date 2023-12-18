@@ -58,8 +58,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	metricsServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	gioV1Alpha1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	gioV1Beta1 "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
@@ -76,8 +76,8 @@ var (
 
 func init() {
 	utilRuntime.Must(clientScheme.AddToScheme(scheme))
-	utilRuntime.Must(gioV1Alpha1.AddToScheme(scheme))
-	utilRuntime.Must(gioV1Beta1.AddToScheme(scheme))
+	utilRuntime.Must(v1alpha1.AddToScheme(scheme))
+	utilRuntime.Must(v1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -134,12 +134,12 @@ func main() {
 
 	log.Global.Debug("setting up webhook handlers")
 	if env.Config.EnableWebhook {
-		if err = (&gioV1Beta1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
+		if err = (&v1beta1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
 			log.Global.Error(err, "unable to setup webhook for API definitions v1beta1")
 			os.Exit(1)
 		}
 
-		if err = (&gioV1Alpha1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
+		if err = (&v1alpha1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
 			log.Global.Error(err, "unable to setup webhook for API definitions v1alpha1")
 			os.Exit(1)
 		}
@@ -188,7 +188,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Beta1.ApiDefinitionList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1beta1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "unable to create controller for API definitions")
 		os.Exit(1)
@@ -198,7 +198,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ManagementContextList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1beta1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "unable to create controller for management contexts")
 		os.Exit(1)
@@ -224,7 +224,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("application-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gioV1Alpha1.ApplicationList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1beta1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "unable to create controller for applications")
 		os.Exit(1)
@@ -273,13 +273,13 @@ func indexApiDefinitionFields(manager ctrl.Manager) error {
 	ctx := context.Background()
 
 	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
-	err := cache.IndexField(ctx, &gioV1Beta1.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
+	err := cache.IndexField(ctx, &v1beta1.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
 	if err != nil {
 		return err
 	}
 
 	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
-	err = cache.IndexField(ctx, &gioV1Beta1.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
+	err = cache.IndexField(ctx, &v1beta1.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
 	if err != nil {
 		return err
 	}
@@ -292,7 +292,7 @@ func indexSecretRefs(manager ctrl.Manager) error {
 	ctx := context.Background()
 
 	secretRefIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
-	return cache.IndexField(ctx, &gioV1Alpha1.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
+	return cache.IndexField(ctx, &v1beta1.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
 }
 
 func indexIngressFields(manager ctrl.Manager) error {
@@ -326,7 +326,7 @@ func indexApplicationFields(manager ctrl.Manager) error {
 	ctx := context.Background()
 
 	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
-	err := cache.IndexField(ctx, &gioV1Alpha1.Application{}, appContextIndexer.Field, appContextIndexer.Func)
+	err := cache.IndexField(ctx, &v1beta1.Application{}, appContextIndexer.Field, appContextIndexer.Func)
 	if err != nil {
 		return err
 	}

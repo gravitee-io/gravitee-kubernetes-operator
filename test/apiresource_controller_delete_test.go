@@ -17,13 +17,13 @@ package test
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 )
 
 var _ = Describe("API Resource Controller", func() {
@@ -47,7 +47,7 @@ var _ = Describe("API Resource Controller", func() {
 			resourceLookupKey = types.NamespacedName{Name: fixtures.Resource.Name, Namespace: namespace}
 
 			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
-			createdResource := new(gio.ApiResource)
+			createdResource := new(v1beta1.ApiResource)
 			Eventually(func() error {
 				err = k8sClient.Get(ctx, resourceLookupKey, createdResource)
 				if err != nil {
@@ -60,14 +60,14 @@ var _ = Describe("API Resource Controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			Expect(k8sClient.Create(ctx, fixtures.Api)).Should(Succeed())
-			createdApi := new(gio.ApiDefinition)
+			createdApi := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, createdApi)
 			}, timeout, interval).Should(Succeed())
 		})
 
 		It("Should delete the resource once not referenced", func() {
-			createdResource := new(gio.ApiResource)
+			createdResource := new(v1beta1.ApiResource)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, resourceLookupKey, createdResource)
 			}, timeout, interval).Should(Succeed())
@@ -77,7 +77,7 @@ var _ = Describe("API Resource Controller", func() {
 				return k8sClient.Get(ctx, resourceLookupKey, createdResource)
 			}, timeout, interval).Should(Succeed())
 
-			createdApi := new(gio.ApiDefinition)
+			createdApi := new(v1alpha1.ApiDefinition)
 			Eventually(func() error {
 				return k8sClient.Get(ctx, apiLookupKey, createdApi)
 			}, timeout, interval).Should(Succeed())

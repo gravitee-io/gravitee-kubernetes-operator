@@ -20,7 +20,7 @@ import (
 	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/types/list"
@@ -72,7 +72,7 @@ func (w *Type) WatchContexts(index indexer.IndexField) *handler.Funcs {
 
 func ContextSecrets() *handler.Funcs {
 	queueSecrets := func(obj client.Object, q workqueue.RateLimitingInterface) {
-		ctx, ok := obj.(*v1alpha1.ManagementContext)
+		ctx, ok := obj.(*v1beta1.ManagementContext)
 		if !ok {
 			return
 		}

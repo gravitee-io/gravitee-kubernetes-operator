@@ -19,11 +19,12 @@ import (
 	"net/http"
 	"reflect"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model/api"
 )
 
-func AssertApplicationStatusIsSet(application *gio.Application) error {
+func AssertApplicationStatusIsSet(application *v1beta1.Application) error {
 	status := application.Status
 
 	if status.ID == "" {
@@ -45,7 +46,7 @@ func AssertApplicationStatusIsSet(application *gio.Application) error {
 	return nil
 }
 
-func AssertApiEntityMatchesStatus(apiEntity *api.Entity, apiDefinition *gio.ApiDefinition) error {
+func AssertApiEntityMatchesStatus(apiEntity *api.Entity, apiDefinition *v1alpha1.ApiDefinition) error {
 	if apiEntity.ID != apiDefinition.Status.ID {
 		return NewAssertionError("Status id", apiEntity.ID, apiDefinition.Status.ID)
 	}
@@ -53,7 +54,7 @@ func AssertApiEntityMatchesStatus(apiEntity *api.Entity, apiDefinition *gio.ApiD
 }
 
 func AssertStatusMatches(
-	apiDefinition *gio.ApiDefinition, expectedStatus gio.ApiDefinitionStatus,
+	apiDefinition *v1alpha1.ApiDefinition, expectedStatus v1alpha1.ApiDefinitionStatus,
 ) error {
 	if apiDefinition.Status.ID != expectedStatus.ID {
 		return NewAssertionError("id", expectedStatus.ID, apiDefinition.Status.ID)
@@ -88,18 +89,18 @@ func AssertNoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus in
 }
 
 func AssertStatusCompleted(
-	apiDefinition *gio.ApiDefinition,
+	apiDefinition *v1alpha1.ApiDefinition,
 ) error {
-	return AssertEquals("status", gio.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return AssertEquals("status", v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
 func AssertNoErrorAndStatusCompleted(
-	err error, apiDefinition *gio.ApiDefinition,
+	err error, apiDefinition *v1alpha1.ApiDefinition,
 ) error {
 	if err != nil {
 		return err
 	}
-	return AssertEquals("status", gio.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return AssertEquals("status", v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
 func AssertEquals(property string, expected, actual interface{}) error {
