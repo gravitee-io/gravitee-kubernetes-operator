@@ -311,7 +311,9 @@ func (f *FixtureGenerator) NewApplication(path string,
 	if err != nil {
 		return nil, err
 	}
+
 	application.Name += f.Suffix
+	application.Namespace = Namespace
 
 	return application, nil
 }
