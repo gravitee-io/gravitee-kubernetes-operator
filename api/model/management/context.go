@@ -13,16 +13,24 @@
 // limitations under the License.
 
 // +kubebuilder:object:generate=true
-package v1
-
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management/base"
-)
+package management
 
 type Context struct {
-	base.Context `json:",inline"`
+	// The baseURL of a management API instance
+	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
+	BaseURL string `json:"baseUrl"`
+
+	// An existing environment id targeted by the context within the organization.
+	// +kubebuilder:validation:Required
+	EnvID string `json:"environmentId"`
 
 	// The Gravitee APIM organization targeted by the management context.
 	// +kubebuilder:validation:Required
 	OrgID string `json:"organizationId"`
+
+	// Auth defines the authentication method used to connect to the API Management.
+	// Can be either basic authentication credentials, a bearer token
+	// or a reference to a kubernetes secret holding one of these two configurations.
+	// +kubebuilder:validation:Required
+	Auth *Auth `json:"auth"`
 }
