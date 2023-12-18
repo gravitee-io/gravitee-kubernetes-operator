@@ -19,17 +19,15 @@ import (
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	admissionRegistration "k8s.io/api/admissionregistration/v1"
 	apiExtensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-var log = ctrl.Log.WithName("extensions")
 
 var (
 	conversionPath = "/convert"
@@ -86,13 +84,13 @@ func InitValidatingWebhookConfig(
 	err := cli.Get(ctx, types.NamespacedName{Name: config.Name}, config)
 
 	if errors.IsNotFound(err) {
-		log.Info("creating validating webhook", "name", config.Name)
+		log.Global.Debugf("creating validating webhook %s", config.Name)
 		if err = cli.Create(ctx, config); err != nil {
-			log.Error(err, "unable to create validating webhook", "name", config.Name)
+			log.Global.Error(err, "unable to create validating webhook")
 			return err
 		}
 	} else if err != nil {
-		log.Error(err, "unable to get validating webhook", "name", config.Name)
+		log.Global.Error(err, "unable to get validating webhook")
 		return err
 	}
 	config.Webhooks = []admissionRegistration.ValidatingWebhook{}
@@ -108,7 +106,7 @@ func getConversions(name string) []string {
 }
 
 func GetValidationWebhookConfig() *admissionRegistration.ValidatingWebhookConfiguration {
-	log.Info("Creating validation webhook configuration", "name", validationResourceName)
+	log.Global.Debugf("Creating validation webhook configuration with name %s", validationResourceName)
 	return &admissionRegistration.ValidatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: validationResourceName,
@@ -128,12 +126,12 @@ func AddValidatingWebhook(
 ) *admissionRegistration.ValidatingWebhookConfiguration {
 	versions, ok := admissions[crd.Name]
 	if !ok {
-		log.Info("No validation webhook to add for resource", "resource", crd.Spec.Names.Singular)
+		log.Global.Debugf("No validation webhook to add for resource %s", crd.Spec.Names.Singular)
 		return config
 	}
 
 	for _, version := range versions {
-		log.Info("Adding validation webhook configuration", "name", validationResourceName)
+		log.Global.Debugf("Adding validation webhook configuration for %s", validationResourceName)
 		config.Webhooks = append(config.Webhooks, buildValidatingWebhook(crd, version))
 	}
 
@@ -185,6 +183,7 @@ func buildValidatingWebhookPath(
 }
 
 func setConversion(crd *apiExtensions.CustomResourceDefinition, versions []string) {
+	log.Global.Debugf("Adding conversion webhook configuration for %s with versions %v", crd.Spec.Names.Singular, versions)
 	crd.Spec.Conversion = &apiExtensions.CustomResourceConversion{
 		Strategy: apiExtensions.WebhookConverter,
 		Webhook: &apiExtensions.WebhookConversion{

@@ -76,27 +76,6 @@ var _ = SynchronizedBeforeSuite(func() {
 
 var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
-
-	// Expect(k8sClient.DeleteAllOf(
-	// 	ctx,
-	// 	&netv1.Ingress{},
-	// 	client.InNamespace(namespace),
-	// 	client.MatchingLabels{keys.IngressLabel: keys.IngressLabelValue}),
-	// ).To(Succeed())
-	// Consistently(k8sClient.DeleteAllOf(
-	// 	ctx,
-	// 	&gio.ApiDefinition{},
-	// 	client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
-	// Consistently(k8sClient.DeleteAllOf(
-	// 	ctx,
-	// 	&gio.Application{},
-	// 	client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
-	// Consistently(k8sClient.DeleteAllOf(
-	// 	ctx,
-	// 	&gio.ManagementContext{},
-	// 	client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
-	// Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
-
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
 	// NOSONAR ignore this noop func
