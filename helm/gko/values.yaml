@@ -52,8 +52,8 @@ manager:
   image:
     ## @param manager.image.repository Specifies the docker registry and image name to use.
     repository: graviteeio/kubernetes-operator
-    ## @param manager.image.tag Specifies the docker image tag to use.
-    tag: latest
+    ## @param manager.image.tag Specifies the docker image tag to use. If no value is set, the chart version will be used.
+    tag: ""
     ## @param manager.image.pullPolicy Specifies the pull policy to apply to the controller manager image
     pullPolicy: Always
   log:
