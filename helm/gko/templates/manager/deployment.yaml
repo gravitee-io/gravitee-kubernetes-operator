@@ -71,7 +71,7 @@ spec:
             - configMapRef:
                 name: '{{ .Values.manager.configMap.name }}'
                 optional: true
-          image: '{{ .Values.manager.image.repository }}:{{ .Values.manager.image.tag }}'
+          image: '{{ .Values.manager.image.repository }}:{{ default .Chart.Version .Values.manager.image.tag }}'
           imagePullPolicy: '{{ .Values.manager.image.pullPolicy }}'
           livenessProbe:
             httpGet:
