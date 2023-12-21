@@ -29,10 +29,17 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 spec:
   ports:
+    {{- if .Values.manager.metrics.secured }}
     - name: https
-      port: 8443
+      port: 443
       protocol: TCP
-      targetPort: https
+      targetPort: {{ .Values.manager.metrics.port }}
+    {{- else }}
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: {{ .Values.manager.metrics.port }}
+    {{- end }}
   selector:
     control-plane: controller-manager
 {{- end }}  

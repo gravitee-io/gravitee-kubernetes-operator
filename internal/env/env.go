@@ -15,6 +15,7 @@
 package env
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -30,6 +31,8 @@ const (
 	WatchNS                  = "WATCH_NAMESPACE"
 	ApplyCRDs                = "APPLY_CRDS"
 	EnableMetrics            = "ENABLE_METRICS"
+	SecureMetrics            = "SECURE_METRICS"
+	MetricsCertDir           = "METRICS_CERT_DIR"
 	MetricsPort              = "METRICS_PORT"
 	ProbePort                = "PROBE_PORT"
 	HTTPClientSkipCertVerify = "HTTP_CLIENT_SKIP_CERT_VERIFY"
@@ -60,6 +63,8 @@ var Config = struct {
 	ReleaseNS                string
 	ApplyCRDs                bool
 	EnableMetrics            bool
+	SecureMetrics            bool
+	MetricsCertDir           string
 	MetricsPort              int
 	ProbePort                int
 	DisableJSONLogs          bool
@@ -79,6 +84,13 @@ var Config = struct {
 	EnableLeaderElection     bool
 }{}
 
+func GetMetricsAddr() string {
+	if !Config.EnableMetrics {
+		return "0" // disables metrics
+	}
+	return fmt.Sprintf(":%d", Config.MetricsPort)
+}
+
 func init() {
 	Config.WatchNS = os.Getenv(WatchNS)
 	Config.ReleaseNS = os.Getenv(WebhookNS)
@@ -93,6 +105,8 @@ func init() {
 	Config.HTTPClientSkipCertVerify = os.Getenv(HTTPClientSkipCertVerify) == trueString
 	Config.HTTPClientTimeoutSeconds = parseInt(HTTPClientTimeoutSeconds, defaultHTTPClientTimeoutSeconds)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == trueString
+	Config.SecureMetrics = os.Getenv(SecureMetrics) == trueString
+	Config.MetricsCertDir = os.Getenv(MetricsCertDir)
 	Config.MetricsPort = parseInt(MetricsPort, defaultMetricsPort)
 	Config.ProbePort = parseInt(ProbePort, defaultProbesPort)
 	Config.EnableWebhook = os.Getenv(EnableWebhook) == trueString
