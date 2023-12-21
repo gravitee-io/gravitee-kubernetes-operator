@@ -1,0 +1,70 @@
+mongodb:
+  enabled: true
+  image:
+    repository: mongo
+    tag: 6.0.12-jammy
+  architecture: standalone
+  persistence:
+    mountPath: /data/db
+  
+elasticsearch:
+  enabled: true
+  master:
+    masterOnly: false
+    replicaCount: 1
+  data:
+    replicaCount: 0
+  coordinating:
+    replicaCount: 0
+  ingest:
+    replicaCount: 0
+
+mongo:
+  uri: mongodb://graviteeio-apim-mongodb-replicaset:27017/gravitee-apim?connectTimeoutMS=30000
+
+es:
+  endpoints:
+    - http://graviteeio-apim-elasticsearch-master-hl:9200
+
+ui:
+  ingress:
+    enabled: false
+  service:
+    type: NodePort
+    nodePort: 30080
+  baseURL: http://localhost:30083/management
+  env:
+  - name: CONSOLE_BASE_HREF
+    value: /
+
+portal:
+  ingress:
+    enabled: false
+  service:
+    type: NodePort
+    nodePort: 30081
+  baseURL: http://localhost:30083/portal
+  env:
+  - name: PORTAL_BASE_HREF
+    value: /
+
+gateway:
+  ingress:
+    enabled: false
+  service:
+    type: NodePort
+    nodePort: 30082
+
+api:
+  ingress:
+    enabled: false
+  service:
+    type: NodePort
+    nodePort: 30083
+
+installation:
+  api: 
+    url: http://localhost:30083
+    proxyPath:
+      management: /management
+      portal: /portal
