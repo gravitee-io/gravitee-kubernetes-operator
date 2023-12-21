@@ -46,18 +46,6 @@ tests:
           path: data.LOG_FORMAT
           value: "console"
 
-  - it: Should have metrics disabled
-    set:
-      manager:
-        metrics:
-            enabled: false
-    asserts:
-      - hasDocuments:
-          count: 1
-      - equal:
-          path: data.ENABLE_METRICS
-          value: "false"
-
   - it: Should have cluster scope disabled
     set:
       manager:

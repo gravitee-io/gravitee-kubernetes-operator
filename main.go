@@ -82,20 +82,18 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
-	if !env.Config.EnableMetrics {
-		log.Global.Info("metrics are disabled")
-		metricsAddr = "0" // disables metrics
-	} else {
-		metricsAddr = fmt.Sprintf(":%d", env.Config.MetricsPort)
-	}
-	metrics := metricsServer.Options{BindAddress: metricsAddr}
-
-	probeAddr := fmt.Sprintf(":%d", env.Config.ProbePort)
-
 	if env.Config.HTTPClientSkipCertVerify {
 		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
+
+	log.Global.Debugf("enable metrics: %t", env.Config.EnableMetrics)
+	metrics := metricsServer.Options{
+		BindAddress:   env.GetMetricsAddr(),
+		SecureServing: env.Config.SecureMetrics,
+		CertDir:       env.Config.MetricsCertDir,
+	}
+
+	probeAddr := fmt.Sprintf(":%d", env.Config.ProbePort)
 
 	log.Global.Debug("setting up webhook server")
 	var webhookServer webhook.Server

@@ -97,6 +97,15 @@ manager:
     enabled: true
     ## @param manager.metrics.port Which port the metric server will bind to.
     port: 8080
+    ## @param manager.metrics.secured If true, the metrics will be served over TLS.
+    secured: true
+    ## @param manager.metrics.certDir The directory where the TLS certificate and key will be stored. If empty, a self signed certificate will be generated.
+    certDir: ""
+    monitor:
+      ## @param manager.metrics.monitor.create If true, a service monitor will be created for the metrics server (requires the prometheus operator to be installed on the cluster). 
+      create: false
+      ## @param manager.metrics.monitor.insecureSkipCertVerify If true, the service monitor will not verify the certificate used by the metrics server.
+      insecureSkipCertVerify: true
   probe:
      ## @param manager.probe.port Which port the readiness and liveness probes will listen to.
     port: 8081
@@ -121,6 +130,10 @@ manager:
       secret:
         ## @param manager.webhook.cert.secret.name The name of the secret storing the webhook server certificate.
         name: gko-webhook-cert
+  ## @param manager.volumes Volumes to add to the manager pod.
+  volumes: []
+  ## @param manager.volumeMounts Volume mounts to add to the manager container.
+  volumeMounts: []
 ## @section Ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.
