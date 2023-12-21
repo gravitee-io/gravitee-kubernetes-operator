@@ -1,3 +1,11 @@
+# [1.0.0-beta.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.2...1.0.0-beta.3) (2023-12-21)
+
+
+### Features
+
+* allow to configure service monitor from helm ([4bab3cb](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/4bab3cb64502cd41a226b3833dab987dfa316156))
+* allow to configure service monitor from helm ([1cd2818](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/1cd281888f2c17a141b8a43532ab574a47f8231b))
+
 # [1.0.0-beta.2](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.1...1.0.0-beta.2) (2023-12-21)
 
 
