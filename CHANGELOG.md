@@ -1,3 +1,10 @@
+# [1.0.0-beta.2](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.1...1.0.0-beta.2) (2023-12-21)
+
+
+### Bug Fixes
+
+* default manager image tag to chart version ([fcad3b3](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/fcad3b36a7553517cd1a41f090385831dc871529))
+
 # [1.0.0-beta.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.5.0...1.0.0-beta.1) (2023-12-15)
 
 
