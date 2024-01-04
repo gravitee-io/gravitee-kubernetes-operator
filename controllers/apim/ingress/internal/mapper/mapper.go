@@ -50,8 +50,8 @@ const (
 	rootPath               = "/"
 )
 
-var hostCondition = el.Expression("#request.headers['Host'][0] == '%s'")
-var noHostCondition = el.Expression("#request.headers['Host'][0] != '%s'")
+var hostCondition = el.Expression("#request.host == '%s'")
+var noHostCondition = el.Expression("#request.host != '%s'")
 var pathCondition = el.Expression("#request.contextPath.startsWith('%s')")
 
 type Mapper struct {
