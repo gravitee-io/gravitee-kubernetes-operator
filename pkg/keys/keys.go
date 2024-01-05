@@ -17,13 +17,12 @@ package keys
 // Kubernetes Ingresses.
 const (
 	GraviteeComponentLabel      = "gravitee.io/component"
-	IngressComponentLabelValue  = "ingress"
 	IngressLabel                = "gravitee.io/ingress"
 	IngressLabelValue           = "graviteeio"
 	IngressClassAnnotation      = "kubernetes.io/ingress.class"
 	IngressClassAnnotationValue = "graviteeio"
 	IngressTemplateAnnotation   = "gravitee.io/template"
-	GatewayKeystoreConfigSecret = "gravitee.io/gw-keystore-config" //nolint:gosec // GW keystore credentials
+	GraviteePemRegistryLabel    = "kubernetes-pem-registry"
 )
 
 // Gravitee.io CRDs.

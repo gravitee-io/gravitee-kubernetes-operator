@@ -18,6 +18,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
 
 const (
@@ -43,8 +46,8 @@ const (
 	WebhookPort              = "WEBHOOK_SERVICE_PORT"
 	WebhookCertSecret        = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not a hardcoded secret
 	EnableLeaderElection     = "ENABLE_LEADER_ELECTION"
-
-	trueString = "true"
+	IngressClasses           = "INGRESS_CLASSES"
+	TrueString               = "true"
 
 	// This default are applied when running the app locally.
 	defaultWebhookPort              = 9443
@@ -54,7 +57,6 @@ const (
 	defaultLogLevel                 = "debug"
 	defaultLogTimestampField        = "timestamp"
 	defaultLogTimestampFormat       = "iso-8601"
-	defaultLogTraceIdField          = "reconcile-id"
 	defaultHTTPClientTimeoutSeconds = 10
 )
 
@@ -82,6 +84,7 @@ var Config = struct {
 	WebhookPort              int
 	WebhookCertSecret        string
 	EnableLeaderElection     bool
+	IngressClasses           []string
 }{}
 
 func GetMetricsAddr() string {
@@ -94,27 +97,32 @@ func GetMetricsAddr() string {
 func init() {
 	Config.WatchNS = os.Getenv(WatchNS)
 	Config.ReleaseNS = os.Getenv(WebhookNS)
-	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == trueString
-	Config.DisableJSONLogs = os.Getenv(DisableJSONLogs) == trueString
+	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == TrueString
+	Config.DisableJSONLogs = os.Getenv(DisableJSONLogs) == TrueString
 	Config.LogFormat = getStringOrDefault(LogFormat, defaultLogFormat)
 	Config.LogLevel = getStringOrDefault(LogLevel, defaultLogLevel)
-	Config.LogTimestampField = getStringOrDefault(Config.LogTimestampField, defaultLogTimestampField)
+	Config.LogTimestampField = getStringOrDefault(LogTimestampField, defaultLogTimestampField)
 	Config.LogTimestampFormat = getStringOrDefault(LogTimestampFormat, defaultLogTimestampFormat)
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
-	Config.HTTPClientSkipCertVerify = os.Getenv(HTTPClientSkipCertVerify) == trueString
+	Config.HTTPClientSkipCertVerify = os.Getenv(HTTPClientSkipCertVerify) == TrueString
 	Config.HTTPClientTimeoutSeconds = parseInt(HTTPClientTimeoutSeconds, defaultHTTPClientTimeoutSeconds)
-	Config.EnableMetrics = os.Getenv(EnableMetrics) == trueString
-	Config.SecureMetrics = os.Getenv(SecureMetrics) == trueString
+	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
+	Config.SecureMetrics = os.Getenv(SecureMetrics) == TrueString
 	Config.MetricsCertDir = os.Getenv(MetricsCertDir)
 	Config.MetricsPort = parseInt(MetricsPort, defaultMetricsPort)
 	Config.ProbePort = parseInt(ProbePort, defaultProbesPort)
-	Config.EnableWebhook = os.Getenv(EnableWebhook) == trueString
+	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
 	Config.WebhookNS = os.Getenv(WebhookNS)
 	Config.WebhookService = os.Getenv(WebhookServiceName)
 	Config.WebhookCertSecret = os.Getenv(WebhookCertSecret)
 	Config.WebhookPort = parseInt(WebhookPort, defaultWebhookPort)
-	Config.EnableLeaderElection = getStringOrDefault(EnableLeaderElection, trueString) == trueString
+	Config.EnableLeaderElection = getStringOrDefault(EnableLeaderElection, TrueString) == TrueString
+	var ingressClass string
+	if ingressClass = keys.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
+		ingressClass = os.Getenv(IngressClasses)
+	}
+	Config.IngressClasses = strings.Split(ingressClass, ",")
 }
 
 func getStringOrDefault(key, defaultValue string) string {
