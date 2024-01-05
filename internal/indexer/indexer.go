@@ -16,6 +16,7 @@ package indexer
 
 import (
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -100,7 +101,7 @@ func IndexApiTemplate(ing *v1.Ingress, fields *[]string) {
 }
 
 func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
-	if ing.Annotations[keys.IngressClassAnnotation] != keys.IngressClassAnnotationValue {
+	if !k8s.IsGraviteeIngress(ing) {
 		return
 	}
 
