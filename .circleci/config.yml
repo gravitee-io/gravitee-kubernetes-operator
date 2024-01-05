@@ -518,8 +518,7 @@ workflows:
     when:
       and:
         - or:
-            - equal: [ci-staging, << pipeline.git.branch >>]
-            - equal: [alpha, << pipeline.git.branch >>]
+            - equal: [beta, << pipeline.git.branch >>]
     jobs:
       - test:
           name: Test operator
