@@ -1,3 +1,10 @@
+# [1.0.0-beta.5](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.4...1.0.0-beta.5) (2024-01-05)
+
+
+### Features
+
+* introduce pem registry ([3ca58f6](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3ca58f6a8930731b346e438863a3099986f5e776))
+
 # [1.0.0-beta.4](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.3...1.0.0-beta.4) (2024-01-05)
 
 
