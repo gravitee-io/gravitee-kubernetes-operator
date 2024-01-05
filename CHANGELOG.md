@@ -1,3 +1,10 @@
+# [1.0.0-beta.4](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.3...1.0.0-beta.4) (2024-01-05)
+
+
+### Bug Fixes
+
+* allow support for http2 requests on ingresses ([cc05c9a](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/cc05c9a449e8f4da983b1728211d0227207d3b61))
+
 # [1.0.0-beta.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.2...1.0.0-beta.3) (2023-12-21)
 
 
