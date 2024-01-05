@@ -25,7 +25,8 @@ import {
     createHttpBinSecret,
     createTemplatingSecret,
     createTemplatingConfigmap,
-    createNotFoundTemplateForIngress
+    createNotFoundTemplateForIngress,
+    createPemRegistryForIngress
 } from "./util/k3d.mjs";
 import {addHelmRepos, helmInstall, updateGraviteeRepo} from "./util/helm.mjs";
 import * as env from "./util/env.mjs";
@@ -90,6 +91,12 @@ LOG.blue(`
 `);
 
 await time(createNotFoundTemplateForIngress);
+
+LOG.blue(`
+  ☸ Storing pem-registry ...
+`);
+
+await time(createPemRegistryForIngress);
 
 LOG.blue(`
   ☸ Storing Templating configmap ...
