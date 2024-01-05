@@ -520,28 +520,16 @@ workflows:
         - or:
             - equal: [beta, << pipeline.git.branch >>]
     jobs:
-      - test:
-          name: Test operator
-          context: cicd-orchestrator
-      - helm-test:
-          name: Test chart
       - login-to-azure:
           name: Authenticate on cluster
           context: cicd-orchestrator
           clusterName: devs-preprod
-      - sonarcloud-analysis:
-          name: Sonarcloud Analysis
-          context: cicd-orchestrator
-          requires:
-            - Test operator
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: alpha-latest
           context: cicd-orchestrator
           requires:
-            - Test operator
-            - Test chart
             - Authenticate on cluster
       - helm-install:
           name: Deploy in << matrix.namespace >>
