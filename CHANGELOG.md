@@ -1,3 +1,10 @@
+# [1.0.0-beta.6](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.5...1.0.0-beta.6) (2024-01-05)
+
+
+### Bug Fixes
+
+* create pem registry configmap on start ([2b96692](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/2b9669205de6ac5543ca6b32435abb66ee8a024c))
+
 # [1.0.0-beta.5](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/1.0.0-beta.4...1.0.0-beta.5) (2024-01-05)
 
 
