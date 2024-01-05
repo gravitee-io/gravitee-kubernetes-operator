@@ -46,6 +46,7 @@ data:
   {{- end }}
   {{- end }}
   {{- end }}
+  INGRESS_CLASSES: {{ template "ingress.Classes" . }}
   PROBE_PORT: {{ quote .Values.manager.probe.port }}
   {{- $template404 := get .Values.ingress.templates "404" }}
   {{- if $template404.name }}

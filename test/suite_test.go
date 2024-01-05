@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -32,6 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/onsi/gomega/gexec"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -46,6 +48,8 @@ const (
 	namespace = "default"
 	timeout   = time.Second * 10
 	interval  = time.Second * 1
+
+	pemRegistryName = "pem-registry"
 )
 
 func TestAPIs(t *testing.T) {
@@ -73,6 +77,7 @@ var _ = SynchronizedBeforeSuite(func() {
 
 	k8sClient = internal.ClusterClient()
 	ctx = context.Background()
+	Expect(k8sClient.Create(ctx, pemRegistry())).Should(Succeed())
 })
 
 var _ = SynchronizedAfterSuite(func() {
@@ -101,5 +106,18 @@ func getEventReasons(obj client.Object) func() []string {
 			eventsReason = append(eventsReason, event.Reason)
 		}
 		return eventsReason
+	}
+}
+
+func pemRegistry() *v1.ConfigMap {
+	return &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pemRegistryName,
+			Namespace: namespace,
+			Labels: map[string]string{
+				keys.GraviteeComponentLabel: keys.GraviteePemRegistryLabel,
+				keys.IngressClassAnnotation: keys.IngressClassAnnotationValue,
+			},
+		},
 	}
 }
