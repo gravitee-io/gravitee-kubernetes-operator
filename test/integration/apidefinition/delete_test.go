@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apidefinition
 
 import (
 	"net/http"
@@ -20,7 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -50,8 +50,8 @@ var _ = Describe("API Definition Controller", func() {
 
 			apiDefinition := fixtures.Api
 			managementContext := fixtures.Context
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
-			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: internal.Namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: internal.Namespace}
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
@@ -70,7 +70,7 @@ var _ = Describe("API Definition Controller", func() {
 			}, timeout, interval).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 		})
 
 		It("Should Delete an API Definition", func() {

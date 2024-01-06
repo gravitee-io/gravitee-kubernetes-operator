@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package ingress
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	netV1 "k8s.io/api/networking/v1"

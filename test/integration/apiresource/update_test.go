@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apiresource
 
 import (
 	"errors"
@@ -23,7 +23,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 )
 
 var _ = Describe("API Resource Controller", func() {
@@ -50,7 +50,7 @@ var _ = Describe("API Resource Controller", func() {
 			managementContext := fixtures.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: internal.Namespace}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -59,8 +59,8 @@ var _ = Describe("API Resource Controller", func() {
 
 			Expect(k8sClient.Create(ctx, fixtures.Api)).Should(Succeed())
 
-			apiLookupKey = types.NamespacedName{Name: fixtures.Api.Name, Namespace: namespace}
-			resourceLookupKey = types.NamespacedName{Name: fixtures.Resource.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: fixtures.Api.Name, Namespace: internal.Namespace}
+			resourceLookupKey = types.NamespacedName{Name: fixtures.Resource.Name, Namespace: internal.Namespace}
 		})
 
 		It("Should update the API definition on resource update", func() {

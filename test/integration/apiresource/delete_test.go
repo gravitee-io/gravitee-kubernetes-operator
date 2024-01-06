@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apiresource
 
 import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -43,8 +43,8 @@ var _ = Describe("API Resource Controller", func() {
 
 			Expect(err).ToNot(HaveOccurred())
 
-			apiLookupKey = types.NamespacedName{Name: fixtures.Api.Name, Namespace: namespace}
-			resourceLookupKey = types.NamespacedName{Name: fixtures.Resource.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: fixtures.Api.Name, Namespace: internal.Namespace}
+			resourceLookupKey = types.NamespacedName{Name: fixtures.Resource.Name, Namespace: internal.Namespace}
 
 			Expect(k8sClient.Create(ctx, fixtures.Resource)).Should(Succeed())
 			createdResource := new(v1beta1.ApiResource)

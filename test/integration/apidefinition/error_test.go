@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apidefinition
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 )
 
 var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("DisableSmokeExpect"), func() {
@@ -52,7 +52,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 			managementContext := fixtures.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: internal.Namespace}
 
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
@@ -65,7 +65,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 
 			apiDefinitionFixture = apiDefinition
 			managementContextFixture = managementContext
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 
 			By("Expect the API Definition to be Ready")
 

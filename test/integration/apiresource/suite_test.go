@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apiresource
 
 import (
 	"context"
@@ -21,11 +21,10 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -43,17 +42,14 @@ var ctx context.Context
 
 // Define utility constants for object names and testing timeouts/durations and intervals.
 const (
-	namespace = "default"
-	timeout   = time.Second * 10
-	interval  = time.Second * 1
-
-	pemRegistryName = "pem-registry"
+	timeout  = time.Second * 10
+	interval = time.Second * 1
 )
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	RunSpecs(t, "GKO Controllers Suite")
+	RunSpecs(t, "API Resource Controller Suite")
 }
 
 var _ = SynchronizedBeforeSuite(func() {
@@ -83,25 +79,3 @@ var _ = SynchronizedAfterSuite(func() {
 }, func() {
 	// NOSONAR ignore this noop func
 })
-
-func getEventReasons(obj client.Object) func() []string {
-	return func() []string {
-		eventsReason := []string{}
-
-		events := &v1.EventList{}
-
-		if err := k8sClient.List(
-			ctx,
-			events,
-			&client.ListOptions{Namespace: obj.GetNamespace()},
-			client.MatchingFields{"involvedObject.name": obj.GetName()},
-		); err != nil {
-			return nil
-		}
-
-		for _, event := range events.Items {
-			eventsReason = append(eventsReason, event.Reason)
-		}
-		return eventsReason
-	}
-}

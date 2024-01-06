@@ -210,7 +210,7 @@ jobs:
       - run:
           name: Create volume for coverage reports
           command: |
-            kubectl apply -f test/k8s/coverage-pv.yaml
+            kubectl apply -f test/integration/k8s/coverage-pv.yaml
       - run:
           name: Build image with cover profile enabled
           command: IMG=k3d-graviteeio.docker.localhost:12345/gko TAG=latest make docker-build-it
@@ -222,8 +222,8 @@ jobs:
           command: |
             while ! kubectl get secret gko-webhook-cert --namespace default; do echo "Waiting for webhook cert secret"; sleep 1; done
       - run:
-          name: Run tests
-          command: make test
+          name: Run integration tests
+          command: make it
       - run:
           name: Terminate operator deployment
           command: kubectl scale deployment gko-controller-manager --replicas=0

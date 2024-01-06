@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apidefinition
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 )
 
 var _ = Describe("Create", func() {
@@ -46,7 +46,7 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			apiDefinitionFixture := fixtures.Api
-			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 
 			By("Creating an API definition resource without a management context")
 
@@ -112,8 +112,8 @@ var _ = Describe("Create", func() {
 			apiDefinitionFixture = fixtures.Api
 			managementContextFixture = fixtures.Context
 
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: internal.Namespace}
 		})
 
 		It("should create an API Definition", func() {
@@ -288,8 +288,8 @@ var _ = Describe("Create", func() {
 			apiDefinitionFixture = fixtures.Api
 			managementContextFixture = fixtures.Context
 
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: internal.Namespace}
 
 			Expect(k8sClient.Create(ctx, fixtures.Context)).Should(Succeed())
 
@@ -329,8 +329,8 @@ var _ = Describe("Create", func() {
 			apiDefinitionFixture := fixtures.Api
 			managementContextFixture := fixtures.Context
 
-			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
+			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: internal.Namespace}
 
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())
@@ -408,8 +408,8 @@ var _ = Describe("Create", func() {
 			apiDefinitionFixture := fixtures.Api
 			managementContextFixture := fixtures.Context
 
-			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			apiLookupKey := types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
+			contextLookupKey := types.NamespacedName{Name: managementContextFixture.Name, Namespace: internal.Namespace}
 
 			By("Creating a management context to synchronize with the REST API")
 			Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())

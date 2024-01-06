@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apidefinition
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
@@ -52,7 +52,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinition.Name, Namespace: internal.Namespace}
 		})
 
 		It("Should update an API Definition", func() {
@@ -131,7 +131,7 @@ var _ = Describe("API Definition Controller", func() {
 			managementContext := fixtures.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: internal.Namespace}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -142,7 +142,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 		})
 
 		It("Should update an API Definition", func() {
@@ -240,7 +240,7 @@ var _ = Describe("API Definition Controller", func() {
 			managementContext := fixtures.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: internal.Namespace}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -252,7 +252,7 @@ var _ = Describe("API Definition Controller", func() {
 
 			apiDefinitionFixture = apiDefinition
 			contextFixture = managementContext
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 		})
 
 		It("Should update an API Definition, adding a management context", func() {

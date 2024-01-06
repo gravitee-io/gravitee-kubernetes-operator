@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package managementcontext
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -46,7 +46,10 @@ var _ = Describe("Deleting a management context", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			contextFixture = fixtures.Context
-			contextLookupKey = types.NamespacedName{Name: contextFixture.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{
+				Name:      contextFixture.Name,
+				Namespace: internal.Namespace,
+			}
 		})
 
 		It("Should delete the management context", func() {
@@ -90,10 +93,10 @@ var _ = Describe("Deleting a management context", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			contextFixture = fixtures.Context
-			contextLookupKey = types.NamespacedName{Name: contextFixture.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: contextFixture.Name, Namespace: internal.Namespace}
 
 			apiFixture = fixtures.Api
-			apiLookupKey = types.NamespacedName{Name: apiFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiFixture.Name, Namespace: internal.Namespace}
 		})
 
 		AfterEach(func() {
@@ -152,7 +155,7 @@ var _ = Describe("Deleting a management context", func() {
 			}
 
 			secret.Name = secretName
-			secret.Namespace = namespace
+			secret.Namespace = internal.Namespace
 
 			Expect(k8sClient.Create(ctx, secret)).Should(Succeed())
 
@@ -166,7 +169,7 @@ var _ = Describe("Deleting a management context", func() {
 			}, func(fix *internal.Fixtures) {
 				fix.Context.Spec.Auth.SecretRef = &refs.NamespacedName{
 					Name:      secretName,
-					Namespace: namespace,
+					Namespace: internal.Namespace,
 				}
 			})
 
@@ -185,7 +188,7 @@ var _ = Describe("Deleting a management context", func() {
 			}, func(fix *internal.Fixtures) {
 				fix.Context.Spec.Auth.SecretRef = &refs.NamespacedName{
 					Name:      "test-context-secret",
-					Namespace: namespace,
+					Namespace: internal.Namespace,
 				}
 			})
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apidefinition
 
 import (
 	"net/http"
@@ -20,7 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -62,7 +62,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			managementContext := fixtures.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: internal.Namespace}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -73,7 +73,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 
 			By("Expecting the API Definition to be Ready")
 
@@ -219,7 +219,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			managementContext := fixtures.Context
 			Expect(k8sClient.Create(ctx, managementContext)).Should(Succeed())
 
-			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContext.Name, Namespace: internal.Namespace}
 			Eventually(func() error {
 				return k8sClient.Get(ctx, contextLookupKey, managementContext)
 			}, timeout, interval).Should(Succeed())
@@ -230,7 +230,7 @@ var _ = Describe("Checking ApiKey plan and subscription", Ordered, func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 
 			By("Expecting the API Definition to be Ready")
 

@@ -19,7 +19,7 @@ const (
 
 	GatewayUrl    = "http://localhost:9001"
 	ManagementUrl = "http://localhost:9000/management"
-	SamplesPath   = "../samples"
+	SamplesPath   = "../../../samples"
 
 	ClusterContextFile = SamplesPath + "/managementcontext/cluster/management-context-with-secret-ref.yml"
 	ClientContextFile  = SamplesPath + "/managementcontext/dev/management-context-with-credentials.yml"

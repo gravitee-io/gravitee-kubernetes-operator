@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apidefinition
 
 import (
 	"net/http"
@@ -26,7 +26,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 )
 
 var _ = Describe("Create a basic API", func() {
@@ -51,8 +51,8 @@ var _ = Describe("Create a basic API", func() {
 			apiDefinitionFixture = fixtures.Api
 			managementContextFixture = fixtures.Context
 
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
-			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
+			contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: internal.Namespace}
 		})
 
 		It("should create an API Definition and a ConfigMap when `local` attribute equals true", func() {

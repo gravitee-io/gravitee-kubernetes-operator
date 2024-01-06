@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package application
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1beta1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,8 +38,8 @@ var _ = Describe("Update an Application", func() {
 		Expect(fErr).ToNot(HaveOccurred())
 		managementContextFixture = fixtures.Context
 		applicationFixture = fixtures.Application
-		contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: namespace}
-		appLookupKey = types.NamespacedName{Name: applicationFixture.Name, Namespace: namespace}
+		contextLookupKey = types.NamespacedName{Name: managementContextFixture.Name, Namespace: internal.Namespace}
+		appLookupKey = types.NamespacedName{Name: applicationFixture.Name, Namespace: internal.Namespace}
 
 		By("Creating a management context to synchronize with the REST API")
 		Expect(k8sClient.Create(ctx, managementContextFixture)).Should(Succeed())

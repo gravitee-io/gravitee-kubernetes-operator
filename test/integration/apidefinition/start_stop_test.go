@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package apidefinition
 
 import (
 	"net/http"
@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/integration/internal"
 )
 
 var _ = Describe("API Definition Controller", func() {
@@ -48,7 +48,10 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, fixtures.Context)).Should(Succeed())
 
 			Eventually(func() error {
-				return k8sClient.Get(ctx, types.NamespacedName{Name: fixtures.Context.Name, Namespace: namespace}, fixtures.Context)
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Name:      fixtures.Context.Name,
+					Namespace: internal.Namespace,
+				}, fixtures.Context)
 			}, timeout, interval).Should(Succeed())
 
 			By("Creating an API definition stared by default")
@@ -56,7 +59,7 @@ var _ = Describe("API Definition Controller", func() {
 			Expect(k8sClient.Create(ctx, apiDefinition)).Should(Succeed())
 
 			apiDefinitionFixture = apiDefinition
-			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: namespace}
+			apiLookupKey = types.NamespacedName{Name: apiDefinitionFixture.Name, Namespace: internal.Namespace}
 		})
 
 		It("Should Stop an API Definition", func() {

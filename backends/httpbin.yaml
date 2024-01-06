@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: httpbin-1
-        image: k3d-graviteeio.docker.localhost:12345/go-httpbin
+        image: mccutchen/go-httpbin
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -76,7 +76,7 @@ spec:
     spec:
       containers:
       - name: httpbin-2
-        image: k3d-graviteeio.docker.localhost:12345/go-httpbin
+        image: mccutchen/go-httpbin
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -122,7 +122,7 @@ spec:
     spec:
       containers:
       - name: httpbin-3
-        image: k3d-graviteeio.docker.localhost:12345/go-httpbin
+        image: mccutchen/go-httpbin
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
