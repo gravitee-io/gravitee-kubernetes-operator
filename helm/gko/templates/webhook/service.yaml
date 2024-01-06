@@ -22,7 +22,6 @@ metadata:
     app.kubernetes.io/component: webhook
     app.kubernetes.io/created-by: gko
     app.kubernetes.io/part-of: gko
-    app.kubernetes.io/managed-by: kustomize
   name: {{ .Values.manager.webhook.service.name }}
   namespace: {{ .Release.Namespace }}
 spec:
