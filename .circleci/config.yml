@@ -64,11 +64,17 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
       - checkout
-      - go/load-cache
+      - restore_cache:
+          keys:
+            - golangci-lint
       - run:
           name: Lint sources
           command: make lint-sources
-      - go/save-cache
+      - save_cache:
+          paths:
+            - /home/circleci/.cache/golangci-lint
+            - /home/circleci/go/pkg
+          key: golangci-lint
 
   lint-licenses:
     docker:
