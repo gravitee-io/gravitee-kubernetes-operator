@@ -12,6 +12,9 @@ parameters:
   go-version:
     type: string
     default: "1.21.0"
+  binary-tools-cache-key:
+    type: string
+    default: "binary-tools-3"
 
 executors:
   azure-cli:
@@ -59,7 +62,29 @@ commands:
             }" \
             "https://api.snyk.io/api/v1/org/${SNYK_ORG_ID}/integrations/${SNYK_INTEGRATION_ID}/import"
 jobs:
-  lint-sources:
+  install-tools:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.binary-tools-cache-key>>
+      - go/load-cache # Load cached Go modules.
+      - go/mod-download # Run 'go mod download'.
+      - go/save-cache 
+      - run:
+          name: Install tools
+          command: LOCALBIN=/home/circleci/project/bin make install-tools -j
+      - save_cache:
+          paths:
+            - /home/circleci/project/bin/addlicense
+            - /home/circleci/project/bin/coontroller-gen
+            - /home/circleci/project/bin/crdoc
+            - /home/circleci/project/bin/ginkgo
+            - /home/circleci/project/bin/golangci-lint
+          key: << pipeline.parameters.binary-tools-cache-key>>
+  lint-sources: 
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
@@ -67,6 +92,7 @@ jobs:
       - restore_cache:
           keys:
             - golangci-lint
+            - << pipeline.parameters.binary-tools-cache-key>>
       - run:
           name: Lint sources
           command: make lint-sources
@@ -81,11 +107,12 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
       - checkout
-      - go/load-cache
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.binary-tools-cache-key>>
       - run:
           name: Lint licenses
           command: make lint-licenses
-      - go/save-cache
 
   lint-commits:
     docker:
@@ -101,35 +128,62 @@ jobs:
             node_modules/.bin/commitlint \
               -x @commitlint/config-conventional \
               --from $(git describe --tags --abbrev=0)
-
-  lint-resources:
+  lint-generate:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     steps:
       - checkout
-      - go/mod-download-cached
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.binary-tools-cache-key>>
       - run:
           name: Check that `make generate` has been executed
           command: |
             make generate
             git diff --quiet HEAD api/
+  lint-manifests:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.binary-tools-cache-key>>
       - run:
           name: Check that `make manifests` has been executed
           command: |
             make manifests
             git diff --quiet HEAD helm/gko/crds
+  lint-reference:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.binary-tools-cache-key>>
       - run:
           name: Check that `make reference` has been executed
           command: |
             make reference
             git diff --quiet HEAD docs/api/reference.md
+  lint-helm-reference:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    resource_class: small
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.binary-tools-cache-key>>
       - run:
           name: Check that `make helm-reference` has been executed
           command: |
             make helm-reference
             git diff --quiet HEAD helm/gko/README.md
-
   test:
     machine:
       image: ubuntu-2204:2022.04.2
@@ -493,14 +547,36 @@ workflows:
         - not:
             equal: [alpha, << pipeline.git.branch >>]
     jobs:
+      - install-tools:
+          name: Install tools
       - lint-sources:
           name: Lint sources
+          requires:
+            - Install tools
       - lint-licenses:
           name: Lint licenses
+          requires:
+            - Install tools
       - lint-commits:
           name: Lint commits
-      - lint-resources:
-          name: Lint resources
+          requires:
+            - Install tools
+      - lint-generate:
+          name: Lint generate
+          requires:
+            - Install tools
+      - lint-manifests:
+          name: Lint manifests
+          requires:
+            - Install tools
+      - lint-reference:
+          name: Lint reference
+          requires:
+            - Install tools
+      - lint-helm-reference:
+          name: Lint Helm reference
+          requires:
+            - Install tools
       - test:
           name: Test
           context: cicd-orchestrator
@@ -508,7 +584,10 @@ workflows:
             - Lint sources
             - Lint licenses
             - Lint commits
-            - Lint resources
+            - Lint generate
+            - Lint manifests
+            - Lint reference
+            - Lint Helm reference
       - helm-lint:
           name: Lint Helm chart
       - helm-test:
