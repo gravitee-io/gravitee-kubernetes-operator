@@ -23,12 +23,8 @@ const (
 	Socks5 SOCKSType     = "SOCKS5"
 )
 
+// +kubebuilder:validation:Enum=HTTP_1_1;HTTP_2;
 type ProtocolVersion string
-
-const (
-	Http1 ProtocolVersion = "HTTP_1_1"
-	Http2 ProtocolVersion = "HTTP_2"
-)
 
 // +kubebuilder:validation:Enum=GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER
 type HttpMethod string
@@ -46,27 +42,39 @@ type Cors struct {
 }
 
 type HttpClientOptions struct {
-	IdleTimeout              uint64          `json:"idleTimeout,omitempty"`
-	ConnectTimeout           uint64          `json:"connectTimeout,omitempty"`
-	KeepAlive                bool            `json:"keepAlive,omitempty"`
-	ReadTimeout              uint64          `json:"readTimeout,omitempty"`
-	Pipelining               bool            `json:"pipelining,omitempty"`
-	MaxConcurrentConnections int             `json:"maxConcurrentConnections,omitempty"`
-	UseCompression           bool            `json:"useCompression,omitempty"`
-	FollowRedirects          bool            `json:"followRedirects,omitempty"`
-	ClearTextUpgrade         bool            `json:"clearTextUpgrade,omitempty"`
-	Version                  ProtocolVersion `json:"version,omitempty"`
+	IdleTimeout    uint64 `json:"idleTimeout,omitempty"`
+	ConnectTimeout uint64 `json:"connectTimeout,omitempty"`
+	// +kubebuilder:default:=true
+	KeepAlive   bool   `json:"keepAlive"`
+	ReadTimeout uint64 `json:"readTimeout,omitempty"`
+	// +kubebuilder:default:=false
+	Pipelining               bool `json:"pipelining"`
+	MaxConcurrentConnections int  `json:"maxConcurrentConnections,omitempty"`
+	// +kubebuilder:default:=false
+	UseCompression bool `json:"useCompression"`
+	// +kubebuilder:default:=false
+	PropagateClientAcceptEncoding bool `json:"propagateClientAcceptEncoding"`
+	// +kubebuilder:default:=false
+	FollowRedirects bool `json:"followRedirects"`
+	// +kubebuilder:default:=true
+	ClearTextUpgrade bool `json:"clearTextUpgrade"`
+	// +kubebuilder:default:=`HTTP_1_1`
+	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
 }
 
 type HttpClientSslOptions struct {
-	TrustAll         bool        `json:"trustAll,omitempty"`
+	// +kubebuilder:default:=false
+	TrustAll bool `json:"trustAll,omitempty"`
+	// +kubebuilder:default:=true
 	HostnameVerifier bool        `json:"hostnameVerifier,omitempty"`
 	TrustStore       *TrustStore `json:"trustStore,omitempty"`
 	KeyStore         *KeyStore   `json:"keyStore,omitempty"`
 }
 
 type HttpProxy struct {
-	Enabled        bool          `json:"enabled,omitempty"`
+	// +kubebuilder:default:=false
+	Enabled bool `json:"enabled,omitempty"`
+	// +kubebuilder:default:=false
 	UseSystemProxy bool          `json:"useSystemProxy,omitempty"`
 	Host           string        `json:"host,omitempty"`
 	Port           int           `json:"port,omitempty"`

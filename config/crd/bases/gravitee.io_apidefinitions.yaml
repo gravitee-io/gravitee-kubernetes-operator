@@ -583,28 +583,47 @@ spec:
                               http:
                                 properties:
                                   clearTextUpgrade:
+                                    default: true
                                     type: boolean
                                   connectTimeout:
                                     format: int64
                                     type: integer
                                   followRedirects:
+                                    default: false
                                     type: boolean
                                   idleTimeout:
                                     format: int64
                                     type: integer
                                   keepAlive:
+                                    default: true
                                     type: boolean
                                   maxConcurrentConnections:
                                     type: integer
                                   pipelining:
+                                    default: false
+                                    type: boolean
+                                  propagateClientAcceptEncoding:
+                                    default: false
                                     type: boolean
                                   readTimeout:
                                     format: int64
                                     type: integer
                                   useCompression:
+                                    default: false
                                     type: boolean
                                   version:
+                                    default: HTTP_1_1
+                                    enum:
+                                    - HTTP_1_1
+                                    - HTTP_2
                                     type: string
+                                required:
+                                - clearTextUpgrade
+                                - followRedirects
+                                - keepAlive
+                                - pipelining
+                                - propagateClientAcceptEncoding
+                                - useCompression
                                 type: object
                               inherit:
                                 type: boolean
@@ -613,6 +632,7 @@ spec:
                               proxy:
                                 properties:
                                   enabled:
+                                    default: false
                                     type: boolean
                                   host:
                                     type: string
@@ -623,6 +643,7 @@ spec:
                                   type:
                                     type: string
                                   useSystemProxy:
+                                    default: false
                                     type: boolean
                                   username:
                                     type: string
@@ -630,6 +651,7 @@ spec:
                               ssl:
                                 properties:
                                   hostnameVerifier:
+                                    default: true
                                     type: boolean
                                   keyStore:
                                     properties:
@@ -637,6 +659,7 @@ spec:
                                         type: string
                                     type: object
                                   trustAll:
+                                    default: false
                                     type: boolean
                                   trustStore:
                                     properties:
@@ -663,28 +686,47 @@ spec:
                         http:
                           properties:
                             clearTextUpgrade:
+                              default: true
                               type: boolean
                             connectTimeout:
                               format: int64
                               type: integer
                             followRedirects:
+                              default: false
                               type: boolean
                             idleTimeout:
                               format: int64
                               type: integer
                             keepAlive:
+                              default: true
                               type: boolean
                             maxConcurrentConnections:
                               type: integer
                             pipelining:
+                              default: false
+                              type: boolean
+                            propagateClientAcceptEncoding:
+                              default: false
                               type: boolean
                             readTimeout:
                               format: int64
                               type: integer
                             useCompression:
+                              default: false
                               type: boolean
                             version:
+                              default: HTTP_1_1
+                              enum:
+                              - HTTP_1_1
+                              - HTTP_2
                               type: string
+                          required:
+                          - clearTextUpgrade
+                          - followRedirects
+                          - keepAlive
+                          - pipelining
+                          - propagateClientAcceptEncoding
+                          - useCompression
                           type: object
                         load_balancing:
                           properties:
@@ -696,6 +738,7 @@ spec:
                         proxy:
                           properties:
                             enabled:
+                              default: false
                               type: boolean
                             host:
                               type: string
@@ -706,6 +749,7 @@ spec:
                             type:
                               type: string
                             useSystemProxy:
+                              default: false
                               type: boolean
                             username:
                               type: string
@@ -815,6 +859,7 @@ spec:
                         ssl:
                           properties:
                             hostnameVerifier:
+                              default: true
                               type: boolean
                             keyStore:
                               properties:
@@ -822,6 +867,7 @@ spec:
                                   type: string
                               type: object
                             trustAll:
+                              default: false
                               type: boolean
                             trustStore:
                               properties:

@@ -237,6 +237,8 @@ var _ = Describe("Create", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Init existing api in management api")
+			apiDefinitionFixture.Spec.DefinitionVersion = base.DefinitionVersionV2
+			apiDefinitionFixture.Spec.Properties = make([]*base.Property, 0)
 			existingApiSpec := apiDefinitionFixture.Spec.DeepCopy()
 			existingApiSpec.ID = uuid.NewV4String()
 			existingApiSpec.CrossID = uuid.FromStrings(apiDefinitionFixture.GetNamespacedName().String())
@@ -309,8 +311,10 @@ var _ = Describe("Create", func() {
 					Description: "This is to mimic what happens when applying an existing API",
 					ID:          "258198cb-bd66-4010-b3d4-9f7bee97763b",
 					CrossID:     "1cac491c-acd2-4530-bf97-0627ccf94060",
+					Properties:  make([]*base.Property, 0),
 				},
-				Version: "1",
+				Version:           "1",
+				DefinitionVersion: base.DefinitionVersionV2,
 				Plans: []*v2.Plan{
 					v2.NewPlan(
 						base.NewPlan("key-less", "Free Plan").
