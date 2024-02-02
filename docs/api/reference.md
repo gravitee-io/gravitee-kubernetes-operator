@@ -1966,8 +1966,55 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>followRedirects</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>pipelining</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>useCompression</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -1975,13 +2022,6 @@ The definition context is used to inform a management API instance that this API
           <br/>
           <br/>
             <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>followRedirects</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1994,22 +2034,8 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>pipelining</b></td>
-        <td>boolean</td>
         <td>
           <br/>
         </td>
@@ -2024,17 +2050,13 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>useCompression</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>version</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: HTTP_1_1, HTTP_2<br/>
+            <i>Default</i>: HTTP_1_1<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2062,6 +2084,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2097,6 +2121,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2131,6 +2157,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2145,6 +2173,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2233,8 +2263,55 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>followRedirects</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>pipelining</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>useCompression</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -2242,13 +2319,6 @@ The definition context is used to inform a management API instance that this API
           <br/>
           <br/>
             <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>followRedirects</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2261,22 +2331,8 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>pipelining</b></td>
-        <td>boolean</td>
         <td>
           <br/>
         </td>
@@ -2291,17 +2347,13 @@ The definition context is used to inform a management API instance that this API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>useCompression</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>version</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           <br/>
+          <br/>
+            <i>Enum</i>: HTTP_1_1, HTTP_2<br/>
+            <i>Default</i>: HTTP_1_1<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2356,6 +2408,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2391,6 +2445,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2798,6 +2854,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2812,6 +2870,8 @@ The definition context is used to inform a management API instance that this API
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>

@@ -27,10 +27,13 @@ type Api struct {
 	// +kubebuilder:validation:Required
 	Version string `json:"version,omitempty"`
 	// +kubebuilder:default:=DEFAULT
-	FlowMode     FlowMode  `json:"flow_mode,omitempty"`
-	Proxy        *Proxy    `json:"proxy,omitempty"`
-	Services     *Services `json:"services,omitempty"`
-	Flows        []Flow    `json:"flows,omitempty"`
-	PathMappings []string  `json:"path_mappings,omitempty"`
-	Plans        []*Plan   `json:"plans,omitempty"`
+	FlowMode FlowMode  `json:"flow_mode,omitempty"`
+	Proxy    *Proxy    `json:"proxy,omitempty"`
+	Services *Services `json:"services,omitempty"`
+	// +kubebuilder:validation:Optional
+	Flows []Flow `json:"flows"`
+	// +kubebuilder:validation:Optional
+	PathMappings []string `json:"path_mappings"`
+	// +kubebuilder:validation:Optional
+	Plans []*Plan `json:"plans"`
 }
