@@ -16,7 +16,7 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: with-logging
+  name: api-with-logging
 spec:
   name: "With logging"
   version: "1.0"
@@ -27,9 +27,9 @@ spec:
       security: "KEY_LESS"
   proxy:
     logging:
-        mode: "CLIENT_PROXY"
-        content: "HEADERS_PAYLOADS"
-        scope: "REQUEST_RESPONSE"
+      mode: "CLIENT_PROXY"
+      content: "HEADERS_PAYLOADS"
+      scope: "REQUEST_RESPONSE"
     virtual_hosts:
       - path: "/with-logging"
     groups:

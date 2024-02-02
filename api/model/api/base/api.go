@@ -29,15 +29,20 @@ type ApiBase struct {
 	State string `json:"state,omitempty"`
 	// +kubebuilder:default:=`CREATED`
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
-	Tags           []string       `json:"tags,omitempty"`
-	Labels         []string       `json:"labels,omitempty"`
+	// +kubebuilder:validation:Optional
+	Tags []string `json:"tags"`
+	// +kubebuilder:validation:Optional
+	Labels []string `json:"labels"`
 	// +kubebuilder:default:=PRIVATE
-	Visibility        ApiVisibility                           `json:"visibility,omitempty"`
-	PrimaryOwner      *Member                                 `json:"primaryOwner,omitempty"`
-	Properties        []*Property                             `json:"properties,omitempty"`
-	Metadata          []*MetadataEntry                        `json:"metadata,omitempty"`
+	Visibility   ApiVisibility `json:"visibility,omitempty"`
+	PrimaryOwner *Member       `json:"primaryOwner,omitempty"`
+	// +kubebuilder:validation:Optional
+	Properties []*Property `json:"properties"`
+	// +kubebuilder:validation:Optional
+	Metadata          []*MetadataEntry                        `json:"metadata"`
 	ResponseTemplates map[string]map[string]*ResponseTemplate `json:"response_templates,omitempty"`
-	Resources         []*ResourceOrRef                        `json:"resources,omitempty"`
+	// +kubebuilder:validation:Optional
+	Resources []*ResourceOrRef `json:"resources"`
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;
