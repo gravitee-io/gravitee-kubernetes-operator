@@ -28,6 +28,7 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 
 	spec := &cp.Spec
 	spec.ID = cp.PickID()
+	spec.SetDefinitionContext()
 
 	apiDefinition.Status.ID = cp.Spec.ID
 
@@ -68,8 +69,6 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 
 func (d *Delegate) updateWithContext(api *gio.ApiDefinition) error {
 	spec := &api.Spec
-
-	spec.SetDefinitionContext()
 
 	_, findErr := d.apim.APIs.GetByCrossID(spec.CrossID)
 	if errors.IgnoreNotFound(findErr) != nil {
