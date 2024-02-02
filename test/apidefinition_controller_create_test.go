@@ -236,7 +236,9 @@ var _ = Describe("Create", func() {
 					CrossID:     "1cac491c-acd2-4530-bf97-0627ccf94060",
 					Version:     "1",
 					State:       base.StateStarted,
+					Properties:  make([]*base.Property, 0),
 				},
+				DefinitionVersion: base.DefinitionVersionV2,
 				DefinitionContext: &v2.DefinitionContext{
 					Origin: "management",
 				},

@@ -88,8 +88,8 @@ var _ = Describe("API Resource Controller", func() {
 					Status:                       v1alpha1.ProcessingStatusCompleted,
 					DeprecatedStatus:             v1alpha1.ProcessingStatusCompleted,
 					State:                        "STARTED",
-					ObservedGeneration:           1,
-					DeprecatedObservedGeneration: 1,
+					ObservedGeneration:           2,
+					DeprecatedObservedGeneration: 2,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 

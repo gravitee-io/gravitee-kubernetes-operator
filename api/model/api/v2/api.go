@@ -37,14 +37,15 @@ type Api struct {
 	Proxy *Proxy `json:"proxy,omitempty"`
 	// Contains different services for the API (EndpointDiscovery, HealthCheck ...)
 	Services *Services `json:"services,omitempty"`
-	// +kubebuilder:default:={}
+	// +kubebuilder:validation:Optional
 	// The flow of the API
-	Flows []Flow `json:"flows,omitempty"`
+	Flows []Flow `json:"flows"`
 	// API Path mapping
-	PathMappings []string `json:"path_mappings,omitempty"`
-	// +kubebuilder:default:={}
+	// +kubebuilder:validation:Optional
+	PathMappings []string `json:"path_mappings"`
 	// API plans
-	Plans []*Plan `json:"plans,omitempty"`
+	// +kubebuilder:validation:Optional
+	Plans []*Plan `json:"plans"`
 	// local defines if the api is local or not.
 	//
 	// If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API

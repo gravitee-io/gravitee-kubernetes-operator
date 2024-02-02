@@ -401,7 +401,7 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
         <td><b><a href="#apidefinitionspecmetadataindex">metadata</a></b></td>
         <td>[]object</td>
         <td>
-          List of API metadata entries<br/>
+          A list of Response Templates for the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -436,7 +436,7 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
         <td><b><a href="#apidefinitionspecpropertiesindex">properties</a></b></td>
         <td>[]object</td>
         <td>
-          List of Properties for the API<br/>
+          List of API metadata entries<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2176,8 +2176,55 @@ Custom HTTP client options used for this endpoint
         <td>boolean</td>
         <td>
           Should HTTP/2 clear text upgrade be used or not ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>followRedirects</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP redirects be followed or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          Should keep alive be used for the HTTP connection ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>pipelining</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>useCompression</b></td>
+        <td>boolean</td>
+        <td>
+          Should compression be used or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -2185,13 +2232,6 @@ Custom HTTP client options used for this endpoint
           Connection timeout of the http connection<br/>
           <br/>
             <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>followRedirects</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP redirects be followed or not ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2204,24 +2244,10 @@ Custom HTTP client options used for this endpoint
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          Should keep alive be used for the HTTP connection ?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
           HTTP max concurrent connections<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>pipelining</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2234,17 +2260,13 @@ Custom HTTP client options used for this endpoint
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>useCompression</b></td>
-        <td>boolean</td>
-        <td>
-          Should compression be used or not ?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>version</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           HTTP Protocol Version (Possible values Http1 or Http2)<br/>
+          <br/>
+            <i>Enum</i>: HTTP_1_1, HTTP_2<br/>
+            <i>Default</i>: HTTP_1_1<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2272,6 +2294,8 @@ Configure the HTTP Proxy settings to reach target if needed
         <td>boolean</td>
         <td>
           Specifies that the HTTP connection will be established through a proxy<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2307,6 +2331,8 @@ Configure the HTTP Proxy settings to reach target if needed
         <td>boolean</td>
         <td>
           If true, the proxy defined at the system level will be used<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2341,6 +2367,8 @@ Custom HTTP SSL client options used for this endpoint
         <td>boolean</td>
         <td>
           Verify Hostname when establishing connection<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2355,6 +2383,8 @@ Custom HTTP SSL client options used for this endpoint
         <td>boolean</td>
         <td>
           Whether to trust all issuers or not<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2443,8 +2473,55 @@ Custom HTTP SSL client options used for this EndpointGroup
         <td>boolean</td>
         <td>
           Should HTTP/2 clear text upgrade be used or not ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>followRedirects</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP redirects be followed or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          Should keep alive be used for the HTTP connection ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>pipelining</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>useCompression</b></td>
+        <td>boolean</td>
+        <td>
+          Should compression be used or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -2452,13 +2529,6 @@ Custom HTTP SSL client options used for this EndpointGroup
           Connection timeout of the http connection<br/>
           <br/>
             <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>followRedirects</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP redirects be followed or not ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2471,24 +2541,10 @@ Custom HTTP SSL client options used for this EndpointGroup
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          Should keep alive be used for the HTTP connection ?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
           HTTP max concurrent connections<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>pipelining</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2501,17 +2557,13 @@ Custom HTTP SSL client options used for this EndpointGroup
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>useCompression</b></td>
-        <td>boolean</td>
-        <td>
-          Should compression be used or not ?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>version</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           HTTP Protocol Version (Possible values Http1 or Http2)<br/>
+          <br/>
+            <i>Enum</i>: HTTP_1_1, HTTP_2<br/>
+            <i>Default</i>: HTTP_1_1<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2569,6 +2621,8 @@ Configure the HTTP Proxy settings for this EndpointGroup if needed
         <td>boolean</td>
         <td>
           Specifies that the HTTP connection will be established through a proxy<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2604,6 +2658,8 @@ Configure the HTTP Proxy settings for this EndpointGroup if needed
         <td>boolean</td>
         <td>
           If true, the proxy defined at the system level will be used<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3011,6 +3067,8 @@ Custom HTTP SSL client options used for this EndpointGroup
         <td>boolean</td>
         <td>
           Verify Hostname when establishing connection<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3025,6 +3083,8 @@ Custom HTTP SSL client options used for this EndpointGroup
         <td>boolean</td>
         <td>
           Whether to trust all issuers or not<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4538,7 +4598,7 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         <td><b><a href="#apidefinitionspecmetadataindex-1">metadata</a></b></td>
         <td>[]object</td>
         <td>
-          List of API metadata entries<br/>
+          A list of Response Templates for the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4566,7 +4626,7 @@ ApiDefinitionSpec defines the desired state of ApiDefinition.
         <td><b><a href="#apidefinitionspecpropertiesindex-1">properties</a></b></td>
         <td>[]object</td>
         <td>
-          List of Properties for the API<br/>
+          List of API metadata entries<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5586,8 +5646,55 @@ Endpoint group http client options
         <td>boolean</td>
         <td>
           Should HTTP/2 clear text upgrade be used or not ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>followRedirects</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP redirects be followed or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          Should keep alive be used for the HTTP connection ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>pipelining</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>useCompression</b></td>
+        <td>boolean</td>
+        <td>
+          Should compression be used or not ?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -5595,13 +5702,6 @@ Endpoint group http client options
           Connection timeout of the http connection<br/>
           <br/>
             <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>followRedirects</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP redirects be followed or not ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5614,24 +5714,10 @@ Endpoint group http client options
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          Should keep alive be used for the HTTP connection ?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
           HTTP max concurrent connections<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>pipelining</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5644,17 +5730,13 @@ Endpoint group http client options
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>useCompression</b></td>
-        <td>boolean</td>
-        <td>
-          Should compression be used or not ?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>version</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           HTTP Protocol Version (Possible values Http1 or Http2)<br/>
+          <br/>
+            <i>Enum</i>: HTTP_1_1, HTTP_2<br/>
+            <i>Default</i>: HTTP_1_1<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5842,6 +5924,8 @@ Endpoint group http client SSL options
         <td>boolean</td>
         <td>
           Verify Hostname when establishing connection<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5856,6 +5940,8 @@ Endpoint group http client SSL options
         <td>boolean</td>
         <td>
           Whether to trust all issuers or not<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>

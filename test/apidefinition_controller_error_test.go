@@ -205,8 +205,8 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					CrossID:                      apiDefinition.GetOrGenerateCrossID(),
 					ID:                           apiDefinition.PickID(),
 					State:                        "STARTED",
-					ObservedGeneration:           1,
-					DeprecatedObservedGeneration: 1,
+					ObservedGeneration:           2,
+					DeprecatedObservedGeneration: 2,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 
@@ -238,7 +238,7 @@ var _ = Describe("Checking NoneRecoverable && Recoverable error", Label("Disable
 					ID:                 apiDefinition.PickID(),
 					CrossID:            apiDefinition.GetOrGenerateCrossID(),
 					State:              "STARTED",
-					ObservedGeneration: 2,
+					ObservedGeneration: 3,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 		})

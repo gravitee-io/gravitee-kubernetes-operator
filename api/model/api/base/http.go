@@ -23,12 +23,8 @@ const (
 	Socks5 SOCKSType     = "SOCKS5"
 )
 
+// +kubebuilder:validation:Enum=HTTP_1_1;HTTP_2;
 type ProtocolVersion string
-
-const (
-	Http1 ProtocolVersion = "HTTP_1_1"
-	Http2 ProtocolVersion = "HTTP_2"
-)
 
 // +kubebuilder:validation:Enum=GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER
 type HttpMethod string
@@ -63,53 +59,52 @@ type Cors struct {
 type HttpClientOptions struct {
 	//  Idle Timeout for the http connection
 	IdleTimeout uint64 `json:"idleTimeout,omitempty"`
-
 	// Connection timeout of the http connection
 	ConnectTimeout uint64 `json:"connectTimeout,omitempty"`
-
+	// +kubebuilder:default:=true
 	// Should keep alive be used for the HTTP connection ?
-	KeepAlive bool `json:"keepAlive,omitempty"`
-
+	KeepAlive bool `json:"keepAlive"`
 	// Read timeout
 	ReadTimeout uint64 `json:"readTimeout,omitempty"`
-
+	// +kubebuilder:default:=false
 	// Should HTTP/1.1 pipelining be used for the connection or not ?
-	Pipelining bool `json:"pipelining,omitempty"`
-
+	Pipelining bool `json:"pipelining"`
 	// HTTP max concurrent connections
 	MaxConcurrentConnections int `json:"maxConcurrentConnections,omitempty"`
-
+	// +kubebuilder:default:=false
 	// Should compression be used or not ?
-	UseCompression bool `json:"useCompression,omitempty"`
-
+	UseCompression bool `json:"useCompression"`
+	// +kubebuilder:default:=false
+	PropagateClientAcceptEncoding bool `json:"propagateClientAcceptEncoding"`
+	// +kubebuilder:default:=false
 	// Should HTTP redirects be followed or not ?
-	FollowRedirects bool `json:"followRedirects,omitempty"`
-
+	FollowRedirects bool `json:"followRedirects"`
+	// +kubebuilder:default:=true
 	// Should HTTP/2 clear text upgrade be used or not ?
-	ClearTextUpgrade bool `json:"clearTextUpgrade,omitempty"`
-
+	ClearTextUpgrade bool `json:"clearTextUpgrade"`
+	// +kubebuilder:default:=`HTTP_1_1`
 	// HTTP Protocol Version (Possible values Http1 or Http2)
-	Version ProtocolVersion `json:"version,omitempty"`
+	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
 }
 
 type HttpClientSslOptions struct {
 	// Whether to trust all issuers or not
+	// +kubebuilder:default:=false
 	TrustAll bool `json:"trustAll,omitempty"`
-
+	// +kubebuilder:default:=true
 	// Verify Hostname when establishing connection
 	HostnameVerifier bool `json:"hostnameVerifier,omitempty"`
-
 	// TrustStore type (possible values PEM, PKCS12, JKS)
 	TrustStore *TrustStore `json:"trustStore,omitempty"`
-
 	// KeyStore type (possible values PEM, PKCS12, JKS)
 	KeyStore *KeyStore `json:"keyStore,omitempty"`
 }
 
 type HttpProxy struct {
+	// +kubebuilder:default:=false
 	// Specifies that the HTTP connection will be established through a proxy
 	Enabled bool `json:"enabled,omitempty"`
-
+	// +kubebuilder:default:=false
 	// If true, the proxy defined at the system level will be used
 	UseSystemProxy bool `json:"useSystemProxy,omitempty"`
 

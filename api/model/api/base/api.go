@@ -38,27 +38,29 @@ type ApiBase struct {
 	// +kubebuilder:default:=`CREATED`
 	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
+	// +kubebuilder:validation:Optional
 	// List of Tags of the API
-	Tags []string `json:"tags,omitempty"`
+	Tags []string `json:"tags"`
+	// +kubebuilder:validation:Optional
 	// List of labels of the API
-	Labels []string `json:"labels,omitempty"`
+	Labels []string `json:"labels"`
 	// +kubebuilder:default:=PRIVATE
 	// Should the API be publicly available from the portal or not ?
 	Visibility ApiVisibility `json:"visibility,omitempty"`
 	// Specify the primary member that owns the API
 	PrimaryOwner *Member `json:"primaryOwner,omitempty"`
-	// +kubebuilder:default:={}
-	// List of Properties for the API
-	Properties []*Property `json:"properties,omitempty"`
-	// +kubebuilder:default:={}
+	// +kubebuilder:validation:Optional
 	// List of API metadata entries
-	Metadata []*MetadataEntry `json:"metadata,omitempty"`
+	Properties []*Property `json:"properties"`
+	// +kubebuilder:validation:Optional
+	// A list of Response Templates for the API
+	Metadata []*MetadataEntry `json:"metadata"`
 	// A list of Response Templates for the API
 	ResponseTemplates map[string]map[string]*ResponseTemplate `json:"response_templates,omitempty"`
-	// +kubebuilder:default:={}
+	// +kubebuilder:validation:Optional
 	// Resources can be either inlined or reference the namespace and name
 	// of an <a href="#apiresource">existing API resource definition</a>.
-	Resources []*ResourceOrRef `json:"resources,omitempty"`
+	Resources []*ResourceOrRef `json:"resources"`
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;
