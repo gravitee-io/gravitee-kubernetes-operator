@@ -34,6 +34,8 @@ const (
 	gioTypeKey           = "gio-type"
 	orgKey               = "organizationId"
 	envKey               = "environmentId"
+	defaultEnvId         = "DEFAULT"
+	defaultOrgId         = "DEFAULT"
 )
 
 func (d *Delegate) saveConfigMap(
@@ -72,6 +74,9 @@ func (d *Delegate) saveConfigMap(
 	if d.apim != nil {
 		cm.Data[orgKey] = d.apim.OrgID()
 		cm.Data[envKey] = d.apim.EnvID()
+	} else {
+		cm.Data[orgKey] = defaultOrgId
+		cm.Data[envKey] = defaultEnvId
 	}
 
 	jsonDefinition, err := json.Marshal(definition)
