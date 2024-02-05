@@ -13,10 +13,9 @@
 # limitations under the License.
 
 suite: manager deployment
-templates:
-  - "manager/deployment.yaml"
 tests:
   - it: Should have kube rbac proxy sidecar
+    template: "manager/deployment.yaml"
     asserts:
       - hasDocuments:
           count: 1
@@ -29,6 +28,7 @@ tests:
           count: 2
 
   - it: Should not have kube rbac proxy sidecar when disabled
+    template: "manager/deployment.yaml"
     set:
       rbacProxy:
         enabled: false
@@ -44,6 +44,7 @@ tests:
           count: 1
 
   - it: Should not have kube rbac proxy sidecar when metrics are disabled
+    template: "manager/deployment.yaml"
     set:
       manager:
         metrics:
