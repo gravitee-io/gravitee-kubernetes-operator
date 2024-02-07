@@ -86,7 +86,7 @@ var _ = Describe("API Resource Controller", func() {
 					ID:                 createdApi.PickID(),
 					Status:             gio.ProcessingStatusCompleted,
 					State:              "STARTED",
-					ObservedGeneration: 1,
+					ObservedGeneration: 2,
 				})
 			}, timeout, interval).ShouldNot(HaveOccurred())
 

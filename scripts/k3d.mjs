@@ -22,8 +22,6 @@ import {
     initCluster,
     installK3d,
     createSecret,
-    createGwKeystoreSecret,
-    createGwKeystoreSecretCredentials,
     createHttpBinSecret,
     createTemplatingSecret,
     createTemplatingConfigmap
@@ -79,18 +77,6 @@ LOG.blue(`
 `);
 
 await time(createSecret);
-
-LOG.blue(`
-  ☸ Storing Gateway keystore as a secret ...
-`);
-
-await time(createGwKeystoreSecret);
-
-LOG.blue(`
-  ☸ Storing Gateway keystore credentials as a secret ...
-`);
-
-await time(createGwKeystoreSecretCredentials);
 
 LOG.blue(`
   ☸ Storing Templating secret ...

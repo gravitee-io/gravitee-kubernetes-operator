@@ -56,7 +56,7 @@ This is where you can configure the deployment itself and the way the operator w
 | Name                                        | Description                                                                                                                                     | Value                            |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
 | `manager.image.repository`                  | Specifies the docker registry and image name to use.                                                                                            | `graviteeio/kubernetes-operator` |
-| `manager.image.tag`                         | Specifies the docker image tag to use.                                                                                                          | `latest`                         |
+| `manager.image.tag`                         | Specifies the docker image tag to use. If no value is set, the chart version will be used.                                                      | `""`                             |
 | `manager.logs.json`                         | Whether to output manager logs in JSON format.                                                                                                  | `true`                           |
 | `manager.configMap.name`                    | The name of the config map used to set the manager config from this values.                                                                     | `gko-config`                     |
 | `manager.resources.limits.cpu`              | The CPU resources limits for the GKO Manager container                                                                                          | `500m`                           |
@@ -78,10 +78,11 @@ content: '{ "message": "Not Found" }'
 contentType: application/json
 ```
 
-| Name                              | Description                                                                      | Value |
-| --------------------------------- | -------------------------------------------------------------------------------- | ----- |
-| `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`  |
-| `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`  |
+| Name                              | Description                                                                      | Value            |
+| --------------------------------- | -------------------------------------------------------------------------------- | ---------------- |
+| `ingress.ingressClasses`          | list of ingress classes that the gateway will handle.                            | `["graviteeio"]` |
+| `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`             |
+| `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`             |
 
 ### HTTP Client
 

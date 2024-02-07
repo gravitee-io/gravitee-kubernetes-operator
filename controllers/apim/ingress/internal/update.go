@@ -27,8 +27,8 @@ func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
 		return err
 	}
 
-	if err := d.createUpdateTLSSecret(desired); err != nil {
-		d.log.Error(err, "An error occurred while updating the TLS secretes")
+	if err := d.updateIngressTLSReference(desired); err != nil {
+		d.log.Error(err, "An error occurred while updating the PEM registry")
 		return err
 	}
 

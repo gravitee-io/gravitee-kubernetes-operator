@@ -50,8 +50,8 @@ manager:
   image:
     ## @param manager.image.repository Specifies the docker registry and image name to use.
     repository: graviteeio/kubernetes-operator
-    ## @param manager.image.tag Specifies the docker image tag to use.
-    tag: latest
+    ## @param manager.image.tag Specifies the docker image tag to use. If no value is set, the chart version will be used.
+    tag: ""
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
     json: true
@@ -99,6 +99,9 @@ manager:
 ## ```
 ## @descriptionEnd
 ingress:
+  ## @param ingress.ingressClasses list of ingress classes that the gateway will handle.
+  ingressClasses:
+    - graviteeio
   templates:
     404:
       ## @param ingress.templates.404.name Name of the config map storing the HTTP 404 ingress response template.
