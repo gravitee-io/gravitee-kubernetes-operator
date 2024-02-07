@@ -1,3 +1,19 @@
+# [0.12.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.11.0...0.12.0) (2024-02-07)
+
+
+### Bug Fixes
+
+* allow support for http2 requests on ingresses ([12aebe9](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/12aebe9f4735674ebc184efbb8eedab762bc457d))
+* assign template to any test ([cb1f941](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/cb1f941de570b000c24a39f2941d63a8d230948b))
+* default manager image tag to chart version ([869e3bb](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/869e3bbad6ee6f9ea8435580f1be19e6b6190c7d))
+* set default values for orgId and envId ([01456d0](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/01456d0028003b2c85b9bbd91e59bb661117abfb))
+* use empty arrays instead of null in serialized JSON ([40c9ecf](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/40c9ecfae50e3357fc8155f00a15287b8d05bc7a))
+
+
+### Features
+
+* introduce pem registry ([ce09be0](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ce09be0e6a3cb9792939408b61dd9f501c9882ef))
+
 # [0.11.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.10.0...0.11.0) (2023-11-10)
 
 
