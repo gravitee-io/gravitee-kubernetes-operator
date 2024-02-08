@@ -2160,14 +2160,7 @@ The definition context is used to inform a management API instance that this API
           <br/>
             <i>Default</i>: true<br/>
         </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexsslkeystore">keyStore</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>trustAll</b></td>
         <td>boolean</td>
@@ -2175,6 +2168,13 @@ The definition context is used to inform a management API instance that this API
           <br/>
           <br/>
             <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexsslkeystore">keyStore</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2857,14 +2857,7 @@ The definition context is used to inform a management API instance that this API
           <br/>
             <i>Default</i>: true<br/>
         </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecproxygroupsindexsslkeystore">keyStore</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>trustAll</b></td>
         <td>boolean</td>
@@ -2872,6 +2865,13 @@ The definition context is used to inform a management API instance that this API
           <br/>
           <br/>
             <i>Default</i>: false<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexsslkeystore">keyStore</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr><tr>
