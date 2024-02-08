@@ -67,6 +67,8 @@ helm install \
     --set "gateway.env[1].value=1024m" \
     --set "gateway.reporters.elasticsearch.enabled=false" \
     --set "gateway.image.tag=${env.APIM_IMAGE_TAG}" \
+    --set "installation.api.url=http://localhost:${env.NGINX_LOAD_BALANCER_PORT}" \
+    --set "installation.standalone.console.urls[0]=http://localhost:${env.NGINX_LOAD_BALANCER_PORT}" \
     --set "api.ingress.management.hosts[0]=localhost" \
     --set "api.ingress.management.tls=false" \
     --set "api.portal.enabled=false" \
