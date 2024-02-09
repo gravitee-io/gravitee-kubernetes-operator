@@ -59,6 +59,7 @@ commands:
       docker-image-name:
         type: string
     steps:
+      - run: checkout
       - run:
           name: Add << parameters.docker-image-name >> to Snyk
           command: |
