@@ -56,12 +56,12 @@ commands:
 
   add-docker-image-to-snyk:
     parameters:
-      docker-image-name:
+      docker_image_name:
         type: string
     steps:
       - run: checkout
       - run:
-          name: Add << parameters.docker-image-name >> to Snyk
+          name: Add << parameters.docker_image_name >> to Snyk
           command: |
             curl --fail \
                  --include \
@@ -70,7 +70,7 @@ commands:
                  --header "Authorization: token ${SNYK_API_TOKEN}" \
                  --data-binary "{
               \"target\": {
-                \"name\": \"graviteeio/<< parameters.docker-image-name >>:$(git describe --tags --abbrev=0)\"
+                \"name\": \"<< parameters.docker_image_name >>:$(git describe --tags --abbrev=0)\"
               }
             }" \
             "https://api.snyk.io/api/v1/org/${SNYK_ORG_ID}/integrations/${SNYK_INTEGRATION_ID}/import"
@@ -433,11 +433,13 @@ jobs:
     parameters:
       integration_id_key:
        type: string
+      docker_image_name:
+       type: string
     steps:
       - load-snyk-env:
           integration_id_key: << parameters.integration_id_key >>
       - add-docker-image-to-snyk:
-          docker-image-name: graviteeio/kubernetes-operator
+          docker_image_name: << parameters.integration_id_key >>
 
 workflows:
   pull_requests:
@@ -505,6 +507,13 @@ workflows:
             - Test operator
             - Test chart
             - Authenticate on cluster
+      - add-docker-images-to-snyk:
+          name: Add Docker images to snyk
+          context: cicd-orchestrator
+          requires:
+            - Stage image
+          integration_id_key: gravitee_gko_acr_integration_id
+          docker_image_name: kubernetes-operator
       - helm-install:
           name: Deploy in << matrix.namespace >>
           context: cicd-orchestrator
@@ -520,12 +529,6 @@ workflows:
               tag: [alpha-latest]
           requires:
             - Stage image
-      - add-docker-images-to-snyk:
-          name: Add Docker images to snyk
-          context: cicd-orchestrator
-          requires:
-            - Stage image
-          integration_id_key: gravitee_gko_acr_integration_id
 
   release:
     when:
@@ -546,6 +549,7 @@ workflows:
           requires:
             - Semantic Release
           integration_id_key: gravitee_gko_dockerhub_integration_id
+          docker_image_name: graviteeio/kubernetes-operator
   notify-release:
     jobs:
       - notify-release-slack:
