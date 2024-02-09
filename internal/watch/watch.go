@@ -92,10 +92,10 @@ func ContextSecrets() *handler.Funcs {
 	}
 
 	return &handler.Funcs{
-		CreateFunc: func(ctx context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
+		CreateFunc: func(_ context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
 			queueSecrets(e.Object, q)
 		},
-		DeleteFunc: func(ctx context.Context, e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+		DeleteFunc: func(_ context.Context, e event.DeleteEvent, q workqueue.RateLimitingInterface) {
 			queueSecrets(e.Object, q)
 		},
 	}
@@ -132,7 +132,7 @@ func (w *Type) WatchTLSSecret() *handler.Funcs {
 // The lookupField is the field that is used to lookup the resources.
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
 func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
-	return func(ctx context.Context, e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	return func(_ context.Context, e event.UpdateEvent, q workqueue.RateLimitingInterface) {
 		ref := refs.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
 		w.queueByFieldReferencing(field, ref, q)
 	}
@@ -145,7 +145,7 @@ func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
 // This can be used to reconcile resources when have been created before their dependencies.
 // For example, when an API is created before the management context it references.
 func (w *Type) CreateFromLookup(field indexer.IndexField) CreateFunc {
-	return func(ctx context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	return func(_ context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
 		ref := refs.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
 		w.queueByFieldReferencing(field, ref, q)
 	}
