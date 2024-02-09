@@ -39,6 +39,21 @@ commands:
           event: fail
           template: basic_fail_1
 
+  load-snyk-env:
+    parameters:
+      integration_id_key:
+        type: string
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_gko_org_api_token
+          var-name: SNYK_API_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_gko_org_id
+          var-name: SNYK_ORG_ID
+      - keeper/env-export:
+          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/<< parameters.integration_id_key >>
+          var-name: SNYK_INTEGRATION_ID
+
   add-docker-image-to-snyk:
     parameters:
       docker-image-name:
@@ -204,6 +219,109 @@ jobs:
             - cover.out
       - go/save-cache
 
+
+  login-to-azure:
+    executor:
+      name: azure-cli
+      resource_class: small
+    parameters:
+      clusterName:
+        type: enum
+        enum: ["devs-preprod"]
+        description: Name of the Azure k8s cluster
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
+          var-name: AZURE_SP
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
+          var-name: AZURE_TENANT
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
+          var-name: AZURE_SP_PASSWORD
+      - when:
+          condition:
+            equal: [devs-preprod, << parameters.clusterName >>]
+          steps:
+            - run:
+                name: Get ~/.kube/config from Azure
+                command: |
+                  az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
+                  az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - .kube/config
+
+  publish-private-image:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    parameters:
+      image:
+        type: string
+      tag:
+        type: string
+    steps:
+      - checkout
+      - setup_remote_docker
+      - helm/install_helm_client
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          var-name: AZURE_DOCKER_REGISTRY_USERNAME
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - run:
+          name: Build image << parameters.image >>
+          command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
+      - run:
+          name: Publish image << parameters.image >>:<<parameters.tag >>
+          command: |
+            echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login \
+              --username $AZURE_DOCKER_REGISTRY_USERNAME \
+              --password-stdin graviteeio.azurecr.io
+            IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-push
+            docker logout graviteeio.azurecr.io
+          
+  helm-install:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    resource_class: small
+    parameters:
+      namespace:
+        type: string
+        default: "apim-apim-master"
+        description: The kubernetes namespace in which the operator is deployed
+      image:
+        type: string
+      tag:
+        type: string
+    steps:
+      - checkout
+      - helm/install_helm_client
+      - kubernetes/install-kubectl
+      - go/load-cache
+      - attach_workspace:
+          name: Restore Kubernetes config
+          at: ~/
+      - run:
+          name: Helm install the operator
+          command: |
+            helm upgrade --install \
+              gko helm/gko \
+              --set manager.scope.cluster=false \
+              --set manager.image.repository=<< parameters.image >> \
+              --set manager.image.tag=<< parameters.tag >> \
+              --set serviceAccount.name=gko-<< parameters.namespace >> \
+              -n << parameters.namespace >>
+      - run:
+          name: Rollout controller deployment
+          command: |
+            kubectl rollout restart deployment gko-controller-manager \
+              -n << parameters.namespace >>
+      - go/save-cache
+      - notify-on-failure
+
   semantic-release:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -311,16 +429,12 @@ jobs:
     docker:
       - image: cimg/base:stable
     resource_class: small
+    parameters:
+      integration_id_key:
+       type: string
     steps:
-      - keeper/env-export:
-          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_org_api_token
-          var-name: SNYK_API_TOKEN
-      - keeper/env-export:
-          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_org_id
-          var-name: SNYK_ORG_ID
-      - keeper/env-export:
-          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_apim_dockerhub_integration_id
-          var-name: SNYK_INTEGRATION_ID
+      - load-snyk-env:
+          integration_id_key: << parameters.integration_id_key >>
       - add-docker-image-to-snyk:
           docker-image-name: graviteeio/kubernetes-operator
 
@@ -360,6 +474,57 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Test
+  deploy:
+    when:
+      and:
+        - or:
+            - equal: [ci-staging, << pipeline.git.branch >>]
+            - equal: [alpha, << pipeline.git.branch >>]
+    jobs:
+      - test:
+          name: Test operator
+          context: cicd-orchestrator
+      - helm-test:
+          name: Test chart
+      - login-to-azure:
+          name: Authenticate on cluster
+          context: cicd-orchestrator
+          clusterName: devs-preprod
+      - sonarcloud-analysis:
+          name: Sonarcloud Analysis
+          context: cicd-orchestrator
+          requires:
+            - Test operator
+      - publish-private-image:
+          name: Stage image
+          image: graviteeio.azurecr.io/kubernetes-operator
+          tag: alpha-latest
+          context: cicd-orchestrator
+          requires:
+            - Test operator
+            - Test chart
+            - Authenticate on cluster
+      - helm-install:
+          name: Deploy in << matrix.namespace >>
+          context: cicd-orchestrator
+          matrix:
+            parameters:
+              namespace:
+              - apim-apim-3-20-x
+              - apim-apim-4-0-x
+              - apim-apim-4-1-x
+              - apim-apim-4-2-x
+              - apim-apim-master
+              image: [graviteeio.azurecr.io/kubernetes-operator]
+              tag: [alpha-latest]
+          requires:
+            - Stage image
+      - add-docker-images-to-snyk:
+          name: Add Docker images to snyk
+          context: cicd-orchestrator
+          requires:
+            - Stage image
+          integration_id_key: gravitee_gko_acr_integration_id
 
   release:
     when:
@@ -379,6 +544,7 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Semantic Release
+          integration_id_key: gravitee_gko_dockerhub_integration_id
   notify-release:
     jobs:
       - notify-release-slack:
