@@ -33,7 +33,7 @@ export const K3D_API_PORT = 6950;
 export const K3D_NAMESPACE_NAME = "default";
 export const NGINX_LOAD_BALANCER_PORT = 9000;
 export const GATEWAY_LOAD_BALANCER_PORT = 9001;
-export const K3D_IMAGES_REGISTRY_NAME = `${K3D_CLUSTER_NAME}.docker.localhost`;
+export const K3D_IMAGES_REGISTRY_NAME = `k3d-${K3D_CLUSTER_NAME}.docker.localhost`;
 export const K3D_IMAGES_REGISTRY_PORT = 12345;
 
 // APIM credentials
