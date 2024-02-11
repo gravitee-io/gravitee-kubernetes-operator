@@ -51,7 +51,7 @@ await time(initRegistry);
 LOG.yellow(`
   ⚠️ WARNING ⚠️ 
 
-  Assuming that host "${env.K3D_IMAGES_REGISTRY_NAME}" points to 127.0.0.1
+  Assuming that host "k3d-${env.K3D_IMAGES_REGISTRY_NAME}" points to 127.0.0.1
 
   You might need to edit your /etc/hosts file before going further.
 `);
