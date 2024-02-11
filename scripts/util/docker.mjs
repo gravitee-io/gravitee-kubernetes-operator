@@ -33,6 +33,8 @@ export async function initRegistry() {
 
         await $`k3d registry create ${env.K3D_IMAGES_REGISTRY_NAME} --port ${env.K3D_IMAGES_REGISTRY_PORT}`;
     }
+
+    K3D_IMAGES_REGISTRY = `k3d-${K3D_IMAGES_REGISTRY}`;
 }
 
 export async function registerImages() {
