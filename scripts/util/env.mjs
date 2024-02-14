@@ -38,7 +38,5 @@ export const K3D_IMAGES_REGISTRY_PORT = 12345;
 
 // APIM credentials
 export const APIM_CONTEXT_SECRET_NAME = "apim-context-credentials";
-export const GATEWAY_KEY_STORE_SECRET = "gw-keystore";
 export const HTTPBIN_EXAMPLE_COM = "httpbin.example.com";
-export const GATEWAY_KEY_STORE_CREDENTIALS_SECRET_NAME = "gw-keystore-credentials";
 export const TEMPLATING_SECRET_CONFIGMAP_NAME = "graviteeio-templating";

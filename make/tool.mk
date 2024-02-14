@@ -70,9 +70,9 @@ helm-unittest: ## Install helm-unittest plugin if necessary.
 	@helm plugin list | grep -q unittest || helm plugin install https://github.com/quintush/helm-unittest > /dev/null 2>&1
 
 .PHONY: all-tools
-install-tools: clean-tools $(ALL_TOOLS) ## Install all binary tools (use -j to run in parallel)
+install-tools: $(LOCALBIN) clean-tools $(ALL_TOOLS) ## Install all binary tools (use -j to run in parallel)
 
 .PHONY: clean-tools 
-clean-tools: ## Clean (delete) all binary tools
+clean-tools: $(LOCALBIN)## Clean (delete) all binary tools
 	@echo "Cleaning tools"
 	@find $(LOCALBIN) -type f -delete 

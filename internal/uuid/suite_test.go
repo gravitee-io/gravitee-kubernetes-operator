@@ -15,22 +15,21 @@
 package uuid
 
 import (
-	"strings"
+	"testing"
 
-	"github.com/google/uuid"
-	"github.com/zeebo/xxh3"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func FromStrings(seeds ...string) string {
-	seed := strings.Join(seeds, "")
-	h := xxh3.HashString128(seed).Bytes()
-	guid, err := uuid.FromBytes(h[:])
-	if err != nil {
-		panic(err)
-	}
-	return guid.String()
+func TestUUID(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "package uuid")
 }
 
-func NewV4String() string {
-	return uuid.NewString()
-}
+var _ = Describe("FromStrings", func() {
+	It("generates a predictable UUID", func() {
+		firstRun := FromStrings("foo", "bar")
+		secondRun := FromStrings("foo", "bar")
+		Expect(secondRun).To(Equal(firstRun))
+	})
+})
