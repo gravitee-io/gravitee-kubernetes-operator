@@ -44,6 +44,7 @@ commands:
       integration_id_key:
         type: string
     steps:
+      - checkout
       - keeper/env-export:
           secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_gko_org_api_token
           var-name: SNYK_API_TOKEN
