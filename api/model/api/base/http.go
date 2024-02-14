@@ -58,15 +58,15 @@ type HttpClientOptions struct {
 	FollowRedirects bool `json:"followRedirects"`
 	// +kubebuilder:default:=true
 	ClearTextUpgrade bool `json:"clearTextUpgrade"`
-	// +kubebuilder:default:=`HTTP_1_1`
+	// +kubebuilder:default:=HTTP_1_1
 	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
 }
 
 type HttpClientSslOptions struct {
 	// +kubebuilder:default:=false
-	TrustAll bool `json:"trustAll,omitempty"`
+	TrustAll bool `json:"trustAll"`
 	// +kubebuilder:default:=true
-	HostnameVerifier bool        `json:"hostnameVerifier,omitempty"`
+	HostnameVerifier bool        `json:"hostnameVerifier"`
 	TrustStore       *TrustStore `json:"trustStore,omitempty"`
 	KeyStore         *KeyStore   `json:"keyStore,omitempty"`
 }

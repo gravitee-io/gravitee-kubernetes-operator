@@ -680,6 +680,9 @@ spec:
                                       type:
                                         type: string
                                     type: object
+                                required:
+                                - hostnameVerifier
+                                - trustAll
                                 type: object
                               target:
                                 type: string
@@ -888,6 +891,9 @@ spec:
                                 type:
                                   type: string
                               type: object
+                          required:
+                          - hostnameVerifier
+                          - trustAll
                           type: object
                       type: object
                     type: array
