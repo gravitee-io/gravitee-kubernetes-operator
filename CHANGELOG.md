@@ -1,3 +1,11 @@
+## [0.12.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.12.0...0.12.1) (2024-02-14)
+
+
+### Bug Fixes
+
+* allow to empty array fields in API definition ([3209612](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/3209612cecaa37b53c54f3feb0a875d705e2b094))
+* use secure libs for uuid generation ([26ee612](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/26ee612b1a0bce74653fa61b7e5efd6ff247c239))
+
 # [0.12.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.11.0...0.12.0) (2024-02-07)
 
 
