@@ -461,11 +461,6 @@ spec:
                     type: string
                   type:
                     type: string
-                required:
-                - displayName
-                - email
-                - id
-                - type
                 type: object
               properties:
                 items:
