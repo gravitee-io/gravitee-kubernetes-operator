@@ -1266,28 +1266,28 @@ is managed using a kubernetes operator
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
