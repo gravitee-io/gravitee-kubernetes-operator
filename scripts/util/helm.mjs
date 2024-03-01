@@ -36,7 +36,7 @@ const helmInstallMongo = $`
 helm install \
     --namespace ${env.K3D_NAMESPACE_NAME} \
     --set "image.registry=${K3D_IMAGES_REGISTRY}" \
-    --set "image.repository=mongodb" \
+    --set "image.repository=mongo" \
     --set "image.tag=${env.MONGO_IMAGE_TAG}" \
     --set auth.enabled=false \
     --set readinessProbe.periodSeconds=30 \
@@ -46,6 +46,8 @@ helm install \
     --set resources.requests.memory=2048Mi \
     --set resources.limits.cpu=2000m \
     --set resources.requests.cpu=2000m \
+    --set architecture=standalone \
+    --set persistence.mountPath=/data/db \
     mongodb bitnami/mongodb > /dev/null
 `;
 

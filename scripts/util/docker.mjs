@@ -55,8 +55,8 @@ export async function registerImages() {
 
     const dependencyImages = [
         [
-            `docker.io/bitnami/mongodb:${env.MONGO_IMAGE_TAG}`,
-            `${K3D_IMAGES_REGISTRY}/mongodb:${env.MONGO_IMAGE_TAG}`,
+            `mongo:${env.MONGO_IMAGE_TAG}`,
+            `${K3D_IMAGES_REGISTRY}/mongo:${env.MONGO_IMAGE_TAG}`,
         ],
         [
             `docker.io/bitnami/nginx-ingress-controller:${env.NGINX_CONTROLLER_IMAGE_TAG}`,
