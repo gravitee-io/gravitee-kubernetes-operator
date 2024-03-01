@@ -59,7 +59,10 @@ ApiDefinition is the Schema for the apidefinitions API.
         <td><b><a href="#apidefinitionspec">spec</a></b></td>
         <td>object</td>
         <td>
-          The API definition is the main resource handled by the Kubernetes Operator Most of the configuration properties defined here are already documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html<br/>
+          The API definition is the main resource handled by the Kubernetes Operator
+Most of the configuration properties defined here are already documented
+in the APIM Console API Reference.
+See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -78,7 +81,10 @@ ApiDefinition is the Schema for the apidefinitions API.
 
 
 
-The API definition is the main resource handled by the Kubernetes Operator Most of the configuration properties defined here are already documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
+The API definition is the main resource handled by the Kubernetes Operator
+Most of the configuration properties defined here are already documented
+in the APIM Console API Reference.
+See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
 
 <table>
     <thead>
@@ -107,7 +113,8 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
         <td><b><a href="#apidefinitionspecdefinition_context">definition_context</a></b></td>
         <td>object</td>
         <td>
-          The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator<br/>
+          The definition context is used to inform a management API instance that this API definition
+is managed using a kubernetes operator<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -180,9 +187,16 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
         <td><b>local</b></td>
         <td>boolean</td>
         <td>
-          local defines if the api is local or not. 
- If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API but without setting the update flag in the datastore. 
- If false, the Operator will not create the ConfigMaps for the Gateway. Instead, it pushes the API to the Management API and forces it to update the event in the datastore. This will cause Gateways to fetch the APIs from the datastore<br/>
+          local defines if the api is local or not.
+
+
+If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
+but without setting the update flag in the datastore.
+
+
+If false, the Operator will not create the ConfigMaps for the Gateway.
+Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
+This will cause Gateways to fetch the APIs from the datastore<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -334,7 +348,8 @@ The API definition is the main resource handled by the Kubernetes Operator Most 
 
 
 
-The definition context is used to inform a management API instance that this API definition is managed using a kubernetes operator
+The definition context is used to inform a management API instance that this API definition
+is managed using a kubernetes operator
 
 <table>
     <thead>
@@ -3571,7 +3586,8 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td><b>generation</b></td>
         <td>integer</td>
         <td>
-          This field is kept for backward compatibility and shall be removed in future versions. Use observedGeneration instead.<br/>
+          This field is kept for backward compatibility and shall be removed in future versions.
+Use observedGeneration instead.<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -3619,7 +3635,8 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td><b>status</b></td>
         <td>enum</td>
         <td>
-          This field is kept for backward compatibility and shall be removed in future versions. Use processingStatus instead.<br/>
+          This field is kept for backward compatibility and shall be removed in future versions.
+Use processingStatus instead.<br/>
           <br/>
             <i>Enum</i>: Completed, Failed<br/>
         </td>
@@ -4320,7 +4337,9 @@ ManagementContext represents the configuration for a specific environment
         <td><b><a href="#managementcontextspecauth">auth</a></b></td>
         <td>object</td>
         <td>
-          Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.<br/>
+          Auth defines the authentication method used to connect to the API Management.
+Can be either basic authentication credentials, a bearer token
+or a reference to a kubernetes secret holding one of these two configurations.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4353,7 +4372,9 @@ ManagementContext represents the configuration for a specific environment
 
 
 
-Auth defines the authentication method used to connect to the API Management. Can be either basic authentication credentials, a bearer token or a reference to a kubernetes secret holding one of these two configurations.
+Auth defines the authentication method used to connect to the API Management.
+Can be either basic authentication credentials, a bearer token
+or a reference to a kubernetes secret holding one of these two configurations.
 
 <table>
     <thead>
@@ -4368,7 +4389,8 @@ Auth defines the authentication method used to connect to the API Management. Ca
         <td><b>bearerToken</b></td>
         <td>string</td>
         <td>
-          The bearer token used to authenticate against the API Management instance (must be generated from an admin account)<br/>
+          The bearer token used to authenticate against the API Management instance
+(must be generated from an admin account)<br/>
         </td>
         <td>false</td>
       </tr><tr>
