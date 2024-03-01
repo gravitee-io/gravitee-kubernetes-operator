@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: apidefinitions.gravitee.io
 spec:
   group: gravitee.io
@@ -35,21 +35,28 @@ spec:
         description: ApiDefinition is the Schema for the apidefinitions API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
           spec:
-            description: The API definition is the main resource handled by the Kubernetes
-              Operator Most of the configuration properties defined here are already
-              documented in the APIM Console API Reference. See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
+            description: |-
+              The API definition is the main resource handled by the Kubernetes Operator
+              Most of the configuration properties defined here are already documented
+              in the APIM Console API Reference.
+              See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
             properties:
               contextRef:
                 properties:
@@ -63,9 +70,9 @@ spec:
               crossId:
                 type: string
               definition_context:
-                description: The definition context is used to inform a management
-                  API instance that this API definition is managed using a kubernetes
-                  operator
+                description: |-
+                  The definition context is used to inform a management API instance that this API definition
+                  is managed using a kubernetes operator
                 properties:
                   mode:
                     default: fully_managed
@@ -198,13 +205,17 @@ spec:
                 type: string
               local:
                 default: true
-                description: "local defines if the api is local or not. \n If true,
-                  the Operator will create the ConfigMaps for the Gateway and pushes
-                  the API to the Management API but without setting the update flag
-                  in the datastore. \n If false, the Operator will not create the
-                  ConfigMaps for the Gateway. Instead, it pushes the API to the Management
-                  API and forces it to update the event in the datastore. This will
-                  cause Gateways to fetch the APIs from the datastore"
+                description: |-
+                  local defines if the api is local or not.
+
+
+                  If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
+                  but without setting the update flag in the datastore.
+
+
+                  If false, the Operator will not create the ConfigMaps for the Gateway.
+                  Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
+                  This will cause Gateways to fetch the APIs from the datastore
                 type: boolean
               metadata:
                 items:
@@ -1092,8 +1103,9 @@ spec:
               environmentId:
                 type: string
               generation:
-                description: This field is kept for backward compatibility and shall
-                  be removed in future versions. Use observedGeneration instead.
+                description: |-
+                  This field is kept for backward compatibility and shall be removed in future versions.
+                  Use observedGeneration instead.
                 format: int64
                 type: integer
               id:
@@ -1115,8 +1127,9 @@ spec:
                 description: The state of the API. Can be either STARTED or STOPPED.
                 type: string
               status:
-                description: This field is kept for backward compatibility and shall
-                  be removed in future versions. Use processingStatus instead.
+                description: |-
+                  This field is kept for backward compatibility and shall be removed in future versions.
+                  Use processingStatus instead.
                 enum:
                 - Completed
                 - Failed
