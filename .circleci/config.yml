@@ -538,6 +538,7 @@ workflows:
               - apim-apim-4-0-x
               - apim-apim-4-1-x
               - apim-apim-4-2-x
+              - apim-apim-4-3-x
               - apim-apim-master
               image: [graviteeio.azurecr.io/kubernetes-operator]
               tag: [alpha-latest]
