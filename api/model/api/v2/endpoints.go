@@ -35,20 +35,32 @@ const (
 )
 
 type Endpoint struct {
-	Name    string         `json:"name,omitempty"`
-	Target  string         `json:"target,omitempty"`
-	Weight  int            `json:"weight,omitempty"`
-	Backup  bool           `json:"backup,omitempty"`
-	Status  EndpointStatus `json:"-,omitempty"`
-	Tenants []string       `json:"tenants,omitempty"`
-	Type    EndpointType   `json:"type,omitempty"`
-	Inherit bool           `json:"inherit,omitempty"`
-
-	HttpProxy            *base.HttpProxy             `json:"proxy,omitempty"`
-	HttpClientOptions    *base.HttpClientOptions     `json:"http,omitempty"`
-	HttpClientSslOptions *base.HttpClientSslOptions  `json:"ssl,omitempty"`
-	Headers              []base.HttpHeader           `json:"headers,omitempty"`
-	HealthCheck          *EndpointHealthCheckService `json:"healthcheck,omitempty"`
+	// Name of the endpoint
+	Name string `json:"name,omitempty"`
+	// The end target of this endpoint (backend)
+	Target string `json:"target,omitempty"`
+	// Endpoint weight used for load-balancing
+	Weight int `json:"weight,omitempty"`
+	// Indicate that this ia a back-end endpoint
+	Backup bool `json:"backup,omitempty"`
+	// The status of the endpoint (Down, TransitionallyDown, TransitionallyUp, Up)
+	Status EndpointStatus `json:"-,omitempty"`
+	// The endpoint tenants
+	Tenants []string `json:"tenants,omitempty"`
+	// The type of endpoint (HttpEndpointType or GrpcEndpointType)
+	Type EndpointType `json:"type,omitempty"`
+	// Is endpoint inherited or not
+	Inherit bool `json:"inherit,omitempty"`
+	// Configure the HTTP Proxy settings to reach target if needed
+	HttpProxy *base.HttpProxy `json:"proxy,omitempty"`
+	// Custom HTTP client options used for this endpoint
+	HttpClientOptions *base.HttpClientOptions `json:"http,omitempty"`
+	// Custom HTTP SSL client options used for this endpoint
+	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
+	// List of headers for this endpoint
+	Headers []base.HttpHeader `json:"headers,omitempty"`
+	// Specify EndpointHealthCheck service settings
+	HealthCheck *EndpointHealthCheckService `json:"healthcheck,omitempty"`
 }
 
 func NewHttpEndpoint(name string) *Endpoint {
@@ -68,6 +80,7 @@ const (
 )
 
 type LoadBalancer struct {
+	// Type of the LoadBalancer (RoundRobin, Random, WeightedRoundRobin, WeightedRandom)
 	Type LoadBalancerType `json:"type,omitempty"`
 }
 
@@ -78,14 +91,22 @@ func NewLoadBalancer(algo LoadBalancerType) *LoadBalancer {
 }
 
 type EndpointGroup struct {
-	Name                 string                     `json:"name,omitempty"`
-	Endpoints            []*Endpoint                `json:"endpoints,omitempty"`
-	LoadBalancer         LoadBalancer               `json:"load_balancing,omitempty"`
-	Services             *Services                  `json:"services,omitempty"`
-	HttpProxy            *base.HttpProxy            `json:"proxy,omitempty"`
-	HttpClientOptions    *base.HttpClientOptions    `json:"http,omitempty"`
+	// EndpointGroup name
+	Name string `json:"name,omitempty"`
+	// List of Endpoints belonging to this group
+	Endpoints []*Endpoint `json:"endpoints,omitempty"`
+	// The LoadBalancer Type
+	LoadBalancer LoadBalancer `json:"load_balancing,omitempty"`
+	// Specify different Endpoint Services
+	Services *Services `json:"services,omitempty"`
+	// Configure the HTTP Proxy settings for this EndpointGroup if needed
+	HttpProxy *base.HttpProxy `json:"proxy,omitempty"`
+	// Custom HTTP SSL client options used for this EndpointGroup
+	HttpClientOptions *base.HttpClientOptions `json:"http,omitempty"`
+	// Custom HTTP SSL client options used for this EndpointGroup
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
-	Headers              map[string]string          `json:"headers,omitempty"`
+	// List of headers needed for this EndpointGroup
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 func NewHttpEndpointGroup(name string) *EndpointGroup {
@@ -99,7 +120,10 @@ func NewHttpEndpointGroup(name string) *EndpointGroup {
 type FailoverCase string
 
 type Failover struct {
-	MaxAttempts  int            `json:"maxAttempts,omitempty"`
-	RetryTimeout int64          `json:"retryTimeout,omitempty"`
-	Cases        []FailoverCase `json:"cases,omitempty"`
+	// Maximum number of attempts
+	MaxAttempts int `json:"maxAttempts,omitempty"`
+	// Retry timeout
+	RetryTimeout int64 `json:"retryTimeout,omitempty"`
+	// List of Failover cases
+	Cases []FailoverCase `json:"cases,omitempty"`
 }

@@ -30,20 +30,34 @@ const (
 type PlanValidation string
 
 type Plan struct {
-	Id          string   `json:"id,omitempty"`
-	CrossId     string   `json:"crossId,omitempty"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Tags        []string `json:"tags,omitempty"`
+	// Plan ID
+	Id string `json:"id,omitempty"`
+	// The plan Cross ID.
+	// This field is used to identify plans defined for an API
+	// that has been promoted between different environments.
+	CrossId string `json:"crossId,omitempty"`
+	// Plan name
+	Name string `json:"name"`
+	// Plan Description
+	Description string `json:"description"`
+	// List of plan tags
+	Tags []string `json:"tags,omitempty"`
 	// +kubebuilder:default:=PUBLISHED
-	Status          PlanStatus `json:"status,omitempty"`
-	Characteristics []string   `json:"characteristics,omitempty"`
+	// The plan status
+	Status PlanStatus `json:"status,omitempty"`
+	// List of plan characteristics
+	Characteristics []string `json:"characteristics,omitempty"`
 	// +kubebuilder:default:=AUTO
-	Validation      PlanValidation `json:"validation,omitempty"`
-	CommentRequired bool           `json:"comment_required,omitempty"`
-	Order           int            `json:"order,omitempty"`
+	// Plan validation strategy
+	Validation PlanValidation `json:"validation,omitempty"`
+	// Indicate of comment is required for this plan or not
+	CommentRequired bool `json:"comment_required,omitempty"`
+	// Plan order
+	Order int `json:"order,omitempty"`
 	// +kubebuilder:default:=API
-	Type           PlanType `json:"type,omitempty"`
+	// Plan type
+	Type PlanType `json:"type,omitempty"`
+	// List of excluded groups for this plan
 	ExcludedGroups []string `json:"excluded_groups,omitempty"`
 }
 
