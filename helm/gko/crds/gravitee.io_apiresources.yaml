@@ -53,13 +53,17 @@ spec:
             description: ApiResourceSpec defines the desired state of ApiResource.
             properties:
               configuration:
+                description: Resource Configuration, arbitrary map of key-values
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               enabled:
+                description: Resource is enabled or not?
                 type: boolean
               name:
+                description: Resource Name
                 type: string
               type:
+                description: Resource Type
                 type: string
             type: object
           status:

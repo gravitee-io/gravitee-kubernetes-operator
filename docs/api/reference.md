@@ -1,26 +1,258 @@
-# API Reference
+# Gravitee Kubernetes Operator API Reference
 
-Packages:
+## Versions
 
-- [gravitee.io/v1alpha1](#graviteeiov1alpha1)
+
+
+<table>
+  <thead>
+        <tr>
+            <th>Version</th>
+            <th>Description</th>
+        </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><a href="#graviteeiov1alpha1">gravitee.io/v1alpha1</a></td>
+          <td>This version is compatible with gravitee APIM version 3.x and 4.x but v4 API features are not supported.</td>
+      </tr>
+      <tr>
+          <td><a href="#graviteeiov1beta1">gravitee.io/v1beta1</a></td>
+          <td>This version is compatible with gravitee APIM version 4.x and upper and supports v4 API features</td>
+      </tr>
+  </tbody>
+</table>
 
 # gravitee.io/v1alpha1
 
-Resource Types:
+Resources
 
-- [ApiDefinition](#apidefinition)
+<table>
+  <thead>
+  </thead>
+    <tbody>
+        <tr>
+            <td><a href="#managementcontext">ManagementContext</a></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><a href="#apidefinition">ApiDefinition</a></td>
+            <td>ApiDefinition is the Schema for the apidefinitions API.</td>
+        </tr>
+        <tr>
+            <td><a href="#apiresource">ApiResource</a></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><a href="#application">Application</a></td>
+            <td></td>
+        </tr></tbody>
+</table>
 
-- [ApiResource](#apiresource)
-
-- [Application](#application)
-
-- [ManagementContext](#managementcontext)
 
 
+## ManagementContext
 
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#managementcontextspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          ManagementContext represents the configuration for a specific environment<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>object</td>
+        <td>
+          ManagementContextStatus defines the observed state of an API Context.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec
+[Go to parent definition](#managementcontext)
+
+
+
+ManagementContext represents the configuration for a specific environment
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#managementcontextspecauth">auth</a></b></td>
+        <td>object</td>
+        <td>
+          Auth defines the authentication method used to connect to the API Management.
+Can be either basic authentication credentials, a bearer token
+or a reference to a kubernetes secret holding one of these two configurations.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>baseUrl</b></td>
+        <td>string</td>
+        <td>
+          The URL of a management API instance<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>environmentId</b></td>
+        <td>string</td>
+        <td>
+          An existing environment id targeted by the context within the organization.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>organizationId</b></td>
+        <td>string</td>
+        <td>
+          An existing organization id targeted by the context on the management API instance.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth
+[Go to parent definition](#managementcontextspec)
+
+
+
+Auth defines the authentication method used to connect to the API Management.
+Can be either basic authentication credentials, a bearer token
+or a reference to a kubernetes secret holding one of these two configurations.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>bearerToken</b></td>
+        <td>string</td>
+        <td>
+          The bearer token used to authenticate against the API Management instance
+(must be generated from an admin account)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthcredentials">credentials</a></b></td>
+        <td>object</td>
+        <td>
+          The Basic credentials used to authenticate against the API Management instance.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspecauthsecretref">secretRef</a></b></td>
+        <td>object</td>
+        <td>
+          A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.credentials
+[Go to parent definition](#managementcontextspecauth)
+
+
+
+The Basic credentials used to authenticate against the API Management instance.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>username</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.auth.secretRef
+[Go to parent definition](#managementcontextspecauth)
+
+
+
+A secret reference holding either a bearer token or the user name and password used for basic authentication
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
 
 ## ApiDefinition
-<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
 
 
 
@@ -39,23 +271,6 @@ ApiDefinition is the Schema for the apidefinitions API.
         </tr>
     </thead>
     <tbody><tr>
-      <td><b>apiVersion</b></td>
-      <td>string</td>
-      <td>gravitee.io/v1alpha1</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b>kind</b></td>
-      <td>string</td>
-      <td>ApiDefinition</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
-      <td>object</td>
-      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
-      <td>true</td>
-      </tr><tr>
         <td><b><a href="#apidefinitionspec">spec</a></b></td>
         <td>object</td>
         <td>
@@ -77,7 +292,7 @@ See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.
 
 
 ### ApiDefinition.spec
-<sup><sup>[↩ Parent](#apidefinition)</sup></sup>
+[Go to parent definition](#apidefinition)
 
 
 
@@ -106,7 +321,11 @@ See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.
         <td><b>crossId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          When promoting an API from one environment to the other,
+this ID identifies the API across those different environments.
+Setting this ID also allows to take control over an existing API on an APIM instance
+(by setting the same value as defined in APIM).
+If empty, a UUID will be generated based on the namespace and name of the resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -121,7 +340,7 @@ is managed using a kubernetes operator<br/>
         <td><b>deployedAt</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Shows the time that the API is deployed<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -130,14 +349,14 @@ is managed using a kubernetes operator<br/>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          API description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>flow_mode</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The flow mode of the API. The value is either `DEFAULT` or `BEST_MATCH`.<br/>
           <br/>
             <i>Enum</i>: DEFAULT, BEST_MATCH<br/>
             <i>Default</i>: DEFAULT<br/>
@@ -147,14 +366,14 @@ is managed using a kubernetes operator<br/>
         <td><b><a href="#apidefinitionspecflowsindex">flows</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          The flow of the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>gravitee</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The definition version of the API. For v1alpha1 resources, this field should always set to `2.0.0`.<br/>
           <br/>
             <i>Default</i>: 2.0.0<br/>
         </td>
@@ -163,21 +382,22 @@ is managed using a kubernetes operator<br/>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The API ID. If empty, this field will take the value of the `metadata.uid`
+field of the resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>labels</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of labels of the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>lifecycle_state</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
           <br/>
             <i>Enum</i>: CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
             <i>Default</i>: CREATED<br/>
@@ -205,77 +425,78 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         <td><b><a href="#apidefinitionspecmetadataindex">metadata</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of API metadata entries<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          API name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>path_mappings</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          API Path mapping<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindex">plans</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          API plans<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecprimaryowner">primaryOwner</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Specify the primary member that owns the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecpropertiesindex">properties</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of Properties for the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxy">proxy</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The proxy of the API that specifies its VirtualHosts and Groups.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecresourcesindex">resources</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Resources can be either inlined or reference the namespace and name
+of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecresponse_templateskeykey">response_templates</a></b></td>
         <td>map[string]map[string]object</td>
         <td>
-          <br/>
+          A list of Response Templates for the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecservices">services</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Contains different services for the API (EndpointDiscovery, HealthCheck ...)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>state</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The state of API (setting the value to `STOPPED` will make the API un-reachable from the gateway)<br/>
           <br/>
             <i>Enum</i>: STARTED, STOPPED<br/>
             <i>Default</i>: STARTED<br/>
@@ -285,21 +506,21 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         <td><b>tags</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of Tags of the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>version</b></td>
         <td>string</td>
         <td>
-          <br/>
+          API version<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>visibility</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Should the API be publicly available from the portal or not ?<br/>
           <br/>
             <i>Enum</i>: PUBLIC, PRIVATE<br/>
             <i>Default</i>: PRIVATE<br/>
@@ -310,7 +531,7 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
 
 
 ### ApiDefinition.spec.contextRef
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -344,7 +565,7 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
 
 
 ### ApiDefinition.spec.definition_context
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -383,7 +604,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.flows[index]
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -402,7 +623,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if this flow is enabled or disabled<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -411,56 +632,56 @@ is managed using a kubernetes operator
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Flow condition<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecflowsindexconsumersindex">consumers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of the consumers of this Flow<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Flow ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>methods</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Flow name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecflowsindexpath-operator">path-operator</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          List of path operators<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecflowsindexpostindex">post</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Flow post step<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecflowsindexpreindex">pre</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Flow pre step<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -468,7 +689,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.flows[index].consumers[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecflowsindex)
 
 
 
@@ -487,14 +708,14 @@ is managed using a kubernetes operator
         <td><b>consumerId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Consumer ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>consumerType</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Consumer type (possible values TAG)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -502,11 +723,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.flows[index].path-operator
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecflowsindex)
 
 
 
-
+List of path operators
 
 <table>
     <thead>
@@ -521,7 +742,7 @@ is managed using a kubernetes operator
         <td><b>operator</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operator (possible values STARTS_WITH or EQUALS)<br/>
           <br/>
             <i>Enum</i>: STARTS_WITH, EQUALS<br/>
             <i>Default</i>: STARTS_WITH<br/>
@@ -531,7 +752,7 @@ is managed using a kubernetes operator
         <td><b>path</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Operator path<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -539,7 +760,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.flows[index].post[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecflowsindex)
 
 
 
@@ -558,7 +779,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if this FlowStep is enabled or not<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -567,35 +788,35 @@ is managed using a kubernetes operator
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep condition<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          FlowStep configuration is a map of arbitrary key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>policy</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep policy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -603,7 +824,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.flows[index].pre[index]
-<sup><sup>[↩ Parent](#apidefinitionspecflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecflowsindex)
 
 
 
@@ -622,7 +843,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if this FlowStep is enabled or not<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -631,35 +852,35 @@ is managed using a kubernetes operator
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep condition<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          FlowStep configuration is a map of arbitrary key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>policy</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep policy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -667,7 +888,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.metadata[index]
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -686,7 +907,7 @@ is managed using a kubernetes operator
         <td><b>format</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          MetaData Format<br/>
           <br/>
             <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
         </td>
@@ -695,28 +916,28 @@ is managed using a kubernetes operator
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          <br/>
+          MetaData Key<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          MetaData Name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>defaultValue</b></td>
         <td>string</td>
         <td>
-          <br/>
+          MetaData Default value<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          MetaData Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -724,7 +945,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index]
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -743,105 +964,107 @@ is managed using a kubernetes operator
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Plan Description<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Plan name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>security</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Plan Security<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>api</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Specify the API associated with this plan<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>characteristics</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of plan characteristics<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>comment_required</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate of comment is required for this plan or not<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>crossId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The plan Cross ID.
+This field is used to identify plans defined for an API
+that has been promoted between different environments.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>excluded_groups</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of excluded groups for this plan<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexflowsindex">flows</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of different flows for this Plan<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Plan ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>order</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Plan order<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexpathskeyindex">paths</a></b></td>
         <td>map[string][]object</td>
         <td>
-          <br/>
+          A map of different paths (alongside their Rules) for this Plan<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>securityDefinition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Plan Security definition<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>selectionRule</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Plan selection rule<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>status</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The plan status<br/>
           <br/>
             <i>Enum</i>: STAGING, PUBLISHED, CLOSED, DEPRECATED<br/>
             <i>Default</i>: PUBLISHED<br/>
@@ -851,14 +1074,14 @@ is managed using a kubernetes operator
         <td><b>tags</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of plan tags<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Plan type<br/>
           <br/>
             <i>Enum</i>: API, CATALOG<br/>
             <i>Default</i>: API<br/>
@@ -868,7 +1091,7 @@ is managed using a kubernetes operator
         <td><b>validation</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Plan validation strategy<br/>
           <br/>
             <i>Enum</i>: AUTO, MANUAL<br/>
             <i>Default</i>: AUTO<br/>
@@ -879,7 +1102,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index].flows[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecplansindex)
 
 
 
@@ -898,7 +1121,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if this flow is enabled or disabled<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -907,56 +1130,56 @@ is managed using a kubernetes operator
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Flow condition<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexflowsindexconsumersindex">consumers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of the consumers of this Flow<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Flow ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>methods</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Flow name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexflowsindexpath-operator">path-operator</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          List of path operators<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexflowsindexpostindex">post</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Flow post step<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexflowsindexpreindex">pre</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Flow pre step<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -964,7 +1187,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index].flows[index].consumers[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecplansindexflowsindex)
 
 
 
@@ -983,14 +1206,14 @@ is managed using a kubernetes operator
         <td><b>consumerId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Consumer ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>consumerType</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Consumer type (possible values TAG)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -998,11 +1221,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index].flows[index].path-operator
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecplansindexflowsindex)
 
 
 
-
+List of path operators
 
 <table>
     <thead>
@@ -1017,7 +1240,7 @@ is managed using a kubernetes operator
         <td><b>operator</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Operator (possible values STARTS_WITH or EQUALS)<br/>
           <br/>
             <i>Enum</i>: STARTS_WITH, EQUALS<br/>
             <i>Default</i>: STARTS_WITH<br/>
@@ -1027,7 +1250,7 @@ is managed using a kubernetes operator
         <td><b>path</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Operator path<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1035,7 +1258,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index].flows[index].post[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecplansindexflowsindex)
 
 
 
@@ -1054,7 +1277,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if this FlowStep is enabled or not<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -1063,35 +1286,35 @@ is managed using a kubernetes operator
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep condition<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          FlowStep configuration is a map of arbitrary key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>policy</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep policy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1099,7 +1322,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index].flows[index].pre[index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexflowsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecplansindexflowsindex)
 
 
 
@@ -1118,7 +1341,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if this FlowStep is enabled or not<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -1127,35 +1350,35 @@ is managed using a kubernetes operator
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep condition<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          FlowStep configuration is a map of arbitrary key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>policy</b></td>
         <td>string</td>
         <td>
-          <br/>
+          FlowStep policy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1163,7 +1386,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index].paths[key][index]
-<sup><sup>[↩ Parent](#apidefinitionspecplansindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecplansindex)
 
 
 
@@ -1182,28 +1405,28 @@ is managed using a kubernetes operator
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Rule description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if the Rule is enabled or not<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>methods</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          List of http methods for this Rule (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecplansindexpathskeyindexpolicy">policy</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Rule policy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1211,11 +1434,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.plans[index].paths[key][index].policy
-<sup><sup>[↩ Parent](#apidefinitionspecplansindexpathskeyindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecplansindexpathskeyindex)
 
 
 
-
+Rule policy
 
 <table>
     <thead>
@@ -1230,14 +1453,14 @@ is managed using a kubernetes operator
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Policy configuration is a map of arbitrary key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Policy name<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1245,11 +1468,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.primaryOwner
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
-
+Specify the primary member that owns the API
 
 <table>
     <thead>
@@ -1264,28 +1487,28 @@ is managed using a kubernetes operator
         <td><b>displayName</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Member Display Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Member email<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Member ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Member type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1293,7 +1516,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.properties[index]
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -1312,21 +1535,21 @@ is managed using a kubernetes operator
         <td><b>encrypted</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Property Encrypted or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Property Key<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Property Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1334,11 +1557,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
-
+The proxy of the API that specifies its VirtualHosts and Groups.
 
 <table>
     <thead>
@@ -1353,49 +1576,49 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecproxycors">cors</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Proxy Cors<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxyfailover">failover</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Proxy Failover<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindex">groups</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of endpoint groups of the proxy<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxylogging">logging</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Logging<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>preserve_host</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Preserve Host<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>strip_context_path</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Strip Context Path<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxyvirtual_hostsindex">virtual_hosts</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          list of Virtual hosts fot the proxy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1403,11 +1626,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.cors
-<sup><sup>[↩ Parent](#apidefinitionspecproxy)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxy)
 
 
 
-
+Proxy Cors
 
 <table>
     <thead>
@@ -1422,56 +1645,56 @@ is managed using a kubernetes operator
         <td><b>allowCredentials</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Access Control - Allow credentials or not<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if the cors enabled or not<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>maxAge</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Access Control -  Max age<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>allowHeaders</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Access Control - List of allowed headers<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>allowMethods</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Access Control - List of allowed methods<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>allowOrigin</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Access Control -  List of Allowed origins<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>exposeHeaders</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Access Control - List of Exposed Headers<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>runPolicies</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Run policies or not<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -1481,11 +1704,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.failover
-<sup><sup>[↩ Parent](#apidefinitionspecproxy)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxy)
 
 
 
-
+Proxy Failover
 
 <table>
     <thead>
@@ -1500,21 +1723,21 @@ is managed using a kubernetes operator
         <td><b>cases</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of Failover cases<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>maxAttempts</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Maximum number of attempts<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>retryTimeout</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Retry timeout<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -1524,7 +1747,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxy)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxy)
 
 
 
@@ -1543,56 +1766,56 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindex">endpoints</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of Endpoints belonging to this group<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>headers</b></td>
         <td>map[string]string</td>
         <td>
-          <br/>
+          List of headers needed for this EndpointGroup<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexhttp">http</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Custom HTTP SSL client options used for this EndpointGroup<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexload_balancing">load_balancing</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          The LoadBalancer Type<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          EndpointGroup name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexproxy">proxy</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Configure the HTTP Proxy settings for this EndpointGroup if needed<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexservices">services</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Specify different Endpoint Services<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexssl">ssl</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Custom HTTP SSL client options used for this EndpointGroup<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1600,7 +1823,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindex)
 
 
 
@@ -1619,91 +1842,91 @@ is managed using a kubernetes operator
         <td><b>-</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          The status of the endpoint (Down, TransitionallyDown, TransitionallyUp, Up)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>backup</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate that this ia a back-end endpoint<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexheadersindex">headers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of headers for this endpoint<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheck">healthcheck</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Specify EndpointHealthCheck service settings<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhttp">http</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Custom HTTP client options used for this endpoint<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>inherit</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Is endpoint inherited or not<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Name of the endpoint<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexproxy">proxy</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Configure the HTTP Proxy settings to reach target if needed<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexssl">ssl</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Custom HTTP SSL client options used for this endpoint<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>target</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The end target of this endpoint (backend)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>tenants</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          The endpoint tenants<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The type of endpoint (HttpEndpointType or GrpcEndpointType)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>weight</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Endpoint weight used for load-balancing<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1711,7 +1934,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].headers[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindex)
 
 
 
@@ -1730,14 +1953,14 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1745,11 +1968,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindex)
 
 
 
-
+Specify EndpointHealthCheck service settings
 
 <table>
     <thead>
@@ -1764,7 +1987,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Service is enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -1773,14 +1996,14 @@ is managed using a kubernetes operator
         <td><b>inherit</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Is service inherited or not?<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Service name<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1794,7 +2017,7 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex">steps</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of health check steps<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1802,7 +2025,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheck)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindexhealthcheck)
 
 
 
@@ -1821,21 +2044,21 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Health Check Step Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindexrequest">request</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Step Request<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindexresponse">response</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Step Response<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1843,11 +2066,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index].request
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex)
 
 
 
-
+Health Check Step Request
 
 <table>
     <thead>
@@ -1862,28 +2085,28 @@ is managed using a kubernetes operator
         <td><b>fromRoot</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          If true, the health check request will be issued without prepending the context path of the API.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>body</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Health Check Request Body<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindexrequestheadersindex">headers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of HTTP headers to include in the health check request<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>method</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The HTTP method to use when issuing the health check request<br/>
           <br/>
             <i>Enum</i>: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE, OTHER<br/>
         </td>
@@ -1892,7 +2115,7 @@ is managed using a kubernetes operator
         <td><b>path</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The path of the endpoint handling the health check request<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1900,7 +2123,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index].request.headers[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindexrequest)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindexrequest)
 
 
 
@@ -1919,14 +2142,14 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1934,11 +2157,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].healthcheck.steps[index].response
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindexhealthcheckstepsindex)
 
 
 
-
+Health Check Step Response
 
 <table>
     <thead>
@@ -1961,11 +2184,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].http
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindex)
 
 
 
-
+Custom HTTP client options used for this endpoint
 
 <table>
     <thead>
@@ -1980,7 +2203,7 @@ is managed using a kubernetes operator
         <td><b>clearTextUpgrade</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should HTTP/2 clear text upgrade be used or not ?<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -1989,7 +2212,7 @@ is managed using a kubernetes operator
         <td><b>followRedirects</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should HTTP redirects be followed or not ?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -1998,7 +2221,7 @@ is managed using a kubernetes operator
         <td><b>keepAlive</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should keep alive be used for the HTTP connection ?<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -2007,7 +2230,7 @@ is managed using a kubernetes operator
         <td><b>pipelining</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2016,7 +2239,7 @@ is managed using a kubernetes operator
         <td><b>propagateClientAcceptEncoding</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Propagate Client Accept-Encoding header<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2025,7 +2248,7 @@ is managed using a kubernetes operator
         <td><b>useCompression</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should compression be used or not ?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2034,7 +2257,7 @@ is managed using a kubernetes operator
         <td><b>connectTimeout</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Connection timeout of the http connection<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -2043,7 +2266,7 @@ is managed using a kubernetes operator
         <td><b>idleTimeout</b></td>
         <td>integer</td>
         <td>
-          <br/>
+           Idle Timeout for the http connection<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -2052,14 +2275,14 @@ is managed using a kubernetes operator
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          HTTP max concurrent connections<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>readTimeout</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Read timeout<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -2068,7 +2291,7 @@ is managed using a kubernetes operator
         <td><b>version</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          HTTP Protocol Version (Possible values Http1 or Http2)<br/>
           <br/>
             <i>Enum</i>: HTTP_1_1, HTTP_2<br/>
             <i>Default</i>: HTTP_1_1<br/>
@@ -2079,11 +2302,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].proxy
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindex)
 
 
 
-
+Configure the HTTP Proxy settings to reach target if needed
 
 <table>
     <thead>
@@ -2098,7 +2321,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Specifies that the HTTP connection will be established through a proxy<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2107,35 +2330,35 @@ is managed using a kubernetes operator
         <td><b>host</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Proxy host name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>password</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP proxy password (if the proxy requires authentication)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>port</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          The HTTP proxy port<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP proxy type (possible values Http, Socks4, Socks5)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>useSystemProxy</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          If true, the proxy defined at the system level will be used<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2144,7 +2367,7 @@ is managed using a kubernetes operator
         <td><b>username</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP proxy username (if the proxy requires authentication)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2152,11 +2375,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].ssl
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindex)
 
 
 
-
+Custom HTTP SSL client options used for this endpoint
 
 <table>
     <thead>
@@ -2171,7 +2394,7 @@ is managed using a kubernetes operator
         <td><b>hostnameVerifier</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Verify Hostname when establishing connection<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -2180,7 +2403,7 @@ is managed using a kubernetes operator
         <td><b>trustAll</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether to trust all issuers or not<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2189,14 +2412,14 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexsslkeystore">keyStore</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          KeyStore type (possible values PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexssltruststore">trustStore</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          TrustStore type (possible values PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2204,11 +2427,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].ssl.keyStore
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexssl)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindexssl)
 
 
 
-
+KeyStore type (possible values PEM, PKCS12, JKS)
 
 <table>
     <thead>
@@ -2223,7 +2446,7 @@ is managed using a kubernetes operator
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The KeyStore type to use (possible values are PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2231,11 +2454,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].endpoints[index].ssl.trustStore
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexendpointsindexssl)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindexssl)
 
 
 
-
+TrustStore type (possible values PEM, PKCS12, JKS)
 
 <table>
     <thead>
@@ -2250,7 +2473,7 @@ is managed using a kubernetes operator
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The TrustStore type to use (possible values are PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2258,11 +2481,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].http
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindex)
 
 
 
-
+Custom HTTP SSL client options used for this EndpointGroup
 
 <table>
     <thead>
@@ -2277,7 +2500,7 @@ is managed using a kubernetes operator
         <td><b>clearTextUpgrade</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should HTTP/2 clear text upgrade be used or not ?<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -2286,7 +2509,7 @@ is managed using a kubernetes operator
         <td><b>followRedirects</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should HTTP redirects be followed or not ?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2295,7 +2518,7 @@ is managed using a kubernetes operator
         <td><b>keepAlive</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should keep alive be used for the HTTP connection ?<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -2304,7 +2527,7 @@ is managed using a kubernetes operator
         <td><b>pipelining</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2313,7 +2536,7 @@ is managed using a kubernetes operator
         <td><b>propagateClientAcceptEncoding</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Propagate Client Accept-Encoding header<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2322,7 +2545,7 @@ is managed using a kubernetes operator
         <td><b>useCompression</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should compression be used or not ?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2331,7 +2554,7 @@ is managed using a kubernetes operator
         <td><b>connectTimeout</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Connection timeout of the http connection<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -2340,7 +2563,7 @@ is managed using a kubernetes operator
         <td><b>idleTimeout</b></td>
         <td>integer</td>
         <td>
-          <br/>
+           Idle Timeout for the http connection<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -2349,14 +2572,14 @@ is managed using a kubernetes operator
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          HTTP max concurrent connections<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>readTimeout</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          Read timeout<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -2365,7 +2588,7 @@ is managed using a kubernetes operator
         <td><b>version</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          HTTP Protocol Version (Possible values Http1 or Http2)<br/>
           <br/>
             <i>Enum</i>: HTTP_1_1, HTTP_2<br/>
             <i>Default</i>: HTTP_1_1<br/>
@@ -2376,11 +2599,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].load_balancing
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindex)
 
 
 
-
+The LoadBalancer Type
 
 <table>
     <thead>
@@ -2395,7 +2618,7 @@ is managed using a kubernetes operator
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Type of the LoadBalancer (RoundRobin, Random, WeightedRoundRobin, WeightedRandom)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2403,11 +2626,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].proxy
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindex)
 
 
 
-
+Configure the HTTP Proxy settings for this EndpointGroup if needed
 
 <table>
     <thead>
@@ -2422,7 +2645,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Specifies that the HTTP connection will be established through a proxy<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2431,35 +2654,35 @@ is managed using a kubernetes operator
         <td><b>host</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Proxy host name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>password</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP proxy password (if the proxy requires authentication)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>port</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          The HTTP proxy port<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP proxy type (possible values Http, Socks4, Socks5)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>useSystemProxy</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          If true, the proxy defined at the system level will be used<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2468,7 +2691,7 @@ is managed using a kubernetes operator
         <td><b>username</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP proxy username (if the proxy requires authentication)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2476,11 +2699,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindex)
 
 
 
-
+Specify different Endpoint Services
 
 <table>
     <thead>
@@ -2495,21 +2718,21 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecproxygroupsindexservicesdiscovery">discovery</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Endpoint Discovery Service<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexservicesdynamic-property">dynamic-property</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Dynamic Property Service<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexserviceshealth-check">health-check</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Service<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2517,11 +2740,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services.discovery
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexservices)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexservices)
 
 
 
-
+Endpoint Discovery Service
 
 <table>
     <thead>
@@ -2536,7 +2759,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Service is enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2545,35 +2768,35 @@ is managed using a kubernetes operator
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Configuration, arbitrary map of key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Service name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>provider</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Provider name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>secondary</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Is it secondary or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>tenants</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of tenants<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2581,11 +2804,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services.dynamic-property
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexservices)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexservices)
 
 
 
-
+Dynamic Property Service
 
 <table>
     <thead>
@@ -2600,7 +2823,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Service is enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2609,14 +2832,14 @@ is managed using a kubernetes operator
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Configuration, arbitrary map of key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Service name<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2640,11 +2863,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services.health-check
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexservices)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexservices)
 
 
 
-
+Health Check Service
 
 <table>
     <thead>
@@ -2659,7 +2882,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Service is enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2668,7 +2891,7 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Service name<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2682,7 +2905,7 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindex">steps</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of health check steps<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2690,7 +2913,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services.health-check.steps[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexserviceshealth-check)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexserviceshealth-check)
 
 
 
@@ -2709,21 +2932,21 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Health Check Step Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindexrequest">request</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Step Request<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindexresponse">response</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Step Response<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2731,11 +2954,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services.health-check.steps[index].request
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindex)
 
 
 
-
+Health Check Step Request
 
 <table>
     <thead>
@@ -2750,28 +2973,28 @@ is managed using a kubernetes operator
         <td><b>fromRoot</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          If true, the health check request will be issued without prepending the context path of the API.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>body</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Health Check Request Body<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindexrequestheadersindex">headers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of HTTP headers to include in the health check request<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>method</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The HTTP method to use when issuing the health check request<br/>
           <br/>
             <i>Enum</i>: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE, OTHER<br/>
         </td>
@@ -2780,7 +3003,7 @@ is managed using a kubernetes operator
         <td><b>path</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The path of the endpoint handling the health check request<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2788,7 +3011,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services.health-check.steps[index].request.headers[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindexrequest)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindexrequest)
 
 
 
@@ -2807,14 +3030,14 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2822,11 +3045,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].services.health-check.steps[index].response
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexserviceshealth-checkstepsindex)
 
 
 
-
+Health Check Step Response
 
 <table>
     <thead>
@@ -2849,11 +3072,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].ssl
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindex)
 
 
 
-
+Custom HTTP SSL client options used for this EndpointGroup
 
 <table>
     <thead>
@@ -2868,7 +3091,7 @@ is managed using a kubernetes operator
         <td><b>hostnameVerifier</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Verify Hostname when establishing connection<br/>
           <br/>
             <i>Default</i>: true<br/>
         </td>
@@ -2877,7 +3100,7 @@ is managed using a kubernetes operator
         <td><b>trustAll</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether to trust all issuers or not<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2886,14 +3109,14 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecproxygroupsindexsslkeystore">keyStore</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          KeyStore type (possible values PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexssltruststore">trustStore</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          TrustStore type (possible values PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2901,11 +3124,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].ssl.keyStore
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexssl)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexssl)
 
 
 
-
+KeyStore type (possible values PEM, PKCS12, JKS)
 
 <table>
     <thead>
@@ -2920,7 +3143,7 @@ is managed using a kubernetes operator
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The KeyStore type to use (possible values are PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2928,11 +3151,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.groups[index].ssl.trustStore
-<sup><sup>[↩ Parent](#apidefinitionspecproxygroupsindexssl)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxygroupsindexssl)
 
 
 
-
+TrustStore type (possible values PEM, PKCS12, JKS)
 
 <table>
     <thead>
@@ -2947,7 +3170,7 @@ is managed using a kubernetes operator
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The TrustStore type to use (possible values are PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2955,11 +3178,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.logging
-<sup><sup>[↩ Parent](#apidefinitionspecproxy)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxy)
 
 
 
-
+Logging
 
 <table>
     <thead>
@@ -2974,14 +3197,14 @@ is managed using a kubernetes operator
         <td><b>condition</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The logging condition (supports EL expressions)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>content</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Which part of the request/response should be logged ?<br/>
           <br/>
             <i>Enum</i>: NONE, HEADERS, PAYLOADS, HEADERS_PAYLOADS<br/>
         </td>
@@ -2990,7 +3213,9 @@ is managed using a kubernetes operator
         <td><b>mode</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The logging mode.
+CLIENT identifies the inbound request issued to the gateway,
+while PROXY identifies the request issued to the upstream service.<br/>
           <br/>
             <i>Enum</i>: NONE, CLIENT, PROXY, CLIENT_PROXY<br/>
         </td>
@@ -2999,7 +3224,7 @@ is managed using a kubernetes operator
         <td><b>scope</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The logging scope (which phase of the request roundtrip should be included in each log entry.<br/>
           <br/>
             <i>Enum</i>: NONE, REQUEST, RESPONSE, REQUEST_RESPONSE<br/>
         </td>
@@ -3009,7 +3234,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.proxy.virtual_hosts[index]
-<sup><sup>[↩ Parent](#apidefinitionspecproxy)</sup></sup>
+[Go to parent definition](#apidefinitionspecproxy)
 
 
 
@@ -3028,21 +3253,21 @@ is managed using a kubernetes operator
         <td><b>host</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Host name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>override_entrypoint</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Indicate if Entrypoint should be overridden or not<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>path</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Path<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3050,7 +3275,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.resources[index]
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -3069,35 +3294,35 @@ is managed using a kubernetes operator
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Resource Configuration, arbitrary map of key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Resource is enabled or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Resource Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecresourcesindexref">ref</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Reference to a resource<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Resource Type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3105,11 +3330,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.resources[index].ref
-<sup><sup>[↩ Parent](#apidefinitionspecresourcesindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecresourcesindex)
 
 
 
-
+Reference to a resource
 
 <table>
     <thead>
@@ -3139,7 +3364,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.response_templates[key][key]
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
@@ -3180,11 +3405,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services
-<sup><sup>[↩ Parent](#apidefinitionspec)</sup></sup>
+[Go to parent definition](#apidefinitionspec)
 
 
 
-
+Contains different services for the API (EndpointDiscovery, HealthCheck ...)
 
 <table>
     <thead>
@@ -3199,21 +3424,21 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecservicesdiscovery">discovery</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Endpoint Discovery Service<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecservicesdynamic-property">dynamic-property</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Dynamic Property Service<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecserviceshealth-check">health-check</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Service<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3221,11 +3446,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services.discovery
-<sup><sup>[↩ Parent](#apidefinitionspecservices)</sup></sup>
+[Go to parent definition](#apidefinitionspecservices)
 
 
 
-
+Endpoint Discovery Service
 
 <table>
     <thead>
@@ -3240,7 +3465,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Service is enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -3249,35 +3474,35 @@ is managed using a kubernetes operator
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Configuration, arbitrary map of key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Service name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>provider</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Provider name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>secondary</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Is it secondary or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>tenants</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of tenants<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3285,11 +3510,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services.dynamic-property
-<sup><sup>[↩ Parent](#apidefinitionspecservices)</sup></sup>
+[Go to parent definition](#apidefinitionspecservices)
 
 
 
-
+Dynamic Property Service
 
 <table>
     <thead>
@@ -3304,7 +3529,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Service is enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -3313,14 +3538,14 @@ is managed using a kubernetes operator
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Configuration, arbitrary map of key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Service name<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3344,11 +3569,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services.health-check
-<sup><sup>[↩ Parent](#apidefinitionspecservices)</sup></sup>
+[Go to parent definition](#apidefinitionspecservices)
 
 
 
-
+Health Check Service
 
 <table>
     <thead>
@@ -3363,7 +3588,7 @@ is managed using a kubernetes operator
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Service is enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -3372,7 +3597,7 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Service name<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3386,7 +3611,7 @@ is managed using a kubernetes operator
         <td><b><a href="#apidefinitionspecserviceshealth-checkstepsindex">steps</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of health check steps<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3394,7 +3619,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services.health-check.steps[index]
-<sup><sup>[↩ Parent](#apidefinitionspecserviceshealth-check)</sup></sup>
+[Go to parent definition](#apidefinitionspecserviceshealth-check)
 
 
 
@@ -3413,21 +3638,21 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Health Check Step Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecserviceshealth-checkstepsindexrequest">request</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Step Request<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecserviceshealth-checkstepsindexresponse">response</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Health Check Step Response<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3435,11 +3660,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services.health-check.steps[index].request
-<sup><sup>[↩ Parent](#apidefinitionspecserviceshealth-checkstepsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecserviceshealth-checkstepsindex)
 
 
 
-
+Health Check Step Request
 
 <table>
     <thead>
@@ -3454,28 +3679,28 @@ is managed using a kubernetes operator
         <td><b>fromRoot</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          If true, the health check request will be issued without prepending the context path of the API.<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>body</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Health Check Request Body<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apidefinitionspecserviceshealth-checkstepsindexrequestheadersindex">headers</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          List of HTTP headers to include in the health check request<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>method</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The HTTP method to use when issuing the health check request<br/>
           <br/>
             <i>Enum</i>: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE, OTHER<br/>
         </td>
@@ -3484,7 +3709,7 @@ is managed using a kubernetes operator
         <td><b>path</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The path of the endpoint handling the health check request<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3492,7 +3717,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services.health-check.steps[index].request.headers[index]
-<sup><sup>[↩ Parent](#apidefinitionspecserviceshealth-checkstepsindexrequest)</sup></sup>
+[Go to parent definition](#apidefinitionspecserviceshealth-checkstepsindexrequest)
 
 
 
@@ -3511,14 +3736,14 @@ is managed using a kubernetes operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3526,11 +3751,11 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.spec.services.health-check.steps[index].response
-<sup><sup>[↩ Parent](#apidefinitionspecserviceshealth-checkstepsindex)</sup></sup>
+[Go to parent definition](#apidefinitionspecserviceshealth-checkstepsindex)
 
 
 
-
+Health Check Step Response
 
 <table>
     <thead>
@@ -3553,7 +3778,7 @@ is managed using a kubernetes operator
 
 
 ### ApiDefinition.status
-<sup><sup>[↩ Parent](#apidefinition)</sup></sup>
+[Go to parent definition](#apidefinition)
 
 
 
@@ -3645,7 +3870,8 @@ Use processingStatus instead.<br/>
 </table>
 
 ## ApiResource
-<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
 
 
 
@@ -3664,23 +3890,6 @@ Use processingStatus instead.<br/>
         </tr>
     </thead>
     <tbody><tr>
-      <td><b>apiVersion</b></td>
-      <td>string</td>
-      <td>gravitee.io/v1alpha1</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b>kind</b></td>
-      <td>string</td>
-      <td>ApiResource</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
-      <td>object</td>
-      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
-      <td>true</td>
-      </tr><tr>
         <td><b><a href="#apiresourcespec">spec</a></b></td>
         <td>object</td>
         <td>
@@ -3699,7 +3908,7 @@ Use processingStatus instead.<br/>
 
 
 ### ApiResource.spec
-<sup><sup>[↩ Parent](#apiresource)</sup></sup>
+[Go to parent definition](#apiresource)
 
 
 
@@ -3718,35 +3927,36 @@ ApiResourceSpec defines the desired state of ApiResource.
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Resource Configuration, arbitrary map of key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Resource is enabled or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Resource Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Resource Type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 ## Application
-<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
 
 
 
@@ -3765,23 +3975,6 @@ ApiResourceSpec defines the desired state of ApiResource.
         </tr>
     </thead>
     <tbody><tr>
-      <td><b>apiVersion</b></td>
-      <td>string</td>
-      <td>gravitee.io/v1alpha1</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b>kind</b></td>
-      <td>string</td>
-      <td>Application</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
-      <td>object</td>
-      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
-      <td>true</td>
-      </tr><tr>
         <td><b><a href="#applicationspec">spec</a></b></td>
         <td>object</td>
         <td>
@@ -3800,7 +3993,7 @@ ApiResourceSpec defines the desired state of ApiResource.
 
 
 ### Application.spec
-<sup><sup>[↩ Parent](#application)</sup></sup>
+[Go to parent definition](#application)
 
 
 
@@ -3819,14 +4012,14 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Application name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>app_key_mode</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          The API key mode to use. If shared, the application will reuse the same API key across various subscriptions.<br/>
           <br/>
             <i>Enum</i>: SHARED, EXCLUSIVE, UNSPECIFIED<br/>
         </td>
@@ -3835,21 +4028,21 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b><a href="#applicationspecapplicationmetadataindex">applicationMetaData</a></b></td>
         <td>[]object</td>
         <td>
-          <br/>
+          Application meta data<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>background</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The base64 encoded background to use for this application when displaying it on the portal<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>clientId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The ClientId identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3863,42 +4056,43 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>description</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Application Description<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>disable_membership_notifications</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Should membership notifications be disabled or not ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>domain</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Application domain<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>groups</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          Application groups<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          io.gravitee.definition.model.Application<br/>
+          io.gravitee.definition.model.Application
+Application ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>metadata</b></td>
         <td>object</td>
         <td>
-          <br/>
+          Application Metadata, a map of arbitrary key-values<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3914,35 +4108,35 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>picture</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>picture_url</b></td>
         <td>string</td>
         <td>
-          <br/>
+          An URL pointing to the picture to use when displaying the application on the portal<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>redirectUris</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of application Redirect Uris<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#applicationspecsettings">settings</a></b></td>
         <td>object</td>
         <td>
-          <br/>
+          Application settings<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Application Type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3950,7 +4144,7 @@ Application is the main resource handled by the Kubernetes Operator
 
 
 ### Application.spec.applicationMetaData[index]
-<sup><sup>[↩ Parent](#applicationspec)</sup></sup>
+[Go to parent definition](#applicationspec)
 
 
 
@@ -3969,28 +4163,28 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Meta data Name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>applicationId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Meta data ApplicationId<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>defaultValue</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Meta data DefaultValue<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>format</b></td>
         <td>enum</td>
         <td>
-          <br/>
+          Meta data Format<br/>
           <br/>
             <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
         </td>
@@ -3999,21 +4193,21 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>hidden</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Meta data is hidden or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Meta data Key<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Meta data Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4021,7 +4215,7 @@ Application is the main resource handled by the Kubernetes Operator
 
 
 ### Application.spec.contextRef
-<sup><sup>[↩ Parent](#applicationspec)</sup></sup>
+[Go to parent definition](#applicationspec)
 
 
 
@@ -4055,11 +4249,11 @@ Application is the main resource handled by the Kubernetes Operator
 
 
 ### Application.spec.settings
-<sup><sup>[↩ Parent](#applicationspec)</sup></sup>
+[Go to parent definition](#applicationspec)
 
 
 
-
+Application settings
 
 <table>
     <thead>
@@ -4089,7 +4283,7 @@ Application is the main resource handled by the Kubernetes Operator
 
 
 ### Application.spec.settings.app
-<sup><sup>[↩ Parent](#applicationspecsettings)</sup></sup>
+[Go to parent definition](#applicationspecsettings)
 
 
 
@@ -4108,14 +4302,14 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>client_id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          ClientId is the client id of the application<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Application Type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4123,7 +4317,7 @@ Application is the main resource handled by the Kubernetes Operator
 
 
 ### Application.spec.settings.oauth
-<sup><sup>[↩ Parent](#applicationspecsettings)</sup></sup>
+[Go to parent definition](#applicationspecsettings)
 
 
 
@@ -4142,63 +4336,63 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>application_type</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Oauth client application type<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>client_id</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Oauth client id<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>client_secret</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Oauth client secret<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>client_uri</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Oauth client uri<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>grant_types</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of Oauth client grant types<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>logo_uri</b></td>
         <td>string</td>
         <td>
-          <br/>
+          Oauth client logo uri<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>redirect_uris</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of Oauth client redirect uris<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>renew_client_secret_supported</b></td>
         <td>boolean</td>
         <td>
-          <br/>
+          Whether client secret renewing is supported or not<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>response_types</b></td>
         <td>[]string</td>
         <td>
-          <br/>
+          List of Oauth client response types<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4206,7 +4400,7 @@ Application is the main resource handled by the Kubernetes Operator
 
 
 ### Application.status
-<sup><sup>[↩ Parent](#application)</sup></sup>
+[Go to parent definition](#application)
 
 
 
@@ -4263,217 +4457,20 @@ ApplicationStatus defines the observed state of Application.
       </tr></tbody>
 </table>
 
-## ManagementContext
-<sup><sup>[↩ Parent](#graviteeiov1alpha1 )</sup></sup>
+# gravitee.io/v1beta1
 
-
-
-
-
-
-
+Resources
 
 <table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-      <td><b>apiVersion</b></td>
-      <td>string</td>
-      <td>gravitee.io/v1alpha1</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b>kind</b></td>
-      <td>string</td>
-      <td>ManagementContext</td>
-      <td>true</td>
-      </tr>
-      <tr>
-      <td><b><a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">metadata</a></b></td>
-      <td>object</td>
-      <td>Refer to the Kubernetes API documentation for the fields of the `metadata` field.</td>
-      <td>true</td>
-      </tr><tr>
-        <td><b><a href="#managementcontextspec">spec</a></b></td>
-        <td>object</td>
-        <td>
-          ManagementContext represents the configuration for a specific environment<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>status</b></td>
-        <td>object</td>
-        <td>
-          ManagementContextStatus defines the observed state of an API Context.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
+  <thead>
+  </thead>
+    <tbody></tbody>
 </table>
 
 
-### ManagementContext.spec
-<sup><sup>[↩ Parent](#managementcontext)</sup></sup>
+
+## ApiDefinition
+
+[gravitee.io/v1beta1](#graviteeiov1beta1)
 
 
-
-ManagementContext represents the configuration for a specific environment
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#managementcontextspecauth">auth</a></b></td>
-        <td>object</td>
-        <td>
-          Auth defines the authentication method used to connect to the API Management.
-Can be either basic authentication credentials, a bearer token
-or a reference to a kubernetes secret holding one of these two configurations.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>baseUrl</b></td>
-        <td>string</td>
-        <td>
-          The URL of a management API instance<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>environmentId</b></td>
-        <td>string</td>
-        <td>
-          An existing environment id targeted by the context within the organization.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>organizationId</b></td>
-        <td>string</td>
-        <td>
-          An existing organization id targeted by the context on the management API instance.<br/>
-        </td>
-        <td>true</td>
-      </tr></tbody>
-</table>
-
-
-### ManagementContext.spec.auth
-<sup><sup>[↩ Parent](#managementcontextspec)</sup></sup>
-
-
-
-Auth defines the authentication method used to connect to the API Management.
-Can be either basic authentication credentials, a bearer token
-or a reference to a kubernetes secret holding one of these two configurations.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>bearerToken</b></td>
-        <td>string</td>
-        <td>
-          The bearer token used to authenticate against the API Management instance
-(must be generated from an admin account)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#managementcontextspecauthcredentials">credentials</a></b></td>
-        <td>object</td>
-        <td>
-          The Basic credentials used to authenticate against the API Management instance.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#managementcontextspecauthsecretref">secretRef</a></b></td>
-        <td>object</td>
-        <td>
-          A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ManagementContext.spec.auth.credentials
-<sup><sup>[↩ Parent](#managementcontextspecauth)</sup></sup>
-
-
-
-The Basic credentials used to authenticate against the API Management instance.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>password</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>username</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ManagementContext.spec.auth.secretRef
-<sup><sup>[↩ Parent](#managementcontextspecauth)</sup></sup>
-
-
-
-A secret reference holding either a bearer token or the user name and password used for basic authentication
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>namespace</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
