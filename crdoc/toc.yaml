@@ -24,7 +24,3 @@ groups:
       - name: ApiDefinition
       - name: ApiResource
       - name: Application
-  - group: gravitee.io
-    version: v1beta1
-    kinds:
-      - name: ApiDefinition
