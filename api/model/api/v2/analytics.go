@@ -45,16 +45,25 @@ const (
 )
 
 type Logging struct {
-	Mode      LoggingMode    `json:"mode,omitempty"`
-	Scope     LoggingScope   `json:"scope,omitempty"`
-	Content   LoggingContent `json:"content,omitempty"`
-	Condition string         `json:"condition,omitempty"`
+	// The logging mode.
+	// CLIENT identifies the inbound request issued to the gateway,
+	// while PROXY identifies the request issued to the upstream service.
+	Mode LoggingMode `json:"mode,omitempty"`
+	// The logging scope (which phase of the request roundtrip should be included in each log entry.
+	Scope LoggingScope `json:"scope,omitempty"`
+	// Which part of the request/response should be logged ?
+	Content LoggingContent `json:"content,omitempty"`
+	// The logging condition (supports EL expressions)
+	Condition string `json:"condition,omitempty"`
 }
 
 type Analytics struct {
-	Enabled  bool      `json:"enabled"`
+	// Analytics Enabled or not?
+	Enabled bool `json:"enabled"`
+	// Analytics Sampling
 	Sampling *Sampling `json:"sampling,omitempty"`
-	Logging  *Logging  `json:"logging,omitempty"`
+	// Analytics Logging
+	Logging *Logging `json:"logging,omitempty"`
 }
 
 type SamplingType string
@@ -67,6 +76,8 @@ const (
 )
 
 type Sampling struct {
-	Type  SamplingType `json:"type"`
-	Value string       `json:"value"`
+	// The sampling type to use
+	Type SamplingType `json:"type"`
+	// Sampling Value
+	Value string `json:"value"`
 }
