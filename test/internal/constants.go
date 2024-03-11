@@ -19,7 +19,7 @@ const (
 
 	GatewayUrl    = "http://localhost:9001"
 	ManagementUrl = "http://localhost:9000/management"
-	SamplesPath   = "../samples"
+	SamplesPath   = "../examples"
 
 	ContextWithSecretFile      = SamplesPath + "/management_context/dev/management-context-with-secret-ref.yml"
 	ContextWithCredentialsFile = SamplesPath + "/management_context/dev/management-context-with-credentials.yml"

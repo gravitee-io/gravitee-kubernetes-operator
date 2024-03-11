@@ -146,7 +146,7 @@ jobs:
           name: Check that `make manifests` has been executed
           command: |
             make manifests
-            git diff --quiet HEAD config/crd/bases/
+            git diff --quiet HEAD helm/gko/crds
       - run:
           name: Check that `make reference` has been executed
           command: |
