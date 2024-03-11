@@ -16,10 +16,6 @@
           <td><a href="#graviteeiov1alpha1">gravitee.io/v1alpha1</a></td>
           <td>This version is compatible with gravitee APIM version 3.x and 4.x but v4 API features are not supported.</td>
       </tr>
-      <tr>
-          <td><a href="#graviteeiov1beta1">gravitee.io/v1beta1</a></td>
-          <td>This version is compatible with gravitee APIM version 4.x and upper and supports v4 API features</td>
-      </tr>
   </tbody>
 </table>
 
@@ -4456,21 +4452,3 @@ ApplicationStatus defines the observed state of Application.
         <td>false</td>
       </tr></tbody>
 </table>
-
-# gravitee.io/v1beta1
-
-Resources
-
-<table>
-  <thead>
-  </thead>
-    <tbody></tbody>
-</table>
-
-
-
-## ApiDefinition
-
-[gravitee.io/v1beta1](#graviteeiov1beta1)
-
-
