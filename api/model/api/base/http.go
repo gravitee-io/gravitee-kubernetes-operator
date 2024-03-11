@@ -30,60 +30,92 @@ type ProtocolVersion string
 type HttpMethod string
 
 type Cors struct {
-	Enabled                       bool     `json:"enabled"`
-	AccessControlAllowOrigin      []string `json:"allowOrigin,omitempty"`
-	AccessControlExposeHeaders    []string `json:"exposeHeaders,omitempty"`
-	AccessControlMaxAge           int      `json:"maxAge"`
-	AccessControlAllowCredentials bool     `json:"allowCredentials"`
-	AccessControlAllowMethods     []string `json:"allowMethods,omitempty"`
-	AccessControlAllowHeaders     []string `json:"allowHeaders,omitempty"`
+	// Indicate if the cors enabled or not
+	Enabled bool `json:"enabled"`
+	// Access Control -  List of Allowed origins
+	AccessControlAllowOrigin []string `json:"allowOrigin,omitempty"`
+	// Access Control - List of Exposed Headers
+	AccessControlExposeHeaders []string `json:"exposeHeaders,omitempty"`
+	// Access Control -  Max age
+	AccessControlMaxAge int `json:"maxAge"`
+	// Access Control - Allow credentials or not
+	AccessControlAllowCredentials bool `json:"allowCredentials"`
+	// Access Control - List of allowed methods
+	AccessControlAllowMethods []string `json:"allowMethods,omitempty"`
+	// Access Control - List of allowed headers
+	AccessControlAllowHeaders []string `json:"allowHeaders,omitempty"`
 	// +kubebuilder:default:=false
+	// Run policies or not
 	RunPolicies bool `json:"runPolicies,omitempty"`
 }
 
 type HttpClientOptions struct {
-	IdleTimeout    uint64 `json:"idleTimeout,omitempty"`
+	//  Idle Timeout for the http connection
+	IdleTimeout uint64 `json:"idleTimeout,omitempty"`
+	// Connection timeout of the http connection
 	ConnectTimeout uint64 `json:"connectTimeout,omitempty"`
 	// +kubebuilder:default:=true
-	KeepAlive   bool   `json:"keepAlive"`
+	// Should keep alive be used for the HTTP connection ?
+	KeepAlive bool `json:"keepAlive"`
+	// Read timeout
 	ReadTimeout uint64 `json:"readTimeout,omitempty"`
 	// +kubebuilder:default:=false
-	Pipelining               bool `json:"pipelining"`
-	MaxConcurrentConnections int  `json:"maxConcurrentConnections,omitempty"`
+	// Should HTTP/1.1 pipelining be used for the connection or not ?
+	Pipelining bool `json:"pipelining"`
+	// HTTP max concurrent connections
+	MaxConcurrentConnections int `json:"maxConcurrentConnections,omitempty"`
 	// +kubebuilder:default:=false
+	// Should compression be used or not ?
 	UseCompression bool `json:"useCompression"`
 	// +kubebuilder:default:=false
+	// Propagate Client Accept-Encoding header
 	PropagateClientAcceptEncoding bool `json:"propagateClientAcceptEncoding"`
 	// +kubebuilder:default:=false
+	// Should HTTP redirects be followed or not ?
 	FollowRedirects bool `json:"followRedirects"`
 	// +kubebuilder:default:=true
+	// Should HTTP/2 clear text upgrade be used or not ?
 	ClearTextUpgrade bool `json:"clearTextUpgrade"`
 	// +kubebuilder:default:=HTTP_1_1
+	// HTTP Protocol Version (Possible values Http1 or Http2)
 	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
 }
 
 type HttpClientSslOptions struct {
 	// +kubebuilder:default:=false
+	// Whether to trust all issuers or not
 	TrustAll bool `json:"trustAll"`
 	// +kubebuilder:default:=true
-	HostnameVerifier bool        `json:"hostnameVerifier"`
-	TrustStore       *TrustStore `json:"trustStore,omitempty"`
-	KeyStore         *KeyStore   `json:"keyStore,omitempty"`
+	// Verify Hostname when establishing connection
+	HostnameVerifier bool `json:"hostnameVerifier"`
+	// TrustStore type (possible values PEM, PKCS12, JKS)
+	TrustStore *TrustStore `json:"trustStore,omitempty"`
+	// KeyStore type (possible values PEM, PKCS12, JKS)
+	KeyStore *KeyStore `json:"keyStore,omitempty"`
 }
 
 type HttpProxy struct {
 	// +kubebuilder:default:=false
+	// Specifies that the HTTP connection will be established through a proxy
 	Enabled bool `json:"enabled,omitempty"`
 	// +kubebuilder:default:=false
-	UseSystemProxy bool          `json:"useSystemProxy,omitempty"`
-	Host           string        `json:"host,omitempty"`
-	Port           int           `json:"port,omitempty"`
-	Username       string        `json:"username,omitempty"`
-	Password       string        `json:"password,omitempty"`
-	HttpProxyType  HttpProxyType `json:"type,omitempty"`
+	// If true, the proxy defined at the system level will be used
+	UseSystemProxy bool `json:"useSystemProxy,omitempty"`
+	// Proxy host name
+	Host string `json:"host,omitempty"`
+	// The HTTP proxy port
+	Port int `json:"port,omitempty"`
+	// The HTTP proxy username (if the proxy requires authentication)
+	Username string `json:"username,omitempty"`
+	// The HTTP proxy password (if the proxy requires authentication)
+	Password string `json:"password,omitempty"`
+	// The HTTP proxy type (possible values Http, Socks4, Socks5)
+	HttpProxyType HttpProxyType `json:"type,omitempty"`
 }
 
 type HttpHeader struct {
-	Name  string `json:"name,omitempty"`
+	// The HTTP header name
+	Name string `json:"name,omitempty"`
+	// The HTTP header value
 	Value string `json:"value,omitempty"`
 }

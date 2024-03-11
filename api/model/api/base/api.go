@@ -16,9 +16,18 @@
 package base
 
 type ApiBase struct {
-	ID          string `json:"id,omitempty"`
-	CrossID     string `json:"crossId,omitempty"`
-	Name        string `json:"name,omitempty"`
+	// The API ID. If empty, this field will take the value of the `metadata.uid`
+	// field of the resource.
+	ID string `json:"id,omitempty"`
+	// When promoting an API from one environment to the other,
+	// this ID identifies the API across those different environments.
+	// Setting this ID also allows to take control over an existing API on an APIM instance
+	// (by setting the same value as defined in APIM).
+	// If empty, a UUID will be generated based on the namespace and name of the resource.
+	CrossID string `json:"crossId,omitempty"`
+	// API name
+	Name string `json:"name,omitempty"`
+	// API description
 	Description string `json:"description,omitempty"`
 	// +kubebuilder:validation:Required
 	// The definition context is used to inform a management API instance that this API definition
@@ -26,22 +35,33 @@ type ApiBase struct {
 	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 	// +kubebuilder:default:=`STARTED`
 	// +kubebuilder:validation:Enum=STARTED;STOPPED;
+	// The state of API (setting the value to `STOPPED` will make the API un-reachable from the gateway)
 	State string `json:"state,omitempty"`
 	// +kubebuilder:default:=`CREATED`
+	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
 	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
 	// +kubebuilder:validation:Optional
+	// List of Tags of the API
 	Tags []string `json:"tags"`
 	// +kubebuilder:validation:Optional
+	// List of labels of the API
 	Labels []string `json:"labels"`
 	// +kubebuilder:default:=PRIVATE
-	Visibility   ApiVisibility `json:"visibility,omitempty"`
-	PrimaryOwner *Member       `json:"primaryOwner,omitempty"`
+	// Should the API be publicly available from the portal or not ?
+	Visibility ApiVisibility `json:"visibility,omitempty"`
+	// Specify the primary member that owns the API
+	PrimaryOwner *Member `json:"primaryOwner,omitempty"`
 	// +kubebuilder:validation:Optional
+	// List of Properties for the API
 	Properties []*Property `json:"properties"`
 	// +kubebuilder:validation:Optional
-	Metadata          []*MetadataEntry                        `json:"metadata"`
+	// List of API metadata entries
+	Metadata []*MetadataEntry `json:"metadata"`
+	// A list of Response Templates for the API
 	ResponseTemplates map[string]map[string]*ResponseTemplate `json:"response_templates,omitempty"`
 	// +kubebuilder:validation:Optional
+	// Resources can be either inlined or reference the namespace and name
+	// of an <a href="#apiresource">existing API resource definition</a>.
 	Resources []*ResourceOrRef `json:"resources"`
 }
 

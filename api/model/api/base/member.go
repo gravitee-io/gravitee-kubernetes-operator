@@ -16,11 +16,15 @@ package base
 
 type Member struct {
 	// +kubebuilder:validation:Required
+	// Member ID
 	Id string `json:"id,omitempty"`
 	// +kubebuilder:validation:Optional
+	// Member email
 	Email string `json:"email,omitempty"`
 	// +kubebuilder:validation:Optional
+	// Member Display Name
 	DisplayName string `json:"displayName,omitempty"`
 	// +kubebuilder:validation:Required
+	// Member type
 	Type string `json:"type,omitempty"`
 }

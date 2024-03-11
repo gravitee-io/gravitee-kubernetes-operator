@@ -21,19 +21,28 @@ import (
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
-	DeployedAt    uint64 `json:"deployedAt,omitempty"`
+	// Shows the time that the API is deployed
+	DeployedAt uint64 `json:"deployedAt,omitempty"`
 	// +kubebuilder:default:=`2.0.0`
+	// The definition version of the API. For v1alpha1 resources, this field should always set to `2.0.0`.
 	DefinitionVersion base.DefinitionVersion `json:"gravitee,omitempty"`
 	// +kubebuilder:validation:Required
+	// API version
 	Version string `json:"version,omitempty"`
 	// +kubebuilder:default:=DEFAULT
-	FlowMode FlowMode  `json:"flow_mode,omitempty"`
-	Proxy    *Proxy    `json:"proxy,omitempty"`
+	// The flow mode of the API. The value is either `DEFAULT` or `BEST_MATCH`.
+	FlowMode FlowMode `json:"flow_mode,omitempty"`
+	// The proxy of the API that specifies its VirtualHosts and Groups.
+	Proxy *Proxy `json:"proxy,omitempty"`
+	// Contains different services for the API (EndpointDiscovery, HealthCheck ...)
 	Services *Services `json:"services,omitempty"`
 	// +kubebuilder:validation:Optional
+	// The flow of the API
 	Flows []Flow `json:"flows"`
 	// +kubebuilder:validation:Optional
+	// API Path mapping
 	PathMappings []string `json:"path_mappings"`
 	// +kubebuilder:validation:Optional
+	// API plans
 	Plans []*Plan `json:"plans"`
 }

@@ -15,7 +15,10 @@
 package base
 
 type Property struct {
-	Key       string `json:"key,omitempty"`
-	Value     string `json:"value,omitempty"`
-	Encrypted bool   `json:"encrypted,omitempty"`
+	// Property Key
+	Key string `json:"key,omitempty"`
+	// Property Value
+	Value string `json:"value,omitempty"`
+	// Property Encrypted or not?
+	Encrypted bool `json:"encrypted,omitempty"`
 }
