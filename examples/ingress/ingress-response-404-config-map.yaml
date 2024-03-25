@@ -11,14 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: gravitee.io/v1alpha1
-kind: ManagementContext
+
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: dev-ctx
-spec:
-  baseUrl: http://localhost:30083
-  environmentId: DEFAULT
-  organizationId: DEFAULT
-  auth:
-    # TODO: replace with your generate bearer token
-    bearerToken: xxxx-yyyy-zzzz 
+  name: template-404
+data:
+  content: '{ "message": "not-found-test" }'
+  contentType: application/json

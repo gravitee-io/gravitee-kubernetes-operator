@@ -53,12 +53,12 @@ make help
 
 === Run the operator locally
 
-To run the operator locally against an APIM-ready link:https://k3d.io/[k3d^] cluster, run the following commands:
+To run the operator locally against an APIM-ready local cluster, run the following commands:
 
 [source,shell]
 ----
 # Initialize a local kubernetes cluster running APIM
-make k3d-init
+make start-cluster
 
 # Install the operator CRDs into the cluster
 make install
@@ -80,7 +80,7 @@ To be able to run the operator against a local instance of both an APIM Gateway 
 ----
 # Create a service account token with 'cluster-admin' role in the current context and
 # use this token to authenticate against the current cluster
-make k3d-admin
+make cluster-admin
 
 make run # or run using a debugger if you need to debug the operator as well
 
@@ -89,20 +89,6 @@ kubectl apply -f ./config/samples/context/debug/api-context-with-credentials.yml
 
 # Create a basic API Definition resource
 kubectl apply -f ./config/samples/apim/api-with-context.yml
-----
-
-=== Run the operator as a deployment on the k3d cluster
-
-Some features and behaviors of the operator can only be tested when running it as a deployment on the k3d cluster.
-
-This is a case for e.g. for link:https://sdk.operatorframework.io/docs/building-operators/golang/webhook/[webhooks^] or 
-when testing the operator deployed in multiple namespaces.
-
-You can deploy the operator on your k3d cluster by running the following commands:
-
-[source,shell]
-----
-make k3d-build k3d-push k3d-deploy
 ----
 
 === Working with the repo
@@ -125,13 +111,3 @@ Once the pull request is merged, semantic release will automatically create a ne
 * publishing a new docker image on docker hub with the new version tag
 * publishing a new helm chart on https://helm.gravitee.io/index.yaml[helm.gravitee.io] with the new version tag
 
-== Troubleshooting
-
-=== Local Docker image registry
-
-The k3d registry host used to share images between your host and your k3d cluster is defined as `k3d-graviteeio.docker.localhost`. On most linux / macos platforms, `*.localhost`` should resolve to 127.0.0.1. If this is not the case on your device, you need to add the following entry in your `/etc/hosts` file:
-
-[source,shell]
-----
-127.0.0.1 k3d-graviteeio.docker.localhost
-----
