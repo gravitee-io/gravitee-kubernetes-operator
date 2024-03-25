@@ -28,9 +28,10 @@ spec:
       labels:
         type: httpbin-1
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: httpbin-1
-        image: k3d-graviteeio.docker.localhost:12345/go-httpbin
+        image: go-httpbin:dev
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -74,9 +75,10 @@ spec:
       labels:
         type: httpbin-2
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: httpbin-2
-        image: k3d-graviteeio.docker.localhost:12345/go-httpbin
+        image: go-httpbin:dev
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -120,9 +122,10 @@ spec:
       labels:
         type: httpbin-3
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: httpbin-3
-        image: k3d-graviteeio.docker.localhost:12345/go-httpbin
+        image: go-httpbin:dev
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080

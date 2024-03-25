@@ -38,8 +38,9 @@ var _ = Describe("Create", func() {
 
 	httpClient := http.Client{Timeout: 5 * time.Second}
 
-	DescribeTable("a basic spec without a management context",
+	DescribeTable("An API spec without a management context",
 		func(specFile string, expectedGatewayStatusCode int) {
+
 			By("Initializing the API definition fixture")
 			fixtureGenerator := internal.NewFixtureGenerator()
 
@@ -82,7 +83,7 @@ var _ = Describe("Create", func() {
 		),
 		Entry(
 			"should resolve the template and makes api available",
-			internal.BasicApiFileTemplating,
+			internal.ApiWithTemplatingFile,
 			200,
 		),
 		Entry(
