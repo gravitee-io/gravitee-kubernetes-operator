@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
@@ -202,8 +203,38 @@ var _ = SynchronizedBeforeSuite(func() {
 	k8sClient = cli
 	ctx = context.Background()
 
-	Expect(k8sClient.Create(ctx, template404())).Should(Succeed())
-	Expect(k8sClient.Create(ctx, pemRegistry())).Should(Succeed())
+	err = k8sClient.Create(ctx, pemRegistry())
+	Expect(client.IgnoreAlreadyExists(err)).Should(Succeed())
+
+	managementContextSecret, err := internal.NewSecret(internal.ContextSecretFile)
+	managementContextSecret.Namespace = internal.Namespace
+	Expect(err).ToNot(HaveOccurred())
+	err = k8sClient.Create(ctx, managementContextSecret)
+	Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred())
+
+	ingressTLSSecret, err := internal.NewSecret(internal.IngressWithTLSSecretFile)
+	ingressTLSSecret.Namespace = internal.Namespace
+	Expect(err).ToNot(HaveOccurred())
+	err = k8sClient.Create(ctx, ingressTLSSecret)
+	Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred())
+
+	ingress404ConfigMap, err := internal.NewConfigMap(internal.IngressResponse404CMFile)
+	ingress404ConfigMap.Namespace = internal.Namespace
+	Expect(err).ToNot(HaveOccurred())
+	err = k8sClient.Create(ctx, ingress404ConfigMap)
+	Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred())
+
+	templatingSecret, err := internal.NewSecret(internal.ApiWithTemplatingSecretFile)
+	Expect(err).ToNot(HaveOccurred())
+	templatingSecret.Namespace = internal.Namespace
+	err = k8sClient.Create(ctx, templatingSecret)
+	Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred())
+
+	templatingConfigMap, err := internal.NewConfigMap(internal.ApiWithTemplatingConfigMapFile)
+	Expect(err).ToNot(HaveOccurred())
+	templatingConfigMap.Namespace = internal.Namespace
+	err = k8sClient.Create(ctx, templatingConfigMap)
+	Expect(client.IgnoreAlreadyExists(err)).ToNot(HaveOccurred())
 })
 
 var _ = SynchronizedAfterSuite(func() {
@@ -228,7 +259,6 @@ var _ = SynchronizedAfterSuite(func() {
 		&gio.ManagementContext{},
 		client.InNamespace(namespace)), timeout/10, 1*time.Second).Should(Succeed())
 	Expect(k8sClient.DeleteAllOf(ctx, &gio.ApiResource{}, client.InNamespace(namespace))).To(Succeed())
-	Expect(k8sClient.Delete(ctx, template404())).Should(Succeed())
 	Expect(k8sClient.Delete(ctx, pemRegistry())).Should(Succeed())
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
@@ -268,19 +298,6 @@ func getEventReasons(obj client.Object) func() []string {
 			eventsReason = append(eventsReason, event.Reason)
 		}
 		return eventsReason
-	}
-}
-
-func template404() *v1.ConfigMap {
-	return &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "template-404",
-			Namespace: namespace,
-		},
-		Data: map[string]string{
-			"content":     `{ "message": "not-found-test" }`,
-			"contentType": "application/json",
-		},
 	}
 }
 
