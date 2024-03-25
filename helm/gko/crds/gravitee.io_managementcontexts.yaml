@@ -31,9 +31,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .metadata.name
-      name: Name
-      type: string
     - jsonPath: .spec.baseUrl
       name: BaseUrl
       type: string
