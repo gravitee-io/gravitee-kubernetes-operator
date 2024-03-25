@@ -17,18 +17,20 @@ package internal
 const (
 	Namespace = "default"
 
-	GatewayUrl    = "http://localhost:9001"
-	ManagementUrl = "http://localhost:9000/management"
+	GatewayUrl    = "http://localhost:30082"
+	ManagementUrl = "http://localhost:30083/management"
 	SamplesPath   = "../examples"
 
+	ContextSecretFile          = SamplesPath + "/management_context/dev/management-context-secret.yml"
 	ContextWithSecretFile      = SamplesPath + "/management_context/dev/management-context-with-secret-ref.yml"
 	ContextWithCredentialsFile = SamplesPath + "/management_context/dev/management-context-with-credentials.yml"
 
 	BasicApiFile                        = SamplesPath + "/apim/api_definition/basic-api.yml"
 	BasicApiWithRateLimit               = SamplesPath + "/apim/api_definition/basic-api-with-rate-limit.yml"
 	BasicApiWithDisabledPolicy          = SamplesPath + "/apim/api_definition/basic-api-with-disabled-policy.yml"
-	BasicApiFileWithTemplate            = SamplesPath + "/apim/api_definition/basic-api-with-template.yml"
-	BasicApiFileTemplating              = SamplesPath + "/apim/api_definition/basic-api-templating.yml"
+	ApiWithTemplatingFile               = SamplesPath + "/apim/api_definition/api-with-templating.yml"
+	ApiWithTemplatingSecretFile         = SamplesPath + "/apim/api_definition/api-with-templating-secret.yml"
+	ApiWithTemplatingConfigMapFile      = SamplesPath + "/apim/api_definition/api-with-templating-config-map.yml"
 	ExportedApi                         = SamplesPath + "/apim/api_definition/exported-api.yml"
 	ApiWithContextFile                  = SamplesPath + "/apim/api_definition/api-with-context.yml"
 	ApiWithContextNoPlanFile            = SamplesPath + "/apim/api_definition/api-with-no-plan.yml"
@@ -64,11 +66,14 @@ const (
 	ApiResourceKeycloakAdapterFile    = SamplesPath + "/apim/api_resource/api-resource-keycloak-adapter.yml"
 	ApiResourceOauth2AMFile           = SamplesPath + "/apim/api_resource/api-resource-oauth2-am.yml"
 	ApiResourceOauth2GenericFile      = SamplesPath + "/apim/api_resource/api-resource-oauth2-generic.yml"
-	IngressWithoutTemplateFile        = SamplesPath + "/ingress/ingress-without-api-template.yml"
-	ApiTemplateWithApiKeyPlanFile     = SamplesPath + "/ingress/api-template-with-api-key-plan.yml"
-	IngressWithTemplateFile           = SamplesPath + "/ingress/ingress-with-api-template.yml"
-	IngressWithMultipleHosts          = SamplesPath + "/ingress/ingress-with-multiple-hosts.yml"
-	IngressWithTLS                    = SamplesPath + "/ingress/ingress-with-tls.yml"
+
+	IngressWithoutTemplateFile    = SamplesPath + "/ingress/ingress-without-api-template.yml"
+	ApiTemplateWithApiKeyPlanFile = SamplesPath + "/ingress/api-template-with-api-key-plan.yml"
+	IngressWithTemplateFile       = SamplesPath + "/ingress/ingress-with-api-template.yml"
+	IngressWithMultipleHosts      = SamplesPath + "/ingress/ingress-with-multiple-hosts.yml"
+	IngressWithTLS                = SamplesPath + "/ingress/ingress-with-tls.yml"
+	IngressWithTLSSecretFile      = SamplesPath + "/ingress/ingress-with-tls-secret.yml"
+	IngressResponse404CMFile      = SamplesPath + "/ingress/ingress-response-404-config-map.yaml"
 
 	BasicApplication = SamplesPath + "/apim/application/basic-application.yml"
 )

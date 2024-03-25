@@ -20,6 +20,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
+	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -264,6 +266,56 @@ func newManagementContext(path string, transforms ...func(*gio.ManagementContext
 	}
 
 	return ctx, nil
+}
+
+func NewSecret(path string, transforms ...func(*coreV1.Secret)) (*coreV1.Secret, error) {
+	secret, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := coreV1.SchemeGroupVersion.WithKind("secret")
+	decoded, _, err := decode(secret, &gvk, new(coreV1.Secret))
+
+	if err != nil {
+		return nil, err
+	}
+
+	resource, ok := decoded.(*v1.Secret)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of Ingress CRD")
+	}
+
+	for _, transform := range transforms {
+		transform(resource)
+	}
+
+	return resource, nil
+}
+
+func NewConfigMap(path string, transforms ...func(*coreV1.ConfigMap)) (*v1.ConfigMap, error) {
+	configMap, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	gvk := v1.SchemeGroupVersion.WithKind("configmap")
+	decoded, _, err := decode(configMap, &gvk, new(coreV1.ConfigMap))
+
+	if err != nil {
+		return nil, err
+	}
+
+	resource, ok := decoded.(*coreV1.ConfigMap)
+	if !ok {
+		return nil, fmt.Errorf("failed to assert type of Ingress CRD")
+	}
+
+	for _, transform := range transforms {
+		transform(resource)
+	}
+
+	return resource, nil
 }
 
 func (f *FixtureGenerator) NewIngress(path string, transforms ...func(*netV1.Ingress)) (*netV1.Ingress, error) {
