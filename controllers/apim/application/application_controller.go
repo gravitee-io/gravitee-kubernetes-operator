@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	e "sigs.k8s.io/controller-runtime/pkg/event"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 
 	"github.com/go-logr/logr"
@@ -123,6 +126,36 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.Application{}).
 		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		WithEventFilter(r.eventFilter()).
 		Complete(r)
+}
+
+func (r *Reconciler) eventFilter() predicate.Predicate {
+	return predicate.Funcs{
+		CreateFunc: func(e e.CreateEvent) bool {
+			return e.Object.GetDeletionTimestamp() != nil || len(e.Object.GetFinalizers()) == 0
+		},
+		UpdateFunc: func(e e.UpdateEvent) bool {
+			if e.ObjectOld == nil || e.ObjectNew == nil {
+				return false
+			}
+			if e.ObjectNew.GetDeletionTimestamp() != nil {
+				return true
+			}
+
+			switch no := e.ObjectNew.(type) {
+			case *gio.Application:
+				oo, _ := e.ObjectOld.(*gio.Application)
+				return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+			case *gio.ManagementContext:
+				oo, _ := e.ObjectOld.(*gio.ManagementContext)
+				return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+			default:
+				return false
+			}
+		},
+		DeleteFunc: func(_ e.DeleteEvent) bool {
+			return true
+		},
+	}
 }

@@ -21,7 +21,9 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	e "sigs.k8s.io/controller-runtime/pkg/event"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
@@ -127,6 +129,39 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&gio.ApiDefinition{}).
 		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
 		Watches(&gio.ApiResource{}, r.Watcher.WatchResources()).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		WithEventFilter(r.eventFilter()).
 		Complete(r)
+}
+
+func (r *Reconciler) eventFilter() predicate.Predicate {
+	return predicate.Funcs{
+		CreateFunc: func(e e.CreateEvent) bool {
+			return e.Object.GetDeletionTimestamp() != nil || len(e.Object.GetFinalizers()) == 0
+		},
+		UpdateFunc: func(e e.UpdateEvent) bool {
+			if e.ObjectOld == nil || e.ObjectNew == nil {
+				return false
+			}
+			if e.ObjectNew.GetDeletionTimestamp() != nil {
+				return true
+			}
+
+			switch no := e.ObjectNew.(type) {
+			case *gio.ApiDefinition:
+				oo, _ := e.ObjectOld.(*gio.ApiDefinition)
+				return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+			case *gio.ManagementContext:
+				oo, _ := e.ObjectOld.(*gio.ManagementContext)
+				return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+			case *gio.ApiResource:
+				oo, _ := e.ObjectOld.(*gio.ApiResource)
+				return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+			default:
+				return false
+			}
+		},
+		DeleteFunc: func(_ e.DeleteEvent) bool {
+			return true
+		},
+	}
 }
