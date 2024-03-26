@@ -17,7 +17,7 @@ ifndef ignore-not-found
 endif
 
 .PHONY: install
-install: kustomize manifests ## Install CRDss into the current cluster
+install: ## Install CRDss into the current cluster
 	kubectl apply -f helm/gko/crds
 
 .PHONY: uninstall
@@ -25,5 +25,5 @@ uninstall: ## Uninstall CRDs from the current cluster
 	kubectl delete -f helm/gko/crds
 
 .PHONY: run
-run: manifests generate ## Run a controller from your host
+run: ## Run a controller from your host
 	go run ./main.go

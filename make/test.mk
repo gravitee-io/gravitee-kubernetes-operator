@@ -4,7 +4,7 @@ GOTESTARGS ?= ""
 COVERPKG = "github.com/gravitee-io/gravitee-kubernetes-operator/..."
 TIMEOUT = 380s 
 .PHONY: test
-test: manifests generate install ginkgo ## Run tests.
+test: install ginkgo ## Run tests.
 	kubectl config use-context kind-gravitee
 	KUBEBUILDER_ASSETS=USE_EXISTING_CLUSTER=true $(GINKGO) $(GOTESTARGS) --timeout $(TIMEOUT) --cover --coverprofile=cover.out --coverpkg=$(COVERPKG)  ./...
 

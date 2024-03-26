@@ -15,7 +15,6 @@ include make/tool.mk
 include make/build.mk
 include make/docker.mk
 include make/helm.mk
-include make/olm.mk
 include make/dev.mk
 include make/lint.mk
 include make/test.mk
