@@ -15,18 +15,10 @@
 package internal
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/types"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
-	if err := d.addFinalizer(desired); err != nil {
-		d.log.Error(err, "An error occurs while adding finalizer to the Ingress", "Ingress", desired)
-		return err
-	}
-
 	if err := d.updateIngressTLSReference(desired); err != nil {
 		d.log.Error(err, "An error occurred while updating the PEM registry")
 		return err
@@ -43,19 +35,4 @@ func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
 	}
 
 	return nil
-}
-
-func (d *Delegate) addFinalizer(desired *v1.Ingress) error {
-	ingress := &v1.Ingress{}
-	if err := d.k8s.Get(
-		d.ctx, types.NamespacedName{Namespace: desired.Namespace, Name: desired.Name}, ingress,
-	); err != nil {
-		return err
-	}
-
-	if !util.ContainsFinalizer(ingress, keys.IngressFinalizer) {
-		util.AddFinalizer(ingress, keys.IngressFinalizer)
-	}
-
-	return d.k8s.Update(d.ctx, ingress)
 }

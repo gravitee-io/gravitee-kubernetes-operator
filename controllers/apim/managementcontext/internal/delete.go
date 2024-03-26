@@ -69,5 +69,5 @@ func Delete(
 
 	util.RemoveFinalizer(instance, keys.ManagementContextFinalizer)
 
-	return client.Update(ctx, instance)
+	return nil
 }
