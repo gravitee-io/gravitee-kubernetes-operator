@@ -34,5 +34,5 @@ func (d *Delegate) Delete(
 
 	util.RemoveFinalizer(application, keys.ApplicationDeletionFinalizer)
 
-	return d.k8s.Update(d.ctx, application)
+	return nil
 }

@@ -12,21 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package hash
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	v1 "k8s.io/api/networking/v1"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 )
 
-func (d *Delegate) Delete(ingress *v1.Ingress) error {
-	if err := d.deleteIngressTLSReference(ingress); err != nil {
-		d.log.Error(err, "An error occurred while updating the TLS secrets")
-		return err
+func Calculate(i interface{}) string {
+	data, err := json.Marshal(i)
+	if err != nil {
+		return ""
 	}
-
-	util.RemoveFinalizer(ingress, keys.IngressFinalizer)
-
-	return nil
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:])
 }

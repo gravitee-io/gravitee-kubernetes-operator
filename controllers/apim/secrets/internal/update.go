@@ -17,21 +17,21 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func Update(ctx context.Context, secret *v1.Secret) error {
-	return ensureContextFinalizer(ctx, secret)
+	return ensureContextFinalizerAndHash(ctx, secret)
 }
 
-func ensureContextFinalizer(ctx context.Context, secret *v1.Secret) error {
-	k8s := k8s.GetClient()
-
+func ensureContextFinalizerAndHash(ctx context.Context, secret *v1.Secret) error {
 	contextRefs, err := getReferences(ctx, secret, new(v1alpha1.ManagementContextList))
 
 	if err != nil {
@@ -42,11 +42,11 @@ func ensureContextFinalizer(ctx context.Context, secret *v1.Secret) error {
 		return nil
 	}
 
-	if !controllerutil.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
+	if !util.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
 		log.FromContext(ctx).Info("secret is used by some management context, adding finalizer")
-		controllerutil.AddFinalizer(secret, keys.ManagementContextSecretFinalizer)
-		return k8s.Update(ctx, secret)
+		util.AddFinalizer(secret, keys.ManagementContextSecretFinalizer)
 	}
+	k8s.AddAnnotation(secret, keys.LastSpecHash, hash.Calculate(&secret.Data))
 
 	return nil
 }

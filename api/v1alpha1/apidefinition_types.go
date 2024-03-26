@@ -21,10 +21,8 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // The API definition is the main resource handled by the Kubernetes Operator
@@ -97,10 +95,6 @@ const (
 	ProcessingStatusCompleted ProcessingStatus = "Completed"
 	ProcessingStatusFailed    ProcessingStatus = "Failed"
 )
-
-func (api *ApiDefinition) IsMissingDeletionFinalizer() bool {
-	return !kUtil.ContainsFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
-}
 
 func (api *ApiDefinition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()

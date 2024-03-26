@@ -12,21 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package k8s
 
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	v1 "k8s.io/api/networking/v1"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-)
+import "sigs.k8s.io/controller-runtime/pkg/client"
 
-func (d *Delegate) Delete(ingress *v1.Ingress) error {
-	if err := d.deleteIngressTLSReference(ingress); err != nil {
-		d.log.Error(err, "An error occurred while updating the TLS secrets")
-		return err
+func AddAnnotation(o client.Object, key, value string) {
+	a := o.GetAnnotations()
+	if a == nil {
+		a = make(map[string]string)
 	}
 
-	util.RemoveFinalizer(ingress, keys.IngressFinalizer)
-
-	return nil
+	a[key] = value
+	o.SetAnnotations(a)
 }

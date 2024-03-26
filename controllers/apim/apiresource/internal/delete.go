@@ -54,5 +54,5 @@ func Delete(
 
 	util.RemoveFinalizer(resource, keys.ApiResourceFinalizer)
 
-	return client.Update(ctx, resource)
+	return nil
 }

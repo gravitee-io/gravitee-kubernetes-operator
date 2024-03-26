@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"k8s.io/apimachinery/pkg/labels"
@@ -58,13 +60,19 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 			return err
 		}
 
-		// If finalizer not present, add it; This is a new object
+		// If finalizer not present, add it;
 		if !util.ContainsFinalizer(secret, keys.KeyPairFinalizer) {
 			d.log.Info("adding finalizer to the tls secret")
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, keys.KeyPairFinalizer)
+			k8s.AddAnnotation(secret, keys.LastSpecHash, hash.Calculate(&secret.Data))
 			if err := d.k8s.Update(d.ctx, secret); err != nil {
 				return client.IgnoreNotFound(err)
+			}
+		} else {
+			secret.Annotations[keys.LastSpecHash] = hash.Calculate(&secret.Data)
+			if err := d.k8s.Update(d.ctx, secret); err != nil {
+				return err
 			}
 		}
 
@@ -87,6 +95,10 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 }
 
 func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
+	if len(ingress.Spec.TLS) == 0 {
+		return nil
+	}
+
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
