@@ -17,6 +17,8 @@ package secrets
 import (
 	"context"
 
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -38,13 +40,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var reconcileErr error
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, secret, func() error {
+		if !secret.DeletionTimestamp.IsZero() {
+			return internal.Delete(ctx, secret)
+		}
 
-	if !secret.DeletionTimestamp.IsZero() {
-		reconcileErr = internal.Delete(ctx, secret)
-	} else {
-		reconcileErr = internal.Update(ctx, secret)
-	}
+		return internal.Update(ctx, secret)
+	})
 
 	if reconcileErr == nil {
 		return ctrl.Result{}, nil

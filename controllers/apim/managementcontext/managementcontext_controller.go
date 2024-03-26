@@ -19,14 +19,21 @@ package managementcontext
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -53,21 +60,31 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if err := template.NewResolver(ctx, r.Client, logger, managementContext).Resolve(); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	events := event.NewRecorder(r.Recorder)
-	var reconcileErr error
-	if managementContext.IsBeingDeleted() {
-		reconcileErr = events.Record(event.Delete, managementContext, func() error {
-			return internal.Delete(ctx, r.Client, managementContext)
-		})
-	} else {
-		reconcileErr = events.Record(event.Update, managementContext, func() error {
-			return internal.CreateOrUpdate(ctx, r.Client, managementContext)
-		})
-	}
+	dc := managementContext.DeepCopy()
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
+		util.AddFinalizer(managementContext, keys.ManagementContextFinalizer)
+		k8s.AddAnnotation(managementContext, keys.LastSpecHash, hash.Calculate(&managementContext.Spec))
+
+		if err := template.NewResolver(ctx, r.Client, logger, managementContext).Resolve(); err != nil {
+			return err
+		}
+
+		var err error
+		if managementContext.IsBeingDeleted() {
+			err = events.Record(event.Delete, managementContext, func() error {
+				return internal.Delete(ctx, r.Client, managementContext)
+			})
+		} else {
+			err = events.Record(event.Update, managementContext, func() error {
+				// We don't do anything directly when there is an update on ManagementContext
+				return nil
+			})
+		}
+
+		managementContext.ObjectMeta.DeepCopyInto(&dc.ObjectMeta)
+		return err
+	})
 
 	if reconcileErr == nil {
 		logger.Info("Management context has been reconciled")
@@ -82,6 +99,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gio.ManagementContext{}).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

@@ -22,10 +22,8 @@ import (
 	"github.com/go-logr/logr"
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	coreV1 "k8s.io/api/core/v1"
 	k8s "sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -78,11 +76,6 @@ func (d *Delegate) ResolveContext(application *gio.Application) error {
 
 func (d *Delegate) HasContext() bool {
 	return d.apim != nil
-}
-
-func (d *Delegate) AddDeletionFinalizer(application *gio.Application) error {
-	util.AddFinalizer(application, keys.ApplicationDeletionFinalizer)
-	return d.k8s.Update(d.ctx, application)
 }
 
 func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
