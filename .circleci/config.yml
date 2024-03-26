@@ -108,6 +108,7 @@ jobs:
           key: golangci-lint-{{ checksum ".golangci.yml" }}
           paths:
             - /home/circleci/.cache
+            - /home/circleci/go/pkg/mod
 
   lint-licenses:
     docker:
