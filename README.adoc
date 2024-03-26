@@ -32,6 +32,7 @@ The GKO API reference documentation is available https://github.com/gravitee-io/
 * Install link:https://www.docker.com/[Docker^]
 * Install link:https://kubernetes.io/docs/tasks/tools/#kubectl[kubectl^]
 * Install link:https://helm.sh/docs/intro/install/[Helm^]
+* Install link:https://kind.sigs.k8s.io/docs/user/quick-start/#installation[kind^]
 * Install link:https://nodejs.org/en/download/[NodeJs^]
 * Install the operator-sdk: `brew install operator-sdk`
 
@@ -61,7 +62,7 @@ To run the operator locally against an APIM-ready local cluster, run the followi
 make start-cluster
 
 # Install the operator CRDs into the cluster
-make install
+make manifests install
 
 # Run the operator controller on your local machine
 make run
