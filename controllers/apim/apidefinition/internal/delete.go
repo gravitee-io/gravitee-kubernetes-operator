@@ -36,7 +36,7 @@ func (d *Delegate) Delete(
 
 	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
 
-	return d.k8s.Update(d.ctx, apiDefinition)
+	return nil
 }
 
 func (d *Delegate) deleteWithContext(api *gio.ApiDefinition) error {

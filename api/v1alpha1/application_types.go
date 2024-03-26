@@ -19,9 +19,7 @@ package v1alpha1
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kUtil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // Application is the main resource handled by the Kubernetes Operator
@@ -62,10 +60,6 @@ type ApplicationList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Application `json:"items"`
-}
-
-func (api *Application) IsMissingDeletionFinalizer() bool {
-	return !kUtil.ContainsFinalizer(api, keys.ApplicationDeletionFinalizer)
 }
 
 func (api *Application) IsBeingDeleted() bool {

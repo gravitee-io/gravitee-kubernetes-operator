@@ -18,11 +18,11 @@ import (
 	"context"
 	"fmt"
 
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -31,8 +31,6 @@ func Delete(ctx context.Context, secret *v1.Secret) error {
 }
 
 func checkContextFinalizer(ctx context.Context, secret *v1.Secret) error {
-	k8s := k8s.GetClient()
-
 	contextRefs, err := getReferences(ctx, secret, new(v1alpha1.ManagementContextList))
 
 	if err != nil {
@@ -45,10 +43,9 @@ func checkContextFinalizer(ctx context.Context, secret *v1.Secret) error {
 		return fmt.Errorf("secret is used by %d management context, cannot be deleted", refCount)
 	}
 
-	if controllerutil.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
+	if util.ContainsFinalizer(secret, keys.ManagementContextSecretFinalizer) {
 		log.FromContext(ctx).Info("secret is not used by any management context, removing finalizer")
-		controllerutil.RemoveFinalizer(secret, keys.ManagementContextSecretFinalizer)
-		return k8s.Update(ctx, secret)
+		util.RemoveFinalizer(secret, keys.ManagementContextSecretFinalizer)
 	}
 
 	return nil

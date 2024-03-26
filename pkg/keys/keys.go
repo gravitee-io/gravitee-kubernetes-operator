@@ -23,6 +23,7 @@ const (
 	IngressClassAnnotationValue = "graviteeio"
 	IngressTemplateAnnotation   = "gravitee.io/template"
 	GraviteePemRegistryLabel    = "kubernetes-pem-registry"
+	LastSpecHash                = "gravitee.io/last-spec-hash"
 )
 
 // Gravitee.io CRDs.
