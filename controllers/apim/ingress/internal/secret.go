@@ -87,6 +87,10 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 }
 
 func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
+	if len(ingress.Spec.TLS) == 0 {
+		return nil
+	}
+
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}

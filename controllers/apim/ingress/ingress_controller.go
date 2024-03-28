@@ -17,6 +17,8 @@ package ingress
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -32,7 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -89,30 +91,48 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
-	reconcilable := func(o runtime.Object) bool {
-		switch t := o.(type) {
-		case *netV1.Ingress:
-			return k8s.IsGraviteeIngress(t)
-		case *v1alpha1.ApiDefinition:
-			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
-		case *corev1.Secret:
-			return t.Type == "kubernetes.io/tls"
-		default:
-			return false
-		}
-	}
-
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			return reconcilable(e.Object)
-		},
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			if !reconcilable(e.ObjectNew) {
+			if !isReconcilable(e.Object) {
 				return false
 			}
 
-			if e.ObjectOld == nil || e.ObjectNew == nil {
+			if e.Object.GetDeletionTimestamp() != nil || len(e.Object.GetFinalizers()) == 0 {
+				return true
+			} else if len(e.Object.GetFinalizers()) != 0 {
+				switch t := e.Object.(type) {
+				case *netV1.Ingress:
+					return !finalizerExit(t.Finalizers, keys.IngressFinalizer)
+				case *gio.ApiDefinition:
+					return !finalizerExit(t.Finalizers, keys.ApiDefinitionTemplateFinalizer)
+				case *corev1.Secret:
+					return !finalizerExit(t.Finalizers, keys.ManagementContextSecretFinalizer)
+				default:
+					return false
+				}
+			}
+
+			return false
+		},
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			if !isReconcilable(e.ObjectNew) {
 				return false
+			}
+
+			if e.ObjectNew.GetDeletionTimestamp() != nil {
+				return true
+			}
+
+			switch no := e.ObjectNew.(type) {
+			case *netV1.Ingress:
+				oo, _ := e.ObjectOld.(*netV1.Ingress)
+				return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+			case *gio.ApiDefinition:
+				oo, _ := e.ObjectOld.(*gio.ApiDefinition)
+				return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+			case *corev1.Secret:
+				oo, _ := e.ObjectOld.(*corev1.Secret)
+				return hash.Calculate(&no.Data) != hash.Calculate(&oo.Data)
 			}
 
 			// for some reasons "generation" is not set for the TLS secretes
@@ -130,17 +150,39 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
-			return reconcilable(e.Object)
+			return isReconcilable(e.Object)
 		},
 	}
+}
+
+func isReconcilable(o runtime.Object) bool {
+	switch t := o.(type) {
+	case *netV1.Ingress:
+		return k8s.IsGraviteeIngress(t)
+	case *gio.ApiDefinition:
+		return t.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
+	case *corev1.Secret:
+		return t.Type == "kubernetes.io/tls"
+	default:
+		return false
+	}
+}
+
+func finalizerExit(finalizers []string, key string) bool {
+	for _, finalizer := range finalizers {
+		if finalizer == key {
+			return true
+		}
+	}
+	return false
 }
 
 // SetupWithManager initializes ingress controller manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
-		Owns(&v1alpha1.ApiDefinition{}).
-		Watches(&v1alpha1.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
+		Owns(&gio.ApiDefinition{}).
+		Watches(&gio.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
 		Watches(&corev1.Secret{}, r.Watcher.WatchTLSSecret()).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)
