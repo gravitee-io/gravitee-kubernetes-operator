@@ -16,7 +16,7 @@ mongodb:
   enabled: true
   image:
     repository: mongo
-    tag: 6.0.12-jammy
+    tag: 6.0.14-jammy
   architecture: standalone
   persistence:
     mountPath: /data/db
