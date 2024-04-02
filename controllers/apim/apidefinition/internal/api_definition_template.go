@@ -41,7 +41,7 @@ func (d *Delegate) SyncApiDefinitionTemplate(api *gio.ApiDefinition, ns string) 
 		return d.k8s.Update(d.ctx, api)
 	}
 
-	return nil
+	return d.UpdateStatusSuccess(api)
 }
 
 func (d *Delegate) delete(apiDefinition *gio.ApiDefinition, namespace string) error {

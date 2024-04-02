@@ -20,6 +20,7 @@ const KIND_CONFIG = path.join(__dirname, '..', 'kind');
 
 const APIM_REGISTRY = `${ process.env.APIM_IMAGE_REGISTRY || "graviteeio" }`;
 const APIM_TAG = `${ process.env.APIM_IMAGE_TAG || "latest"}`;
+const APIM_VALUES= `${ process.env.APIM_VALUES || "values.yaml"}`;
 
 const IMAGES = new Map([
     [
@@ -76,7 +77,7 @@ async function loadImages() {
 async function helmInstallAPIM() {
     await $`helm repo add graviteeio https://helm.gravitee.io`;
     await $`helm repo update graviteeio`;
-    await $`helm install apim graviteeio/apim3 -f ${KIND_CONFIG}/apim/values.yaml`;
+    await $`helm install apim graviteeio/apim3 -f ${KIND_CONFIG}/apim/${APIM_VALUES}`;
 }
 
 async function deployHTTPBin() {
@@ -117,7 +118,6 @@ LOG.magenta(`
     Version: ${APIM_TAG}
 
     Available endpoints are:
-
         Gateway             http://localhost:30082
         Management API      http://localhost:30083/management/organizations/DEFAULT
         Console             http://localhost:30080
