@@ -164,9 +164,20 @@ jobs:
             make helm-reference
             git diff --quiet HEAD helm/gko/README.md
 
-  test:
+  unit-test:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    resource_class: small
+    steps:
+      - checkout
+      - go/mod-download-cached
+      - run:
+          name: Run unit tests
+          command: make -s unit
+
+  integration-test:
     machine:
-      image: ubuntu-2204:2024.01.1
+      image: ubuntu-2204:2024.01.2
       docker_layer_caching: true
     resource_class: large
     steps:
@@ -204,8 +215,8 @@ jobs:
             export APIM_IMAGE_TAG=master-latest
             make start-cluster
       - run:
-          name: Run tests
-          command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
+          name: Run integration tests
+          command: IT_ARGS="--label-filter=withoutContext --output-dir=/tmp/junit/reports" make -s it
       - store_test_results:
           path: /tmp/junit/reports
       - persist_to_workspace:
@@ -459,7 +470,7 @@ jobs:
           secret-url: keeper://9x9YgyU6DWzux4DPoHAzDQ/field/password
           var-name: SONAR_TOKEN
       - run:
-          name: Run Sonarcloud Analysis
+          name: Run Sonarcloud analysis
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
       - notify-on-failure
 
@@ -492,14 +503,17 @@ workflows:
           name: Lint commits
       - lint-resources:
           name: Lint resources
-      - test:
-          name: Test
+      - unit-test:
+          name: Run unit tests
+      - integration-test:
+          name: Run integration tests
           context: cicd-orchestrator
           requires:
             - Lint sources
             - Lint licenses
             - Lint commits
             - Lint resources
+            - Run unit tests
       - helm-lint:
           name: Lint Helm chart
       - helm-test:
@@ -507,10 +521,10 @@ workflows:
           requires:
             - Lint Helm chart
       - sonarcloud-analysis:
-          name: Sonarcloud Analysis
+          name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
-            - Test
+            - Run integration tests
   deploy:
     when:
       and:
@@ -518,8 +532,8 @@ workflows:
             - equal: [ci-staging, << pipeline.git.branch >>]
             - equal: [alpha, << pipeline.git.branch >>]
     jobs:
-      - test:
-          name: Test operator
+      - integration-test:
+          name: Run integration tests
           context: cicd-orchestrator
       - helm-test:
           name: Test chart
@@ -528,17 +542,17 @@ workflows:
           context: cicd-orchestrator
           clusterName: devs-preprod
       - sonarcloud-analysis:
-          name: Sonarcloud Analysis
+          name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
-            - Test operator
+            - Run integration tests
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: alpha-latest
           context: cicd-orchestrator
           requires:
-            - Test operator
+            - Run integration tests
             - Test chart
             - Authenticate on cluster
       - add-docker-images-to-snyk:

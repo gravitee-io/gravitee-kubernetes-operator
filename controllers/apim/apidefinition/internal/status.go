@@ -23,6 +23,7 @@ func (d *Delegate) UpdateStatusSuccess(api *gio.ApiDefinition) error {
 		return nil
 	}
 	api.Status.ObservedGeneration = api.ObjectMeta.Generation
+	api.Status.Status = gio.ProcessingStatusCompleted
 	return d.k8s.Status().Update(d.ctx, api)
 }
 

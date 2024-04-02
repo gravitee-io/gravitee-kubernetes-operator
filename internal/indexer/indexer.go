@@ -15,10 +15,14 @@
 package indexer
 
 import (
+	"context"
+
 	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/util/errors"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -44,7 +48,43 @@ type Indexer struct {
 
 type Func = func(obj client.Object) []string
 
-func CreateIndexerFunc[T client.Object](doIndex func(T, *[]string)) Func {
+func InitCache(ctx context.Context, cache cache.Cache) error {
+	errs := make([]error, 0)
+
+	contextIndexer := newIndexer(ContextField, indexManagementContexts)
+	if err := cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	resourceIndexer := newIndexer(ResourceField, indexApiResourceRefs)
+	if err := cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	secretRefIndexer := newIndexer(SecretRefField, indexManagementContextSecrets)
+	if err := cache.IndexField(ctx, &gio.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	apiTemplateIndexer := newIndexer(ApiTemplateField, indexApiTemplate)
+	if err := cache.IndexField(ctx, &v1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	tlsSecretIndexer := newIndexer(TLSSecretField, indexTLSSecret)
+	if err := cache.IndexField(ctx, &v1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	appContextIndexer := newIndexer(AppContextField, indexApplicationManagementContexts)
+	if err := cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	return errors.NewAggregate(errs)
+}
+
+func createIndexerFunc[T client.Object](doIndex func(T, *[]string)) Func {
 	return func(obj client.Object) []string {
 		fields := []string{}
 		o, ok := obj.(T)
@@ -59,14 +99,14 @@ func CreateIndexerFunc[T client.Object](doIndex func(T, *[]string)) Func {
 	}
 }
 
-func NewIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) Indexer {
+func newIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) Indexer {
 	return Indexer{
 		Field: string(field),
-		Func:  CreateIndexerFunc(doIndex),
+		Func:  createIndexerFunc(doIndex),
 	}
 }
 
-func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
+func indexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	if api.Spec.Context == nil {
 		return
 	}
@@ -74,13 +114,13 @@ func IndexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	*fields = append(*fields, api.Spec.Context.String())
 }
 
-func IndexManagementContextSecrets(context *gio.ManagementContext, fields *[]string) {
+func indexManagementContextSecrets(context *gio.ManagementContext, fields *[]string) {
 	if context.Spec.HasSecretRef() {
 		*fields = append(*fields, context.Spec.SecretRef().String())
 	}
 }
 
-func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
+func indexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
 	if api.Spec.Resources == nil {
 		return
 	}
@@ -92,7 +132,7 @@ func IndexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
 	}
 }
 
-func IndexApiTemplate(ing *v1.Ingress, fields *[]string) {
+func indexApiTemplate(ing *v1.Ingress, fields *[]string) {
 	if ing.Annotations[keys.IngressTemplateAnnotation] == "" {
 		return
 	}
@@ -100,7 +140,7 @@ func IndexApiTemplate(ing *v1.Ingress, fields *[]string) {
 	*fields = append(*fields, ing.Namespace+"/"+ing.Annotations[keys.IngressTemplateAnnotation])
 }
 
-func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
+func indexTLSSecret(ing *v1.Ingress, fields *[]string) {
 	if !k8s.IsGraviteeIngress(ing) {
 		return
 	}
@@ -114,7 +154,7 @@ func IndexTLSSecret(ing *v1.Ingress, fields *[]string) {
 	}
 }
 
-func IndexApplicationManagementContexts(application *gio.Application, fields *[]string) {
+func indexApplicationManagementContexts(application *gio.Application, fields *[]string) {
 	if application.Spec.Context == nil {
 		return
 	}

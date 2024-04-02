@@ -24,10 +24,10 @@ spec:
     - host: httpbin.example.com
       http:
         paths:
-          - path: /get
+          - path: /httpbin
             pathType: Prefix
             backend:
               service:
-                name: httpbin
+                name: httpbin-1
                 port:
-                  number: 8000
+                  number: 8080

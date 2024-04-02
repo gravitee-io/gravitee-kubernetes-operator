@@ -56,6 +56,8 @@ gateway:
     pullPolicy: IfNotPresent
   ingress:
     enabled: false
+  ingressController:
+    enabled: true
   service:
     type: NodePort
     nodePort: 30082
