@@ -111,6 +111,14 @@ func IsNotFound(err error) bool {
 	return false
 }
 
+func IsUnauthorized(err error) bool {
+	serverError := &ServerError{}
+	if errors.As(err, serverError) {
+		return serverError.StatusCode == http.StatusUnauthorized
+	}
+	return false
+}
+
 func IgnoreNotFound(err error) error {
 	if IsNotFound(err) {
 		return nil

@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/docker/docker v26.0.0+incompatible // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.8.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect

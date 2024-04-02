@@ -22,10 +22,10 @@ metadata:
     gravitee.io/ingress: graviteeio
 spec:
   rules:
-    - host: example.com
+    - host: httpbin.example.com
       http:
         paths:
-          - path: /api-with-template
+          - path: /templated
             pathType: Prefix
             backend:
               service:

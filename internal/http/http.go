@@ -160,6 +160,10 @@ func (client *Client) newJSONRequest(method, url string, entity any) (*http.Requ
 	return req, nil
 }
 
+func NewNoAuthClient(ctx context.Context) *Client {
+	return NewClient(ctx, nil)
+}
+
 func NewClient(ctx context.Context, auth *Auth) *Client {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig = &tls.Config{

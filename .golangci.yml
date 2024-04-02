@@ -32,6 +32,16 @@ run:
 # This file contains only configs which differ from defaults.
 # All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
 linters-settings:
+  stylecheck:
+    dot-import-whitelist:
+    - github.com/onsi/ginkgo/v2
+    - github.com/onsi/gomega
+
+  revive:
+    rules:
+    - name: dot-imports
+      disabled: true
+
   cyclop:
     # The maximal code complexity to report.
     # Default: 10
@@ -157,11 +167,6 @@ linters-settings:
     # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
     # Default: false
     all: true
-
-  varcheck:
-    # Check usage of exported fields and variables.
-    # Default: false
-    exported-fields: false # default false # TODO: enable after fixing false positives
 
 linters:
   disable-all: true
@@ -294,3 +299,7 @@ issues:
         - wrapcheck
         - revive
         - stylecheck
+    - path: "test/internal/integration/(fixture|manager)"
+      linters:
+        - funlen
+        - gocognit

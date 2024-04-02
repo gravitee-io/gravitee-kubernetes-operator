@@ -62,7 +62,7 @@ To run the operator locally against an APIM-ready local cluster, run the followi
 make start-cluster
 
 # Install the operator CRDs into the cluster
-make manifests install
+make install
 
 # Run the operator controller on your local machine
 make run
