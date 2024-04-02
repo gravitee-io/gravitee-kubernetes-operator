@@ -20,7 +20,7 @@ metadata:
   namespace: default
 spec:
   contextRef:
-    name: "dev-ctx"
+    name: "dev-ctx-admiring-antonelli"
     namespace: "default"
   name: "K8S-Application"
   type: "WEB"
