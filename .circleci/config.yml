@@ -180,6 +180,12 @@ jobs:
       image: ubuntu-2204:2024.01.2
       docker_layer_caching: true
     resource_class: large
+    parameters:
+      ginkgo-filter:
+        type: enum
+        enum:
+          - withContext
+          - withoutContext
     steps:
       - checkout
       - go/install:
@@ -208,6 +214,12 @@ jobs:
       - run:
           name: Install ginkgo
           command: make ginkgo
+      - when:
+          condition:
+            equal: [withoutContext, << parameters.ginkgo-filter >>]
+          steps:
+            - run:
+                command: echo 'export APIM_VALUES=values-dbless.yaml' >> $BASH_ENV
       - run:
           name: Start cluster
           command: |
@@ -216,13 +228,13 @@ jobs:
             make start-cluster
       - run:
           name: Run integration tests
-          command: IT_ARGS="--label-filter=withoutContext --output-dir=/tmp/junit/reports" make -s it
+          command: IT_ARGS="--label-filter=<< parameters.ginkgo-filter >> --cover --coverprofile=cover-<< parameters.ginkgo-filter >>.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" make -s it
       - store_test_results:
           path: /tmp/junit/reports
       - persist_to_workspace:
           root: /tmp/junit/reports
           paths:
-            - cover.out
+            - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
 
   login-to-azure:
@@ -462,7 +474,7 @@ workflows:
       - unit-test:
           name: Run unit tests
       - integration-test:
-          name: Run integration tests
+          name: Run integration tests with context
           context: cicd-orchestrator
           requires:
             - Lint sources
@@ -470,6 +482,17 @@ workflows:
             - Lint commits
             - Lint resources
             - Run unit tests
+          ginkgo-filter: withContext
+      - integration-test:
+          name: Run integration tests without context
+          context: cicd-orchestrator
+          requires:
+            - Lint sources
+            - Lint licenses
+            - Lint commits
+            - Lint resources
+            - Run unit tests
+          ginkgo-filter: withoutContext
       - helm-lint:
           name: Lint Helm chart
       - helm-test:
@@ -480,7 +503,8 @@ workflows:
           name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
-            - Run integration tests
+            - Run integration tests with context
+            - Run integration tests without context
   deploy:
     when:
       and:
@@ -488,27 +512,18 @@ workflows:
             - equal: [ci-staging, << pipeline.git.branch >>]
             - equal: [alpha, << pipeline.git.branch >>]
     jobs:
-      - integration-test:
-          name: Run integration tests
-          context: cicd-orchestrator
       - helm-test:
           name: Test chart
       - login-to-azure:
           name: Authenticate on cluster
           context: cicd-orchestrator
           clusterName: devs-preprod
-      - sonarcloud-analysis:
-          name: Sonarcloud analysis
-          context: cicd-orchestrator
-          requires:
-            - Run integration tests
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: alpha-latest
           context: cicd-orchestrator
           requires:
-            - Run integration tests
             - Test chart
             - Authenticate on cluster
       - add-docker-images-to-snyk:
