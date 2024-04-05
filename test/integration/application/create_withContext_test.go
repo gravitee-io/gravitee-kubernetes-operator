@@ -37,7 +37,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	It("should create application in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithApplication(constants.BasicApplication).
+			WithApplication(constants.Application).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()

@@ -36,7 +36,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 
 	It("should update api definition", func() {
 		fixtures := fixture.Builder().
-			WithAPI(constants.BasicApiFile).
+			WithAPI(constants.Api).
 			Build().
 			Apply()
 
@@ -46,7 +46,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("updating api context path")
 
@@ -63,7 +63,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(updatedEndpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("expecting API event to have been emitted")
 

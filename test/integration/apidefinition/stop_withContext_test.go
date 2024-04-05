@@ -40,7 +40,7 @@ var _ = Describe("Stop", labels.WithContext, func() {
 
 	It("should start API", func() {
 		fixtures := fixture.Builder().
-			WithAPI(constants.BasicApiFile).
+			WithAPI(constants.Api).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
@@ -52,7 +52,7 @@ var _ = Describe("Stop", labels.WithContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("calling rest API, expecting state 'STARTED'")
 
@@ -72,14 +72,14 @@ var _ = Describe("Stop", labels.WithContext, func() {
 
 		Eventually(func() error {
 			return manager.UpdateSafely(updated)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("calling gateway endpoint, expecting status 404")
 
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("calling rest API, expecting state 'STOPPED'")
 

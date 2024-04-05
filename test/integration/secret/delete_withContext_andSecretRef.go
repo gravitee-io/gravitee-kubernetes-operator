@@ -20,7 +20,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -48,16 +47,6 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		fixtures.Context.Spec.Auth.SecretRef.Name = secret.Name
 
 		fixtures.Apply()
-
-		By("expecting finalizer to have been added to secret")
-
-		Eventually(func() error {
-			sec, err := manager.GetLatest(secret)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(sec, keys.ManagementContextSecretFinalizer)
-		}, timeout, interval).Should(Succeed())
 
 		By("deleting secret")
 

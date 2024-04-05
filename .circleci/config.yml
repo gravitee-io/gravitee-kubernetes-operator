@@ -227,7 +227,7 @@ jobs:
             export APIM_IMAGE_TAG=master-latest
             make start-cluster
       - run:
-          name: Run integration tests
+          name: Run IT with filter << parameters.ginkgo-filter >>
           command: IT_ARGS="--label-filter=<< parameters.ginkgo-filter >> --cover --coverprofile=cover-<< parameters.ginkgo-filter >>.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" make -s it
       - store_test_results:
           path: /tmp/junit/reports
@@ -518,7 +518,7 @@ workflows:
       - unit-test:
           name: Run unit tests
       - integration-test:
-          name: Run integration tests with context
+          name: Run IT with context
           context: cicd-orchestrator
           requires:
             - Lint sources
@@ -528,7 +528,7 @@ workflows:
             - Run unit tests
           ginkgo-filter: withContext
       - integration-test:
-          name: Run integration tests without context
+          name: Run IT without context
           context: cicd-orchestrator
           requires:
             - Lint sources
@@ -547,8 +547,8 @@ workflows:
           name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
-            - Run integration tests with context
-            - Run integration tests without context
+            - Run IT with context
+            - Run IT without context
   deploy:
     when:
       and:

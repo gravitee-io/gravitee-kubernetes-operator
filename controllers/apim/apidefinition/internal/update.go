@@ -62,8 +62,6 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 		}
 	}
 
-	apiDefinition.Status.Status = gio.ProcessingStatusCompleted
-
 	return nil
 }
 

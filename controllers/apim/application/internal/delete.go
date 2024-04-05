@@ -24,7 +24,7 @@ import (
 func (d *Delegate) Delete(
 	application *gio.Application,
 ) error {
-	if !util.ContainsFinalizer(application, keys.ApplicationDeletionFinalizer) {
+	if !util.ContainsFinalizer(application, keys.ApplicationFinalizer) {
 		return nil
 	}
 
@@ -32,7 +32,7 @@ func (d *Delegate) Delete(
 		return err
 	}
 
-	util.RemoveFinalizer(application, keys.ApplicationDeletionFinalizer)
+	util.RemoveFinalizer(application, keys.ApplicationFinalizer)
 
 	return nil
 }

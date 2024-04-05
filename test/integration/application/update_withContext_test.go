@@ -37,7 +37,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 	It("should update application in APIM", func() {
 		fixtures := fixture.Builder().
-			WithApplication(constants.BasicApplication).
+			WithApplication(constants.Application).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()

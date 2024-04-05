@@ -53,7 +53,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
 				return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout, interval).Should(Succeed())
 
 			By("fixing the management context")
 
@@ -64,7 +64,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 			Eventually(func() error {
 				return manager.UpdateSafely(fixed)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout, interval).Should(Succeed())
 
 			By("expecting API status to be completed")
 
@@ -81,7 +81,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
 				return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout, interval).Should(Succeed())
 
 			By("calling rest API, expecting API to match status cross ID")
 

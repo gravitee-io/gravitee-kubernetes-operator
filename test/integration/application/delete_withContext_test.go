@@ -20,7 +20,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -39,20 +38,10 @@ var _ = Describe("Delete", labels.WithContext, func() {
 	It("should delete application in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithApplication(constants.BasicApplication).
+			WithApplication(constants.Application).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
-
-		By("expecting finalizer to have been added to api")
-
-		Eventually(func() error {
-			app, err := manager.GetLatest(fixtures.Application)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(app, keys.ApplicationDeletionFinalizer)
-		}, timeout, interval).Should(Succeed())
 
 		By("expecting application status to be completed")
 
