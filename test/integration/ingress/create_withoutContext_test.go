@@ -83,6 +83,6 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 			url, err := xhttp.NewURL(constants.BuildAPIEndpoint(apiDef))
 			Expect(err).ToNot(HaveOccurred())
 			return httpCli.Get(url.WithPath("hostname").String(), new(Host), xhttp.WithHost("httpbin.example.com"))
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 	})
 })

@@ -37,12 +37,12 @@ const (
 	ContextWithBadCredentialsFile = SamplesPath + "/management_context/dev/management-context-with-bearer-token.yml"
 	ContextWithBadURLFile         = SamplesPath + "/management_context/debug/management-context-with-credentials.yml"
 
-	BasicApiFile                        = SamplesPath + "/apim/api_definition/basic-api.yml"
-	BasicApiWithRateLimit               = SamplesPath + "/apim/api_definition/basic-api-with-rate-limit.yml"
+	Api                                 = SamplesPath + "/apim/api_definition/api.yml"
+	ApiWithRateLimit                    = SamplesPath + "/apim/api_definition/api-with-rate-limit.yml"
 	ApiWithStateStopped                 = SamplesPath + "/apim/api_definition/api-with-state-stopped.yml"
 	ApiWithSyncFromAPIM                 = SamplesPath + "/apim/api_definition/api-with-sync-from-apim.yml"
 	ApiWithIds                          = SamplesPath + "/apim/api_definition/api-with-ids.yml"
-	BasicApiWithDisabledPolicy          = SamplesPath + "/apim/api_definition/basic-api-with-disabled-policy.yml"
+	ApiWithDisabledPolicy               = SamplesPath + "/apim/api_definition/api-with-disabled-policy.yml"
 	ApiWithTemplatingFile               = SamplesPath + "/apim/api_definition/api-with-templating.yml"
 	ApiWithTemplatingSecretFile         = SamplesPath + "/apim/api_definition/api-with-templating-secret.yml"
 	ApiWithTemplatingConfigMapFile      = SamplesPath + "/apim/api_definition/api-with-templating-config-map.yml"
@@ -92,7 +92,7 @@ const (
 	IngressWithTLSSecretFile   = SamplesPath + "/ingress/ingress-with-tls-secret.yml"
 	IngressResponse404CMFile   = SamplesPath + "/ingress/ingress-response-404-config-map.yaml"
 
-	BasicApplication = SamplesPath + "/apim/application/basic-application.yml"
+	Application = SamplesPath + "/apim/application/application.yml"
 )
 
 func BuildAPIEndpoint(api *v1alpha1.ApiDefinition) string {

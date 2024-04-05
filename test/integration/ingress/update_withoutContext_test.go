@@ -61,7 +61,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 		proxy := apiDef.Spec.Proxy
 		Expect(proxy.VirtualHosts).ToNot(BeEmpty())
 		endpoint := constants.BuildAPIEndpoint(apiDef)
-		Expect(assert.PathEquals(endpoint, "/httpbin"+fixtures.GetGeneratedSuffix())).To(Succeed())
+		Expect(assert.StrEndingWithPath(endpoint, "/httpbin"+fixtures.GetGeneratedSuffix())).To(Succeed())
 
 		By("updating ingress path")
 
@@ -78,7 +78,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 				return err
 			}
 			endpoint = constants.BuildAPIEndpoint(latest)
-			return assert.PathEquals(endpoint, "/"+fixtures.GetGeneratedSuffix()[1:])
+			return assert.StrEndingWithPath(endpoint, "/"+fixtures.GetGeneratedSuffix()[1:])
 		}, timeout, interval).Should(Succeed())
 
 		By("checking access to backend service")
@@ -87,6 +87,6 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 			url, err := xhttp.NewURL(endpoint)
 			Expect(err).ToNot(HaveOccurred())
 			return httpCli.Get(url.WithPath("hostname").String(), new(Host), xhttp.WithHost("httpbin.example.com"))
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 	})
 })

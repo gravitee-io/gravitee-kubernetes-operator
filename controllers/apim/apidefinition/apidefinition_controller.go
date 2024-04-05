@@ -32,7 +32,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 
 	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -63,7 +63,7 @@ type Reconciler struct {
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	apiDefinition := &gio.ApiDefinition{}
+	apiDefinition := &v1alpha1.ApiDefinition{}
 
 	if err := r.Get(ctx, req.NamespacedName, apiDefinition); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -86,19 +86,22 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	status := &gio.ApiDefinitionStatus{}
+	status := &v1alpha1.ApiDefinitionStatus{}
 	dc := apiDefinition.DeepCopy()
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
-		util.AddFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
+		util.AddFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, keys.LastSpecHash, hash.Calculate(&apiDefinition.Spec))
 
 		if err := delegate.ResolveTemplate(apiDefinition); err != nil {
+			status.Status = v1alpha1.ProcessingStatusFailed
 			return err
 		}
 
 		if apiDefinition.Spec.Context != nil {
 			if err := delegate.ResolveContext(apiDefinition); err != nil {
+				status.Status = v1alpha1.ProcessingStatusFailed
 				logger.Info("Unable to resolve context, no attempt will be made to sync with APIM")
+				return err
 			}
 		}
 
@@ -139,9 +142,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.ApiDefinition{}).
-		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
-		Watches(&gio.ApiResource{}, r.Watcher.WatchResources()).
+		For(&v1alpha1.ApiDefinition{}).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
+		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources()).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

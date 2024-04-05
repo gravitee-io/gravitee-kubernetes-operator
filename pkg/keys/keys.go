@@ -39,7 +39,7 @@ const Extends = "gravitee.io/extends"
 
 // Kubernetes Finalizers.
 const (
-	ApiDefinitionDeletionFinalizer = "finalizers.gravitee.io/apidefinitiondeletion"
+	ApiDefinitionFinalizer         = "finalizers.gravitee.io/apidefinitiondeletion"
 	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
 	ManagementContextFinalizer     = "finalizers.gravitee.io/managementcontextdeletion"
 	ApiResourceFinalizer           = "finalizers.gravitee.io/apiresource"
@@ -47,6 +47,6 @@ const (
 	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
 	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
 	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
-	ApplicationDeletionFinalizer     = "finalizers.gravitee.io/applicationdeletion"
+	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 )

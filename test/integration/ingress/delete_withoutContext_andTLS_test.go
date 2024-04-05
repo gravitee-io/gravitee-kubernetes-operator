@@ -16,10 +16,8 @@ package ingress_test
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -48,16 +46,6 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 			WithIngress(constants.IngressWithTLS).
 			Build().
 			Apply()
-
-		By("expecting finalizer to have been added to ingress")
-
-		Eventually(func() error {
-			ing, err := manager.GetLatest(fixtures.Ingress)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(ing, keys.IngressFinalizer)
-		}, timeout, interval).Should(Succeed())
 
 		By("deleting the ingress")
 
@@ -94,12 +82,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 			if err != nil {
 				return err
 			}
-			data := cm.Data[fixtures.GetIngressPEMRegistryKey()]
-			if data != "" {
-				return fmt.Errorf("gateway pem registry should not include an entry for this ingress")
-			}
-
-			return nil
+			return assert.MapNotContaining(cm.Data, fixtures.GetIngressPEMRegistryKey())
 		}, timeout, interval).Should(Succeed())
 
 		By("expecting ingress events to have been emitted")

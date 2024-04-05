@@ -36,7 +36,7 @@ var _ = Describe("Stop", labels.WithoutContext, func() {
 
 	It("should start API", func() {
 		fixtures := fixture.Builder().
-			WithAPI(constants.BasicApiFile).
+			WithAPI(constants.Api).
 			Build().
 			Apply()
 
@@ -47,7 +47,7 @@ var _ = Describe("Stop", labels.WithoutContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("updating the API, setting state to 'STOPPED'")
 
@@ -56,14 +56,14 @@ var _ = Describe("Stop", labels.WithoutContext, func() {
 
 		Eventually(func() error {
 			return manager.UpdateSafely(updated)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("calling gateway endpoint, expecting status 404")
 
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 	})
 })

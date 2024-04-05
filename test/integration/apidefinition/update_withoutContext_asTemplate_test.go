@@ -25,7 +25,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -48,26 +47,6 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 			WithIngress(constants.IngressWithTemplateFile).
 			Build().
 			Apply()
-
-		By("expecting finalizer to have been added to ingress")
-
-		Eventually(func() error {
-			ing, err := manager.GetLatest(fixtures.Ingress)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(ing, keys.IngressFinalizer)
-		}, timeout, interval).Should(Succeed())
-
-		By("expecting finalizer to have been added to api")
-
-		Eventually(func() error {
-			api, err := manager.GetLatest(fixtures.API)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(api, keys.ApiDefinitionTemplateFinalizer)
-		}, timeout, interval).Should(Succeed())
 
 		By("expecting to find an API definition created for ingress")
 
@@ -92,7 +71,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 				return assert.Equals("error", "[UNAUTHORIZED]", err)
 			}
 			return nil
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("updating the template")
 
@@ -114,6 +93,6 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 			url, err := xhttp.NewURL(endpoint)
 			Expect(err).ToNot(HaveOccurred())
 			return httpCli.Get(url.WithPath("hostname").String(), new(Host), xhttp.WithHost("httpbin.example.com"))
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 	})
 })

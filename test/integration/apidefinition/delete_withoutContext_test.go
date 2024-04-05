@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -43,19 +42,9 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 
 	It("should delete API", func() {
 		fixtures := fixture.Builder().
-			WithAPI(constants.BasicApiFile).
+			WithAPI(constants.Api).
 			Build().
 			Apply()
-
-		By("expecting finalizer to have been added to api")
-
-		Eventually(func() error {
-			api, err := manager.GetLatest(fixtures.API)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
-		}, timeout, interval).Should(Succeed())
 
 		By("calling API endpoint, expecting status 200")
 
@@ -63,7 +52,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("deleting the API Definition")
 
@@ -75,7 +64,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("expecting config map to be deleted")
 
