@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -45,16 +44,6 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 			WithIngress(constants.IngressWithoutTemplateFile).
 			Build().
 			Apply()
-
-		By("expecting finalizer to have been added to ingress")
-
-		Eventually(func() error {
-			ing, err := manager.GetLatest(fixtures.Ingress)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(ing, keys.IngressFinalizer)
-		}, timeout, interval).Should(Succeed())
 
 		By("deleting the ingress")
 

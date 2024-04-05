@@ -68,11 +68,11 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
 				return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout, interval).Should(Succeed())
 		},
 		Entry(
 			"should make api available",
-			fixture.Builder().WithAPI(constants.BasicApiFile),
+			fixture.Builder().WithAPI(constants.Api),
 			200,
 		),
 		Entry(
@@ -82,12 +82,12 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		),
 		Entry(
 			"should make api with rate limit available",
-			fixture.Builder().WithAPI(constants.BasicApiWithRateLimit),
+			fixture.Builder().WithAPI(constants.ApiWithRateLimit),
 			200,
 		),
 		Entry(
 			"should make api with disabled policy available",
-			fixture.Builder().WithAPI(constants.BasicApiWithDisabledPolicy),
+			fixture.Builder().WithAPI(constants.ApiWithDisabledPolicy),
 			200,
 		),
 	)

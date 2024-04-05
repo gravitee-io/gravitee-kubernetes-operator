@@ -32,7 +32,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func AssertFinalizer(object client.Object, value string) error {
+func HasFinalizer(object client.Object, value string) error {
 	if !controllerutil.ContainsFinalizer(object, value) {
 		return fmt.Errorf(
 			"expected %s %s to have finalizer %s",
@@ -42,8 +42,8 @@ func AssertFinalizer(object client.Object, value string) error {
 	return nil
 }
 
-func PathEquals(url, path string) error {
-	return Equals("path", path, url[strings.LastIndex(url, "/"):])
+func StrEndingWithPath(str, path string) error {
+	return Equals("path", path, str[strings.LastIndex(str, "/"):])
 }
 
 func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
@@ -52,6 +52,10 @@ func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
 
 func ApplicationCompleted(app *v1alpha1.Application) error {
 	return Equals("reconcile status", v1alpha1.ProcessingStatusCompleted, app.Status.Status)
+}
+
+func ApplicationFailed(app *v1alpha1.Application) error {
+	return Equals("reconcile status", v1alpha1.ProcessingStatusFailed, app.Status.Status)
 }
 
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
@@ -68,7 +72,7 @@ func NoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus int) err
 	return nil
 }
 
-func StrStartsWith(str, prefix string) error {
+func StrStartingWith(str, prefix string) error {
 	if !strings.HasPrefix(str, prefix) {
 		return fmt.Errorf("expected %s to start with %s", str, prefix)
 	}
@@ -92,6 +96,21 @@ func NotEmptySlice[T any](field string, value []T) error {
 func NotEmptyString(field string, value string) error {
 	if value == "" {
 		return fmt.Errorf("expected %s not to be empty", field)
+	}
+	return nil
+}
+
+func MapContaining[K comparable, V any](m map[K]V, key K, value V) error {
+	val, ok := m[key]
+	if !ok {
+		return fmt.Errorf("expected map to contain key %v", key)
+	}
+	return Equals(fmt.Sprintf("map[%v]", key), value, val)
+}
+
+func MapNotContaining[K comparable, V any](m map[K]V, key K) error {
+	if _, ok := m[key]; ok {
+		return fmt.Errorf("expected map to not contain key %v", key)
 	}
 	return nil
 }

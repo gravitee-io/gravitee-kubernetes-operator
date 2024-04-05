@@ -65,7 +65,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
 				return assert.NoErrorAndHTTPStatus(callErr, res, status)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout, interval).Should(Succeed())
 
 			By("calling rest API, expecting API to match status cross ID")
 

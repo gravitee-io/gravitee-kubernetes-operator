@@ -17,7 +17,6 @@ package ingress_test
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,6 +24,7 @@ import (
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
@@ -84,13 +84,11 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 			if err != nil {
 				return err
 			}
-
-			data := cm.Data[fixtures.GetIngressPEMRegistryKey()]
-			if !strings.Contains(data, "httpbin.example.com") {
-				return fmt.Errorf("gateway pem registry should include the secret name")
-			}
-
-			return nil
+			return assert.MapContaining(
+				cm.Data,
+				fixtures.GetIngressPEMRegistryKey(),
+				fmt.Sprintf(`["%s/httpbin.example.com"]`, constants.Namespace),
+			)
 		}, timeout, interval).Should(Succeed())
 	})
 })

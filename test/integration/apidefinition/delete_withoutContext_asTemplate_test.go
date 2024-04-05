@@ -50,7 +50,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 			if err != nil {
 				return err
 			}
-			return assert.AssertFinalizer(api, keys.ApiDefinitionTemplateFinalizer)
+			return assert.HasFinalizer(api, keys.ApiDefinitionTemplateFinalizer)
 		}, timeout, interval).Should(Succeed())
 
 		By("deleting the template")

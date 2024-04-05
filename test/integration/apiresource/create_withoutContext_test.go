@@ -47,7 +47,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
 				return assert.NoErrorAndHTTPStatus(callErr, res, status)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout, interval).Should(Succeed())
 
 			By("expecting API event to have been emitted")
 
