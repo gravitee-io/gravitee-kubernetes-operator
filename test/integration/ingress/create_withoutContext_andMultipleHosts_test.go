@@ -114,9 +114,9 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 		Eventually(func() error {
 			return httpCli.Get(url, host, xhttp.WithHost("foo.example.com"))
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
-		Expect(assert.StrStartsWith(host.Name, "httpbin-1")).To(Succeed())
+		Expect(assert.StrStartingWith(host.Name, "httpbin-1")).To(Succeed())
 
 		By("checking routing to httpbin-2")
 
@@ -125,9 +125,9 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 		Eventually(func() error {
 			return httpCli.Get(url, host, xhttp.WithHost("bar.example.com"))
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
-		Expect(assert.StrStartsWith(host.Name, "httpbin-2")).To(Succeed())
+		Expect(assert.StrStartingWith(host.Name, "httpbin-2")).To(Succeed())
 
 		By("checking routing to httpbin-3")
 
@@ -136,9 +136,9 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 		Eventually(func() error {
 			return httpCli.Get(url, host)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
-		Expect(assert.StrStartsWith(host.Name, "httpbin-3")).To(Succeed())
+		Expect(assert.StrStartingWith(host.Name, "httpbin-3")).To(Succeed())
 
 		By("checking error routing using response template")
 
@@ -149,6 +149,6 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 				return assert.Equals("error", nfErr, callErr)
 			}
 			return assert.Equals("message", "not-found-test", nfErr.Message)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 	})
 })

@@ -40,7 +40,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 	It("should update api definition", func() {
 		fixtures := fixture.Builder().
-			WithAPI(constants.BasicApiFile).
+			WithAPI(constants.Api).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()

@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -47,16 +46,6 @@ var _ = Describe("Delete", labels.WithContext, func() {
 			WithAPI(constants.ApiWithContextFile).
 			Build().Apply()
 
-		By("expecting finalizer to have been added to api")
-
-		Eventually(func() error {
-			api, err := manager.GetLatest(fixtures.API)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(api, keys.ApiDefinitionDeletionFinalizer)
-		}, timeout, interval).Should(Succeed())
-
 		By("deleting the API in APIM")
 
 		apim := apim.NewClient(ctx)
@@ -70,7 +59,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("deleting the API Definition")
 
@@ -92,7 +81,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusNotFound)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 
 		By("expecting API events to have been emitted")
 

@@ -33,7 +33,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 
 	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
@@ -65,7 +65,7 @@ type Reconciler struct {
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	application := &gio.Application{}
+	application := &v1alpha1.Application{}
 	if err := r.Get(ctx, req.NamespacedName, application); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -78,17 +78,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	status := &gio.ApplicationStatus{}
+	status := &v1alpha1.ApplicationStatus{}
 	dc := application.DeepCopy()
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
-		util.AddFinalizer(application, keys.ApplicationDeletionFinalizer)
+		util.AddFinalizer(application, keys.ApplicationFinalizer)
 		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
 		if err := delegate.ResolveTemplate(application); err != nil {
+			status.Status = v1alpha1.ProcessingStatusFailed
 			return err
 		}
 
 		if err := delegate.ResolveContext(application); err != nil {
+			status.Status = v1alpha1.ProcessingStatusFailed
 			logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
 			return err
 		}
@@ -131,8 +133,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.Application{}).
-		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		For(&v1alpha1.Application{}).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

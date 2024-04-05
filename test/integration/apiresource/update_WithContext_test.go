@@ -51,7 +51,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			Eventually(func() error {
 				res, callErr := httpClient.Get(endpoint)
 				return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusUnauthorized)
-			}, timeout, interval).ShouldNot(HaveOccurred())
+			}, timeout, interval).Should(Succeed())
 
 			By("calling rest API, expecting to find resources in API")
 

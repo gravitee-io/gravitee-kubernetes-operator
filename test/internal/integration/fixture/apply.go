@@ -17,13 +17,11 @@ package fixture
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/gomega"
-	netV1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -44,53 +42,41 @@ func (o *Objects) Apply() *Objects {
 	if o.Context != nil {
 		Expect(cli.Create(ctx, o.Context)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp := new(v1alpha1.ManagementContext)
-			key := types.NamespacedName{
-				Namespace: o.Context.GetNamespace(),
-				Name:      o.Context.GetName(),
-			}
-			if err := cli.Get(ctx, key, cp); err != nil {
+			cp, err := manager.GetLatest(o.Context)
+			if err != nil {
 				return err
 			}
 			o.Context.Status = cp.Status
 			o.Context.ObjectMeta = cp.ObjectMeta
-			return nil
+			return assert.HasFinalizer(o.Context, keys.ManagementContextFinalizer)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Context.Name)
 	}
 
 	if o.Resource != nil {
 		Expect(cli.Create(ctx, o.Resource)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp := new(v1alpha1.ApiResource)
-			key := types.NamespacedName{
-				Namespace: o.Resource.GetNamespace(),
-				Name:      o.Resource.GetName(),
-			}
-			if err := cli.Get(ctx, key, cp); err != nil {
+			cp, err := manager.GetLatest(o.Resource)
+			if err != nil {
 				return err
 			}
 			o.Resource.Status = cp.Status
 			o.Resource.ObjectMeta = cp.ObjectMeta
-			return nil
+			return assert.HasFinalizer(o.Resource, keys.ApiResourceFinalizer)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Resource.Name)
 	}
 
 	if o.Application != nil {
 		Expect(cli.Create(ctx, o.Application)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp := new(v1alpha1.Application)
-			key := types.NamespacedName{
-				Namespace: o.Application.GetNamespace(),
-				Name:      o.Application.GetName(),
-			}
-			if err := cli.Get(ctx, key, cp); err != nil {
-				return err
-			}
-			if err := assert.NotEmptyString("status", string(cp.Status.Status)); err != nil {
+			cp, err := manager.GetLatest(o.Application)
+			if err != nil {
 				return err
 			}
 			o.Application.Status = cp.Status
 			o.Application.ObjectMeta = cp.ObjectMeta
+			if err = assert.ApplicationCompleted(o.Application); err != nil {
+				return assert.ApplicationFailed(o.Application)
+			}
 			return nil
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Application.Name)
 	}
@@ -98,19 +84,18 @@ func (o *Objects) Apply() *Objects {
 	if o.API != nil {
 		Expect(cli.Create(ctx, o.API)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp := new(v1alpha1.ApiDefinition)
-			key := types.NamespacedName{
-				Namespace: o.API.Namespace,
-				Name:      o.API.Name,
-			}
-			if err := cli.Get(ctx, key, cp); err != nil {
-				return err
-			}
-			if err := assert.NotEmptyString("status", string(cp.Status.Status)); err != nil {
+			cp, err := manager.GetLatest(o.API)
+			if err != nil {
 				return err
 			}
 			o.API.Status = cp.Status
 			o.API.ObjectMeta = cp.ObjectMeta
+			if isTemplate(o.API) {
+				return assert.HasFinalizer(o.API, keys.ApiDefinitionTemplateFinalizer)
+			}
+			if err = assert.ApiCompleted(o.API); err != nil {
+				return assert.ApiFailed(o.API)
+			}
 			return nil
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.API.Name)
 	}
@@ -118,17 +103,13 @@ func (o *Objects) Apply() *Objects {
 	if o.Ingress != nil {
 		Expect(cli.Create(ctx, o.Ingress)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp := new(netV1.Ingress)
-			key := types.NamespacedName{
-				Namespace: o.Ingress.GetNamespace(),
-				Name:      o.Ingress.GetName(),
-			}
-			if err := cli.Get(ctx, key, cp); err != nil {
+			cp, err := manager.GetLatest(o.Ingress)
+			if err != nil {
 				return err
 			}
 			o.Ingress.Status = cp.Status
 			o.Ingress.ObjectMeta = cp.ObjectMeta
-			return nil
+			return assert.HasFinalizer(o.Ingress, keys.IngressFinalizer)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Ingress.Name)
 	}
 

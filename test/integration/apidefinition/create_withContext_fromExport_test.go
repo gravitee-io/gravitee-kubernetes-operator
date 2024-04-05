@@ -69,14 +69,13 @@ var _ = Describe("Create", labels.WithContext, func() {
 				return apiErr
 			}
 			return assert.Equals("API origin", "kubernetes", api.DefinitionContext.Origin)
-		}, timeout, interval).ShouldNot(HaveOccurred())
-
+		}, timeout, interval).Should(Succeed())
 		By("calling gateway endpoint, expecting status 200")
 
 		endpoint := constants.BuildAPIEndpoint(fixtures.API)
 		Eventually(func() error {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).ShouldNot(HaveOccurred())
+		}, timeout, interval).Should(Succeed())
 	})
 })

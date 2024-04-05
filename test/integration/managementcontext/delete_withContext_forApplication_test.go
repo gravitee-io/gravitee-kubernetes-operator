@@ -20,7 +20,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -39,20 +38,10 @@ var _ = Describe("Delete", labels.WithContext, func() {
 	It("should delete only with no more API references", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
-			WithApplication(constants.BasicApplication).
+			WithApplication(constants.Application).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
-
-		By("expecting finalizer to have been added to context")
-
-		Eventually(func() error {
-			mCtx, err := manager.GetLatest(fixtures.Context)
-			if err != nil {
-				return err
-			}
-			return assert.AssertFinalizer(mCtx, keys.ManagementContextFinalizer)
-		}, timeout, interval).Should(Succeed())
 
 		By("deleting management context")
 

@@ -24,7 +24,7 @@ import (
 func (d *Delegate) Delete(
 	apiDefinition *gio.ApiDefinition,
 ) error {
-	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer) {
+	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionFinalizer) {
 		return nil
 	}
 
@@ -34,7 +34,7 @@ func (d *Delegate) Delete(
 		}
 	}
 
-	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionDeletionFinalizer)
+	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
 
 	return nil
 }
