@@ -179,7 +179,7 @@ jobs:
     machine:
       image: ubuntu-2204:2024.01.2
       docker_layer_caching: true
-    resource_class: medium
+    resource_class: small
     parameters:
       ginkgo-filter:
         type: enum
