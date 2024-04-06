@@ -176,9 +176,8 @@ jobs:
           command: make -s unit
 
   integration-test:
-    machine:
-      image: ubuntu-2204:2024.01.2
-      docker_layer_caching: true
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: medium
     parameters:
       ginkgo-filter:
@@ -188,9 +187,8 @@ jobs:
           - withoutContext
     steps:
       - checkout
-      - go/install:
-          version: "<< pipeline.parameters.go-version >>"
-      - go/load-cache
+      - setup_remote_docker:
+          docker_layer_caching: true
       - kubernetes/install-kubectl
       - helm/install_helm_client
       - run:
@@ -211,9 +209,7 @@ jobs:
       - run:
           name: Docker login
           command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
-      - run:
-          name: Install ginkgo
-          command: make ginkgo
+      - go/mod-download-cached
       - when:
           condition:
             equal: [withoutContext, << parameters.ginkgo-filter >>]
