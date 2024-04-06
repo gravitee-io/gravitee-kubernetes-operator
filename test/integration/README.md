@@ -40,17 +40,17 @@ This filters are
   - withContext (only passing with the default mode)
   - withoutContext (passing with both modes)
   
-Running the cluster with one more or the other and applying filters is described in the next sections.
+Running the cluster with one mode or the other and applying filters is described in the next sections.
 
 ## Running the integration cluster
 
-The make start-cluster target allows you to start a local kind cluster in order to run the tests. Configuring the way APIM is deployed can be achieved using the following environment variables.
+The `start-cluster` make target allows you to start a local kind cluster in order to run the tests. Configuring the way APIM is deployed can be achieved using the following environment variables.
 
 | Name | Description | Default value |
 |---|---|---|
 | APIM_VALUES | The value file to use when deploying APIM to the cluster using Helm. (defaults to deploying all components) | `values.yaml` |
-| APIM_IMAGE_REGISTRY | The docker registry to pull APIM images from. Useful if you want to work against images under development, which  are published in a private registry. | `graviteeio`  (dockerhub) |
-| APIM_IMAGE_TAG | The docker tag used to pull APIM images. Useful if you want to run test against a support version | `latest` |
+| APIM_IMAGE_REGISTRY | The docker registry to pull APIM images from. Useful if you want to work against images under development, which  are published in a private registry (defaults to docker hub public image registry) | `graviteeio` |
+| APIM_IMAGE_TAG | The docker tag used to pull APIM images. Useful if you want to run test against a support version (defaults to the latest published APIM release) | `latest` |
 
 ### Examples
 
@@ -106,9 +106,6 @@ test
     └── secret
 ```
 
-This means that you have control on wether to run all the tests or only a subset of them.
-
-
 ### Examples
 
 Running all integration tests at once
@@ -141,7 +138,7 @@ Running only apidefinition tests involving a management context
 ### Use one file per test
 
 Making async assertions against the cluster makes the code verbose so let's 
-not bloat files and stick to this convention 🙏.
+not bloat files and stick to this convention 🙏
 
 ### Stick to the naming convention
 
@@ -165,7 +162,7 @@ create_withContext_andLocalFalse_test.go
 
 ### Gomega conventions
 
-Don't use boolean assertions except when you are testing against a flag. This results in meaningless feedbacks when the test fails and dreadful debugging sessions.
+Don't use boolean assertions except when you are testing against a flag. This results in meaningless feedbacks when the test fails.
 
 ```golang
 // Don't use this
@@ -279,18 +276,21 @@ func TestResources(t *testing.T) {
 }
 
 var _ = SynchronizedBeforeSuite(func() {
-	// If we run the tests in parallel, this function is executed before all parallel
-    // node kicks in
+	// If we run the tests in parallel, this function is executed 
+    // before executing parallel nodes
 }, func() {
 	// Executed before each parallel node
 })
 
 
 var _ = SynchronizedAfterSuite(func() {
+    // If we run the tests in parallel, this function is executed 
+    // after all parallel nodes have been executed
+
     // This kills the operator process spawned during test initialization
 	gexec.KillAndWait(5 * time.Second)
 }, func() {
-    // Same thing as above, but after
+    // Executed after each parallel node
 })
 ```
 
@@ -301,33 +301,26 @@ Labels are exposed into a `labels` sub package located in the test `internal/int
 ```golang
 // First parameter should be the operation under test
 // Second parameter is the label that will allow applying filters when running your test
-// Last argument is a function wrapper for your test
-var _ = Describe("Create", labels.WithContext, func() {
-	timeout := constants.EventualTimeout
-	interval := constants.Interval
-
-	ctx := context.Background()
-
+var _ = Describe("Create", labels.WithoutContext, func() {
 	It("should create an API Definition", func() {
-        // This will initialize required resource from the examples directory
+        // This will initialize required resources from the examples directory
         // and apply them on the cluster.
 		fixtures := fixture.Builder().
-			WithAPI(constants.ApiWithStateStopped).
-			WithContext(constants.ContextWithSecretFile).
+			WithAPI(constants.Api).
 			Build().
 			Apply()
 
+
+        By("calling gateway endpoint, expecting status 200")
+        
+        httpClient := http.Client{Timeout: 5 * time.Second}
 		endpoint := constants.BuildAPIEndpoint(fixtures.API)
 
-		By("getting the API Definition, expecting it to be stopped")
-
 		Eventually(func() error {
-			latest, err := manager.GetLatest(fixtures.API)
-            if err != nil {
-                return err
-            }
-            return assert.Equals("state", "STOPPED", latest.Spec.State)
-		}, timeout, interval).Should(Succeed())
+			res, err := httpClient.Get(endpoint)
+			return assert.NoErrorAndHTTPStatus(err, res, http.StatusOK)
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+
 	})
 })
 ```
