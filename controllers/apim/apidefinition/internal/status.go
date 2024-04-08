@@ -15,19 +15,19 @@
 package internal
 
 import (
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-func (d *Delegate) UpdateStatusSuccess(api *gio.ApiDefinition) error {
+func (d *Delegate) UpdateStatusSuccess(api *v1alpha1.ApiDefinition) error {
 	if api.IsBeingDeleted() {
 		return nil
 	}
 	api.Status.ObservedGeneration = api.ObjectMeta.Generation
-	api.Status.Status = gio.ProcessingStatusCompleted
+	api.Status.Status = v1alpha1.ProcessingStatusCompleted
 	return d.k8s.Status().Update(d.ctx, api)
 }
 
-func (d *Delegate) UpdateStatusFailure(api *gio.ApiDefinition) error {
-	api.Status.Status = gio.ProcessingStatusFailed
+func (d *Delegate) UpdateStatusFailure(api *v1alpha1.ApiDefinition) error {
+	api.Status.Status = v1alpha1.ProcessingStatusFailed
 	return d.k8s.Status().Update(d.ctx, api)
 }

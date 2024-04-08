@@ -15,14 +15,14 @@
 package internal
 
 import (
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (d *Delegate) Delete(
-	apiDefinition *gio.ApiDefinition,
+	apiDefinition *v1alpha1.ApiDefinition,
 ) error {
 	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionFinalizer) {
 		return nil
@@ -39,6 +39,6 @@ func (d *Delegate) Delete(
 	return nil
 }
 
-func (d *Delegate) deleteWithContext(api *gio.ApiDefinition) error {
+func (d *Delegate) deleteWithContext(api *v1alpha1.ApiDefinition) error {
 	return errors.IgnoreNotFound(d.apim.APIs.Delete(api.Status.ID))
 }

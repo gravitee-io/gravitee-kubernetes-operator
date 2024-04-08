@@ -20,7 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 
 	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	coreV1 "k8s.io/api/core/v1"
 	k8s "sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,12 +45,12 @@ func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate
 	}
 }
 
-func (d *Delegate) ResolveTemplate(application *gio.Application) error {
+func (d *Delegate) ResolveTemplate(application *v1alpha1.Application) error {
 	return template.NewResolver(d.ctx, d.k8s, d.log, application).Resolve()
 }
 
-func (d *Delegate) ResolveContext(application *gio.Application) error {
-	managementContext := new(gio.ManagementContext)
+func (d *Delegate) ResolveContext(application *v1alpha1.Application) error {
+	managementContext := new(v1alpha1.ManagementContext)
 
 	ref := application.Spec.Context
 	ns := ref.ToK8sType()
@@ -78,7 +78,7 @@ func (d *Delegate) HasContext() bool {
 	return d.apim != nil
 }
 
-func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
+func (d *Delegate) resolveContextSecrets(context *v1alpha1.ManagementContext) error {
 	management := context.Spec
 
 	if management.HasSecretRef() {
@@ -102,7 +102,7 @@ func (d *Delegate) resolveContextSecrets(context *gio.ManagementContext) error {
 	return nil
 }
 
-func getSecretNamespace(context *gio.ManagementContext) string {
+func getSecretNamespace(context *v1alpha1.ManagementContext) string {
 	secretRef := context.Spec.SecretRef()
 	if secretRef.Namespace != "" {
 		return secretRef.Namespace
