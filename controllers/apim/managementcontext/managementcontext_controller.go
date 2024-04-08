@@ -39,7 +39,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 // Reconciler reconciles a ManagementContext object.
@@ -55,7 +55,7 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	managementContext := &gio.ManagementContext{}
+	managementContext := &v1alpha1.ManagementContext{}
 	if err := r.Get(ctx, req.NamespacedName, managementContext); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -98,7 +98,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.ManagementContext{}).
+		For(&v1alpha1.ManagementContext{}).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

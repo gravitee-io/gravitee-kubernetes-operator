@@ -34,7 +34,7 @@ import (
 	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 
 	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
 	p "github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	netV1 "k8s.io/api/networking/v1"
@@ -103,7 +103,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 		switch t := o.(type) {
 		case *netV1.Ingress:
 			return k8s.IsGraviteeIngress(t)
-		case *gio.ApiDefinition:
+		case *v1alpha1.ApiDefinition:
 			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
 		case *corev1.Secret:
 			return t.Type == "kubernetes.io/tls"
@@ -136,8 +136,8 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
-		Owns(&gio.ApiDefinition{}).
-		Watches(&gio.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
+		Owns(&v1alpha1.ApiDefinition{}).
+		Watches(&v1alpha1.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
 		Watches(&corev1.Secret{}, r.Watcher.WatchTLSSecret()).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)
