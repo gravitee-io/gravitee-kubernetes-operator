@@ -15,6 +15,7 @@
 package fixture
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/docker/docker/pkg/namesgenerator"
@@ -26,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	coreV1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 type Files struct {
@@ -135,7 +137,12 @@ func randomizeIngressRules(ing *netV1.Ingress, suffix string) {
 }
 
 func generateRandomSuffix() string {
-	return "-" + strings.ReplaceAll(namesgenerator.GetRandomName(0), "_", "-")
+	randMax := 10
+	return fmt.Sprintf(
+		"-%s-%02d",
+		strings.ReplaceAll(namesgenerator.GetRandomName(0), "_", "-"),
+		rand.Intn(randMax),
+	)
 }
 
 func isTemplate(api *v1alpha1.ApiDefinition) bool {
