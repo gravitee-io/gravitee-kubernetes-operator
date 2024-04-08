@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -38,7 +38,7 @@ const (
 	defaultOrgId         = "DEFAULT"
 )
 
-func (d *Delegate) updateConfigMap(api *gio.ApiDefinition) error {
+func (d *Delegate) updateConfigMap(api *v1alpha1.ApiDefinition) error {
 	if api.Spec.State == base.StateStopped {
 		if err := d.deleteConfigMap(api); err != nil {
 			d.log.Error(err, "Unable to delete ConfigMap from API definition")
@@ -55,7 +55,7 @@ func (d *Delegate) updateConfigMap(api *gio.ApiDefinition) error {
 }
 
 func (d *Delegate) saveConfigMap(
-	apiDefinition *gio.ApiDefinition,
+	apiDefinition *v1alpha1.ApiDefinition,
 ) error {
 	if apiDefinition.Spec.State == base.StateStopped {
 		return nil
@@ -134,7 +134,7 @@ func (d *Delegate) saveConfigMap(
 	return nil
 }
 
-func (d *Delegate) deleteConfigMap(api *gio.ApiDefinition) error {
+func (d *Delegate) deleteConfigMap(api *v1alpha1.ApiDefinition) error {
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      api.Name,

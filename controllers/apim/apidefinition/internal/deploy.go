@@ -20,10 +20,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-func (d *Delegate) deploy(api *gio.ApiDefinition) error {
+func (d *Delegate) deploy(api *v1alpha1.ApiDefinition) error {
 	if api.Spec.IsLocal {
 		return d.updateConfigMap(api)
 	}
@@ -40,7 +40,7 @@ func (d *Delegate) deploy(api *gio.ApiDefinition) error {
 	return d.apim.APIs.Deploy(api.Spec.ID)
 }
 
-func (d *Delegate) updateState(api *gio.ApiDefinition) error {
+func (d *Delegate) updateState(api *v1alpha1.ApiDefinition) error {
 	if api.Spec.IsLocal {
 		return nil
 	}
