@@ -22,7 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/el"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -95,7 +95,7 @@ func newIndexedPath(path *v1.HTTPIngressPath, ruleIndex, index int) *indexedPath
 // The host header is used to select the flow, and a dynamic routing policy routes the request
 // to the backend service, identified by the endpoint name. Is no rule matches,
 // a 404 response is returned by a flow that negates all the previous conditions.
-func (m *Mapper) Map(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio.ApiDefinition {
+func (m *Mapper) Map(apiDefinition *v1alpha1.ApiDefinition, ingress *v1.Ingress) *v1alpha1.ApiDefinition {
 	m.hosts = getHosts(ingress)
 	cp := buildApiCopy(apiDefinition, ingress)
 	cp.Spec.Proxy = buildProxy(ingress)
@@ -121,13 +121,13 @@ func getHosts(ingress *v1.Ingress) map[string]bool {
 	return hosts
 }
 
-func buildApiCopy(apiDefinition *gio.ApiDefinition, ingress *v1.Ingress) *gio.ApiDefinition {
+func buildApiCopy(apiDefinition *v1alpha1.ApiDefinition, ingress *v1.Ingress) *v1alpha1.ApiDefinition {
 	spec := *apiDefinition.Spec.DeepCopy()
 	spec.Name = ingress.Name
 	spec.Description = keys.IngressLabel
-	spec.Version = gio.GroupVersion.Version
+	spec.Version = v1alpha1.GroupVersion.Version
 
-	return &gio.ApiDefinition{
+	return &v1alpha1.ApiDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ingress.Name,
 			Namespace: ingress.Namespace,

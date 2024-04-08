@@ -78,7 +78,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	status := &v1alpha1.ApplicationStatus{}
+	status := application.Status.DeepCopy()
 	dc := application.DeepCopy()
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
 		util.AddFinalizer(application, keys.ApplicationFinalizer)

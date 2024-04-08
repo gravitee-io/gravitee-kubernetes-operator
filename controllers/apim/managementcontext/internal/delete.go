@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -30,13 +30,13 @@ import (
 func Delete(
 	ctx context.Context,
 	client client.Client,
-	instance *gio.ManagementContext,
+	instance *v1alpha1.ManagementContext,
 ) error {
 	if !util.ContainsFinalizer(instance, keys.ManagementContextFinalizer) {
 		return nil
 	}
 
-	apis := &gio.ApiDefinitionList{}
+	apis := &v1alpha1.ApiDefinitionList{}
 	if err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.ContextField,
 		refs.NewNamespacedName(instance.Namespace, instance.Name),
@@ -50,7 +50,7 @@ func Delete(
 		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apis.Items))
 	}
 
-	apps := &gio.ApplicationList{}
+	apps := &v1alpha1.ApplicationList{}
 	err := search.New(ctx, client).FindByFieldReferencing(
 		indexer.AppContextField,
 		refs.NewNamespacedName(instance.Namespace, instance.Name),
