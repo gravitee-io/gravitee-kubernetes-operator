@@ -31,7 +31,7 @@ func NewSubscriptions(client *client.Client) *Subscriptions {
 }
 
 func (svc *Subscriptions) APITarget(apiID string) *http.URL {
-	return svc.EnvTarget("apis").WithPath(apiID).WithPath("subscriptions")
+	return svc.EnvV1Target("apis").WithPath(apiID).WithPath("subscriptions")
 }
 
 func (svc *Subscriptions) Subscribe(apiID, applicationID, planID string) (*model.Subscription, error) {
