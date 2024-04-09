@@ -12,23 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package v4
 
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-)
+import "strings"
 
-func (d *Delegate) UpdateStatusSuccess(api v1alpha1.CRD) error {
-	if !api.GetDeletionTimestamp().IsZero() {
-		return nil
-	}
+type Enum string
 
-	api.GetStatus().SetProcessingStatus(v1alpha1.ProcessingStatusCompleted)
-	api.GetStatus().SetObservedGeneration(api.GetGeneration())
-	return d.k8s.Status().Update(d.ctx, api)
-}
-
-func (d *Delegate) UpdateStatusFailure(api v1alpha1.CRD) error {
-	api.GetStatus().SetProcessingStatus(v1alpha1.ProcessingStatusFailed)
-	return d.k8s.Status().Update(d.ctx, api)
+func (e Enum) ToGatewayDefinition() string {
+	return strings.ReplaceAll(strings.ToLower(string(e)), "_", "-")
 }

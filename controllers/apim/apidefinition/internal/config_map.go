@@ -55,12 +55,8 @@ func (d *Delegate) updateConfigMap(api *v1alpha1.ApiDefinition) error {
 }
 
 func (d *Delegate) saveConfigMap(
-	apiDefinition *v1alpha1.ApiDefinition,
+	apiDefinition v1alpha1.CRD,
 ) error {
-	if apiDefinition.Spec.State == base.StateStopped {
-		return nil
-	}
-
 	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
 
@@ -68,16 +64,16 @@ func (d *Delegate) saveConfigMap(
 	// 📝 ConfigMap should be in same namespace as ApiDefinition.
 	newOwnerReferences := []metav1.OwnerReference{
 		{
-			Kind:       apiDefinition.Kind,
-			Name:       apiDefinition.Name,
-			APIVersion: apiDefinition.APIVersion,
-			UID:        apiDefinition.UID,
+			Kind:       apiDefinition.GroupVersionKind().Kind,
+			Name:       apiDefinition.GetName(),
+			APIVersion: apiDefinition.GroupVersionKind().GroupVersion().String(),
+			UID:        apiDefinition.GetUID(),
 		},
 	}
 	cm.SetOwnerReferences(newOwnerReferences)
 
-	cm.Namespace = apiDefinition.Namespace
-	cm.Name = apiDefinition.Name
+	cm.Namespace = apiDefinition.GetNamespace()
+	cm.Name = apiDefinition.GetName()
 
 	cm.CreationTimestamp = metav1.Now()
 	cm.Labels = map[string]string{
@@ -86,10 +82,8 @@ func (d *Delegate) saveConfigMap(
 	}
 
 	cm.Data = map[string]string{
-		definitionVersionKey: apiDefinition.ResourceVersion,
+		definitionVersionKey: apiDefinition.GetResourceVersion(),
 	}
-
-	spec := &(apiDefinition.Spec)
 
 	if d.apim != nil {
 		cm.Data[orgKey] = d.apim.OrgID()
@@ -99,11 +93,20 @@ func (d *Delegate) saveConfigMap(
 		cm.Data[envKey] = defaultEnvId
 	}
 
-	if spec.ID == "" {
-		spec.ID = string(apiDefinition.UID)
+	var payload any
+	switch t := apiDefinition.(type) {
+	case *v1alpha1.ApiDefinition:
+		spec := &(t.Spec)
+		if spec.ID == "" {
+			spec.ID = string(t.UID)
+		}
+		payload = spec
+	case *v1alpha1.ApiDefinitionV4:
+		cm.Data["apiDefinitionVersion"] = "4.0.0"
+		payload = t.ToGatewayDefinition()
 	}
 
-	jsonSpec, err := json.Marshal(spec)
+	jsonSpec, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
@@ -116,7 +119,7 @@ func (d *Delegate) saveConfigMap(
 
 	err = d.k8s.Get(d.ctx, lookupKey, currentApiDefinition)
 	if errors.IsNotFound(err) {
-		d.log.Info("Creating config map for API.", "id", apiDefinition.Spec.ID, "name", apiDefinition.Name)
+		d.log.Info("Creating config map for API.", "name", apiDefinition.GetName())
 		return d.k8s.Create(d.ctx, cm)
 	}
 
@@ -125,20 +128,20 @@ func (d *Delegate) saveConfigMap(
 	}
 
 	// Only update the config map if resource version has changed (means api definition has changed).
-	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.ResourceVersion {
-		d.log.Info("Updating ConfigMap", "id", apiDefinition.Spec.ID)
+	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.GetResourceVersion() {
+		d.log.Info("Updating ConfigMap", "name", apiDefinition.GetName())
 		return d.k8s.Update(d.ctx, cm)
 	}
 
-	d.log.Info("No change detected on API. Skipped.", "id", apiDefinition.Spec.ID)
+	d.log.Info("No change detected on API. Skipped.", "name", apiDefinition.GetName())
 	return nil
 }
 
-func (d *Delegate) deleteConfigMap(api *v1alpha1.ApiDefinition) error {
+func (d *Delegate) deleteConfigMap(api client.Object) error {
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      api.Name,
-			Namespace: api.Namespace,
+			Name:      api.GetName(),
+			Namespace: api.GetNamespace(),
 		},
 	}
 

@@ -47,11 +47,11 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		apim := apim.NewClient(ctx)
 
-		err := apim.APIs.Delete(fixtures.API.Spec.ID)
+		err := apim.APIs.DeleteV2(fixtures.API.Spec.ID)
 		Expect(errors.IgnoreNotFound(err)).ToNot(HaveOccurred())
 
 		Eventually(func() error {
-			_, err = apim.APIs.Import(http.MethodPost, &fixtures.API.Spec.Api)
+			_, err = apim.APIs.ImportV2(http.MethodPost, &fixtures.API.Spec.Api)
 			return err
 		}, timeout, interval).Should(Succeed())
 

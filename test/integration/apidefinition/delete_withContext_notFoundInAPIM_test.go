@@ -50,7 +50,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 		apim := apim.NewClient(ctx)
 
-		err := apim.APIs.Delete(fixtures.API.Status.ID)
+		err := apim.APIs.DeleteV2(fixtures.API.Status.ID)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("calling API endpoint, expecting status 200")

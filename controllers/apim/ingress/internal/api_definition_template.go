@@ -91,7 +91,7 @@ func checkData(template map[string]string) error {
 
 func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 	return &v1alpha1.ApiDefinition{
-		Spec: v1alpha1.ApiDefinitionSpec{
+		Spec: v1alpha1.ApiDefinitionV2Spec{
 			Api: v2.Api{
 				Plans: []*v2.Plan{
 					v2.NewPlan(
@@ -101,8 +101,8 @@ func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 				},
 				ApiBase: &base.ApiBase{
 					Description: "A default keyless API",
+					Version:     "1.0.0",
 				},
-				Version: "1.0.0",
 			},
 			IsLocal: true,
 		},

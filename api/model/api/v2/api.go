@@ -21,14 +21,14 @@ import (
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
+	// +kubebuilder:default:=`CREATED`
+	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
+	LifecycleState base.LifecycleState `json:"lifecycle_state,omitempty"`
 	// Shows the time that the API is deployed
 	DeployedAt uint64 `json:"deployedAt,omitempty"`
 	// +kubebuilder:default:=`2.0.0`
 	// The definition version of the API. For v1alpha1 resources, this field should always set to `2.0.0`.
 	DefinitionVersion base.DefinitionVersion `json:"gravitee,omitempty"`
-	// +kubebuilder:validation:Required
-	// API version
-	Version string `json:"version,omitempty"`
 	// +kubebuilder:default:=DEFAULT
 	// The flow mode of the API. The value is either `DEFAULT` or `BEST_MATCH`.
 	FlowMode FlowMode `json:"flow_mode,omitempty"`

@@ -28,7 +28,7 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,7 +52,8 @@ func NewResolver(ctx context.Context, c client.Client, l logr.Logger, obj runtim
 
 func (r *Resolver) Resolve() error {
 	switch t := r.obj.(type) {
-	case *gio.ApiDefinition, *gio.ManagementContext, *gio.Application, *netv1.Ingress, *gio.ApiResource:
+	case *v1alpha1.ApiDefinition, *v1alpha1.ApiDefinitionV4, *v1alpha1.ManagementContext,
+		*v1alpha1.Application, *netv1.Ingress, *v1alpha1.ApiResource:
 		return r.exec()
 	default:
 		return fmt.Errorf("unsupported object type %v", t)
