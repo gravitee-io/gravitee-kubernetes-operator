@@ -19,12 +19,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-func (d *Delegate) resolveResources(spec *v1alpha1.ApiDefinitionSpec) error {
-	if spec.Resources == nil {
+func (d *Delegate) resolveResources(resources []*base.ResourceOrRef) error {
+	if resources == nil {
 		return nil
 	}
 
-	for _, resource := range spec.Resources {
+	for _, resource := range resources {
 		if err := d.resolveIfRef(resource); err != nil {
 			return err
 		}
