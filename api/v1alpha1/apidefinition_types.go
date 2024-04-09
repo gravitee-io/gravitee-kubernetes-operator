@@ -17,12 +17,16 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"fmt"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // The API definition is the main resource handled by the Kubernetes Operator
@@ -30,7 +34,7 @@ import (
 // in the APIM Console API Reference.
 // See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
 // +kubebuilder:object:generate=true
-type ApiDefinitionSpec struct {
+type ApiDefinitionV2Spec struct {
 	v2.Api  `json:",inline"`
 	Context *refs.NamespacedName `json:"contextRef,omitempty"`
 	// local defines if the api is local or not.
@@ -71,6 +75,7 @@ type ApiDefinitionStatus struct {
 
 var _ list.Item = &ApiDefinition{}
 
+// ApiDefinition is the Schema for the apidefinitions API.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
@@ -78,13 +83,12 @@ var _ list.Item = &ApiDefinition{}
 // +kubebuilder:printcolumn:name="Endpoint",type=string,JSONPath=`.spec.proxy.groups[*].endpoints[*].target`,description="API endpoint."
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
 // +kubebuilder:resource:shortName=graviteeapis
-// ApiDefinition is the Schema for the apidefinitions API.
 // +kubebuilder:storageversion
 type ApiDefinition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ApiDefinitionSpec   `json:"spec,omitempty"`
+	Spec   ApiDefinitionV2Spec `json:"spec,omitempty"`
 	Status ApiDefinitionStatus `json:"status,omitempty"`
 }
 
@@ -95,10 +99,6 @@ const (
 	ProcessingStatusCompleted ProcessingStatus = "Completed"
 	ProcessingStatusFailed    ProcessingStatus = "Failed"
 )
-
-func (api *ApiDefinition) IsBeingDeleted() bool {
-	return !api.ObjectMeta.DeletionTimestamp.IsZero()
-}
 
 // PickID returns the ID of the API definition, when a context has been defined at the spec level.
 // The ID might be returned from the API status, meaning that the API is already known.
@@ -137,17 +137,71 @@ func (api *ApiDefinition) GetNamespacedName() refs.NamespacedName {
 	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
-func (spec *ApiDefinitionSpec) SetDefinitionContext() {
-	spec.DefinitionContext = &base.DefinitionContext{
-		Mode:   base.ModeFullyManaged,
-		Origin: base.OriginKubernetes,
+func (spec *ApiDefinitionV2Spec) SetDefinitionContext() {
+	spec.DefinitionContext = &v2.DefinitionContext{
+		Mode:   v2.ModeFullyManaged,
+		Origin: v2.OriginKubernetes,
 	}
+}
+
+func (api *ApiDefinition) DeepCopyCrd() CRD {
+	return api.DeepCopy()
+}
+
+func (api *ApiDefinition) GetSpec() Spec {
+	return &api.Spec
+}
+
+func (api *ApiDefinition) GetApiDefinitionSpec() ContextAwareSpec {
+	return &api.Spec
+}
+
+func (spec *ApiDefinitionV2Spec) Hash() string {
+	return hash.Calculate(spec)
+}
+
+func (spec *ApiDefinitionV2Spec) GetManagementContext() *refs.NamespacedName {
+	return spec.Context
+}
+
+func (api *ApiDefinition) GetStatus() Status {
+	return &api.Status
+}
+
+func (s *ApiDefinitionStatus) SetProcessingStatus(status ProcessingStatus) {
+	s.Status = status
+}
+
+func (s *ApiDefinitionStatus) SetObservedGeneration(g int64) {
+	s.ObservedGeneration = g
+}
+
+func (s *ApiDefinitionStatus) DeepCopyFrom(obj client.Object) error {
+	switch t := obj.(type) {
+	case *ApiDefinition:
+		t.Status.DeepCopyInto(s)
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
+
+	return nil
+}
+
+func (s *ApiDefinitionStatus) DeepCopyTo(obj client.Object) error {
+	switch t := obj.(type) {
+	case *ApiDefinition:
+		s.DeepCopyInto(&t.Status)
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
+
+	return nil
 }
 
 var _ list.Interface = &ApiDefinitionList{}
 
-// +kubebuilder:object:root=true
 // ApiDefinitionList contains a list of ApiDefinition.
+// +kubebuilder:object:root=true
 type ApiDefinitionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -79,7 +79,7 @@ func (client *Client) Post(url string, entity, target any, transformers ...Reque
 	return client.do(req, target)
 }
 
-// Post returns the result of a PUT request to the specified URL,
+// Put returns the result of a PUT request to the specified URL,
 // using entity as the body of the request, marshaling the result into target.
 // If the target is nil, the response is discarded.
 func (client *Client) Put(url string, entity, target any, transformers ...RequestTransformer) error {

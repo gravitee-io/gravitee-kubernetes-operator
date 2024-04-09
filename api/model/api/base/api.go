@@ -30,6 +30,9 @@ type ApiBase struct {
 	// API description
 	Description string `json:"description,omitempty"`
 	// +kubebuilder:validation:Required
+	// API version
+	Version string `json:"version"`
+	// +kubebuilder:validation:Required
 	// The definition context is used to inform a management API instance that this API definition
 	// is managed using a kubernetes operator
 	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
@@ -37,9 +40,6 @@ type ApiBase struct {
 	// +kubebuilder:validation:Enum=STARTED;STOPPED;
 	// The state of API (setting the value to `STOPPED` will make the API un-reachable from the gateway)
 	State string `json:"state,omitempty"`
-	// +kubebuilder:default:=`CREATED`
-	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
-	LifecycleState LifecycleState `json:"lifecycle_state,omitempty"`
 	// +kubebuilder:validation:Optional
 	// List of Tags of the API
 	Tags []string `json:"tags"`
@@ -73,7 +73,8 @@ type DefinitionVersion string
 const (
 	DefinitionVersionV1 DefinitionVersion = "1.0.0"
 	DefinitionVersionV2 DefinitionVersion = "2.0.0"
-	DefinitionVersionV4 DefinitionVersion = "4.0.0"
+	DefinitionVersionV4 DefinitionVersion = "V4"
+	GatewayDefinitionV4 DefinitionVersion = "4.0.0"
 )
 
 // +kubebuilder:validation:Enum=CREATED;PUBLISHED;UNPUBLISHED;DEPRECATED;ARCHIVED;
