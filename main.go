@@ -179,10 +179,20 @@ func registerControllers(mgr manager.Manager) {
 	if err := (&apidefinition.Reconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
+		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
+		os.Exit(1)
+	}
+
+	if err := (&apidefinition.V4Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apidefinitionv4-controller"),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiDefinitionV4List{}),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinitionV4")
 		os.Exit(1)
 	}
 

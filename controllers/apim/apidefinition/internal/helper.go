@@ -21,7 +21,7 @@ import (
 )
 
 // For each plan, generate a CrossId from Api Id & Plan Name if not defined.
-func generateEmptyPlanCrossIds(spec *v1alpha1.ApiDefinitionSpec) {
+func generateEmptyPlanCrossIds(spec *v1alpha1.ApiDefinitionV2Spec) {
 	plans := spec.Plans
 
 	for _, plan := range plans {
@@ -32,7 +32,7 @@ func generateEmptyPlanCrossIds(spec *v1alpha1.ApiDefinitionSpec) {
 }
 
 // Retrieve the plan ids from the management apiEntity.
-func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionSpec, mgmtApi *apimModel.ApiEntity) {
+func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, mgmtApi *apimModel.ApiEntity) {
 	plans := spec.Plans
 
 	for _, plan := range plans {

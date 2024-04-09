@@ -1470,6 +1470,8 @@ spec:
                 - PUBLIC
                 - PRIVATE
                 type: string
+            required:
+            - version
             type: object
           status:
             description: ApiDefinitionStatus defines the observed state of API Definition.
