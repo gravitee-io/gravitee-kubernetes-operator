@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	orgPath = "/management/organizations/"
-	envPath = "/environments/"
+	basePath = "/management"
+	envPath  = "/environments"
+	orgPath  = "/organizations"
 )
 
 // Client is the client for a given instance of the Gravitee.io Management API
@@ -35,13 +36,19 @@ type Client struct {
 
 // URLs contains URLs targeting the organization and environment of the client.
 type URLs struct {
-	Org *http.URL
-	Env *http.URL
+	Org   *http.URL
+	EnvV1 *http.URL
+	EnvV2 *http.URL
 }
 
-// EnvTarget returns a new URL with the given path appended to the environment URL.
-func (client *Client) EnvTarget(path string) *http.URL {
-	return client.URLs.Env.WithPath(path)
+// EnvV1Target returns a new URL with the given path appended to the environment URL.
+func (client *Client) EnvV1Target(path string) *http.URL {
+	return client.URLs.EnvV1.WithPath(path)
+}
+
+// EnvV2Target returns a new URL with the given path appended to the environment URL.
+func (client *Client) EnvV2Target(path string) *http.URL {
+	return client.URLs.EnvV2.WithPath(path)
 }
 
 // OrgTarget returns a new URL with the given path appended to the organization URL.
@@ -57,8 +64,17 @@ func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
 		return nil, err
 	}
 
-	org := base.WithPath(orgPath, orgID)
-	env := org.WithPath(envPath, envID)
+	// /management
+	root := base.WithPath(basePath)
 
-	return &URLs{org, env}, nil
+	// /organizations
+	org := base.WithPath(orgPath, orgID)
+
+	// /management/organizations/{orgID}/environments/{envID}
+	envV1 := root.WithPath(orgPath, orgID).WithPath(envPath, envID)
+
+	// /management/v2/organizations/{orgID}/environments/{envID}
+	envV2 := root.WithPath("v2").WithPath(orgPath, orgID).WithPath(envPath, envID)
+
+	return &URLs{org, envV1, envV2}, nil
 }

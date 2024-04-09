@@ -15,19 +15,40 @@
 package internal
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (d *Delegate) UpdateStatusSuccess(api *v1alpha1.ApiDefinition) error {
-	if api.IsBeingDeleted() {
+func (d *Delegate) UpdateStatusSuccess(api client.Object) error {
+	if !api.GetDeletionTimestamp().IsZero() {
 		return nil
 	}
-	api.Status.ObservedGeneration = api.ObjectMeta.Generation
-	api.Status.Status = v1alpha1.ProcessingStatusCompleted
-	return d.k8s.Status().Update(d.ctx, api)
+
+	switch t := api.(type) {
+	case *v1alpha1.ApiDefinition:
+		t.Status.ObservedGeneration = t.ObjectMeta.Generation
+		t.Status.Status = v1alpha1.ProcessingStatusCompleted
+		return d.k8s.Status().Update(d.ctx, t)
+	case *v1alpha1.ApiDefinitionV4:
+		t.Status.ObservedGeneration = t.ObjectMeta.Generation
+		t.Status.Status = v1alpha1.ProcessingStatusCompleted
+		return d.k8s.Status().Update(d.ctx, t)
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
 }
 
-func (d *Delegate) UpdateStatusFailure(api *v1alpha1.ApiDefinition) error {
-	api.Status.Status = v1alpha1.ProcessingStatusFailed
-	return d.k8s.Status().Update(d.ctx, api)
+func (d *Delegate) UpdateStatusFailure(api client.Object) error {
+	switch t := api.(type) {
+	case *v1alpha1.ApiDefinition:
+		t.Status.Status = v1alpha1.ProcessingStatusFailed
+		return d.k8s.Status().Update(d.ctx, t)
+	case *v1alpha1.ApiDefinitionV4:
+		t.Status.Status = v1alpha1.ProcessingStatusFailed
+		return d.k8s.Status().Update(d.ctx, t)
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
 }
