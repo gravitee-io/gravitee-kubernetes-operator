@@ -3931,16 +3931,6 @@ ApiDefinitionV4Spec ApiDefinitionSpec defines the desired state of ApiDefinition
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>lifecycleState</b></td>
-        <td>enum</td>
-        <td>
-          API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
-          <br/>
-            <i>Enum</i>: CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
-            <i>Default</i>: CREATED<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>listeners</b></td>
         <td>[]object</td>
         <td>
@@ -4054,6 +4044,16 @@ field of the resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>lifecycleState</b></td>
+        <td>enum</td>
+        <td>
+          API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
+          <br/>
+            <i>Enum</i>: CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
+            <i>Default</i>: CREATED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionv4specmetadataindex">metadata</a></b></td>
         <td>[]object</td>
         <td>
@@ -4071,7 +4071,9 @@ field of the resource.<br/>
         <td><b><a href="#apidefinitionv4specplanskey">plans</a></b></td>
         <td>map[string]object</td>
         <td>
-          List of API plans<br/>
+          A map of plan identifiers to plan
+Keys uniquely identify plans and are used to keep them in sync
+when using a management context.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5628,19 +5630,11 @@ API Flow Execution
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>mode</b></td>
+        <td><b>displayName</b></td>
         <td>string</td>
         <td>
-          The plan mode<br/>
-          <br/>
-            <i>Default</i>: STANDARD<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Plan name<br/>
+          Plan display name, this will be the name displayed in the UI
+if a management context is used to sync the API with APIM<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -5694,6 +5688,15 @@ that has been promoted between different environments.<br/>
         <td>string</td>
         <td>
           Plan ID<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>string</td>
+        <td>
+          The plan mode<br/>
+          <br/>
+            <i>Default</i>: STANDARD<br/>
         </td>
         <td>false</td>
       </tr><tr>

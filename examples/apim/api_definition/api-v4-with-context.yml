@@ -16,10 +16,10 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinitionV4
 metadata:
-  name: v4-api-with-context
+  name: api-v4-with-context
 spec:
-  name: "K8s Basic Example V4"
-  description: "Basic api V4 managed by Gravitee Kubernetes Operator"
+  name: "api-v4-with-context"
+  description: "V4 API managed by Gravitee Kubernetes Operator"
   version: "1.0"
   contextRef:
     name: "dev-ctx"
@@ -76,8 +76,8 @@ spec:
     mode: DEFAULT
     matchRequired: false
   plans:
-    "KEY_LESS":
-      name: "KEY_LESS"
-      description: "Updated KEY LESS Plan"
+    KeyLess:
+      displayName: "Free plan (updated)"
+      description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"

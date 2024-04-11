@@ -745,6 +745,11 @@ spec:
                     description:
                       description: Plan Description
                       type: string
+                    displayName:
+                      description: |-
+                        Plan display name, this will be the name displayed in the UI
+                        if a management context is used to sync the API with APIM
+                      type: string
                     excluded_groups:
                       description: List of excluded groups for this plan
                       items:
@@ -927,9 +932,6 @@ spec:
                       default: STANDARD
                       description: The plan mode
                       type: string
-                    name:
-                      description: Plan name
-                      type: string
                     order:
                       description: Plan order
                       type: integer
@@ -980,10 +982,12 @@ spec:
                       type: string
                   required:
                   - description
-                  - mode
-                  - name
+                  - displayName
                   type: object
-                description: List of API plans
+                description: |-
+                  A map of plan identifiers to plan
+                  Keys uniquely identify plans and are used to keep them in sync
+                  when using a management context.
                 type: object
               primaryOwner:
                 description: Specify the primary member that owns the API
@@ -1119,7 +1123,6 @@ spec:
                 type: string
             required:
             - endpointGroups
-            - lifecycleState
             - listeners
             - type
             - version

@@ -16,10 +16,10 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinitionV4
 metadata:
-  name: v4-basic-v4api-example
+  name: api-v4
 spec:
-  name: "K8s V4 Basic Example"
-  description: "Basic V4 api managed by Gravitee Kubernetes Operator"
+  name: "api-v4"
+  description: "API v4 managed by Gravitee Kubernetes Operator"
   version: "1.0"
   type: PROXY
   listeners:
@@ -72,8 +72,8 @@ spec:
     mode: DEFAULT
     matchRequired: false
   plans:
-    "KEY_LESS":
-      name: "KEY_LESS"
-      description: "FREE"
+    KeyLess:
+      displayName: "Free plan"
+      description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
