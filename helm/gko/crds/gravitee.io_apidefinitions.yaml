@@ -791,9 +791,13 @@ spec:
                                     type: integer
                                   keepAlive:
                                     default: true
+                                    type: boolean
+                                  keepAliveTimeout:
+                                    default: 30000
                                     description: Should keep alive be used for the
                                       HTTP connection ?
-                                    type: boolean
+                                    format: int64
+                                    type: integer
                                   maxConcurrentConnections:
                                     description: HTTP max concurrent connections
                                     type: integer
@@ -825,11 +829,8 @@ spec:
                                     - HTTP_2
                                     type: string
                                 required:
-                                - clearTextUpgrade
                                 - followRedirects
-                                - keepAlive
                                 - pipelining
-                                - propagateClientAcceptEncoding
                                 - useCompression
                                 type: object
                               inherit:
@@ -952,9 +953,13 @@ spec:
                               type: integer
                             keepAlive:
                               default: true
+                              type: boolean
+                            keepAliveTimeout:
+                              default: 30000
                               description: Should keep alive be used for the HTTP
                                 connection ?
-                              type: boolean
+                              format: int64
+                              type: integer
                             maxConcurrentConnections:
                               description: HTTP max concurrent connections
                               type: integer
@@ -984,11 +989,8 @@ spec:
                               - HTTP_2
                               type: string
                           required:
-                          - clearTextUpgrade
                           - followRedirects
-                          - keepAlive
                           - pipelining
-                          - propagateClientAcceptEncoding
                           - useCompression
                           type: object
                         load_balancing:
