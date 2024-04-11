@@ -32,10 +32,6 @@ type ApiBase struct {
 	// +kubebuilder:validation:Required
 	// API version
 	Version string `json:"version"`
-	// +kubebuilder:validation:Required
-	// The definition context is used to inform a management API instance that this API definition
-	// is managed using a kubernetes operator
-	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 	// +kubebuilder:default:=`STARTED`
 	// +kubebuilder:validation:Enum=STARTED;STOPPED;
 	// The state of API (setting the value to `STOPPED` will make the API un-reachable from the gateway)
@@ -84,18 +80,6 @@ const (
 	StateStarted string = "STARTED"
 	StateStopped string = "STOPPED"
 )
-
-const (
-	ModeFullyManaged = "fully_managed"
-	OriginKubernetes = "kubernetes"
-)
-
-type DefinitionContext struct {
-	// +kubebuilder:default:=kubernetes
-	Origin string `json:"origin,omitempty"`
-	// +kubebuilder:default:=fully_managed
-	Mode string `json:"mode,omitempty"`
-}
 
 type ResponseTemplate struct {
 	StatusCode int               `json:"status,omitempty"`
