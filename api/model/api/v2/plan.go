@@ -33,6 +33,8 @@ type Consumer struct {
 
 type Plan struct {
 	*base.Plan `json:",inline"`
+	// Plan name
+	Name string `json:"name"`
 	// Plan Security
 	Security string `json:"security"`
 	// Plan Security definition
@@ -53,6 +55,11 @@ func NewPlan(base *base.Plan) *Plan {
 		Flows: []Flow{},
 		Paths: make(map[string][]Rule),
 	}
+}
+
+func (plan *Plan) WithName(name string) *Plan {
+	plan.Name = name
+	return plan
 }
 
 func (plan *Plan) WithSecurity(security string) *Plan {
