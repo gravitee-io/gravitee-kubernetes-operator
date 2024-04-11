@@ -135,9 +135,9 @@ func (api *ApiDefinitionV4) PickPlanIDs() map[string]*v4.Plan {
 
 // GetOrGenerateEmptyPlanCrossID For each plan, generate a CrossId from Api Id & Plan Name if not defined.
 func (api *ApiDefinitionV4) GetOrGenerateEmptyPlanCrossID() {
-	for _, plan := range api.Spec.Plans {
+	for name, plan := range api.Spec.Plans {
 		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromStrings(api.Spec.ID, "/", plan.Name)
+			plan.CrossId = uuid.FromStrings(api.PickCrossID(), "/", name)
 		}
 	}
 }

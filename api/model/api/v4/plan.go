@@ -31,6 +31,10 @@ const (
 type Plan struct {
 	*base.Plan `json:",inline"`
 
+	// Plan display name, this will be the name displayed in the UI
+	// if a management context is used to sync the API with APIM
+	DisplayName string `json:"displayName"`
+
 	// Plan definition version
 	DefinitionVersion DefinitionVersion `json:"definitionVersion,omitempty"`
 
@@ -38,10 +42,10 @@ type Plan struct {
 	Security PlanSecurity `json:"security,omitempty"`
 
 	// The plan mode
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=`STANDARD`
 	// +kubebuilder:validation:Enum=STANDARD;PUSH;
-	Mode PlanMode `json:"mode"`
+	Mode PlanMode `json:"mode,omitempty"`
 
 	// Plan selection rule
 	SelectionRule string `json:"selectionRule,omitempty"`
