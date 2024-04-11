@@ -37,10 +37,10 @@ type Api struct {
 	// and define whether the API definition should be synchronized
 	// from an API instance or from a config map created in the cluster (which is the default)
 	DefinitionContext *DefinitionContext `json:"definitionContext,omitempty"`
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=`CREATED`
 	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
-	LifecycleState base.LifecycleState `json:"lifecycleState"`
+	LifecycleState base.LifecycleState `json:"lifecycleState,omitempty"`
 	// +kubebuilder:validation:Required
 	// Api Type (proxy or message)
 	Type ApiType `json:"type"`
@@ -53,7 +53,9 @@ type Api struct {
 	// List of Endpoint groups
 	EndpointGroups []*EndpointGroup `json:"endpointGroups"`
 	// +kubebuilder:validation:Optional
-	// List of API plans
+	// A map of plan identifiers to plan
+	// Keys uniquely identify plans and are used to keep them in sync
+	// when using a management context.
 	Plans map[string]*Plan `json:"plans"`
 	// API Flow Execution
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`

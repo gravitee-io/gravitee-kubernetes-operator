@@ -36,8 +36,6 @@ type Plan struct {
 	// This field is used to identify plans defined for an API
 	// that has been promoted between different environments.
 	CrossId string `json:"crossId,omitempty"`
-	// Plan name
-	Name string `json:"name"`
 	// Plan Description
 	Description string `json:"description"`
 	// List of plan tags
@@ -61,9 +59,8 @@ type Plan struct {
 	ExcludedGroups []string `json:"excluded_groups,omitempty"`
 }
 
-func NewPlan(name, description string) *Plan {
+func NewPlan(description string) *Plan {
 	return &Plan{
-		Name:            name,
 		Description:     description,
 		Tags:            []string{},
 		Characteristics: []string{},
