@@ -54,9 +54,13 @@ type HttpClientOptions struct {
 	IdleTimeout uint64 `json:"idleTimeout,omitempty"`
 	// Connection timeout of the http connection
 	ConnectTimeout uint64 `json:"connectTimeout,omitempty"`
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=true
-	// Should keep alive be used for the HTTP connection ?
 	KeepAlive bool `json:"keepAlive"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=30000
+	// Should keep alive be used for the HTTP connection ?
+	KeepAliveTimeout uint64 `json:"keepAliveTimeout"`
 	// Read timeout
 	ReadTimeout uint64 `json:"readTimeout,omitempty"`
 	// +kubebuilder:default:=false
@@ -67,12 +71,14 @@ type HttpClientOptions struct {
 	// +kubebuilder:default:=false
 	// Should compression be used or not ?
 	UseCompression bool `json:"useCompression"`
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=false
 	// Propagate Client Accept-Encoding header
 	PropagateClientAcceptEncoding bool `json:"propagateClientAcceptEncoding"`
 	// +kubebuilder:default:=false
 	// Should HTTP redirects be followed or not ?
 	FollowRedirects bool `json:"followRedirects"`
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=true
 	// Should HTTP/2 clear text upgrade be used or not ?
 	ClearTextUpgrade bool `json:"clearTextUpgrade"`
