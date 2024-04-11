@@ -21,6 +21,10 @@ import (
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
+	// +kubebuilder:validation:Required
+	// The definition context is used to inform a management API instance that this API definition
+	// is managed using a kubernetes operator
+	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`
 	// +kubebuilder:default:=`CREATED`
 	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
 	LifecycleState base.LifecycleState `json:"lifecycle_state,omitempty"`
@@ -45,4 +49,23 @@ type Api struct {
 	// +kubebuilder:validation:Optional
 	// API plans
 	Plans []*Plan `json:"plans"`
+}
+
+const (
+	ModeFullyManaged = "fully_managed"
+	OriginKubernetes = "kubernetes"
+)
+
+type DefinitionContext struct {
+	// +kubebuilder:default:=kubernetes
+	Origin string `json:"origin,omitempty"`
+	// +kubebuilder:default:=fully_managed
+	Mode string `json:"mode,omitempty"`
+}
+
+func (spec *Api) SetDefinitionContext() {
+	spec.DefinitionContext = &DefinitionContext{
+		Mode:   ModeFullyManaged,
+		Origin: OriginKubernetes,
+	}
 }
