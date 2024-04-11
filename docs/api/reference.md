@@ -2200,15 +2200,6 @@ Custom HTTP client options used for this endpoint
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>clearTextUpgrade</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP/2 clear text upgrade be used or not ?<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>followRedirects</b></td>
         <td>boolean</td>
         <td>
@@ -2218,28 +2209,10 @@ Custom HTTP client options used for this endpoint
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          Should keep alive be used for the HTTP connection ?<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>pipelining</b></td>
         <td>boolean</td>
         <td>
           Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>propagateClientAcceptEncoding</b></td>
-        <td>boolean</td>
-        <td>
-          Propagate Client Accept-Encoding header<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2253,6 +2226,15 @@ Custom HTTP client options used for this endpoint
             <i>Default</i>: false<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>clearTextUpgrade</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP/2 clear text upgrade be used or not ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -2272,10 +2254,38 @@ Custom HTTP client options used for this endpoint
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keepAliveTimeout</b></td>
+        <td>integer</td>
+        <td>
+          Should keep alive be used for the HTTP connection ?<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Default</i>: 30000<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
           HTTP max concurrent connections<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          Propagate Client Accept-Encoding header<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2497,15 +2507,6 @@ Custom HTTP SSL client options used for this EndpointGroup
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>clearTextUpgrade</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP/2 clear text upgrade be used or not ?<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>followRedirects</b></td>
         <td>boolean</td>
         <td>
@@ -2515,28 +2516,10 @@ Custom HTTP SSL client options used for this EndpointGroup
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          Should keep alive be used for the HTTP connection ?<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>pipelining</b></td>
         <td>boolean</td>
         <td>
           Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>propagateClientAcceptEncoding</b></td>
-        <td>boolean</td>
-        <td>
-          Propagate Client Accept-Encoding header<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -2550,6 +2533,15 @@ Custom HTTP SSL client options used for this EndpointGroup
             <i>Default</i>: false<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>clearTextUpgrade</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP/2 clear text upgrade be used or not ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -2569,10 +2561,38 @@ Custom HTTP SSL client options used for this EndpointGroup
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keepAliveTimeout</b></td>
+        <td>integer</td>
+        <td>
+          Should keep alive be used for the HTTP connection ?<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Default</i>: 30000<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
           HTTP max concurrent connections<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          Propagate Client Accept-Encoding header<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3998,14 +4018,6 @@ from an API instance or from a config map created in the cluster (which is the d
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specdefinition_context">definition_context</a></b></td>
-        <td>object</td>
-        <td>
-          The definition context is used to inform a management API instance that this API definition
-is managed using a kubernetes operator<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
@@ -4401,15 +4413,6 @@ Endpoint group http client options
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>clearTextUpgrade</b></td>
-        <td>boolean</td>
-        <td>
-          Should HTTP/2 clear text upgrade be used or not ?<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>followRedirects</b></td>
         <td>boolean</td>
         <td>
@@ -4419,28 +4422,10 @@ Endpoint group http client options
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>keepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          Should keep alive be used for the HTTP connection ?<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>pipelining</b></td>
         <td>boolean</td>
         <td>
           Should HTTP/1.1 pipelining be used for the connection or not ?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>propagateClientAcceptEncoding</b></td>
-        <td>boolean</td>
-        <td>
-          Propagate Client Accept-Encoding header<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -4454,6 +4439,15 @@ Endpoint group http client options
             <i>Default</i>: false<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>clearTextUpgrade</b></td>
+        <td>boolean</td>
+        <td>
+          Should HTTP/2 clear text upgrade be used or not ?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>connectTimeout</b></td>
         <td>integer</td>
@@ -4473,10 +4467,38 @@ Endpoint group http client options
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>keepAlive</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keepAliveTimeout</b></td>
+        <td>integer</td>
+        <td>
+          Should keep alive be used for the HTTP connection ?<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Default</i>: 30000<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>maxConcurrentConnections</b></td>
         <td>integer</td>
         <td>
           HTTP max concurrent connections<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>propagateClientAcceptEncoding</b></td>
+        <td>boolean</td>
+        <td>
+          Propagate Client Accept-Encoding header<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5108,45 +5130,6 @@ If the value is `KUBERNETES`, the API definition will be sourced from a config m
 This means that only gateways deployed in the same cluster will be able to sync the API definition.<br/>
           <br/>
             <i>Default</i>: KUBERNETES<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.definition_context
-[Go to parent definition](#apidefinitionv4spec)
-
-
-
-The definition context is used to inform a management API instance that this API definition
-is managed using a kubernetes operator
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>mode</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: fully_managed<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>origin</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: kubernetes<br/>
         </td>
         <td>false</td>
       </tr></tbody>
