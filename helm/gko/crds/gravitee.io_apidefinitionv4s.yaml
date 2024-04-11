@@ -186,18 +186,6 @@ spec:
                   (by setting the same value as defined in APIM).
                   If empty, a UUID will be generated based on the namespace and name of the resource.
                 type: string
-              definition_context:
-                description: |-
-                  The definition context is used to inform a management API instance that this API definition
-                  is managed using a kubernetes operator
-                properties:
-                  mode:
-                    default: fully_managed
-                    type: string
-                  origin:
-                    default: kubernetes
-                    type: string
-                type: object
               definitionContext:
                 description: |-
                   The API Definition context is used to identify the Kubernetes origin of the API,
@@ -342,9 +330,13 @@ spec:
                           type: integer
                         keepAlive:
                           default: true
+                          type: boolean
+                        keepAliveTimeout:
+                          default: 30000
                           description: Should keep alive be used for the HTTP connection
                             ?
-                          type: boolean
+                          format: int64
+                          type: integer
                         maxConcurrentConnections:
                           description: HTTP max concurrent connections
                           type: integer
@@ -374,11 +366,8 @@ spec:
                           - HTTP_2
                           type: string
                       required:
-                      - clearTextUpgrade
                       - followRedirects
-                      - keepAlive
                       - pipelining
-                      - propagateClientAcceptEncoding
                       - useCompression
                       type: object
                     loadBalancer:

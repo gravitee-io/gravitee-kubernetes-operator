@@ -19,7 +19,6 @@ package v1alpha1
 import (
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
@@ -134,13 +133,6 @@ func (api *ApiDefinition) GetOrGenerateCrossID() string {
 
 func (api *ApiDefinition) GetNamespacedName() refs.NamespacedName {
 	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
-}
-
-func (spec *ApiDefinitionSpec) SetDefinitionContext() {
-	spec.DefinitionContext = &base.DefinitionContext{
-		Mode:   base.ModeFullyManaged,
-		Origin: base.OriginKubernetes,
-	}
 }
 
 func (api *ApiDefinition) GetSpec() any {
