@@ -95,12 +95,12 @@ func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 			Api: v2.Api{
 				Plans: []*v2.Plan{
 					v2.NewPlan(
-						base.NewPlan("Default keyless plan", "").
+						base.NewPlan("Default ingress keyless plan").
 							WithStatus(base.PublishedPlanStatus),
-					).WithSecurity("KEY_LESS"),
+					).WithSecurity("KEY_LESS").WithName("Key Less"),
 				},
 				ApiBase: &base.ApiBase{
-					Description: "A default keyless API",
+					Description: "This API was generated on behalf of an Kubernetes ingress resource",
 					Version:     "1.0.0",
 				},
 			},
