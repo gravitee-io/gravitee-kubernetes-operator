@@ -34,6 +34,7 @@ rules:
     resourceNames:
       - managementcontexts.gravitee.io
       - apidefinitions.gravitee.io
+      - apidefinitionv4s.gravitee.io
       - applications.gravitee.io
       - apiresources.gravitee.io
     resources:
