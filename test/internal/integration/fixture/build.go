@@ -15,19 +15,15 @@
 package fixture
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 	coreV1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/util/rand"
 )
 
 type Files struct {
@@ -60,7 +56,7 @@ func (b *FSBuilder) Build() *Objects {
 	obj.Secrets = decodeList(f.Secrets, &coreV1.Secret{}, secKind)
 	obj.ConfigMaps = decodeList(f.ConfigMaps, &coreV1.ConfigMap{}, cmKind)
 
-	suffix := generateRandomSuffix()
+	suffix := random.GetSuffix()
 	obj.randomSuffix = suffix
 
 	if api := decodeIfDefined(f.API, &v1alpha1.ApiDefinition{}, apiKind); api != nil {
@@ -134,15 +130,6 @@ func randomizeIngressRules(ing *netV1.Ingress, suffix string) {
 			ing.Spec.Rules[i].HTTP.Paths[j].Path += suffix
 		}
 	}
-}
-
-func generateRandomSuffix() string {
-	randMax := 10
-	return fmt.Sprintf(
-		"-%s-%02d",
-		strings.ReplaceAll(namesgenerator.GetRandomName(0), "_", "-"),
-		rand.Intn(randMax),
-	)
 }
 
 func isTemplate(api *v1alpha1.ApiDefinition) bool {
