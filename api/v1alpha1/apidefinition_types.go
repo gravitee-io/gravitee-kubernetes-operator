@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
@@ -65,7 +67,7 @@ type ApiDefinitionStatus struct {
 	DeprecatedStatus ProcessingStatus `json:"status,omitempty"`
 
 	// The state of the API. Can be either STARTED or STOPPED.
-	State string `json:"state,omitempty"`
+	State base.ApiState `json:"state,omitempty"`
 
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 	// This field is kept for backward compatibility and shall be removed in future versions.

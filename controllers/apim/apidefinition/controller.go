@@ -39,10 +39,8 @@ import (
 
 const requeueAfterTime = time.Second * 5
 
-func Reconcile(ctx context.Context,
-	apiDefinition v1alpha1.ApiDefinitionCRD,
-	c client.Client,
-	r record.EventRecorder) (ctrl.Result, error) {
+func Reconcile(ctx context.Context, apiDefinition v1alpha1.ApiDefinitionCRD,
+	c client.Client, r record.EventRecorder) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	d := internal.NewDelegate(ctx, c, logger)
 	events := event.NewRecorder(r)
