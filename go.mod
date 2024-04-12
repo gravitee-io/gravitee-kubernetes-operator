@@ -3,7 +3,7 @@ module github.com/gravitee-io/gravitee-kubernetes-operator
 go 1.21
 
 require (
-	github.com/docker/docker v26.0.0+incompatible
+	github.com/moby/moby v26.0.0+incompatible
 	github.com/onsi/ginkgo/v2 v2.17.1
 	github.com/onsi/gomega v1.31.1
 	github.com/zeebo/xxh3 v1.0.2
@@ -25,7 +25,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
-	github.com/moby/moby v26.0.0+incompatible // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/tools v0.17.0 // indirect
@@ -53,7 +52,6 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
-	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0
