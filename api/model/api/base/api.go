@@ -33,9 +33,8 @@ type ApiBase struct {
 	// API version
 	Version string `json:"version"`
 	// +kubebuilder:default:=`STARTED`
-	// +kubebuilder:validation:Enum=STARTED;STOPPED;
 	// The state of API (setting the value to `STOPPED` will make the API un-reachable from the gateway)
-	State string `json:"state,omitempty"`
+	State ApiState `json:"state,omitempty"`
 	// +kubebuilder:validation:Optional
 	// List of Tags of the API
 	Tags []string `json:"tags"`
@@ -76,9 +75,12 @@ const (
 // +kubebuilder:validation:Enum=CREATED;PUBLISHED;UNPUBLISHED;DEPRECATED;ARCHIVED;
 type LifecycleState string
 
+// +kubebuilder:validation:Enum=STARTED;STOPPED;
+type ApiState string
+
 const (
-	StateStarted string = "STARTED"
-	StateStopped string = "STOPPED"
+	StateStarted ApiState = "STARTED"
+	StateStopped ApiState = "STOPPED"
 )
 
 type ResponseTemplate struct {

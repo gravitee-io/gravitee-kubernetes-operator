@@ -3871,9 +3871,11 @@ Use observedGeneration instead.<br/>
         <td>false</td>
       </tr><tr>
         <td><b>state</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The state of the API. Can be either STARTED or STOPPED.<br/>
+          <br/>
+            <i>Enum</i>: STARTED, STOPPED<br/>
         </td>
         <td>false</td>
       </tr><tr>

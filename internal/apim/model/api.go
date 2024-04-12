@@ -14,6 +14,8 @@
 
 package model
 
+import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+
 type ApiEntity struct {
 	ID                string             `json:"id"`
 	CrossID           string             `json:"crossId"`
@@ -57,6 +59,22 @@ type ApiListItem struct {
 }
 
 type Action string
+
+const (
+	ActionStart Action = "START"
+	ActionStop  Action = "STOP"
+)
+
+func ApiStateToAction(s base.ApiState) Action {
+	switch s {
+	case base.StateStarted:
+		return ActionStart
+	case base.StateStopped:
+		return ActionStop
+	default:
+		return ActionStop
+	}
+}
 
 type Plan struct {
 	Id       string           `json:"id"`
