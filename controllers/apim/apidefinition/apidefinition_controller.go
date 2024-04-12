@@ -86,7 +86,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	status := &v1alpha1.ApiDefinitionStatus{}
+	status := apiDefinition.Status.DeepCopy()
 	dc := apiDefinition.DeepCopy()
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
 		util.AddFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
