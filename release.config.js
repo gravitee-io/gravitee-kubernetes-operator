@@ -15,7 +15,7 @@
  */
 
 const config = {
-  branches: ["master"],
+  branches: ["trigger-release"],
   tagFormat: "${version}",
 };
 const changelogFile = "CHANGELOG.md";

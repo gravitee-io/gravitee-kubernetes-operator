@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Trigger Release
+name: Clean release
 
-on: workflow_dispatch
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
-  trigger-release:
+  clean-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +30,7 @@ jobs:
         run: |
           git config user.name "Gravitee.io Bot"
           git config user.email contact@gravitee.io
-      - name: "Create release branch"
+      - name: "Delete release branch"
         run: |
-          echo "🚀 Creating release branch"
-          git checkout -b trigger-release
-          git push --set-upstream origin trigger-release
+          echo "🚀 Deleting release branch"
+          git push origin --delete trigger-release &>/dev/null
