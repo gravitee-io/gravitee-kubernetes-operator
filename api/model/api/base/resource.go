@@ -21,15 +21,21 @@ import (
 
 type Resource struct {
 	// +kubebuilder:validation:Optional
-	Enabled       bool                    `json:"enabled"`
-	Name          string                  `json:"name,omitempty"`
-	ResourceType  string                  `json:"type,omitempty"`
+	// Resource is enabled or not?
+	Enabled bool `json:"enabled"`
+	// Resource Name
+	Name string `json:"name,omitempty"`
+	// Resource Type
+	ResourceType string `json:"type,omitempty"`
+	// Resource Configuration, arbitrary map of key-values
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 type ResourceOrRef struct {
+	// Resource
 	*Resource `json:",omitempty,inline"`
-	Ref       *refs.NamespacedName `json:"ref,omitempty"`
+	// Reference to a resource
+	Ref *refs.NamespacedName `json:"ref,omitempty"`
 }
 
 func (r *ResourceOrRef) IsRef() bool {

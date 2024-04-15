@@ -17,6 +17,12 @@ package ingress
 import (
 	"context"
 
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -24,20 +30,19 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	e "github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal"
+	p "github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // Reconciler watches and reconciles Ingress objects.
@@ -63,21 +68,26 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	d := internal.NewDelegate(ctx, r.Client, logger)
-	if err := d.ResolveTemplate(ingress); err != nil {
-		return ctrl.Result{}, err
-	}
 
 	events := e.NewRecorder(r.Recorder)
-	var reconcileErr error
-	if !ingress.DeletionTimestamp.IsZero() {
-		reconcileErr = events.Record(e.Delete, ingress, func() error {
-			return d.Delete(ingress)
-		})
-	} else {
-		reconcileErr = events.Record(e.Update, ingress, func() error {
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, ingress, func() error {
+		util.AddFinalizer(ingress, keys.IngressFinalizer)
+		k8s.AddAnnotation(ingress, keys.LastSpecHash, hash.Calculate(&ingress.Spec))
+
+		if err := d.ResolveTemplate(ingress); err != nil {
+			return err
+		}
+
+		if !ingress.DeletionTimestamp.IsZero() {
+			return events.Record(e.Delete, ingress, func() error {
+				return d.Delete(ingress)
+			})
+		}
+
+		return events.Record(e.Update, ingress, func() error {
 			return d.CreateOrUpdate(ingress)
 		})
-	}
+	})
 
 	if reconcileErr != nil {
 		logger.Error(reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)
@@ -104,30 +114,17 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			return reconcilable(e.Object)
+			if !reconcilable(e.Object) {
+				return false
+			}
+			return p.LastSpecHashPredicate{}.Create(e)
 		},
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			if !reconcilable(e.ObjectNew) {
 				return false
 			}
 
-			if e.ObjectOld == nil || e.ObjectNew == nil {
-				return false
-			}
-
-			// for some reasons "generation" is not set for the TLS secretes
-			if _, ok := e.ObjectNew.(*corev1.Secret); ok &&
-				e.ObjectOld.GetResourceVersion() != e.ObjectNew.GetResourceVersion() {
-				return true
-			}
-
-			// generation is not updated for annotations
-			if e.ObjectNew.GetAnnotations()[keys.IngressTemplateAnnotation] !=
-				e.ObjectOld.GetAnnotations()[keys.IngressTemplateAnnotation] {
-				return true
-			}
-
-			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
+			return p.LastSpecHashPredicate{}.Update(e)
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			return reconcilable(e.Object)

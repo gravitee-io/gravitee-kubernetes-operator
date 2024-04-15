@@ -23,13 +23,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 // This function is applied to all ingresses which are using the ApiDefinition template
 // As per Kubernetes Finalizers (https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 // First return value defines if we should requeue or not.
-func (d *Delegate) SyncApiDefinitionTemplate(api *gio.ApiDefinition, ns string) error {
+func (d *Delegate) SyncApiDefinitionTemplate(api *v1alpha1.ApiDefinition, ns string) error {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
 	// deletion by populating .metadata.deletionTimestamp
 	if !api.DeletionTimestamp.IsZero() {
@@ -41,10 +41,10 @@ func (d *Delegate) SyncApiDefinitionTemplate(api *gio.ApiDefinition, ns string) 
 		return d.k8s.Update(d.ctx, api)
 	}
 
-	return nil
+	return d.UpdateStatusSuccess(api)
 }
 
-func (d *Delegate) delete(apiDefinition *gio.ApiDefinition, namespace string) error {
+func (d *Delegate) delete(apiDefinition *v1alpha1.ApiDefinition, namespace string) error {
 	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer) {
 		return nil
 	}

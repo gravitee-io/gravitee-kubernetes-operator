@@ -19,16 +19,23 @@ package apiresource
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 )
@@ -50,26 +57,36 @@ type Reconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	apiResource := &gio.ApiResource{}
+	apiResource := &v1alpha1.ApiResource{}
 	if err := r.Get(ctx, req.NamespacedName, apiResource); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if err := template.NewResolver(ctx, r.Client, logger, apiResource).Resolve(); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	events := event.NewRecorder(r.Recorder)
-	var reconcileErr error
-	if apiResource.IsBeingDeleted() {
-		reconcileErr = events.Record(event.Delete, apiResource, func() error {
-			return internal.Delete(ctx, r.Client, apiResource)
-		})
-	} else {
-		reconcileErr = events.Record(event.Update, apiResource, func() error {
-			return internal.CreateOrUpdate(ctx, r.Client, apiResource)
-		})
-	}
+	dc := apiResource.DeepCopy()
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
+		util.AddFinalizer(apiResource, keys.ApiResourceFinalizer)
+		k8s.AddAnnotation(apiResource, keys.LastSpecHash, hash.Calculate(&apiResource.Spec))
+
+		if err := template.NewResolver(ctx, r.Client, logger, apiResource).Resolve(); err != nil {
+			return err
+		}
+
+		var err error
+		if apiResource.IsBeingDeleted() {
+			err = events.Record(event.Delete, apiResource, func() error {
+				return internal.Delete(ctx, r.Client, apiResource)
+			})
+		} else {
+			err = events.Record(event.Update, apiResource, func() error {
+				// We don't do anything directly when there is an update on ApiResource
+				return nil
+			})
+		}
+
+		apiResource.ObjectMeta.DeepCopyInto(&dc.ObjectMeta)
+		return err
+	})
 
 	if reconcileErr == nil {
 		logger.Info("API Resource has been reconciled")
@@ -83,7 +100,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 // SetupWithManager sets up the controller with the Manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.ApiResource{}).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		For(&v1alpha1.ApiResource{}).
+		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

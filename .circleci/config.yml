@@ -2,16 +2,16 @@ version: 2.1
 
 orbs:
   kubernetes: circleci/kubernetes@1.3.1
-  go: circleci/go@1.10.0
-  helm: circleci/helm@3.0.1
+  go: circleci/go@1.11.0
+  helm: circleci/helm@3.0.2
   keeper: gravitee-io/keeper@0.6.3
   gravitee: gravitee-io/gravitee@4.1.1
-  slack: circleci/slack@4.12.6
+  slack: circleci/slack@4.13.2
 
 parameters:
   go-version:
     type: string
-    default: "1.21.0"
+    default: "1.22.1"
 
 executors:
   azure-cli:
@@ -24,7 +24,7 @@ executors:
     docker:
       # Version can be found here https://docs.microsoft.com/en-us/cli/azure/release-notes-azure-cli
       # be careful when updating the version as it looks it is not following semver
-      - image: mcr.microsoft.com/azure-cli:2.56.0
+      - image: mcr.microsoft.com/azure-cli:2.59.0
     resource_class: <<parameters.resource_class>>
 
 commands:
@@ -44,6 +44,7 @@ commands:
       integration_id_key:
         type: string
     steps:
+      - checkout
       - keeper/env-export:
           secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_gko_org_api_token
           var-name: SNYK_API_TOKEN
@@ -97,11 +98,17 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
       - checkout
-      - go/load-cache
+      - restore_cache:
+          keys:
+           - golangci-lint-{{ checksum ".golangci.yml" }}
       - run:
           name: Lint sources
           command: make lint-sources
-      - go/save-cache
+      - save_cache:
+          key: golangci-lint-{{ checksum ".golangci.yml" }}
+          paths:
+            - /home/circleci/.cache
+            - /home/circleci/go/pkg/mod
 
   lint-licenses:
     docker:
@@ -145,7 +152,7 @@ jobs:
           name: Check that `make manifests` has been executed
           command: |
             make manifests
-            git diff --quiet HEAD config/crd/bases/
+            git diff --quiet HEAD helm/gko/crds
       - run:
           name: Check that `make reference` has been executed
           command: |
@@ -157,11 +164,28 @@ jobs:
             make helm-reference
             git diff --quiet HEAD helm/gko/README.md
 
-  test:
+  unit-test:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    resource_class: small
+    steps:
+      - checkout
+      - go/mod-download-cached
+      - run:
+          name: Run unit tests
+          command: make -s unit
+
+  integration-test:
     machine:
-      image: ubuntu-2204:2022.04.2
+      image: ubuntu-2204:2024.01.2
       docker_layer_caching: true
-    resource_class: large
+    resource_class: medium
+    parameters:
+      ginkgo-filter:
+        type: enum
+        enum:
+          - withContext
+          - withoutContext
     steps:
       - checkout
       - go/install:
@@ -169,6 +193,12 @@ jobs:
       - go/load-cache
       - kubernetes/install-kubectl
       - helm/install_helm_client
+      - run:
+          name: Install kind
+          command: |
+            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
       - keeper/env-export:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           var-name: AZURE_DOCKER_REGISTRY_USERNAME
@@ -184,59 +214,28 @@ jobs:
       - run:
           name: Install ginkgo
           command: make ginkgo
-      - restore_cache:
-          keys:
-            - k3d-registry-docker-v1
+      - when:
+          condition:
+            equal: [withoutContext, << parameters.ginkgo-filter >>]
+          steps:
+            - run:
+                command: echo 'export APIM_VALUES=values-dbless.yaml' >> $BASH_ENV
       - run:
-          name: Prepare k3d images registry
-          command: |
-            if [ -f k3d-registry.image.tar ]; then  
-              docker load -i k3d-registry.image.tar
-              tar -xf k3d-registry.volume.tar
-              docker run --name k3d-graviteeio.docker.localhost \
-                --net=bridge \
-                -h k3d-graviteeio.docker.localhost \
-                -p 12345:12345 \
-                -e REGISTRY_HTTP_ADDR=:12345 \
-                -v $(pwd)/var/lib/registry:/var/lib/registry  \
-                -d gko/k3d-registry:latest
-              echo "export K3D_PULL=apim" >> $BASH_ENV
-            else 
-              echo "No registry archive found. All images will be pulled from network."
-              echo "export K3D_PULL=all" >> $BASH_ENV
-            fi
-      - run:
-          name: Start APIM using k3d
+          name: Start cluster
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
             export APIM_IMAGE_TAG=master-latest
-            K3DARGS="--pull=${K3D_PULL}" make k3d-init
+            make start-cluster
       - run:
-          name: Run tests
-          command: GOTESTARGS="--output-dir=/tmp/junit/reports --junit-report=junit.xml" make test
-      - run:
-          name: Archive k3d registry image and volume for caching
-          command: |
-            if [ -f k3d-registry.image.tar ]; then 
-              echo "K3d registry already saved on disk. Nothing to do"
-            else
-              docker commit k3d-graviteeio.docker.localhost gko/k3d-registry:latest
-              docker save -o k3d-registry.image.tar gko/k3d-registry:latest
-              docker run --rm --volumes-from $(docker ps -aqf "name=graviteeio.docker.localhost") -v $(pwd):/backup alpine tar cf /backup/k3d-registry.volume.tar /var/lib/registry
-            fi
-      - save_cache:
-          paths:
-            - k3d-registry.image.tar
-            - k3d-registry.volume.tar
-          key: k3d-registry-docker-v1
+          name: Run IT with filter << parameters.ginkgo-filter >>
+          command: IT_ARGS="--label-filter=<< parameters.ginkgo-filter >> --cover --coverprofile=cover-<< parameters.ginkgo-filter >>.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" make -s it
       - store_test_results:
           path: /tmp/junit/reports
       - persist_to_workspace:
           root: /tmp/junit/reports
           paths:
-            - cover.out
+            - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
-
 
   login-to-azure:
     executor:
@@ -427,7 +426,7 @@ jobs:
     description: A job that run Sonarcloud analysis
     docker:
       - image: sonarsource/sonar-scanner-cli
-    resource_class: large
+    resource_class: small
     steps:
       - run:
           name: Add SSH tool
@@ -439,7 +438,7 @@ jobs:
           secret-url: keeper://9x9YgyU6DWzux4DPoHAzDQ/field/password
           var-name: SONAR_TOKEN
       - run:
-          name: Run Sonarcloud Analysis
+          name: Run Sonarcloud analysis
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
       - notify-on-failure
 
@@ -472,14 +471,28 @@ workflows:
           name: Lint commits
       - lint-resources:
           name: Lint resources
-      - test:
-          name: Test
+      - unit-test:
+          name: Run unit tests
+      - integration-test:
+          name: Run IT with context
           context: cicd-orchestrator
           requires:
             - Lint sources
             - Lint licenses
             - Lint commits
             - Lint resources
+            - Run unit tests
+          ginkgo-filter: withContext
+      - integration-test:
+          name: Run IT without context
+          context: cicd-orchestrator
+          requires:
+            - Lint sources
+            - Lint licenses
+            - Lint commits
+            - Lint resources
+            - Run unit tests
+          ginkgo-filter: withoutContext
       - helm-lint:
           name: Lint Helm chart
       - helm-test:
@@ -487,10 +500,11 @@ workflows:
           requires:
             - Lint Helm chart
       - sonarcloud-analysis:
-          name: Sonarcloud Analysis
+          name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
-            - Test
+            - Run IT with context
+            - Run IT without context
   deploy:
     when:
       and:
@@ -498,27 +512,18 @@ workflows:
             - equal: [ci-staging, << pipeline.git.branch >>]
             - equal: [alpha, << pipeline.git.branch >>]
     jobs:
-      - test:
-          name: Test operator
-          context: cicd-orchestrator
       - helm-test:
           name: Test chart
       - login-to-azure:
           name: Authenticate on cluster
           context: cicd-orchestrator
           clusterName: devs-preprod
-      - sonarcloud-analysis:
-          name: Sonarcloud Analysis
-          context: cicd-orchestrator
-          requires:
-            - Test operator
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: alpha-latest
           context: cicd-orchestrator
           requires:
-            - Test operator
             - Test chart
             - Authenticate on cluster
       - add-docker-images-to-snyk:
@@ -537,6 +542,7 @@ workflows:
               - apim-apim-4-0-x
               - apim-apim-4-1-x
               - apim-apim-4-2-x
+              - apim-apim-4-3-x
               - apim-apim-master
               image: [graviteeio.azurecr.io/kubernetes-operator]
               tag: [alpha-latest]

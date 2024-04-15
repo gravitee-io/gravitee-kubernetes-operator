@@ -21,10 +21,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 
 	"github.com/go-logr/logr"
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
@@ -34,7 +43,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -57,17 +65,12 @@ type Reconciler struct {
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	application := &gio.Application{}
-
+	application := &v1alpha1.Application{}
 	if err := r.Get(ctx, req.NamespacedName, application); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	delegate := internal.NewDelegate(ctx, r.Client, logger)
-	if err := delegate.ResolveTemplate(application); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	events := event.NewRecorder(r.Recorder)
 
 	if application.Spec.Context == nil {
@@ -75,38 +78,47 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	if err := delegate.ResolveContext(application); err != nil {
-		logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
-		return ctrl.Result{}, err
-	}
+	status := application.Status.DeepCopy()
+	dc := application.DeepCopy()
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
+		util.AddFinalizer(application, keys.ApplicationFinalizer)
+		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
-	if application.IsMissingDeletionFinalizer() {
-		err := delegate.AddDeletionFinalizer(application)
-		if err != nil {
-			logger.Error(err, "Unable to add deletion finalizer to Application")
-			return ctrl.Result{}, err
+		if err := delegate.ResolveTemplate(application); err != nil {
+			status.Status = v1alpha1.ProcessingStatusFailed
+			return err
 		}
-	}
 
-	var reconcileErr error
+		if err := delegate.ResolveContext(application); err != nil {
+			status.Status = v1alpha1.ProcessingStatusFailed
+			logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
+			return err
+		}
 
-	if application.IsBeingDeleted() {
-		reconcileErr = events.Record(event.Delete, application, func() error {
-			return delegate.Delete(application)
-		})
-	} else {
-		reconcileErr = events.Record(event.Update, application, func() error {
-			return delegate.CreateOrUpdate(application)
-		})
-	}
+		var err error
+		if application.IsBeingDeleted() {
+			err = events.Record(event.Delete, application, func() error {
+				return delegate.Delete(application)
+			})
+		} else {
+			err = events.Record(event.Update, application, func() error {
+				return delegate.CreateOrUpdate(application)
+			})
+		}
 
+		application.Status.DeepCopyInto(status)
+		application.ObjectMeta.DeepCopyInto(&dc.ObjectMeta)
+		return err
+	})
+
+	status.DeepCopyInto(&dc.Status)
 	if reconcileErr == nil {
 		logger.Info("Application has been reconciled")
-		return ctrl.Result{}, delegate.UpdateStatusSuccess(application)
+		return ctrl.Result{}, delegate.UpdateStatusSuccess(dc)
 	}
 
 	// An error occurred during the reconcile
-	if err := delegate.UpdateStatusFailure(application); err != nil {
+	if err := delegate.UpdateStatusFailure(dc); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -121,8 +133,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gio.Application{}).
-		Watches(&gio.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
-		WithEventFilter(predicate.GenerationChangedPredicate{}).
+		For(&v1alpha1.Application{}).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

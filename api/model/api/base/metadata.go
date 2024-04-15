@@ -18,9 +18,14 @@ package base
 type MetadataFormat string
 
 type MetadataEntry struct {
-	Key          string         `json:"key"`
-	Name         string         `json:"name"`
-	Format       MetadataFormat `json:"format"`
-	Value        string         `json:"value,omitempty"`
-	DefaultValue string         `json:"defaultValue,omitempty"`
+	// MetaData Key
+	Key string `json:"key"`
+	// MetaData Name
+	Name string `json:"name"`
+	// MetaData Format
+	Format MetadataFormat `json:"format"`
+	// MetaData Value
+	Value string `json:"value,omitempty"`
+	// MetaData Default value
+	DefaultValue string `json:"defaultValue,omitempty"`
 }

@@ -1,0 +1,112 @@
+# Gravitee Kubernetes Operator API Reference
+
+## Versions
+
+
+
+<table>
+  <thead>
+        <tr>
+            <th>Version</th>
+            <th>Description</th>
+        </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><a href="#graviteeiov1alpha1">gravitee.io/v1alpha1</a></td>
+          <td>This version is compatible with gravitee APIM version 3.x and 4.x but v4 API features are not supported.</td>
+      </tr>
+  </tbody>
+</table>
+
+
+{{- range .Groups }}
+{{- $group := . }}
+
+# {{.Group}}/{{.Version}}
+
+Resources
+
+<table>
+  <thead>
+  </thead>
+    <tbody>
+        {{- range .Kinds -}}
+        {{- range .Types -}}
+        {{if .IsTopLevel}}
+        <tr>
+            <td><a href="#{{ anchorize .Name }}">{{ .Name }}</a></td>
+            <td>{{ .Description }}</td>
+        </tr>
+        {{- end -}}
+        {{- end -}}
+        {{- end -}}
+    </tbody>
+</table>
+
+{{range .Kinds}}
+{{$kind := .}}
+## {{.Name}}
+
+[{{printf "%s/%s" $group.Group $group.Version }}](#{{ anchorize (printf "%s/%s" $group.Group $group.Version) }})
+
+{{range .Types}}
+
+{{if not .IsTopLevel}}
+### {{.Name}}
+{{if .ParentKey}}[Go to parent definition](#{{.ParentKey}}){{end}}
+{{end}}
+
+
+{{.Description}}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody>
+      {{- range .Fields -}}
+      <tr>
+        <td><b>{{if .TypeKey}}<a href="#{{.TypeKey}}">{{.Name}}</a>{{else}}{{.Name}}{{end}}</b></td>
+        <td>{{.Type}}</td>
+        <td>
+          {{.Description}}<br/>
+          {{- if or .Schema.XValidations .Schema.Format .Schema.Enum .Schema.Default .Schema.Minimum .Schema.Maximum }}
+          <br/>
+          {{- end}}
+          {{- if .Schema.XValidations }}
+            <i>Validations</i>:
+            {{- range .Schema.XValidations -}}
+              <li>{{ .Rule }}: {{ .Message }}</li>
+            {{- end -}}
+          {{- end }}
+          {{- if .Schema.Format }}
+            <i>Format</i>: {{ .Schema.Format }}<br/>
+          {{- end }}
+          {{- if .Schema.Enum }}
+            <i>Enum</i>: {{ .Schema.Enum | toStrings | join ", " }}<br/>
+          {{- end }}
+          {{- if .Schema.Default }}
+            <i>Default</i>: {{ .Schema.Default }}<br/>
+          {{- end }}
+          {{- if .Schema.Minimum }}
+            <i>Minimum</i>: {{ .Schema.Minimum }}<br/>
+          {{- end }}
+          {{- if .Schema.Maximum }}
+            <i>Maximum</i>: {{ .Schema.Maximum }}<br/>
+          {{- end }}
+        </td>
+        <td>{{.Required}}</td>
+      </tr>
+      {{- end -}}
+    </tbody>
+</table>
+
+{{- end}}{{/* range .Types */}}
+{{- end}}{{/* range .Kinds */}}
+{{- end}}{{/* range .Groups */}}

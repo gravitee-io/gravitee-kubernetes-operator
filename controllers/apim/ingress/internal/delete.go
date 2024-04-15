@@ -26,12 +26,7 @@ func (d *Delegate) Delete(ingress *v1.Ingress) error {
 		return err
 	}
 
-	if util.ContainsFinalizer(ingress, keys.IngressFinalizer) {
-		util.RemoveFinalizer(ingress, keys.IngressFinalizer)
-	}
+	util.RemoveFinalizer(ingress, keys.IngressFinalizer)
 
-	// because we set SetOwnerReference during phase, we don't need to delete the
-	// api definition manually because it will be automatically deleted once the
-	// parent is deleted so we just need to remove the finalizer
-	return d.k8s.Update(d.ctx, ingress)
+	return nil
 }

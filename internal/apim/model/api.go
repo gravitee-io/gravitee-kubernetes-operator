@@ -16,6 +16,7 @@ package model
 
 type ApiEntity struct {
 	ID                string             `json:"id"`
+	CrossID           string             `json:"crossId"`
 	Name              string             `json:"name"`
 	State             string             `json:"state"`
 	Visibility        string             `json:"visibility"`

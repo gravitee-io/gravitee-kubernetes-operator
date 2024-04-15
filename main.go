@@ -20,7 +20,6 @@ import (
 	"context"
 	"embed"
 	"flag"
-	"fmt"
 	"io/fs"
 	"os"
 
@@ -48,7 +47,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
@@ -61,7 +60,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	metricServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -78,8 +77,7 @@ const managerPort = 9443
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(gio.AddToScheme(scheme))
-	utilruntime.Must(gio.AddToScheme(scheme))
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -112,7 +110,7 @@ func main() {
 		setupLog.Info("TLS verification is skipped for APIM HTTP client")
 	}
 
-	metrics := metricsserver.Options{BindAddress: metricsAddr}
+	metrics := metricServer.Options{BindAddress: metricsAddr}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:  scheme,
@@ -138,7 +136,7 @@ func main() {
 		}
 	}
 
-	if err = addIndexer(mgr); err != nil {
+	if err = indexer.InitCache(context.Background(), mgr.GetCache()); err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
@@ -182,7 +180,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinition-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApiDefinitionList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
 		os.Exit(1)
@@ -192,7 +190,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ManagementContextList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
 		os.Exit(1)
@@ -218,7 +216,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("application-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &gio.ApplicationList{}),
+		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Application")
 		os.Exit(1)
@@ -231,101 +229,6 @@ func registerControllers(mgr manager.Manager) {
 		setupLog.Error(err, "unable to create controller", "controller", "Secret")
 		os.Exit(1)
 	}
-}
-
-func addIndexer(mgr manager.Manager) error {
-	err := indexApiDefinitionFields(mgr)
-	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in API definition)")
-	}
-
-	err = indexSecretRefs(mgr)
-	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in context resources)")
-	}
-
-	err = indexIngressFields(mgr)
-	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
-	}
-
-	err = indexTLSSecretFields(mgr)
-	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in ingress resources)")
-	}
-
-	err = indexApplicationFields(mgr)
-	if err != nil {
-		return fmt.Errorf("unable to start manager (Indexing fields in application resources)")
-	}
-
-	return nil
-}
-
-func indexApiDefinitionFields(manager ctrl.Manager) error {
-	cache := manager.GetCache()
-	ctx := context.Background()
-
-	contextIndexer := indexer.NewIndexer(indexer.ContextField, indexer.IndexManagementContexts)
-	err := cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func)
-	if err != nil {
-		return err
-	}
-
-	resourceIndexer := indexer.NewIndexer(indexer.ResourceField, indexer.IndexApiResourceRefs)
-	err = cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func indexSecretRefs(manager ctrl.Manager) error {
-	cache := manager.GetCache()
-	ctx := context.Background()
-
-	secretRefIndexer := indexer.NewIndexer(indexer.SecretRefField, indexer.IndexManagementContextSecrets)
-	return cache.IndexField(ctx, &gio.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func)
-}
-
-func indexIngressFields(manager ctrl.Manager) error {
-	cache := manager.GetCache()
-	ctx := context.Background()
-
-	apiTemplateIndexer := indexer.NewIndexer(indexer.ApiTemplateField, indexer.IndexApiTemplate)
-	err := cache.IndexField(ctx, &v1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func indexTLSSecretFields(manager ctrl.Manager) error {
-	cache := manager.GetCache()
-	ctx := context.Background()
-
-	tlsSecretIndexer := indexer.NewIndexer(indexer.TLSSecretField, indexer.IndexTLSSecret)
-	err := cache.IndexField(ctx, &v1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func indexApplicationFields(manager ctrl.Manager) error {
-	cache := manager.GetCache()
-	ctx := context.Background()
-
-	appContextIndexer := indexer.NewIndexer(indexer.AppContextField, indexer.IndexApplicationManagementContexts)
-	err := cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func applyCRDs() error {

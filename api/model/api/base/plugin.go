@@ -17,20 +17,30 @@ package base
 import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 type Plugin struct {
-	Policy        string                  `json:"policy,omitempty"`
-	Resource      string                  `json:"resource,omitempty"`
+	// Plugin Policy
+	Policy string `json:"policy,omitempty"`
+	// Plugin Resource
+	Resource string `json:"resource,omitempty"`
+	// Plugin Configuration, a map of arbitrary key-values
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 type PluginReference struct {
+	// Plugin Reference Namespace
 	Namespace string `json:"namespace,omitempty"`
-	Resource  string `json:"resource,omitempty"`
-	Name      string `json:"name,omitempty"`
+	// Plugin Reference Resource
+	Resource string `json:"resource,omitempty"`
+	// Plugin Reference Name
+	Name string `json:"name,omitempty"`
 }
 
 type PluginRevision struct {
+	// Plugin reference
 	PluginReference *PluginReference `json:"pluginReference,omitempty"`
-	Generation      int64            `json:"generation,omitempty"`
-	Plugin          *Plugin          `json:"plugin,omitempty"`
-	HashCode        string           `json:"hashCode,omitempty"`
+	// Plugin Generation
+	Generation int64 `json:"generation,omitempty"`
+	// Plugin
+	Plugin *Plugin `json:"plugin,omitempty"`
+	// Plugin Revision Hash code
+	HashCode string `json:"hashCode,omitempty"`
 }

@@ -47,7 +47,7 @@ Kube RBAC Proxy is deployed as a sidecar container and restricts access to the p
 | ---------------------------- | ------------------------------------------------------------ | -------------------------------- |
 | `rbacProxy.enabled`          | Specifies if the kube-rbac-proxy sidecar should be enabled.  | `true`                           |
 | `rbacProxy.image.repository` | Specifies the docker registry and image name to use.         | `quay.io/brancz/kube-rbac-proxy` |
-| `rbacProxy.image.tag`        | Specifies the docker image tag to use.                       | `v0.14.3`                        |
+| `rbacProxy.image.tag`        | Specifies the docker image tag to use.                       | `v0.16.0`                        |
 
 ### Controller Manager
 

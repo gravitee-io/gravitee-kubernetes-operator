@@ -19,11 +19,11 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
+func (d *Delegate) CreateOrUpdate(apiDefinition *v1alpha1.ApiDefinition) error {
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec
@@ -62,12 +62,10 @@ func (d *Delegate) CreateOrUpdate(apiDefinition *gio.ApiDefinition) error {
 		}
 	}
 
-	apiDefinition.Status.Status = gio.ProcessingStatusCompleted
-
 	return nil
 }
 
-func (d *Delegate) updateWithContext(api *gio.ApiDefinition) error {
+func (d *Delegate) updateWithContext(api *v1alpha1.ApiDefinition) error {
 	spec := &api.Spec
 
 	_, findErr := d.apim.APIs.GetByCrossID(spec.CrossID)
