@@ -52,7 +52,7 @@ func NewResolver(ctx context.Context, c client.Client, l logr.Logger, obj runtim
 
 func (r *Resolver) Resolve() error {
 	switch t := r.obj.(type) {
-	case *v1alpha1.ApiDefinition, *v1alpha1.ApiDefinitionV4, *v1alpha1.ManagementContext,
+	case *v1alpha1.ApiDefinition, *v1alpha1.ApiV4Definition, *v1alpha1.ManagementContext,
 		*v1alpha1.Application, *netv1.Ingress, *v1alpha1.ApiResource:
 		return r.exec()
 	default:

@@ -16,6 +16,7 @@ package fixture
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -32,6 +33,7 @@ type Files struct {
 	Context     string
 	Resource    string
 	API         string
+	APIv4       string
 	Application string
 	Ingress     string
 }
@@ -68,6 +70,15 @@ func (b *FSBuilder) Build() *Objects {
 		randomizeAPIPaths(obj.API, suffix)
 	}
 
+	if apiV4 := decodeIfDefined(f.APIv4, &v1alpha1.ApiV4Definition{}, apiV4Kind); apiV4 != nil {
+		obj.APIv4 = *apiV4
+		obj.APIv4.Name += suffix
+		obj.APIv4.Namespace = constants.Namespace
+		obj.APIv4.Spec.Name = obj.APIv4.Name
+
+		randomizeAPIv4Paths(obj.APIv4, suffix)
+	}
+
 	if app := decodeIfDefined(f.Application, &v1alpha1.Application{}, appKind); app != nil {
 		obj.Application = *app
 		obj.Application.Name += suffix
@@ -80,6 +91,9 @@ func (b *FSBuilder) Build() *Objects {
 		obj.Context.Namespace = constants.Namespace
 		if obj.API != nil {
 			obj.API.Spec.Context = obj.Context.GetNamespacedName()
+		}
+		if obj.APIv4 != nil {
+			obj.APIv4.Spec.Context = obj.Context.GetNamespacedName()
 		}
 		if obj.Application != nil {
 			obj.Application.Spec.Context = obj.Context.GetNamespacedName()
@@ -100,6 +114,16 @@ func (b *FSBuilder) Build() *Objects {
 				},
 			}
 		}
+		if obj.APIv4 != nil {
+			obj.APIv4.Spec.Resources = []*base.ResourceOrRef{
+				{
+					Ref: &refs.NamespacedName{
+						Name:      obj.Resource.Name,
+						Namespace: constants.Namespace,
+					},
+				},
+			}
+		}
 	}
 
 	if ing := decodeIfDefined(f.Ingress, &netV1.Ingress{}, ingKind); ing != nil {
@@ -108,6 +132,9 @@ func (b *FSBuilder) Build() *Objects {
 		obj.Ingress.Namespace = constants.Namespace
 		if obj.API != nil && isTemplate(obj.API) {
 			obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.API.Name
+		}
+		if obj.APIv4 != nil && isTemplate(obj.APIv4) {
+			obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.APIv4.Name
 		}
 
 		randomizeIngressRules(obj.Ingress, suffix)
@@ -124,6 +151,29 @@ func randomizeAPIPaths(api *v1alpha1.ApiDefinition, suffix string) {
 	}
 }
 
+func randomizeAPIv4Paths(api *v1alpha1.ApiV4Definition, suffix string) {
+	if !isTemplate(api) {
+		for i, v := range api.Spec.Listeners {
+			api.Spec.Listeners[i] = setPath(v, suffix)
+		}
+	}
+}
+
+func setPath(l v4.Listener, suffix string) *v4.GenericListener {
+	switch t := l.(type) {
+	case *v4.GenericListener:
+		return setPath(t.ToListener(), suffix)
+	case *v4.HttpListener:
+		t.Paths[0].Path = "/" + suffix[1:]
+		return v4.ToGenericListener(t)
+	case *v4.TCPListener:
+		// TODO needs to be confirmed
+		t.Servers[0] = "/" + suffix[1:]
+		return v4.ToGenericListener(t)
+	}
+	return nil
+}
+
 func randomizeIngressRules(ing *netV1.Ingress, suffix string) {
 	for i := range ing.Spec.Rules {
 		for j := range ing.Spec.Rules[i].HTTP.Paths {
@@ -132,8 +182,8 @@ func randomizeIngressRules(ing *netV1.Ingress, suffix string) {
 	}
 }
 
-func isTemplate(api *v1alpha1.ApiDefinition) bool {
-	return api.Annotations[keys.IngressTemplateAnnotation] == env.TrueString
+func isTemplate(api v1alpha1.ApiDefinitionCRD) bool {
+	return api.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
 }
 
 func (b *FSBuilder) AddSecret(file string) *FSBuilder {
@@ -158,6 +208,11 @@ func (b *FSBuilder) WithResource(file string) *FSBuilder {
 
 func (b *FSBuilder) WithAPI(file string) *FSBuilder {
 	b.files.API = file
+	return b
+}
+
+func (b *FSBuilder) WithAPIv4(file string) *FSBuilder {
+	b.files.APIv4 = file
 	return b
 }
 

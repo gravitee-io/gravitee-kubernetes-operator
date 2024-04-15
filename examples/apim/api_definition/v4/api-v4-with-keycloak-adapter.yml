@@ -1,0 +1,109 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: with-keycloak-adapter-v4
+spec:
+  name: "api-v4-with-keycloak-adapter"
+  description: "API v4 With Keycloak Adapter"
+  version: "1.0"
+  type: PROXY
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/with-keycloak-adapter-v4"
+      entrypoints:
+        - type: http-proxy
+          qos: AUTO
+  endpointGroups:
+    - name: Default HTTP proxy group
+      type: http-proxy
+      endpoints:
+        - name: Default HTTP proxy
+          type: http-proxy
+          inheritConfiguration: false
+          configuration:
+            target: https://api.gravitee.io/echo
+          secondary: false
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  resources:
+    - name: keycloak-adapter
+      type: oauth2-keycloak-resource
+      configuration:
+        validateTokenLocally: true
+        userClaim: sub
+        verifyHost: false
+        trustAll: true
+        keycloakConfiguration: |-
+          {
+              "auth-server-url": "http://localhost:8080/auth",
+              "confidential-port": 0,
+              "credentials": {
+                  "secret": "f1c9ff64-abcf-4671-9ddb-4fe4a172390d"
+              },
+              "policy-enforcer": {},
+              "realm": "gravitee",
+              "resource": "gravitee",
+              "ssl-required": "external"
+          }
+      enabled: true
+  plans:
+    oauth2:
+      mode: STANDARD
+      name: oauth2
+      description: OAUTH2 Plan
+      security:
+        type: OAUTH2
+        configuration:
+          oauthResource: keycloak-adapter
+          extractPayload: false
+          checkRequiredScopes: false
+          requiredScopes: []
+          modeStrict: true
+          propagateAuthHeader: true
+      characteristics: [ ]
+      comment_required: false
+      status: PUBLISHED
+      tags: [ ]
+      type: API
+      flows:
+        - enabled: true
+          selectors:
+            - type: HTTP
+              path: "/"
+              pathOperator: STARTS_WITH
+          request: [ ]
+          response: [ ]
+          subscribe: [ ]
+          publish: [ ]
+    KeyLess:
+      name: "Free plan"
+      description: "This plan does not require any authentication"
+      security:
+        type: "KEY_LESS"
+      flows:
+        - enabled: true
+          selectors:
+            - type: HTTP
+              path: "/"
+              pathOperator: STARTS_WITH
+          request: [ ]
+          response: [ ]
+          subscribe: [ ]
+          publish: [ ]

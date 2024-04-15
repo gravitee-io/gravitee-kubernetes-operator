@@ -15,22 +15,28 @@
 package v4
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
+// +kubebuilder:validation:Enum=HTTP;SUBSCRIPTION;TCP;
 type ListenerType string
 
+// +kubebuilder:validation:Enum=NONE;AUTO;AT_MOST_ONCE;AT_LEAST_ONCE;
+type QosType string
+
 const (
-	HTTPListenerType         = "HTTP"
-	SubscriptionListenerType = "SUBSCRIPTION"
-	TCPListenerType          = "TCP"
+	HTTPListenerType         ListenerType = "HTTP"
+	SubscriptionListenerType ListenerType = "SUBSCRIPTION"
+	TCPListenerType          ListenerType = "TCP"
 )
 
 const (
-	AutoQOS        = "AUTO"
-	NoQOS          = "NONE"
-	AtMostOnceQOS  = "AT_MOST_ONCE"
-	AtLeastOnceQOS = "AT_LEAST_ONCE"
+	AutoQOS        QosType = "AUTO"
+	NoQOS          QosType = "NONE"
+	AtMostOnceQOS  QosType = "AT_MOST_ONCE"
+	AtLeastOnceQOS QosType = "AT_LEAST_ONCE"
 )
 
 type DLQ struct {
@@ -40,58 +46,156 @@ type DLQ struct {
 
 type EntryPointType string
 
-const (
-	EntryPointTypeHTTP = EntryPointType("http-proxy")
-)
-
-func NewHttpEntryPoint() map[string]interface{} {
-	return map[string]interface{}{
-		"type":          string(EntryPointTypeHTTP),
-		"qos":           string(AutoQOS),
-		"configuration": map[string]interface{}{},
-	}
-}
-
-func NewPath(host, path string) map[string]interface{} {
-	out := map[string]interface{}{"path": path}
-	if host != "" {
-		out["host"] = host
-	}
-	return out
-}
-
-func NewHttpListenerBase() *Listener {
-	impl := utils.NewGenericStringMap()
-	impl.Put("type", string(HTTPListenerType))
-	impl.Put("entrypoints", []interface{}{NewHttpEntryPoint()})
-	return &Listener{impl}
-}
-
-type Listener struct {
+type GenericListener struct {
 	*utils.GenericStringMap `json:",inline"`
 }
 
-func (l *Listener) UnmarshalJSON(data []byte) error {
+func (l *GenericListener) UnmarshalJSON(data []byte) error {
 	if l.GenericStringMap == nil {
 		l.GenericStringMap = utils.NewGenericStringMap()
 	}
 	return l.GenericStringMap.UnmarshalJSON(data)
 }
 
-func (l *Listener) ToGatewayDefinition() *Listener {
-	listener := l.DeepCopy()
-	listener.Put("type", Enum(listener.GetString("type")).ToGatewayDefinition())
-	listener.Put("entrypoints", listener.GetGatewayDefinitionEntryPoints())
+func (l *GenericListener) ListenerType() ListenerType {
+	return ListenerType(l.GetString("type"))
+}
+
+func (l *GenericListener) ToListener() Listener {
+	body, _ := json.Marshal(l)
+	var listener Listener
+	switch l.ListenerType() {
+	case HTTPListenerType:
+		listener = new(HttpListener)
+	case SubscriptionListenerType:
+		listener = new(SubscriptionListener)
+	case TCPListenerType:
+		listener = new(TCPListener)
+	}
+
+	_ = json.Unmarshal(body, listener)
 	return listener
 }
 
-func (l *Listener) GetGatewayDefinitionEntryPoints() []interface{} {
-	var entrypoints []interface{}
-	for _, entrypoint := range l.GetSlice("entrypoints") {
-		entrypoint := utils.ToGenericStringMap(entrypoint)
-		qos := Enum(entrypoint.GetString("qos")).ToGatewayDefinition()
-		entrypoint.Put("qos", Enum(qos).ToGatewayDefinition())
-		entrypoints = append(entrypoints, entrypoint)
+func ToGenericListener(l Listener) *GenericListener {
+	body, _ := json.Marshal(l)
+	obj := new(GenericListener)
+	_ = json.Unmarshal(body, obj)
+	return obj
+}
+
+// +k8s:deepcopy-gen=false
+type Listener interface {
+	ListenerType() ListenerType
+}
+
+type AbstractListener struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default:=`HTTP`
+	Type ListenerType `json:"type"`
+	// +kubebuilder:validation:Required
+	Entrypoints []*Entrypoint `json:"entrypoints"`
+	Servers     []string      `json:"servers,omitempty"`
+}
+
+type HttpListener struct {
+	*AbstractListener `json:",inline"`
+	// +kubebuilder:validation:Required
+	Paths        []*Path  `json:"paths"`
+	PathMappings []string `json:"pathMappings"`
+}
+
+func (l *AbstractListener) ToGatewayDefinition() *AbstractListener {
+	listener := l.DeepCopy()
+	listener.Type = ListenerType(Enum(l.Type).ToGatewayDefinition())
+	ep := make([]*Entrypoint, len(l.Entrypoints))
+	for i, l := range l.Entrypoints {
+		ep[i] = l.ToGatewayDefinition()
 	}
-	return entrypoints
+	listener.Entrypoints = ep
+
+	return listener
+}
+
+func (l *HttpListener) ListenerType() ListenerType {
+	return l.Type
+}
+
+func (l *HttpListener) ToGatewayDefinition() *HttpListener {
+	listener := l.DeepCopy()
+	listener.AbstractListener = l.AbstractListener.ToGatewayDefinition()
+
+	return listener
+}
+
+type SubscriptionListener struct {
+	*AbstractListener `json:",inline"`
+}
+
+func (l *SubscriptionListener) ToGatewayDefinition() *SubscriptionListener {
+	listener := l.DeepCopy()
+	listener.AbstractListener = l.AbstractListener.ToGatewayDefinition()
+
+	return listener
+}
+
+func (l *SubscriptionListener) ListenerType() ListenerType {
+	return l.Type
+}
+
+type TCPListener struct {
+	*AbstractListener `json:",inline"`
+	// +kubebuilder:validation:Required
+	Hosts []string `json:"hosts"`
+}
+
+func (l *TCPListener) ToGatewayDefinition() *TCPListener {
+	listener := l.DeepCopy()
+	listener.AbstractListener = l.AbstractListener.ToGatewayDefinition()
+
+	return listener
+}
+
+func (l *TCPListener) ListenerType() ListenerType {
+	return l.Type
+}
+
+type Path struct {
+	Host string `json:"host,omitempty"`
+	// +kubebuilder:validation:Required
+	Path string `json:"path"`
+}
+
+type Entrypoint struct {
+	// +kubebuilder:validation:Required
+	Type string `json:"type"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:default:=`AUTO`
+	Qos           QosType                 `json:"qos"`
+	Dlq           *DLQ                    `json:"dlq,omitempty"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
+}
+
+func (ep *Entrypoint) ToGatewayDefinition() *Entrypoint {
+	entryPoint := ep.DeepCopy()
+	entryPoint.Qos = QosType(Enum(ep.Qos).ToGatewayDefinition())
+	if ep.Dlq != nil && ep.Dlq.Endpoint == "" {
+		entryPoint.Dlq = nil
+	}
+	return entryPoint
+}
+
+func ToListenerGatewayDefinition(l Listener) *GenericListener {
+	switch t := l.(type) {
+	case *GenericListener:
+		return ToListenerGatewayDefinition(t.ToListener())
+	case *HttpListener:
+		return ToGenericListener(t.ToGatewayDefinition())
+	case *SubscriptionListener:
+		return ToGenericListener(t.ToGatewayDefinition())
+	case *TCPListener:
+		return ToGenericListener(t.ToGatewayDefinition())
+	}
+
+	return nil
 }

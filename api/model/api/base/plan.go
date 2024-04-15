@@ -17,13 +17,12 @@ package base
 // +kubebuilder:validation:Enum=API;CATALOG;
 type PlanType string
 
-// +kubebuilder:validation:Enum=STAGING;PUBLISHED;CLOSED;DEPRECATED;
+// in APIM there are different state (STAGING;PUBLISHED;CLOSED;DEPRECATED;) but in GKO we only have a single state
+// +kubebuilder:validation:Enum=PUBLISHED;
 type PlanStatus string
 
 const (
-	StagingPlanStatus   = PlanStatus("STAGING")
 	PublishedPlanStatus = PlanStatus("PUBLISHED")
-	ClosedPlanStatus    = PlanStatus("CLOSED")
 )
 
 // +kubebuilder:validation:Enum=AUTO;MANUAL;
@@ -40,6 +39,7 @@ type Plan struct {
 	Description string `json:"description"`
 	// List of plan tags
 	Tags []string `json:"tags,omitempty"`
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=PUBLISHED
 	// The plan status
 	Status PlanStatus `json:"status,omitempty"`

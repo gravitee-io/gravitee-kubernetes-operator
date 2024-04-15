@@ -22,6 +22,9 @@ import (
 // +kubebuilder:validation:Enum=PROXY;MESSAGE;
 type ApiType string
 
+// +kubebuilder:validation:Enum=PUBLISHED;UNPUBLISHED;
+type ApiV4LifecycleState string
+
 type Api struct {
 	*base.ApiBase `json:",inline"`
 	// +kubebuilder:default:=`V4`
@@ -33,21 +36,22 @@ type Api struct {
 	// from an API instance or from a config map created in the cluster (which is the default)
 	DefinitionContext *DefinitionContext `json:"definitionContext,omitempty"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=`CREATED`
-	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
-	LifecycleState base.LifecycleState `json:"lifecycleState,omitempty"`
+	// +kubebuilder:default:=`UNPUBLISHED`
+	// API life cycle state can be one of the values PUBLISHED, UNPUBLISHED
+	LifecycleState ApiV4LifecycleState `json:"lifecycleState,omitempty"`
 	// +kubebuilder:validation:Required
 	// Api Type (proxy or message)
 	Type ApiType `json:"type"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems:=1
 	// List of listeners for this API
-	Listeners []*Listener `json:"listeners"`
+	Listeners []*GenericListener `json:"listeners"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems:=1
 	// List of Endpoint groups
 	EndpointGroups []*EndpointGroup `json:"endpointGroups"`
-	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinProperties:=1
 	// A map of plan identifiers to plan
 	// Keys uniquely identify plans and are used to keep them in sync
 	// when using a management context.
@@ -146,10 +150,10 @@ func (api *Api) getGatewayDefinitionPlans() []*GatewayDefinitionPlan {
 	return plans
 }
 
-func (api *Api) getGatewayDefinitionListener() []*Listener {
-	listeners := make([]*Listener, len(api.Listeners))
+func (api *Api) getGatewayDefinitionListener() []*GenericListener {
+	listeners := make([]*GenericListener, len(api.Listeners))
 	for i, listener := range api.Listeners {
-		listeners[i] = listener.ToGatewayDefinition()
+		listeners[i] = ToListenerGatewayDefinition(listener)
 	}
 	return listeners
 }

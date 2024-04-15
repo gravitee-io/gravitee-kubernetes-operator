@@ -73,11 +73,11 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 		By("expecting API proxy to match updated rule")
 
 		Eventually(func() error {
-			latest, err := manager.GetLatest(apiDef)
+			err := manager.GetLatest(apiDef)
 			if err != nil {
 				return err
 			}
-			endpoint = constants.BuildAPIEndpoint(latest)
+			endpoint = constants.BuildAPIEndpoint(apiDef)
 			return assert.StrEndingWithPath(endpoint, "/"+fixtures.GetGeneratedSuffix()[1:])
 		}, timeout, interval).Should(Succeed())
 

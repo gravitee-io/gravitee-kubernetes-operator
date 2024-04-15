@@ -146,20 +146,24 @@ func (spec *ApiDefinitionV2Spec) SetDefinitionContext() {
 	}
 }
 
-func (api *ApiDefinition) DeepCopyCrd() CRD {
-	return api.DeepCopy()
+func (api *ApiDefinition) GetObjectMeta() *metav1.ObjectMeta {
+	return &api.ObjectMeta
 }
 
 func (api *ApiDefinition) GetSpec() Spec {
 	return &api.Spec
 }
 
-func (api *ApiDefinition) GetApiDefinitionSpec() ContextAwareSpec {
-	return &api.Spec
+func (api *ApiDefinition) GetStatus() Status {
+	return &api.Status
 }
 
-func (api *ApiDefinition) GetApiBase() *base.ApiBase {
-	return api.Spec.ApiBase
+func (api *ApiDefinition) DeepCopyCrd() CRD {
+	return api.DeepCopy()
+}
+
+func (api *ApiDefinition) GetApiDefinitionSpec() ContextAwareSpec {
+	return &api.Spec
 }
 
 func (spec *ApiDefinitionV2Spec) Hash() string {
@@ -168,10 +172,6 @@ func (spec *ApiDefinitionV2Spec) Hash() string {
 
 func (spec *ApiDefinitionV2Spec) GetManagementContext() *refs.NamespacedName {
 	return spec.Context
-}
-
-func (api *ApiDefinition) GetStatus() Status {
-	return &api.Status
 }
 
 func (s *ApiDefinitionStatus) SetProcessingStatus(status ProcessingStatus) {

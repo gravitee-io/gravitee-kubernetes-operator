@@ -27,6 +27,8 @@ func OfType(obj interface{}) (client.ObjectList, error) {
 	switch obj.(type) {
 	case *v1alpha1.ApiDefinitionList:
 		return &v1alpha1.ApiDefinitionList{}, nil
+	case *v1alpha1.ApiV4DefinitionList:
+		return &v1alpha1.ApiV4DefinitionList{}, nil
 	case *v1alpha1.ManagementContextList:
 		return &v1alpha1.ManagementContextList{}, nil
 	case *netv1.IngressList:

@@ -46,11 +46,11 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("expecting finalizer to have been added to api")
 
 		Eventually(func() error {
-			api, err := manager.GetLatest(fixtures.API)
+			err := manager.GetLatest(fixtures.API)
 			if err != nil {
 				return err
 			}
-			return assert.HasFinalizer(api, keys.ApiDefinitionTemplateFinalizer)
+			return assert.HasFinalizer(fixtures.API, keys.ApiDefinitionTemplateFinalizer)
 		}, timeout, interval).Should(Succeed())
 
 		By("deleting the template")
@@ -61,7 +61,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			_, kErr := manager.GetLatest(fixtures.API)
+			kErr := manager.GetLatest(fixtures.API)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -72,7 +72,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("expecting template to have been deleted")
 
 		Eventually(func() error {
-			_, kErr := manager.GetLatest(fixtures.API)
+			kErr := manager.GetLatest(fixtures.API)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}

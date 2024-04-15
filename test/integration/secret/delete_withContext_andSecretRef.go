@@ -56,7 +56,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			_, kErr := manager.GetLatest(secret)
+			kErr := manager.GetLatest(secret)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -67,7 +67,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("expecting secret to have been deleted")
 
 		Eventually(func() error {
-			_, kErr := manager.GetLatest(secret)
+			kErr := manager.GetLatest(secret)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}

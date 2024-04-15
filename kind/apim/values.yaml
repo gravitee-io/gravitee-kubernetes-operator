@@ -20,7 +20,7 @@ mongodb:
   architecture: standalone
   persistence:
     mountPath: /data/db
-  
+
 elasticsearch:
   enabled: false
 
@@ -43,8 +43,8 @@ ui:
     nodePort: 30080
   baseURL: http://localhost:30083/management
   env:
-  - name: CONSOLE_BASE_HREF
-    value: /
+    - name: CONSOLE_BASE_HREF
+      value: /
 
 portal:
   enabled: false
@@ -84,7 +84,7 @@ api:
       value: none
 
 installation:
-  api: 
+  api:
     url: http://localhost:30083
     proxyPath:
       management: /management

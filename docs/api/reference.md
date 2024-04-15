@@ -36,8 +36,8 @@ Resources
             <td>ApiDefinition is the Schema for the apidefinitions API.</td>
         </tr>
         <tr>
-            <td><a href="#apidefinitionv4">ApiDefinitionV4</a></td>
-            <td>ApiDefinitionV4 is the Schema for the v4 apidefinitions API.</td>
+            <td><a href="#apiv4definition">ApiV4Definition</a></td>
+            <td>ApiV4Definition is the Schema for the v4 apidefinitions API.</td>
         </tr>
         <tr>
             <td><a href="#apiresource">ApiResource</a></td>
@@ -1066,7 +1066,7 @@ that has been promoted between different environments.<br/>
         <td>
           The plan status<br/>
           <br/>
-            <i>Enum</i>: STAGING, PUBLISHED, CLOSED, DEPRECATED<br/>
+            <i>Enum</i>: PUBLISHED<br/>
             <i>Default</i>: PUBLISHED<br/>
         </td>
         <td>false</td>
@@ -1532,6 +1532,13 @@ Specify the primary member that owns the API
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>dynamic</b></td>
+        <td>boolean</td>
+        <td>
+          Property is dynamic or not?<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>encrypted</b></td>
         <td>boolean</td>
         <td>
@@ -3891,7 +3898,7 @@ Use processingStatus instead.<br/>
       </tr></tbody>
 </table>
 
-## ApiDefinitionV4
+## ApiV4Definition
 
 [gravitee.io/v1alpha1](#graviteeiov1alpha1)
 
@@ -3900,7 +3907,7 @@ Use processingStatus instead.<br/>
 
 
 
-ApiDefinitionV4 is the Schema for the v4 apidefinitions API.
+ApiV4Definition is the Schema for the v4 apidefinitions API.
 
 <table>
     <thead>
@@ -3912,29 +3919,29 @@ ApiDefinitionV4 is the Schema for the v4 apidefinitions API.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionv4spec">spec</a></b></td>
+        <td><b><a href="#apiv4definitionspec">spec</a></b></td>
         <td>object</td>
         <td>
-          ApiDefinitionV4Spec defines the desired state of ApiDefinition.<br/>
+          ApiV4DefinitionSpec defines the desired state of ApiDefinition.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4status">status</a></b></td>
+        <td><b><a href="#apiv4definitionstatus">status</a></b></td>
         <td>object</td>
         <td>
-          ApiDefinitionV4Status defines the observed state of API Definition.<br/>
+          ApiV4DefinitionStatus defines the observed state of API Definition.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
 </table>
 
 
-### ApiDefinitionV4.spec
-[Go to parent definition](#apidefinitionv4)
+### ApiV4Definition.spec
+[Go to parent definition](#apiv4definition)
 
 
 
-ApiDefinitionV4Spec defines the desired state of ApiDefinition.
+ApiV4DefinitionSpec defines the desired state of ApiDefinition.
 
 <table>
     <thead>
@@ -3946,7 +3953,7 @@ ApiDefinitionV4Spec defines the desired state of ApiDefinition.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindex">endpointGroups</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindex">endpointGroups</a></b></td>
         <td>[]object</td>
         <td>
           List of Endpoint groups<br/>
@@ -3957,6 +3964,15 @@ ApiDefinitionV4Spec defines the desired state of ApiDefinition.
         <td>[]object</td>
         <td>
           List of listeners for this API<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskey">plans</a></b></td>
+        <td>map[string]object</td>
+        <td>
+          A map of plan identifiers to plan
+Keys uniquely identify plans and are used to keep them in sync
+when using a management context.<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -3976,14 +3992,14 @@ ApiDefinitionV4Spec defines the desired state of ApiDefinition.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specanalytics">analytics</a></b></td>
+        <td><b><a href="#apiv4definitionspecanalytics">analytics</a></b></td>
         <td>object</td>
         <td>
           API Analytics<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4speccontextref">contextRef</a></b></td>
+        <td><b><a href="#apiv4definitionspeccontextref">contextRef</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -4001,7 +4017,7 @@ If empty, a UUID will be generated based on the namespace and name of the resour
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specdefinitioncontext">definitionContext</a></b></td>
+        <td><b><a href="#apiv4definitionspecdefinitioncontext">definitionContext</a></b></td>
         <td>object</td>
         <td>
           The API Definition context is used to identify the Kubernetes origin of the API,
@@ -4027,14 +4043,14 @@ from an API instance or from a config map created in the cluster (which is the d
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specflowexecution">flowExecution</a></b></td>
+        <td><b><a href="#apiv4definitionspecflowexecution">flowExecution</a></b></td>
         <td>object</td>
         <td>
           API Flow Execution<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specflowsindex">flows</a></b></td>
+        <td><b><a href="#apiv4definitionspecflowsindex">flows</a></b></td>
         <td>[]object</td>
         <td>
           List of flows for the API<br/>
@@ -4061,14 +4077,14 @@ field of the resource.<br/>
         <td><b>lifecycleState</b></td>
         <td>enum</td>
         <td>
-          API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
+          API life cycle state can be one of the values PUBLISHED, UNPUBLISHED<br/>
           <br/>
-            <i>Enum</i>: CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
-            <i>Default</i>: CREATED<br/>
+            <i>Enum</i>: PUBLISHED, UNPUBLISHED<br/>
+            <i>Default</i>: UNPUBLISHED<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specmetadataindex">metadata</a></b></td>
+        <td><b><a href="#apiv4definitionspecmetadataindex">metadata</a></b></td>
         <td>[]object</td>
         <td>
           List of API metadata entries<br/>
@@ -4082,30 +4098,21 @@ field of the resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specplanskey">plans</a></b></td>
-        <td>map[string]object</td>
-        <td>
-          A map of plan identifiers to plan
-Keys uniquely identify plans and are used to keep them in sync
-when using a management context.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionv4specprimaryowner">primaryOwner</a></b></td>
+        <td><b><a href="#apiv4definitionspecprimaryowner">primaryOwner</a></b></td>
         <td>object</td>
         <td>
           Specify the primary member that owns the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specpropertiesindex">properties</a></b></td>
+        <td><b><a href="#apiv4definitionspecpropertiesindex">properties</a></b></td>
         <td>[]object</td>
         <td>
           List of Properties for the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specresourcesindex">resources</a></b></td>
+        <td><b><a href="#apiv4definitionspecresourcesindex">resources</a></b></td>
         <td>[]object</td>
         <td>
           Resources can be either inlined or reference the namespace and name
@@ -4113,14 +4120,14 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specresponse_templateskeykey">response_templates</a></b></td>
+        <td><b><a href="#apiv4definitionspecresponse_templateskeykey">response_templates</a></b></td>
         <td>map[string]map[string]object</td>
         <td>
           A list of Response Templates for the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specservices">services</a></b></td>
+        <td><b><a href="#apiv4definitionspecservices">services</a></b></td>
         <td>object</td>
         <td>
           API Services<br/>
@@ -4157,8 +4164,8 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index]
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.endpointGroups[index]
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -4181,7 +4188,7 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexendpointsindex">endpoints</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexendpointsindex">endpoints</a></b></td>
         <td>[]object</td>
         <td>
           List of endpoint for the group<br/>
@@ -4195,21 +4202,21 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexhttp">http</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexhttp">http</a></b></td>
         <td>object</td>
         <td>
           Endpoint group http client options<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexloadbalancer">loadBalancer</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexloadbalancer">loadBalancer</a></b></td>
         <td>object</td>
         <td>
           Endpoint group load balancer<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexservices">services</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexservices">services</a></b></td>
         <td>object</td>
         <td>
           Endpoint group services<br/>
@@ -4223,7 +4230,7 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexssl">ssl</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexssl">ssl</a></b></td>
         <td>object</td>
         <td>
           Endpoint group http client SSL options<br/>
@@ -4240,8 +4247,8 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].endpoints[index]
-[Go to parent definition](#apidefinitionv4specendpointgroupsindex)
+### ApiV4Definition.spec.endpointGroups[index].endpoints[index]
+[Go to parent definition](#apiv4definitionspecendpointgroupsindex)
 
 
 
@@ -4285,7 +4292,7 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexendpointsindexservices">services</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexendpointsindexservices">services</a></b></td>
         <td>object</td>
         <td>
           Endpoint Services<br/>
@@ -4323,8 +4330,8 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].endpoints[index].services
-[Go to parent definition](#apidefinitionv4specendpointgroupsindexendpointsindex)
+### ApiV4Definition.spec.endpointGroups[index].endpoints[index].services
+[Go to parent definition](#apiv4definitionspecendpointgroupsindexendpointsindex)
 
 
 
@@ -4340,7 +4347,7 @@ Endpoint Services
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexendpointsindexserviceshealthcheck">healthCheck</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexendpointsindexserviceshealthcheck">healthCheck</a></b></td>
         <td>object</td>
         <td>
           Health check service<br/>
@@ -4350,8 +4357,8 @@ Endpoint Services
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].endpoints[index].services.healthCheck
-[Go to parent definition](#apidefinitionv4specendpointgroupsindexendpointsindexservices)
+### ApiV4Definition.spec.endpointGroups[index].endpoints[index].services.healthCheck
+[Go to parent definition](#apiv4definitionspecendpointgroupsindexendpointsindexservices)
 
 
 
@@ -4398,8 +4405,8 @@ Health check service
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].http
-[Go to parent definition](#apidefinitionv4specendpointgroupsindex)
+### ApiV4Definition.spec.endpointGroups[index].http
+[Go to parent definition](#apiv4definitionspecendpointgroupsindex)
 
 
 
@@ -4526,8 +4533,8 @@ Endpoint group http client options
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].loadBalancer
-[Go to parent definition](#apidefinitionv4specendpointgroupsindex)
+### ApiV4Definition.spec.endpointGroups[index].loadBalancer
+[Go to parent definition](#apiv4definitionspecendpointgroupsindex)
 
 
 
@@ -4556,8 +4563,8 @@ Endpoint group load balancer
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].services
-[Go to parent definition](#apidefinitionv4specendpointgroupsindex)
+### ApiV4Definition.spec.endpointGroups[index].services
+[Go to parent definition](#apiv4definitionspecendpointgroupsindex)
 
 
 
@@ -4573,14 +4580,14 @@ Endpoint group services
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexservicesdiscovery">discovery</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexservicesdiscovery">discovery</a></b></td>
         <td>object</td>
         <td>
           Endpoint group discovery service<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexserviceshealthcheck">healthCheck</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexserviceshealthcheck">healthCheck</a></b></td>
         <td>object</td>
         <td>
           Endpoint group health check service<br/>
@@ -4590,8 +4597,8 @@ Endpoint group services
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].services.discovery
-[Go to parent definition](#apidefinitionv4specendpointgroupsindexservices)
+### ApiV4Definition.spec.endpointGroups[index].services.discovery
+[Go to parent definition](#apiv4definitionspecendpointgroupsindexservices)
 
 
 
@@ -4638,8 +4645,8 @@ Endpoint group discovery service
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].services.healthCheck
-[Go to parent definition](#apidefinitionv4specendpointgroupsindexservices)
+### ApiV4Definition.spec.endpointGroups[index].services.healthCheck
+[Go to parent definition](#apiv4definitionspecendpointgroupsindexservices)
 
 
 
@@ -4686,8 +4693,8 @@ Endpoint group health check service
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].ssl
-[Go to parent definition](#apidefinitionv4specendpointgroupsindex)
+### ApiV4Definition.spec.endpointGroups[index].ssl
+[Go to parent definition](#apiv4definitionspecendpointgroupsindex)
 
 
 
@@ -4721,14 +4728,14 @@ Endpoint group http client SSL options
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexsslkeystore">keyStore</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexsslkeystore">keyStore</a></b></td>
         <td>object</td>
         <td>
           KeyStore type (possible values PEM, PKCS12, JKS)<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specendpointgroupsindexssltruststore">trustStore</a></b></td>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexssltruststore">trustStore</a></b></td>
         <td>object</td>
         <td>
           TrustStore type (possible values PEM, PKCS12, JKS)<br/>
@@ -4738,8 +4745,8 @@ Endpoint group http client SSL options
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].ssl.keyStore
-[Go to parent definition](#apidefinitionv4specendpointgroupsindexssl)
+### ApiV4Definition.spec.endpointGroups[index].ssl.keyStore
+[Go to parent definition](#apiv4definitionspecendpointgroupsindexssl)
 
 
 
@@ -4765,8 +4772,8 @@ KeyStore type (possible values PEM, PKCS12, JKS)
 </table>
 
 
-### ApiDefinitionV4.spec.endpointGroups[index].ssl.trustStore
-[Go to parent definition](#apidefinitionv4specendpointgroupsindexssl)
+### ApiV4Definition.spec.endpointGroups[index].ssl.trustStore
+[Go to parent definition](#apiv4definitionspecendpointgroupsindexssl)
 
 
 
@@ -4792,8 +4799,559 @@ TrustStore type (possible values PEM, PKCS12, JKS)
 </table>
 
 
-### ApiDefinitionV4.spec.analytics
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.plans[key]
+[Go to parent definition](#apiv4definitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Plan Description<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Plan display name, this will be the name displayed in the UI
+if a management context is used to sync the API with APIM<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>characteristics</b></td>
+        <td>[]string</td>
+        <td>
+          List of plan characteristics<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>comment_required</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate of comment is required for this plan or not<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          The plan Cross ID.
+This field is used to identify plans defined for an API
+that has been promoted between different environments.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>definitionVersion</b></td>
+        <td>string</td>
+        <td>
+          Plan definition version<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>excluded_groups</b></td>
+        <td>[]string</td>
+        <td>
+          List of excluded groups for this plan<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindex">flows</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of plan flows<br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          Plan ID<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>mode</b></td>
+        <td>string</td>
+        <td>
+          The plan mode<br/>
+          <br/>
+            <i>Default</i>: STANDARD<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>order</b></td>
+        <td>integer</td>
+        <td>
+          Plan order<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeysecurity">security</a></b></td>
+        <td>object</td>
+        <td>
+          Plan security<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectionRule</b></td>
+        <td>string</td>
+        <td>
+          Plan selection rule<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          The plan status<br/>
+          <br/>
+            <i>Enum</i>: PUBLISHED<br/>
+            <i>Default</i>: PUBLISHED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tags</b></td>
+        <td>[]string</td>
+        <td>
+          List of plan tags<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          Plan type<br/>
+          <br/>
+            <i>Enum</i>: API, CATALOG<br/>
+            <i>Default</i>: API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>validation</b></td>
+        <td>enum</td>
+        <td>
+          Plan validation strategy<br/>
+          <br/>
+            <i>Enum</i>: AUTO, MANUAL<br/>
+            <i>Default</i>: AUTO<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].flows[index]
+[Go to parent definition](#apiv4definitionspecplanskey)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is flow enabled or not?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Flow name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindexpublishindex">publish</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Publish flow steps<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindexrequestindex">request</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Request flow steps<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindexresponseindex">response</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Response flow steps<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>selectors</b></td>
+        <td>[]object</td>
+        <td>
+          List of Flow selectors<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindexsubscribeindex">subscribe</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Subscribe flow steps<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tags</b></td>
+        <td>[]string</td>
+        <td>
+          List of tags<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].flows[index].publish[index]
+[Go to parent definition](#apiv4definitionspecplanskeyflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].flows[index].request[index]
+[Go to parent definition](#apiv4definitionspecplanskeyflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].flows[index].response[index]
+[Go to parent definition](#apiv4definitionspecplanskeyflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].flows[index].subscribe[index]
+[Go to parent definition](#apiv4definitionspecplanskeyflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].security
+[Go to parent definition](#apiv4definitionspecplanskey)
+
+
+
+Plan security
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          Plan Security type<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          Plan security configuration, a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.analytics
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -4818,14 +5376,14 @@ API Analytics
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specanalyticslogging">logging</a></b></td>
+        <td><b><a href="#apiv4definitionspecanalyticslogging">logging</a></b></td>
         <td>object</td>
         <td>
           Analytics Logging<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specanalyticssampling">sampling</a></b></td>
+        <td><b><a href="#apiv4definitionspecanalyticssampling">sampling</a></b></td>
         <td>object</td>
         <td>
           Analytics Sampling<br/>
@@ -4835,8 +5393,8 @@ API Analytics
 </table>
 
 
-### ApiDefinitionV4.spec.analytics.logging
-[Go to parent definition](#apidefinitionv4specanalytics)
+### ApiV4Definition.spec.analytics.logging
+[Go to parent definition](#apiv4definitionspecanalytics)
 
 
 
@@ -4859,7 +5417,7 @@ Analytics Logging
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specanalyticsloggingcontent">content</a></b></td>
+        <td><b><a href="#apiv4definitionspecanalyticsloggingcontent">content</a></b></td>
         <td>object</td>
         <td>
           Defines which component of the request should be included in the log payload.<br/>
@@ -4873,7 +5431,7 @@ Analytics Logging
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specanalyticsloggingmode">mode</a></b></td>
+        <td><b><a href="#apiv4definitionspecanalyticsloggingmode">mode</a></b></td>
         <td>object</td>
         <td>
           The logging mode defines which "hop" of the request roundtrip
@@ -4883,7 +5441,7 @@ the request issued by the gateway to the upstream service, or both.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specanalyticsloggingphase">phase</a></b></td>
+        <td><b><a href="#apiv4definitionspecanalyticsloggingphase">phase</a></b></td>
         <td>object</td>
         <td>
           Defines which phase of the request roundtrip
@@ -4895,8 +5453,8 @@ This can be either the request phase, the response phase, or both.<br/>
 </table>
 
 
-### ApiDefinitionV4.spec.analytics.logging.content
-[Go to parent definition](#apidefinitionv4specanalyticslogging)
+### ApiV4Definition.spec.analytics.logging.content
+[Go to parent definition](#apiv4definitionspecanalyticslogging)
 
 
 
@@ -4950,8 +5508,8 @@ Defines which component of the request should be included in the log payload.
 </table>
 
 
-### ApiDefinitionV4.spec.analytics.logging.mode
-[Go to parent definition](#apidefinitionv4specanalyticslogging)
+### ApiV4Definition.spec.analytics.logging.mode
+[Go to parent definition](#apiv4definitionspecanalyticslogging)
 
 
 
@@ -4987,8 +5545,8 @@ the request issued by the gateway to the upstream service, or both.
 </table>
 
 
-### ApiDefinitionV4.spec.analytics.logging.phase
-[Go to parent definition](#apidefinitionv4specanalyticslogging)
+### ApiV4Definition.spec.analytics.logging.phase
+[Go to parent definition](#apiv4definitionspecanalyticslogging)
 
 
 
@@ -5023,8 +5581,8 @@ This can be either the request phase, the response phase, or both.
 </table>
 
 
-### ApiDefinitionV4.spec.analytics.sampling
-[Go to parent definition](#apidefinitionv4specanalytics)
+### ApiV4Definition.spec.analytics.sampling
+[Go to parent definition](#apiv4definitionspecanalytics)
 
 
 
@@ -5057,8 +5615,8 @@ Analytics Sampling
 </table>
 
 
-### ApiDefinitionV4.spec.contextRef
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.contextRef
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -5091,8 +5649,8 @@ Analytics Sampling
 </table>
 
 
-### ApiDefinitionV4.spec.definitionContext
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.definitionContext
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -5138,8 +5696,8 @@ This means that only gateways deployed in the same cluster will be able to sync 
 </table>
 
 
-### ApiDefinitionV4.spec.flowExecution
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.flowExecution
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -5172,8 +5730,8 @@ API Flow Execution
 </table>
 
 
-### ApiDefinitionV4.spec.flows[index]
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.flows[index]
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -5205,21 +5763,21 @@ API Flow Execution
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specflowsindexpublishindex">publish</a></b></td>
+        <td><b><a href="#apiv4definitionspecflowsindexpublishindex">publish</a></b></td>
         <td>[]object</td>
         <td>
           List of Publish flow steps<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specflowsindexrequestindex">request</a></b></td>
+        <td><b><a href="#apiv4definitionspecflowsindexrequestindex">request</a></b></td>
         <td>[]object</td>
         <td>
           List of Request flow steps<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specflowsindexresponseindex">response</a></b></td>
+        <td><b><a href="#apiv4definitionspecflowsindexresponseindex">response</a></b></td>
         <td>[]object</td>
         <td>
           List of Response flow steps<br/>
@@ -5233,7 +5791,7 @@ API Flow Execution
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specflowsindexsubscribeindex">subscribe</a></b></td>
+        <td><b><a href="#apiv4definitionspecflowsindexsubscribeindex">subscribe</a></b></td>
         <td>[]object</td>
         <td>
           List of Subscribe flow steps<br/>
@@ -5250,8 +5808,8 @@ API Flow Execution
 </table>
 
 
-### ApiDefinitionV4.spec.flows[index].publish[index]
-[Go to parent definition](#apidefinitionv4specflowsindex)
+### ApiV4Definition.spec.flows[index].publish[index]
+[Go to parent definition](#apiv4definitionspecflowsindex)
 
 
 
@@ -5321,8 +5879,8 @@ API Flow Execution
 </table>
 
 
-### ApiDefinitionV4.spec.flows[index].request[index]
-[Go to parent definition](#apidefinitionv4specflowsindex)
+### ApiV4Definition.spec.flows[index].request[index]
+[Go to parent definition](#apiv4definitionspecflowsindex)
 
 
 
@@ -5392,8 +5950,8 @@ API Flow Execution
 </table>
 
 
-### ApiDefinitionV4.spec.flows[index].response[index]
-[Go to parent definition](#apidefinitionv4specflowsindex)
+### ApiV4Definition.spec.flows[index].response[index]
+[Go to parent definition](#apiv4definitionspecflowsindex)
 
 
 
@@ -5463,8 +6021,8 @@ API Flow Execution
 </table>
 
 
-### ApiDefinitionV4.spec.flows[index].subscribe[index]
-[Go to parent definition](#apidefinitionv4specflowsindex)
+### ApiV4Definition.spec.flows[index].subscribe[index]
+[Go to parent definition](#apiv4definitionspecflowsindex)
 
 
 
@@ -5534,8 +6092,8 @@ API Flow Execution
 </table>
 
 
-### ApiDefinitionV4.spec.metadata[index]
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.metadata[index]
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -5591,559 +6149,8 @@ API Flow Execution
 </table>
 
 
-### ApiDefinitionV4.spec.plans[key]
-[Go to parent definition](#apidefinitionv4spec)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          Plan Description<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>displayName</b></td>
-        <td>string</td>
-        <td>
-          Plan display name, this will be the name displayed in the UI
-if a management context is used to sync the API with APIM<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>characteristics</b></td>
-        <td>[]string</td>
-        <td>
-          List of plan characteristics<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>comment_required</b></td>
-        <td>boolean</td>
-        <td>
-          Indicate of comment is required for this plan or not<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>crossId</b></td>
-        <td>string</td>
-        <td>
-          The plan Cross ID.
-This field is used to identify plans defined for an API
-that has been promoted between different environments.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>definitionVersion</b></td>
-        <td>string</td>
-        <td>
-          Plan definition version<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>excluded_groups</b></td>
-        <td>[]string</td>
-        <td>
-          List of excluded groups for this plan<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionv4specplanskeyflowsindex">flows</a></b></td>
-        <td>[]object</td>
-        <td>
-          List of plan flows<br/>
-          <br/>
-            <i>Default</i>: []<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>id</b></td>
-        <td>string</td>
-        <td>
-          Plan ID<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>mode</b></td>
-        <td>string</td>
-        <td>
-          The plan mode<br/>
-          <br/>
-            <i>Default</i>: STANDARD<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>order</b></td>
-        <td>integer</td>
-        <td>
-          Plan order<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionv4specplanskeysecurity">security</a></b></td>
-        <td>object</td>
-        <td>
-          Plan security<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>selectionRule</b></td>
-        <td>string</td>
-        <td>
-          Plan selection rule<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>status</b></td>
-        <td>enum</td>
-        <td>
-          The plan status<br/>
-          <br/>
-            <i>Enum</i>: STAGING, PUBLISHED, CLOSED, DEPRECATED<br/>
-            <i>Default</i>: PUBLISHED<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>tags</b></td>
-        <td>[]string</td>
-        <td>
-          List of plan tags<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>enum</td>
-        <td>
-          Plan type<br/>
-          <br/>
-            <i>Enum</i>: API, CATALOG<br/>
-            <i>Default</i>: API<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>validation</b></td>
-        <td>enum</td>
-        <td>
-          Plan validation strategy<br/>
-          <br/>
-            <i>Enum</i>: AUTO, MANUAL<br/>
-            <i>Default</i>: AUTO<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.plans[key].flows[index]
-[Go to parent definition](#apidefinitionv4specplanskey)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Is flow enabled or not?<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Flow name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionv4specplanskeyflowsindexpublishindex">publish</a></b></td>
-        <td>[]object</td>
-        <td>
-          List of Publish flow steps<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionv4specplanskeyflowsindexrequestindex">request</a></b></td>
-        <td>[]object</td>
-        <td>
-          List of Request flow steps<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionv4specplanskeyflowsindexresponseindex">response</a></b></td>
-        <td>[]object</td>
-        <td>
-          List of Response flow steps<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>selectors</b></td>
-        <td>[]object</td>
-        <td>
-          List of Flow selectors<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionv4specplanskeyflowsindexsubscribeindex">subscribe</a></b></td>
-        <td>[]object</td>
-        <td>
-          List of Subscribe flow steps<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>tags</b></td>
-        <td>[]string</td>
-        <td>
-          List of tags<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.plans[key].flows[index].publish[index]
-[Go to parent definition](#apidefinitionv4specplanskeyflowsindex)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Indicate if this FlowStep is enabled or not<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          FlowStep condition<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          FlowStep configuration is a map of arbitrary key-values<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          FlowStep description<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          The message condition (supports EL expressions)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          FlowStep name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          FlowStep policy<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.plans[key].flows[index].request[index]
-[Go to parent definition](#apidefinitionv4specplanskeyflowsindex)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Indicate if this FlowStep is enabled or not<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          FlowStep condition<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          FlowStep configuration is a map of arbitrary key-values<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          FlowStep description<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          The message condition (supports EL expressions)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          FlowStep name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          FlowStep policy<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.plans[key].flows[index].response[index]
-[Go to parent definition](#apidefinitionv4specplanskeyflowsindex)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Indicate if this FlowStep is enabled or not<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          FlowStep condition<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          FlowStep configuration is a map of arbitrary key-values<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          FlowStep description<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          The message condition (supports EL expressions)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          FlowStep name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          FlowStep policy<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.plans[key].flows[index].subscribe[index]
-[Go to parent definition](#apidefinitionv4specplanskeyflowsindex)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Indicate if this FlowStep is enabled or not<br/>
-          <br/>
-            <i>Default</i>: true<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>condition</b></td>
-        <td>string</td>
-        <td>
-          FlowStep condition<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          FlowStep configuration is a map of arbitrary key-values<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          FlowStep description<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>messageCondition</b></td>
-        <td>string</td>
-        <td>
-          The message condition (supports EL expressions)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          FlowStep name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>policy</b></td>
-        <td>string</td>
-        <td>
-          FlowStep policy<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.plans[key].security
-[Go to parent definition](#apidefinitionv4specplanskey)
-
-
-
-Plan security
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          Plan Security type<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>configuration</b></td>
-        <td>object</td>
-        <td>
-          Plan security configuration, a map of arbitrary key-values<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinitionV4.spec.primaryOwner
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.primaryOwner
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -6190,8 +6197,8 @@ Specify the primary member that owns the API
 </table>
 
 
-### ApiDefinitionV4.spec.properties[index]
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.properties[index]
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -6207,6 +6214,13 @@ Specify the primary member that owns the API
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>dynamic</b></td>
+        <td>boolean</td>
+        <td>
+          Property is dynamic or not?<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>encrypted</b></td>
         <td>boolean</td>
         <td>
@@ -6231,8 +6245,8 @@ Specify the primary member that owns the API
 </table>
 
 
-### ApiDefinitionV4.spec.resources[index]
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.resources[index]
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -6269,7 +6283,7 @@ Specify the primary member that owns the API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionv4specresourcesindexref">ref</a></b></td>
+        <td><b><a href="#apiv4definitionspecresourcesindexref">ref</a></b></td>
         <td>object</td>
         <td>
           Reference to a resource<br/>
@@ -6286,8 +6300,8 @@ Specify the primary member that owns the API
 </table>
 
 
-### ApiDefinitionV4.spec.resources[index].ref
-[Go to parent definition](#apidefinitionv4specresourcesindex)
+### ApiV4Definition.spec.resources[index].ref
+[Go to parent definition](#apiv4definitionspecresourcesindex)
 
 
 
@@ -6320,8 +6334,8 @@ Reference to a resource
 </table>
 
 
-### ApiDefinitionV4.spec.response_templates[key][key]
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.response_templates[key][key]
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -6361,8 +6375,8 @@ Reference to a resource
 </table>
 
 
-### ApiDefinitionV4.spec.services
-[Go to parent definition](#apidefinitionv4spec)
+### ApiV4Definition.spec.services
+[Go to parent definition](#apiv4definitionspec)
 
 
 
@@ -6378,7 +6392,7 @@ API Services
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionv4specservicesdynamicproperty">dynamicProperty</a></b></td>
+        <td><b><a href="#apiv4definitionspecservicesdynamicproperty">dynamicProperty</a></b></td>
         <td>object</td>
         <td>
           API dynamic property service<br/>
@@ -6388,8 +6402,8 @@ API Services
 </table>
 
 
-### ApiDefinitionV4.spec.services.dynamicProperty
-[Go to parent definition](#apidefinitionv4specservices)
+### ApiV4Definition.spec.services.dynamicProperty
+[Go to parent definition](#apiv4definitionspecservices)
 
 
 
@@ -6436,12 +6450,12 @@ API dynamic property service
 </table>
 
 
-### ApiDefinitionV4.status
-[Go to parent definition](#apidefinitionv4)
+### ApiV4Definition.status
+[Go to parent definition](#apiv4definition)
 
 
 
-ApiDefinitionV4Status defines the observed state of API Definition.
+ApiV4DefinitionStatus defines the observed state of API Definition.
 
 <table>
     <thead>

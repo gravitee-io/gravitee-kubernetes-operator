@@ -18,16 +18,16 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: apidefinitionv4s.gravitee.io
+  name: apiv4definitions.gravitee.io
 spec:
   group: gravitee.io
   names:
-    kind: ApiDefinitionV4
-    listKind: ApiDefinitionV4List
-    plural: apidefinitionv4s
+    kind: ApiV4Definition
+    listKind: ApiV4DefinitionList
+    plural: apiv4definitions
     shortNames:
     - graviteev4apis
-    singular: apidefinitionv4
+    singular: apiv4definition
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -46,7 +46,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ApiDefinitionV4 is the Schema for the v4 apidefinitions API.
+        description: ApiV4Definition is the Schema for the v4 apidefinitions API.
         properties:
           apiVersion:
             description: |-
@@ -66,7 +66,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ApiDefinitionV4Spec defines the desired state of ApiDefinition.
+            description: ApiV4DefinitionSpec defines the desired state of ApiDefinition.
             properties:
               analytics:
                 description: API Analytics
@@ -657,15 +657,12 @@ spec:
                   type: string
                 type: array
               lifecycleState:
-                default: CREATED
-                description: API life cycle state can be one of the values CREATED,
-                  PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
+                default: UNPUBLISHED
+                description: API life cycle state can be one of the values PUBLISHED,
+                  UNPUBLISHED
                 enum:
-                - CREATED
                 - PUBLISHED
                 - UNPUBLISHED
-                - DEPRECATED
-                - ARCHIVED
                 type: string
               listeners:
                 description: List of listeners for this API
@@ -732,11 +729,6 @@ spec:
                       type: string
                     description:
                       description: Plan Description
-                      type: string
-                    displayName:
-                      description: |-
-                        Plan display name, this will be the name displayed in the UI
-                        if a management context is used to sync the API with APIM
                       type: string
                     excluded_groups:
                       description: List of excluded groups for this plan
@@ -920,6 +912,11 @@ spec:
                       default: STANDARD
                       description: The plan mode
                       type: string
+                    name:
+                      description: |-
+                        Plan display name, this will be the name displayed in the UI
+                        if a management context is used to sync the API with APIM
+                      type: string
                     order:
                       description: Plan order
                       type: integer
@@ -944,10 +941,7 @@ spec:
                       default: PUBLISHED
                       description: The plan status
                       enum:
-                      - STAGING
                       - PUBLISHED
-                      - CLOSED
-                      - DEPRECATED
                       type: string
                     tags:
                       description: List of plan tags
@@ -970,12 +964,13 @@ spec:
                       type: string
                   required:
                   - description
-                  - displayName
+                  - name
                   type: object
                 description: |-
                   A map of plan identifiers to plan
                   Keys uniquely identify plans and are used to keep them in sync
                   when using a management context.
+                minProperties: 1
                 type: object
               primaryOwner:
                 description: Specify the primary member that owns the API
@@ -997,6 +992,9 @@ spec:
                 description: List of Properties for the API
                 items:
                   properties:
+                    dynamic:
+                      description: Property is dynamic or not?
+                      type: boolean
                     encrypted:
                       description: Property Encrypted or not?
                       type: boolean
@@ -1112,11 +1110,12 @@ spec:
             required:
             - endpointGroups
             - listeners
+            - plans
             - type
             - version
             type: object
           status:
-            description: ApiDefinitionV4Status defines the observed state of API Definition.
+            description: ApiV4DefinitionStatus defines the observed state of API Definition.
             properties:
               crossId:
                 description: The Cross ID of the API definition if a management context

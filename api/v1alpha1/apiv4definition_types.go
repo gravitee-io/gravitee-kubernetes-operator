@@ -19,8 +19,6 @@ package v1alpha1
 import (
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -31,15 +29,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ApiDefinitionV4Spec defines the desired state of ApiDefinition.
+// ApiV4DefinitionSpec defines the desired state of ApiDefinition.
 // +kubebuilder:object:generate=true
-type ApiDefinitionV4Spec struct {
+type ApiV4DefinitionSpec struct {
 	v4.Api  `json:",inline"`
 	Context *refs.NamespacedName `json:"contextRef,omitempty"`
 }
 
-// ApiDefinitionV4Status defines the observed state of API Definition.
-type ApiDefinitionV4Status struct {
+// ApiV4DefinitionStatus defines the observed state of API Definition.
+type ApiV4DefinitionStatus struct {
 	// The organisation ID, if a management context has been defined to sync the API with an APIM instance
 	OrgID string `json:"organizationId,omitempty"`
 	// The environment ID, if a management context has been defined to sync the API with an APIM instance
@@ -63,7 +61,7 @@ type ApiDefinitionV4Status struct {
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
-// ApiDefinitionV4 is the Schema for the v4 apidefinitions API.
+// ApiV4Definition is the Schema for the v4 apidefinitions API.
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
@@ -72,21 +70,21 @@ type ApiDefinitionV4Status struct {
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.spec.version`,description="API version."
 // +kubebuilder:resource:shortName=graviteev4apis
 // +kubebuilder:storageversion
-type ApiDefinitionV4 struct {
+type ApiV4Definition struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ApiDefinitionV4Spec   `json:"spec,omitempty"`
-	Status ApiDefinitionV4Status `json:"status,omitempty"`
+	Spec   ApiV4DefinitionSpec   `json:"spec,omitempty"`
+	Status ApiV4DefinitionStatus `json:"status,omitempty"`
 }
 
-func (api *ApiDefinitionV4) ToGatewayDefinition() v4.GatewayDefinitionApi {
+func (api *ApiV4Definition) ToGatewayDefinition() v4.GatewayDefinitionApi {
 	cp := api.DeepCopy()
 	cp.Spec.ID = api.PickID()
 	return cp.Spec.Api.ToGatewayDefinition()
 }
 
-func (api *ApiDefinitionV4) IsBeingDeleted() bool {
+func (api *ApiV4Definition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
@@ -95,7 +93,7 @@ func (api *ApiDefinitionV4) IsBeingDeleted() bool {
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiDefinitionV4) PickID() string {
+func (api *ApiV4Definition) PickID() string {
 	if api.Status.ID != "" {
 		return api.Status.ID
 	}
@@ -107,7 +105,7 @@ func (api *ApiDefinitionV4) PickID() string {
 	return string(api.UID)
 }
 
-func (api *ApiDefinitionV4) PickCrossID() string {
+func (api *ApiV4Definition) PickCrossID() string {
 	if api.Status.CrossID != "" {
 		return api.Status.CrossID
 	}
@@ -120,7 +118,7 @@ func (api *ApiDefinitionV4) PickCrossID() string {
 	return uuid.FromStrings(namespacedName.String())
 }
 
-func (api *ApiDefinitionV4) PickPlanIDs() map[string]*v4.Plan {
+func (api *ApiV4Definition) PickPlanIDs() map[string]*v4.Plan {
 	plans := make(map[string]*v4.Plan, len(api.Spec.Plans))
 	for key, plan := range api.Spec.Plans {
 		p := plan.DeepCopy()
@@ -136,7 +134,7 @@ func (api *ApiDefinitionV4) PickPlanIDs() map[string]*v4.Plan {
 }
 
 // GetOrGenerateEmptyPlanCrossID For each plan, generate a CrossId from Api Id & Plan Name if not defined.
-func (api *ApiDefinitionV4) GetOrGenerateEmptyPlanCrossID() {
+func (api *ApiV4Definition) GetOrGenerateEmptyPlanCrossID() {
 	for name, plan := range api.Spec.Plans {
 		if plan.CrossId == "" {
 			plan.CrossId = uuid.FromStrings(api.PickCrossID(), "/", name)
@@ -144,56 +142,56 @@ func (api *ApiDefinitionV4) GetOrGenerateEmptyPlanCrossID() {
 	}
 }
 
-func (api *ApiDefinitionV4) GetNamespacedName() refs.NamespacedName {
+func (api *ApiV4Definition) GetNamespacedName() refs.NamespacedName {
 	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
-func (spec *ApiDefinitionV4Spec) SetDefinitionContext() {
+func (spec *ApiV4DefinitionSpec) SetDefinitionContext() {
 	spec.DefinitionContext = &v4.DefinitionContext{
 		Origin:   v4.OriginKubernetes,
 		SyncFrom: v4.OriginKubernetes,
 	}
 }
 
-func (api *ApiDefinitionV4) DeepCopyCrd() CRD {
-	return api.DeepCopy()
+func (api *ApiV4Definition) GetObjectMeta() *metav1.ObjectMeta {
+	return &api.ObjectMeta
 }
 
-func (api *ApiDefinitionV4) GetSpec() Spec {
+func (api *ApiV4Definition) GetSpec() Spec {
 	return &api.Spec
 }
 
-func (api *ApiDefinitionV4) GetApiBase() *base.ApiBase {
-	return api.Spec.ApiBase
-}
-
-func (api *ApiDefinitionV4) GetApiDefinitionSpec() ContextAwareSpec {
-	return &api.Spec
-}
-
-func (spec *ApiDefinitionV4Spec) Hash() string {
-	return hash.Calculate(spec)
-}
-
-func (spec *ApiDefinitionV4Spec) GetManagementContext() *refs.NamespacedName {
-	return spec.Context
-}
-
-func (api *ApiDefinitionV4) GetStatus() Status {
+func (api *ApiV4Definition) GetStatus() Status {
 	return &api.Status
 }
 
-func (s *ApiDefinitionV4Status) SetProcessingStatus(status ProcessingStatus) {
+func (api *ApiV4Definition) DeepCopyCrd() CRD {
+	return api.DeepCopy()
+}
+
+func (api *ApiV4Definition) GetApiDefinitionSpec() ContextAwareSpec {
+	return &api.Spec
+}
+
+func (spec *ApiV4DefinitionSpec) Hash() string {
+	return hash.Calculate(spec)
+}
+
+func (spec *ApiV4DefinitionSpec) GetManagementContext() *refs.NamespacedName {
+	return spec.Context
+}
+
+func (s *ApiV4DefinitionStatus) SetProcessingStatus(status ProcessingStatus) {
 	s.Status = status
 }
 
-func (s *ApiDefinitionV4Status) SetObservedGeneration(g int64) {
+func (s *ApiV4DefinitionStatus) SetObservedGeneration(g int64) {
 	s.ObservedGeneration = g
 }
 
-func (s *ApiDefinitionV4Status) DeepCopyFrom(api client.Object) error {
+func (s *ApiV4DefinitionStatus) DeepCopyFrom(api client.Object) error {
 	switch t := api.(type) {
-	case *ApiDefinitionV4:
+	case *ApiV4Definition:
 		t.Status.DeepCopyInto(s)
 	default:
 		return fmt.Errorf("unknown type %T", t)
@@ -202,9 +200,9 @@ func (s *ApiDefinitionV4Status) DeepCopyFrom(api client.Object) error {
 	return nil
 }
 
-func (s *ApiDefinitionV4Status) DeepCopyTo(api client.Object) error {
+func (s *ApiV4DefinitionStatus) DeepCopyTo(api client.Object) error {
 	switch t := api.(type) {
-	case *ApiDefinitionV4:
+	case *ApiV4Definition:
 		s.DeepCopyInto(&t.Status)
 	default:
 		return fmt.Errorf("unknown type %T", t)
@@ -213,15 +211,15 @@ func (s *ApiDefinitionV4Status) DeepCopyTo(api client.Object) error {
 	return nil
 }
 
-// ApiDefinitionV4List contains a list of ApiDefinitionV4.
+// ApiV4DefinitionList contains a list of ApiV4Definition.
 // +kubebuilder:object:root=true
-type ApiDefinitionV4List struct {
+type ApiV4DefinitionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ApiDefinitionV4 `json:"items"`
+	Items           []ApiV4Definition `json:"items"`
 }
 
-func (l *ApiDefinitionV4List) GetItems() []list.Item {
+func (l *ApiV4DefinitionList) GetItems() []list.Item {
 	items := make([]list.Item, len(l.Items))
 	for i := range l.Items {
 		items[i] = &l.Items[i]
@@ -230,5 +228,5 @@ func (l *ApiDefinitionV4List) GetItems() []list.Item {
 }
 
 func init() {
-	SchemeBuilder.Register(&ApiDefinitionV4{}, &ApiDefinitionV4List{})
+	SchemeBuilder.Register(&ApiV4Definition{}, &ApiV4DefinitionList{})
 }

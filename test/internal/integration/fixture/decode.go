@@ -31,13 +31,14 @@ import (
 var universalDecode = scheme.Codecs.UniversalDecoder().Decode
 
 var (
-	cmKind  = coreV1.SchemeGroupVersion.WithKind("ConfigMap")
-	secKind = coreV1.SchemeGroupVersion.WithKind("Secret")
-	ingKind = netV1.SchemeGroupVersion.WithKind("Ingress")
-	ctxKind = v1alpha1.GroupVersion.WithKind("ManagementContext")
-	rscKind = v1alpha1.GroupVersion.WithKind("ApiResource")
-	appKind = v1alpha1.GroupVersion.WithKind("Application")
-	apiKind = v1alpha1.GroupVersion.WithKind("ApiDefinition")
+	cmKind    = coreV1.SchemeGroupVersion.WithKind("ConfigMap")
+	secKind   = coreV1.SchemeGroupVersion.WithKind("Secret")
+	ingKind   = netV1.SchemeGroupVersion.WithKind("Ingress")
+	ctxKind   = v1alpha1.GroupVersion.WithKind("ManagementContext")
+	rscKind   = v1alpha1.GroupVersion.WithKind("ApiResource")
+	appKind   = v1alpha1.GroupVersion.WithKind("Application")
+	apiKind   = v1alpha1.GroupVersion.WithKind("ApiDefinition")
+	apiV4Kind = v1alpha1.GroupVersion.WithKind("ApiV4Definition")
 )
 
 func decodeIfDefined[T client.Object](path string, rcv T, kind schema.GroupVersionKind) *T {

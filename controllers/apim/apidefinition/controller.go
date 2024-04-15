@@ -98,7 +98,7 @@ func reconcileApiDefinition(ctx context.Context, apiDefinition v1alpha1.ApiDefin
 		if err != nil {
 			return err
 		}
-		err = status.DeepCopyFrom(apiDefinition)
+
 		dc.SetFinalizers(apiDefinition.GetFinalizers())
 		dc.SetAnnotations(apiDefinition.GetAnnotations())
 		return err

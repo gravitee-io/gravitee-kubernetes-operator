@@ -50,6 +50,10 @@ func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals("reconcile status", v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
+func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
+	return Equals("reconcile status", v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
+}
+
 func ApplicationCompleted(app *v1alpha1.Application) error {
 	return Equals("reconcile status", v1alpha1.ProcessingStatusCompleted, app.Status.Status)
 }
@@ -59,6 +63,10 @@ func ApplicationFailed(app *v1alpha1.Application) error {
 }
 
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
+	return Equals("reconcile status", v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
+}
+
+func ApiV4Failed(apiDefinition *v1alpha1.ApiV4Definition) error {
 	return Equals("reconcile status", v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
 }
 

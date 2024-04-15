@@ -42,12 +42,10 @@ func (o *Objects) Apply() *Objects {
 	if o.Context != nil {
 		Expect(cli.Create(ctx, o.Context)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp, err := manager.GetLatest(o.Context)
+			err := manager.GetLatest(o.Context)
 			if err != nil {
 				return err
 			}
-			o.Context.Status = cp.Status
-			o.Context.ObjectMeta = cp.ObjectMeta
 			return assert.HasFinalizer(o.Context, keys.ManagementContextFinalizer)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Context.Name)
 	}
@@ -55,12 +53,10 @@ func (o *Objects) Apply() *Objects {
 	if o.Resource != nil {
 		Expect(cli.Create(ctx, o.Resource)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp, err := manager.GetLatest(o.Resource)
+			err := manager.GetLatest(o.Resource)
 			if err != nil {
 				return err
 			}
-			o.Resource.Status = cp.Status
-			o.Resource.ObjectMeta = cp.ObjectMeta
 			return assert.HasFinalizer(o.Resource, keys.ApiResourceFinalizer)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Resource.Name)
 	}
@@ -68,12 +64,10 @@ func (o *Objects) Apply() *Objects {
 	if o.Application != nil {
 		Expect(cli.Create(ctx, o.Application)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp, err := manager.GetLatest(o.Application)
+			err := manager.GetLatest(o.Application)
 			if err != nil {
 				return err
 			}
-			o.Application.Status = cp.Status
-			o.Application.ObjectMeta = cp.ObjectMeta
 			if err = assert.ApplicationCompleted(o.Application); err != nil {
 				return assert.ApplicationFailed(o.Application)
 			}
@@ -84,12 +78,10 @@ func (o *Objects) Apply() *Objects {
 	if o.API != nil {
 		Expect(cli.Create(ctx, o.API)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp, err := manager.GetLatest(o.API)
+			err := manager.GetLatest(o.API)
 			if err != nil {
 				return err
 			}
-			o.API.Status = cp.Status
-			o.API.ObjectMeta = cp.ObjectMeta
 			if isTemplate(o.API) {
 				return assert.HasFinalizer(o.API, keys.ApiDefinitionTemplateFinalizer)
 			}
@@ -100,15 +92,30 @@ func (o *Objects) Apply() *Objects {
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.API.Name)
 	}
 
-	if o.Ingress != nil {
-		Expect(cli.Create(ctx, o.Ingress)).ToNot(HaveOccurred())
+	if o.APIv4 != nil {
+		Expect(cli.Create(ctx, o.APIv4)).ToNot(HaveOccurred())
 		Eventually(func() error {
-			cp, err := manager.GetLatest(o.Ingress)
+			err := manager.GetLatest(o.APIv4)
 			if err != nil {
 				return err
 			}
-			o.Ingress.Status = cp.Status
-			o.Ingress.ObjectMeta = cp.ObjectMeta
+			if isTemplate(o.APIv4) {
+				return assert.HasFinalizer(o.APIv4, keys.ApiDefinitionTemplateFinalizer)
+			}
+			if err = assert.ApiV4Completed(o.APIv4); err != nil {
+				return assert.ApiV4Failed(o.APIv4)
+			}
+			return nil
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.APIv4.Name)
+	}
+
+	if o.Ingress != nil {
+		Expect(cli.Create(ctx, o.Ingress)).ToNot(HaveOccurred())
+		Eventually(func() error {
+			err := manager.GetLatest(o.Ingress)
+			if err != nil {
+				return err
+			}
 			return assert.HasFinalizer(o.Ingress, keys.IngressFinalizer)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Ingress.Name)
 	}

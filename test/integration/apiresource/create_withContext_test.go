@@ -63,7 +63,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 					return apiErr
 				}
 				return assert.NotEmptySlice("resource", api.Resources)
-			}, timeout, interval).ShouldNot(HaveOccurred(), fixtures.API.Name)
+			}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 
 			By("expecting API event to have been emitted")
 

@@ -122,6 +122,15 @@ func init() {
 	)
 
 	runtimeUtil.Must(
+		(&apidefinition.V4Reconciler{
+			Client:   cli,
+			Scheme:   mgr.GetScheme(),
+			Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
+			Watcher:  watch.New(context.Background(), cli, &v1alpha1.ApiV4DefinitionList{}),
+		}).SetupWithManager(mgr),
+	)
+
+	runtimeUtil.Must(
 		(&managementcontext.Reconciler{
 			Client:   cli,
 			Scheme:   mgr.GetScheme(),

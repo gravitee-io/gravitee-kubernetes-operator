@@ -47,7 +47,7 @@ type V4Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=graviteev4apis/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	apiDefinition := &v1alpha1.ApiDefinitionV4{}
+	apiDefinition := &v1alpha1.ApiV4Definition{}
 
 	if err := r.Get(ctx, req.NamespacedName, apiDefinition); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -58,9 +58,9 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 
 func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.ApiDefinitionV4{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
-		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources()).
+		For(&v1alpha1.ApiV4Definition{}).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ApiV4ContextField)).
+		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(indexer.ApiV4ResourceField)).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

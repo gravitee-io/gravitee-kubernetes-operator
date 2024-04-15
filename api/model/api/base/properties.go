@@ -21,4 +21,6 @@ type Property struct {
 	Value string `json:"value,omitempty"`
 	// Property Encrypted or not?
 	Encrypted bool `json:"encrypted,omitempty"`
+	// Property is dynamic or not?
+	Dynamic bool `json:"dynamic,omitempty"`
 }

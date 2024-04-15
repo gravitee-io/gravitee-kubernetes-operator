@@ -22,6 +22,6 @@ groups:
     kinds:
       - name: ManagementContext
       - name: ApiDefinition
-      - name: ApiDefinitionV4
+      - name: ApiV4Definition
       - name: ApiResource
       - name: Application

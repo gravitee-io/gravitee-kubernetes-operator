@@ -44,7 +44,7 @@ func (d *Delegate) deleteWithContext(api client.Object) error {
 	switch t := api.(type) {
 	case *v1alpha1.ApiDefinition:
 		return errors.IgnoreNotFound(d.apim.APIs.DeleteV2(t.Status.ID))
-	case *v1alpha1.ApiDefinitionV4:
+	case *v1alpha1.ApiV4Definition:
 		return errors.IgnoreNotFound(d.apim.APIs.DeleteV4(t.Status.ID))
 	default:
 		return fmt.Errorf("unknown type %T", t)
