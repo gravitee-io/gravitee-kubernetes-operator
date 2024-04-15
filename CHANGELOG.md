@@ -1,3 +1,19 @@
+# [0.13.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.12.1...0.13.0) (2024-04-15)
+
+
+### Bug Fixes
+
+* add lint comment on the exact line ([326323b](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/326323b72695ed5ba10ae5d95f403694ae17b981))
+* do not print context name column twice ([ded7f0f](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ded7f0f0214442472a03b1f8d65289d1c1f8bb05))
+* do not update and publish change to an API if there is no change to the CRD definition ([ce0ba2c](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/ce0ba2cba52b76b4f61693730c812b03afd210f2))
+* make member display name and email optional ([c9ce8e9](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/c9ce8e995646c9ab145dff0c094cbd8f1148a1ff))
+* use new version of MongoDB, useful for all architectures ([7163c9f](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/7163c9fa1533942ce68bb8bb8adbc492c14d84d7))
+
+
+### Features
+
+* improve CRD documentations ([e2a19c3](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/e2a19c36cde4732d42aba2a0809ee5ddfb41be06))
+
 ## [0.12.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.12.0...0.12.1) (2024-02-14)
 
 
