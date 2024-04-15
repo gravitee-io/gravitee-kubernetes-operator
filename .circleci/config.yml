@@ -551,29 +551,29 @@ workflows:
 
   release:
     when:
-      and:
-        - or:
-            - equal: [master, << pipeline.git.branch >>]
-        - not:
-            # Workflow will not run when we open a pull request from alpha to master to trigger a release
-            equal:
-              [<< pipeline.git.revision >>, << pipeline.git.base_revision >>]
+      equal: [trigger-release, << pipeline.git.branch >>]
     jobs:
       - semantic-release:
           name: Semantic Release
           context: cicd-orchestrator
-      - add-docker-images-to-snyk:
-          name: Trigger snyk import
-          context: cicd-orchestrator
-          requires:
-            - Semantic Release
-          integration_id_key: gravitee_gko_dockerhub_integration_id
 
   notify-release:
     jobs:
       - notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
           context: cicd-orchestrator
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /\d+\.\d+\.\d+/
+  
+  trigger-snyk-on-release:
+    jobs:
+      - add-docker-images-to-snyk:
+          name: Trigger snyk import
+          context: cicd-orchestrator
+          integration_id_key: gravitee_gko_dockerhub_integration_id
           filters:
             branches:
               ignore: /.*/
