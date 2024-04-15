@@ -61,7 +61,7 @@ spec:
               modeStrict\":true,\"propagateAuthHeader\":true,\"oauthResource\":\"oauth2-generic-resource\"\
               }"
           type: "API"
-          status: "STAGING"
+          status: "PUBLISHED"
           order: 0
           characteristics: []
           paths: {}

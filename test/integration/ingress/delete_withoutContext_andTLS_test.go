@@ -78,7 +78,8 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("checking pem registry")
 
 		Eventually(func() error {
-			cm, err := manager.GetLatest(fixtures.ConfigMaps[0])
+			cm := fixtures.ConfigMaps[0]
+			err := manager.GetLatest(cm)
 			if err != nil {
 				return err
 			}

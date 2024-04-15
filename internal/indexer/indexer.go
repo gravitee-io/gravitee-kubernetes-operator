@@ -29,12 +29,14 @@ import (
 type IndexField string
 
 const (
-	ContextField     IndexField = "context"
-	SecretRefField   IndexField = "secretRef"
-	ResourceField    IndexField = "resource"
-	ApiTemplateField IndexField = "api-template"
-	TLSSecretField   IndexField = "tls-secret"
-	AppContextField  IndexField = "app-context"
+	ApiContextField    IndexField = "context"
+	ApiV4ContextField  IndexField = "api-v4-context"
+	SecretRefField     IndexField = "secretRef"
+	ApiResourceField   IndexField = "resource"
+	ApiV4ResourceField IndexField = "api-v4-resource"
+	ApiTemplateField   IndexField = "api-template"
+	TLSSecretField     IndexField = "tls-secret"
+	AppContextField    IndexField = "app-context"
 )
 
 func (f IndexField) String() string {
@@ -51,13 +53,25 @@ type Func = func(obj client.Object) []string
 func InitCache(ctx context.Context, cache cache.Cache) error {
 	errs := make([]error, 0)
 
-	contextIndexer := newIndexer(ContextField, indexManagementContexts)
+	contextIndexer := newIndexer(ApiContextField, indexManagementContexts)
 	if err := cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
-	resourceIndexer := newIndexer(ResourceField, indexApiResourceRefs)
+	apiV4ContextIndexer := newIndexer(ApiV4ContextField, indexApiV4ManagementContexts)
+	if err := cache.IndexField(ctx, &gio.ApiV4Definition{}, apiV4ContextIndexer.Field,
+		apiV4ContextIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	resourceIndexer := newIndexer(ApiResourceField, indexApiResourceRefs)
 	if err := cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	apiV4ResourceIndexer := newIndexer(ApiV4ResourceField, indexIApiV4ResourceRefs)
+	if err := cache.IndexField(ctx, &gio.ApiV4Definition{}, apiV4ResourceIndexer.Field,
+		apiV4ResourceIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -114,6 +128,14 @@ func indexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	*fields = append(*fields, api.Spec.Context.String())
 }
 
+func indexApiV4ManagementContexts(api *gio.ApiV4Definition, fields *[]string) {
+	if api.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, api.Spec.Context.String())
+}
+
 func indexManagementContextSecrets(context *gio.ManagementContext, fields *[]string) {
 	if context.Spec.HasSecretRef() {
 		*fields = append(*fields, context.Spec.SecretRef().String())
@@ -121,6 +143,18 @@ func indexManagementContextSecrets(context *gio.ManagementContext, fields *[]str
 }
 
 func indexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
+	if api.Spec.Resources == nil {
+		return
+	}
+
+	for _, resource := range api.Spec.Resources {
+		if resource.IsRef() {
+			*fields = append(*fields, resource.Ref.String())
+		}
+	}
+}
+
+func indexIApiV4ResourceRefs(api *gio.ApiV4Definition, fields *[]string) {
 	if api.Spec.Resources == nil {
 		return
 	}

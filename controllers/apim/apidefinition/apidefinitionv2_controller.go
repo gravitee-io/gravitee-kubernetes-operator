@@ -60,8 +60,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.ApiDefinition{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ContextField)).
-		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources()).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ApiContextField)).
+		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(indexer.ApiResourceField)).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

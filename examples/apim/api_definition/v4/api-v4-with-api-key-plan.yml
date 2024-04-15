@@ -14,22 +14,18 @@
 # limitations under the License.
 #
 apiVersion: gravitee.io/v1alpha1
-kind: ApiDefinitionV4
+kind: ApiV4Definition
 metadata:
-  name: api-v4-with-context
+  name: api-v4-with-apikey
 spec:
-  name: "api-v4-with-context"
-  description: "V4 API managed by Gravitee Kubernetes Operator"
+  name: "api-v4-with-apikey"
+  description: "API v4 with API KEY managed by Gravitee Kubernetes Operator"
   version: "1.0"
-  contextRef:
-    name: "dev-ctx"
-    namespace: "default"
   type: PROXY
-  state: STARTED
   listeners:
     - type: HTTP
       paths:
-        - path: "/echo-v4-context"
+        - path: "/k8s-apikey-with-ctx-v4"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -47,8 +43,14 @@ spec:
     mode: DEFAULT
     matchRequired: false
   plans:
-    KeyLess:
-      displayName: "Free plan"
-      description: "This plan does not require any authentication"
+    API_KEY:
+      name: "API Key plan"
+      description: "API key plan needs a key to authenticate"
       security:
-        type: "KEY_LESS"
+        type: "API_KEY"
+      flows:
+        - enabled: true
+          selectors:
+            - type: HTTP
+              path: "/"
+              pathOperator: STARTS_WITH

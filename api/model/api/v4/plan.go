@@ -33,7 +33,7 @@ type Plan struct {
 
 	// Plan display name, this will be the name displayed in the UI
 	// if a management context is used to sync the API with APIM
-	DisplayName string `json:"displayName"`
+	Name string `json:"name"`
 
 	// Plan definition version
 	DefinitionVersion DefinitionVersion `json:"definitionVersion,omitempty"`

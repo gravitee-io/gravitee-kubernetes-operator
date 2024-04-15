@@ -14,24 +14,23 @@
 # limitations under the License.
 #
 apiVersion: gravitee.io/v1alpha1
-kind: ApiDefinitionV4
+kind: ApiV4Definition
 metadata:
-  name: api-v4-with-context
+  name: basic-api-v4-disabled-policy
 spec:
-  name: "api-v4-with-context-sync-management"
-  description: "Updated V4 API managed by Gravitee Kubernetes Operator"
+  name: "K8s Basic V4 Example With Disabled Policy"
   version: "1.0"
-  contextRef:
-    name: "dev-ctx"
-    namespace: "default"
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
+  description: "Basic api V4 with disabled policy managed by Gravitee Kubernetes Operator"
+  properties:
+    - key: my_api_key
+      value: CYdxX9ACurTnOJQp2cW1hQ==
+      encrypted: true
+      dynamic: false
   type: PROXY
   listeners:
     - type: HTTP
       paths:
-        - path: "/echo-v4-ctx-sync-mgt"
+        - path: "/k8s-basic-disabled-policy-v4"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -48,9 +47,36 @@ spec:
   flowExecution:
     mode: DEFAULT
     matchRequired: false
+  flows:
+    - name: default
+      enabled: true
+      selectors:
+        - type: HTTP
+          path: "/"
+          pathOperator: EQUALS
+          methods: [ ]
+      request:
+        - name: Validate Request
+          description: K8S Validate Request
+          enabled: false
+          policy: policy-request-validation
+          configuration:
+            scope: REQUEST
+            rules:
+              - input: "{#request.headers['X-API-KEY']}"
+                isRequired: true
+                constraint:
+                  type: PATTERN
+                  message: api key
+                  parameters:
+                    - "^{#api.properties['my_api_key']}$"
+            status: '401'
+      response: [ ]
+      subscribe: [ ]
+      publish: [ ]
   plans:
     KeyLess:
-      displayName: "Free plan"
+      name: "Free plan"
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"

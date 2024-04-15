@@ -17,6 +17,8 @@ package constants
 import (
 	"time"
 
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
@@ -37,6 +39,7 @@ const (
 	ContextWithBadCredentialsFile = SamplesPath + "/management_context/dev/management-context-with-bearer-token.yml"
 	ContextWithBadURLFile         = SamplesPath + "/management_context/debug/management-context-with-credentials.yml"
 
+	// V2 APIs.
 	Api                                 = SamplesPath + "/apim/api_definition/api.yml"
 	ApiWithRateLimit                    = SamplesPath + "/apim/api_definition/api-with-rate-limit.yml"
 	ApiWithStateStopped                 = SamplesPath + "/apim/api_definition/api-with-state-stopped.yml"
@@ -83,6 +86,34 @@ const (
 
 	ApiWithTemplateAnnotation = SamplesPath + "/apim/api_definition/api-with-template-annotation.yml"
 
+	// V4 APIS.
+	ApiV4                              = SamplesPath + "/apim/api_definition/v4/api-v4.yml"
+	ApiV4WithSyncFromAPIM              = SamplesPath + "/apim/api_definition/v4/api-v4-with-sync-from-apim.yml"
+	ApiV4WithTemplatingFile            = SamplesPath + "/apim/api_definition/v4/api-v4-with-templating.yml"
+	ApiV4WithRateLimit                 = SamplesPath + "/apim/api_definition/v4/api-v4-with-rate-limit.yml"
+	ApiV4WithDisabledPolicy            = SamplesPath + "/apim/api_definition/v4/api-v4-with-disabled-policy.yml"
+	ApiV4WithContextFile               = SamplesPath + "/apim/api_definition/v4/api-v4-with-context.yml"
+	ApiV4WithHCFile                    = SamplesPath + "/apim/api_definition/v4/api-v4-with-health-check.yml"
+	ApiV4WithDisabledHCFile            = SamplesPath + "/apim/api_definition/v4/api-v4-with-health-check-disabled.yml"
+	ApiV4WithLoggingFile               = SamplesPath + "/apim/api_definition/v4/api-v4-with-logging.yml"
+	ApiV4WithMetadataFile              = SamplesPath + "/apim/api_definition/v4/api-v4-with-metadata.yml"
+	ApiV4WithCacheRedisResourceFile    = SamplesPath + "/apim/api_definition/v4/api-v4-with-cache-redis-resource.yml"
+	ApiV4WithOAuth2GenericResourceFile = SamplesPath + "/apim/api_definition/v4/api-v4-with-oauth2-generic-resource.yml"
+	ApiV4WithOauth2AmResourceFile      = SamplesPath + "/apim/api_definition/v4/api-v4-with-oauth2-am-resource.yml"
+	ApiV4WithKeycloakAdapterFile       = SamplesPath + "/apim/api_definition/v4/api-v4-with-keycloak-adapter.yml"
+	ApiV4WithLDAPAuthProviderFile      = SamplesPath + "/apim/api_definition/v4/api-v4-with-ldap-auth-provider.yml"
+	ApiV4WithInlineAuthProviderFile    = SamplesPath + "/apim/api_definition/v4/api-v4-with-inline-auth-provider.yml"
+	ApiV4WithHTTPAuthProviderFile      = SamplesPath + "/apim/api_definition/v4/api-v4-with-http-auth-provider.yml"
+	ApiV4WithStateStopped              = SamplesPath + "/apim/api_definition/v4/api-v4-with-state-stopped.yml"
+	ApiV4WithApiKeyPlanFile            = SamplesPath + "/apim/api_definition/v4/api-v4-with-api-key-plan.yml"
+	ApiV4WithCacheRedisResourceRef     = SamplesPath + "/apim/api_definition/v4/api-v4-with-cache-redis-resource-ref.yml"
+	ApiV4WithOAuth2GenericResRef       = SamplesPath + "/apim/api_definition/v4/api-v4-with-oauth2-generic-res-ref.yml"
+	ApiV4WithOauth2AmResourceRefFile   = SamplesPath + "/apim/api_definition/v4/api-v4-with-oauth2-am-resource-ref.yml"
+	ApiV4WithKeycloakAdapterRefFile    = SamplesPath + "/apim/api_definition/v4/api-v4-with-keycloak-adapter-ref.yml"
+	ApiV4WithLDAPAuthProviderRefFile   = SamplesPath + "/apim/api_definition/v4/api-v4-with-ldap-auth-provider-ref.yml"
+	ApiV4WithInlineAuthProviderRef     = SamplesPath + "/apim/api_definition/v4/api-v4-with-inline-auth-provider-ref.yml"
+	ApiV4WithHTTPAuthProviderRefFile   = SamplesPath + "/apim/api_definition/v4/api-v4-with-http-auth-provider-ref.yml"
+
 	IngressPEMRegistry         = SamplesPath + "/ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = SamplesPath + "/ingress/ingress-response-404-config-map.yml"
 	IngressWithoutTemplateFile = SamplesPath + "/ingress/ingress-without-api-template.yml"
@@ -97,4 +128,18 @@ const (
 
 func BuildAPIEndpoint(api *v1alpha1.ApiDefinition) string {
 	return GatewayUrl + api.Spec.Proxy.VirtualHosts[0].Path
+}
+
+func BuildAPIV4Endpoint(l v4.Listener) string {
+	switch t := l.(type) {
+	case *v4.GenericListener:
+		return BuildAPIV4Endpoint(t.ToListener())
+	case *v4.HttpListener:
+		return GatewayUrl + t.Paths[0].Path
+	case *v4.TCPListener:
+		// TODO needs to be confirmed
+		return GatewayUrl + t.Servers[0]
+	}
+
+	return ""
 }

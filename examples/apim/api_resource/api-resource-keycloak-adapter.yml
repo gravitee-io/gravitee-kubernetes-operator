@@ -26,11 +26,15 @@ spec:
       userClaim: "sub"
       verifyHost: false
       trustAll: true
-      keycloakConfiguration:
-          "{\n                \"realm\": \"gravitee\",\n      \
-          \          \"auth-server-url\": \"http://localhost:8080/auth\",\n        \
-          \        \"ssl-required\": \"external\",\n                \"resource\": \"\
-          gravitee\",\n                \"credentials\": {\n                    \"secret\"\
-          : \"f1c9ff64-abcf-4671-9ddb-4fe4a172390d\"\n                },\n         \
-          \       \"confidential-port\": 0,\n                \"policy-enforcer\": {}\n\
-          }"
+      keycloakConfiguration: |-
+        {
+            "auth-server-url": "http://localhost:8080/auth",
+            "confidential-port": 0,
+            "credentials": {
+                "secret": "f1c9ff64-abcf-4671-9ddb-4fe4a172390d"
+            },
+            "policy-enforcer": {},
+            "realm": "gravitee",
+            "resource": "gravitee",
+            "ssl-required": "external"
+        }

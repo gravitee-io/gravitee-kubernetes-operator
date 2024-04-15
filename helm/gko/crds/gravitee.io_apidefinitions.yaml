@@ -536,10 +536,7 @@ spec:
                       default: PUBLISHED
                       description: The plan status
                       enum:
-                      - STAGING
                       - PUBLISHED
-                      - CLOSED
-                      - DEPRECATED
                       type: string
                     tags:
                       description: List of plan tags
@@ -586,6 +583,9 @@ spec:
                 description: List of Properties for the API
                 items:
                   properties:
+                    dynamic:
+                      description: Property is dynamic or not?
+                      type: boolean
                     encrypted:
                       description: Property Encrypted or not?
                       type: boolean

@@ -76,7 +76,7 @@ spec:
               modeStrict\":true,\"propagateAuthHeader\":true,\"oauthResource\":\"keycloak-adapter\"\
               ,\"requiredScopes\":[\"user:read\"]}"
           type: "API"
-          status: "STAGING"
+          status: "PUBLISHED"
           order: 0
           characteristics: []
           paths: {}

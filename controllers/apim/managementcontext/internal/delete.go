@@ -38,7 +38,7 @@ func Delete(
 
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := search.New(ctx, client).FindByFieldReferencing(
-		indexer.ContextField,
+		indexer.ApiContextField,
 		refs.NewNamespacedName(instance.Namespace, instance.Name),
 		apis,
 	); err != nil {
@@ -48,6 +48,20 @@ func Delete(
 
 	if len(apis.Items) > 0 {
 		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apis.Items))
+	}
+
+	apisV4 := &v1alpha1.ApiV4DefinitionList{}
+	if err := search.New(ctx, client).FindByFieldReferencing(
+		indexer.ApiV4ContextField,
+		refs.NewNamespacedName(instance.Namespace, instance.Name),
+		apisV4,
+	); err != nil {
+		err = fmt.Errorf("can not check if the management context is linked to an api v4 definition: %w", err)
+		return err
+	}
+
+	if len(apisV4.Items) > 0 {
+		return fmt.Errorf("can not delete %s because %d api(s) relying on this context", instance.Name, len(apisV4.Items))
 	}
 
 	apps := &v1alpha1.ApplicationList{}

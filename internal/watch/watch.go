@@ -36,7 +36,7 @@ import (
 
 type Interface interface {
 	WatchContexts(index indexer.IndexField) *handler.Funcs
-	WatchResources() *handler.Funcs
+	WatchResources(index indexer.IndexField) *handler.Funcs
 	WatchApiTemplate() *handler.Funcs
 	WatchTLSSecret() *handler.Funcs
 }
@@ -65,8 +65,8 @@ func New(ctx context.Context, k8s client.Client, objectList client.ObjectList) *
 // on resources that should be synced with this context.
 func (w *Type) WatchContexts(index indexer.IndexField) *handler.Funcs {
 	return &handler.Funcs{
-		UpdateFunc: w.UpdateFromLookup(index),
 		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
 	}
 }
 
@@ -103,9 +103,10 @@ func ContextSecrets() *handler.Funcs {
 
 // WatchResources can be used to trigger a reconciliation when an API resource is updated
 // on resources that are depending on it. Right now this is only used for API definitions.
-func (w *Type) WatchResources() *handler.Funcs {
+func (w *Type) WatchResources(index indexer.IndexField) *handler.Funcs {
 	return &handler.Funcs{
-		UpdateFunc: w.UpdateFromLookup(indexer.ResourceField),
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
 	}
 }
 

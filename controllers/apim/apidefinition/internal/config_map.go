@@ -101,7 +101,7 @@ func (d *Delegate) saveConfigMap(
 			spec.ID = string(t.UID)
 		}
 		payload = spec
-	case *v1alpha1.ApiDefinitionV4:
+	case *v1alpha1.ApiV4Definition:
 		cm.Data["apiDefinitionVersion"] = "4.0.0"
 		payload = t.ToGatewayDefinition()
 	}

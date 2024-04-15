@@ -39,7 +39,7 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 	case *gio.ApiDefinition:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
 			t.Status.Status != gio.ProcessingStatusCompleted
-	case *gio.ApiDefinitionV4:
+	case *gio.ApiV4Definition:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
 			t.Status.Status != gio.ProcessingStatusCompleted
 	case *gio.ManagementContext:
@@ -72,8 +72,8 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	case *gio.ApiDefinition:
 		oo, _ := e.ObjectOld.(*gio.ApiDefinition)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
-	case *gio.ApiDefinitionV4:
-		oo, _ := e.ObjectOld.(*gio.ApiDefinitionV4)
+	case *gio.ApiV4Definition:
+		oo, _ := e.ObjectOld.(*gio.ApiV4Definition)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *gio.ManagementContext:
 		oo, _ := e.ObjectOld.(*gio.ManagementContext)

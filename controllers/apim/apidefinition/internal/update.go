@@ -33,7 +33,7 @@ func (d *Delegate) CreateOrUpdate(apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:
 		return d.createOrUpdateV2(t)
-	case *v1alpha1.ApiDefinitionV4:
+	case *v1alpha1.ApiV4Definition:
 		return d.createOrUpdateV4(t)
 	default:
 		return fmt.Errorf("unknown type %T", t)
@@ -82,7 +82,7 @@ func (d *Delegate) createOrUpdateV2(apiDefinition *v1alpha1.ApiDefinition) error
 	return nil
 }
 
-func (d *Delegate) createOrUpdateV4(apiDefinition *v1alpha1.ApiDefinitionV4) error {
+func (d *Delegate) createOrUpdateV4(apiDefinition *v1alpha1.ApiV4Definition) error {
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec

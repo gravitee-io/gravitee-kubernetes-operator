@@ -69,11 +69,11 @@ var _ = Describe("Create", labels.WithContext, func() {
 			By("expecting API status to be completed")
 
 			Eventually(func() error {
-				latest, err := manager.GetLatest(fixtures.API)
+				err := manager.GetLatest(fixtures.API)
 				if err != nil {
 					return err
 				}
-				return assert.ApiCompleted(latest)
+				return assert.ApiCompleted(fixtures.API)
 			}, timeout, interval).Should(Succeed())
 
 			By("calling gateway endpoint, expecting status 200")

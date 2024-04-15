@@ -40,7 +40,7 @@ func Delete(
 
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := search.FindByFieldReferencing(
-		indexer.ResourceField,
+		indexer.ApiResourceField,
 		refs.NewNamespacedName(resource.Namespace, resource.Name),
 		apis,
 	); err != nil {
@@ -49,6 +49,20 @@ func Delete(
 	}
 
 	if len(apis.Items) > 0 {
+		return fmt.Errorf("resource is referenced and will remain")
+	}
+
+	apisV4 := &v1alpha1.ApiV4DefinitionList{}
+	if err := search.FindByFieldReferencing(
+		indexer.ApiV4ResourceField,
+		refs.NewNamespacedName(resource.Namespace, resource.Name),
+		apisV4,
+	); err != nil {
+		err = fmt.Errorf("an error occurred while checking if the api resource is linked to an api definition: %w", err)
+		return err
+	}
+
+	if len(apisV4.Items) > 0 {
 		return fmt.Errorf("resource is referenced and will remain")
 	}
 

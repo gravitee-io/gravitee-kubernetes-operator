@@ -51,7 +51,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			_, kErr := manager.GetLatest(fixtures.Context)
+			kErr := manager.GetLatest(fixtures.Context)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -62,7 +62,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("expecting management context to have been deleted")
 
 		Eventually(func() error {
-			_, kErr := manager.GetLatest(fixtures.Context)
+			kErr := manager.GetLatest(fixtures.Context)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}

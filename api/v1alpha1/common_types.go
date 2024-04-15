@@ -15,8 +15,8 @@
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -26,6 +26,7 @@ import (
 type CRD interface {
 	client.Object
 	schema.ObjectKind
+	GetObjectMeta() *metav1.ObjectMeta
 	GetSpec() Spec
 	GetStatus() Status
 	DeepCopyCrd() CRD
@@ -36,7 +37,6 @@ type CRD interface {
 type ApiDefinitionCRD interface {
 	CRD
 	GetApiDefinitionSpec() ContextAwareSpec
-	GetApiBase() *base.ApiBase
 }
 
 // Spec

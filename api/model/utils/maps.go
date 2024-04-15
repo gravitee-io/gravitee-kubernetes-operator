@@ -16,7 +16,6 @@ package utils
 
 import (
 	"encoding/json"
-	"reflect"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -101,21 +100,39 @@ func (in *GenericStringMap) DeepCopyInto(out *GenericStringMap) {
 	// thus we write our own DeepCopyInto function.
 	if out != nil {
 		casted := in.Unstructured
-		for k, v := range casted.Object {
-			if reflect.TypeOf(v).Kind() == reflect.Int {
-				casted.Object[k] = int64(v.(int))
-			} else if reflect.TypeOf(v).Kind() == reflect.Map {
-				if innerMap, ok := v.(map[string]interface{}); ok {
-					nestedIn := GenericStringMap{Unstructured: unstructured.Unstructured{Object: innerMap}}
-					nestedOut := GenericStringMap{}
-					nestedIn.DeepCopyInto(&nestedOut)
-					casted.Object[k] = nestedOut.Object
-				}
-			}
-		}
+		casted.Object = normalizeObject(casted.Object).(map[string]interface{}) //nolint:errcheck // map is expected
 
 		deepCopy := casted.DeepCopy()
 		out.Object = deepCopy.Object
+	}
+}
+
+func normalizeObject(x interface{}) interface{} {
+	switch x := x.(type) {
+	case map[string]interface{}:
+		if x == nil {
+			// Typed nil - an interface{} that contains a type map[string]interface{} with a value of nil
+			return x
+		}
+		clone := make(map[string]interface{}, len(x))
+		for k, v := range x {
+			clone[k] = normalizeObject(v)
+		}
+		return clone
+	case []interface{}:
+		if x == nil {
+			// Typed nil - an interface{} that contains a type []interface{} with a value of nil
+			return x
+		}
+		clone := make([]interface{}, len(x))
+		for i, v := range x {
+			clone[i] = normalizeObject(v)
+		}
+		return clone
+	case int:
+		return int64(x)
+	default:
+		return x
 	}
 }
 

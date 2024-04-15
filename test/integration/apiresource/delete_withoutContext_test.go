@@ -50,7 +50,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			_, kErr := manager.GetLatest(fixtures.Resource)
+			kErr := manager.GetLatest(fixtures.Resource)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -61,7 +61,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("expecting resource to have been deleted")
 
 		Eventually(func() error {
-			_, kErr := manager.GetLatest(fixtures.Resource)
+			kErr := manager.GetLatest(fixtures.Resource)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}

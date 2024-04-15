@@ -79,6 +79,17 @@ func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
 	return api, nil
 }
 
+func (svc *APIs) GetV4ByID(apiID string) (*v1alpha1.ApiV4DefinitionSpec, error) {
+	url := svc.EnvV2Target("apis").WithPath(apiID)
+	resp := new(v1alpha1.ApiV4DefinitionSpec)
+
+	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func (svc *APIs) ImportV2(method string, spec *v2.Api) (*model.ApiEntity, error) {
 	url := svc.EnvV1Target("apis/import").WithQueryParams(importParams)
 	api := new(model.ApiEntity)
@@ -91,10 +102,10 @@ func (svc *APIs) ImportV2(method string, spec *v2.Api) (*model.ApiEntity, error)
 	return api, nil
 }
 
-func (svc *APIs) ImportV4(spec *v4.Api) (*v1alpha1.ApiDefinitionV4Status, error) {
+func (svc *APIs) ImportV4(spec *v4.Api) (*v1alpha1.ApiV4DefinitionStatus, error) {
 	url := svc.EnvV2Target("apis/_import/crd")
 
-	status := new(v1alpha1.ApiDefinitionV4Status)
+	status := new(v1alpha1.ApiV4DefinitionStatus)
 	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
 		return nil, err
 	}

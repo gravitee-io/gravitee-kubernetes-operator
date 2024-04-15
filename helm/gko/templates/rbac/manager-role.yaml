@@ -72,7 +72,7 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
-      - apidefinitionv4s
+      - apiv4definitions
     verbs:
       - create
       - delete
@@ -85,13 +85,13 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
-      - apidefinitionv4s/finalizers
+      - apiv4definitions/finalizers
     verbs:
       - update
   - apiGroups:
       - gravitee.io
     resources:
-      - apidefinitionv4s/status
+      - apiv4definitions/status
     verbs:
       - get
       - patch
