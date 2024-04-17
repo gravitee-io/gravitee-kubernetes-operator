@@ -1,0 +1,50 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: gravitee.io/v1alpha1
+kind: ApiDefinition
+metadata:
+  name: api-with-swagger-http-fetcher
+spec:
+  contextRef:
+    name: dev-ctx
+    namespace: default
+  name: "api-with-swagger-http-fetcher"
+  version: "1.0"
+  description: "An API with a swagger page fetched from HTTP"
+  plans:
+    - name: "KEY_LESS"
+      description: "FREE"
+      security: "KEY_LESS"
+  proxy:
+    virtual_hosts:
+      - path: "/api-with-swagger-http-fetcher"
+    groups:
+      - endpoints:
+          - name: "Default"
+            target: "https://api.gravitee.io/echo"
+  pages:
+    docs-folder:
+      name: specifications
+      type: FOLDER  
+    swagger:
+      name: "pet-store"
+      type: SWAGGER
+      parent: specifications
+      source:
+        type: 'http-fetcher'
+        configuration:
+          url: https://petstore.swagger.io/v2/swagger.json
+          fetchCron: '0 1 * * *'

@@ -92,10 +92,11 @@ func (svc *APIs) GetV4ByID(apiID string) (*v1alpha1.ApiV4DefinitionSpec, error) 
 
 func (svc *APIs) ImportV2(method string, spec *v2.Api) (*model.ApiEntity, error) {
 	url := svc.EnvV1Target("apis/import").WithQueryParams(importParams)
+	apiImport := model.ToApiImport(spec)
 	api := new(model.ApiEntity)
 	fun := svc.getImportFunc(method)
 
-	if err := fun(url.String(), spec, api); err != nil {
+	if err := fun(url.String(), apiImport, api); err != nil {
 		return nil, err
 	}
 
