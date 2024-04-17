@@ -101,6 +101,13 @@ func NotEmptySlice[T any](field string, value []T) error {
 	return nil
 }
 
+func SliceOfSize[T any](field string, value []T, size int) error {
+	if len(value) != size {
+		return fmt.Errorf("expected %s to have len %d, got %d", field, size, len(value))
+	}
+	return nil
+}
+
 func NotEmptyString(field string, value string) error {
 	if value == "" {
 		return fmt.Errorf("expected %s not to be empty", field)

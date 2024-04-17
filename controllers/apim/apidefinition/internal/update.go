@@ -45,6 +45,7 @@ func (d *Delegate) createOrUpdateV2(apiDefinition *v1alpha1.ApiDefinition) error
 
 	spec := &cp.Spec
 	spec.ID = cp.PickID()
+	spec.CrossID = cp.PickCrossID()
 	spec.SetDefinitionContext()
 
 	apiDefinition.Status.ID = cp.Spec.ID
@@ -55,9 +56,10 @@ func (d *Delegate) createOrUpdateV2(apiDefinition *v1alpha1.ApiDefinition) error
 	}
 
 	generateEmptyPlanCrossIds(spec)
+	generatePageIDs(cp)
+
 	stateUpdated := false
 	if d.HasContext() {
-		spec.CrossID = cp.PickCrossID()
 		stateUpdated = apiDefinition.Status.State != spec.State
 		apiDefinition.Status.EnvID = d.apim.EnvID()
 		apiDefinition.Status.OrgID = d.apim.OrgID()

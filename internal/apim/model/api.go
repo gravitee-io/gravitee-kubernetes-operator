@@ -14,7 +14,10 @@
 
 package model
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+)
 
 type ApiEntity struct {
 	ID                string             `json:"id"`
@@ -97,4 +100,9 @@ type PlanStatus string
 
 type ApiDeployment struct {
 	DeploymentLabel string `json:"deploymentLabel"`
+}
+
+type ApiImport struct {
+	*v2.Api `json:",inline"`
+	Pages   []*PageImport `json:"pages,omitempty"`
 }

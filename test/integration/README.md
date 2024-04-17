@@ -325,4 +325,9 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 })
 ```
 
+💡 After writing your test and before committing it, don't forget to run linters using the `make lint-fix` target
+
+```sh
+make lint-fix
+```
 

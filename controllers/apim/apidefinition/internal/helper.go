@@ -31,6 +31,24 @@ func generateEmptyPlanCrossIds(spec *v1alpha1.ApiDefinitionV2Spec) {
 	}
 }
 
+func generatePageIDs(api *v1alpha1.ApiDefinition) {
+	spec := &api.Spec
+	pages := spec.Pages
+	for name, page := range pages {
+		page.API = spec.ID
+		apiName := api.GetNamespacedName().String()
+		if page.CrossID == "" {
+			page.CrossID = uuid.FromStrings(apiName, separator, name)
+		}
+		if page.ID == "" {
+			page.ID = uuid.FromStrings(spec.ID, separator, name)
+		}
+		if page.Parent != "" {
+			page.ParentID = uuid.FromStrings(spec.ID, separator, page.Parent)
+		}
+	}
+}
+
 // Retrieve the plan ids from the management apiEntity.
 func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, mgmtApi *apimModel.ApiEntity) {
 	plans := spec.Plans

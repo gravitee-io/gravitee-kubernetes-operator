@@ -30,6 +30,7 @@ type APIM struct {
 
 	Applications  *service.Applications
 	Subscriptions *service.Subscriptions
+	Pages         *service.Pages
 }
 
 func NewClient(ctx context.Context) *APIM {
@@ -43,10 +44,12 @@ func NewClient(ctx context.Context) *APIM {
 
 	applications := service.NewApplications(apim.APIs.Client)
 	subscriptions := service.NewSubscriptions(apim.APIs.Client)
+	pages := service.NewPages(apim.APIs.Client)
 
 	return &APIM{
 		APIM:          apim,
 		Applications:  applications,
 		Subscriptions: subscriptions,
+		Pages:         pages,
 	}
 }
