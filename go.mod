@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/docker/docker v26.0.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.17.1
-	github.com/onsi/gomega v1.31.1
+	github.com/onsi/gomega v1.33.0
 	github.com/zeebo/xxh3 v1.0.2
 	k8s.io/apimachinery v0.29.3
 	k8s.io/client-go v0.29.3
