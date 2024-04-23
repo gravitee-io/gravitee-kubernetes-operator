@@ -45,7 +45,7 @@ type ApiBase struct {
 	// Should the API be publicly available from the portal or not ?
 	Visibility ApiVisibility `json:"visibility,omitempty"`
 	// Specify the primary member that owns the API
-	PrimaryOwner *Member `json:"primaryOwner,omitempty"`
+	PrimaryOwner *PrimaryOwner `json:"primaryOwner,omitempty"`
 	// +kubebuilder:validation:Optional
 	// List of Properties for the API
 	Properties []*Property `json:"properties"`
@@ -58,6 +58,10 @@ type ApiBase struct {
 	// Resources can be either inlined or reference the namespace and name
 	// of an <a href="#apiresource">existing API resource definition</a>.
 	Resources []*ResourceOrRef `json:"resources"`
+	// List of groups associated with the API
+	Groups []string `json:"groups,omitempty"`
+	// List of members associated with the API
+	Members []*Member `json:"members,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;

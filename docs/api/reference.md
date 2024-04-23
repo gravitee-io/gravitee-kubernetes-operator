@@ -394,6 +394,13 @@ is managed using a kubernetes operator<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>groups</b></td>
+        <td>[]string</td>
+        <td>
+          List of groups associated with the API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
@@ -434,6 +441,13 @@ Instead, it pushes the API to the Management API and forces it to update the eve
 This will cause Gateways to fetch the APIs from the datastore<br/>
           <br/>
             <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecmembersindex">members</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of members associated with the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -902,6 +916,47 @@ List of path operators
           FlowStep policy<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.members[index]
+[Go to parent definition](#apidefinitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>roles</b></td>
+        <td>[]string</td>
+        <td>
+          List of roles associated with this Member<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>source</b></td>
+        <td>string</td>
+        <td>
+          Member source<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>sourceId</b></td>
+        <td>string</td>
+        <td>
+          Member source ID<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -1680,28 +1735,28 @@ Specify the primary member that owns the API
         <td><b>displayName</b></td>
         <td>string</td>
         <td>
-          Member Display Name<br/>
+          PrimaryOwner Display Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
-          Member email<br/>
+          PrimaryOwner email<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          Member ID<br/>
+          PrimaryOwner ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          Member type<br/>
+          PrimaryOwner type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4252,6 +4307,13 @@ from an API instance or from a config map created in the cluster (which is the d
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>groups</b></td>
+        <td>[]string</td>
+        <td>
+          List of groups associated with the API<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
@@ -4274,6 +4336,13 @@ field of the resource.<br/>
           <br/>
             <i>Enum</i>: PUBLISHED, UNPUBLISHED<br/>
             <i>Default</i>: UNPUBLISHED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecmembersindex">members</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of members associated with the API<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6285,6 +6354,47 @@ API Flow Execution
 </table>
 
 
+### ApiV4Definition.spec.members[index]
+[Go to parent definition](#apiv4definitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>roles</b></td>
+        <td>[]string</td>
+        <td>
+          List of roles associated with this Member<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>source</b></td>
+        <td>string</td>
+        <td>
+          Member source<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>sourceId</b></td>
+        <td>string</td>
+        <td>
+          Member source ID<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
 ### ApiV4Definition.spec.metadata[index]
 [Go to parent definition](#apiv4definitionspec)
 
@@ -6362,28 +6472,28 @@ Specify the primary member that owns the API
         <td><b>displayName</b></td>
         <td>string</td>
         <td>
-          Member Display Name<br/>
+          PrimaryOwner Display Name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>email</b></td>
         <td>string</td>
         <td>
-          Member email<br/>
+          PrimaryOwner email<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          Member ID<br/>
+          PrimaryOwner ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          Member type<br/>
+          PrimaryOwner type<br/>
         </td>
         <td>false</td>
       </tr></tbody>

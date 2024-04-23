@@ -125,6 +125,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 				WithContext(constants.ContextWithSecretFile),
 			200,
 		),
+		Entry("should import with groups and members",
+			fixture.Builder().
+				WithAPI(constants.ApiWithMembersAndGroups).
+				WithContext(constants.ContextWithSecretFile),
+			200,
+		),
 		Entry("should import with cache redis resource",
 			fixture.Builder().
 				WithAPI(constants.ApiWithCacheRedisResourceFile).
