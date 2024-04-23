@@ -646,6 +646,11 @@ spec:
                   - enabled
                   type: object
                 type: array
+              groups:
+                description: List of groups associated with the API
+                items:
+                  type: string
+                type: array
               id:
                 description: |-
                   The API ID. If empty, this field will take the value of the `metadata.uid`
@@ -670,6 +675,27 @@ spec:
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
                 minItems: 1
+                type: array
+              members:
+                description: List of members associated with the API
+                items:
+                  properties:
+                    roles:
+                      description: List of roles associated with this Member
+                      items:
+                        type: string
+                      type: array
+                    source:
+                      description: Member source
+                      type: string
+                    sourceId:
+                      description: Member source ID
+                      type: string
+                  required:
+                  - roles
+                  - source
+                  - sourceId
+                  type: object
                 type: array
               metadata:
                 description: List of API metadata entries
@@ -976,16 +1002,16 @@ spec:
                 description: Specify the primary member that owns the API
                 properties:
                   displayName:
-                    description: Member Display Name
+                    description: PrimaryOwner Display Name
                     type: string
                   email:
-                    description: Member email
+                    description: PrimaryOwner email
                     type: string
                   id:
-                    description: Member ID
+                    description: PrimaryOwner ID
                     type: string
                   type:
-                    description: Member type
+                    description: PrimaryOwner type
                     type: string
                 type: object
               properties:

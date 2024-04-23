@@ -14,11 +14,17 @@
 
 package base
 
-type Member struct {
-	// Member source
-	Source string `json:"source"`
-	// Member source ID
-	SourceId string `json:"sourceId"`
-	// List of roles associated with this Member
-	Roles []string `json:"roles"`
+type PrimaryOwner struct {
+	// +kubebuilder:validation:Required
+	// PrimaryOwner ID
+	Id string `json:"id,omitempty"`
+	// +kubebuilder:validation:Optional
+	// PrimaryOwner email
+	Email string `json:"email,omitempty"`
+	// +kubebuilder:validation:Optional
+	// PrimaryOwner Display Name
+	DisplayName string `json:"displayName,omitempty"`
+	// +kubebuilder:validation:Required
+	// PrimaryOwner type
+	Type string `json:"type,omitempty"`
 }

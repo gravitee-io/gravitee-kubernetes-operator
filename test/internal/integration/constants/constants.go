@@ -78,6 +78,7 @@ const (
 	ApiWithHTTPAuthProviderRefFile      = SamplesPath + "/apim/api_definition/api-with-http-auth-provider-ref.yml"
 	ApiWithMarkdownPage                 = SamplesPath + "/apim/api_definition/api-with-page-markdown.yml"
 	ApiWithSwaggerHTTPFetcher           = SamplesPath + "/apim/api_definition/api-with-page-swagger-http-fetcher.yml"
+	ApiWithMembersAndGroups             = SamplesPath + "/apim/api_definition/api-with-groups-members.yml"
 
 	ApiResourceCacheFile              = SamplesPath + "/apim/api_resource/api-resource-cache.yml"
 	ApiResourceCacheRedisFile         = SamplesPath + "/apim/api_resource/api-resource-cache-redis.yml"
