@@ -63,7 +63,7 @@ commands:
                 command: echo "export DOCKER_IMAGE_NAME=kubernetes-operator" >> ${BASH_ENV}
             - run:
                 name: Setting docker image tag
-                command: echo "export DOCKER_IMAGE_TAG=alpha-latest" >> ${BASH_ENV}
+                command: echo "export DOCKER_IMAGE_TAG=master-latest" >> ${BASH_ENV}
       - when:
           condition:
             equal: [gravitee_gko_dockerhub_integration_id, << parameters.integration_id_key >>]
@@ -462,8 +462,6 @@ workflows:
       and:
         - not:
             equal: [master, << pipeline.git.branch >>]
-        - not:
-            equal: [alpha, << pipeline.git.branch >>]
     jobs:
       - lint-sources:
           name: Lint sources
@@ -511,8 +509,7 @@ workflows:
     when:
       and:
         - or:
-            - equal: [ci-staging, << pipeline.git.branch >>]
-            - equal: [alpha, << pipeline.git.branch >>]
+            - equal: [master, << pipeline.git.branch >>]
     jobs:
       - helm-test:
           name: Test chart
@@ -523,7 +520,7 @@ workflows:
       - publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
-          tag: alpha-latest
+          tag: master-latest
           context: cicd-orchestrator
           requires:
             - Test chart
@@ -547,7 +544,7 @@ workflows:
               - apim-apim-4-3-x
               - apim-apim-master
               image: [graviteeio.azurecr.io/kubernetes-operator]
-              tag: [alpha-latest]
+              tag: [master-latest]
           requires:
             - Stage image
 
