@@ -319,6 +319,12 @@ spec:
                       description: The API of the page. If empty, will be set automatically
                         to the generated ID of the API.
                       type: string
+                    configuration:
+                      additionalProperties:
+                        type: string
+                      description: Legacy page configuration support can be added
+                        using this field
+                      type: object
                     content:
                       description: The content of the page, if any.
                       type: string

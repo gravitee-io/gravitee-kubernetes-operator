@@ -979,6 +979,13 @@ List of path operators
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>configuration</b></td>
+        <td>map[string]string</td>
+        <td>
+          Legacy page configuration support can be added using this field<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>content</b></td>
         <td>string</td>
         <td>
