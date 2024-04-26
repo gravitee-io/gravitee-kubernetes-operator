@@ -1,3 +1,10 @@
+## [0.13.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.13.0...0.13.1) (2024-04-26)
+
+
+### Bug Fixes
+
+* ensure crd export match API expectations ([b037085](https://github.com/gravitee-io/gravitee-kubernetes-operator/commit/b03708599125f49d277508e1c6ceb866c689a89f))
+
 # [0.13.0](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.12.1...0.13.0) (2024-04-15)
 
 
