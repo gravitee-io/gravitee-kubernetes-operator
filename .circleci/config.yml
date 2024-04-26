@@ -537,7 +537,6 @@ workflows:
           matrix:
             parameters:
               namespace:
-              - apim-apim-3-20-x
               - apim-apim-4-0-x
               - apim-apim-4-1-x
               - apim-apim-4-2-x
