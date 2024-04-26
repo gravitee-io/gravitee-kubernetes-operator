@@ -78,4 +78,7 @@ type Page struct {
 	// Source allow you to fetch pages from various external sources, overriding page content
 	// each time the source is fetched.
 	Source *PageSource `json:"source,omitempty"`
+	// +kubebuilder:validation:Optional
+	// Legacy page configuration support can be added using this field
+	Configuration map[string]string `json:"configuration,omitempty"`
 }
