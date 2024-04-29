@@ -318,6 +318,14 @@ See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>categories</b></td>
+        <td>[]string</td>
+        <td>
+          The list of categories the API belongs to.
+Categories are reflected in APIM portal so that consumers can easily find the APIs they need.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspeccontextref">contextRef</a></b></td>
         <td>object</td>
         <td>
