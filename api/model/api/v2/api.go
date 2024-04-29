@@ -56,6 +56,10 @@ type Api struct {
 	// a key is a the same as deleting the previous page associated to that key,
 	// and generating a new one, holding a new ID in APIM.
 	Pages map[string]*Page `json:"pages"`
+	// +kubebuilder:validation:Optional
+	// The list of categories the API belongs to.
+	// Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
+	Categories []string `json:"categories"`
 }
 
 const (
