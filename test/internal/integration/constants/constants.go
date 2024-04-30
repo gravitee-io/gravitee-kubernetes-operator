@@ -29,7 +29,9 @@ const (
 	EventualTimeout   = time.Second * 30
 	Interval          = time.Millisecond * 250
 
-	GatewayUrl    = "http://localhost:30082"
+	GatewayHost   = "localhost"
+	GatewayPort   = "30082"
+	GatewayUrl    = "http://" + GatewayHost + ":" + GatewayPort
 	ManagementUrl = "http://localhost:30083/management"
 	SamplesPath   = "../../../examples"
 
@@ -139,8 +141,7 @@ func BuildAPIV4Endpoint(l v4.Listener) string {
 	case *v4.HttpListener:
 		return GatewayUrl + t.Paths[0].Path
 	case *v4.TCPListener:
-		// TODO needs to be confirmed
-		return GatewayUrl + t.Servers[0]
+		return t.Hosts[0]
 	}
 
 	return ""

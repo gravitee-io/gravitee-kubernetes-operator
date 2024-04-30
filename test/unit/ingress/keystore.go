@@ -23,6 +23,7 @@ import (
 )
 
 var _ = Describe("Gravitee gateway config", func() {
+	const location = "/ns/secrets/name/key"
 	DescribeTable("should validate keystore",
 		func(given gateway.KeystoreConfig, expected error) {
 			if expected == nil {
@@ -34,7 +35,7 @@ var _ = Describe("Gravitee gateway config", func() {
 		Entry(
 			"with valid config and plain password", gateway.KeystoreConfig{
 				Type:     "jks",
-				Location: "/ns/secrets/name/key",
+				Location: location,
 				Password: "password",
 			},
 			nil,
@@ -42,7 +43,7 @@ var _ = Describe("Gravitee gateway config", func() {
 		Entry(
 			"with valid config and kubernetes password", gateway.KeystoreConfig{
 				Type:     "jks",
-				Location: "/ns/secrets/name/key",
+				Location: location,
 				Password: "kubernetes://ns/secrets/name/key",
 			},
 			nil,
@@ -50,7 +51,7 @@ var _ = Describe("Gravitee gateway config", func() {
 		Entry(
 			"with wrong type", gateway.KeystoreConfig{
 				Type:     "pem",
-				Location: "/ns/secrets/name/key",
+				Location: location,
 				Password: "password",
 			},
 			fmt.Errorf("expected keystore type jks, got pem"),
@@ -74,7 +75,7 @@ var _ = Describe("Gravitee gateway config", func() {
 		Entry(
 			"with  empty password", gateway.KeystoreConfig{
 				Type:     "jks",
-				Location: "/ns/secrets/name/key",
+				Location: location,
 				Password: "",
 			},
 			fmt.Errorf("password is required"),
@@ -82,7 +83,7 @@ var _ = Describe("Gravitee gateway config", func() {
 		Entry(
 			"with wrong kubernetes password password path", gateway.KeystoreConfig{
 				Type:     "jks",
-				Location: "/ns/secrets/name/key",
+				Location: location,
 				Password: "kubernetes://ns",
 			},
 			fmt.Errorf(

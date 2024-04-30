@@ -20,5 +20,5 @@ spec:
   environmentId: DEFAULT
   organizationId: DEFAULT
   auth:
-    # TODO: replace with your generate bearer token
+    # WARNING: replace with your generate bearer token
     bearerToken: xxxx-yyyy-zzzz 

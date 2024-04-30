@@ -62,85 +62,109 @@ func (b *FSBuilder) Build() *Objects {
 	obj.randomSuffix = suffix
 
 	if api := decodeIfDefined(f.API, &v1alpha1.ApiDefinition{}, apiKind); api != nil {
-		obj.API = *api
-		obj.API.Name += suffix
-		obj.API.Namespace = constants.Namespace
-		obj.API.Spec.Name = obj.API.Name
-
-		randomizeAPIPaths(obj.API, suffix)
+		b.setupAPI(obj, api, suffix)
 	}
 
 	if apiV4 := decodeIfDefined(f.APIv4, &v1alpha1.ApiV4Definition{}, apiV4Kind); apiV4 != nil {
-		obj.APIv4 = *apiV4
-		obj.APIv4.Name += suffix
-		obj.APIv4.Namespace = constants.Namespace
-		obj.APIv4.Spec.Name = obj.APIv4.Name
-
-		randomizeAPIv4Paths(obj.APIv4, suffix)
+		b.setupAPIv4(obj, apiV4, suffix)
 	}
 
 	if app := decodeIfDefined(f.Application, &v1alpha1.Application{}, appKind); app != nil {
-		obj.Application = *app
-		obj.Application.Name += suffix
-		obj.Application.Namespace = constants.Namespace
+		b.setupApplication(obj, app, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
-		obj.Context = *ctx
-		obj.Context.Name += suffix
-		obj.Context.Namespace = constants.Namespace
-		if obj.API != nil {
-			obj.API.Spec.Context = obj.Context.GetNamespacedName()
-		}
-		if obj.APIv4 != nil {
-			obj.APIv4.Spec.Context = obj.Context.GetNamespacedName()
-		}
-		if obj.Application != nil {
-			obj.Application.Spec.Context = obj.Context.GetNamespacedName()
-		}
+		b.setupMgmtContext(obj, ctx, suffix)
 	}
 
 	if rsc := decodeIfDefined(f.Resource, &v1alpha1.ApiResource{}, rscKind); rsc != nil {
-		obj.Resource = *rsc
-		obj.Resource.Name += suffix
-		obj.Resource.Namespace = constants.Namespace
-		if obj.API != nil {
-			obj.API.Spec.Resources = []*base.ResourceOrRef{
-				{
-					Ref: &refs.NamespacedName{
-						Name:      obj.Resource.Name,
-						Namespace: constants.Namespace,
-					},
-				},
-			}
-		}
-		if obj.APIv4 != nil {
-			obj.APIv4.Spec.Resources = []*base.ResourceOrRef{
-				{
-					Ref: &refs.NamespacedName{
-						Name:      obj.Resource.Name,
-						Namespace: constants.Namespace,
-					},
-				},
-			}
-		}
+		b.setupAPIResource(obj, rsc, suffix)
 	}
 
 	if ing := decodeIfDefined(f.Ingress, &netV1.Ingress{}, ingKind); ing != nil {
-		obj.Ingress = *ing
-		obj.Ingress.Name += suffix
-		obj.Ingress.Namespace = constants.Namespace
-		if obj.API != nil && isTemplate(obj.API) {
-			obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.API.Name
-		}
-		if obj.APIv4 != nil && isTemplate(obj.APIv4) {
-			obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.APIv4.Name
-		}
-
-		randomizeIngressRules(obj.Ingress, suffix)
+		b.setupIngress(obj, ing, suffix)
 	}
 
 	return obj
+}
+
+func (b *FSBuilder) setupIngress(obj *Objects, ing **netV1.Ingress, suffix string) {
+	obj.Ingress = *ing
+	obj.Ingress.Name += suffix
+	obj.Ingress.Namespace = constants.Namespace
+	if obj.API != nil && isTemplate(obj.API) {
+		obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.API.Name
+	}
+	if obj.APIv4 != nil && isTemplate(obj.APIv4) {
+		obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.APIv4.Name
+	}
+
+	randomizeIngressRules(obj.Ingress, suffix)
+}
+
+func (b *FSBuilder) setupAPIResource(obj *Objects, rsc **v1alpha1.ApiResource, suffix string) {
+	obj.Resource = *rsc
+	obj.Resource.Name += suffix
+	obj.Resource.Namespace = constants.Namespace
+	if obj.API != nil {
+		obj.API.Spec.Resources = []*base.ResourceOrRef{
+			{
+				Ref: &refs.NamespacedName{
+					Name:      obj.Resource.Name,
+					Namespace: constants.Namespace,
+				},
+			},
+		}
+	}
+	if obj.APIv4 != nil {
+		obj.APIv4.Spec.Resources = []*base.ResourceOrRef{
+			{
+				Ref: &refs.NamespacedName{
+					Name:      obj.Resource.Name,
+					Namespace: constants.Namespace,
+				},
+			},
+		}
+	}
+}
+
+func (b *FSBuilder) setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix string) {
+	obj.Context = *ctx
+	obj.Context.Name += suffix
+	obj.Context.Namespace = constants.Namespace
+	if obj.API != nil {
+		obj.API.Spec.Context = obj.Context.GetNamespacedName()
+	}
+	if obj.APIv4 != nil {
+		obj.APIv4.Spec.Context = obj.Context.GetNamespacedName()
+	}
+	if obj.Application != nil {
+		obj.Application.Spec.Context = obj.Context.GetNamespacedName()
+	}
+}
+
+func (b *FSBuilder) setupApplication(obj *Objects, app **v1alpha1.Application, suffix string) {
+	obj.Application = *app
+	obj.Application.Name += suffix
+	obj.Application.Namespace = constants.Namespace
+}
+
+func (b *FSBuilder) setupAPIv4(obj *Objects, apiV4 **v1alpha1.ApiV4Definition, suffix string) {
+	obj.APIv4 = *apiV4
+	obj.APIv4.Name += suffix
+	obj.APIv4.Namespace = constants.Namespace
+	obj.APIv4.Spec.Name = obj.APIv4.Name
+
+	randomizeAPIv4Paths(obj.APIv4, suffix)
+}
+
+func (b *FSBuilder) setupAPI(obj *Objects, api **v1alpha1.ApiDefinition, suffix string) {
+	obj.API = *api
+	obj.API.Name += suffix
+	obj.API.Namespace = constants.Namespace
+	obj.API.Spec.Name = obj.API.Name
+
+	randomizeAPIPaths(obj.API, suffix)
 }
 
 func randomizeAPIPaths(api *v1alpha1.ApiDefinition, suffix string) {
@@ -167,8 +191,7 @@ func setPath(l v4.Listener, suffix string) *v4.GenericListener {
 		t.Paths[0].Path = "/" + suffix[1:]
 		return v4.ToGenericListener(t)
 	case *v4.TCPListener:
-		// TODO needs to be confirmed
-		t.Servers[0] = "/" + suffix[1:]
+		t.Hosts[0] = constants.GatewayHost
 		return v4.ToGenericListener(t)
 	}
 	return nil
