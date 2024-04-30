@@ -31,8 +31,9 @@ var _ = Describe("Gravitee kubernetes properties", func() {
 		Expect(prop.Key()).To(Equal("key"))
 	})
 
+	const secretLocation = "/ns/secrets/name/key"
 	It("should parse path components without scheme", func() {
-		prop := gateway.GraviteeKubeProperty("/ns/secrets/name/key")
+		prop := gateway.GraviteeKubeProperty(secretLocation)
 		Expect(prop.Namespace()).To(Equal("ns"))
 		Expect(prop.Type()).To(Equal("secrets"))
 		Expect(prop.Name()).To(Equal("name"))
@@ -40,7 +41,7 @@ var _ = Describe("Gravitee kubernetes properties", func() {
 	})
 
 	It("should return a secret receiver", func() {
-		prop := gateway.GraviteeKubeProperty("/ns/secrets/name/key")
+		prop := gateway.GraviteeKubeProperty(secretLocation)
 		Expect(prop.NewReceiver()).To(BeAssignableToTypeOf(&v1.Secret{}))
 	})
 
@@ -55,7 +56,7 @@ var _ = Describe("Gravitee kubernetes properties", func() {
 	})
 
 	It("should get bytes from secret", func() {
-		prop := gateway.GraviteeKubeProperty("/ns/secrets/name/key")
+		prop := gateway.GraviteeKubeProperty(secretLocation)
 		secret, ok := prop.NewReceiver().(*v1.Secret)
 		Expect(ok).To(BeTrue())
 		secret.Data = map[string][]byte{

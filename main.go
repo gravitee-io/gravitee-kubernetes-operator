@@ -176,13 +176,15 @@ func buildCacheOptions(ns string) cache.Options {
 }
 
 func registerControllers(mgr manager.Manager) {
+	const msg = "unable to create controller"
+	const controller = "controller"
 	if err := (&apidefinition.Reconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiDefinition")
+		setupLog.Error(err, msg, controller, "ApiDefinition")
 		os.Exit(1)
 	}
 
@@ -192,7 +194,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiV4Definition")
+		setupLog.Error(err, msg, controller, "ApiV4Definition")
 		os.Exit(1)
 	}
 
@@ -202,7 +204,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ManagementContext")
+		setupLog.Error(err, msg, controller, "ManagementContext")
 		os.Exit(1)
 	}
 	if err := (&ingress.Reconciler{
@@ -211,7 +213,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1.IngressList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Ingress")
+		setupLog.Error(err, msg, controller, "Ingress")
 		os.Exit(1)
 	}
 	if err := (&apiresource.Reconciler{
@@ -219,7 +221,7 @@ func registerControllers(mgr manager.Manager) {
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApiResource")
+		setupLog.Error(err, msg, controller, "ApiResource")
 		os.Exit(1)
 	}
 	if err := (&application.Reconciler{
@@ -228,7 +230,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("application-controller"),
 		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Application")
+		setupLog.Error(err, msg, controller, "Application")
 		os.Exit(1)
 	}
 
@@ -236,7 +238,7 @@ func registerControllers(mgr manager.Manager) {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Secret")
+		setupLog.Error(err, msg, controller, "Secret")
 		os.Exit(1)
 	}
 }

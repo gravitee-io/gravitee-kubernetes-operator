@@ -32,6 +32,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const reconcileStatus = "reconcile status"
+
 func HasFinalizer(object client.Object, value string) error {
 	if !controllerutil.ContainsFinalizer(object, value) {
 		return fmt.Errorf(
@@ -47,27 +49,27 @@ func StrEndingWithPath(str, path string) error {
 }
 
 func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
-	return Equals("reconcile status", v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
 func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return Equals("reconcile status", v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
 func ApplicationCompleted(app *v1alpha1.Application) error {
-	return Equals("reconcile status", v1alpha1.ProcessingStatusCompleted, app.Status.Status)
+	return Equals(reconcileStatus, v1alpha1.ProcessingStatusCompleted, app.Status.Status)
 }
 
 func ApplicationFailed(app *v1alpha1.Application) error {
-	return Equals("reconcile status", v1alpha1.ProcessingStatusFailed, app.Status.Status)
+	return Equals(reconcileStatus, v1alpha1.ProcessingStatusFailed, app.Status.Status)
 }
 
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
-	return Equals("reconcile status", v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
 }
 
 func ApiV4Failed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return Equals("reconcile status", v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
 }
 
 func NoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus int) error {

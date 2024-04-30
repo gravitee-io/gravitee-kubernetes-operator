@@ -24,4 +24,4 @@ spec:
   configuration:
       method: "POST"
       condition: "{#authResponse.status == 200}"
-      url: "http://authorization-server.com/basic"
+      url: "https://authorization-server.com/basic"
