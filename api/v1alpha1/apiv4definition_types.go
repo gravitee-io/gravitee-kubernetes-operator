@@ -80,7 +80,6 @@ type ApiV4Definition struct {
 
 func (api *ApiV4Definition) ToGatewayDefinition() v4.GatewayDefinitionApi {
 	cp := api.DeepCopy()
-	cp.Spec.ID = api.PickID()
 	return cp.Spec.Api.ToGatewayDefinition()
 }
 
@@ -93,13 +92,17 @@ func (api *ApiV4Definition) IsBeingDeleted() bool {
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiV4Definition) PickID() string {
+func (api *ApiV4Definition) PickID(mCtx *ManagementContext) string {
 	if api.Status.ID != "" {
 		return api.Status.ID
 	}
 
 	if api.Spec.ID != "" {
 		return api.Spec.ID
+	}
+
+	if mCtx != nil {
+		return uuid.FromStrings(api.PickCrossID(), mCtx.Spec.OrgId, mCtx.Spec.EnvId)
 	}
 
 	return string(api.UID)
