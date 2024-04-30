@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apidefinition_test
+package apidefinition
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -37,6 +38,8 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
+
+	ctx := context.Background()
 
 	It("should update api definition V4", func() {
 		fixtures := fixture.Builder().
@@ -69,7 +72,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 		updatedEndpoint := constants.BuildAPIV4Endpoint(updated.Spec.Listeners[0])
 
 		Eventually(func() error {
-			return manager.UpdateSafely(updated)
+			return manager.UpdateSafely(ctx, updated)
 		}, timeout, interval).Should(Succeed())
 
 		By("calling updated endpoint, expecting status 200")

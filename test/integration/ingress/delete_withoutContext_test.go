@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ingress_test
+package ingress
 
 import (
 	"context"
@@ -47,7 +47,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 
 		By("deleting the ingress")
 
-		Expect(manager.Delete(fixtures.Ingress.DeepCopy())).To(Succeed())
+		Expect(manager.Delete(ctx, fixtures.Ingress.DeepCopy())).To(Succeed())
 
 		By("expecting ingress and API definition to have been deleted")
 

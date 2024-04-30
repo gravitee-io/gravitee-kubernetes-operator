@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apidefinition_test
+package apidefinition
 
 import (
 	"context"
@@ -71,7 +71,7 @@ var _ = Describe("Start", labels.WithContext, func() {
 		updated.Spec.State = base.StateStarted
 
 		Eventually(func() error {
-			return manager.UpdateSafely(updated)
+			return manager.UpdateSafely(ctx, updated)
 		}, timeout, interval).Should(Succeed())
 
 		By("calling gateway endpoint, expecting status 200")

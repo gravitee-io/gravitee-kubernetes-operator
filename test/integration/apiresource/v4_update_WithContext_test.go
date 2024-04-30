@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apiresource_test
+package apiresource
 
 import (
 	"context"
@@ -70,7 +70,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			updated := fixtures.Resource.DeepCopy()
 			updated.Spec.Enabled = false
 
-			Expect(manager.UpdateSafely(updated)).To(Succeed())
+			Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
 			By("calling rest API, expecting resource to be updated")
 

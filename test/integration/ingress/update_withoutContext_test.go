@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ingress_test
+package ingress
 
 import (
 	"context"
@@ -68,12 +68,12 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 		updated := fixtures.Ingress.DeepCopy()
 		updated.Spec.Rules[0].HTTP.Paths[0].Path = "/" + fixtures.GetGeneratedSuffix()[1:]
 
-		Expect(manager.UpdateSafely(updated)).To(Succeed())
+		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
 		By("expecting API proxy to match updated rule")
 
 		Eventually(func() error {
-			err := manager.GetLatest(apiDef)
+			err := manager.GetLatest(ctx, apiDef)
 			if err != nil {
 				return err
 			}

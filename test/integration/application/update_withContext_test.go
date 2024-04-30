@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package application_test
+package application
 
 import (
 	"context"
@@ -63,7 +63,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		updated := fixtures.Application.DeepCopy()
 		updated.Spec.Name += "-updated"
 
-		Expect(manager.UpdateSafely(updated)).To(Succeed())
+		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
 		By("calling rest API, expecting application to be up to date")
 

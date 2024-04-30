@@ -29,28 +29,28 @@ func Client() client.Client {
 	return cli
 }
 
-func GetLatest[T client.Object](obj T) error {
+func GetLatest[T client.Object](ctx context.Context, obj T) error {
 	key := types.NamespacedName{
 		Namespace: obj.GetNamespace(),
 		Name:      obj.GetName(),
 	}
 
-	if err := Client().Get(context.Background(), key, obj); err != nil {
+	if err := Client().Get(ctx, key, obj); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func Delete[T client.Object](obj T) error {
-	err := GetLatest(obj)
+func Delete[T client.Object](ctx context.Context, obj T) error {
+	err := GetLatest(ctx, obj)
 	if err != nil {
 		return err
 	}
-	return Client().Delete(context.Background(), obj)
+	return Client().Delete(ctx, obj)
 }
 
-func UpdateSafely[T client.Object](objNew T) error {
+func UpdateSafely[T client.Object](ctx context.Context, objNew T) error {
 	key := types.NamespacedName{
 		Namespace: objNew.GetNamespace(),
 		Name:      objNew.GetName(),
@@ -60,8 +60,6 @@ func UpdateSafely[T client.Object](objNew T) error {
 	if !ok {
 		return fmt.Errorf("failed to copy object %v", objNew)
 	}
-
-	ctx := context.Background()
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if err := Client().Get(ctx, key, objLast); err != nil {
