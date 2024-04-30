@@ -40,11 +40,12 @@ type Delegate struct {
 	k8s  client.Client
 	log  logr.Logger
 	apim *apim.APIM
+	mCtx *v1alpha1.ManagementContext
 }
 
 func NewDelegate(ctx context.Context, k8s client.Client, log logr.Logger) *Delegate {
 	return &Delegate{
-		ctx, k8s, log, nil,
+		ctx, k8s, log, nil, nil,
 	}
 }
 
@@ -72,6 +73,7 @@ func (d *Delegate) ResolveContext(ref *refs.NamespacedName) error {
 	}
 
 	d.apim = apim
+	d.mCtx = managementContext
 	return nil
 }
 

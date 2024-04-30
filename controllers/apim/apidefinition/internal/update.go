@@ -88,7 +88,7 @@ func (d *Delegate) createOrUpdateV4(apiDefinition *v1alpha1.ApiV4Definition) err
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec
-	spec.ID = cp.PickID()
+	spec.ID = cp.PickID(d.mCtx)
 	spec.CrossID = cp.PickCrossID()
 	spec.Plans = cp.PickPlanIDs()
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
