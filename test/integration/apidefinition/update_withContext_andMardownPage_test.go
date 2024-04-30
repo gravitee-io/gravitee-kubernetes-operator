@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apidefinition_test
+package apidefinition
 
 import (
 	"context"
@@ -52,7 +52,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		markdown.Content = updatedContent
 
 		Eventually(func() error {
-			return manager.UpdateSafely(fixtures.API)
+			return manager.UpdateSafely(ctx, fixtures.API)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 
 		By("checking pages number in APIM")

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ingress_test
+package ingress
 
 import (
 	"context"
@@ -81,7 +81,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 		Eventually(func() error {
 			cm := fixtures.ConfigMaps[0]
-			err := manager.GetLatest(cm)
+			err := manager.GetLatest(ctx, cm)
 			if err != nil {
 				return err
 			}

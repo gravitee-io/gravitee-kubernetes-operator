@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apidefinition_test
+package apidefinition
 
 import (
 	"context"
@@ -46,7 +46,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("expecting finalizer to have been added to api")
 
 		Eventually(func() error {
-			err := manager.GetLatest(fixtures.API)
+			err := manager.GetLatest(ctx, fixtures.API)
 			if err != nil {
 				return err
 			}
@@ -61,7 +61,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			kErr := manager.GetLatest(fixtures.API)
+			kErr := manager.GetLatest(ctx, fixtures.API)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -72,7 +72,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("expecting template to have been deleted")
 
 		Eventually(func() error {
-			kErr := manager.GetLatest(fixtures.API)
+			kErr := manager.GetLatest(ctx, fixtures.API)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}

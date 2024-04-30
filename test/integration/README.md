@@ -257,7 +257,7 @@ test
 Here is a minimal version of that file
 
 ```golang
-package apidefinition_test
+package apidefinition
 
 import (
 	"testing"

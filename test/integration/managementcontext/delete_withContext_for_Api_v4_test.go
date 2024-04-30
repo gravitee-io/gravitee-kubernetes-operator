@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package managementcontext_test
+package managementcontext
 
 import (
 	"context"
@@ -51,7 +51,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			kErr := manager.GetLatest(fixtures.Context)
+			kErr := manager.GetLatest(ctx, fixtures.Context)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -62,7 +62,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("expecting management context to have been deleted")
 
 		Eventually(func() error {
-			kErr := manager.GetLatest(fixtures.Context)
+			kErr := manager.GetLatest(ctx, fixtures.Context)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}

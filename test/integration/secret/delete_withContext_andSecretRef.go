@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package secret_test
+package secret
 
 import (
 	"context"
@@ -56,7 +56,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			kErr := manager.GetLatest(secret)
+			kErr := manager.GetLatest(ctx, secret)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -67,7 +67,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("expecting secret to have been deleted")
 
 		Eventually(func() error {
-			kErr := manager.GetLatest(secret)
+			kErr := manager.GetLatest(ctx, secret)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}

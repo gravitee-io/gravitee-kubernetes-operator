@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package apidefinition_test
+package apidefinition
 
 import (
 	"context"
@@ -63,13 +63,13 @@ var _ = Describe("Create", labels.WithContext, func() {
 				Build().Context.Spec
 
 			Eventually(func() error {
-				return manager.UpdateSafely(fixed)
+				return manager.UpdateSafely(ctx, fixed)
 			}, timeout, interval).Should(Succeed())
 
 			By("expecting API status to be completed")
 
 			Eventually(func() error {
-				err := manager.GetLatest(fixtures.API)
+				err := manager.GetLatest(ctx, fixtures.API)
 				if err != nil {
 					return err
 				}

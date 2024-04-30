@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apiresource_test
+package apiresource
 
 import (
 	"context"
@@ -50,7 +50,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 
 		checkUntil := constants.ConsistentTimeout
 		Consistently(func() error {
-			kErr := manager.GetLatest(fixtures.Resource)
+			kErr := manager.GetLatest(ctx, fixtures.Resource)
 			return kErr
 		}, checkUntil, interval).Should(Succeed())
 
@@ -61,7 +61,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("expecting resource to have been deleted")
 
 		Eventually(func() error {
-			kErr := manager.GetLatest(fixtures.Resource)
+			kErr := manager.GetLatest(ctx, fixtures.Resource)
 			if errors.IsNotFound(kErr) {
 				return nil
 			}
