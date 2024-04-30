@@ -42,7 +42,7 @@ spec:
     swagger:
       name: "pet-store"
       type: SWAGGER
-      parent: specifications
+      parent:  docs-folder
       source:
         type: 'http-fetcher'
         configuration:
