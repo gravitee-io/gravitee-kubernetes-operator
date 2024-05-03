@@ -149,13 +149,6 @@ func (api *ApiV4Definition) GetNamespacedName() refs.NamespacedName {
 	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
-func (spec *ApiV4DefinitionSpec) SetDefinitionContext() {
-	spec.DefinitionContext = &v4.DefinitionContext{
-		Origin:   v4.OriginKubernetes,
-		SyncFrom: v4.OriginKubernetes,
-	}
-}
-
 func (api *ApiV4Definition) GetObjectMeta() *metav1.ObjectMeta {
 	return &api.ObjectMeta
 }

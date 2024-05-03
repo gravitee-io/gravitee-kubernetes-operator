@@ -18,8 +18,10 @@ package v1alpha1
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
@@ -141,8 +143,12 @@ func (api *ApiDefinition) GetNamespacedName() refs.NamespacedName {
 
 func (spec *ApiDefinitionV2Spec) SetDefinitionContext() {
 	spec.DefinitionContext = &v2.DefinitionContext{
-		Mode:   v2.ModeFullyManaged,
-		Origin: v2.OriginKubernetes,
+		Mode:     v2.ModeFullyManaged,
+		Origin:   v2.OriginKubernetes,
+		SyncFrom: v2.OriginKubernetes,
+	}
+	if !spec.IsLocal || strings.EqualFold(string(v4.OriginManagement), spec.DefinitionContext.SyncFrom) {
+		spec.DefinitionContext.SyncFrom = string(v4.OriginManagement)
 	}
 }
 

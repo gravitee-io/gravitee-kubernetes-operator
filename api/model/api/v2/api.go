@@ -65,6 +65,7 @@ type Api struct {
 const (
 	ModeFullyManaged = "fully_managed"
 	OriginKubernetes = "kubernetes"
+	OriginManagement = "management"
 )
 
 type DefinitionContext struct {
@@ -72,11 +73,6 @@ type DefinitionContext struct {
 	Origin string `json:"origin,omitempty"`
 	// +kubebuilder:default:=fully_managed
 	Mode string `json:"mode,omitempty"`
-}
-
-func (spec *Api) SetDefinitionContext() {
-	spec.DefinitionContext = &DefinitionContext{
-		Mode:   ModeFullyManaged,
-		Origin: OriginKubernetes,
-	}
+	// +kubebuilder:default:=kubernetes
+	SyncFrom string `json:"syncFrom,omitempty"`
 }

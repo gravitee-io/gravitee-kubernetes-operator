@@ -632,6 +632,15 @@ is managed using a kubernetes operator
             <i>Default</i>: kubernetes<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>syncFrom</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: kubernetes<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
