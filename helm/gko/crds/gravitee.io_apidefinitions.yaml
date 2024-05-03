@@ -107,6 +107,9 @@ spec:
                   origin:
                     default: kubernetes
                     type: string
+                  syncFrom:
+                    default: kubernetes
+                    type: string
                 type: object
               deployedAt:
                 description: Shows the time that the API is deployed

@@ -22,6 +22,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
@@ -47,15 +48,19 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		apim := apim.NewClient(ctx)
 
-		err := apim.APIs.DeleteV2(fixtures.API.Spec.ID)
-		Expect(errors.IgnoreNotFound(err)).ToNot(HaveOccurred())
+		fixtures.API.Spec.DefinitionContext = &v2.DefinitionContext{
+			Origin:   v2.OriginKubernetes,
+			Mode:     v2.ModeFullyManaged,
+			SyncFrom: v2.OriginKubernetes,
+		}
 
 		Eventually(func() error {
-			_, err = apim.APIs.ImportV2(http.MethodPost, &fixtures.API.Spec.Api)
+			if err := apim.APIs.DeleteV2(fixtures.API.Spec.ID); errors.IgnoreNotFound(err) != nil {
+				return err
+			}
+			_, err := apim.APIs.ImportV2(http.MethodPost, &fixtures.API.Spec.Api)
 			return err
 		}, timeout, interval).Should(Succeed())
-
-		Expect(err).ToNot(HaveOccurred())
 
 		By("creating API in cluster")
 
@@ -64,9 +69,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("calling management API and expecting API origin to be kubernetes")
 
 		Eventually(func() error {
-			api, apiErr := apim.APIs.GetByID(fixtures.API.Spec.ID)
-			if apiErr != nil {
-				return apiErr
+			api, err := apim.APIs.GetByID(fixtures.API.Spec.ID)
+			if err != nil {
+				return err
 			}
 			return assert.Equals("API origin", "kubernetes", api.DefinitionContext.Origin)
 		}, timeout, interval).Should(Succeed())
@@ -74,8 +79,8 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		endpoint := constants.BuildAPIEndpoint(fixtures.API)
 		Eventually(func() error {
-			res, callErr := httpClient.Get(endpoint)
-			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			res, err := httpClient.Get(endpoint)
+			return assert.NoErrorAndHTTPStatus(err, res, http.StatusOK)
 		}, timeout, interval).Should(Succeed())
 	})
 })
