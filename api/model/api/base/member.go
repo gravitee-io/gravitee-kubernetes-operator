@@ -19,6 +19,6 @@ type Member struct {
 	Source string `json:"source"`
 	// Member source ID
 	SourceId string `json:"sourceId"`
-	// List of roles associated with this Member
-	Roles []string `json:"roles"`
+	// The API role associated with this Member
+	Role string `json:"role"`
 }
