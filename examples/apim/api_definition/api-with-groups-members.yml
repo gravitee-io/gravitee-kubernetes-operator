@@ -38,13 +38,10 @@ spec:
   members:
     - source: gravitee
       sourceId: sa-gko
-      roles:
-        - USER
+      role: USER
     - source: gravitee
       sourceId: antoine.kamiel@graviteesource.com
-      roles:
-        - USER
+      role: REVIEWER
     - source: gravitee
       sourceId: kamiel.antoine@graviteesource.com
-      roles:
-        - USER
+      role: d7a1cb52-061a-4cf7-aed0-cb8142cbbab1

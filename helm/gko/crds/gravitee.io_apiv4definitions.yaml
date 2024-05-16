@@ -680,11 +680,9 @@ spec:
                 description: List of members associated with the API
                 items:
                   properties:
-                    roles:
-                      description: List of roles associated with this Member
-                      items:
-                        type: string
-                      type: array
+                    role:
+                      description: The API role associated with this Member
+                      type: string
                     source:
                       description: Member source
                       type: string
@@ -692,7 +690,7 @@ spec:
                       description: Member source ID
                       type: string
                   required:
-                  - roles
+                  - role
                   - source
                   - sourceId
                   type: object

@@ -946,10 +946,10 @@ List of path operators
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>roles</b></td>
-        <td>[]string</td>
+        <td><b>role</b></td>
+        <td>string</td>
         <td>
-          List of roles associated with this Member<br/>
+          The API role associated with this Member<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6380,10 +6380,10 @@ API Flow Execution
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>roles</b></td>
-        <td>[]string</td>
+        <td><b>role</b></td>
+        <td>string</td>
         <td>
-          List of roles associated with this Member<br/>
+          The API role associated with this Member<br/>
         </td>
         <td>true</td>
       </tr><tr>
