@@ -5940,17 +5940,18 @@ from an API instance or from a config map created in the cluster (which is the d
     </thead>
     <tbody><tr>
         <td><b>origin</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The definition context origin where the API definition is managed.
 The value is always `KUBERNETES` for an API managed by the operator.<br/>
           <br/>
+            <i>Enum</i>: KUBERNETES<br/>
             <i>Default</i>: KUBERNETES<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>syncFrom</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The syncFrom field defines where the gateways should source the API definition from.
 If the value is `MANAGEMENT`, the API definition will be sourced from an APIM instance.
@@ -5960,6 +5961,7 @@ gateways deployed across multiple clusters / regions.
 If the value is `KUBERNETES`, the API definition will be sourced from a config map.
 This means that only gateways deployed in the same cluster will be able to sync the API definition.<br/>
           <br/>
+            <i>Enum</i>: KUBERNETES, MANAGEMENT<br/>
             <i>Default</i>: KUBERNETES<br/>
         </td>
         <td>false</td>

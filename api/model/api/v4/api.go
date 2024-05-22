@@ -77,7 +77,6 @@ type GatewayDefinitionApi struct {
 // +kubebuilder:validation:Enum=FULLY_MANAGED;
 type DefinitionContextMode string
 
-// +kubebuilder:validation:Enum=KUBERNETES;MANAGEMENT;
 type DefinitionContextOrigin string
 
 const (

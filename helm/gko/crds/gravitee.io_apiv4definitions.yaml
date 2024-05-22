@@ -192,25 +192,14 @@ spec:
                   from an API instance or from a config map created in the cluster (which is the default)
                 properties:
                   origin:
-                    allOf:
-                    - enum:
-                      - KUBERNETES
-                      - MANAGEMENT
-                    - enum:
-                      - KUBERNETES
                     default: KUBERNETES
                     description: |-
                       The definition context origin where the API definition is managed.
                       The value is always `KUBERNETES` for an API managed by the operator.
+                    enum:
+                    - KUBERNETES
                     type: string
                   syncFrom:
-                    allOf:
-                    - enum:
-                      - KUBERNETES
-                      - MANAGEMENT
-                    - enum:
-                      - KUBERNETES
-                      - MANAGEMENT
                     default: KUBERNETES
                     description: |-
                       The syncFrom field defines where the gateways should source the API definition from.
@@ -220,6 +209,9 @@ spec:
                       gateways deployed across multiple clusters / regions.
                       If the value is `KUBERNETES`, the API definition will be sourced from a config map.
                       This means that only gateways deployed in the same cluster will be able to sync the API definition.
+                    enum:
+                    - KUBERNETES
+                    - MANAGEMENT
                     type: string
                 type: object
               definitionVersion:
