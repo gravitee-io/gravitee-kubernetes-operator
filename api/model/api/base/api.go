@@ -58,8 +58,6 @@ type ApiBase struct {
 	Resources []*ResourceOrRef `json:"resources"`
 	// List of groups associated with the API
 	Groups []string `json:"groups,omitempty"`
-	// List of members associated with the API
-	Members []*Member `json:"members,omitempty"`
 	// +kubebuilder:validation:Optional
 	// The list of categories the API belongs to.
 	// Categories are reflected in APIM portal so that consumers can easily find the APIs they need.

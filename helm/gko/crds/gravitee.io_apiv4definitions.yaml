@@ -684,19 +684,29 @@ spec:
                 description: List of members associated with the API
                 items:
                   properties:
-                    role:
-                      description: The API role associated with this Member
-                      type: string
-                    source:
-                      description: Member source
-                      type: string
-                    sourceId:
+                    displayName:
                       description: Member source ID
                       type: string
+                    id:
+                      description: Member user ID
+                      type: string
+                    roles:
+                      default: []
+                      description: The API role associated with this Member
+                      items:
+                        properties:
+                          name:
+                            default: USER
+                            description: Name of the role (USER, REVIEWER ...)
+                            type: string
+                          scope:
+                            default: API
+                            description: Role scope, by default it is API scope
+                            type: string
+                        type: object
+                      type: array
                   required:
-                  - role
-                  - source
-                  - sourceId
+                  - id
                   type: object
                 type: array
               metadata:

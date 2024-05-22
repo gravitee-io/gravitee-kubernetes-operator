@@ -6408,26 +6408,66 @@ APIM exports and can be safely ignored.<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>role</b></td>
+        <td><b>id</b></td>
         <td>string</td>
         <td>
-          The API role associated with this Member<br/>
+          Member user ID<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>source</b></td>
-        <td>string</td>
-        <td>
-          Member source<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>sourceId</b></td>
+        <td><b>displayName</b></td>
         <td>string</td>
         <td>
           Member source ID<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecmembersindexrolesindex">roles</a></b></td>
+        <td>[]object</td>
+        <td>
+          The API role associated with this Member<br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.members[index].roles[index]
+[Go to parent definition](#apiv4definitionspecmembersindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of the role (USER, REVIEWER ...)<br/>
+          <br/>
+            <i>Default</i>: USER<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>scope</b></td>
+        <td>string</td>
+        <td>
+          Role scope, by default it is API scope<br/>
+          <br/>
+            <i>Default</i>: API<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
