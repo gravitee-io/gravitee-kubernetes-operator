@@ -66,6 +66,8 @@ type Api struct {
 	Analytics *Analytics `json:"analytics,omitempty"`
 	// API Services
 	Services *ApiServices `json:"services,omitempty"`
+	// A list of Response Templates for the API
+	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
 }
 
 type GatewayDefinitionApi struct {

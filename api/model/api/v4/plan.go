@@ -53,6 +53,9 @@ type Plan struct {
 	// +kubebuilder:default:={}
 	// List of plan flows
 	Flows []*Flow `json:"flows"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
+	ExcludedGroups []string `json:"excludedGroups"`
 }
 
 type GatewayDefinitionPlan struct {

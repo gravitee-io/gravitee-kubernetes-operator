@@ -111,10 +111,32 @@ func (in *Api) DeepCopyInto(out *Api) {
 			(*out)[key] = outVal
 		}
 	}
-	if in.Categories != nil {
-		in, out := &in.Categories, &out.Categories
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+	if in.ResponseTemplates != nil {
+		in, out := &in.ResponseTemplates, &out.ResponseTemplates
+		*out = make(map[string]map[string]*base.ResponseTemplate, len(*in))
+		for key, val := range *in {
+			var outVal map[string]*base.ResponseTemplate
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				inVal := (*in)[key]
+				in, out := &inVal, &outVal
+				*out = make(map[string]*base.ResponseTemplate, len(*in))
+				for key, val := range *in {
+					var outVal *base.ResponseTemplate
+					if val == nil {
+						(*out)[key] = nil
+					} else {
+						inVal := (*in)[key]
+						in, out := &inVal, &outVal
+						*out = new(base.ResponseTemplate)
+						(*in).DeepCopyInto(*out)
+					}
+					(*out)[key] = outVal
+				}
+			}
+			(*out)[key] = outVal
+		}
 	}
 }
 
@@ -631,6 +653,11 @@ func (in *Plan) DeepCopyInto(out *Plan) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.ExcludedGroups != nil {
+		in, out := &in.ExcludedGroups, &out.ExcludedGroups
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 }
 
