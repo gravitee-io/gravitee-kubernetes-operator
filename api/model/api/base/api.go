@@ -52,8 +52,6 @@ type ApiBase struct {
 	// +kubebuilder:validation:Optional
 	// List of API metadata entries
 	Metadata []*MetadataEntry `json:"metadata"`
-	// A list of Response Templates for the API
-	ResponseTemplates map[string]map[string]*ResponseTemplate `json:"response_templates,omitempty"`
 	// +kubebuilder:validation:Optional
 	// Resources can be either inlined or reference the namespace and name
 	// of an <a href="#apiresource">existing API resource definition</a>.
@@ -62,6 +60,10 @@ type ApiBase struct {
 	Groups []string `json:"groups,omitempty"`
 	// List of members associated with the API
 	Members []*Member `json:"members,omitempty"`
+	// +kubebuilder:validation:Optional
+	// The list of categories the API belongs to.
+	// Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
+	Categories []string `json:"categories"`
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;

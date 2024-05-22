@@ -47,6 +47,8 @@ type Plan struct {
 	SelectionRule string `json:"selectionRule,omitempty"`
 	// List of different flows for this Plan
 	Flows []Flow `json:"flows,omitempty"`
+	// List of excluded groups for this plan
+	ExcludedGroups []string `json:"excluded_groups,omitempty"`
 }
 
 func NewPlan(base *base.Plan) *Plan {

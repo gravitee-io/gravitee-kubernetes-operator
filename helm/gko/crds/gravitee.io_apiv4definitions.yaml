@@ -168,6 +168,13 @@ spec:
                 required:
                 - enabled
                 type: object
+              categories:
+                description: |-
+                  The list of categories the API belongs to.
+                  Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
+                items:
+                  type: string
+                type: array
               contextRef:
                 properties:
                   name:
@@ -492,6 +499,11 @@ spec:
                       default: true
                       description: Is flow enabled or not?
                       type: boolean
+                    id:
+                      description: |-
+                        The ID of the flow this field is mainly used for compatibility with
+                        APIM exports and can be safely ignored.
+                      type: string
                     name:
                       description: Flow name
                       type: string
@@ -746,8 +758,8 @@ spec:
                     description:
                       description: Plan Description
                       type: string
-                    excluded_groups:
-                      description: List of excluded groups for this plan
+                    excludedGroups:
+                      default: []
                       items:
                         type: string
                       type: array
@@ -760,6 +772,11 @@ spec:
                             default: true
                             description: Is flow enabled or not?
                             type: boolean
+                          id:
+                            description: |-
+                              The ID of the flow this field is mainly used for compatibility with
+                              APIM exports and can be safely ignored.
+                            type: string
                           name:
                             description: Flow name
                             type: string
@@ -1053,7 +1070,7 @@ spec:
                       type: string
                   type: object
                 type: array
-              response_templates:
+              responseTemplates:
                 additionalProperties:
                   additionalProperties:
                     properties:

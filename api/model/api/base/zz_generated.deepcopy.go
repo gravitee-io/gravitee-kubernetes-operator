@@ -64,33 +64,6 @@ func (in *ApiBase) DeepCopyInto(out *ApiBase) {
 			}
 		}
 	}
-	if in.ResponseTemplates != nil {
-		in, out := &in.ResponseTemplates, &out.ResponseTemplates
-		*out = make(map[string]map[string]*ResponseTemplate, len(*in))
-		for key, val := range *in {
-			var outVal map[string]*ResponseTemplate
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				inVal := (*in)[key]
-				in, out := &inVal, &outVal
-				*out = make(map[string]*ResponseTemplate, len(*in))
-				for key, val := range *in {
-					var outVal *ResponseTemplate
-					if val == nil {
-						(*out)[key] = nil
-					} else {
-						inVal := (*in)[key]
-						in, out := &inVal, &outVal
-						*out = new(ResponseTemplate)
-						(*in).DeepCopyInto(*out)
-					}
-					(*out)[key] = outVal
-				}
-			}
-			(*out)[key] = outVal
-		}
-	}
 	if in.Resources != nil {
 		in, out := &in.Resources, &out.Resources
 		*out = make([]*ResourceOrRef, len(*in))
@@ -117,6 +90,11 @@ func (in *ApiBase) DeepCopyInto(out *ApiBase) {
 				**out = **in
 			}
 		}
+	}
+	if in.Categories != nil {
+		in, out := &in.Categories, &out.Categories
+		*out = make([]string, len(*in))
+		copy(*out, *in)
 	}
 }
 
@@ -399,11 +377,6 @@ func (in *Plan) DeepCopyInto(out *Plan) {
 	}
 	if in.Characteristics != nil {
 		in, out := &in.Characteristics, &out.Characteristics
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
-	if in.ExcludedGroups != nil {
-		in, out := &in.ExcludedGroups, &out.ExcludedGroups
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}

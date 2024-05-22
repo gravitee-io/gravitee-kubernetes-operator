@@ -20,6 +20,11 @@ import (
 )
 
 type Flow struct {
+	// +kubebuilder:validation:Optional
+	// The ID of the flow this field is mainly used for compatibility with
+	// APIM exports and can be safely ignored.
+	ID string `json:"id,omitempty"`
+
 	// Flow name
 	Name string `json:"name,omitempty"`
 

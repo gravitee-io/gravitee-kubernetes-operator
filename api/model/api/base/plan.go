@@ -55,8 +55,6 @@ type Plan struct {
 	// +kubebuilder:default:=API
 	// Plan type
 	Type PlanType `json:"type,omitempty"`
-	// List of excluded groups for this plan
-	ExcludedGroups []string `json:"excluded_groups,omitempty"`
 }
 
 func NewPlan(description string) *Plan {
@@ -64,7 +62,6 @@ func NewPlan(description string) *Plan {
 		Description:     description,
 		Tags:            []string{},
 		Characteristics: []string{},
-		ExcludedGroups:  []string{},
 	}
 }
 

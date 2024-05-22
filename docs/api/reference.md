@@ -4256,6 +4256,14 @@ when using a management context.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>categories</b></td>
+        <td>[]string</td>
+        <td>
+          The list of categories the API belongs to.
+Categories are reflected in APIM portal so that consumers can easily find the APIs they need.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apiv4definitionspeccontextref">contextRef</a></b></td>
         <td>object</td>
         <td>
@@ -4391,7 +4399,7 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apiv4definitionspecresponse_templateskeykey">response_templates</a></b></td>
+        <td><b><a href="#apiv4definitionspecresponsetemplateskeykey">responseTemplates</a></b></td>
         <td>map[string]map[string]object</td>
         <td>
           A list of Response Templates for the API<br/>
@@ -5132,10 +5140,12 @@ that has been promoted between different environments.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>excluded_groups</b></td>
+        <td><b>excludedGroups</b></td>
         <td>[]string</td>
         <td>
-          List of excluded groups for this plan<br/>
+          <br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5250,6 +5260,14 @@ that has been promoted between different environments.<br/>
             <i>Default</i>: true<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          The ID of the flow this field is mainly used for compatibility with
+APIM exports and can be safely ignored.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
@@ -6029,6 +6047,14 @@ API Flow Execution
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          The ID of the flow this field is mainly used for compatibility with
+APIM exports and can be safely ignored.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
@@ -6648,7 +6674,7 @@ Reference to a resource
 </table>
 
 
-### ApiV4Definition.spec.response_templates[key][key]
+### ApiV4Definition.spec.responseTemplates[key][key]
 [Go to parent definition](#apiv4definitionspec)
 
 
