@@ -427,7 +427,7 @@ jobs:
   sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
     docker:
-      - image: sonarsource/sonar-scanner-cli
+      - image: sonarsource/sonar-scanner-cli:5.0.1
     resource_class: small
     steps:
       - run:
