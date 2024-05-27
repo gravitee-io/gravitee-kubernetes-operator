@@ -941,6 +941,9 @@ spec:
                         - enabled
                         type: object
                       type: array
+                    generalConditions:
+                      description: The general conditions defined to use this plan
+                      type: string
                     id:
                       description: Plan ID
                       type: string
