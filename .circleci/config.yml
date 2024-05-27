@@ -291,7 +291,7 @@ jobs:
           secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
           var-name: AZURE_DOCKER_REGISTRY_PASSWORD
       - run:
-          name: Build image << parameters.image >>
+          name: Build image << parameters.image >>:<< parameters.tag >>
           command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
       - run:
           name: Publish image << parameters.image >>:<<parameters.tag >>
@@ -456,12 +456,99 @@ jobs:
           integration_id_key: << parameters.integration_id_key >>
       - add-docker-image-to-snyk
 
+  run-aqua-fs-scanner:
+    docker:
+      - image: aquasec/aqua-scanner
+    steps:
+      - checkout
+      - run: |
+          trivy fs --scanners config,vuln,secret .
+
+  run-aqua-image-scan:
+    docker:
+      - image: cimg/base:2022.06
+    parameters:
+      image:
+        type: string
+      tag:
+        type: string
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Login to aqua registry
+          command: docker login $AQUA_REGISTRY -u "$AQUA_USER" -p "$AQUA_PASSWORD"
+      - run:
+          name: Scan docker image
+          command: |
+            docker run  \
+              -e BUILD_JOB_NAME="$CIRCLE_JOB" \
+              -e BUILD_URL="$CIRCLE_BUILD_URL" \
+              -e BUILD_NUMBER="$CIRCLE_BUILD_NUM" \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              "$AQUA_REGISTRY/scanner:2022.4.517" \
+              scan --register \
+              --registry "AC-Registry.02ae5fba-84b0-443a-9df6-9be92297c139.graviteeio" \
+              --host $AQUA_HOST \
+              --token $AQUA_SCANNER_TOKEN \
+              --show-negligible \
+              << parameters.image >>:<< parameters.tag >>
+
+  run-aqua-sbom:
+    docker:
+      - image: cimg/base:2022.06
+    parameters:
+      registry:
+        type: string
+      image:
+        type: string
+      tag:
+        type: string
+    steps:
+      - checkout
+      - setup_remote_docker 
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          var-name: AZURE_DOCKER_REGISTRY_USERNAME
+      - keeper/env-export:
+          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - run:
+          name: Pull image
+          command: |
+            echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login \
+              --username $AZURE_DOCKER_REGISTRY_USERNAME \
+              --password-stdin << parameters.registry >>
+            docker pull << parameters.registry >>/<< parameters.image >>:<< parameters.tag >>
+      - run:
+          name: Release Artifact Generation
+          command: |
+            export BILLY_SERVER=https://billy.eu-1.codesec.aquasec.com
+            curl -sLo install.sh download.codesec.aquasec.com/billy/install.sh
+            curl -sLo install.sh.checksum https://github.com/argonsecurity/releases/releases/latest/download/install.sh.checksum
+            if ! cat install.sh.checksum | sha256sum --check; then
+            echo "install.sh checksum failed"
+            exit 1
+            fi
+            BINDIR="." sh install.sh
+            rm install.sh install.sh.checksum
+            ./billy generate \
+              --access-token $GITHUB_TOKEN \
+              --aqua-key $AQUA_KEY \
+              --aqua-secret $AQUA_SECRET \
+              --artifact-path "<< parameters.registry >>/<< parameters.image >>:<< parameters.tag >>"
+
 workflows:
   pull_requests:
     when:
       and:
         - not:
             equal: [master, << pipeline.git.branch >>]
+        - not:
+            equal: [ci-aqua, << pipeline.git.branch >>]
     jobs:
       - lint-sources:
           name: Lint sources
@@ -505,6 +592,7 @@ workflows:
           requires:
             - Run IT with context
             - Run IT without context
+  
   deploy:
     when:
       and:
@@ -525,12 +613,6 @@ workflows:
           requires:
             - Test chart
             - Authenticate on cluster
-      - add-docker-images-to-snyk:
-          name: Trigger snyk import
-          context: cicd-orchestrator
-          requires:
-            - Stage image
-          integration_id_key: gravitee_gko_acr_integration_id
       - helm-install:
           name: Deploy in << matrix.namespace >>
           context: cicd-orchestrator
@@ -548,6 +630,57 @@ workflows:
           requires:
             - Stage image
 
+  deploy-aqua:
+    when:
+      and:
+        - or:
+            - equal: [ci-aqua, << pipeline.git.branch >>]
+    jobs:
+      - helm-test:
+          name: Test chart
+      - login-to-azure:
+          name: Authenticate on cluster
+          context: cicd-orchestrator
+          clusterName: devs-preprod
+      - publish-private-image:
+          name: Stage image
+          image: graviteeio.azurecr.io/kubernetes-operator
+          tag: aqua-poc
+          context: cicd-orchestrator
+          requires:
+            - Test chart
+            - Authenticate on cluster
+      - helm-install:
+          name: Deploy in << matrix.namespace >>
+          context: cicd-orchestrator
+          matrix:
+            parameters:
+              namespace:
+              - aqua-poc
+              image: [graviteeio.azurecr.io/kubernetes-operator]
+              tag: [aqua-poc]
+          requires:
+            - Stage image
+      - run-aqua-fs-scanner:
+          name: Scan repository
+          context: cicd-orchestrator
+          requires:
+            - helm-install
+      - run-aqua-image-scan:
+          name: Scan docker image
+          context: cicd-orchestrator
+          image: kubernetes-operator
+          tag: aqua-poc
+          requires:
+            - Scan repository
+      - run-aqua-sbom:
+          name: Generate SBOM
+          context: cicd-orchestrator
+          registry: graviteeio.azurecr.io
+          image: kubernetes-operator
+          tag: aqua-poc
+          requires:
+            - Scan docker image
   release:
     when:
       equal: [trigger-release, << pipeline.git.branch >>]
