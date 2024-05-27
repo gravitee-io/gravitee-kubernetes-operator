@@ -5158,6 +5158,13 @@ that has been promoted between different environments.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>generalConditions</b></td>
+        <td>string</td>
+        <td>
+          The general conditions defined to use this plan<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>

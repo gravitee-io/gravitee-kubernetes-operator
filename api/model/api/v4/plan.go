@@ -56,6 +56,8 @@ type Plan struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	ExcludedGroups []string `json:"excludedGroups"`
+	// The general conditions defined to use this plan
+	GeneralConditions string `json:"generalConditions,omitempty"`
 }
 
 type GatewayDefinitionPlan struct {
