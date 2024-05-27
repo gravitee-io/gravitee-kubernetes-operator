@@ -456,6 +456,15 @@ jobs:
           integration_id_key: << parameters.integration_id_key >>
       - add-docker-image-to-snyk
 
+  add-docker-images-to-aqua:
+    docker:
+      - image: ghcr.io/aquasecurity/trivy:0.51.2
+    steps:
+      - checkout
+      - run: 
+          name: Scan image
+          command: trivy image graviteeio/kubernetes-operator:0.13.1
+
 workflows:
   pull_requests:
     when:
@@ -505,6 +514,21 @@ workflows:
           requires:
             - Run IT with context
             - Run IT without context
+  
+  scan:
+    when:
+      and:
+        - or:
+            - equal: [ci-aqua, << pipeline.git.branch >>]
+    jobs:
+      - add-docker-images-to-snyk:
+          name: Trigger snyk import
+          context: cicd-orchestrator
+          integration_id_key: gravitee_gko_acr_integration_id
+      - add-docker-images-to-aqua:
+          name: Trigger aqua import
+          context: cicd-orchestrator
+
   deploy:
     when:
       and:
