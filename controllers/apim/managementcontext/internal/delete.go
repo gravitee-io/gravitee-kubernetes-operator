@@ -23,13 +23,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"golang.org/x/net/context"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func Delete(
 	ctx context.Context,
-	client client.Client,
 	instance *v1alpha1.ManagementContext,
 ) error {
 	if !util.ContainsFinalizer(instance, keys.ManagementContextFinalizer) {
@@ -37,7 +35,8 @@ func Delete(
 	}
 
 	apis := &v1alpha1.ApiDefinitionList{}
-	if err := search.New(ctx, client).FindByFieldReferencing(
+	if err := search.FindByFieldReferencing(
+		ctx,
 		indexer.ApiContextField,
 		refs.NewNamespacedName(instance.Namespace, instance.Name),
 		apis,
@@ -51,7 +50,8 @@ func Delete(
 	}
 
 	apisV4 := &v1alpha1.ApiV4DefinitionList{}
-	if err := search.New(ctx, client).FindByFieldReferencing(
+	if err := search.FindByFieldReferencing(
+		ctx,
 		indexer.ApiV4ContextField,
 		refs.NewNamespacedName(instance.Namespace, instance.Name),
 		apisV4,
@@ -65,7 +65,8 @@ func Delete(
 	}
 
 	apps := &v1alpha1.ApplicationList{}
-	err := search.New(ctx, client).FindByFieldReferencing(
+	err := search.FindByFieldReferencing(
+		ctx,
 		indexer.AppContextField,
 		refs.NewNamespacedName(instance.Namespace, instance.Name),
 		apps,

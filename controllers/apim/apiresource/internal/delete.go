@@ -23,23 +23,20 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func Delete(
 	ctx context.Context,
-	client client.Client,
 	resource *v1alpha1.ApiResource,
 ) error {
 	if !util.ContainsFinalizer(resource, keys.ApiResourceFinalizer) {
 		return nil
 	}
 
-	search := search.New(ctx, client)
-
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := search.FindByFieldReferencing(
+		ctx,
 		indexer.ApiResourceField,
 		refs.NewNamespacedName(resource.Namespace, resource.Name),
 		apis,
@@ -54,6 +51,7 @@ func Delete(
 
 	apisV4 := &v1alpha1.ApiV4DefinitionList{}
 	if err := search.FindByFieldReferencing(
+		ctx,
 		indexer.ApiV4ResourceField,
 		refs.NewNamespacedName(resource.Namespace, resource.Name),
 		apisV4,

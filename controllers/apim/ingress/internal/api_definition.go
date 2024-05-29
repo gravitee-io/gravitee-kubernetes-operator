@@ -16,6 +16,7 @@ package internal
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -60,19 +61,20 @@ func (d *Delegate) createApiDefinition(
 ) (util.OperationResult, error) {
 	d.log.Info("Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
 
-	if err := util.SetOwnerReference(ingress, apiDefinition, d.k8s.Scheme()); err != nil {
+	cli := k8s.GetClient()
+	if err := util.SetOwnerReference(ingress, apiDefinition, cli.Scheme()); err != nil {
 		return util.OperationResultNone, err
 	}
 
-	return util.OperationResultCreated, d.k8s.Create(d.ctx, apiDefinition)
+	return util.OperationResultCreated, cli.Create(d.ctx, apiDefinition)
 }
 
 func (d *Delegate) updateApiDefinition(
 	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
 ) (util.OperationResult, error) {
 	d.log.Info("Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
-
-	err := util.SetOwnerReference(ingress, apiDefinition, d.k8s.Scheme())
+	cli := k8s.GetClient()
+	err := util.SetOwnerReference(ingress, apiDefinition, cli.Scheme())
 	if err != nil {
 		return util.OperationResultNone, err
 	}
@@ -84,12 +86,13 @@ func (d *Delegate) updateApiDefinition(
 	}
 
 	apiDefinition.Spec.DeepCopyInto(&existingApiDefinition.Spec)
-	return util.OperationResultUpdated, d.k8s.Update(d.ctx, existingApiDefinition)
+	return util.OperationResultUpdated, cli.Update(d.ctx, existingApiDefinition)
 }
 
 func (d *Delegate) getApiDefinition(key client.ObjectKey) (*v1alpha1.ApiDefinition, error) {
 	api := &v1alpha1.ApiDefinition{}
-	err := d.k8s.Get(d.ctx, key, api)
+	cli := k8s.GetClient()
+	err := cli.Get(d.ctx, key, api)
 	if err != nil {
 		return nil, err
 	}

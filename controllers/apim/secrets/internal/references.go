@@ -19,7 +19,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -28,14 +27,13 @@ import (
 )
 
 func getReferences(ctx context.Context, secret *v1.Secret, referenceType client.ObjectList) ([]runtime.Object, error) {
-	k8s := k8s.GetClient()
-
 	ref := refs.NamespacedName{
 		Namespace: secret.Namespace,
 		Name:      secret.Name,
 	}
 
-	if err := search.New(ctx, k8s).FindByFieldReferencing(
+	if err := search.FindByFieldReferencing(
+		ctx,
 		indexer.SecretRefField,
 		ref,
 		referenceType,
@@ -50,7 +48,8 @@ func getReferences(ctx context.Context, secret *v1.Secret, referenceType client.
 
 	ref.Namespace = ""
 
-	if err = search.New(ctx, k8s).FindByFieldReferencing(
+	if err = search.FindByFieldReferencing(
+		ctx,
 		indexer.SecretRefField,
 		ref,
 		referenceType,

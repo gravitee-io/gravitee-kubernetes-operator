@@ -18,12 +18,12 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	coreV1 "k8s.io/api/core/v1"
-	k8s "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -34,19 +34,18 @@ const (
 
 type Delegate struct {
 	ctx  context.Context
-	k8s  k8s.Client
 	log  logr.Logger
 	apim *apim.APIM
 }
 
-func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate {
+func NewDelegate(ctx context.Context, log logr.Logger) *Delegate {
 	return &Delegate{
-		ctx, k8s, log, nil,
+		ctx, log, nil,
 	}
 }
 
 func (d *Delegate) ResolveTemplate(application *v1alpha1.Application) error {
-	return template.NewResolver(d.ctx, d.k8s, d.log, application).Resolve()
+	return template.NewResolver(d.ctx, d.log, application).Resolve()
 }
 
 func (d *Delegate) ResolveContext(application *v1alpha1.Application) error {
@@ -57,7 +56,8 @@ func (d *Delegate) ResolveContext(application *v1alpha1.Application) error {
 
 	d.log.Info("Resolving Management context", "namespace", ref.Namespace, "name", ref.Name)
 
-	if err := d.k8s.Get(d.ctx, ns, managementContext); err != nil {
+	cli := k8s.GetClient()
+	if err := cli.Get(d.ctx, ns, managementContext); err != nil {
 		return err
 	}
 
@@ -87,7 +87,8 @@ func (d *Delegate) resolveContextSecrets(context *v1alpha1.ManagementContext) er
 		secretKey := management.SecretRef().ToK8sType()
 		secretKey.Namespace = getSecretNamespace(context)
 
-		if err := d.k8s.Get(d.ctx, secretKey, secret); err != nil {
+		cli := k8s.GetClient()
+		if err := cli.Get(d.ctx, secretKey, secret); err != nil {
 			return err
 		}
 

@@ -20,6 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal/mapper"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -35,7 +36,8 @@ func (d *Delegate) resolveApiDefinitionTemplate(ingress *netV1.Ingress) (*v1alph
 
 	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
 		apiDefinition = &v1alpha1.ApiDefinition{}
-		if err := d.k8s.Get(
+		cli := k8s.GetClient()
+		if err := cli.Get(
 			d.ctx, types.NamespacedName{Name: name, Namespace: ingress.Namespace}, apiDefinition,
 		); err != nil {
 			return nil, err
@@ -61,7 +63,8 @@ func (d *Delegate) setNotFoundTemplate(opts *mapper.Opts) {
 	}
 
 	cm := coreV1.ConfigMap{}
-	if err := d.k8s.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
+	cli := k8s.GetClient()
+	if err := cli.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
 		d.log.Error(err, "unable to access config map, using default HTTP not found template")
 		return
 	}

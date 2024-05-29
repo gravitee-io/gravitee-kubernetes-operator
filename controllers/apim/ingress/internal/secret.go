@@ -53,10 +53,11 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 	*/
 	key := fmt.Sprintf("%s-%s", ingress.Namespace, ingress.Name)
 	values := make([]string, 0)
+	cli := k8s.GetClient()
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
-		if err := d.k8s.Get(d.ctx, key, secret); err != nil {
+		if err := cli.Get(d.ctx, key, secret); err != nil {
 			return err
 		}
 
@@ -66,12 +67,12 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, keys.KeyPairFinalizer)
 			k8s.AddAnnotation(secret, keys.LastSpecHash, hash.Calculate(&secret.Data))
-			if err := d.k8s.Update(d.ctx, secret); err != nil {
+			if err := cli.Update(d.ctx, secret); err != nil {
 				return client.IgnoreNotFound(err)
 			}
 		} else {
 			secret.Annotations[keys.LastSpecHash] = hash.Calculate(&secret.Data)
-			if err := d.k8s.Update(d.ctx, secret); err != nil {
+			if err := cli.Update(d.ctx, secret); err != nil {
 				return err
 			}
 		}
@@ -99,10 +100,12 @@ func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 		return nil
 	}
 
+	cli := k8s.GetClient()
+
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
-		if err := d.k8s.Get(d.ctx, key, secret); err != nil {
+		if err := cli.Get(d.ctx, key, secret); err != nil {
 			return err
 		}
 
@@ -123,7 +126,7 @@ func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 			d.log.Info("removing finalizer from secret", "secret", secret.Name)
 			util.RemoveFinalizer(secret, keys.KeyPairFinalizer)
 
-			if err = d.k8s.Update(d.ctx, secret); err != nil {
+			if err = cli.Update(d.ctx, secret); err != nil {
 				return err
 			}
 		}
@@ -159,7 +162,9 @@ func (d *Delegate) secretHasReference(ing *netV1.Ingress, secret *core.Secret) (
 
 func (d *Delegate) retrieveIngressListWithTLS(ctx context.Context, ns string) (*netV1.IngressList, error) {
 	il := &netV1.IngressList{}
-	if err := d.k8s.List(ctx, il, client.InNamespace(ns)); err != nil {
+	cli := k8s.GetClient()
+
+	if err := cli.List(ctx, il, client.InNamespace(ns)); err != nil {
 		return nil, client.IgnoreNotFound(err)
 	}
 
@@ -195,7 +200,9 @@ func (d *Delegate) getPemRegistryConfigMapsToUpdate(ing *netV1.Ingress) ([]*core
 		LabelSelector: labels.SelectorFromSet(labels.Set{keys.GraviteeComponentLabel: keys.GraviteePemRegistryLabel}),
 	}
 	var err error
-	if err = d.k8s.List(d.ctx, pemRegistryConfigMaps, filter); err != nil {
+
+	cli := k8s.GetClient()
+	if err = cli.List(d.ctx, pemRegistryConfigMaps, filter); err != nil {
 		return nil, err
 	}
 
@@ -271,8 +278,9 @@ func (d *Delegate) updatePemRegistryEntry(configmaps []*core.ConfigMap, key stri
 		}
 
 		configmap.Data[key] = string(bytes)
+		cli := k8s.GetClient()
 
-		err = d.k8s.Update(d.ctx, configmap)
+		err = cli.Update(d.ctx, configmap)
 
 		if err != nil {
 			return err
@@ -289,7 +297,8 @@ func (d *Delegate) deletePemRegistryEntry(configmaps []*core.ConfigMap, key stri
 		updateTimestamp(configmap)
 
 		delete(configmap.Data, key)
-		if err := d.k8s.Update(d.ctx, configmap); err != nil {
+		cli := k8s.GetClient()
+		if err := cli.Update(d.ctx, configmap); err != nil {
 			return err
 		}
 	}

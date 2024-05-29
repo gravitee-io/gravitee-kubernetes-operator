@@ -70,7 +70,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	delegate := internal.NewDelegate(ctx, r.Client, logger)
+	delegate := internal.NewDelegate(ctx, logger)
 	events := event.NewRecorder(r.Recorder)
 
 	if application.Spec.Context == nil {

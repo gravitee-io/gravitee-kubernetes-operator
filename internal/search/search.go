@@ -17,24 +17,14 @@ package search
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type Type struct {
-	k8s client.Client
-	ctx context.Context
-}
-
-func New(ctx context.Context, k8s client.Client) *Type {
-	return &Type{
-		k8s: k8s,
-		ctx: ctx,
-	}
-}
-
-func (s *Type) FindByFieldReferencing(
+func FindByFieldReferencing(
+	ctx context.Context,
 	field indexer.IndexField,
 	ref refs.NamespacedName,
 	result client.ObjectList,
@@ -43,5 +33,5 @@ func (s *Type) FindByFieldReferencing(
 		FieldSelector: fields.SelectorFromSet(fields.Set{field.String(): ref.String()}),
 	}
 
-	return s.k8s.List(s.ctx, result, filter)
+	return k8s.GetClient().List(ctx, result, filter)
 }

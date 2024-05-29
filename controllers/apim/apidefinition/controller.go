@@ -33,16 +33,18 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const requeueAfterTime = time.Second * 5
 
-func Reconcile(ctx context.Context, apiDefinition v1alpha1.ApiDefinitionCRD,
-	c client.Client, r record.EventRecorder) (ctrl.Result, error) {
+func Reconcile(
+	ctx context.Context,
+	apiDefinition v1alpha1.ApiDefinitionCRD,
+	r record.EventRecorder,
+) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	d := internal.NewDelegate(ctx, c, logger)
+	d := internal.NewDelegate(ctx, logger)
 	events := event.NewRecorder(r)
 
 	if apiDefinition.GetAnnotations()[keys.IngressTemplateAnnotation] == "true" {
@@ -59,15 +61,15 @@ func Reconcile(ctx context.Context, apiDefinition v1alpha1.ApiDefinitionCRD,
 		return ctrl.Result{}, nil
 	}
 
-	return reconcileApiDefinition(ctx, apiDefinition, c, d, events)
+	return reconcileApiDefinition(ctx, apiDefinition, d, events)
 }
 
 func reconcileApiDefinition(ctx context.Context, apiDefinition v1alpha1.ApiDefinitionCRD,
-	c client.Client, d *internal.Delegate, events *event.Recorder) (ctrl.Result, error) {
+	d *internal.Delegate, events *event.Recorder) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	dc := apiDefinition.DeepCopyCrd()
 	status := apiDefinition.GetStatus()
-	_, reconcileErr := util.CreateOrUpdate(ctx, c, dc, func() error {
+	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), dc, func() error {
 		util.AddFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, keys.LastSpecHash, apiDefinition.GetSpec().Hash())
 

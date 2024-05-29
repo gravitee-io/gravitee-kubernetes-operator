@@ -16,6 +16,7 @@ package internal
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -25,7 +26,9 @@ func (d *Delegate) UpdateStatusSuccess(application *v1alpha1.Application) error 
 	}
 
 	app := &v1alpha1.Application{}
-	if err := d.k8s.Get(
+	cli := k8s.GetClient()
+
+	if err := cli.Get(
 		d.ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
 	); err != nil {
 		return err
@@ -33,12 +36,14 @@ func (d *Delegate) UpdateStatusSuccess(application *v1alpha1.Application) error 
 
 	application.Status.ObservedGeneration = application.ObjectMeta.Generation
 	application.Status.DeepCopyInto(&app.Status)
-	return d.k8s.Status().Update(d.ctx, app)
+	return cli.Status().Update(d.ctx, app)
 }
 
 func (d *Delegate) UpdateStatusFailure(application *v1alpha1.Application) error {
 	app := &v1alpha1.Application{}
-	if err := d.k8s.Get(
+	cli := k8s.GetClient()
+
+	if err := cli.Get(
 		d.ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
 	); err != nil {
 		return err
@@ -46,5 +51,5 @@ func (d *Delegate) UpdateStatusFailure(application *v1alpha1.Application) error 
 
 	application.Status.Status = v1alpha1.ProcessingStatusFailed
 	application.Status.DeepCopyInto(&app.Status)
-	return d.k8s.Status().Update(d.ctx, app)
+	return cli.Status().Update(d.ctx, app)
 }

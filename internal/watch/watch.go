@@ -164,7 +164,7 @@ func (w *Type) queueByFieldReferencing(
 		return
 	}
 
-	if sErr := search.New(w.ctx, w.k8s).FindByFieldReferencing(field, ref, objectList); sErr != nil {
+	if sErr := search.FindByFieldReferencing(w.ctx, field, ref, objectList); sErr != nil {
 		log.FromContext(w.ctx).Error(sErr, "error while searching for items referencing", "reference", ref.String())
 		return
 	}

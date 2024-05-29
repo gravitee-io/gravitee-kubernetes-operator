@@ -54,7 +54,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	return Reconcile(ctx, apiDefinition, r.Client, r.Recorder)
+	return Reconcile(ctx, apiDefinition, r.Recorder)
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

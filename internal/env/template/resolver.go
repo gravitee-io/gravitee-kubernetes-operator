@@ -22,6 +22,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -40,14 +41,13 @@ import (
 const ksPropertyLength = 2
 
 type Resolver struct {
-	ctx    context.Context
-	client client.Client
-	log    logr.Logger
-	obj    runtime.Object
+	ctx context.Context
+	log logr.Logger
+	obj runtime.Object
 }
 
-func NewResolver(ctx context.Context, c client.Client, l logr.Logger, obj runtime.Object) *Resolver {
-	return &Resolver{ctx: ctx, client: c, log: l, obj: obj}
+func NewResolver(ctx context.Context, l logr.Logger, obj runtime.Object) *Resolver {
+	return &Resolver{ctx: ctx, log: l, obj: obj}
 }
 
 func (r *Resolver) Resolve() error {
@@ -106,7 +106,8 @@ func (r *Resolver) resolveConfigmap(name string) (string, error) {
 	u := unstructured.Unstructured{Object: innerObj}
 	nn := types.NamespacedName{Namespace: u.GetNamespace(), Name: sp[0]}
 	cm := new(v1.ConfigMap)
-	if err = r.client.Get(r.ctx, nn, cm); err != nil {
+	cli := k8s.GetClient()
+	if err = cli.Get(r.ctx, nn, cm); err != nil {
 		return "", err
 	}
 
@@ -135,7 +136,8 @@ func (r *Resolver) resolveSecret(name string) (string, error) {
 	u := unstructured.Unstructured{Object: innerObj}
 	nn := types.NamespacedName{Namespace: u.GetNamespace(), Name: sp[0]}
 	sec := new(v1.Secret)
-	if err = r.client.Get(r.ctx, nn, sec); err != nil {
+	cli := k8s.GetClient()
+	if err = cli.Get(r.ctx, nn, sec); err != nil {
 		return "", err
 	}
 
@@ -157,13 +159,14 @@ func (r *Resolver) addFinalizer(obj client.Object) error {
 		}
 
 		nn := types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
-		if err := r.client.Get(r.ctx, nn, object); err != nil {
+		cli := k8s.GetClient()
+		if err := cli.Get(r.ctx, nn, object); err != nil {
 			return err
 		}
 
 		util.AddFinalizer(object, keys.TemplatingFinalizer)
 
-		return r.client.Update(r.ctx, object)
+		return cli.Update(r.ctx, object)
 	}
 
 	return nil
