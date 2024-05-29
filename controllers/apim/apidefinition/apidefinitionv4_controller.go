@@ -53,7 +53,7 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	return Reconcile(ctx, apiDefinition, r.Client, r.Recorder)
+	return Reconcile(ctx, apiDefinition, r.Recorder)
 }
 
 func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {

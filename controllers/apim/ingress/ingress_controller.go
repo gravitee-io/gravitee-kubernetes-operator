@@ -67,7 +67,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	d := internal.NewDelegate(ctx, r.Client, logger)
+	d := internal.NewDelegate(ctx, logger)
 
 	events := e.NewRecorder(r.Recorder)
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, ingress, func() error {

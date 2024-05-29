@@ -16,6 +16,7 @@ package internal
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func (d *Delegate) UpdateStatusSuccess(api v1alpha1.CRD) error {
@@ -25,10 +26,10 @@ func (d *Delegate) UpdateStatusSuccess(api v1alpha1.CRD) error {
 
 	api.GetStatus().SetProcessingStatus(v1alpha1.ProcessingStatusCompleted)
 	api.GetStatus().SetObservedGeneration(api.GetGeneration())
-	return d.k8s.Status().Update(d.ctx, api)
+	return k8s.GetClient().Status().Update(d.ctx, api)
 }
 
 func (d *Delegate) UpdateStatusFailure(api v1alpha1.CRD) error {
 	api.GetStatus().SetProcessingStatus(v1alpha1.ProcessingStatusFailed)
-	return d.k8s.Status().Update(d.ctx, api)
+	return k8s.GetClient().Status().Update(d.ctx, api)
 }

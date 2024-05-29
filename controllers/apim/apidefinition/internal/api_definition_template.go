@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netv1 "k8s.io/api/networking/v1"
@@ -38,7 +39,7 @@ func (d *Delegate) SyncApiDefinitionTemplate(api v1alpha1.ApiDefinitionCRD, ns s
 
 	if !util.ContainsFinalizer(api, keys.ApiDefinitionTemplateFinalizer) {
 		util.AddFinalizer(api, keys.ApiDefinitionTemplateFinalizer)
-		return d.k8s.Update(d.ctx, api)
+		return k8s.GetClient().Update(d.ctx, api)
 	}
 
 	return d.UpdateStatusSuccess(api)
@@ -52,7 +53,7 @@ func (d *Delegate) delete(apiDefinition client.Object, namespace string) error {
 	ingressList := netv1.IngressList{}
 
 	// Retrieves the ingresses from the namespace
-	err := d.k8s.List(d.ctx, &ingressList, client.InNamespace(namespace))
+	err := k8s.GetClient().List(d.ctx, &ingressList, client.InNamespace(namespace))
 	if err != nil && !kerrors.IsNotFound(err) {
 		return err
 	}
@@ -72,5 +73,5 @@ func (d *Delegate) delete(apiDefinition client.Object, namespace string) error {
 
 	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
 
-	return d.k8s.Update(d.ctx, apiDefinition)
+	return k8s.GetClient().Update(d.ctx, apiDefinition)
 }

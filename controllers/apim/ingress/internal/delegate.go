@@ -21,21 +21,19 @@ import (
 	netv1 "k8s.io/api/networking/v1"
 
 	"github.com/go-logr/logr"
-	k8s "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Delegate struct {
 	ctx context.Context
-	k8s k8s.Client
 	log logr.Logger
 }
 
-func NewDelegate(ctx context.Context, k8s k8s.Client, log logr.Logger) *Delegate {
+func NewDelegate(ctx context.Context, log logr.Logger) *Delegate {
 	return &Delegate{
-		ctx, k8s, log,
+		ctx, log,
 	}
 }
 
 func (d *Delegate) ResolveTemplate(ingress *netv1.Ingress) error {
-	return template.NewResolver(d.ctx, d.k8s, d.log, ingress).Resolve()
+	return template.NewResolver(d.ctx, d.log, ingress).Resolve()
 }

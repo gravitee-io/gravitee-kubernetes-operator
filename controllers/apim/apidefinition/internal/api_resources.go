@@ -17,6 +17,7 @@ package internal
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func (d *Delegate) resolveResources(resources []*base.ResourceOrRef) error {
@@ -43,7 +44,7 @@ func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
 
 	d.log.Info("Looking for api resource from", "namespace", namespacedName.Namespace, "name", namespacedName.Name)
 
-	if err := d.k8s.Get(d.ctx, namespacedName, resource); err != nil {
+	if err := k8s.GetClient().Get(d.ctx, namespacedName, resource); err != nil {
 		return err
 	}
 

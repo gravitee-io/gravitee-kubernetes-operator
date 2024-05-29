@@ -68,14 +68,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(apiResource, keys.ApiResourceFinalizer)
 		k8s.AddAnnotation(apiResource, keys.LastSpecHash, hash.Calculate(&apiResource.Spec))
 
-		if err := template.NewResolver(ctx, r.Client, logger, apiResource).Resolve(); err != nil {
+		if err := template.NewResolver(ctx, logger, apiResource).Resolve(); err != nil {
 			return err
 		}
 
 		var err error
 		if apiResource.IsBeingDeleted() {
 			err = events.Record(event.Delete, apiResource, func() error {
-				return internal.Delete(ctx, r.Client, apiResource)
+				return internal.Delete(ctx, apiResource)
 			})
 		} else {
 			err = events.Record(event.Update, apiResource, func() error {

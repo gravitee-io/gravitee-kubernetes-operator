@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -117,10 +118,10 @@ func (d *Delegate) saveConfigMap(
 
 	lookupKey := types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}
 
-	err = d.k8s.Get(d.ctx, lookupKey, currentApiDefinition)
+	err = k8s.GetClient().Get(d.ctx, lookupKey, currentApiDefinition)
 	if errors.IsNotFound(err) {
 		d.log.Info("Creating config map for API.", "name", apiDefinition.GetName())
-		return d.k8s.Create(d.ctx, cm)
+		return k8s.GetClient().Create(d.ctx, cm)
 	}
 
 	if err != nil {
@@ -130,7 +131,7 @@ func (d *Delegate) saveConfigMap(
 	// Only update the config map if resource version has changed (means api definition has changed).
 	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.GetResourceVersion() {
 		d.log.Info("Updating ConfigMap", "name", apiDefinition.GetName())
-		return d.k8s.Update(d.ctx, cm)
+		return k8s.GetClient().Update(d.ctx, cm)
 	}
 
 	d.log.Info("No change detected on API. Skipped.", "name", apiDefinition.GetName())
@@ -146,5 +147,5 @@ func (d *Delegate) deleteConfigMap(api client.Object) error {
 	}
 
 	d.log.Info("Deleting Config Map associated to API if exists")
-	return client.IgnoreNotFound(d.k8s.Delete(d.ctx, configMap))
+	return client.IgnoreNotFound(k8s.GetClient().Delete(d.ctx, configMap))
 }
