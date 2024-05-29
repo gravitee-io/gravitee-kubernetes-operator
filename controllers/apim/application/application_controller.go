@@ -83,12 +83,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(application, keys.ApplicationFinalizer)
 		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
-		if err := delegate.ResolveTemplate(application); err != nil {
+		if err := delegate.ResolveTemplate(ctx, application); err != nil {
 			application.Status.Status = v1alpha1.ProcessingStatusFailed
 			return err
 		}
 
-		if err := delegate.ResolveContext(application); err != nil {
+		if err := delegate.ResolveContext(ctx, application); err != nil {
 			application.Status.Status = v1alpha1.ProcessingStatusFailed
 			logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
 			return err
@@ -112,11 +112,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	application.Status.DeepCopyInto(&dc.Status)
 	if reconcileErr == nil {
 		logger.Info("Application has been reconciled")
-		return ctrl.Result{}, delegate.UpdateStatusSuccess(dc)
+		return ctrl.Result{}, delegate.UpdateStatusSuccess(ctx, dc)
 	}
 
 	// An error occurred during the reconcile
-	if err := delegate.UpdateStatusFailure(dc); err != nil {
+	if err := delegate.UpdateStatusFailure(ctx, dc); err != nil {
 		return ctrl.Result{}, err
 	}
 

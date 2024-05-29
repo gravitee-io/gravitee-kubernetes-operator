@@ -15,18 +15,20 @@
 package internal
 
 import (
+	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func (d *Delegate) resolveResources(resources []*base.ResourceOrRef) error {
+func (d *Delegate) resolveResources(ctx context.Context, resources []*base.ResourceOrRef) error {
 	if resources == nil {
 		return nil
 	}
 
 	for _, resource := range resources {
-		if err := d.resolveIfRef(resource); err != nil {
+		if err := d.resolveIfRef(ctx, resource); err != nil {
 			return err
 		}
 	}
@@ -34,7 +36,7 @@ func (d *Delegate) resolveResources(resources []*base.ResourceOrRef) error {
 	return nil
 }
 
-func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
+func (d *Delegate) resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error {
 	if !resourceOrRef.IsRef() {
 		return nil
 	}
@@ -44,7 +46,7 @@ func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
 
 	d.log.Info("Looking for api resource from", "namespace", namespacedName.Namespace, "name", namespacedName.Name)
 
-	if err := k8s.GetClient().Get(d.ctx, namespacedName, resource); err != nil {
+	if err := k8s.GetClient().Get(ctx, namespacedName, resource); err != nil {
 		return err
 	}
 

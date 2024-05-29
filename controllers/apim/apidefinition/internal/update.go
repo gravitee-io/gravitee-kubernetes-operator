@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -29,18 +30,18 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func (d *Delegate) CreateOrUpdate(apiDefinition client.Object) error {
+func (d *Delegate) CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:
-		return d.createOrUpdateV2(t)
+		return d.createOrUpdateV2(ctx, t)
 	case *v1alpha1.ApiV4Definition:
-		return d.createOrUpdateV4(t)
+		return d.createOrUpdateV4(ctx, t)
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
 }
 
-func (d *Delegate) createOrUpdateV2(apiDefinition *v1alpha1.ApiDefinition) error {
+func (d *Delegate) createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition) error {
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec
@@ -50,7 +51,7 @@ func (d *Delegate) createOrUpdateV2(apiDefinition *v1alpha1.ApiDefinition) error
 
 	apiDefinition.Status.ID = cp.Spec.ID
 
-	if err := d.resolveResources(spec.Resources); err != nil {
+	if err := d.resolveResources(ctx, spec.Resources); err != nil {
 		d.log.Error(err, "unable to resolve resources")
 		return err
 	}
@@ -71,7 +72,7 @@ func (d *Delegate) createOrUpdateV2(apiDefinition *v1alpha1.ApiDefinition) error
 		apiDefinition.Status.State = spec.State
 	}
 
-	if err := d.deploy(cp); err != nil {
+	if err := d.deploy(ctx, cp); err != nil {
 		return err
 	}
 
@@ -84,7 +85,7 @@ func (d *Delegate) createOrUpdateV2(apiDefinition *v1alpha1.ApiDefinition) error
 	return nil
 }
 
-func (d *Delegate) createOrUpdateV4(apiDefinition *v1alpha1.ApiV4Definition) error {
+func (d *Delegate) createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec
@@ -93,7 +94,7 @@ func (d *Delegate) createOrUpdateV4(apiDefinition *v1alpha1.ApiV4Definition) err
 	spec.Plans = cp.PickPlanIDs()
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
-	if err := d.resolveResources(spec.Resources); err != nil {
+	if err := d.resolveResources(ctx, spec.Resources); err != nil {
 		d.log.Error(err, "Unable to resolve API resources from references")
 		return err
 	}
@@ -114,12 +115,12 @@ func (d *Delegate) createOrUpdateV4(apiDefinition *v1alpha1.ApiV4Definition) err
 			"syncFrom", spec.DefinitionContext.SyncFrom,
 			"state", spec.State,
 		)
-		if err := d.deleteConfigMap(cp); err != nil {
+		if err := d.deleteConfigMap(ctx, cp); err != nil {
 			return err
 		}
 	} else {
 		d.log.Info("Saving config map")
-		if err := d.saveConfigMap(cp); err != nil {
+		if err := d.saveConfigMap(ctx, cp); err != nil {
 			return err
 		}
 	}

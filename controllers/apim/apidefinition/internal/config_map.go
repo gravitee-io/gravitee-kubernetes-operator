@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
@@ -39,14 +40,14 @@ const (
 	defaultOrgId         = "DEFAULT"
 )
 
-func (d *Delegate) updateConfigMap(api *v1alpha1.ApiDefinition) error {
+func (d *Delegate) updateConfigMap(ctx context.Context, api *v1alpha1.ApiDefinition) error {
 	if api.Spec.State == base.StateStopped {
-		if err := d.deleteConfigMap(api); err != nil {
+		if err := d.deleteConfigMap(ctx, api); err != nil {
 			d.log.Error(err, "Unable to delete ConfigMap from API definition")
 			return err
 		}
 	} else {
-		if err := d.saveConfigMap(api); err != nil {
+		if err := d.saveConfigMap(ctx, api); err != nil {
 			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
 			return err
 		}
@@ -56,6 +57,7 @@ func (d *Delegate) updateConfigMap(api *v1alpha1.ApiDefinition) error {
 }
 
 func (d *Delegate) saveConfigMap(
+	ctx context.Context,
 	apiDefinition v1alpha1.CRD,
 ) error {
 	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
@@ -118,10 +120,10 @@ func (d *Delegate) saveConfigMap(
 
 	lookupKey := types.NamespacedName{Name: cm.Name, Namespace: cm.Namespace}
 
-	err = k8s.GetClient().Get(d.ctx, lookupKey, currentApiDefinition)
+	err = k8s.GetClient().Get(ctx, lookupKey, currentApiDefinition)
 	if errors.IsNotFound(err) {
 		d.log.Info("Creating config map for API.", "name", apiDefinition.GetName())
-		return k8s.GetClient().Create(d.ctx, cm)
+		return k8s.GetClient().Create(ctx, cm)
 	}
 
 	if err != nil {
@@ -131,14 +133,14 @@ func (d *Delegate) saveConfigMap(
 	// Only update the config map if resource version has changed (means api definition has changed).
 	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.GetResourceVersion() {
 		d.log.Info("Updating ConfigMap", "name", apiDefinition.GetName())
-		return k8s.GetClient().Update(d.ctx, cm)
+		return k8s.GetClient().Update(ctx, cm)
 	}
 
 	d.log.Info("No change detected on API. Skipped.", "name", apiDefinition.GetName())
 	return nil
 }
 
-func (d *Delegate) deleteConfigMap(api client.Object) error {
+func (d *Delegate) deleteConfigMap(ctx context.Context, api client.Object) error {
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      api.GetName(),
@@ -147,5 +149,5 @@ func (d *Delegate) deleteConfigMap(api client.Object) error {
 	}
 
 	d.log.Info("Deleting Config Map associated to API if exists")
-	return client.IgnoreNotFound(k8s.GetClient().Delete(d.ctx, configMap))
+	return client.IgnoreNotFound(k8s.GetClient().Delete(ctx, configMap))
 }

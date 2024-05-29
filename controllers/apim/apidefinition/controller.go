@@ -49,10 +49,10 @@ func Reconcile(
 
 	if apiDefinition.GetAnnotations()[keys.IngressTemplateAnnotation] == "true" {
 		logger.Info("syncing template", "template", apiDefinition.GetName())
-		if err := d.ResolveTemplate(apiDefinition); err != nil {
+		if err := d.ResolveTemplate(ctx, apiDefinition); err != nil {
 			return ctrl.Result{}, err
 		}
-		if err := d.SyncApiDefinitionTemplate(apiDefinition, apiDefinition.GetNamespace()); err != nil {
+		if err := d.SyncApiDefinitionTemplate(ctx, apiDefinition, apiDefinition.GetNamespace()); err != nil {
 			logger.Error(err, "Failed to sync API definition template")
 			return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 		}
@@ -73,13 +73,13 @@ func reconcileApiDefinition(ctx context.Context, apiDefinition v1alpha1.ApiDefin
 		util.AddFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, keys.LastSpecHash, apiDefinition.GetSpec().Hash())
 
-		if err := d.ResolveTemplate(apiDefinition); err != nil {
+		if err := d.ResolveTemplate(ctx, apiDefinition); err != nil {
 			status.SetProcessingStatus(v1alpha1.ProcessingStatusFailed)
 			return err
 		}
 
 		if mCtx := apiDefinition.GetApiDefinitionSpec().GetManagementContext(); mCtx != nil {
-			if err := d.ResolveContext(mCtx); err != nil {
+			if err := d.ResolveContext(ctx, mCtx); err != nil {
 				status.SetProcessingStatus(v1alpha1.ProcessingStatusFailed)
 				logger.Info("Unable to resolve context, no attempt will be made to sync with APIM")
 				return err
@@ -93,7 +93,7 @@ func reconcileApiDefinition(ctx context.Context, apiDefinition v1alpha1.ApiDefin
 			})
 		} else {
 			err = events.Record(event.Update, apiDefinition, func() error {
-				return d.CreateOrUpdate(apiDefinition)
+				return d.CreateOrUpdate(ctx, apiDefinition)
 			})
 		}
 
@@ -112,10 +112,10 @@ func reconcileApiDefinition(ctx context.Context, apiDefinition v1alpha1.ApiDefin
 
 	if reconcileErr == nil {
 		logger.Info("API definition has been reconciled")
-		return ctrl.Result{}, d.UpdateStatusSuccess(dc)
+		return ctrl.Result{}, d.UpdateStatusSuccess(ctx, dc)
 	}
 
-	if err := d.UpdateStatusFailure(dc); err != nil {
+	if err := d.UpdateStatusFailure(ctx, dc); err != nil {
 		return ctrl.Result{}, err
 	}
 

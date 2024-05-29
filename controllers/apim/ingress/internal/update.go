@@ -15,16 +15,20 @@
 package internal
 
 import (
+	"context"
+
 	v1 "k8s.io/api/networking/v1"
 )
 
-func (d *Delegate) CreateOrUpdate(desired *v1.Ingress) error {
-	if err := d.updateIngressTLSReference(desired); err != nil {
+func (d *Delegate) CreateOrUpdate(
+	ctx context.Context,
+	desired *v1.Ingress) error {
+	if err := d.updateIngressTLSReference(ctx, desired); err != nil {
 		d.log.Error(err, "An error occurred while updating the PEM registry")
 		return err
 	}
 
-	operation, apiDefinitionError := d.createOrUpdateApiDefinition(desired)
+	operation, apiDefinitionError := d.createOrUpdateApiDefinition(ctx, desired)
 	if apiDefinitionError != nil {
 		d.log.Error(
 			apiDefinitionError,

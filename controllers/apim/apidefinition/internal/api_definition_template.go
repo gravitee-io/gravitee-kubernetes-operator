@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -30,22 +31,24 @@ import (
 // This function is applied to all ingresses which are using the ApiDefinition template
 // As per Kubernetes Finalizers (https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 // First return value defines if we should requeue or not.
-func (d *Delegate) SyncApiDefinitionTemplate(api v1alpha1.ApiDefinitionCRD, ns string) error {
+func (d *Delegate) SyncApiDefinitionTemplate(
+	ctx context.Context,
+	api v1alpha1.ApiDefinitionCRD, ns string) error {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
 	// deletion by populating .metadata.deletionTimestamp
 	if !api.GetDeletionTimestamp().IsZero() {
-		return d.delete(api, ns)
+		return d.delete(ctx, api, ns)
 	}
 
 	if !util.ContainsFinalizer(api, keys.ApiDefinitionTemplateFinalizer) {
 		util.AddFinalizer(api, keys.ApiDefinitionTemplateFinalizer)
-		return k8s.GetClient().Update(d.ctx, api)
+		return k8s.GetClient().Update(ctx, api)
 	}
 
-	return d.UpdateStatusSuccess(api)
+	return d.UpdateStatusSuccess(ctx, api)
 }
 
-func (d *Delegate) delete(apiDefinition client.Object, namespace string) error {
+func (d *Delegate) delete(ctx context.Context, apiDefinition client.Object, namespace string) error {
 	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer) {
 		return nil
 	}
@@ -53,7 +56,7 @@ func (d *Delegate) delete(apiDefinition client.Object, namespace string) error {
 	ingressList := netv1.IngressList{}
 
 	// Retrieves the ingresses from the namespace
-	err := k8s.GetClient().List(d.ctx, &ingressList, client.InNamespace(namespace))
+	err := k8s.GetClient().List(ctx, &ingressList, client.InNamespace(namespace))
 	if err != nil && !kerrors.IsNotFound(err) {
 		return err
 	}
@@ -73,5 +76,5 @@ func (d *Delegate) delete(apiDefinition client.Object, namespace string) error {
 
 	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
 
-	return k8s.GetClient().Update(d.ctx, apiDefinition)
+	return k8s.GetClient().Update(ctx, apiDefinition)
 }

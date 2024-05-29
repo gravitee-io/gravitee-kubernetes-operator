@@ -38,7 +38,9 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
+func (d *Delegate) updateIngressTLSReference(
+	ctx context.Context,
+	ingress *netV1.Ingress) error {
 	if ingress.Spec.TLS == nil || len(ingress.Spec.TLS) == 0 {
 		d.log.Info("no TLS will be configured")
 		return nil
@@ -57,7 +59,7 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
-		if err := cli.Get(d.ctx, key, secret); err != nil {
+		if err := cli.Get(ctx, key, secret); err != nil {
 			return err
 		}
 
@@ -67,12 +69,12 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, keys.KeyPairFinalizer)
 			k8s.AddAnnotation(secret, keys.LastSpecHash, hash.Calculate(&secret.Data))
-			if err := cli.Update(d.ctx, secret); err != nil {
+			if err := cli.Update(ctx, secret); err != nil {
 				return client.IgnoreNotFound(err)
 			}
 		} else {
 			secret.Annotations[keys.LastSpecHash] = hash.Calculate(&secret.Data)
-			if err := cli.Update(d.ctx, secret); err != nil {
+			if err := cli.Update(ctx, secret); err != nil {
 				return err
 			}
 		}
@@ -92,10 +94,12 @@ func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
 	}
 
 	d.log.Info("Update GW PEM registry with the secret names")
-	return d.updatePemRegistry(ingress, key, values)
+	return d.updatePemRegistry(ctx, ingress, key, values)
 }
 
-func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
+func (d *Delegate) deleteIngressTLSReference(
+	ctx context.Context,
+	ingress *netV1.Ingress) error {
 	if len(ingress.Spec.TLS) == 0 {
 		return nil
 	}
@@ -105,7 +109,7 @@ func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 	for _, tls := range ingress.Spec.TLS {
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
-		if err := cli.Get(d.ctx, key, secret); err != nil {
+		if err := cli.Get(ctx, key, secret); err != nil {
 			return err
 		}
 
@@ -113,7 +117,7 @@ func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 		// We will not remove the finalizer and we will not remove the keypair
 		// from keystore but we also don't throw any error to let the current ingress
 		// be deleted
-		hasReferenceToOtherIngress, err := d.secretHasReference(ingress, secret)
+		hasReferenceToOtherIngress, err := d.secretHasReference(ctx, ingress, secret)
 		if err != nil {
 			return err
 		}
@@ -126,7 +130,7 @@ func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 			d.log.Info("removing finalizer from secret", "secret", secret.Name)
 			util.RemoveFinalizer(secret, keys.KeyPairFinalizer)
 
-			if err = cli.Update(d.ctx, secret); err != nil {
+			if err = cli.Update(ctx, secret); err != nil {
 				return err
 			}
 		}
@@ -134,7 +138,7 @@ func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 
 	// no reference to this secret, we can remove it from the keystore
 	key := fmt.Sprintf("%s-%s", ingress.Namespace, ingress.Name)
-	if err := d.updatePemRegistry(ingress, key, nil); err != nil {
+	if err := d.updatePemRegistry(ctx, ingress, key, nil); err != nil {
 		return err
 	}
 
@@ -142,8 +146,8 @@ func (d *Delegate) deleteIngressTLSReference(ingress *netV1.Ingress) error {
 	return nil
 }
 
-func (d *Delegate) secretHasReference(ing *netV1.Ingress, secret *core.Secret) (bool, error) {
-	il, err := d.retrieveIngressListWithTLS(d.ctx, ing.Namespace)
+func (d *Delegate) secretHasReference(ctx context.Context, ing *netV1.Ingress, secret *core.Secret) (bool, error) {
+	il, err := d.retrieveIngressListWithTLS(ctx, ing.Namespace)
 	if err != nil {
 		return false, err
 	}
@@ -181,20 +185,24 @@ func (d *Delegate) retrieveIngressListWithTLS(ctx context.Context, ns string) (*
 	return result, nil
 }
 
-func (d *Delegate) updatePemRegistry(ing *netV1.Ingress, key string, values []string) error {
-	pemRegistriesToUpdate, err := d.getPemRegistryConfigMapsToUpdate(ing)
+func (d *Delegate) updatePemRegistry(
+	ctx context.Context,
+	ing *netV1.Ingress, key string, values []string) error {
+	pemRegistriesToUpdate, err := d.getPemRegistryConfigMapsToUpdate(ctx, ing)
 	if err != nil {
 		return err
 	}
 
 	if !ing.DeletionTimestamp.IsZero() {
-		return d.deletePemRegistryEntry(pemRegistriesToUpdate, key)
+		return d.deletePemRegistryEntry(ctx, pemRegistriesToUpdate, key)
 	}
 
-	return d.updatePemRegistryEntry(pemRegistriesToUpdate, key, values)
+	return d.updatePemRegistryEntry(ctx, pemRegistriesToUpdate, key, values)
 }
 
-func (d *Delegate) getPemRegistryConfigMapsToUpdate(ing *netV1.Ingress) ([]*core.ConfigMap, error) {
+func (d *Delegate) getPemRegistryConfigMapsToUpdate(
+	ctx context.Context,
+	ing *netV1.Ingress) ([]*core.ConfigMap, error) {
 	pemRegistryConfigMaps := &core.ConfigMapList{}
 	filter := &client.ListOptions{
 		LabelSelector: labels.SelectorFromSet(labels.Set{keys.GraviteeComponentLabel: keys.GraviteePemRegistryLabel}),
@@ -202,7 +210,7 @@ func (d *Delegate) getPemRegistryConfigMapsToUpdate(ing *netV1.Ingress) ([]*core
 	var err error
 
 	cli := k8s.GetClient()
-	if err = cli.List(d.ctx, pemRegistryConfigMaps, filter); err != nil {
+	if err = cli.List(ctx, pemRegistryConfigMaps, filter); err != nil {
 		return nil, err
 	}
 
@@ -262,7 +270,9 @@ func (d *Delegate) parseTLSSecret(secret *core.Secret) error {
 	return nil
 }
 
-func (d *Delegate) updatePemRegistryEntry(configmaps []*core.ConfigMap, key string, values []string) error {
+func (d *Delegate) updatePemRegistryEntry(
+	ctx context.Context,
+	configmaps []*core.ConfigMap, key string, values []string) error {
 	for _, configmap := range configmaps {
 		// a simple solution for dealing with secretes that were updated
 		// the gateway will receive an update event and will refresh the trust store
@@ -280,7 +290,7 @@ func (d *Delegate) updatePemRegistryEntry(configmaps []*core.ConfigMap, key stri
 		configmap.Data[key] = string(bytes)
 		cli := k8s.GetClient()
 
-		err = cli.Update(d.ctx, configmap)
+		err = cli.Update(ctx, configmap)
 
 		if err != nil {
 			return err
@@ -290,7 +300,9 @@ func (d *Delegate) updatePemRegistryEntry(configmaps []*core.ConfigMap, key stri
 	return nil
 }
 
-func (d *Delegate) deletePemRegistryEntry(configmaps []*core.ConfigMap, key string) error {
+func (d *Delegate) deletePemRegistryEntry(
+	ctx context.Context,
+	configmaps []*core.ConfigMap, key string) error {
 	for _, configmap := range configmaps {
 		// a simple solution for dealing with secretes that were updated
 		// the gateway will receive an update event and will refresh the trust store
@@ -298,7 +310,7 @@ func (d *Delegate) deletePemRegistryEntry(configmaps []*core.ConfigMap, key stri
 
 		delete(configmap.Data, key)
 		cli := k8s.GetClient()
-		if err := cli.Update(d.ctx, configmap); err != nil {
+		if err := cli.Update(ctx, configmap); err != nil {
 			return err
 		}
 	}

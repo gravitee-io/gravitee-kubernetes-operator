@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -31,14 +32,17 @@ import (
 	netV1 "k8s.io/api/networking/v1"
 )
 
-func (d *Delegate) resolveApiDefinitionTemplate(ingress *netV1.Ingress) (*v1alpha1.ApiDefinition, error) {
+func (d *Delegate) resolveApiDefinitionTemplate(
+	ctx context.Context,
+	ingress *netV1.Ingress,
+) (*v1alpha1.ApiDefinition, error) {
 	var apiDefinition *v1alpha1.ApiDefinition
 
 	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
 		apiDefinition = &v1alpha1.ApiDefinition{}
 		cli := k8s.GetClient()
 		if err := cli.Get(
-			d.ctx, types.NamespacedName{Name: name, Namespace: ingress.Namespace}, apiDefinition,
+			ctx, types.NamespacedName{Name: name, Namespace: ingress.Namespace}, apiDefinition,
 		); err != nil {
 			return nil, err
 		}
@@ -46,16 +50,16 @@ func (d *Delegate) resolveApiDefinitionTemplate(ingress *netV1.Ingress) (*v1alph
 		apiDefinition = defaultApiDefinitionTemplate()
 	}
 
-	return mapper.New(d.getMapperOpts()).Map(apiDefinition, ingress), nil
+	return mapper.New(d.getMapperOpts(ctx)).Map(apiDefinition, ingress), nil
 }
 
-func (d *Delegate) getMapperOpts() mapper.Opts {
+func (d *Delegate) getMapperOpts(ctx context.Context) mapper.Opts {
 	opts := mapper.NewOpts()
-	d.setNotFoundTemplate(&opts)
+	d.setNotFoundTemplate(ctx, &opts)
 	return opts
 }
 
-func (d *Delegate) setNotFoundTemplate(opts *mapper.Opts) {
+func (d *Delegate) setNotFoundTemplate(ctx context.Context, opts *mapper.Opts) {
 	ns, name := env.Config.CMTemplate404NS, env.Config.CMTemplate404Name
 
 	if name == "" {
@@ -64,7 +68,7 @@ func (d *Delegate) setNotFoundTemplate(opts *mapper.Opts) {
 
 	cm := coreV1.ConfigMap{}
 	cli := k8s.GetClient()
-	if err := cli.Get(d.ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
+	if err := cli.Get(ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
 		d.log.Error(err, "unable to access config map, using default HTTP not found template")
 		return
 	}

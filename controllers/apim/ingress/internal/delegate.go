@@ -24,16 +24,15 @@ import (
 )
 
 type Delegate struct {
-	ctx context.Context
 	log logr.Logger
 }
 
-func NewDelegate(ctx context.Context, log logr.Logger) *Delegate {
+func NewDelegate(log logr.Logger) *Delegate {
 	return &Delegate{
-		ctx, log,
+		log,
 	}
 }
 
-func (d *Delegate) ResolveTemplate(ingress *netv1.Ingress) error {
-	return template.NewResolver(d.ctx, d.log, ingress).Resolve()
+func (d *Delegate) ResolveTemplate(ctx context.Context, ingress *netv1.Ingress) error {
+	return template.NewResolver(ctx, d.log, ingress).Resolve()
 }

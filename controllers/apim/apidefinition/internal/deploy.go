@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"context"
 	"errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -22,9 +23,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-func (d *Delegate) deploy(api *v1alpha1.ApiDefinition) error {
+func (d *Delegate) deploy(ctx context.Context, api *v1alpha1.ApiDefinition) error {
 	if api.Spec.IsLocal {
-		return d.updateConfigMap(api)
+		return d.updateConfigMap(ctx, api)
 	}
 
 	// Is a not-local and need to deploy it directly on APIM Console, no ConfigMap needed
@@ -32,7 +33,7 @@ func (d *Delegate) deploy(api *v1alpha1.ApiDefinition) error {
 		return errors.New("a non-local API definition must have a reference to a ManagementContext")
 	}
 
-	if err := d.deleteConfigMap(api); err != nil {
+	if err := d.deleteConfigMap(ctx, api); err != nil {
 		return err
 	}
 

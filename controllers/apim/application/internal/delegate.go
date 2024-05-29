@@ -33,22 +33,21 @@ const (
 )
 
 type Delegate struct {
-	ctx  context.Context
 	log  logr.Logger
 	apim *apim.APIM
 }
 
 func NewDelegate(ctx context.Context, log logr.Logger) *Delegate {
 	return &Delegate{
-		ctx, log, nil,
+		log, nil,
 	}
 }
 
-func (d *Delegate) ResolveTemplate(application *v1alpha1.Application) error {
-	return template.NewResolver(d.ctx, d.log, application).Resolve()
+func (d *Delegate) ResolveTemplate(ctx context.Context, application *v1alpha1.Application) error {
+	return template.NewResolver(ctx, d.log, application).Resolve()
 }
 
-func (d *Delegate) ResolveContext(application *v1alpha1.Application) error {
+func (d *Delegate) ResolveContext(ctx context.Context, application *v1alpha1.Application) error {
 	managementContext := new(v1alpha1.ManagementContext)
 
 	ref := application.Spec.Context
@@ -57,15 +56,15 @@ func (d *Delegate) ResolveContext(application *v1alpha1.Application) error {
 	d.log.Info("Resolving Management context", "namespace", ref.Namespace, "name", ref.Name)
 
 	cli := k8s.GetClient()
-	if err := cli.Get(d.ctx, ns, managementContext); err != nil {
+	if err := cli.Get(ctx, ns, managementContext); err != nil {
 		return err
 	}
 
-	if err := d.resolveContextSecrets(managementContext); err != nil {
+	if err := d.resolveContextSecrets(ctx, managementContext); err != nil {
 		return err
 	}
 
-	apim, err := apim.FromContext(d.ctx, managementContext.Spec.Context)
+	apim, err := apim.FromContext(ctx, managementContext.Spec.Context)
 	if err != nil {
 		return err
 	}
@@ -78,7 +77,7 @@ func (d *Delegate) HasContext() bool {
 	return d.apim != nil
 }
 
-func (d *Delegate) resolveContextSecrets(context *v1alpha1.ManagementContext) error {
+func (d *Delegate) resolveContextSecrets(ctx context.Context, context *v1alpha1.ManagementContext) error {
 	management := context.Spec
 
 	if management.HasSecretRef() {
@@ -88,7 +87,7 @@ func (d *Delegate) resolveContextSecrets(context *v1alpha1.ManagementContext) er
 		secretKey.Namespace = getSecretNamespace(context)
 
 		cli := k8s.GetClient()
-		if err := cli.Get(d.ctx, secretKey, secret); err != nil {
+		if err := cli.Get(ctx, secretKey, secret); err != nil {
 			return err
 		}
 

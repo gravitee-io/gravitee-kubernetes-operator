@@ -15,6 +15,8 @@
 package internal
 
 import (
+	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	v1 "k8s.io/api/networking/v1"
@@ -25,17 +27,18 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.OperationResult, error) {
-	apiDefinition, err := d.resolveApiDefinitionTemplate(ingress)
+func (d *Delegate) createOrUpdateApiDefinition(ctx context.Context, ingress *v1.Ingress) (util.OperationResult, error) {
+	apiDefinition, err := d.resolveApiDefinitionTemplate(ctx, ingress)
 	if err != nil {
 		d.log.Error(err, "ResolveApiDefinition error")
 		return util.OperationResultNone, err
 	}
 
 	var existingApiDefinition *v1alpha1.ApiDefinition
-	existingApiDefinition, err = d.getApiDefinition(types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name})
+	nsm := types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name}
+	existingApiDefinition, err = d.getApiDefinition(ctx, nsm)
 	if errors.IsNotFound(err) {
-		return d.createApiDefinition(ingress, apiDefinition)
+		return d.createApiDefinition(ctx, ingress, apiDefinition)
 	}
 
 	if err != nil {
@@ -45,7 +48,7 @@ func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.Operat
 
 	if !equality.Semantic.DeepEqual(existingApiDefinition, apiDefinition) {
 		apiDefinition.Spec.DeepCopyInto(&existingApiDefinition.Spec)
-		return d.updateApiDefinition(ingress, existingApiDefinition)
+		return d.updateApiDefinition(ctx, ingress, existingApiDefinition)
 	}
 
 	d.log.Info(
@@ -57,6 +60,7 @@ func (d *Delegate) createOrUpdateApiDefinition(ingress *v1.Ingress) (util.Operat
 }
 
 func (d *Delegate) createApiDefinition(
+	ctx context.Context,
 	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
 ) (util.OperationResult, error) {
 	d.log.Info("Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
@@ -66,10 +70,11 @@ func (d *Delegate) createApiDefinition(
 		return util.OperationResultNone, err
 	}
 
-	return util.OperationResultCreated, cli.Create(d.ctx, apiDefinition)
+	return util.OperationResultCreated, cli.Create(ctx, apiDefinition)
 }
 
 func (d *Delegate) updateApiDefinition(
+	ctx context.Context,
 	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
 ) (util.OperationResult, error) {
 	d.log.Info("Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
@@ -80,19 +85,20 @@ func (d *Delegate) updateApiDefinition(
 	}
 
 	var existingApiDefinition *v1alpha1.ApiDefinition
-	existingApiDefinition, err = d.getApiDefinition(types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name})
+	nsm := types.NamespacedName{Namespace: ingress.Namespace, Name: ingress.Name}
+	existingApiDefinition, err = d.getApiDefinition(ctx, nsm)
 	if err != nil {
 		return util.OperationResultNone, err
 	}
 
 	apiDefinition.Spec.DeepCopyInto(&existingApiDefinition.Spec)
-	return util.OperationResultUpdated, cli.Update(d.ctx, existingApiDefinition)
+	return util.OperationResultUpdated, cli.Update(ctx, existingApiDefinition)
 }
 
-func (d *Delegate) getApiDefinition(key client.ObjectKey) (*v1alpha1.ApiDefinition, error) {
+func (d *Delegate) getApiDefinition(ctx context.Context, key client.ObjectKey) (*v1alpha1.ApiDefinition, error) {
 	api := &v1alpha1.ApiDefinition{}
 	cli := k8s.GetClient()
-	err := cli.Get(d.ctx, key, api)
+	err := cli.Get(ctx, key, api)
 	if err != nil {
 		return nil, err
 	}
