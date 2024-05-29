@@ -18,19 +18,20 @@ import (
 	"context"
 
 	v1 "k8s.io/api/networking/v1"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func (d *Delegate) CreateOrUpdate(
 	ctx context.Context,
 	desired *v1.Ingress) error {
 	if err := d.updateIngressTLSReference(ctx, desired); err != nil {
-		d.log.Error(err, "An error occurred while updating the PEM registry")
+		log.FromContext(ctx).Error(err, "An error occurred while updating the PEM registry")
 		return err
 	}
 
 	operation, apiDefinitionError := d.createOrUpdateApiDefinition(ctx, desired)
 	if apiDefinitionError != nil {
-		d.log.Error(
+		log.FromContext(ctx).Error(
 			apiDefinitionError,
 			"An error occurs while creating or updating the ApiDefinition",
 			"Operation", operation,

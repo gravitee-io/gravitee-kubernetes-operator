@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
@@ -69,12 +70,12 @@ func (d *Delegate) setNotFoundTemplate(ctx context.Context, opts *mapper.Opts) {
 	cm := coreV1.ConfigMap{}
 	cli := k8s.GetClient()
 	if err := cli.Get(ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
-		d.log.Error(err, "unable to access config map, using default HTTP not found template")
+		log.FromContext(ctx).Error(err, "unable to access config map, using default HTTP not found template")
 		return
 	}
 
 	if err := checkData(cm.Data); err != nil {
-		d.log.Error(err, "missing key in config map, using default HTTP not found template")
+		log.FromContext(ctx).Error(err, "missing key in config map, using default HTTP not found template")
 		return
 	}
 

@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -33,18 +34,17 @@ const (
 )
 
 type Delegate struct {
-	log  logr.Logger
 	apim *apim.APIM
 }
 
 func NewDelegate(ctx context.Context, log logr.Logger) *Delegate {
 	return &Delegate{
-		log, nil,
+		nil,
 	}
 }
 
 func (d *Delegate) ResolveTemplate(ctx context.Context, application *v1alpha1.Application) error {
-	return template.NewResolver(ctx, d.log, application).Resolve()
+	return template.NewResolver(ctx, application).Resolve()
 }
 
 func (d *Delegate) ResolveContext(ctx context.Context, application *v1alpha1.Application) error {
@@ -53,7 +53,9 @@ func (d *Delegate) ResolveContext(ctx context.Context, application *v1alpha1.App
 	ref := application.Spec.Context
 	ns := ref.ToK8sType()
 
-	d.log.Info("Resolving Management context", "namespace", ref.Namespace, "name", ref.Name)
+	log := log.FromContext(ctx)
+
+	log.Info("Resolving Management context", "namespace", ref.Namespace, "name", ref.Name)
 
 	cli := k8s.GetClient()
 	if err := cli.Get(ctx, ns, managementContext); err != nil {

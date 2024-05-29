@@ -23,6 +23,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 
@@ -52,7 +53,7 @@ func (d *Delegate) createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1
 	apiDefinition.Status.ID = cp.Spec.ID
 
 	if err := d.resolveResources(ctx, spec.Resources); err != nil {
-		d.log.Error(err, "unable to resolve resources")
+		log.FromContext(ctx).Error(err, "unable to resolve resources")
 		return err
 	}
 
@@ -95,22 +96,22 @@ func (d *Delegate) createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
 	if err := d.resolveResources(ctx, spec.Resources); err != nil {
-		d.log.Error(err, "Unable to resolve API resources from references")
+		log.FromContext(ctx).Error(err, "Unable to resolve API resources from references")
 		return err
 	}
 
 	if d.HasContext() {
-		d.log.Info("Syncing API with APIM")
+		log.FromContext(ctx).Info("Syncing API with APIM")
 		status, err := d.apim.APIs.ImportV4(&spec.Api)
 		if err != nil {
 			return err
 		}
 		apiDefinition.Status = *status
-		d.log.Info("API successfully synced with APIM. ID: " + spec.ID)
+		log.FromContext(ctx).Info("API successfully synced with APIM. ID: " + spec.ID)
 	}
 
 	if spec.DefinitionContext.SyncFrom == v4.OriginManagement || spec.State == base.StateStopped {
-		d.log.Info(
+		log.FromContext(ctx).Info(
 			"Deleting config map as API is not managed by operator or is stopped",
 			"syncFrom", spec.DefinitionContext.SyncFrom,
 			"state", spec.State,
@@ -119,7 +120,7 @@ func (d *Delegate) createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1
 			return err
 		}
 	} else {
-		d.log.Info("Saving config map")
+		log.FromContext(ctx).Info("Saving config map")
 		if err := d.saveConfigMap(ctx, cp); err != nil {
 			return err
 		}

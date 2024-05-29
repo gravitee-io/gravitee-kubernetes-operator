@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
@@ -42,12 +41,11 @@ const ksPropertyLength = 2
 
 type Resolver struct {
 	ctx context.Context
-	log logr.Logger
 	obj runtime.Object
 }
 
-func NewResolver(ctx context.Context, l logr.Logger, obj runtime.Object) *Resolver {
-	return &Resolver{ctx: ctx, log: l, obj: obj}
+func NewResolver(ctx context.Context, obj runtime.Object) *Resolver {
+	return &Resolver{ctx: ctx, obj: obj}
 }
 
 func (r *Resolver) Resolve() error {

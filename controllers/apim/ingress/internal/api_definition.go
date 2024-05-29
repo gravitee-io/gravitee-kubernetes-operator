@@ -25,12 +25,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func (d *Delegate) createOrUpdateApiDefinition(ctx context.Context, ingress *v1.Ingress) (util.OperationResult, error) {
 	apiDefinition, err := d.resolveApiDefinitionTemplate(ctx, ingress)
 	if err != nil {
-		d.log.Error(err, "ResolveApiDefinition error")
+		log.FromContext(ctx).Error(err, "ResolveApiDefinition error")
 		return util.OperationResultNone, err
 	}
 
@@ -42,7 +43,7 @@ func (d *Delegate) createOrUpdateApiDefinition(ctx context.Context, ingress *v1.
 	}
 
 	if err != nil {
-		d.log.Error(err, "unable to create api definition from template")
+		log.FromContext(ctx).Error(err, "unable to create api definition from template")
 		return util.OperationResultNone, err
 	}
 
@@ -51,7 +52,7 @@ func (d *Delegate) createOrUpdateApiDefinition(ctx context.Context, ingress *v1.
 		return d.updateApiDefinition(ctx, ingress, existingApiDefinition)
 	}
 
-	d.log.Info(
+	log.FromContext(ctx).Info(
 		"No change detected on ApiDefinition. Skipped.",
 		"name", apiDefinition.Name,
 		"namespace", apiDefinition.Namespace,
@@ -63,7 +64,7 @@ func (d *Delegate) createApiDefinition(
 	ctx context.Context,
 	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
 ) (util.OperationResult, error) {
-	d.log.Info("Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+	log.FromContext(ctx).Info("Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
 
 	cli := k8s.GetClient()
 	if err := util.SetOwnerReference(ingress, apiDefinition, cli.Scheme()); err != nil {
@@ -77,7 +78,7 @@ func (d *Delegate) updateApiDefinition(
 	ctx context.Context,
 	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
 ) (util.OperationResult, error) {
-	d.log.Info("Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+	log.FromContext(ctx).Info("Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
 	cli := k8s.GetClient()
 	err := util.SetOwnerReference(ingress, apiDefinition, cli.Scheme())
 	if err != nil {
