@@ -15,12 +15,14 @@
 package internal
 
 import (
+	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (d *Delegate) UpdateStatusSuccess(application *v1alpha1.Application) error {
+func (d *Delegate) UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application) error {
 	if application.IsBeingDeleted() {
 		return nil
 	}
@@ -29,27 +31,27 @@ func (d *Delegate) UpdateStatusSuccess(application *v1alpha1.Application) error 
 	cli := k8s.GetClient()
 
 	if err := cli.Get(
-		d.ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
+		ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
 	); err != nil {
 		return err
 	}
 
 	application.Status.ObservedGeneration = application.ObjectMeta.Generation
 	application.Status.DeepCopyInto(&app.Status)
-	return cli.Status().Update(d.ctx, app)
+	return cli.Status().Update(ctx, app)
 }
 
-func (d *Delegate) UpdateStatusFailure(application *v1alpha1.Application) error {
+func (d *Delegate) UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application) error {
 	app := &v1alpha1.Application{}
 	cli := k8s.GetClient()
 
 	if err := cli.Get(
-		d.ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
+		ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
 	); err != nil {
 		return err
 	}
 
 	application.Status.Status = v1alpha1.ProcessingStatusFailed
 	application.Status.DeepCopyInto(&app.Status)
-	return cli.Status().Update(d.ctx, app)
+	return cli.Status().Update(ctx, app)
 }

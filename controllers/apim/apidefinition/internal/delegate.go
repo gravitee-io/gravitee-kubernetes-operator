@@ -37,7 +37,6 @@ const (
 )
 
 type Delegate struct {
-	ctx  context.Context
 	log  logr.Logger
 	apim *apim.APIM
 	mCtx *v1alpha1.ManagementContext
@@ -45,29 +44,33 @@ type Delegate struct {
 
 func NewDelegate(ctx context.Context, log logr.Logger) *Delegate {
 	return &Delegate{
-		ctx, log, nil, nil,
+		log, nil, nil,
 	}
 }
 
-func (d *Delegate) ResolveTemplate(api client.Object) error {
-	return template.NewResolver(d.ctx, d.log, api).Resolve()
+func (d *Delegate) ResolveTemplate(
+	ctx context.Context,
+	api client.Object) error {
+	return template.NewResolver(ctx, d.log, api).Resolve()
 }
 
-func (d *Delegate) ResolveContext(ref *refs.NamespacedName) error {
+func (d *Delegate) ResolveContext(
+	ctx context.Context,
+	ref *refs.NamespacedName) error {
 	managementContext := new(v1alpha1.ManagementContext)
 
 	d.log.Info("Resolving API context", "namespace", ref.Namespace, "name", ref.Name)
 
 	ns := ref.ToK8sType()
-	if err := k8s.GetClient().Get(d.ctx, ns, managementContext); err != nil {
+	if err := k8s.GetClient().Get(ctx, ns, managementContext); err != nil {
 		return err
 	}
 
-	if err := d.resolveContextSecrets(managementContext); err != nil {
+	if err := d.resolveContextSecrets(ctx, managementContext); err != nil {
 		return err
 	}
 
-	apim, err := apim.FromContext(d.ctx, managementContext.Spec.Context)
+	apim, err := apim.FromContext(ctx, managementContext.Spec.Context)
 	if err != nil {
 		return err
 	}
@@ -81,7 +84,7 @@ func (d *Delegate) HasContext() bool {
 	return d.apim != nil
 }
 
-func (d *Delegate) resolveContextSecrets(context *v1alpha1.ManagementContext) error {
+func (d *Delegate) resolveContextSecrets(ctx context.Context, context *v1alpha1.ManagementContext) error {
 	management := context.Spec
 
 	if management.HasSecretRef() {
@@ -90,7 +93,7 @@ func (d *Delegate) resolveContextSecrets(context *v1alpha1.ManagementContext) er
 		secretKey := management.SecretRef().ToK8sType()
 		secretKey.Namespace = getSecretNamespace(context)
 
-		if err := k8s.GetClient().Get(d.ctx, secretKey, secret); err != nil {
+		if err := k8s.GetClient().Get(ctx, secretKey, secret); err != nil {
 			return err
 		}
 
