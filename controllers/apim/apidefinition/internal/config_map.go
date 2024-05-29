@@ -27,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const (
@@ -43,12 +44,12 @@ const (
 func (d *Delegate) updateConfigMap(ctx context.Context, api *v1alpha1.ApiDefinition) error {
 	if api.Spec.State == base.StateStopped {
 		if err := d.deleteConfigMap(ctx, api); err != nil {
-			d.log.Error(err, "Unable to delete ConfigMap from API definition")
+			log.FromContext(ctx).Error(err, "Unable to delete ConfigMap from API definition")
 			return err
 		}
 	} else {
 		if err := d.saveConfigMap(ctx, api); err != nil {
-			d.log.Error(err, "Unable to create or update ConfigMap from API definition")
+			log.FromContext(ctx).Error(err, "Unable to create or update ConfigMap from API definition")
 			return err
 		}
 	}
@@ -122,7 +123,7 @@ func (d *Delegate) saveConfigMap(
 
 	err = k8s.GetClient().Get(ctx, lookupKey, currentApiDefinition)
 	if errors.IsNotFound(err) {
-		d.log.Info("Creating config map for API.", "name", apiDefinition.GetName())
+		log.FromContext(ctx).Info("Creating config map for API.", "name", apiDefinition.GetName())
 		return k8s.GetClient().Create(ctx, cm)
 	}
 
@@ -132,11 +133,11 @@ func (d *Delegate) saveConfigMap(
 
 	// Only update the config map if resource version has changed (means api definition has changed).
 	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.GetResourceVersion() {
-		d.log.Info("Updating ConfigMap", "name", apiDefinition.GetName())
+		log.FromContext(ctx).Info("Updating ConfigMap", "name", apiDefinition.GetName())
 		return k8s.GetClient().Update(ctx, cm)
 	}
 
-	d.log.Info("No change detected on API. Skipped.", "name", apiDefinition.GetName())
+	log.FromContext(ctx).Info("No change detected on API. Skipped.", "name", apiDefinition.GetName())
 	return nil
 }
 
@@ -148,6 +149,6 @@ func (d *Delegate) deleteConfigMap(ctx context.Context, api client.Object) error
 		},
 	}
 
-	d.log.Info("Deleting Config Map associated to API if exists")
+	log.FromContext(ctx).Info("Deleting Config Map associated to API if exists")
 	return client.IgnoreNotFound(k8s.GetClient().Delete(ctx, configMap))
 }

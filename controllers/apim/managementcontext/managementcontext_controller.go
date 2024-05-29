@@ -66,7 +66,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(managementContext, keys.ManagementContextFinalizer)
 		k8s.AddAnnotation(managementContext, keys.LastSpecHash, hash.Calculate(&managementContext.Spec))
 
-		if err := template.NewResolver(ctx, logger, managementContext).Resolve(); err != nil {
+		if err := template.NewResolver(ctx, managementContext).Resolve(); err != nil {
 			return err
 		}
 

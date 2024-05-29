@@ -36,13 +36,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func (d *Delegate) updateIngressTLSReference(
 	ctx context.Context,
 	ingress *netV1.Ingress) error {
 	if ingress.Spec.TLS == nil || len(ingress.Spec.TLS) == 0 {
-		d.log.Info("no TLS will be configured")
+		log.FromContext(ctx).Info("no TLS will be configured")
 		return nil
 	}
 
@@ -65,7 +66,7 @@ func (d *Delegate) updateIngressTLSReference(
 
 		// If finalizer not present, add it;
 		if !util.ContainsFinalizer(secret, keys.KeyPairFinalizer) {
-			d.log.Info("adding finalizer to the tls secret")
+			log.FromContext(ctx).Info("adding finalizer to the tls secret")
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, keys.KeyPairFinalizer)
 			k8s.AddAnnotation(secret, keys.LastSpecHash, hash.Calculate(&secret.Data))
@@ -93,7 +94,7 @@ func (d *Delegate) updateIngressTLSReference(
 		values = append(values, fmt.Sprintf("%s/%s", secret.Namespace, secret.Name))
 	}
 
-	d.log.Info("Update GW PEM registry with the secret names")
+	log.FromContext(ctx).Info("Update GW PEM registry with the secret names")
 	return d.updatePemRegistry(ctx, ingress, key, values)
 }
 
@@ -123,11 +124,11 @@ func (d *Delegate) deleteIngressTLSReference(
 		}
 
 		if hasReferenceToOtherIngress {
-			d.log.Error(
+			log.FromContext(ctx).Error(
 				errors.New("secret has reference"),
 				"secret is used by another ingress, it will not be deleted from the keystore")
 		} else {
-			d.log.Info("removing finalizer from secret", "secret", secret.Name)
+			log.FromContext(ctx).Info("removing finalizer from secret", "secret", secret.Name)
 			util.RemoveFinalizer(secret, keys.KeyPairFinalizer)
 
 			if err = cli.Update(ctx, secret); err != nil {
@@ -142,7 +143,7 @@ func (d *Delegate) deleteIngressTLSReference(
 		return err
 	}
 
-	d.log.Info("gateway pem registry has been successfully updated.")
+	log.FromContext(ctx).Info("gateway pem registry has been successfully updated.")
 	return nil
 }
 
@@ -155,7 +156,7 @@ func (d *Delegate) secretHasReference(ctx context.Context, ing *netV1.Ingress, s
 	for i := range il.Items {
 		for _, tls := range il.Items[i].Spec.TLS {
 			if tls.SecretName == secret.Name && il.Items[i].DeletionTimestamp.IsZero() {
-				d.log.Info("the secret is already used inside an ingress resource", "resource", il.Items[i].Name)
+				log.FromContext(ctx).Info("the secret is already used inside an ingress resource", "resource", il.Items[i].Name)
 				return true, nil
 			}
 		}
