@@ -15,20 +15,29 @@
 package internal
 
 import (
+	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) Delete(
+func Delete(
+	ctx context.Context,
 	application *v1alpha1.Application,
 ) error {
 	if !util.ContainsFinalizer(application, keys.ApplicationFinalizer) {
 		return nil
 	}
 
-	if err := d.apim.Applications.Delete(application.Status.ID); errors.IgnoreNotFound(err) != nil {
+	apim, apimErr := apim.FromContextRef(ctx, application.Spec.Context)
+	if apimErr != nil {
+		return apimErr
+	}
+
+	if err := apim.Applications.Delete(application.Status.ID); errors.IgnoreNotFound(err) != nil {
 		return err
 	}
 

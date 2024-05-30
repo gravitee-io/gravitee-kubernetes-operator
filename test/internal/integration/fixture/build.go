@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 	coreV1 "k8s.io/api/core/v1"
@@ -205,7 +206,7 @@ func randomizeIngressRules(ing *netV1.Ingress, suffix string) {
 	}
 }
 
-func isTemplate(api v1alpha1.ApiDefinitionCRD) bool {
+func isTemplate(api custom.ApiDefinition) bool {
 	return api.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
 }
 

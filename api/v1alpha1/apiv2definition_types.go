@@ -28,6 +28,7 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -63,10 +64,10 @@ type ApiDefinitionStatus struct {
 	ID      string `json:"id,omitempty"`
 	CrossID string `json:"crossId,omitempty"`
 	// The processing status of the API definition.
-	Status ProcessingStatus `json:"processingStatus,omitempty"`
+	Status custom.ProcessingStatus `json:"processingStatus,omitempty"`
 	// This field is kept for backward compatibility and shall be removed in future versions.
 	// Use processingStatus instead.
-	DeprecatedStatus ProcessingStatus `json:"status,omitempty"`
+	DeprecatedStatus custom.ProcessingStatus `json:"status,omitempty"`
 
 	// The state of the API. Can be either STARTED or STOPPED.
 	State base.ApiState `json:"state,omitempty"`
@@ -78,6 +79,9 @@ type ApiDefinitionStatus struct {
 }
 
 var _ list.Item = &ApiDefinition{}
+var _ custom.ApiDefinition = &ApiDefinition{}
+var _ custom.Status = &ApiDefinitionStatus{}
+var _ custom.Spec = &ApiDefinitionV2Spec{}
 
 // ApiDefinition is the Schema for the apidefinitions API.
 // +kubebuilder:object:root=true
@@ -95,14 +99,6 @@ type ApiDefinition struct {
 	Spec   ApiDefinitionV2Spec `json:"spec,omitempty"`
 	Status ApiDefinitionStatus `json:"status,omitempty"`
 }
-
-// +kubebuilder:validation:Enum=Completed;Failed;
-type ProcessingStatus string
-
-const (
-	ProcessingStatusCompleted ProcessingStatus = "Completed"
-	ProcessingStatusFailed    ProcessingStatus = "Failed"
-)
 
 // PickID returns the ID of the API definition, when a context has been defined at the spec level.
 // The ID might be returned from the API status, meaning that the API is already known.
@@ -152,35 +148,47 @@ func (spec *ApiDefinitionV2Spec) SetDefinitionContext() {
 	}
 }
 
-func (api *ApiDefinition) GetObjectMeta() *metav1.ObjectMeta {
-	return &api.ObjectMeta
+func (api *ApiDefinition) EnvID() string {
+	return api.Status.EnvID
 }
 
-func (api *ApiDefinition) GetSpec() Spec {
+func (api *ApiDefinition) ID() string {
+	return api.Status.ID
+}
+
+func (api *ApiDefinition) OrgID() string {
+	return api.Status.OrgID
+}
+
+func (api *ApiDefinition) Version() custom.ApiDefinitionVersion {
+	return custom.ApiV2
+}
+
+func (api *ApiDefinition) GetSpec() custom.Spec {
 	return &api.Spec
 }
 
-func (api *ApiDefinition) GetStatus() Status {
+func (api *ApiDefinition) GetStatus() custom.Status {
 	return &api.Status
 }
 
-func (api *ApiDefinition) DeepCopyCrd() CRD {
+func (api *ApiDefinition) DeepCopyResource() custom.Resource {
 	return api.DeepCopy()
 }
 
-func (api *ApiDefinition) GetApiDefinitionSpec() ContextAwareSpec {
-	return &api.Spec
+func (api *ApiDefinition) ContextRef() custom.ResourceRef {
+	return api.Spec.Context
+}
+
+func (api *ApiDefinition) HasContext() bool {
+	return api.Spec.Context != nil
 }
 
 func (spec *ApiDefinitionV2Spec) Hash() string {
 	return hash.Calculate(spec)
 }
 
-func (spec *ApiDefinitionV2Spec) GetManagementContext() *refs.NamespacedName {
-	return spec.Context
-}
-
-func (s *ApiDefinitionStatus) SetProcessingStatus(status ProcessingStatus) {
+func (s *ApiDefinitionStatus) SetProcessingStatus(status custom.ProcessingStatus) {
 	s.Status = status
 }
 

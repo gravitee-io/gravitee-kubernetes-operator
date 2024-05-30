@@ -12,51 +12,68 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package custom
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"fmt"
+
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// CRD is a common interface that can be used for generic use cases
+type ProcessingStatus string
+
+const (
+	ProcessingStatusCompleted ProcessingStatus = "Completed"
+	ProcessingStatusFailed    ProcessingStatus = "Failed"
+)
+
+type ApiDefinitionVersion string
+
+const (
+	ApiV2 = ApiDefinitionVersion("V2")
+	ApiV4 = ApiDefinitionVersion("V4")
+)
+
 // +k8s:deepcopy-gen=false
-type CRD interface {
+type Resource interface {
 	client.Object
-	schema.ObjectKind
-	GetObjectMeta() *metav1.ObjectMeta
 	GetSpec() Spec
 	GetStatus() Status
-	DeepCopyCrd() CRD
+	DeepCopyResource() Resource
 }
 
-// ApiDefinitionCRD
 // +k8s:deepcopy-gen=false
-type ApiDefinitionCRD interface {
-	CRD
-	GetApiDefinitionSpec() ContextAwareSpec
+type ApiDefinition interface {
+	ContextAwareResource
+	Version() ApiDefinitionVersion
+	OrgID() string
+	EnvID() string
 }
 
-// Spec
 // +k8s:deepcopy-gen=false
 type Spec interface {
 	Hash() string
 }
 
-// ContextAwareSpec
-// +k8s:deepcopy-gen=false
-type ContextAwareSpec interface {
-	Spec
-	GetManagementContext() *refs.NamespacedName
-}
-
-// Status is a common interface that can be used for generic use cases
 // +k8s:deepcopy-gen=false
 type Status interface {
 	SetProcessingStatus(status ProcessingStatus)
 	SetObservedGeneration(g int64)
 	DeepCopyFrom(obj client.Object) error
 	DeepCopyTo(obj client.Object) error
+}
+
+// +k8s:deepcopy-gen=false
+type ContextAwareResource interface {
+	Resource
+	ContextRef() ResourceRef
+	HasContext() bool
+	ID() string
+}
+
+// +k8s:deepcopy-gen=false
+type ResourceRef interface {
+	fmt.Stringer
+	NamespacedName() types.NamespacedName
 }

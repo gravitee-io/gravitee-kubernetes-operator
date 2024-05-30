@@ -18,6 +18,9 @@ kind: ApiDefinition
 metadata:
   name: api-with-groups-members
 spec:
+  contextRef:
+    name: dev-ctx
+    namespace: default
   name: "Echo API with groups and members"
   version: "1.1"
   description: "API with groups and members Gravitee Kubernetes Operator sample"
@@ -37,11 +40,11 @@ spec:
     - developers
   members:
     - source: gravitee
-      sourceId: sa-gko
+      sourceId: Eloise25@hotmail.com
       role: USER
     - source: gravitee
-      sourceId: antoine.kamiel@graviteesource.com
-      role: REVIEWER
+      sourceId: Isadore.Brekke@hotmail.com
+      role: USER
     - source: gravitee
-      sourceId: kamiel.antoine@graviteesource.com
-      role: d7a1cb52-061a-4cf7-aed0-cb8142cbbab1
+      sourceId: Sonny71@yahoo.com
+      role: USER

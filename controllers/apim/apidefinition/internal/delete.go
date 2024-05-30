@@ -15,38 +15,43 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (d *Delegate) Delete(apiDefinition client.Object) error {
-	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionFinalizer) {
+func Delete(ctx context.Context, api custom.ApiDefinition) error {
+	if !util.ContainsFinalizer(api, keys.ApiDefinitionFinalizer) {
 		return nil
 	}
 
-	if d.HasContext() {
-		if err := d.deleteWithContext(apiDefinition); err != nil {
+	if api.HasContext() {
+		if err := deleteWithContext(ctx, api); err != nil {
 			return err
 		}
 	}
 
-	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
+	util.RemoveFinalizer(api, keys.ApiDefinitionFinalizer)
 
 	return nil
 }
 
-func (d *Delegate) deleteWithContext(api client.Object) error {
-	switch t := api.(type) {
-	case *v1alpha1.ApiDefinition:
-		return errors.IgnoreNotFound(d.apim.APIs.DeleteV2(t.Status.ID))
-	case *v1alpha1.ApiV4Definition:
-		return errors.IgnoreNotFound(d.apim.APIs.DeleteV4(t.Status.ID))
+func deleteWithContext(ctx context.Context, api custom.ApiDefinition) error {
+	apim, err := apim.FromContextRef(ctx, api.ContextRef())
+	if err != nil {
+		return err
+	}
+	switch {
+	case api.Version() == custom.ApiV2:
+		return errors.IgnoreNotFound(apim.APIs.DeleteV2(api.ID()))
+	case api.Version() == custom.ApiV4:
+		return errors.IgnoreNotFound(apim.APIs.DeleteV4(api.ID()))
 	default:
-		return fmt.Errorf("unknown type %T", t)
+		return fmt.Errorf("unknown version %s", api.Version())
 	}
 }

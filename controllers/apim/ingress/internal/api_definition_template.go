@@ -33,7 +33,7 @@ import (
 	netV1 "k8s.io/api/networking/v1"
 )
 
-func (d *Delegate) resolveApiDefinitionTemplate(
+func resolveApiDefinitionTemplate(
 	ctx context.Context,
 	ingress *netV1.Ingress,
 ) (*v1alpha1.ApiDefinition, error) {
@@ -51,16 +51,16 @@ func (d *Delegate) resolveApiDefinitionTemplate(
 		apiDefinition = defaultApiDefinitionTemplate()
 	}
 
-	return mapper.New(d.getMapperOpts(ctx)).Map(apiDefinition, ingress), nil
+	return mapper.New(getMapperOpts(ctx)).Map(apiDefinition, ingress), nil
 }
 
-func (d *Delegate) getMapperOpts(ctx context.Context) mapper.Opts {
+func getMapperOpts(ctx context.Context) mapper.Opts {
 	opts := mapper.NewOpts()
-	d.setNotFoundTemplate(ctx, &opts)
+	setNotFoundTemplate(ctx, &opts)
 	return opts
 }
 
-func (d *Delegate) setNotFoundTemplate(ctx context.Context, opts *mapper.Opts) {
+func setNotFoundTemplate(ctx context.Context, opts *mapper.Opts) {
 	ns, name := env.Config.CMTemplate404NS, env.Config.CMTemplate404Name
 
 	if name == "" {

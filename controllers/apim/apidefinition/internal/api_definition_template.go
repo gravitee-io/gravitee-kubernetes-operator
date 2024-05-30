@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	netv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -31,13 +31,13 @@ import (
 // This function is applied to all ingresses which are using the ApiDefinition template
 // As per Kubernetes Finalizers (https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 // First return value defines if we should requeue or not.
-func (d *Delegate) SyncApiDefinitionTemplate(
+func SyncApiDefinitionTemplate(
 	ctx context.Context,
-	api v1alpha1.ApiDefinitionCRD, ns string) error {
+	api custom.ApiDefinition, ns string) error {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
 	// deletion by populating .metadata.deletionTimestamp
 	if !api.GetDeletionTimestamp().IsZero() {
-		return d.delete(ctx, api, ns)
+		return doDelete(ctx, api, ns)
 	}
 
 	if !util.ContainsFinalizer(api, keys.ApiDefinitionTemplateFinalizer) {
@@ -45,10 +45,10 @@ func (d *Delegate) SyncApiDefinitionTemplate(
 		return k8s.GetClient().Update(ctx, api)
 	}
 
-	return d.UpdateStatusSuccess(ctx, api)
+	return UpdateStatusSuccess(ctx, api)
 }
 
-func (d *Delegate) delete(ctx context.Context, apiDefinition client.Object, namespace string) error {
+func doDelete(ctx context.Context, apiDefinition client.Object, namespace string) error {
 	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer) {
 		return nil
 	}

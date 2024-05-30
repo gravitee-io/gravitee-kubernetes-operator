@@ -23,10 +23,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (d *Delegate) Delete(
+func Delete(
 	ctx context.Context,
 	ingress *v1.Ingress) error {
-	if err := d.deleteIngressTLSReference(ctx, ingress); err != nil {
+	if err := deleteIngressTLSReference(ctx, ingress); err != nil {
 		log.FromContext(ctx).Error(err, "An error occurred while updating the TLS secrets")
 		return err
 	}

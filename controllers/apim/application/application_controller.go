@@ -21,23 +21,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application/internal"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -70,7 +68,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	delegate := internal.NewDelegate(ctx, logger)
 	events := event.NewRecorder(r.Recorder)
 
 	if application.Spec.Context == nil {
@@ -83,25 +80,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(application, keys.ApplicationFinalizer)
 		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
-		if err := delegate.ResolveTemplate(ctx, application); err != nil {
-			application.Status.Status = v1alpha1.ProcessingStatusFailed
-			return err
-		}
-
-		if err := delegate.ResolveContext(ctx, application); err != nil {
-			application.Status.Status = v1alpha1.ProcessingStatusFailed
-			logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
+		if err := internal.ResolveTemplate(ctx, application); err != nil {
+			application.Status.Status = custom.ProcessingStatusCompleted
 			return err
 		}
 
 		var err error
 		if application.IsBeingDeleted() {
 			err = events.Record(event.Delete, application, func() error {
-				return delegate.Delete(application)
+				return internal.Delete(ctx, application)
 			})
 		} else {
 			err = events.Record(event.Update, application, func() error {
-				return delegate.CreateOrUpdate(application)
+				return internal.CreateOrUpdate(ctx, application)
 			})
 		}
 
@@ -112,15 +103,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	application.Status.DeepCopyInto(&dc.Status)
 	if reconcileErr == nil {
 		logger.Info("Application has been reconciled")
-		return ctrl.Result{}, delegate.UpdateStatusSuccess(ctx, dc)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, dc)
 	}
 
 	// An error occurred during the reconcile
-	if err := delegate.UpdateStatusFailure(ctx, dc); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, dc); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	if apim.IsRecoverable(reconcileErr) {
+	if errors.IsRecoverable(reconcileErr) {
 		logger.Error(reconcileErr, "Requeuing reconcile")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}

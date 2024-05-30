@@ -15,29 +15,42 @@
 package internal
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 )
 
-func (d *Delegate) CreateOrUpdate(application *v1alpha1.Application) error {
-	if err := d.createUpdateApplication(application); err != nil {
+func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
+	if err := createUpdateApplication(ctx, application); err != nil {
 		return err
 	}
 
-	return d.createUpdateApplicationMetadata(application)
+	return createUpdateApplicationMetadata(ctx, application)
 }
 
-func (d *Delegate) createUpdateApplication(application *v1alpha1.Application) error {
+func ResolveTemplate(ctx context.Context, application *v1alpha1.Application) error {
+	return template.NewResolver(ctx, application).Resolve()
+}
+
+func createUpdateApplication(ctx context.Context, application *v1alpha1.Application) error {
 	spec := &application.Spec
 	spec.Origin = "KUBERNETES"
-	app, err := d.apim.Applications.GetByID(application.Status.ID)
+
+	apim, err := apim.FromContextRef(ctx, spec.Context)
+	if err != nil {
+		return err
+	}
+
+	app, err := apim.Applications.GetByID(application.Status.ID)
 	if errors.IgnoreNotFound(err) != nil {
-		return apim.NewContextError(err)
+		return errors.NewContextError(err)
 	}
 
 	method := http.MethodPost
@@ -50,62 +63,67 @@ func (d *Delegate) createUpdateApplication(application *v1alpha1.Application) er
 		}
 	}
 
-	mgmtApp, mgmtErr := d.apim.Applications.CreateUpdate(method, &spec.Application)
+	mgmtApp, mgmtErr := apim.Applications.CreateUpdate(method, &spec.Application)
 	if mgmtErr != nil {
-		return apim.NewContextError(mgmtErr)
+		return errors.NewContextError(mgmtErr)
 	}
 
 	spec.ID = mgmtApp.Id
 	application.Status.ID = mgmtApp.Id
-	application.Status.EnvID = d.apim.EnvID()
-	application.Status.OrgID = d.apim.OrgID()
+	application.Status.EnvID = apim.EnvID()
+	application.Status.OrgID = apim.OrgID()
 
 	return nil
 }
 
-func (d *Delegate) createUpdateApplicationMetadata(application *v1alpha1.Application) error {
+func createUpdateApplicationMetadata(ctx context.Context, application *v1alpha1.Application) error {
 	spec := &application.Spec
 	if spec.ApplicationMetaData == nil {
-		application.Status.Status = v1alpha1.ProcessingStatusCompleted
+		application.Status.Status = custom.ProcessingStatusCompleted
 		return nil
 	}
 
-	appMetaData, err := d.apim.Applications.GetMetadataByApplicationID(application.Status.ID)
+	apimCli, err := apim.FromContextRef(ctx, spec.Context)
 	if err != nil {
-		return apim.NewContextError(err)
+		return err
+	}
+
+	appMetaData, err := apimCli.Applications.GetMetadataByApplicationID(application.Status.ID)
+	if err != nil {
+		return errors.NewContextError(err)
 	}
 
 	for _, metaData := range *spec.ApplicationMetaData {
 		method := http.MethodPost
-		key := d.findMetadataKey(appMetaData, metaData.Name)
+		key := findMetadataKey(appMetaData, metaData.Name)
 		if key != "" {
 			// update
 			metaData.Key = key
 			method = http.MethodPut
 		}
 
-		_, mgmtErr := d.apim.Applications.CreateUpdateMetadata(method, spec.ID, metaData)
+		_, mgmtErr := apimCli.Applications.CreateUpdateMetadata(method, spec.ID, metaData)
 		if mgmtErr != nil {
-			return apim.NewContextError(mgmtErr)
+			return errors.NewContextError(mgmtErr)
 		}
 	}
 
 	// Delete removed metadata
 	for _, metaData := range *appMetaData {
-		if d.metadataIsRemoved(spec.ApplicationMetaData, metaData.Name) {
-			err = d.apim.Applications.DeleteMetadata(application.Status.ID, metaData.Key)
+		if metadataIsRemoved(spec.ApplicationMetaData, metaData.Name) {
+			err = apimCli.Applications.DeleteMetadata(application.Status.ID, metaData.Key)
 			if errors.IgnoreNotFound(err) != nil {
 				return err
 			}
 		}
 	}
 
-	application.Status.Status = v1alpha1.ProcessingStatusCompleted
+	application.Status.Status = custom.ProcessingStatusCompleted
 
 	return nil
 }
 
-func (d *Delegate) findMetadataKey(appMetadata *[]apimModel.ApplicationMetaData, name string) string {
+func findMetadataKey(appMetadata *[]apimModel.ApplicationMetaData, name string) string {
 	for _, md := range *appMetadata {
 		if md.Name == name {
 			return md.Key
@@ -115,7 +133,7 @@ func (d *Delegate) findMetadataKey(appMetadata *[]apimModel.ApplicationMetaData,
 	return ""
 }
 
-func (d *Delegate) metadataIsRemoved(metaData *[]application.MetaData, name string) bool {
+func metadataIsRemoved(metaData *[]application.MetaData, name string) bool {
 	for _, md := range *metaData {
 		if md.Name == name {
 			return false

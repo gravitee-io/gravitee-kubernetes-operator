@@ -25,7 +25,7 @@ import (
 // ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
 type ManagementContextSpec struct {
-	management.Context `json:",inline"`
+	*management.Context `json:",inline"`
 }
 
 // ManagementContextStatus defines the observed state of an API Context.

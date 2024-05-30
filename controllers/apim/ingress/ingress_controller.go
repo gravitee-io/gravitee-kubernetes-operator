@@ -67,25 +67,23 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	d := internal.NewDelegate(logger)
-
 	events := e.NewRecorder(r.Recorder)
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, ingress, func() error {
 		util.AddFinalizer(ingress, keys.IngressFinalizer)
 		k8s.AddAnnotation(ingress, keys.LastSpecHash, hash.Calculate(&ingress.Spec))
 
-		if err := d.ResolveTemplate(ctx, ingress); err != nil {
+		if err := internal.ResolveTemplate(ctx, ingress); err != nil {
 			return err
 		}
 
 		if !ingress.DeletionTimestamp.IsZero() {
 			return events.Record(e.Delete, ingress, func() error {
-				return d.Delete(ctx, ingress)
+				return internal.Delete(ctx, ingress)
 			})
 		}
 
 		return events.Record(e.Update, ingress, func() error {
-			return d.CreateOrUpdate(ctx, ingress)
+			return internal.CreateOrUpdate(ctx, ingress)
 		})
 	})
 

@@ -20,6 +20,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 )
 
+const separator = "/"
+
 // For each plan, generate a CrossId from Api Id & Plan Name if not defined.
 func generateEmptyPlanCrossIds(spec *v1alpha1.ApiDefinitionV2Spec) {
 	plans := spec.Plans

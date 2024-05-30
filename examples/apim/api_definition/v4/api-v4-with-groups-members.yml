@@ -56,10 +56,12 @@ spec:
       security:
         type: "KEY_LESS"
   groups:
-    - 54a058b8-50be-4cb4-a058-b850be5cb417
+    - b53e7784-2e9d-4305-be77-842e9dc30541
+  primaryOwner:
+    id: b53e7784-2e9d-4305-be77-842e9dc30541
+    type: GROUP
   members:
-    - id: 7198b3e7-068c-4002-98b3-e7068c400292
-      displayName: Antoine Kamiel
+    - id: b69a89f3-3770-4d44-9a89-f337700d4424
       roles:
-        - name: USER
+        - name: REVIEWER
           scope: API

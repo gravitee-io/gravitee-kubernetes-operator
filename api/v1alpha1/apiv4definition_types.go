@@ -22,8 +22,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -48,7 +50,7 @@ type ApiV4DefinitionStatus struct {
 	CrossID string `json:"crossId,omitempty"`
 
 	// The processing status of the API definition.
-	Status ProcessingStatus `json:"processingStatus,omitempty"`
+	Status custom.ProcessingStatus `json:"processingStatus,omitempty"`
 
 	// The state of the API. Can be either STARTED or STOPPED.
 	State string `json:"state,omitempty"`
@@ -60,6 +62,10 @@ type ApiV4DefinitionStatus struct {
 	// Last generation of the CRD resource
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
+
+var _ custom.ApiDefinition = &ApiV4Definition{}
+var _ custom.Status = &ApiDefinitionStatus{}
+var _ custom.Spec = &ApiDefinitionV2Spec{}
 
 // ApiV4Definition is the Schema for the v4 apidefinitions API.
 // +kubebuilder:object:root=true
@@ -92,7 +98,7 @@ func (api *ApiV4Definition) IsBeingDeleted() bool {
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiV4Definition) PickID(mCtx *ManagementContext) string {
+func (api *ApiV4Definition) PickID(mCtx *management.Context) string {
 	if api.Status.ID != "" {
 		return api.Status.ID
 	}
@@ -102,7 +108,7 @@ func (api *ApiV4Definition) PickID(mCtx *ManagementContext) string {
 	}
 
 	if mCtx != nil {
-		return uuid.FromStrings(api.PickCrossID(), mCtx.Spec.OrgId, mCtx.Spec.EnvId)
+		return uuid.FromStrings(api.PickCrossID(), mCtx.OrgId, mCtx.EnvId)
 	}
 
 	return string(api.UID)
@@ -145,28 +151,51 @@ func (api *ApiV4Definition) GetOrGenerateEmptyPlanCrossID() {
 	}
 }
 
+// EnvID implements custom.ApiDefinition.
+func (api *ApiV4Definition) EnvID() string {
+	return api.Status.EnvID
+}
+
+// ID implements custom.ApiDefinition.
+func (api *ApiV4Definition) ID() string {
+	return api.Status.ID
+}
+
+// OrgID implements custom.ApiDefinition.
+func (api *ApiV4Definition) OrgID() string {
+	return api.Status.OrgID
+}
+
+func (api *ApiV4Definition) GetSpec() custom.Spec {
+	return &api.Spec
+}
+
+func (api *ApiV4Definition) GetStatus() custom.Status {
+	return &api.Status
+}
+
+func (api *ApiV4Definition) DeepCopyResource() custom.Resource {
+	return api.DeepCopy()
+}
+
+func (api *ApiV4Definition) ContextRef() custom.ResourceRef {
+	return api.Spec.Context
+}
+
+func (api *ApiV4Definition) HasContext() bool {
+	return api.Spec.Context != nil
+}
+
+func (api *ApiV4Definition) Version() custom.ApiDefinitionVersion {
+	return custom.ApiV4
+}
+
 func (api *ApiV4Definition) GetNamespacedName() refs.NamespacedName {
 	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
 func (api *ApiV4Definition) GetObjectMeta() *metav1.ObjectMeta {
 	return &api.ObjectMeta
-}
-
-func (api *ApiV4Definition) GetSpec() Spec {
-	return &api.Spec
-}
-
-func (api *ApiV4Definition) GetStatus() Status {
-	return &api.Status
-}
-
-func (api *ApiV4Definition) DeepCopyCrd() CRD {
-	return api.DeepCopy()
-}
-
-func (api *ApiV4Definition) GetApiDefinitionSpec() ContextAwareSpec {
-	return &api.Spec
 }
 
 func (spec *ApiV4DefinitionSpec) Hash() string {
@@ -177,7 +206,7 @@ func (spec *ApiV4DefinitionSpec) GetManagementContext() *refs.NamespacedName {
 	return spec.Context
 }
 
-func (s *ApiV4DefinitionStatus) SetProcessingStatus(status ProcessingStatus) {
+func (s *ApiV4DefinitionStatus) SetProcessingStatus(status custom.ProcessingStatus) {
 	s.Status = status
 }
 

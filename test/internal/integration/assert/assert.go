@@ -23,6 +23,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	v1 "k8s.io/api/core/v1"
@@ -49,27 +50,27 @@ func StrEndingWithPath(str, path string) error {
 }
 
 func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
-	return Equals(reconcileStatus, v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
 func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return Equals(reconcileStatus, v1alpha1.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, apiDefinition.Status.Status)
 }
 
 func ApplicationCompleted(app *v1alpha1.Application) error {
-	return Equals(reconcileStatus, v1alpha1.ProcessingStatusCompleted, app.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, app.Status.Status)
 }
 
 func ApplicationFailed(app *v1alpha1.Application) error {
-	return Equals(reconcileStatus, v1alpha1.ProcessingStatusFailed, app.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusFailed, app.Status.Status)
 }
 
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
-	return Equals(reconcileStatus, v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusFailed, apiDefinition.Status.Status)
 }
 
 func ApiV4Failed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return Equals(reconcileStatus, v1alpha1.ProcessingStatusFailed, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusFailed, apiDefinition.Status.Status)
 }
 
 func NoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus int) error {

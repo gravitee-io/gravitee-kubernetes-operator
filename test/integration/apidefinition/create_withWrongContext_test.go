@@ -43,7 +43,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 			By("expecting API status to be failed")
 
-			Expect(assert.ApiFailed(fixtures.API)).To(Succeed())
+			Expect(assert.ApiFailed(fixtures.API)).To(Succeed(), fixtures.API.Name)
 
 			By("expecting API events to have been emitted")
 

@@ -1630,9 +1630,6 @@ spec:
                 type: string
               processingStatus:
                 description: The processing status of the API definition.
-                enum:
-                - Completed
-                - Failed
                 type: string
               state:
                 description: The state of the API. Can be either STARTED or STOPPED.
@@ -1644,9 +1641,6 @@ spec:
                 description: |-
                   This field is kept for backward compatibility and shall be removed in future versions.
                   Use processingStatus instead.
-                enum:
-                - Completed
-                - Failed
                 type: string
             type: object
         type: object

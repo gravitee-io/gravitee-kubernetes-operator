@@ -23,13 +23,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (d *Delegate) resolveResources(ctx context.Context, resources []*base.ResourceOrRef) error {
+func resolveResources(ctx context.Context, resources []*base.ResourceOrRef) error {
 	if resources == nil {
 		return nil
 	}
 
 	for _, resource := range resources {
-		if err := d.resolveIfRef(ctx, resource); err != nil {
+		if err := resolveIfRef(ctx, resource); err != nil {
 			return err
 		}
 	}
@@ -37,12 +37,12 @@ func (d *Delegate) resolveResources(ctx context.Context, resources []*base.Resou
 	return nil
 }
 
-func (d *Delegate) resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error {
+func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error {
 	if !resourceOrRef.IsRef() {
 		return nil
 	}
 
-	namespacedName := resourceOrRef.Ref.ToK8sType()
+	namespacedName := resourceOrRef.Ref.NamespacedName()
 	resource := new(v1alpha1.ApiResource)
 
 	log.FromContext(ctx).Info(
