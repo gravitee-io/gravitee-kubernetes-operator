@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implie
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -21,93 +21,139 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func (d *Delegate) CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
+func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:
-		return d.createOrUpdateV2(ctx, t)
+		return createOrUpdateV2(ctx, t)
 	case *v1alpha1.ApiV4Definition:
-		return d.createOrUpdateV4(ctx, t)
+		return createOrUpdateV4(ctx, t)
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
 }
 
-func (d *Delegate) createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition) error {
+func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition) error {
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec
+	formerStatus := cp.Status
+
 	spec.ID = cp.PickID()
-	spec.CrossID = cp.PickCrossID()
 	spec.SetDefinitionContext()
+	generateEmptyPlanCrossIds(spec)
 
-	apiDefinition.Status.ID = cp.Spec.ID
-
-	if err := d.resolveResources(ctx, spec.Resources); err != nil {
+	if err := resolveResources(ctx, spec.Resources); err != nil {
 		log.FromContext(ctx).Error(err, "unable to resolve resources")
 		return err
 	}
 
-	generateEmptyPlanCrossIds(spec)
-	generatePageIDs(cp)
-
-	stateUpdated := false
-	if d.HasContext() {
-		stateUpdated = apiDefinition.Status.State != spec.State
-		apiDefinition.Status.EnvID = d.apim.EnvID()
-		apiDefinition.Status.OrgID = d.apim.OrgID()
-		apiDefinition.Status.CrossID = spec.CrossID
-		if err := d.updateWithContext(cp); err != nil {
+	if !apiDefinition.HasContext() {
+		if err := updateConfigMap(ctx, cp); err != nil {
 			return err
 		}
-		apiDefinition.Status.ID = spec.ID
 		apiDefinition.Status.State = spec.State
+		apiDefinition.Status.ID = spec.ID
+		return nil
 	}
 
-	if err := d.deploy(ctx, cp); err != nil {
+	log.FromContext(ctx).Info("Syncing API with APIM")
+
+	apim, apimErr := apim.FromContextRef(ctx, spec.Context)
+	if apimErr != nil {
+		return apimErr
+	}
+
+	generatePageIDs(cp)
+	spec.CrossID = cp.PickCrossID()
+
+	_, findErr := apim.APIs.GetByCrossID(spec.CrossID)
+	if errors.IgnoreNotFound(findErr) != nil {
+		return errors.NewContextError(findErr)
+	}
+
+	importMethod := http.MethodPost
+	if findErr == nil {
+		importMethod = http.MethodPut
+	}
+
+	mgmtApi, mgmtErr := apim.APIs.ImportV2(importMethod, &spec.Api)
+	if mgmtErr != nil {
+		return errors.NewContextError(mgmtErr)
+	}
+
+	spec.ID = mgmtApi.ID
+	apiDefinition.Status.ID = mgmtApi.ID
+	apiDefinition.Status.CrossID = mgmtApi.CrossID
+	apiDefinition.Status.EnvID = apim.EnvID()
+	apiDefinition.Status.OrgID = apim.OrgID()
+	apiDefinition.Status.State = base.ApiState(mgmtApi.State)
+	retrieveMgmtPlanIds(spec, mgmtApi)
+
+	if mgmtApi.ShouldSetKubernetesContext() {
+		if err := apim.APIs.SetKubernetesContext(apiDefinition.ID()); err != nil {
+			return errors.NewContextError(err)
+		}
+	}
+
+	if spec.IsLocal {
+		return updateConfigMap(ctx, cp)
+	}
+
+	if err := deleteConfigMap(ctx, apiDefinition); err != nil {
 		return err
 	}
-
-	if stateUpdated {
-		if err := d.updateState(cp); err != nil {
-			return err
-		}
+	if err := apim.APIs.Deploy(apiDefinition.ID()); err != nil {
+		return err
+	}
+	if formerStatus.State != spec.State {
+		return apim.APIs.UpdateState(apiDefinition.ID(), model.ApiStateToAction(spec.State))
 	}
 
 	return nil
 }
 
-func (d *Delegate) createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
+func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
 	cp := apiDefinition.DeepCopy()
 
 	spec := &cp.Spec
-	spec.ID = cp.PickID(d.mCtx)
-	spec.CrossID = cp.PickCrossID()
-	spec.Plans = cp.PickPlanIDs()
-	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
-	if err := d.resolveResources(ctx, spec.Resources); err != nil {
+	if err := resolveResources(ctx, spec.Resources); err != nil {
 		log.FromContext(ctx).Error(err, "Unable to resolve API resources from references")
 		return err
 	}
 
-	if d.HasContext() {
+	spec.CrossID = cp.PickCrossID()
+	spec.Plans = cp.PickPlanIDs()
+	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
+
+	if spec.Context != nil {
 		log.FromContext(ctx).Info("Syncing API with APIM")
-		status, err := d.apim.APIs.ImportV4(&spec.Api)
+		apim, err := apim.FromContextRef(ctx, spec.Context)
+		if err != nil {
+			return err
+		}
+		spec.ID = cp.PickID(apim.Context)
+		status, err := apim.APIs.ImportV4(&spec.Api)
 		if err != nil {
 			return err
 		}
 		apiDefinition.Status = *status
-		log.FromContext(ctx).Info("API successfully synced with APIM. ID: " + spec.ID)
+		log.FromContext(ctx).WithValues("id", spec.ID).Info("API successfully synced with APIM")
+	} else {
+		spec.ID = cp.PickID(nil)
 	}
 
 	if spec.DefinitionContext.SyncFrom == v4.OriginManagement || spec.State == base.StateStopped {
@@ -116,44 +162,18 @@ func (d *Delegate) createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1
 			"syncFrom", spec.DefinitionContext.SyncFrom,
 			"state", spec.State,
 		)
-		if err := d.deleteConfigMap(ctx, cp); err != nil {
+		if err := deleteConfigMap(ctx, cp); err != nil {
 			return err
 		}
 	} else {
 		log.FromContext(ctx).Info("Saving config map")
-		if err := d.saveConfigMap(ctx, cp); err != nil {
+		if err := saveConfigMap(ctx, cp); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (d *Delegate) updateWithContext(api *v1alpha1.ApiDefinition) error {
-	spec := &api.Spec
-
-	_, findErr := d.apim.APIs.GetByCrossID(spec.CrossID)
-	if errors.IgnoreNotFound(findErr) != nil {
-		return apim.NewContextError(findErr)
-	}
-
-	importMethod := http.MethodPost
-	if findErr == nil {
-		importMethod = http.MethodPut
-	}
-
-	mgmtApi, mgmtErr := d.apim.APIs.ImportV2(importMethod, &spec.Api)
-	if mgmtErr != nil {
-		return apim.NewContextError(mgmtErr)
-	}
-
-	retrieveMgmtPlanIds(spec, mgmtApi)
-	spec.ID = mgmtApi.ID
-
-	if mgmtApi.ShouldSetKubernetesContext() {
-		if err := d.apim.APIs.SetKubernetesContext(mgmtApi.ID); err != nil {
-			return apim.NewContextError(err)
-		}
-	}
-
-	return nil
+func ResolveTemplate(ctx context.Context, api custom.ApiDefinition) error {
+	return template.NewResolver(ctx, api).Resolve()
 }

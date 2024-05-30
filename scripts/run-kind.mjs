@@ -36,6 +36,10 @@ const IMAGES = new Map([
         `gravitee-apim-management-ui:dev`,
     ],
     [
+        `mongo:6.0.15-jammy`,
+        `mongo:6.0.15-jammy`
+    ],
+    [
         `mccutchen/go-httpbin:latest`,
         `go-httpbin:dev`
     ]

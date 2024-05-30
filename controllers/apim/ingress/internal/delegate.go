@@ -19,17 +19,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 	netv1 "k8s.io/api/networking/v1"
-
-	"github.com/go-logr/logr"
 )
 
-type Delegate struct {
-}
-
-func NewDelegate(log logr.Logger) *Delegate {
-	return &Delegate{}
-}
-
-func (d *Delegate) ResolveTemplate(ctx context.Context, ingress *netv1.Ingress) error {
+func ResolveTemplate(ctx context.Context, ingress *netv1.Ingress) error {
 	return template.NewResolver(ctx, ingress).Resolve()
 }

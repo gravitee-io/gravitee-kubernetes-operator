@@ -22,16 +22,16 @@ import (
 
 	"k8s.io/client-go/tools/record"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -40,19 +40,18 @@ const requeueAfterTime = time.Second * 5
 
 func Reconcile(
 	ctx context.Context,
-	apiDefinition v1alpha1.ApiDefinitionCRD,
+	apiDefinition custom.ApiDefinition,
 	r record.EventRecorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	d := internal.NewDelegate(ctx, logger)
 	events := event.NewRecorder(r)
 
 	if apiDefinition.GetAnnotations()[keys.IngressTemplateAnnotation] == "true" {
 		logger.Info("syncing template", "template", apiDefinition.GetName())
-		if err := d.ResolveTemplate(ctx, apiDefinition); err != nil {
+		if err := internal.ResolveTemplate(ctx, apiDefinition); err != nil {
 			return ctrl.Result{}, err
 		}
-		if err := d.SyncApiDefinitionTemplate(ctx, apiDefinition, apiDefinition.GetNamespace()); err != nil {
+		if err := internal.SyncApiDefinitionTemplate(ctx, apiDefinition, apiDefinition.GetNamespace()); err != nil {
 			logger.Error(err, "Failed to sync API definition template")
 			return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 		}
@@ -61,39 +60,34 @@ func Reconcile(
 		return ctrl.Result{}, nil
 	}
 
-	return reconcileApiDefinition(ctx, apiDefinition, d, events)
+	return reconcileApiDefinition(ctx, apiDefinition, events)
 }
 
-func reconcileApiDefinition(ctx context.Context, apiDefinition v1alpha1.ApiDefinitionCRD,
-	d *internal.Delegate, events *event.Recorder) (ctrl.Result, error) {
+func reconcileApiDefinition(
+	ctx context.Context,
+	apiDefinition custom.ApiDefinition,
+	events *event.Recorder,
+) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	dc := apiDefinition.DeepCopyCrd()
+	dc := apiDefinition.DeepCopyResource()
 	status := apiDefinition.GetStatus()
 	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), dc, func() error {
 		util.AddFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, keys.LastSpecHash, apiDefinition.GetSpec().Hash())
 
-		if err := d.ResolveTemplate(ctx, apiDefinition); err != nil {
-			status.SetProcessingStatus(v1alpha1.ProcessingStatusFailed)
+		if err := internal.ResolveTemplate(ctx, apiDefinition); err != nil {
+			status.SetProcessingStatus(custom.ProcessingStatusFailed)
 			return err
-		}
-
-		if mCtx := apiDefinition.GetApiDefinitionSpec().GetManagementContext(); mCtx != nil {
-			if err := d.ResolveContext(ctx, mCtx); err != nil {
-				status.SetProcessingStatus(v1alpha1.ProcessingStatusFailed)
-				logger.Info("Unable to resolve context, no attempt will be made to sync with APIM")
-				return err
-			}
 		}
 
 		var err error
 		if !apiDefinition.GetDeletionTimestamp().IsZero() {
 			err = events.Record(event.Delete, apiDefinition, func() error {
-				return d.Delete(apiDefinition)
+				return internal.Delete(ctx, apiDefinition)
 			})
 		} else {
 			err = events.Record(event.Update, apiDefinition, func() error {
-				return d.CreateOrUpdate(ctx, apiDefinition)
+				return internal.CreateOrUpdate(ctx, apiDefinition)
 			})
 		}
 
@@ -112,14 +106,14 @@ func reconcileApiDefinition(ctx context.Context, apiDefinition v1alpha1.ApiDefin
 
 	if reconcileErr == nil {
 		logger.Info("API definition has been reconciled")
-		return ctrl.Result{}, d.UpdateStatusSuccess(ctx, dc)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, dc)
 	}
 
-	if err := d.UpdateStatusFailure(ctx, dc); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, dc); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	if apim.IsRecoverable(reconcileErr) {
+	if errors.IsRecoverable(reconcileErr) {
 		logger.Error(reconcileErr, "Requeuing reconcile")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}

@@ -17,21 +17,21 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 )
 
-func (d *Delegate) UpdateStatusSuccess(ctx context.Context, api v1alpha1.CRD) error {
+func UpdateStatusSuccess(ctx context.Context, api custom.Resource) error {
 	if !api.GetDeletionTimestamp().IsZero() {
 		return nil
 	}
 
-	api.GetStatus().SetProcessingStatus(v1alpha1.ProcessingStatusCompleted)
+	api.GetStatus().SetProcessingStatus(custom.ProcessingStatusCompleted)
 	api.GetStatus().SetObservedGeneration(api.GetGeneration())
 	return k8s.GetClient().Status().Update(ctx, api)
 }
 
-func (d *Delegate) UpdateStatusFailure(ctx context.Context, api v1alpha1.CRD) error {
-	api.GetStatus().SetProcessingStatus(v1alpha1.ProcessingStatusFailed)
+func UpdateStatusFailure(ctx context.Context, api custom.Resource) error {
+	api.GetStatus().SetProcessingStatus(custom.ProcessingStatusFailed)
 	return k8s.GetClient().Status().Update(ctx, api)
 }

@@ -21,26 +21,25 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	apimErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	xErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 var errRaw = fmt.Errorf("raw error")
-var errNotFound = apim.NewContextError(
-	apimErrors.ServerError{StatusCode: 404},
+var errNotFound = xErrors.NewContextError(
+	xErrors.ServerError{StatusCode: 404},
 )
-var errBadRequest = apim.NewContextError(
-	apimErrors.ServerError{StatusCode: 400},
+var errBadRequest = xErrors.NewContextError(
+	xErrors.ServerError{StatusCode: 400},
 )
-var errUnauthorized = apim.NewContextError(
-	apimErrors.ServerError{StatusCode: 401},
+var errUnauthorized = xErrors.NewContextError(
+	xErrors.ServerError{StatusCode: 401},
 )
 
 var _ = Describe("Errors", func() {
 	DescribeTable("recoverable errors",
 		func(given error, expected bool) {
-			Expect(apim.IsRecoverable(given)).To(Equal(expected))
+			Expect(xErrors.IsRecoverable(given)).To(Equal(expected))
 		},
 		Entry("With raw error", errRaw, true),
 		Entry("With not found error", errNotFound, true),
@@ -50,12 +49,12 @@ var _ = Describe("Errors", func() {
 
 	DescribeTable("context error",
 		func(given error, expected bool) {
-			Expect(errors.Is(given, apim.NewContextError(nil))).To(Equal(expected))
+			Expect(errors.Is(given, xErrors.NewContextError(nil))).To(Equal(expected))
 		},
 		Entry("With raw error", errRaw, false),
 		Entry("With nil error", nil, false),
-		Entry("With context error", apim.NewContextError(nil), true),
-		Entry("With aggregate containing context error", kErrors.NewAggregate([]error{apim.NewContextError(nil)}), true),
+		Entry("With context error", xErrors.NewContextError(nil), true),
+		Entry("With aggregate containing context error", kErrors.NewAggregate([]error{xErrors.NewContextError(nil)}), true),
 		Entry("With aggregate not containing any context error", kErrors.NewAggregate([]error{errRaw}), false),
 		Entry("With empty aggregate", kErrors.NewAggregate([]error{}), false),
 	)

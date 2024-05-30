@@ -16,9 +16,10 @@
 package predicate
 
 import (
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	corev1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -36,19 +37,19 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 	}
 
 	switch t := e.Object.(type) {
-	case *gio.ApiDefinition:
+	case *v1alpha1.ApiDefinition:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.Status != gio.ProcessingStatusCompleted
-	case *gio.ApiV4Definition:
+			t.Status.Status != custom.ProcessingStatusCompleted
+	case *v1alpha1.ApiV4Definition:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.Status != gio.ProcessingStatusCompleted
-	case *gio.ManagementContext:
+			t.Status.Status != custom.ProcessingStatusCompleted
+	case *v1alpha1.ManagementContext:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
-	case *gio.ApiResource:
+	case *v1alpha1.ApiResource:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
-	case *gio.Application:
+	case *v1alpha1.Application:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.Status != gio.ProcessingStatusCompleted
+			t.Status.Status != custom.ProcessingStatusCompleted
 	case *netV1.Ingress:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
 	case *corev1.Secret:
@@ -69,20 +70,20 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	}
 
 	switch no := e.ObjectNew.(type) {
-	case *gio.ApiDefinition:
-		oo, _ := e.ObjectOld.(*gio.ApiDefinition)
+	case *v1alpha1.ApiDefinition:
+		oo, _ := e.ObjectOld.(*v1alpha1.ApiDefinition)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
-	case *gio.ApiV4Definition:
-		oo, _ := e.ObjectOld.(*gio.ApiV4Definition)
+	case *v1alpha1.ApiV4Definition:
+		oo, _ := e.ObjectOld.(*v1alpha1.ApiV4Definition)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
-	case *gio.ManagementContext:
-		oo, _ := e.ObjectOld.(*gio.ManagementContext)
+	case *v1alpha1.ManagementContext:
+		oo, _ := e.ObjectOld.(*v1alpha1.ManagementContext)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
-	case *gio.ApiResource:
-		oo, _ := e.ObjectOld.(*gio.ApiResource)
+	case *v1alpha1.ApiResource:
+		oo, _ := e.ObjectOld.(*v1alpha1.ApiResource)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
-	case *gio.Application:
-		oo, _ := e.ObjectOld.(*gio.Application)
+	case *v1alpha1.Application:
+		oo, _ := e.ObjectOld.(*v1alpha1.Application)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *netV1.Ingress:
 		oo, _ := e.ObjectOld.(*netV1.Ingress)

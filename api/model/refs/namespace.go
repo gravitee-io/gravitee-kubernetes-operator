@@ -15,7 +15,12 @@
 // +kubebuilder:object:generate=true
 package refs
 
-import "k8s.io/apimachinery/pkg/types"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
+	"k8s.io/apimachinery/pkg/types"
+)
+
+var _ custom.ResourceRef = NamespacedName{}
 
 type NamespacedName struct {
 	Name      string `json:"name"`
@@ -26,7 +31,7 @@ func NewNamespacedName(namespace, name string) NamespacedName {
 	return NamespacedName{Namespace: namespace, Name: name}
 }
 
-func (n NamespacedName) ToK8sType() types.NamespacedName {
+func (n NamespacedName) NamespacedName() types.NamespacedName {
 	return types.NamespacedName{Namespace: n.Namespace, Name: n.Name}
 }
 

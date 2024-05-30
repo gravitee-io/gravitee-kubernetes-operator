@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -36,7 +37,7 @@ type ApplicationStatus struct {
 	// The ID of the Application in the Gravitee API Management instance (if an API context has been configured).
 	ID string `json:"id,omitempty"`
 	// The processing status of the Application.
-	Status ProcessingStatus `json:"processingStatus,omitempty"`
+	Status custom.ProcessingStatus `json:"processingStatus,omitempty"`
 
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }

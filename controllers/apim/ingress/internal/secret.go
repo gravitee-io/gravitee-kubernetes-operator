@@ -39,7 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func (d *Delegate) updateIngressTLSReference(
+func updateIngressTLSReference(
 	ctx context.Context,
 	ingress *netV1.Ingress) error {
 	if ingress.Spec.TLS == nil || len(ingress.Spec.TLS) == 0 {
@@ -87,7 +87,7 @@ func (d *Delegate) updateIngressTLSReference(
 
 		// parse the secrete just to make sure the data is valid before
 		// passing it to the gateway
-		if err := d.parseTLSSecret(secret); err != nil {
+		if err := parseTLSSecret(secret); err != nil {
 			return err
 		}
 
@@ -95,10 +95,10 @@ func (d *Delegate) updateIngressTLSReference(
 	}
 
 	log.FromContext(ctx).Info("Update GW PEM registry with the secret names")
-	return d.updatePemRegistry(ctx, ingress, key, values)
+	return updatePemRegistry(ctx, ingress, key, values)
 }
 
-func (d *Delegate) deleteIngressTLSReference(
+func deleteIngressTLSReference(
 	ctx context.Context,
 	ingress *netV1.Ingress) error {
 	if len(ingress.Spec.TLS) == 0 {
@@ -118,7 +118,7 @@ func (d *Delegate) deleteIngressTLSReference(
 		// We will not remove the finalizer and we will not remove the keypair
 		// from keystore but we also don't throw any error to let the current ingress
 		// be deleted
-		hasReferenceToOtherIngress, err := d.secretHasReference(ctx, ingress, secret)
+		hasReferenceToOtherIngress, err := secretHasReference(ctx, ingress, secret)
 		if err != nil {
 			return err
 		}
@@ -139,7 +139,7 @@ func (d *Delegate) deleteIngressTLSReference(
 
 	// no reference to this secret, we can remove it from the keystore
 	key := fmt.Sprintf("%s-%s", ingress.Namespace, ingress.Name)
-	if err := d.updatePemRegistry(ctx, ingress, key, nil); err != nil {
+	if err := updatePemRegistry(ctx, ingress, key, nil); err != nil {
 		return err
 	}
 
@@ -147,8 +147,8 @@ func (d *Delegate) deleteIngressTLSReference(
 	return nil
 }
 
-func (d *Delegate) secretHasReference(ctx context.Context, ing *netV1.Ingress, secret *core.Secret) (bool, error) {
-	il, err := d.retrieveIngressListWithTLS(ctx, ing.Namespace)
+func secretHasReference(ctx context.Context, ing *netV1.Ingress, secret *core.Secret) (bool, error) {
+	il, err := retrieveIngressListWithTLS(ctx, ing.Namespace)
 	if err != nil {
 		return false, err
 	}
@@ -165,7 +165,7 @@ func (d *Delegate) secretHasReference(ctx context.Context, ing *netV1.Ingress, s
 	return false, nil
 }
 
-func (d *Delegate) retrieveIngressListWithTLS(ctx context.Context, ns string) (*netV1.IngressList, error) {
+func retrieveIngressListWithTLS(ctx context.Context, ns string) (*netV1.IngressList, error) {
 	il := &netV1.IngressList{}
 	cli := k8s.GetClient()
 
@@ -186,22 +186,22 @@ func (d *Delegate) retrieveIngressListWithTLS(ctx context.Context, ns string) (*
 	return result, nil
 }
 
-func (d *Delegate) updatePemRegistry(
+func updatePemRegistry(
 	ctx context.Context,
 	ing *netV1.Ingress, key string, values []string) error {
-	pemRegistriesToUpdate, err := d.getPemRegistryConfigMapsToUpdate(ctx, ing)
+	pemRegistriesToUpdate, err := getPemRegistryConfigMapsToUpdate(ctx, ing)
 	if err != nil {
 		return err
 	}
 
 	if !ing.DeletionTimestamp.IsZero() {
-		return d.deletePemRegistryEntry(ctx, pemRegistriesToUpdate, key)
+		return deletePemRegistryEntry(ctx, pemRegistriesToUpdate, key)
 	}
 
-	return d.updatePemRegistryEntry(ctx, pemRegistriesToUpdate, key, values)
+	return updatePemRegistryEntry(ctx, pemRegistriesToUpdate, key, values)
 }
 
-func (d *Delegate) getPemRegistryConfigMapsToUpdate(
+func getPemRegistryConfigMapsToUpdate(
 	ctx context.Context,
 	ing *netV1.Ingress) ([]*core.ConfigMap, error) {
 	pemRegistryConfigMaps := &core.ConfigMapList{}
@@ -232,7 +232,7 @@ func (d *Delegate) getPemRegistryConfigMapsToUpdate(
 }
 
 // parse K8S TLS secret and make sure it is valid.
-func (d *Delegate) parseTLSSecret(secret *core.Secret) error {
+func parseTLSSecret(secret *core.Secret) error {
 	// get the key and certificate (The TLS secret must contain keys named tls.crt and tls.key
 	// https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
 	pemKeyBytes, ok := secret.Data["tls.key"]
@@ -271,7 +271,7 @@ func (d *Delegate) parseTLSSecret(secret *core.Secret) error {
 	return nil
 }
 
-func (d *Delegate) updatePemRegistryEntry(
+func updatePemRegistryEntry(
 	ctx context.Context,
 	configmaps []*core.ConfigMap, key string, values []string) error {
 	for _, configmap := range configmaps {
@@ -301,7 +301,7 @@ func (d *Delegate) updatePemRegistryEntry(
 	return nil
 }
 
-func (d *Delegate) deletePemRegistryEntry(
+func deletePemRegistryEntry(
 	ctx context.Context,
 	configmaps []*core.ConfigMap, key string) error {
 	for _, configmap := range configmaps {

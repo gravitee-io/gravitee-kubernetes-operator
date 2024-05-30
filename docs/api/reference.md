@@ -4126,11 +4126,9 @@ Use observedGeneration instead.<br/>
         <td>false</td>
       </tr><tr>
         <td><b>processingStatus</b></td>
-        <td>enum</td>
+        <td>string</td>
         <td>
           The processing status of the API definition.<br/>
-          <br/>
-            <i>Enum</i>: Completed, Failed<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4144,12 +4142,10 @@ Use observedGeneration instead.<br/>
         <td>false</td>
       </tr><tr>
         <td><b>status</b></td>
-        <td>enum</td>
+        <td>string</td>
         <td>
           This field is kept for backward compatibility and shall be removed in future versions.
 Use processingStatus instead.<br/>
-          <br/>
-            <i>Enum</i>: Completed, Failed<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6901,11 +6897,9 @@ to sync the API with an APIM instance<br/>
         <td>false</td>
       </tr><tr>
         <td><b>processingStatus</b></td>
-        <td>enum</td>
+        <td>string</td>
         <td>
           The processing status of the API definition.<br/>
-          <br/>
-            <i>Enum</i>: Completed, Failed<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7496,11 +7490,9 @@ ApplicationStatus defines the observed state of Application.
         <td>false</td>
       </tr><tr>
         <td><b>processingStatus</b></td>
-        <td>enum</td>
+        <td>string</td>
         <td>
           The processing status of the Application.<br/>
-          <br/>
-            <i>Enum</i>: Completed, Failed<br/>
         </td>
         <td>false</td>
       </tr></tbody>

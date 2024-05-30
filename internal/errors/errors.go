@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
 type ServerError struct {
@@ -125,4 +127,50 @@ func IgnoreNotFound(err error) error {
 	}
 
 	return err
+}
+
+type ContextError struct {
+	error
+}
+
+// Redirects the behavior of Is to As
+// because Is is not implemented for k8s.io errors aggregate.
+func (e ContextError) Is(err error) bool {
+	return errors.As(err, new(ContextError))
+}
+
+func NewContextError(err error) error {
+	return ContextError{err}
+}
+
+func IsRecoverable(err error) bool {
+	errs := make([]error, 0)
+
+	//nolint:errorlint // type assertion is intended here (Aggregate is an interface)
+	if agg, ok := err.(kErrors.Aggregate); ok {
+		errs = kErrors.Flatten(agg).Errors()
+	} else {
+		errs = append(errs, err)
+	}
+
+	for _, e := range errs {
+		if isRecoverable(e) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isRecoverable(err error) bool {
+	contextError := &ContextError{}
+	if errors.As(err, contextError) {
+		cause := contextError.error
+		serverError := &ServerError{}
+		if errors.As(cause, serverError) {
+			return serverError.IsRecoverable()
+		}
+	}
+
+	return true
 }

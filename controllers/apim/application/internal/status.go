@@ -19,10 +19,11 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (d *Delegate) UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application) error {
+func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application) error {
 	if application.IsBeingDeleted() {
 		return nil
 	}
@@ -41,7 +42,7 @@ func (d *Delegate) UpdateStatusSuccess(ctx context.Context, application *v1alpha
 	return cli.Status().Update(ctx, app)
 }
 
-func (d *Delegate) UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application) error {
+func UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application) error {
 	app := &v1alpha1.Application{}
 	cli := k8s.GetClient()
 
@@ -51,7 +52,7 @@ func (d *Delegate) UpdateStatusFailure(ctx context.Context, application *v1alpha
 		return err
 	}
 
-	application.Status.Status = v1alpha1.ProcessingStatusFailed
+	application.Status.Status = custom.ProcessingStatusFailed
 	application.Status.DeepCopyInto(&app.Status)
 	return cli.Status().Update(ctx, app)
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,14 +42,17 @@ const (
 	defaultOrgId         = "DEFAULT"
 )
 
-func (d *Delegate) updateConfigMap(ctx context.Context, api *v1alpha1.ApiDefinition) error {
+func updateConfigMap(
+	ctx context.Context,
+	api *v1alpha1.ApiDefinition,
+) error {
 	if api.Spec.State == base.StateStopped {
-		if err := d.deleteConfigMap(ctx, api); err != nil {
+		if err := deleteConfigMap(ctx, api); err != nil {
 			log.FromContext(ctx).Error(err, "Unable to delete ConfigMap from API definition")
 			return err
 		}
 	} else {
-		if err := d.saveConfigMap(ctx, api); err != nil {
+		if err := saveConfigMap(ctx, api); err != nil {
 			log.FromContext(ctx).Error(err, "Unable to create or update ConfigMap from API definition")
 			return err
 		}
@@ -57,9 +61,9 @@ func (d *Delegate) updateConfigMap(ctx context.Context, api *v1alpha1.ApiDefinit
 	return nil
 }
 
-func (d *Delegate) saveConfigMap(
+func saveConfigMap(
 	ctx context.Context,
-	apiDefinition v1alpha1.CRD,
+	apiDefinition custom.ApiDefinition,
 ) error {
 	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
@@ -68,9 +72,9 @@ func (d *Delegate) saveConfigMap(
 	// 📝 ConfigMap should be in same namespace as ApiDefinition.
 	newOwnerReferences := []metav1.OwnerReference{
 		{
-			Kind:       apiDefinition.GroupVersionKind().Kind,
+			Kind:       apiDefinition.GetObjectKind().GroupVersionKind().Kind,
 			Name:       apiDefinition.GetName(),
-			APIVersion: apiDefinition.GroupVersionKind().GroupVersion().String(),
+			APIVersion: apiDefinition.GetObjectKind().GroupVersionKind().GroupVersion().String(),
 			UID:        apiDefinition.GetUID(),
 		},
 	}
@@ -89,9 +93,9 @@ func (d *Delegate) saveConfigMap(
 		definitionVersionKey: apiDefinition.GetResourceVersion(),
 	}
 
-	if d.apim != nil {
-		cm.Data[orgKey] = d.apim.OrgID()
-		cm.Data[envKey] = d.apim.EnvID()
+	if apiDefinition.OrgID() != "" {
+		cm.Data[orgKey] = apiDefinition.OrgID()
+		cm.Data[envKey] = apiDefinition.EnvID()
 	} else {
 		cm.Data[orgKey] = defaultOrgId
 		cm.Data[envKey] = defaultEnvId
@@ -141,7 +145,7 @@ func (d *Delegate) saveConfigMap(
 	return nil
 }
 
-func (d *Delegate) deleteConfigMap(ctx context.Context, api client.Object) error {
+func deleteConfigMap(ctx context.Context, api client.Object) error {
 	configMap := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      api.GetName(),
