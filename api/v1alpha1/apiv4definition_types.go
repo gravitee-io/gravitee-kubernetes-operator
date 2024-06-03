@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -142,13 +144,37 @@ func (api *ApiV4Definition) PickPlanIDs() map[string]*v4.Plan {
 	return plans
 }
 
+const separator = "/"
+
 // GetOrGenerateEmptyPlanCrossID For each plan, generate a CrossId from Api Id & Plan Name if not defined.
 func (api *ApiV4Definition) GetOrGenerateEmptyPlanCrossID() {
 	for name, plan := range api.Spec.Plans {
 		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromStrings(api.PickCrossID(), "/", name)
+			plan.CrossId = uuid.FromStrings(api.PickCrossID(), separator, name)
 		}
 	}
+}
+
+func (api *ApiV4Definition) PickPageIDs() map[string]*base.Page {
+	pages := make(map[string]*base.Page, len(api.Spec.Pages))
+	for name, page := range api.Spec.Pages {
+		p := page.DeepCopy()
+
+		p.API = api.Spec.ID
+		apiName := api.GetNamespacedName().String()
+		if page.ID == "" {
+			p.ID = uuid.FromStrings(api.Spec.ID, separator, name)
+		}
+		if page.CrossID == "" {
+			p.CrossID = uuid.FromStrings(apiName, separator, name)
+		}
+		if page.Parent != "" {
+			p.ParentID = uuid.FromStrings(api.Spec.ID, separator, page.Parent)
+		}
+
+		pages[name] = p
+	}
+	return pages
 }
 
 // EnvID implements custom.ApiDefinition.

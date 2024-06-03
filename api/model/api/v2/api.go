@@ -49,13 +49,6 @@ type Api struct {
 	// +kubebuilder:validation:Optional
 	// API plans
 	Plans []*Plan `json:"plans"`
-	// +kubebuilder:validation:Optional
-	// A map of unique page identifiers to pages
-	// Keys uniquely identify pages and are used to keep them in sync
-	// with APIM when using a management context. This means that renaming
-	// a key is a the same as deleting the previous page associated to that key,
-	// and generating a new one, holding a new ID in APIM.
-	Pages map[string]*Page `json:"pages"`
 	// A list of Response Templates for the API
 	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"response_templates,omitempty"`
 	// List of members associated with the API

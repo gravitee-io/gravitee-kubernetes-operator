@@ -437,13 +437,19 @@ spec:
                       enum:
                       - PUBLIC
                       type: string
+                  required:
+                  - type
                   type: object
                 description: |-
-                  A map of unique page identifiers to pages
+                  A map of pages objects.
+
+
                   Keys uniquely identify pages and are used to keep them in sync
-                  with APIM when using a management context. This means that renaming
-                  a key is a the same as deleting the previous page associated to that key,
-                  and generating a new one, holding a new ID in APIM.
+                  with APIM when using a management context.
+
+
+                  Renaming a key is the equivalent of deleting the page and recreating
+                  it holding a new ID in APIM.
                 type: object
               path_mappings:
                 description: API Path mapping

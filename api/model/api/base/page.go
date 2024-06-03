@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v2
+package base
 
 import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
@@ -42,7 +42,7 @@ type Page struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=MARKDOWN;SWAGGER;ASYNCAPI;ASCIIDOC;FOLDER;SYSTEM_FOLDER
 	// The type of the documentation page or folder.
-	Type string `json:"type,omitempty"`
+	Type string `json:"type"`
 	// +kubebuilder:validation:Optional
 	// The content of the page, if any.
 	Content string `json:"content,omitempty"`
