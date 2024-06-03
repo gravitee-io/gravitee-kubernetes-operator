@@ -468,11 +468,15 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         <td><b><a href="#apidefinitionspecpageskey">pages</a></b></td>
         <td>map[string]object</td>
         <td>
-          A map of unique page identifiers to pages
+          A map of pages objects.
+
+
 Keys uniquely identify pages and are used to keep them in sync
-with APIM when using a management context. This means that renaming
-a key is a the same as deleting the previous page associated to that key,
-and generating a new one, holding a new ID in APIM.<br/>
+with APIM when using a management context.
+
+
+Renaming a key is the equivalent of deleting the page and recreating
+it holding a new ID in APIM.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1044,6 +1048,15 @@ List of path operators
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          The type of the documentation page or folder.<br/>
+          <br/>
+            <i>Enum</i>: MARKDOWN, SWAGGER, ASYNCAPI, ASCIIDOC, FOLDER, SYSTEM_FOLDER<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>api</b></td>
         <td>string</td>
         <td>
@@ -1141,15 +1154,6 @@ in any other case.<br/>
         <td>
           Source allow you to fetch pages from various external sources, overriding page content
 each time the source is fetched.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>enum</td>
-        <td>
-          The type of the documentation page or folder.<br/>
-          <br/>
-            <i>Enum</i>: MARKDOWN, SWAGGER, ASYNCAPI, ASCIIDOC, FOLDER, SYSTEM_FOLDER<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4373,6 +4377,21 @@ field of the resource.<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionspecpageskey">pages</a></b></td>
+        <td>map[string]object</td>
+        <td>
+          A map of pages objects.
+
+
+Keys uniquely identify pages and are used to keep them in sync
+with APIM when using a management context.
+
+
+Renaming a key is the equivalent of deleting the page and recreating
+it holding a new ID in APIM.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apiv4definitionspecprimaryowner">primaryOwner</a></b></td>
         <td>object</td>
         <td>
@@ -6528,6 +6547,180 @@ APIM exports and can be safely ignored.<br/>
           MetaData Value<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.pages[key]
+[Go to parent definition](#apiv4definitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          The type of the documentation page or folder.<br/>
+          <br/>
+            <i>Enum</i>: MARKDOWN, SWAGGER, ASYNCAPI, ASCIIDOC, FOLDER, SYSTEM_FOLDER<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>api</b></td>
+        <td>string</td>
+        <td>
+          The API of the page. If empty, will be set automatically to the generated ID of the API.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>map[string]string</td>
+        <td>
+          Legacy page configuration support can be added using this field<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>content</b></td>
+        <td>string</td>
+        <td>
+          The content of the page, if any.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          CrossID is designed to identified a page across environments.
+If not set, this ID will be generated in a predictable manner based on
+the map key associated to this entry in the API.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>homepage</b></td>
+        <td>boolean</td>
+        <td>
+          If true, this page will be displayed as the homepage of your API documentation.<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          The ID of the page. This field is mostly required when you are applying
+an API exported from APIM to make the operator take control over it.
+If not set, this ID will be generated in a predictable manner based on
+the map key associated to this entry in the API.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          This is the display name of the page in APIM and on the portal.
+This field can be edited safely if you want to rename a page.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>order</b></td>
+        <td>integer</td>
+        <td>
+          The order used to display the page in APIM and on the portal.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>parent</b></td>
+        <td>string</td>
+        <td>
+          If your page contains a folder, setting this field to the map key associated to the
+folder entry will be reflected into APIM by making the page a child of this folder.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>parentId</b></td>
+        <td>string</td>
+        <td>
+          The parent ID of the page. This field is mostly required when you are applying
+an API exported from APIM to make the operator take control over it. Use `Parent`
+in any other case.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>published</b></td>
+        <td>boolean</td>
+        <td>
+          If true, the page will be accessible from the portal (default is false)<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecpageskeysource">source</a></b></td>
+        <td>object</td>
+        <td>
+          Source allow you to fetch pages from various external sources, overriding page content
+each time the source is fetched.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>visibility</b></td>
+        <td>enum</td>
+        <td>
+          The visibility of the page. Only public pages are supported at the moment.<br/>
+          <br/>
+            <i>Enum</i>: PUBLIC<br/>
+            <i>Default</i>: PUBLIC<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.pages[key].source
+[Go to parent definition](#apiv4definitionspecpageskey)
+
+
+
+Source allow you to fetch pages from various external sources, overriding page content
+each time the source is fetched.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 

@@ -118,6 +118,8 @@ const (
 	ApiV4WithLDAPAuthProviderRefFile   = SamplesPath + "/apim/api_definition/v4/api-v4-with-ldap-auth-provider-ref.yml"
 	ApiV4WithInlineAuthProviderRef     = SamplesPath + "/apim/api_definition/v4/api-v4-with-inline-auth-provider-ref.yml"
 	ApiV4WithHTTPAuthProviderRefFile   = SamplesPath + "/apim/api_definition/v4/api-v4-with-http-auth-provider-ref.yml"
+	ApiV4WithMarkdownPage              = SamplesPath + "/apim/api_definition/v4/api-v4-with-page-markdown.yml"
+	ApiV4WithSwaggerHTTPFetcher        = SamplesPath + "/apim/api_definition/v4/api-v4-with-page-swagger-http-fetcher.yml"
 
 	IngressPEMRegistry         = SamplesPath + "/ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = SamplesPath + "/ingress/ingress-response-404-config-map.yml"

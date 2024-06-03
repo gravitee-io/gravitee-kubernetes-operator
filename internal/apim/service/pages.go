@@ -44,3 +44,25 @@ func (svc *Pages) FindByAPI(apiID string, queries ...*model.PagesQuery) ([]model
 
 	return *pages, nil
 }
+
+func (svc *Pages) FindByAPIV4(apiID string, queries ...*model.PagesQuery) ([]model.Page, error) {
+	url := svc.EnvV2Target("apis").WithPath(apiID).WithPath("pages")
+
+	for _, q := range queries {
+		if q.Type != "" {
+			url = url.WithQueryParams(q.AsMap())
+		}
+	}
+
+	tmp := struct {
+		Pages []model.Page `json:"pages"`
+	}{
+		Pages: make([]model.Page, 0),
+	}
+
+	if err := svc.HTTP.Get(url.String(), &tmp); err != nil {
+		return nil, err
+	}
+
+	return tmp.Pages, nil
+}

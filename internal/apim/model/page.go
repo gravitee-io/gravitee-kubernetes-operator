@@ -15,17 +15,25 @@
 package model
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
 type Page struct {
-	ID      string `json:"id,omitempty"`
-	Content string `json:"content,omitempty"`
-	Type    string `json:"type,omitempty"`
+	ID      string      `json:"id,omitempty"`
+	Content string      `json:"content,omitempty"`
+	Type    string      `json:"type,omitempty"`
+	Source  *PageSource `json:"source,omitempty"`
+}
+
+type PageSource struct {
+	Type          string                  `json:"type,omitempty"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 type PageImport struct {
-	*v2.Page          `json:",inline"`
+	*base.Page        `json:",inline"`
 	DefinitionContext *v2.DefinitionContext `json:"definition_context"`
 }
 

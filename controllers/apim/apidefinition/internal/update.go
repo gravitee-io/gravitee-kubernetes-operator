@@ -137,6 +137,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 
 	spec.CrossID = cp.PickCrossID()
 	spec.Plans = cp.PickPlanIDs()
+	spec.Pages = cp.PickPageIDs()
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
 	if spec.Context != nil {
