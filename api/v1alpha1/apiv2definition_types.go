@@ -28,7 +28,7 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

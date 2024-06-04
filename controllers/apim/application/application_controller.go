@@ -31,7 +31,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/go-logr/logr"

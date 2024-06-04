@@ -16,7 +16,7 @@
 package refs
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"k8s.io/apimachinery/pkg/types"
 )
 
