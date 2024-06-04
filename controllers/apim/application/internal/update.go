@@ -23,7 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
 
 func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {

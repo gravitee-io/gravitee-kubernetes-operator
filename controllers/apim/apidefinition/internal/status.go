@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
 
 func UpdateStatusSuccess(ctx context.Context, api custom.Resource) error {
