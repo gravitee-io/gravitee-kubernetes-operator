@@ -537,9 +537,10 @@ jobs:
             rm install.sh install.sh.checksum
             ./billy generate \
               --access-token $GITHUB_TOKEN \
+              --cspm-url $CSPM_URL $ \
               --aqua-key $AQUA_KEY \
               --aqua-secret $AQUA_SECRET \
-              --artifact-path "<< parameters.registry >>/<< parameters.image >>:<< parameters.tag >>"
+              --artifact-path << parameters.registry >>/<< parameters.image >>:<< parameters.tag >>
 
 workflows:
   pull_requests:
