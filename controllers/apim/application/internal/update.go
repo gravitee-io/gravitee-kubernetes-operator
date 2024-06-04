@@ -22,7 +22,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/kube/custom"
 )
@@ -33,10 +32,6 @@ func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) erro
 	}
 
 	return createUpdateApplicationMetadata(ctx, application)
-}
-
-func ResolveTemplate(ctx context.Context, application *v1alpha1.Application) error {
-	return template.NewResolver(ctx, application).Resolve()
 }
 
 func createUpdateApplication(ctx context.Context, application *v1alpha1.Application) error {

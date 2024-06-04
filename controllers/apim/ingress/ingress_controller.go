@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -72,7 +73,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(ingress, keys.IngressFinalizer)
 		k8s.AddAnnotation(ingress, keys.LastSpecHash, hash.Calculate(&ingress.Spec))
 
-		if err := internal.ResolveTemplate(ctx, ingress); err != nil {
+		if err := template.Compile(ctx, ingress); err != nil {
 			return err
 		}
 

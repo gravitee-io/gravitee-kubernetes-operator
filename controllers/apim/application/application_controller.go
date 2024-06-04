@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -80,7 +81,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(application, keys.ApplicationFinalizer)
 		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
-		if err := internal.ResolveTemplate(ctx, application); err != nil {
+		if err := template.Compile(ctx, application); err != nil {
 			application.Status.Status = custom.ProcessingStatusCompleted
 			return err
 		}

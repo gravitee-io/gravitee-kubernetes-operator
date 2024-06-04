@@ -39,34 +39,29 @@ import (
 // example my-configmap/key1.
 const ksPropertyLength = 2
 
-type Resolver struct {
-	ctx context.Context
-	obj runtime.Object
-}
-
-func NewResolver(ctx context.Context, obj runtime.Object) *Resolver {
-	return &Resolver{ctx: ctx, obj: obj}
-}
-
-func (r *Resolver) Resolve() error {
-	switch t := r.obj.(type) {
+func Compile(ctx context.Context, obj runtime.Object) error {
+	switch t := obj.(type) {
 	case *v1alpha1.ApiDefinition, *v1alpha1.ApiV4Definition, *v1alpha1.ManagementContext,
 		*v1alpha1.Application, *netv1.Ingress, *v1alpha1.ApiResource:
-		return r.exec()
+		return exec(ctx, obj)
 	default:
 		return fmt.Errorf("unsupported object type %v", t)
 	}
 }
 
-func (r *Resolver) exec() error {
-	text, err := yaml.Marshal(r.obj)
+func exec(ctx context.Context, obj runtime.Object) error {
+	text, err := yaml.Marshal(obj)
 	if err != nil {
 		return err
 	}
 
 	funcMap := map[string]interface{}{
-		"configmap": r.resolveConfigmap,
-		"secret":    r.resolveSecret,
+		"configmap": func(name string) (string, error) {
+			return resolveConfigmap(ctx, obj, name)
+		},
+		"secret": func(name string) (string, error) {
+			return resolveSecret(ctx, obj, name)
+		},
 	}
 	tmpl, err := template.New("gko").Funcs(template.FuncMap(funcMap)).Delims("[[", "]]").Parse(string(text))
 	if err != nil {
@@ -83,10 +78,10 @@ func (r *Resolver) exec() error {
 		return err
 	}
 
-	return yaml.Unmarshal(buf.Bytes(), r.obj)
+	return yaml.Unmarshal(buf.Bytes(), obj)
 }
 
-func (r *Resolver) resolveConfigmap(name string) (string, error) {
+func resolveConfigmap(ctx context.Context, obj runtime.Object, name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("empty configmap name")
 	}
@@ -96,7 +91,7 @@ func (r *Resolver) resolveConfigmap(name string) (string, error) {
 		return "", fmt.Errorf("wrong configmap name. Example my-configmap/key1")
 	}
 
-	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r.obj)
+	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
 		return "", err
 	}
@@ -105,18 +100,18 @@ func (r *Resolver) resolveConfigmap(name string) (string, error) {
 	nn := types.NamespacedName{Namespace: u.GetNamespace(), Name: sp[0]}
 	cm := new(v1.ConfigMap)
 	cli := k8s.GetClient()
-	if err = cli.Get(r.ctx, nn, cm); err != nil {
+	if err = cli.Get(ctx, nn, cm); err != nil {
 		return "", err
 	}
 
-	if err = r.addFinalizer(cm); err != nil {
+	if err = addFinalizer(ctx, cm); err != nil {
 		return "", err
 	}
 
 	return cm.Data[sp[1]], nil
 }
 
-func (r *Resolver) resolveSecret(name string) (string, error) {
+func resolveSecret(ctx context.Context, obj runtime.Object, name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("empty secret name")
 	}
@@ -126,7 +121,7 @@ func (r *Resolver) resolveSecret(name string) (string, error) {
 		return "", fmt.Errorf("wrong secret name. Example my-secret/key1")
 	}
 
-	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(r.obj)
+	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
 		return "", err
 	}
@@ -135,18 +130,18 @@ func (r *Resolver) resolveSecret(name string) (string, error) {
 	nn := types.NamespacedName{Namespace: u.GetNamespace(), Name: sp[0]}
 	sec := new(v1.Secret)
 	cli := k8s.GetClient()
-	if err = cli.Get(r.ctx, nn, sec); err != nil {
+	if err = cli.Get(ctx, nn, sec); err != nil {
 		return "", err
 	}
 
-	if err = r.addFinalizer(sec); err != nil {
+	if err = addFinalizer(ctx, sec); err != nil {
 		return "", err
 	}
 
 	return string(sec.Data[sp[1]]), nil
 }
 
-func (r *Resolver) addFinalizer(obj client.Object) error {
+func addFinalizer(ctx context.Context, obj client.Object) error {
 	if !util.ContainsFinalizer(obj, keys.TemplatingFinalizer) {
 		var object client.Object
 		switch obj.(type) {
@@ -158,13 +153,13 @@ func (r *Resolver) addFinalizer(obj client.Object) error {
 
 		nn := types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
 		cli := k8s.GetClient()
-		if err := cli.Get(r.ctx, nn, object); err != nil {
+		if err := cli.Get(ctx, nn, object); err != nil {
 			return err
 		}
 
 		util.AddFinalizer(object, keys.TemplatingFinalizer)
 
-		return cli.Update(r.ctx, object)
+		return cli.Update(ctx, object)
 	}
 
 	return nil

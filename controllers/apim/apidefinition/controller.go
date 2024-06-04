@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -48,7 +49,7 @@ func Reconcile(
 
 	if apiDefinition.GetAnnotations()[keys.IngressTemplateAnnotation] == "true" {
 		logger.Info("syncing template", "template", apiDefinition.GetName())
-		if err := internal.ResolveTemplate(ctx, apiDefinition); err != nil {
+		if err := template.Compile(ctx, apiDefinition); err != nil {
 			return ctrl.Result{}, err
 		}
 		if err := internal.SyncApiDefinitionTemplate(ctx, apiDefinition, apiDefinition.GetNamespace()); err != nil {
@@ -75,7 +76,7 @@ func reconcileApiDefinition(
 		util.AddFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, keys.LastSpecHash, apiDefinition.GetSpec().Hash())
 
-		if err := internal.ResolveTemplate(ctx, apiDefinition); err != nil {
+		if err := template.Compile(ctx, apiDefinition); err != nil {
 			status.SetProcessingStatus(custom.ProcessingStatusFailed)
 			return err
 		}

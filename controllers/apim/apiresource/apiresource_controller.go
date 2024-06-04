@@ -21,7 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 
@@ -68,7 +68,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(apiResource, keys.ApiResourceFinalizer)
 		k8s.AddAnnotation(apiResource, keys.LastSpecHash, hash.Calculate(&apiResource.Spec))
 
-		if err := template.NewResolver(ctx, apiResource).Resolve(); err != nil {
+		if err := template.Compile(ctx, apiResource); err != nil {
 			return err
 		}
 
