@@ -14,21 +14,48 @@
 
 name: Trigger Release
 
-on: workflow_dispatch
-
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Which version should we release ?'
+        required: true
+        type: string
+      latest:
+        description: 'Is this version the latest version ?'
+        required: false
+        default: false
+        type: boolean
+      dry-run:
+        description: 'Should this run as a dry run ?'
+        required: true
+        default: true
+        type: boolean
+      pipeline-branch:
+        description: 'On which branch is your circleci pipeline located ?'
+        required: true
+        default: "master"
+        type: string
 jobs:
   trigger-release:
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      LATEST:  ${{ inputs.latest }}
+      DRY_RUN:  ${{ inputs.dry-run }}
+      PIPELINE_BRANCH: ${{ inputs.pipeline-branch }}
+      CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: "Set up git"
+      - name: "Trigger release pipeline"
         run: |
-          git config user.name "Gravitee.io Bot"
-          git config user.email contact@gravitee.io
-      - name: "Create release branch"
-        run: |
-          echo "🚀 Creating release branch"
-          git checkout -b trigger-release
-          git push --set-upstream origin trigger-release
+          echo "🚀 Releasing version ${VERSION}"
+          echo "    Latest: ${LATEST}"
+          echo "    Dry run: ${DRY_RUN}"
+          npx zx scripts/trigger-release.mjs \
+           --version ${VERSION} \
+           --dry-run ${DRY_RUN} \
+           --latest ${LATEST} \
+           --pipeline-branch ${PIPELINE_BRANCH}

@@ -28,7 +28,7 @@ lint-licenses: addlicense ## Run addlicense linter and fail on error
 .PHONY: add-license
 add-license: addlicense ## Add license headers to files
 	@echo "Adding license headers ..."
-	$(ADDLICENSE) -f LICENSE_TEMPLATE.txt \
+	@$(ADDLICENSE) -f LICENSE_TEMPLATE.txt \
 		-ignore ".circleci/**" \
 		-ignore ".mergify.yml" \
 		-ignore "config/**" \
@@ -39,5 +39,5 @@ lint: $(ALL_LINT)
 
 .PHONY: lint-fix
 lint-fix: golangci-lint addlicense ## Fix whatever golangci-lint can fix and add licenses headers
-	$(GOLANGCILINT) run ./... --fix
-	$(MAKE) add-license
+	@$(GOLANGCILINT) run ./... --fix
+	@$(MAKE) add-license
