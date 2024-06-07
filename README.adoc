@@ -2,32 +2,28 @@
 
 image:https://img.shields.io/badge/License-Apache%202.0-blue.svg["License", link="https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/LICENSE.txt"]
 image:https://circleci.com/gh/gravitee-io/gravitee-kubernetes-operator/tree/alpha.svg?style=svg[link="https://app.circleci.com/pipelines/github/gravitee-io/gravitee-kubernetes-operator?branch=alpha"]
-image:https://img.shields.io/badge/semantic--release-📦🚀-e10079?logo=semantic-release["semantic-release: 📦🚀", link="https://github.com/semantic-release/semantic-release"]
 image:https://goreportcard.com/badge/github.com/gravitee-io/gravitee-kubernetes-operator["Go Report Card", link="https://goreportcard.com/report/github.com/gravitee-io/gravitee-kubernetes-operator"]
 
 image:./.assets/gravitee-logo-cyan.svg["Gravitee.io",400]
 
 == Introduction
 
-APIM 3.19.0 has introduced the first release of the Gravitee Kubernetes Operator (GKO).
-
-You can use the GKO to define, deploy, and publish APIs to your API Portal and API Gateway  through Custom Resource Definitions (CRDs).
+You can use the Gravitee Kubernetes Operator (GKO) to define, deploy, and publish APIs to your API Portal and API Gateway through Custom Resource Definitions (CRDs).
 
 == User documentation
 
 You can find detailed information about the Gravitee Kubernetes Operator in the following sections of the Gravitee user documentation:
 
-  * link:https://docs.gravitee.io/apim/3.x/apim_kubernetes_operator_overview.html[Overview^]
-  * link:https://docs.gravitee.io/apim/3.x/apim_kubernetes_operator_architecture.html[Architecture^]
-  * link:https://docs.gravitee.io/apim/3.x/apim_kubernetes_operator_quick_start.html[Quick Start^]
-  * link:https://docs.gravitee.io/apim/3.x/apim_kubernetes_operator_installation.html[Installation and deployment^]
-  * link:https://docs.gravitee.io/apim/3.x/apim_kubernetes_operator_user_guide.html[User Guide^]
+  * link:https://documentation.gravitee.io/apim/guides/gravitee-kubernetes-operator[Overview^]
+  * link:https://documentation.gravitee.io/apim/getting-started/install-and-upgrade-guides/install-on-kubernetes/architecture-overview[Architecture^]
+  * link:https://documentation.gravitee.io/apim/guides/gravitee-kubernetes-operator/quick-start[Quick Start^]
+  * link:https://documentation.gravitee.io/apim/guides/gravitee-kubernetes-operator/installation[Installation and deployment^]
 
-The GKO API reference documentation is available https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/docs/api/reference.md[here].
+The GKO API reference documentation is available https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/docs/api/reference.md[here^].
 
 == Developer guide
 
-=== Initialize your environment
+=== Initializing your environment
 
 * Install link:https://www.docker.com/[Docker^]
 * Install link:https://kubernetes.io/docs/tasks/tools/#kubectl[kubectl^]
@@ -36,7 +32,7 @@ The GKO API reference documentation is available https://github.com/gravitee-io/
 * Install link:https://nodejs.org/en/download/[NodeJs^]
 * Install the operator-sdk: `brew install operator-sdk`
 
-=== Install tooling for development
+=== Installing tooling for development
 
 All the tool needed to run the make targets used during development can be installed by running the following command:
 
@@ -52,7 +48,7 @@ To get more information about the available make targets, run:
 make help
 ----
 
-=== Run the operator locally
+=== Running the operator locally
 
 To run the operator locally against an APIM-ready local cluster, run the following commands:
 
@@ -68,7 +64,11 @@ make install
 make run
 ----
 
-=== Debug the operator and APIM
+=== Writing integration tests
+
+Please refer to this link:https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/test/integration/README.md[document^] for guidance, conventions and best practices regarding integration testing.
+
+=== Debugging
 
 To be able to run the operator against a local instance of both an APIM Gateway and an APIM Management API, you will need to:
 
@@ -84,31 +84,55 @@ To be able to run the operator against a local instance of both an APIM Gateway 
 make cluster-admin
 
 make run # or run using a debugger if you need to debug the operator as well
+----
 
-# Create the debug Management Context resource for APIM
-kubectl apply -f ./config/samples/context/debug/api-context-with-credentials.yml
+If you are using visual studio code, here is a working config snippet for debugging the operator:
 
-# Create a basic API Definition resource
-kubectl apply -f ./config/samples/apim/api-with-context.yml
+[source,json]
+----
+{
+    "name": "Main",
+    "type": "go",
+    "request": "launch",
+    "mode": "auto",
+    "program": "main.go",
+    "env": {
+        "DEV_MODE": "true",
+        "NAMESPACE": "",
+    },
+}
+----
+
+And here is another snippet for debugging integration test execution
+
+[source,json]
+----
+{
+  "name": "Test API Definition",
+  "type": "go",
+  "request": "launch",
+  "mode": "auto",
+  "program": "test/integration/apidefinition/suite_test.go"
+}
 ----
 
 === Working with the repo
 
-When committing your contributions, please follow link:https://www.conventionalcommits.org/en/v1.0.0/[conventional commits^] and semantic release best practices.
+If you are submitting a change to the operator code please make sure that your code is covered by an link:https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/test/integration/README.md[integration test^]
 
-=== Release process
+If you are submitting a change to the helm charts, please make sure that it is covered by a link:https://github.com/gravitee-io/gravitee-kubernetes-operator/tree/master/helm/gko/tests[helm unit test^]
 
-To release a new version of the operator go to the dedicated https://github.com/gravitee-io/gravitee-kubernetes-operator/actions/workflows/trigger-release.yml[Trigger Release] workflow and run it with the default parameters.
+Before committing your changes don't forget to run the following make targets
 
-This will:
+[source,shell]
+----
+# If you commit a change to the operator model
+make generate manifests reference 
+# If you commit a change to the helm chart values
+make helm-reference 
+# In any case
+make lint-fix
+----
 
-* checkout a new `ci-prepare-release` branch from alpha
-* rebase the master branch on top of it
-* open a pull request from `ci-prepare-release` to `master`
-
-Once the pull request is merged, semantic release will automatically create a new release, which includes:
-
-* updating the changelog using conventional commits
-* publishing a new docker image on docker hub with the new version tag
-* publishing a new helm chart on https://helm.gravitee.io/index.yaml[helm.gravitee.io] with the new version tag
+When committing your contributions, please follow the link:https://www.conventionalcommits.org/en/v1.0.0/[conventional commits^] convention.
 
