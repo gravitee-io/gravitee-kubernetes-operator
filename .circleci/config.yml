@@ -7,25 +7,35 @@ orbs:
   keeper: gravitee-io/keeper@0.6.3
   gravitee: gravitee-io/gravitee@4.1.1
   slack: circleci/slack@4.13.3
+  gh: circleci/github-cli@1.0.5
 
 parameters:
   go-version:
     type: string
     default: "1.22.1"
+  trigger:
+    type: enum
+    default: test
+    enum:
+      - release
+      - test
+  release-version:
+    type: string
+    default: ""
+    description: "The version under release then using the release trigger"
+  latest:
+    type: boolean
+    default: false
+    description: Is this version the latest version available (when using the release trigger) ?
+  dry-run:
+    type: boolean
+    default: true
 
 executors:
   azure-cli:
-    parameters:
-      resource_class:
-        description: The resource class
-        type: enum
-        enum: ["small", "medium", "large", "xlarge"]
-        default: "medium"
     docker:
-      # Version can be found here https://docs.microsoft.com/en-us/cli/azure/release-notes-azure-cli
-      # be careful when updating the version as it looks it is not following semver
       - image: mcr.microsoft.com/azure-cli:2.61.0
-    resource_class: <<parameters.resource_class>>
+    resource_class: small
 
 commands:
   notify-on-failure:
@@ -56,9 +66,11 @@ commands:
           var-name: SNYK_INTEGRATION_ID
       - when:
           condition:
-            equal: [gravitee_gko_acr_integration_id, << parameters.integration_id_key >>]
+            equal:
+              - gravitee_gko_acr_integration_id
+              - << parameters.integration_id_key >>
           steps:
-            - run: 
+            - run:
                 name: Setting docker image name
                 command: echo "export DOCKER_IMAGE_NAME=kubernetes-operator" >> ${BASH_ENV}
             - run:
@@ -66,9 +78,11 @@ commands:
                 command: echo "export DOCKER_IMAGE_TAG=master-latest" >> ${BASH_ENV}
       - when:
           condition:
-            equal: [gravitee_gko_dockerhub_integration_id, << parameters.integration_id_key >>]
+            equal:
+              - gravitee_gko_dockerhub_integration_id
+              - << parameters.integration_id_key >>
           steps:
-            - run: 
+            - run:
                 name: Setting docker image name
                 command: echo "export DOCKER_IMAGE_NAME=graviteeio/kubernetes-operator" >> ${BASH_ENV}
             - run:
@@ -100,7 +114,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-           - golangci-lint-{{ checksum ".golangci.yml" }}
+            - golangci-lint-{{ checksum ".golangci.yml" }}
       - run:
           name: Lint sources
           command: make lint-sources
@@ -216,7 +230,9 @@ jobs:
           command: make ginkgo
       - when:
           condition:
-            equal: [withoutContext, << parameters.ginkgo-filter >>]
+            equal:
+              - withoutContext
+              - << parameters.ginkgo-filter >>
           steps:
             - run:
                 command: echo 'export APIM_VALUES=values-dbless.yaml' >> $BASH_ENV
@@ -242,7 +258,6 @@ jobs:
   login-to-azure:
     executor:
       name: azure-cli
-      resource_class: small
     parameters:
       clusterName:
         type: enum
@@ -260,7 +275,9 @@ jobs:
           var-name: AZURE_SP_PASSWORD
       - when:
           condition:
-            equal: [devs-preprod, << parameters.clusterName >>]
+            equal:
+              - devs-preprod
+              - << parameters.clusterName >>
           steps:
             - run:
                 name: Get ~/.kube/config from Azure
@@ -301,7 +318,7 @@ jobs:
               --password-stdin graviteeio.azurecr.io
             IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-push
             docker logout graviteeio.azurecr.io
-          
+
   helm-install:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -341,39 +358,153 @@ jobs:
       - go/save-cache
       - notify-on-failure
 
-  semantic-release:
+  release:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
-    environment:
-      GITHUB_TOKEN: "keeper://TIlcGPFq4rN5GvgnZb9hng/field/password"
-      GIT_AUTHOR_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
-      GIT_AUTHOR_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
-      GIT_COMMITTER_NAME: "keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login"
-      GIT_COMMITTER_EMAIL: "keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email"
-      DOCKER_USERNAME: "keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login"
-      DOCKER_TOKEN: "keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password"
     steps:
       - checkout
-      - gravitee/install-semantic-release
       - setup_remote_docker
-      - keeper/exec:
-          step-name: Docker login
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/login
+          var-name: DOCKER_USERNAME
+      - keeper/env-export:
+          secret-url: keeper://cooU9UoXIk8Kj0hsP2rkBw/field/password
+          var-name: DOCKER_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://hfnQD5TEfxzwRXUKhJhM-A/field/password
+          var-name: JIRA_TOKEN
+      - run:
+          name: Switch to release branch
+          command: |
+            export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+            echo "Switching to branch $RELEASE_BRANCH"
+            git fetch
+            git switch $RELEASE_BRANCH 2>/dev/null || git switch -c $RELEASE_BRANCH
+      - run:
+          name: Docker login
           command: docker login --username="${DOCKER_USERNAME}" -p="${DOCKER_TOKEN}"
       - run:
-          name: Install operator SDK
+          name: Build Docker image for version << pipeline.parameters.release-version >>
           command: |
-            export OPERATOR_SDK_RELEASE_VERSION=v1.23.0
-            export ARCH=$(case $(uname -m) in amd64|x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
-            export OS=$(uname | awk '{print tolower($0)}')
-            export DOWNLOAD_URL=https://github.com/operator-framework/operator-sdk/releases/latest/download
-            export BINARY=operator-sdk_${OS}_${ARCH}
-            curl -OJL ${DOWNLOAD_URL}/${BINARY}
-            chmod +x ${BINARY} && sudo cp ${BINARY} /usr/local/bin/operator-sdk && rm ${BINARY}
+            docker build -t graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> .
+      - when:
+          condition: << pipeline.parameters.latest >>
+          steps:
+            - run:
+                name: Tag << pipeline.parameters.release-version >> image as latest
+                command: |
+                  docker tag \
+                    graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> \
+                    graviteeio/kubernetes-operator:latest
+      - when:
+          condition:
+            and:
+              - not: << pipeline.parameters.dry-run >>
+              - << pipeline.parameters.latest >>
+          steps:
+            - run:
+                name: Push << pipeline.parameters.release-version >> Docker image as latest tag
+                command: |
+                  docker push graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>
+                  docker push graviteeio/kubernetes-operator:latest
+      - when:
+          condition:
+            and:
+              - not: << pipeline.parameters.dry-run >>
+              - not: << pipeline.parameters.latest >>
+          steps:
+            - run:
+                name: Push << pipeline.parameters.release-version >> Docker image tag
+                command: |
+                  docker push graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>
       - helm/install_helm_client
-      - keeper/exec:
-          step-name: "Run Semantic Release"
-          command: npx semantic-release
-
+      - when:
+          condition: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Dry run release Helm chart
+                command: |
+                  npx zx scripts/release-helm-chart.mjs --dry-run --version << pipeline.parameters.release-version >>
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Release Helm chart
+                command: |
+                  npx zx scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
+      - run:
+          name: Commit and tag release
+          command: |
+            make add-license > /dev/null
+            git add helm/gko/Chart.yaml
+            git commit -m "ci: release version << pipeline.parameters.release-version >> [skip ci]"
+            git tag << pipeline.parameters.release-version >>
+            echo
+            git diff HEAD~1 HEAD
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Push release tag and commit
+                command: |
+                  export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+                  git push -u origin $RELEASE_BRANCH
+                  git push --tags origin $RELEASE_BRANCH
+      - run:
+          name: Generate Changelog
+          command: npx zx scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
+      - when:
+          condition: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Print Changelog
+                command: cat /tmp/CHANGELOG.md
+      - run:
+          name: Generate Release Artifacts
+          command: |
+            cp -r helm/gko/crds /tmp/crds
+            pushd /tmp/crds
+              zip -r /tmp/custom-resource-definitions.zip ./*
+            popd
+      - when:
+          condition:
+            and:
+              - not: << pipeline.parameters.dry-run >>
+              - << pipeline.parameters.latest >>
+          steps:
+            - gh/setup
+            - run:
+                name: Publish Github Release << pipeline.parameters.release-version >> as latest
+                command: |
+                  gh release create --latest << pipeline.parameters.release-version >> /tmp/custom-resource-definitions.zip -F /tmp/CHANGELOG.md
+      - when:
+          condition:
+            and:
+              - not: << pipeline.parameters.dry-run >>
+              - not: << pipeline.parameters.latest >>
+          steps:
+            - gh/setup
+            - run:
+                name: Publish Github Release << pipeline.parameters.release-version >>
+                command: |
+                  gh release create << pipeline.parameters.release-version >> /tmp/custom-resource-definitions.zip -F /tmp/CHANGELOG.md
   notify-release-slack:
     docker:
       - image: cimg/base:stable
@@ -450,7 +581,7 @@ jobs:
     resource_class: small
     parameters:
       integration_id_key:
-       type: string
+        type: string
     steps:
       - load-snyk-env:
           integration_id_key: << parameters.integration_id_key >>
@@ -461,7 +592,17 @@ workflows:
     when:
       and:
         - not:
-            equal: [master, << pipeline.git.branch >>]
+            equal:
+              - master
+              - << pipeline.git.branch >>
+        - not:
+            equal:
+              - "release"
+              - << pipeline.parameters.trigger >>
+        - not:
+            equal:
+              - "test"
+              - << pipeline.parameters.trigger >>
     jobs:
       - lint-sources:
           name: Lint sources
@@ -509,7 +650,9 @@ workflows:
     when:
       and:
         - or:
-            - equal: [master, << pipeline.git.branch >>]
+            - equal:
+                - master
+                - << pipeline.git.branch >>
     jobs:
       - helm-test:
           name: Test chart
@@ -537,12 +680,12 @@ workflows:
           matrix:
             parameters:
               namespace:
-              - apim-apim-4-0-x
-              - apim-apim-4-1-x
-              - apim-apim-4-2-x
-              - apim-apim-4-3-x
-              - apim-apim-4-4-x
-              - apim-apim-master
+                - apim-apim-4-0-x
+                - apim-apim-4-1-x
+                - apim-apim-4-2-x
+                - apim-apim-4-3-x
+                - apim-apim-4-4-x
+                - apim-apim-master
               image: [graviteeio.azurecr.io/kubernetes-operator]
               tag: [master-latest]
           requires:
@@ -550,10 +693,12 @@ workflows:
 
   release:
     when:
-      equal: [trigger-release, << pipeline.git.branch >>]
+      equal:
+        - release
+        - << pipeline.parameters.trigger >>
     jobs:
-      - semantic-release:
-          name: Semantic Release
+      - release:
+          name: Release
           context: cicd-orchestrator
 
   notify-release:
@@ -566,7 +711,7 @@ workflows:
               ignore: /.*/
             tags:
               only: /\d+\.\d+\.\d+/
-  
+
   trigger-snyk-on-release:
     jobs:
       - add-docker-images-to-snyk:

@@ -14,82 +14,80 @@
  * limitations under the License.
  */
 
-import { LOG, setNoQuoteEscape, setQuoteEscape, time, toggleVerbosity } from "./lib/index.mjs";
+import {
+  LOG,
+  setNoQuoteEscape,
+  setQuoteEscape,
+  time,
+  toggleVerbosity,
+} from "./lib/index.mjs";
 
-const KIND_CONFIG = path.join(__dirname, '..', 'kind');
+const KIND_CONFIG = path.join(__dirname, "..", "kind");
 
-const APIM_REGISTRY = `${ process.env.APIM_IMAGE_REGISTRY || "graviteeio" }`;
-const APIM_TAG = `${ process.env.APIM_IMAGE_TAG || "latest"}`;
-const APIM_VALUES= `${ process.env.APIM_VALUES || "values.yaml"}`;
+const APIM_REGISTRY = `${process.env.APIM_IMAGE_REGISTRY || "graviteeio"}`;
+const APIM_TAG = `${process.env.APIM_IMAGE_TAG || "latest"}`;
+const APIM_VALUES = `${process.env.APIM_VALUES || "values.yaml"}`;
 
 const IMAGES = new Map([
-    [
-        `${APIM_REGISTRY}/apim-gateway:${APIM_TAG}`,
-        `gravitee-apim-gateway:dev`,
-    ],
-    [
-        `${APIM_REGISTRY}/apim-management-api:${APIM_TAG}`,
-        `gravitee-apim-management-api:dev`,
-    ],
-    [
-        `${APIM_REGISTRY}/apim-management-ui:${APIM_TAG}`,
-        `gravitee-apim-management-ui:dev`,
-    ],
-    [
-        `mongo:6.0.15-jammy`,
-        `mongo:6.0.15-jammy`
-    ],
-    [
-        `mccutchen/go-httpbin:latest`,
-        `go-httpbin:dev`
-    ]
+  [`${APIM_REGISTRY}/apim-gateway:${APIM_TAG}`, `gravitee-apim-gateway:dev`],
+  [
+    `${APIM_REGISTRY}/apim-management-api:${APIM_TAG}`,
+    `gravitee-apim-management-api:dev`,
+  ],
+  [
+    `${APIM_REGISTRY}/apim-management-ui:${APIM_TAG}`,
+    `gravitee-apim-management-ui:dev`,
+  ],
+  [`mongo:6.0.15-jammy`, `mongo:6.0.15-jammy`],
+  [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
 ]);
 
-const REDIRECT = argv.verbose ? '' : '> /dev/null';
+const REDIRECT = argv.verbose ? "" : "> /dev/null";
 
 toggleVerbosity(argv.verbose);
 
-
 async function createKindCluster() {
-    setNoQuoteEscape();
-    await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml ${REDIRECT}`
-    setQuoteEscape();
+  setNoQuoteEscape();
+  await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml ${REDIRECT}`;
+  setQuoteEscape();
 }
 
 async function loadImages() {
-    setNoQuoteEscape();
+  setNoQuoteEscape();
 
-    await Promise.all(
-        Array.from(IMAGES.keys()).map(
-            (image) => $`docker pull ${image} ${REDIRECT}`
-        )
-    );
+  await Promise.all(
+    Array.from(IMAGES.keys()).map(
+      (image) => $`docker pull ${image} ${REDIRECT}`
+    )
+  );
 
-    await Promise.all(
-        Array.from(IMAGES.entries()).map(
-            ([image, tag]) => $`docker tag ${image} ${tag} ${REDIRECT}`
-        )
-    );
+  await Promise.all(
+    Array.from(IMAGES.entries()).map(
+      ([image, tag]) => $`docker tag ${image} ${tag} ${REDIRECT}`
+    )
+  );
 
-    await Promise.all(
-        Array.from(IMAGES.values()).map((tag) => $`kind load docker-image ${tag} --name gravitee ${REDIRECT}`)
-    );
+  await Promise.all(
+    Array.from(IMAGES.values()).map(
+      (tag) => $`kind load docker-image ${tag} --name gravitee ${REDIRECT}`
+    )
+  );
 
-    setQuoteEscape();
+  setQuoteEscape();
 }
 
 async function helmInstallAPIM() {
-    await $`helm repo add graviteeio https://helm.gravitee.io`;
-    await $`helm repo update graviteeio`;
-    await $`helm install apim graviteeio/apim3 -f ${KIND_CONFIG}/apim/${APIM_VALUES}`;
+  await $`helm repo add graviteeio https://helm.gravitee.io`;
+  await $`helm repo update graviteeio`;
+  await $`helm install apim graviteeio/apim3 -f ${KIND_CONFIG}/apim/${APIM_VALUES}`;
 }
 
 async function deployHTTPBin() {
-    await $`kubectl apply -f ${KIND_CONFIG}/httpbin`;
+  await $`kubectl apply -f ${KIND_CONFIG}/httpbin`;
 }
 
 async function waitForApim() {
-    await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
+  await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
 }
 
 LOG.blue(`
@@ -133,4 +131,3 @@ LOG.blue(`Waiting for services to be ready ...
 `);
 
 await time(waitForApim);
-

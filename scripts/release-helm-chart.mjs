@@ -19,46 +19,34 @@ import {
   HELM,
   toggleVerbosity,
   time,
-  isNonEmptyString,
+  isEmptyString,
 } from "./lib/index.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), "helm-charts");
 const PROJECT_DIR = path.join(__dirname, "..");
 
 const VERSION = argv.version;
-const IMG = argv.img;
 const VERBOSE = argv.verbose;
 const DRY_RUN = argv["dry-run"];
 
-const GITHUB_TOKEN=$.env.GITHUB_TOKEN
+const GITHUB_TOKEN = $.env.GITHUB_TOKEN;
 
-$.env["IMG"] = `${IMG}`;
-$.env["TAG"] = `${VERSION}`;
+toggleVerbosity(VERBOSE);
 
 LOG.magenta(`
 🚀 Releasing version ${VERSION} ...
     📦 Project dir    | ${PROJECT_DIR}
-    📦 Working dir    | ${WORKING_DIR}
-    🐳 Docker image   | ${$.env.IMG}`);
-
-toggleVerbosity(VERBOSE);
+    📦 Working dir    | ${WORKING_DIR}`);
 
 await checkRequirements();
 
 async function checkRequirements() {
-  if (!isNonEmptyString(VERSION)) {
+  if (isEmptyString(VERSION)) {
     LOG.red("You must specify a version to release using the --version flag");
     await $`exit 1`;
   }
 
-  if (!isNonEmptyString(IMG)) {
-    LOG.red(
-      "You must specify a docker image to build (without any tag) using the --img flag"
-    );
-    await $`exit 1`;
-  }
-
-  if (!isNonEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
+  if (isEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
     LOG.red(
       "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable."
     );
@@ -77,34 +65,6 @@ async function checkRequirements() {
 }
 
 LOG.blue(`
-🐳 Building docker image ...
-`);
-
-if (!DRY_RUN) {
-  await time(buildDockerImage);
-} else {
-  LOG.yellow(`  ⚠️ This is a dry run, image will not be built ...`);
-}
-
-async function buildDockerImage() {
-  await $`make docker-build-release`;
-}
-
-LOG.blue(`
-🐳 Pushing docker image ...
-`);
-
-if (!DRY_RUN) {
-  await time(pushDockerImage);
-} else {
-  LOG.yellow(`  ⚠️ This is a dry run, image will not be pushed ...`);
-}
-
-async function pushDockerImage() {
-  await $`make docker-push-release`;
-}
-
-LOG.blue(`
 ⎈ Checking out ${HELM.chartsRepo}:${HELM.releaseBranch} ...
 `);
 
@@ -116,7 +76,6 @@ async function checkoutHelmCharts() {
     --single-branch \
     --depth 1 ${WORKING_DIR}`;
 }
-
 
 LOG.blue(`
 ⎈ Packaging chart ...
@@ -155,21 +114,11 @@ if (!DRY_RUN) {
 
 async function publishRelease() {
   cd(WORKING_DIR);
-  await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${HELM.chartsRepo}.git"`
+  await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${HELM.chartsRepo}.git"`;
   await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
   await $`git commit -m "chore(gko): release version ${VERSION}"`;
   await $`git push origin ${HELM.releaseBranch}`;
   cd(PROJECT_DIR);
-}
-
-LOG.blue(`
-📦 Generating legacy bundle.yml file ...
-`);
-
-await time(generateLegacyBundle);
-
-async function generateLegacyBundle() {
-  await $`make helm-template`;
 }
 
 LOG.blue(`
@@ -186,26 +135,6 @@ async function setChartVersion() {
   await fs.writeFile(`${HELM.chartDir}/Chart.yaml`, YAML.stringify(chartYaml));
 }
 
-LOG.blue(`
-⎈ Generating chart reference ...
-`);
-
-await time(generateChartReference);
-
-async function generateChartReference() {
-  await $`make helm-reference`;
-}
-
-LOG.blue(`
-⎈ Adding license headers to generated files ...
-`);
-
-await time(addLicense);
-
-async function addLicense() {
-  await $`make add-license`;
-}
-
 if (!DRY_RUN) {
   LOG.magenta(`
 🎉 version ${VERSION} has been released !`);
@@ -213,4 +142,3 @@ if (!DRY_RUN) {
   LOG.magenta(`
 🎉 dry run done for version ${VERSION}`);
 }
-

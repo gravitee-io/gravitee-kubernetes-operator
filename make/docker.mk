@@ -14,14 +14,4 @@ docker-build: ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}:${TAG}
 
-# RELEASE
-
-.PHONY: docker-build-release
-docker-build-release: ## Build docker image with the manager.
-	docker build -t ${IMG}:${TAG} -t ${IMG}:latest .
-
-.PHONY: docker-push-release
-docker-push-release: ## Push docker image with the manager.
-	docker push  ${IMG}:${TAG}
-	docker push ${IMG}:latest
 
