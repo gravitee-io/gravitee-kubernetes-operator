@@ -21,6 +21,10 @@ spec:
   name: api-with-sync-from-apim
   version: "1.0"
   description: "When local is set to false, no config map is created and the API is synced from the APIM datastore"
+  contextRef:
+    name: dev-ctx
+    namespace: default
+  state: STARTED
   plans:
     - name: "KEY_LESS"
       description: "FREE"

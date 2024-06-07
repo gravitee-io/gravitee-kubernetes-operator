@@ -54,11 +54,13 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	generateEmptyPlanCrossIds(spec)
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
-		log.FromContext(ctx).Error(err, "unable to resolve resources")
 		return err
 	}
 
 	if !apiDefinition.HasContext() {
+		if !spec.IsLocal {
+			return errors.NewUnrecoverableError("a context is required when setting local to false")
+		}
 		if err := updateConfigMap(ctx, cp); err != nil {
 			return err
 		}
