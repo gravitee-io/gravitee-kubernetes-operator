@@ -31,6 +31,22 @@ type ServerError struct {
 	Message    string `json:"message"`
 }
 
+type ContextError struct {
+	error
+}
+
+type UnrecoverableError struct {
+	message string
+}
+
+func (err UnrecoverableError) Error() string {
+	return err.message
+}
+
+func NewUnrecoverableError(message string) error {
+	return UnrecoverableError{message}
+}
+
 var unRecoverableStatusCodes = []int{http.StatusBadRequest, http.StatusUnauthorized}
 
 func (err ServerError) Error() string {
@@ -129,10 +145,6 @@ func IgnoreNotFound(err error) error {
 	return err
 }
 
-type ContextError struct {
-	error
-}
-
 // Redirects the behavior of Is to As
 // because Is is not implemented for k8s.io errors aggregate.
 func (e ContextError) Is(err error) bool {
@@ -163,6 +175,9 @@ func IsRecoverable(err error) bool {
 }
 
 func isRecoverable(err error) bool {
+	if errors.As(err, &UnrecoverableError{}) {
+		return false
+	}
 	contextError := &ContextError{}
 	if errors.As(err, contextError) {
 		cause := contextError.error
