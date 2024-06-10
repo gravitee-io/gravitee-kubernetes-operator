@@ -74,14 +74,14 @@ func FromContext(ctx context.Context, managementContext *management.Context) (*A
 }
 
 func FromContextRef(ctx context.Context, ref custom.ResourceRef) (*APIM, error) {
-	managementContext, err := ResolveManagementContext(ctx, ref)
+	managementContext, err := resolveManagementContext(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
 	return FromContext(ctx, managementContext)
 }
 
-func ResolveManagementContext(
+func resolveManagementContext(
 	ctx context.Context,
 	ref custom.ResourceRef,
 ) (*management.Context, error) {

@@ -70,42 +70,6 @@ spec:
                 - EXCLUSIVE
                 - UNSPECIFIED
                 type: string
-              applicationMetaData:
-                description: Application meta data
-                items:
-                  properties:
-                    applicationId:
-                      description: Meta data ApplicationId
-                      type: string
-                    defaultValue:
-                      description: Meta data DefaultValue
-                      type: string
-                    format:
-                      description: Meta data Format
-                      enum:
-                      - STRING
-                      - NUMERIC
-                      - BOOLEAN
-                      - DATE
-                      - MAIL
-                      - URL
-                      type: string
-                    hidden:
-                      description: Meta data is hidden or not?
-                      type: boolean
-                    key:
-                      description: Meta data Key
-                      type: string
-                    name:
-                      description: Meta data Name
-                      type: string
-                    value:
-                      description: Meta data Value
-                      type: string
-                  required:
-                  - name
-                  type: object
-                type: array
               background:
                 description: The base64 encoded background to use for this application
                   when displaying it on the portal
@@ -142,10 +106,36 @@ spec:
                   io.gravitee.definition.model.Application
                   Application ID
                 type: string
-              metadata:
-                description: Application Metadata, a map of arbitrary key-values
-                type: object
-                x-kubernetes-preserve-unknown-fields: true
+              metaData:
+                description: Application meta data
+                items:
+                  properties:
+                    defaultValue:
+                      description: Meta data DefaultValue
+                      type: string
+                    format:
+                      description: Meta data Format
+                      enum:
+                      - STRING
+                      - NUMERIC
+                      - BOOLEAN
+                      - DATE
+                      - MAIL
+                      - URL
+                      type: string
+                    hidden:
+                      description: Meta data is hidden or not?
+                      type: boolean
+                    name:
+                      description: Meta data Name
+                      type: string
+                    value:
+                      description: Meta data Value
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               name:
                 description: Application name
                 type: string

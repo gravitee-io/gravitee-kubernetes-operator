@@ -57,5 +57,14 @@ var _ = Describe("Create", labels.WithContext, func() {
 			}
 			return assert.Equals("name", fixtures.Application.Spec.Name, app.Name)
 		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
+
+		By("calling rest API, expecting to find application metadata")
+		Eventually(func() error {
+			metadata, appErr := apim.Applications.GetMetadataByApplicationID(fixtures.Application.Status.ID)
+			if appErr != nil {
+				return appErr
+			}
+			return assert.SliceOfSize("metadata", *metadata, 2)
+		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
 	})
 })

@@ -20,7 +20,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application) error {
@@ -28,31 +27,12 @@ func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application)
 		return nil
 	}
 
-	app := &v1alpha1.Application{}
-	cli := k8s.GetClient()
-
-	if err := cli.Get(
-		ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
-	); err != nil {
-		return err
-	}
-
 	application.Status.ObservedGeneration = application.ObjectMeta.Generation
-	application.Status.DeepCopyInto(&app.Status)
-	return cli.Status().Update(ctx, app)
+	application.Status.Status = custom.ProcessingStatusCompleted
+	return k8s.GetClient().Status().Update(ctx, application)
 }
 
 func UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application) error {
-	app := &v1alpha1.Application{}
-	cli := k8s.GetClient()
-
-	if err := cli.Get(
-		ctx, types.NamespacedName{Namespace: application.Namespace, Name: application.Name}, app,
-	); err != nil {
-		return err
-	}
-
 	application.Status.Status = custom.ProcessingStatusFailed
-	application.Status.DeepCopyInto(&app.Status)
-	return cli.Status().Update(ctx, app)
+	return k8s.GetClient().Status().Update(ctx, application)
 }

@@ -106,11 +106,11 @@ func (svc *Applications) Delete(appId string) error {
 }
 
 func (svc *Applications) CreateUpdateMetadata(method string, appId string,
-	spec application.MetaData) (*model.ApplicationMetaData, error) {
+	spec any, key string) (*model.ApplicationMetaData, error) {
 	url := svc.EnvV1Target(applicationsPath).WithPath(appId).WithPath(metadataPath)
 	fun := svc.HTTP.Post
 	if method == http.MethodPut {
-		url = url.WithPath(spec.Key)
+		url = url.WithPath(key)
 		fun = svc.HTTP.Put
 	}
 

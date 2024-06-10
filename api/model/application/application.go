@@ -15,8 +15,6 @@
 // +kubebuilder:object:generate=true
 package application
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
-
 // +kubebuilder:validation:Enum=SHARED;EXCLUSIVE;UNSPECIFIED;
 type KeyMode string
 
@@ -60,8 +58,6 @@ type MetaData struct {
 	// +kubebuilder:validation:Required
 	// Meta data Name
 	Name string `json:"name"`
-	// Meta data ApplicationId
-	ApplicationId string `json:"applicationId,omitempty"`
 	// Meta data Value
 	Value string `json:"value,omitempty"`
 	// Meta data DefaultValue
@@ -70,8 +66,6 @@ type MetaData struct {
 	Format *MetaDataFormat `json:"format,omitempty"`
 	// Meta data is hidden or not?
 	Hidden bool `json:"hidden,omitempty"`
-	// Meta data Key
-	Key string `json:"key,omitempty"`
 }
 
 type Application struct {
@@ -87,8 +81,6 @@ type Application struct {
 	ClientId string `json:"clientId,omitempty"`
 	// List of application Redirect Uris
 	RedirectUris []string `json:"redirectUris,omitempty"`
-	// Application Metadata, a map of arbitrary key-values
-	Metadata *utils.GenericStringMap `json:"metadata,omitempty"`
 
 	// The origin which is used to create this Application
 	// +kubebuilder:validation:Enum=kubernetes;
@@ -113,5 +105,5 @@ type Application struct {
 	// Should membership notifications be disabled or not ?
 	DisableMembershipNotifications bool `json:"disable_membership_notifications,omitempty"`
 	// Application meta data
-	ApplicationMetaData *[]MetaData `json:"applicationMetaData,omitempty"`
+	MetaData *[]MetaData `json:"metaData,omitempty"`
 }

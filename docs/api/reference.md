@@ -7261,13 +7261,6 @@ Application is the main resource handled by the Kubernetes Operator
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#applicationspecapplicationmetadataindex">applicationMetaData</a></b></td>
-        <td>[]object</td>
-        <td>
-          Application meta data<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>background</b></td>
         <td>string</td>
         <td>
@@ -7325,10 +7318,10 @@ Application ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>metadata</b></td>
-        <td>object</td>
+        <td><b><a href="#applicationspecmetadataindex">metaData</a></b></td>
+        <td>[]object</td>
         <td>
-          Application Metadata, a map of arbitrary key-values<br/>
+          Application meta data<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7379,77 +7372,6 @@ Application ID<br/>
 </table>
 
 
-### Application.spec.applicationMetaData[index]
-[Go to parent definition](#applicationspec)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Meta data Name<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>applicationId</b></td>
-        <td>string</td>
-        <td>
-          Meta data ApplicationId<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>defaultValue</b></td>
-        <td>string</td>
-        <td>
-          Meta data DefaultValue<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>format</b></td>
-        <td>enum</td>
-        <td>
-          Meta data Format<br/>
-          <br/>
-            <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>hidden</b></td>
-        <td>boolean</td>
-        <td>
-          Meta data is hidden or not?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>key</b></td>
-        <td>string</td>
-        <td>
-          Meta data Key<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>value</b></td>
-        <td>string</td>
-        <td>
-          Meta data Value<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
 ### Application.spec.contextRef
 [Go to parent definition](#applicationspec)
 
@@ -7478,6 +7400,63 @@ Application ID<br/>
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Application.spec.metaData[index]
+[Go to parent definition](#applicationspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Meta data Name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>defaultValue</b></td>
+        <td>string</td>
+        <td>
+          Meta data DefaultValue<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>format</b></td>
+        <td>enum</td>
+        <td>
+          Meta data Format<br/>
+          <br/>
+            <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>hidden</b></td>
+        <td>boolean</td>
+        <td>
+          Meta data is hidden or not?<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Meta data Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>

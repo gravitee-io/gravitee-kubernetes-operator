@@ -20,14 +20,14 @@ metadata:
   namespace: default
 spec:
   contextRef:
-    name: "dev-ctx-admiring-antonelli"
+    name: "dev-ctx"
     namespace: "default"
   name: "K8S-Application"
   type: "WEB"
   domain: "https://example.com"
   description: "K8s Application"
-  applicationMetaData:
-    - name: "test metadata"
+  metaData:
+    - name: "test metadata 1"
       format: "STRING"
     - name: "test metadata 2"
       format: "STRING"
