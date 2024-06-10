@@ -30,10 +30,6 @@ func (in *Application) DeepCopyInto(out *Application) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.Metadata != nil {
-		in, out := &in.Metadata, &out.Metadata
-		*out = (*in).DeepCopy()
-	}
 	if in.Groups != nil {
 		in, out := &in.Groups, &out.Groups
 		*out = make([]string, len(*in))
@@ -49,8 +45,8 @@ func (in *Application) DeepCopyInto(out *Application) {
 		*out = new(KeyMode)
 		**out = **in
 	}
-	if in.ApplicationMetaData != nil {
-		in, out := &in.ApplicationMetaData, &out.ApplicationMetaData
+	if in.MetaData != nil {
+		in, out := &in.MetaData, &out.MetaData
 		*out = new([]MetaData)
 		if **in != nil {
 			in, out := *in, *out

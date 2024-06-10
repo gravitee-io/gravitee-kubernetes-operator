@@ -71,10 +71,10 @@ func createUpdateApplication(ctx context.Context, application *v1alpha1.Applicat
 	return nil
 }
 
-func createUpdateApplicationMetadata(ctx context.Context, application *v1alpha1.Application) error {
-	spec := &application.Spec
-	if spec.ApplicationMetaData == nil {
-		application.Status.Status = custom.ProcessingStatusCompleted
+func createUpdateApplicationMetadata(ctx context.Context, app *v1alpha1.Application) error {
+	spec := &app.Spec
+	if spec.MetaData == nil {
+		app.Status.Status = custom.ProcessingStatusCompleted
 		return nil
 	}
 
@@ -83,21 +83,30 @@ func createUpdateApplicationMetadata(ctx context.Context, application *v1alpha1.
 		return err
 	}
 
-	appMetaData, err := apimCli.Applications.GetMetadataByApplicationID(application.Status.ID)
+	appMetaData, err := apimCli.Applications.GetMetadataByApplicationID(app.Status.ID)
 	if err != nil {
 		return errors.NewContextError(err)
 	}
 
-	for _, metaData := range *spec.ApplicationMetaData {
+	// All this method Will be removed once we created a dedicated endpoint in APIM for creating Application using GKO
+	for _, metaData := range *spec.MetaData {
+		md := struct {
+			application.MetaData
+			ApplicationId string `json:"applicationId"`
+			Key           string `json:"key,omitempty"`
+		}{
+			MetaData:      metaData,
+			ApplicationId: spec.ID,
+		}
 		method := http.MethodPost
-		key := findMetadataKey(appMetaData, metaData.Name)
+		key := findMetadataKey(appMetaData, md.Name)
 		if key != "" {
 			// update
-			metaData.Key = key
+			md.Key = key
 			method = http.MethodPut
 		}
 
-		_, mgmtErr := apimCli.Applications.CreateUpdateMetadata(method, spec.ID, metaData)
+		_, mgmtErr := apimCli.Applications.CreateUpdateMetadata(method, spec.ID, md, key)
 		if mgmtErr != nil {
 			return errors.NewContextError(mgmtErr)
 		}
@@ -105,15 +114,15 @@ func createUpdateApplicationMetadata(ctx context.Context, application *v1alpha1.
 
 	// Delete removed metadata
 	for _, metaData := range *appMetaData {
-		if metadataIsRemoved(spec.ApplicationMetaData, metaData.Name) {
-			err = apimCli.Applications.DeleteMetadata(application.Status.ID, metaData.Key)
+		if metadataIsRemoved(spec.MetaData, metaData.Name) {
+			err = apimCli.Applications.DeleteMetadata(app.Status.ID, metaData.Key)
 			if errors.IgnoreNotFound(err) != nil {
 				return err
 			}
 		}
 	}
 
-	application.Status.Status = custom.ProcessingStatusCompleted
+	app.Status.Status = custom.ProcessingStatusCompleted
 
 	return nil
 }

@@ -82,7 +82,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
 		if err := template.Compile(ctx, application); err != nil {
-			application.Status.Status = custom.ProcessingStatusCompleted
+			application.Status.Status = custom.ProcessingStatusFailed
 			return err
 		}
 
@@ -97,7 +97,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		}
 
-		application.ObjectMeta.DeepCopyInto(&dc.ObjectMeta)
+		dc.SetFinalizers(application.GetFinalizers())
+		dc.SetAnnotations(application.GetAnnotations())
 		return err
 	})
 

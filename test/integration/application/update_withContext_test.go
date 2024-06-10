@@ -58,10 +58,20 @@ var _ = Describe("Update", labels.WithContext, func() {
 			return assert.Equals("name", fixtures.Application.Spec.Name, app.Name)
 		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
 
+		By("calling rest API, expecting to find application metadata")
+		Eventually(func() error {
+			metadata, appErr := apim.Applications.GetMetadataByApplicationID(fixtures.Application.Status.ID)
+			if appErr != nil {
+				return appErr
+			}
+			return assert.SliceOfSize("metadata", *metadata, 2)
+		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
+
 		By("updating application name")
 
 		updated := fixtures.Application.DeepCopy()
 		updated.Spec.Name += "-updated"
+		(*updated.Spec.MetaData)[0].Name = "test metadata update"
 
 		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
@@ -73,6 +83,15 @@ var _ = Describe("Update", labels.WithContext, func() {
 				return appErr
 			}
 			return assert.Equals("name", updated.Spec.Name, app.Name)
+		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
+
+		By("calling rest API, expecting to find updated application metadata")
+		Eventually(func() error {
+			metadata, appErr := apim.Applications.GetMetadataByApplicationID(fixtures.Application.Status.ID)
+			if appErr != nil {
+				return appErr
+			}
+			return assert.SliceOfSize("metadata", *metadata, 2)
 		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
 
 	})
