@@ -73,6 +73,8 @@ github.com/moby/moby v26.0.0+incompatible h1:2n9/cIWkxiEI1VsWgTGgXhxIWUbv42PyxEP
 github.com/moby/moby v26.0.0+incompatible/go.mod h1:fDXVQ6+S340veQPv35CzDahGBmHsiclFwfEygB/TWMc=
 github.com/moby/moby v26.1.3+incompatible h1:gIzra6kadTUzPUZWpyUfkaLKymz9I8gANMB1NKk2pF0=
 github.com/moby/moby v26.1.3+incompatible/go.mod h1:fDXVQ6+S340veQPv35CzDahGBmHsiclFwfEygB/TWMc=
+github.com/moby/moby v26.1.4+incompatible h1:h0kZhlKY2oCcv/SSQdrH6PeSs0xJ0uVOIfoF837kLLg=
+github.com/moby/moby v26.1.4+incompatible/go.mod h1:fDXVQ6+S340veQPv35CzDahGBmHsiclFwfEygB/TWMc=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
