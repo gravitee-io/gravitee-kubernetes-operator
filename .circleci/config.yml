@@ -15,10 +15,11 @@ parameters:
     default: "1.22.1"
   trigger:
     type: enum
-    default: test
+    default: ""
     enum:
       - release
       - test
+      - ""
   release-version:
     type: string
     default: ""
