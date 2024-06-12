@@ -1,0 +1,134 @@
+= Contributing
+
+image:./.assets/gravitee-logo-cyan.svg["Gravitee.io",400]
+
+== Reporting a bug or suggesting an enhancement
+
+If you want to report a bug or suggest an enhancement, please follow the template guidelines corresponding to your request and submit an link:https://github.com/gravitee-io/issues/issues/new/choose[issue^].
+
+== Submitting a pull request
+
+First off, thanks for taking the time to contribute!
+
+If you want are contributing an enhancement or a bug, please fill an issue and link it to your pull request description.
+
+Details about how we interact with the repository and how you can set up your environment are given in the next sections.
+
+== Working with the repo
+
+If you are submitting a change to the operator code please make sure that your code is covered by an link:#writing-integration-tests[integration test]
+
+If you are submitting a change to the helm charts, please make sure that it is covered by a link:https://github.com/gravitee-io/gravitee-kubernetes-operator/tree/master/helm/gko/tests[helm unit test^]
+
+Before committing your changes don't forget to run the following make targets
+
+[source,shell]
+----
+# If you commit a change to the operator model
+make generate manifests reference 
+# If you commit a change to the helm chart values
+make helm-reference 
+# In any case
+make lint-fix
+----
+
+When committing your contribution, please follow the link:https://www.conventionalcommits.org/en/v1.0.0/[conventional commits^] convention.
+
+== Developer guide
+
+=== External documentations
+
+The link:https://www.kubebuilder.io/reference/reference[kubebuilder^] documentation is 
+a good read to help you start with contributing to our code base.
+
+=== Initializing your environment
+
+* Install link:https://www.docker.com/[Docker^]
+* Install link:https://kubernetes.io/docs/tasks/tools/#kubectl[kubectl^]
+* Install link:https://helm.sh/docs/intro/install/[Helm^]
+* Install link:https://kind.sigs.k8s.io/docs/user/quick-start/#installation[kind^]
+* Install link:https://nodejs.org/en/download/[NodeJs^]
+
+=== Installing tooling for development
+
+All the tool needed to run the make targets used during development can be installed by running the following command:
+
+[source,shell]
+----
+make install-tools
+----
+
+To get more information about the available make targets, run:
+
+[source,shell]
+----
+make help
+----
+
+=== Running the operator locally
+
+To run the operator locally against an APIM-ready local cluster, run the following commands:
+
+[source,shell]
+----
+# Initialize a local kubernetes cluster running APIM
+make start-cluster
+
+# Install the operator CRDs into the cluster
+make install
+
+# Run the operator controller on your local machine
+make run
+----
+
+=== Writing integration tests
+
+Please refer to this link:https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/test/integration/README.md[document^] for guidance, conventions and best practices regarding integration testing.
+
+=== Debugging
+
+To be able to run the operator against a local instance of both an APIM Gateway and an APIM Management API, you will need to:
+
+* Attach to a local cluster context.
+* Create a local service account to authenticate the gateway against the local cluster.
+* Create a Management Context pointing to your local APIM Management API.
+* Run what you need to debug in debug mode.
+
+[source,shell]
+----
+# Create a service account token with 'cluster-admin' role in the current context and
+# use this token to authenticate against the current cluster
+make cluster-admin
+
+make run # or run using a debugger if you need to debug the operator as well
+----
+
+If you are using visual studio code, here is a working config snippet for debugging the operator:
+
+[source,json]
+----
+{
+    "name": "Main",
+    "type": "go",
+    "request": "launch",
+    "mode": "auto",
+    "program": "main.go",
+    "env": {
+        "DEV_MODE": "true",
+        "NAMESPACE": "",
+    },
+}
+----
+
+And here is another snippet for debugging integration test execution
+
+[source,json]
+----
+{
+  "name": "Test API Definition",
+  "type": "go",
+  "request": "launch",
+  "mode": "auto",
+  "program": "test/integration/apidefinition/suite_test.go"
+}
+----
