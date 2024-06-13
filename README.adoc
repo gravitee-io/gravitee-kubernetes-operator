@@ -23,4 +23,4 @@ The GKO API reference documentation is available https://github.com/gravitee-io/
 
 == Contributing
 
-Details about how you can contribute to this repository are available in our contributing link:https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/CONTRIBUTING.md[guide].
+Details about how you can contribute to this repository are available in our contributing link:https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/CONTRIBUTING.adoc[guide].
