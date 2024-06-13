@@ -23,6 +23,17 @@ type PageSource struct {
 	Configuration *utils.GenericStringMap `json:"configuration"`
 }
 
+type AccessControl struct {
+	// +kubebuilder:validation:Required
+	// The ID denied or granted by the access control (currently only group names are supported)
+	ReferenceId string `json:"referenceId,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=GROUP;
+	// The type of reference denied or granted by the access control
+	// Currently only GROUP is supported
+	ReferenceType string `json:"referenceType,omitempty"`
+}
+
 type Page struct {
 	// +kubebuilder:validation:Optional
 	// The ID of the page. This field is mostly required when you are applying
@@ -55,8 +66,8 @@ type Page struct {
 	Published bool `json:"published"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=PUBLIC
-	// +kubebuilder:validation:Enum=PUBLIC;
-	// The visibility of the page. Only public pages are supported at the moment.
+	// +kubebuilder:validation:Enum=PUBLIC;PRIVATE
+	// The visibility of the page.
 	Visibility string `json:"visibility,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=false
@@ -81,4 +92,11 @@ type Page struct {
 	// +kubebuilder:validation:Optional
 	// Legacy page configuration support can be added using this field
 	Configuration map[string]string `json:"configuration,omitempty"`
+	// If the page is private, defines a set of user groups with access
+	// +kubebuilder:validation:Optional
+	AccessControls []AccessControl `json:"accessControls,omitempty"`
+	// if true, the references defined in the accessControls list will be
+	// denied access instead of being granted
+	// +kubebuilder:validation:Optional
+	ExcludedAccessControl bool `json:"excludedAccessControls"`
 }

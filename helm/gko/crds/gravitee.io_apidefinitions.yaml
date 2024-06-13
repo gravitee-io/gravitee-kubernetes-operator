@@ -354,6 +354,24 @@ spec:
               pages:
                 additionalProperties:
                   properties:
+                    accessControls:
+                      description: If the page is private, defines a set of user groups
+                        with access
+                      items:
+                        properties:
+                          referenceId:
+                            description: The ID denied or granted by the access control
+                              (currently only group names are supported)
+                            type: string
+                          referenceType:
+                            description: |-
+                              The type of reference denied or granted by the access control
+                              Currently only GROUP is supported
+                            enum:
+                            - GROUP
+                            type: string
+                        type: object
+                      type: array
                     api:
                       description: The API of the page. If empty, will be set automatically
                         to the generated ID of the API.
@@ -373,6 +391,11 @@ spec:
                         If not set, this ID will be generated in a predictable manner based on
                         the map key associated to this entry in the API.
                       type: string
+                    excludedAccessControls:
+                      description: |-
+                        if true, the references defined in the accessControls list will be
+                        denied access instead of being granted
+                      type: boolean
                     homepage:
                       default: false
                       description: If true, this page will be displayed as the homepage
@@ -437,10 +460,10 @@ spec:
                       type: string
                     visibility:
                       default: PUBLIC
-                      description: The visibility of the page. Only public pages are
-                        supported at the moment.
+                      description: The visibility of the page.
                       enum:
                       - PUBLIC
+                      - PRIVATE
                       type: string
                   required:
                   - type
