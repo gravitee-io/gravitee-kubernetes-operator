@@ -111,10 +111,10 @@ spec:
                 items:
                   properties:
                     defaultValue:
-                      description: Meta data DefaultValue
+                      description: Metadata DefaultValue
                       type: string
                     format:
-                      description: Meta data Format
+                      description: Metadata Format
                       enum:
                       - STRING
                       - NUMERIC
@@ -124,13 +124,13 @@ spec:
                       - URL
                       type: string
                     hidden:
-                      description: Meta data is hidden or not?
+                      description: Metadata is hidden or not?
                       type: boolean
                     name:
-                      description: Meta data Name
+                      description: Metadata Name
                       type: string
                     value:
-                      description: Meta data Value
+                      description: Metadata Value
                       type: string
                   required:
                   - name

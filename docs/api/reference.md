@@ -7404,21 +7404,21 @@ Application ID<br/>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          Meta data Name<br/>
+          Metadata Name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>defaultValue</b></td>
         <td>string</td>
         <td>
-          Meta data DefaultValue<br/>
+          Metadata DefaultValue<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>format</b></td>
         <td>enum</td>
         <td>
-          Meta data Format<br/>
+          Metadata Format<br/>
           <br/>
             <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
         </td>
@@ -7427,14 +7427,14 @@ Application ID<br/>
         <td><b>hidden</b></td>
         <td>boolean</td>
         <td>
-          Meta data is hidden or not?<br/>
+          Metadata is hidden or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          Meta data Value<br/>
+          Metadata Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
