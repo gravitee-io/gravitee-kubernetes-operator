@@ -19,7 +19,7 @@ metadata:
   name: api-v4-with-with-groups-members
 spec:
   name: "api-v4-with-groups-members"
-  description: "V4 API with groups and members managed by Gravitee Kubernetes Operator"
+  description: "V4 API  with groups and members managed by Gravitee Kubernetes Operator"
   version: "1.0"
   contextRef:
     name: "dev-ctx"
@@ -57,11 +57,10 @@ spec:
         type: "KEY_LESS"
   groups:
     - b53e7784-2e9d-4305-be77-842e9dc30541
-  primaryOwner:
-    id: b53e7784-2e9d-4305-be77-842e9dc30541
-    type: GROUP
   members:
-    - id: b69a89f3-3770-4d44-9a89-f337700d4424
-      roles:
-        - name: REVIEWER
-          scope: API
+    - source: gravitee
+      sourceId: antoine.kamiel@graviteesource.com
+      role: REVIEWER
+    - source: gravitee
+      sourceId: kamiel.antoine@graviteesource.com
+      role: USER

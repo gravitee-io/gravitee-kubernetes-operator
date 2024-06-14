@@ -685,28 +685,23 @@ spec:
                 items:
                   properties:
                     displayName:
-                      description: Member source ID
+                      description: Member display name
                       type: string
-                    id:
-                      description: Member user ID
-                      type: string
-                    roles:
-                      default: []
+                    role:
+                      default: USER
                       description: The API role associated with this Member
-                      items:
-                        properties:
-                          name:
-                            default: USER
-                            description: Name of the role (USER, REVIEWER ...)
-                            type: string
-                          scope:
-                            default: API
-                            description: Role scope, by default it is API scope
-                            type: string
-                        type: object
-                      type: array
+                      type: string
+                    source:
+                      description: Member source
+                      example: gravitee
+                      type: string
+                    sourceId:
+                      description: Member source ID
+                      example: user@email.com
+                      type: string
                   required:
-                  - id
+                  - source
+                  - sourceId
                   type: object
                 type: array
               metadata:

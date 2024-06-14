@@ -52,7 +52,7 @@ type Api struct {
 	// A list of Response Templates for the API
 	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"response_templates,omitempty"`
 	// List of members associated with the API
-	Members []*Member `json:"members,omitempty"`
+	Members []*base.Member `json:"members,omitempty"`
 }
 
 const (

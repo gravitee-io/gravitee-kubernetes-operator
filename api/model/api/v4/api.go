@@ -68,9 +68,8 @@ type Api struct {
 	Services *ApiServices `json:"services,omitempty"`
 	// A list of Response Templates for the API
 	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
-
 	// List of members associated with the API
-	Members []*Member `json:"members,omitempty"`
+	Members []*base.Member `json:"members,omitempty"`
 }
 
 type GatewayDefinitionApi struct {

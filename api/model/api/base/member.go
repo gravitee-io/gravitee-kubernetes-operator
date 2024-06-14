@@ -12,26 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v4
+package base
 
 type Member struct {
-	// Member user ID
-	Id string `json:"id"`
-
+	// Member source
+	// +kubebuilder:validation:Required
+	// +kubebuilder:example:=gravitee
+	Source string `json:"source"`
 	// Member source ID
+	// +kubebuilder:validation:Required
+	// +kubebuilder:example:=user@email.com
+	SourceId string `json:"sourceId"`
+	// Member display name
 	DisplayName string `json:"displayName,omitempty"`
-
 	// The API role associated with this Member
-	// +kubebuilder:default:={}
-	Roles []Role `json:"roles,omitempty"`
-}
-
-type Role struct {
-	// Name of the role (USER, REVIEWER ...)
-	// +kubebuilder:default:=`USER`
-	Name string `json:"name,omitempty"`
-
-	// Role scope, by default it is API scope
-	// +kubebuilder:default:=`API`
-	Scope string `json:"scope,omitempty"`
+	// +kubebuilder:default:=USER
+	Role string `json:"role,omitempty"`
 }
