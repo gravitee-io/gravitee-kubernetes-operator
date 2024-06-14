@@ -118,6 +118,13 @@ func NotEmptyString(field string, value string) error {
 	return nil
 }
 
+func NotNil(field string, value any) error {
+	if value == nil || reflect.ValueOf(value).IsNil() {
+		return fmt.Errorf("expected %s not to be nil", field)
+	}
+	return nil
+}
+
 func MapContaining[K comparable, V any](m map[K]V, key K, value V) error {
 	val, ok := m[key]
 	if !ok {
