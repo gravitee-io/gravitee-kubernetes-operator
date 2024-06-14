@@ -145,3 +145,12 @@ func (svc *APIs) Deploy(id string) error {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("deploy")
 	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
 }
+
+func (svc *APIs) ExportV2(id string) (*v1alpha1.ApiDefinition, error) {
+	url := svc.EnvV1Target("apis").WithPath(id).WithPath("/crd")
+	api := new(v1alpha1.ApiDefinition)
+	if err := svc.HTTP.GetYAML(url.String(), api); err != nil {
+		return nil, err
+	}
+	return api, nil
+}

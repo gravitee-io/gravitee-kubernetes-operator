@@ -28,9 +28,9 @@ import (
 type APIM struct {
 	*apim.APIM
 
-	Applications  *service.Applications
 	Subscriptions *service.Subscriptions
 	Pages         *service.Pages
+	Env           *service.Env
 }
 
 func NewClient(ctx context.Context) *APIM {
@@ -42,14 +42,14 @@ func NewClient(ctx context.Context) *APIM {
 	apim, err := apim.FromContext(ctx, context.Spec.Context)
 	Expect(err).ToNot(HaveOccurred())
 
-	applications := service.NewApplications(apim.APIs.Client)
 	subscriptions := service.NewSubscriptions(apim.APIs.Client)
 	pages := service.NewPages(apim.APIs.Client)
+	env := service.NewEnv(apim.APIs.Client)
 
 	return &APIM{
 		APIM:          apim,
-		Applications:  applications,
 		Subscriptions: subscriptions,
 		Pages:         pages,
+		Env:           env,
 	}
 }

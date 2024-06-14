@@ -63,6 +63,20 @@ func (client *Client) Get(url string, target any, transformers ...RequestTransfo
 	return client.do(req, target)
 }
 
+// Special GET method for YAML content type (used in tests).
+func (client *Client) GetYAML(url string, target any, transformers ...RequestTransformer) error {
+	req, err := client.prepareGet(url)
+	if err != nil {
+		return errors.FromNewRequestError(http.MethodGet, url, err)
+	}
+
+	for _, transform := range transformers {
+		transform(req)
+	}
+
+	return client.doYAML(req, target)
+}
+
 // Post returns the result of a POST request to the specified URL,
 // using entity as the body of the request, marshaling the result into target.
 // If the target is nil, the response is discarded.
@@ -123,6 +137,21 @@ func (client *Client) do(req *http.Request, target any) error {
 	}
 
 	return WriteJSON(resp, target)
+}
+
+func (client *Client) doYAML(req *http.Request, target any) error {
+	resp, err := client.http.Do(req)
+	if err != nil {
+		return errors.FromDoRequestError(req, err)
+	}
+
+	defer resp.Body.Close()
+
+	if err = errors.FromResponse(resp); err != nil {
+		return err
+	}
+
+	return WriteYAML(resp, target)
 }
 
 func (client *Client) preparePost(url string, entity any) (*http.Request, error) {
