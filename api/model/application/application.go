@@ -56,15 +56,15 @@ type MetaDataFormat string
 
 type MetaData struct {
 	// +kubebuilder:validation:Required
-	// Meta data Name
+	// Metadata Name
 	Name string `json:"name"`
-	// Meta data Value
+	// Metadata Value
 	Value string `json:"value,omitempty"`
-	// Meta data DefaultValue
+	// Metadata DefaultValue
 	DefaultValue string `json:"defaultValue,omitempty"`
-	// Meta data Format
+	// Metadata Format
 	Format *MetaDataFormat `json:"format,omitempty"`
-	// Meta data is hidden or not?
+	// Metadata is hidden or not?
 	Hidden bool `json:"hidden,omitempty"`
 }
 
