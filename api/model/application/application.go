@@ -54,7 +54,7 @@ type Setting struct {
 // +kubebuilder:validation:Enum=STRING;NUMERIC;BOOLEAN;DATE;MAIL;URL;
 type MetaDataFormat string
 
-type MetaData struct {
+type Metadata struct {
 	// +kubebuilder:validation:Required
 	// Metadata Name
 	Name string `json:"name"`
@@ -104,6 +104,6 @@ type Application struct {
 	AppKeyMode *KeyMode `json:"app_key_mode,omitempty"`
 	// Should membership notifications be disabled or not ?
 	DisableMembershipNotifications bool `json:"disable_membership_notifications,omitempty"`
-	// Application meta data
-	MetaData *[]MetaData `json:"metaData,omitempty"`
+	// Application metadata
+	Metadata *[]Metadata `json:"metadata,omitempty"`
 }
