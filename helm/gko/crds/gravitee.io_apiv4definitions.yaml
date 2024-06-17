@@ -709,10 +709,10 @@ spec:
                 items:
                   properties:
                     defaultValue:
-                      description: MetaData Default value
+                      description: Metadata Default value
                       type: string
                     format:
-                      description: MetaData Format
+                      description: Metadata Format
                       enum:
                       - STRING
                       - NUMERIC
@@ -722,13 +722,13 @@ spec:
                       - URL
                       type: string
                     key:
-                      description: MetaData Key
+                      description: Metadata Key
                       type: string
                     name:
-                      description: MetaData Name
+                      description: Metadata Name
                       type: string
                     value:
-                      description: MetaData Value
+                      description: Metadata Value
                       type: string
                   required:
                   - format

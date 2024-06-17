@@ -73,7 +73,7 @@ func createUpdateApplication(ctx context.Context, application *v1alpha1.Applicat
 
 func createUpdateApplicationMetadata(ctx context.Context, app *v1alpha1.Application) error {
 	spec := &app.Spec
-	if spec.MetaData == nil {
+	if spec.Metadata == nil {
 		app.Status.Status = custom.ProcessingStatusCompleted
 		return nil
 	}
@@ -89,13 +89,13 @@ func createUpdateApplicationMetadata(ctx context.Context, app *v1alpha1.Applicat
 	}
 
 	// All this method Will be removed once we created a dedicated endpoint in APIM for creating Application using GKO
-	for _, metaData := range *spec.MetaData {
+	for _, metadata := range *spec.Metadata {
 		md := struct {
-			application.MetaData
+			application.Metadata
 			ApplicationId string `json:"applicationId"`
 			Key           string `json:"key,omitempty"`
 		}{
-			MetaData:      metaData,
+			Metadata:      metadata,
 			ApplicationId: spec.ID,
 		}
 		method := http.MethodPost
@@ -113,9 +113,9 @@ func createUpdateApplicationMetadata(ctx context.Context, app *v1alpha1.Applicat
 	}
 
 	// Delete removed metadata
-	for _, metaData := range *appMetaData {
-		if metadataIsRemoved(spec.MetaData, metaData.Name) {
-			err = apimCli.Applications.DeleteMetadata(app.Status.ID, metaData.Key)
+	for _, metadata := range *appMetaData {
+		if metadataIsRemoved(spec.Metadata, metadata.Name) {
+			err = apimCli.Applications.DeleteMetadata(app.Status.ID, metadata.Key)
 			if errors.IgnoreNotFound(err) != nil {
 				return err
 			}
@@ -137,8 +137,8 @@ func findMetadataKey(appMetadata *[]apimModel.ApplicationMetaData, name string) 
 	return ""
 }
 
-func metadataIsRemoved(metaData *[]application.MetaData, name string) bool {
-	for _, md := range *metaData {
+func metadataIsRemoved(metadata *[]application.Metadata, name string) bool {
+	for _, md := range *metadata {
 		if md.Name == name {
 			return false
 		}

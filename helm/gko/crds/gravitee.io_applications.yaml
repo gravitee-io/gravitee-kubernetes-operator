@@ -106,8 +106,8 @@ spec:
                   io.gravitee.definition.model.Application
                   Application ID
                 type: string
-              metaData:
-                description: Application meta data
+              metadata:
+                description: Application metadata
                 items:
                   properties:
                     defaultValue:

@@ -1003,7 +1003,7 @@ List of path operators
         <td><b>format</b></td>
         <td>enum</td>
         <td>
-          MetaData Format<br/>
+          Metadata Format<br/>
           <br/>
             <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
         </td>
@@ -1012,28 +1012,28 @@ List of path operators
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          MetaData Key<br/>
+          Metadata Key<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          MetaData Name<br/>
+          Metadata Name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>defaultValue</b></td>
         <td>string</td>
         <td>
-          MetaData Default value<br/>
+          Metadata Default value<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          MetaData Value<br/>
+          Metadata Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6544,7 +6544,7 @@ APIM exports and can be safely ignored.<br/>
         <td><b>format</b></td>
         <td>enum</td>
         <td>
-          MetaData Format<br/>
+          Metadata Format<br/>
           <br/>
             <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
         </td>
@@ -6553,28 +6553,28 @@ APIM exports and can be safely ignored.<br/>
         <td><b>key</b></td>
         <td>string</td>
         <td>
-          MetaData Key<br/>
+          Metadata Key<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
-          MetaData Name<br/>
+          Metadata Name<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>defaultValue</b></td>
         <td>string</td>
         <td>
-          MetaData Default value<br/>
+          Metadata Default value<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>value</b></td>
         <td>string</td>
         <td>
-          MetaData Value<br/>
+          Metadata Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7400,10 +7400,10 @@ Application ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#applicationspecmetadataindex">metaData</a></b></td>
+        <td><b><a href="#applicationspecmetadataindex">metadata</a></b></td>
         <td>[]object</td>
         <td>
-          Application meta data<br/>
+          Application metadata<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7488,7 +7488,7 @@ Application ID<br/>
 </table>
 
 
-### Application.spec.metaData[index]
+### Application.spec.metadata[index]
 [Go to parent definition](#applicationspec)
 
 

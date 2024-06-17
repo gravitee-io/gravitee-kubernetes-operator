@@ -71,7 +71,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		updated := fixtures.Application.DeepCopy()
 		updated.Spec.Name += "-updated"
-		(*updated.Spec.MetaData)[0].Name = "test metadata update"
+		(*updated.Spec.Metadata)[0].Name = "test metadata update"
 
 		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
