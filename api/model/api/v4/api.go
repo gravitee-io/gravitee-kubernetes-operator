@@ -70,6 +70,15 @@ type Api struct {
 	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
 	// List of members associated with the API
 	Members []*base.Member `json:"members,omitempty"`
+	// +kubebuilder:validation:Optional
+	// A map of pages objects.
+	//
+	// Keys uniquely identify pages and are used to keep them in sync
+	// with APIM when using a management context.
+	//
+	// Renaming a key is the equivalent of deleting the page and recreating
+	// it holding a new ID in APIM.
+	Pages map[string]*Page `json:"pages"`
 }
 
 type GatewayDefinitionApi struct {

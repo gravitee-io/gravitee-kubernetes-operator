@@ -19,8 +19,6 @@ package v1alpha1
 import (
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -155,8 +153,8 @@ func (api *ApiV4Definition) GetOrGenerateEmptyPlanCrossID() {
 	}
 }
 
-func (api *ApiV4Definition) PickPageIDs() map[string]*base.Page {
-	pages := make(map[string]*base.Page, len(api.Spec.Pages))
+func (api *ApiV4Definition) PickPageIDs() map[string]*v4.Page {
+	pages := make(map[string]*v4.Page, len(api.Spec.Pages))
 	for name, page := range api.Spec.Pages {
 		p := page.DeepCopy()
 

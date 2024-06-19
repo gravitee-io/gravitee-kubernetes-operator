@@ -742,24 +742,6 @@ spec:
               pages:
                 additionalProperties:
                   properties:
-                    accessControls:
-                      description: If the page is private, defines a set of user groups
-                        with access
-                      items:
-                        properties:
-                          referenceId:
-                            description: The ID denied or granted by the access control
-                              (currently only group names are supported)
-                            type: string
-                          referenceType:
-                            description: |-
-                              The type of reference denied or granted by the access control
-                              Currently only GROUP is supported
-                            enum:
-                            - GROUP
-                            type: string
-                        type: object
-                      type: array
                     api:
                       description: The API of the page. If empty, will be set automatically
                         to the generated ID of the API.
@@ -767,8 +749,8 @@ spec:
                     configuration:
                       additionalProperties:
                         type: string
-                      description: Legacy page configuration support can be added
-                        using this field
+                      description: Custom page configuration (e.g. page rendering
+                        can be changed to use Redoc instead of Swagger ui)
                       type: object
                     content:
                       description: The content of the page, if any.
@@ -779,11 +761,6 @@ spec:
                         If not set, this ID will be generated in a predictable manner based on
                         the map key associated to this entry in the API.
                       type: string
-                    excludedAccessControls:
-                      description: |-
-                        if true, the references defined in the accessControls list will be
-                        denied access instead of being granted
-                      type: boolean
                     homepage:
                       default: false
                       description: If true, this page will be displayed as the homepage

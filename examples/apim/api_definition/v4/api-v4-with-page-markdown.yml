@@ -23,6 +23,9 @@ spec:
   description: "An API V4 with a simple markdown page"
   type: PROXY
   state: STARTED
+  contextRef:
+    name: dev-ctx
+    namespace: default
   listeners:
     - type: HTTP
       paths:
@@ -61,3 +64,7 @@ spec:
         Hello world!
         --
         This is markdown.
+      visibility: PRIVATE
+      accessControls: 
+        - referenceType: GROUP
+          referenceId: developers
