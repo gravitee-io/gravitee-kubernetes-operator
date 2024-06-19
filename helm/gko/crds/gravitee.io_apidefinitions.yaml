@@ -379,8 +379,8 @@ spec:
                     configuration:
                       additionalProperties:
                         type: string
-                      description: Legacy page configuration support can be added
-                        using this field
+                      description: Custom page configuration (e.g. page rendering
+                        can be changed to use Redoc instead of Swagger ui)
                       type: object
                     content:
                       description: The content of the page, if any.

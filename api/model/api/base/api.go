@@ -62,15 +62,6 @@ type ApiBase struct {
 	// The list of categories the API belongs to.
 	// Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
 	Categories []string `json:"categories"`
-	// +kubebuilder:validation:Optional
-	// A map of pages objects.
-	//
-	// Keys uniquely identify pages and are used to keep them in sync
-	// with APIM when using a management context.
-	//
-	// Renaming a key is the equivalent of deleting the page and recreating
-	// it holding a new ID in APIM.
-	Pages map[string]*Page `json:"pages"`
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;

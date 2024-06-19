@@ -90,13 +90,6 @@ type Page struct {
 	// each time the source is fetched.
 	Source *PageSource `json:"source,omitempty"`
 	// +kubebuilder:validation:Optional
-	// Legacy page configuration support can be added using this field
+	// Custom page configuration (e.g. page rendering can be changed to use Redoc instead of Swagger ui)
 	Configuration map[string]string `json:"configuration,omitempty"`
-	// If the page is private, defines a set of user groups with access
-	// +kubebuilder:validation:Optional
-	AccessControls []AccessControl `json:"accessControls,omitempty"`
-	// if true, the references defined in the accessControls list will be
-	// denied access instead of being granted
-	// +kubebuilder:validation:Optional
-	ExcludedAccessControl bool `json:"excludedAccessControls"`
 }

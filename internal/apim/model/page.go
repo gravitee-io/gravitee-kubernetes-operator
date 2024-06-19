@@ -15,7 +15,6 @@
 package model
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
@@ -33,7 +32,7 @@ type PageSource struct {
 }
 
 type PageImport struct {
-	*base.Page        `json:",inline"`
+	*v2.Page          `json:",inline"`
 	DefinitionContext *v2.DefinitionContext `json:"definition_context"`
 }
 

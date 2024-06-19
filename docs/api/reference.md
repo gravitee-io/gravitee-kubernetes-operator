@@ -1083,7 +1083,7 @@ List of path operators
         <td><b>configuration</b></td>
         <td>map[string]string</td>
         <td>
-          Legacy page configuration support can be added using this field<br/>
+          Custom page configuration (e.g. page rendering can be changed to use Redoc instead of Swagger ui)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6607,13 +6607,6 @@ APIM exports and can be safely ignored.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#apiv4definitionspecpageskeyaccesscontrolsindex">accessControls</a></b></td>
-        <td>[]object</td>
-        <td>
-          If the page is private, defines a set of user groups with access<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>api</b></td>
         <td>string</td>
         <td>
@@ -6624,7 +6617,7 @@ APIM exports and can be safely ignored.<br/>
         <td><b>configuration</b></td>
         <td>map[string]string</td>
         <td>
-          Legacy page configuration support can be added using this field<br/>
+          Custom page configuration (e.g. page rendering can be changed to use Redoc instead of Swagger ui)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6641,14 +6634,6 @@ APIM exports and can be safely ignored.<br/>
           CrossID is designed to identified a page across environments.
 If not set, this ID will be generated in a predictable manner based on
 the map key associated to this entry in the API.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>excludedAccessControls</b></td>
-        <td>boolean</td>
-        <td>
-          if true, the references defined in the accessControls list will be
-denied access instead of being granted<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6729,43 +6714,6 @@ each time the source is fetched.<br/>
           <br/>
             <i>Enum</i>: PUBLIC, PRIVATE<br/>
             <i>Default</i>: PUBLIC<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiV4Definition.spec.pages[key].accessControls[index]
-[Go to parent definition](#apiv4definitionspecpageskey)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>referenceId</b></td>
-        <td>string</td>
-        <td>
-          The ID denied or granted by the access control (currently only group names are supported)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>referenceType</b></td>
-        <td>enum</td>
-        <td>
-          The type of reference denied or granted by the access control
-Currently only GROUP is supported<br/>
-          <br/>
-            <i>Enum</i>: GROUP<br/>
         </td>
         <td>false</td>
       </tr></tbody>
