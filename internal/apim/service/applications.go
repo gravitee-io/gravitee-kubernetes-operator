@@ -43,8 +43,7 @@ func NewApplications(client *client.Client) *Applications {
 func (svc *Applications) Search(query string, status string) ([]model.Application, error) {
 	url := svc.EnvV1Target(applicationsPath).WithQueryParam("query", query).WithQueryParam("status", status)
 	applications := new([]model.Application)
-
-	if err := svc.HTTP.Get(url.String(), applications); err != nil {
+	if err := svc.HTTP.Get(url, applications); err != nil {
 		return nil, err
 	}
 
@@ -59,7 +58,7 @@ func (svc *Applications) GetByID(appId string) (*model.Application, error) {
 	url := svc.EnvV1Target(applicationsPath).WithPath(appId)
 	application := new(model.Application)
 
-	if err := svc.HTTP.Get(url.String(), application); err != nil {
+	if err := svc.HTTP.Get(url, application); err != nil {
 		return nil, err
 	}
 
@@ -74,7 +73,7 @@ func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.Appl
 	url := svc.EnvV1Target(applicationsPath).WithPath(appId).WithPath(metadataPath)
 	application := new([]model.ApplicationMetaData)
 
-	if err := svc.HTTP.Get(url.String(), application); err != nil {
+	if err := svc.HTTP.Get(url, application); err != nil {
 		return nil, err
 	}
 
@@ -93,7 +92,7 @@ func (svc *Applications) CreateUpdate(method string, spec *application.Applicati
 	}
 
 	application := new(model.Application)
-	if err := fun(url.String(), spec, application); err != nil {
+	if err := fun(url, spec, application); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +101,7 @@ func (svc *Applications) CreateUpdate(method string, spec *application.Applicati
 
 func (svc *Applications) Delete(appId string) error {
 	url := svc.EnvV1Target(applicationsPath).WithPath(appId)
-	return svc.HTTP.Delete(url.String(), nil)
+	return svc.HTTP.Delete(url, nil)
 }
 
 func (svc *Applications) CreateUpdateMetadata(method string, appId string,
@@ -115,7 +114,7 @@ func (svc *Applications) CreateUpdateMetadata(method string, appId string,
 	}
 
 	md := new(model.ApplicationMetaData)
-	if err := fun(url.String(), spec, md); err != nil {
+	if err := fun(url, spec, md); err != nil {
 		return nil, err
 	}
 
@@ -124,5 +123,5 @@ func (svc *Applications) CreateUpdateMetadata(method string, appId string,
 
 func (svc *Applications) DeleteMetadata(appId string, key string) error {
 	url := svc.EnvV1Target(applicationsPath).WithPath(appId).WithPath(metadataPath).WithPath(key)
-	return svc.HTTP.Delete(url.String(), nil)
+	return svc.HTTP.Delete(url, nil)
 }

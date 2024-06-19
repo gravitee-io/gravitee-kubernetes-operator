@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 )
@@ -50,9 +51,10 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 
 		By("calling API endpoint, expecting status 401")
 
-		endpoint := constants.BuildAPIEndpoint(fixtures.API)
+		url := endpoint.ForV2(fixtures.API)
+
 		Eventually(func() error {
-			res, err := httpClient.Get(endpoint)
+			res, err := httpClient.Get(url.String())
 			return assert.NoErrorAndHTTPStatus(err, res, http.StatusUnauthorized)
 		}, timeout, interval).Should(Succeed())
 
@@ -86,7 +88,7 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 		By("calling API endpoint with API key, expecting status 200")
 
 		Eventually(func() error {
-			req, httpErr := http.NewRequest(http.MethodGet, endpoint, nil)
+			req, httpErr := http.NewRequest(http.MethodGet, url.String(), nil)
 			if httpErr != nil {
 				return httpErr
 			}

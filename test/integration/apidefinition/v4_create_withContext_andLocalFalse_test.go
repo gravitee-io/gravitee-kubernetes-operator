@@ -26,6 +26,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -62,9 +63,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("calling gateway endpoint, expecting status 200")
 
-		endpoint := constants.BuildAPIV4Endpoint(fixtures.APIv4.Spec.Listeners[0])
+		url := endpoint.ForV4Proxy(fixtures.APIv4.Spec.Listeners[0])
 		Eventually(func() error {
-			res, callErr := httpClient.Get(endpoint)
+			res, callErr := httpClient.Get(url.String())
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
 		}, timeout, interval).Should(Succeed())
 	})

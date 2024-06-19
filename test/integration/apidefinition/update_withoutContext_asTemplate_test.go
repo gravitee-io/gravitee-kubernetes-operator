@@ -27,6 +27,7 @@ import (
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -61,12 +62,10 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 
 		By("checking access to backend service, expecting status 401")
 
-		endpoint := constants.BuildAPIEndpoint(apiDef)
+		url := endpoint.ForV2(apiDef)
 
 		Eventually(func() error {
-			url, err := xhttp.NewURL(endpoint)
-			Expect(err).ToNot(HaveOccurred())
-			err = httpCli.Get(url.WithPath("hostname").String(), new(Host), xhttp.WithHost("httpbin.example.com"))
+			err := httpCli.Get(url.WithPath("hostname"), new(Host), xhttp.WithHost("httpbin.example.com"))
 			if !errors.IsUnauthorized(err) {
 				return assert.Equals("error", "[UNAUTHORIZED]", err)
 			}
@@ -90,9 +89,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		By("checking access to backend service, expecting status 200")
 
 		Eventually(func() error {
-			url, err := xhttp.NewURL(endpoint)
-			Expect(err).ToNot(HaveOccurred())
-			return httpCli.Get(url.WithPath("hostname").String(), new(Host), xhttp.WithHost("httpbin.example.com"))
+			return httpCli.Get(url.WithPath("hostname"), new(Host), xhttp.WithHost("httpbin.example.com"))
 		}, timeout, interval).Should(Succeed())
 	})
 })

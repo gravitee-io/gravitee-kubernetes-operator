@@ -24,6 +24,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 )
@@ -43,9 +44,9 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 			By(fmt.Sprintf("calling gateway endpoint, expecting status %d", status))
 
-			endpoint := constants.BuildAPIEndpoint(fixtures.API)
+			url := endpoint.ForV2(fixtures.API)
 			Eventually(func() error {
-				res, callErr := httpClient.Get(endpoint)
+				res, callErr := httpClient.Get(url.String())
 				return assert.NoErrorAndHTTPStatus(callErr, res, status)
 			}, timeout, interval).Should(Succeed())
 

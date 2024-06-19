@@ -36,23 +36,23 @@ type Client struct {
 
 // URLs contains URLs targeting the organization and environment of the client.
 type URLs struct {
-	Org   *http.URL
-	EnvV1 *http.URL
-	EnvV2 *http.URL
+	Org   http.URL
+	EnvV1 http.URL
+	EnvV2 http.URL
 }
 
 // EnvV1Target returns a new URL with the given path appended to the environment URL.
-func (client *Client) EnvV1Target(path string) *http.URL {
+func (client *Client) EnvV1Target(path string) http.URL {
 	return client.URLs.EnvV1.WithPath(path)
 }
 
 // EnvV2Target returns a new URL with the given path appended to the environment URL.
-func (client *Client) EnvV2Target(path string) *http.URL {
+func (client *Client) EnvV2Target(path string) http.URL {
 	return client.URLs.EnvV2.WithPath(path)
 }
 
 // OrgTarget returns a new URL with the given path appended to the organization URL.
-func (client *Client) OrgTarget(path string) *http.URL {
+func (client *Client) OrgTarget(path string) http.URL {
 	return client.URLs.Org.WithPath(path)
 }
 

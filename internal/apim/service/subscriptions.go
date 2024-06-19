@@ -30,7 +30,7 @@ func NewSubscriptions(client *client.Client) *Subscriptions {
 	return &Subscriptions{Client: client}
 }
 
-func (svc *Subscriptions) APITarget(apiID string) *http.URL {
+func (svc *Subscriptions) APITarget(apiID string) http.URL {
 	return svc.EnvV1Target("apis").WithPath(apiID).WithPath("subscriptions")
 }
 
@@ -44,7 +44,7 @@ func (svc *Subscriptions) Subscribe(apiID, applicationID, planID string) (*model
 
 	subscription := new(model.Subscription)
 
-	if err := svc.HTTP.Post(url.String(), nil, subscription); err != nil {
+	if err := svc.HTTP.Post(url, nil, subscription); err != nil {
 		return nil, err
 	}
 
@@ -55,7 +55,7 @@ func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiK
 	url := svc.APITarget(apiID).WithPath(subscriptionID).WithPath("apikeys")
 	apiKeys := new([]model.ApiKeyEntity)
 
-	if err := svc.HTTP.Get(url.String(), apiKeys); err != nil {
+	if err := svc.HTTP.Get(url, apiKeys); err != nil {
 		return nil, err
 	}
 

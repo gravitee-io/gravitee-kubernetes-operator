@@ -16,7 +16,6 @@ package apidefinition
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -27,6 +26,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -41,7 +41,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 	ctx := context.Background()
 
 	DescribeTable("without a management context",
-		func(builder *fixture.FSBuilder, status int) {
+		func(builder *fixture.FSBuilder) {
 			fixtures := builder.Build().Apply()
 
 			By("expecting API status to be completed")
@@ -62,33 +62,29 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 			assert.EventsEmitted(fixtures.API, "UpdateStarted", "UpdateSucceeded")
 
-			By(fmt.Sprintf("calling gateway endpoint, expecting status %d", status))
+			By("calling gateway endpoint, expecting status 200")
 
-			endpoint := constants.BuildAPIEndpoint(fixtures.API)
 			Eventually(func() error {
-				res, callErr := httpClient.Get(endpoint)
+				url := endpoint.ForV2(fixtures.API)
+				res, callErr := httpClient.Get(url.String())
 				return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
 			}, timeout, interval).Should(Succeed())
 		},
 		Entry(
 			"should make api available",
 			fixture.Builder().WithAPI(constants.Api),
-			200,
 		),
 		Entry(
 			"should resolve the template and make api available",
 			fixture.Builder().WithAPI(constants.ApiWithTemplatingFile),
-			200,
 		),
 		Entry(
 			"should make api with rate limit available",
 			fixture.Builder().WithAPI(constants.ApiWithRateLimit),
-			200,
 		),
 		Entry(
 			"should make api with disabled policy available",
 			fixture.Builder().WithAPI(constants.ApiWithDisabledPolicy),
-			200,
 		),
 	)
 })

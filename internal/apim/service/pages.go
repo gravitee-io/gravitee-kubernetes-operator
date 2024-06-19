@@ -38,7 +38,7 @@ func (svc *Pages) FindByAPI(apiID string, queries ...*model.PagesQuery) ([]model
 
 	pages := new([]model.Page)
 
-	if err := svc.HTTP.Get(url.String(), pages); err != nil {
+	if err := svc.HTTP.Get(url, pages); err != nil {
 		return nil, err
 	}
 
@@ -60,7 +60,7 @@ func (svc *Pages) FindByAPIV4(apiID string, queries ...*model.PagesQuery) ([]mod
 		Pages: make([]model.Page, 0),
 	}
 
-	if err := svc.HTTP.Get(url.String(), &tmp); err != nil {
+	if err := svc.HTTP.Get(url, &tmp); err != nil {
 		return nil, err
 	}
 

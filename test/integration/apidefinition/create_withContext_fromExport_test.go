@@ -17,16 +17,17 @@ package apidefinition
 import (
 	"context"
 	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 )
@@ -36,7 +37,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	interval := constants.Interval
 
 	ctx := context.Background()
-	httpClient := http.Client{Timeout: 5 * time.Second}
+	httpCli := xhttp.NewNoAuthClient(ctx)
 
 	It("should update existing api in management API", func() {
 		fixtures := fixture.Builder().
@@ -77,10 +78,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 		}, timeout, interval).Should(Succeed())
 		By("calling gateway endpoint, expecting status 200")
 
-		endpoint := constants.BuildAPIEndpoint(fixtures.API)
 		Eventually(func() error {
-			res, err := httpClient.Get(endpoint)
-			return assert.NoErrorAndHTTPStatus(err, res, http.StatusOK)
+			url := endpoint.ForV2(fixtures.API)
+			return httpCli.Get(url, nil)
 		}, timeout, interval).Should(Succeed())
 	})
 })

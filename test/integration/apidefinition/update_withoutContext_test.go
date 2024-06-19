@@ -24,6 +24,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -45,9 +46,9 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 
 		By("calling gateway endpoint, expecting status 200")
 
-		endpoint := constants.BuildAPIEndpoint(fixtures.API)
+		url := endpoint.ForV2(fixtures.API)
 		Eventually(func() error {
-			res, callErr := httpClient.Get(endpoint)
+			res, callErr := httpClient.Get(url.String())
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
 		}, timeout, interval).Should(Succeed())
 
@@ -55,7 +56,8 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 
 		updated := fixtures.API.DeepCopy()
 		updated.Spec.Proxy.VirtualHosts[0].Path += "-updated"
-		updatedEndpoint := constants.BuildAPIEndpoint(updated)
+
+		updatedURL := endpoint.ForV2(updated)
 
 		Eventually(func() error {
 			return manager.UpdateSafely(ctx, updated)
@@ -64,7 +66,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 		By("calling updated endpoint, expecting status 200")
 
 		Eventually(func() error {
-			res, callErr := httpClient.Get(updatedEndpoint)
+			res, callErr := httpClient.Get(updatedURL.String())
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
 		}, timeout, interval).Should(Succeed())
 

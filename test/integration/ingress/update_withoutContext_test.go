@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -60,8 +61,9 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 
 		proxy := apiDef.Spec.Proxy
 		Expect(proxy.VirtualHosts).ToNot(BeEmpty())
-		endpoint := constants.BuildAPIEndpoint(apiDef)
-		Expect(assert.StrEndingWithPath(endpoint, "/httpbin"+fixtures.GetGeneratedSuffix())).To(Succeed())
+
+		url := endpoint.ForV2(apiDef)
+		Expect(assert.LasFragmentEquals(url, "/httpbin"+fixtures.GetGeneratedSuffix())).To(Succeed())
 
 		By("updating ingress path")
 
@@ -77,16 +79,14 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 			if err != nil {
 				return err
 			}
-			endpoint = constants.BuildAPIEndpoint(apiDef)
-			return assert.StrEndingWithPath(endpoint, "/"+fixtures.GetGeneratedSuffix()[1:])
+			url = endpoint.ForV2(apiDef)
+			return assert.LasFragmentEquals(url, "/"+fixtures.GetGeneratedSuffix()[1:])
 		}, timeout, interval).Should(Succeed())
 
 		By("checking access to backend service")
 
 		Eventually(func() error {
-			url, err := xhttp.NewURL(endpoint)
-			Expect(err).ToNot(HaveOccurred())
-			return httpCli.Get(url.WithPath("hostname").String(), new(Host), xhttp.WithHost("httpbin.example.com"))
+			return httpCli.Get(url.WithPath("hostname"), new(Host), xhttp.WithHost("httpbin.example.com"))
 		}, timeout, interval).Should(Succeed())
 	})
 })

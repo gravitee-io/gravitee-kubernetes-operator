@@ -24,6 +24,7 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -80,9 +81,8 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		By("checking access to backend service")
 
 		Eventually(func() error {
-			url, err := xhttp.NewURL(constants.BuildAPIEndpoint(apiDef))
-			Expect(err).ToNot(HaveOccurred())
-			return httpCli.Get(url.WithPath("hostname").String(), new(Host), xhttp.WithHost("httpbin.example.com"))
+			url := endpoint.ForV2(apiDef)
+			return httpCli.Get(url.WithPath("hostname"), new(Host), xhttp.WithHost("httpbin.example.com"))
 		}, timeout, interval).Should(Succeed())
 	})
 })

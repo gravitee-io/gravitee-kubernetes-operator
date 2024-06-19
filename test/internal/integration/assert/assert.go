@@ -23,6 +23,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -45,8 +46,8 @@ func HasFinalizer(object client.Object, value string) error {
 	return nil
 }
 
-func StrEndingWithPath(str, path string) error {
-	return Equals("path", path, str[strings.LastIndex(str, "/"):])
+func LasFragmentEquals(url xhttp.URL, fragment string) error {
+	return Equals("path", fragment, url.String()[strings.LastIndex(url.String(), "/"):])
 }
 
 func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {

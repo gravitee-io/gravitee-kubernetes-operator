@@ -16,28 +16,27 @@ package apidefinition
 
 import (
 	"context"
-	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
 var _ = Describe("Create", labels.WithContext, func() {
-	httpClient := http.Client{Timeout: 5 * time.Second}
-
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 
 	ctx := context.Background()
+	httpCli := xhttp.NewNoAuthClient(ctx)
 
 	It("should not create a config map and sync from management API", func() {
 		fixtures := fixture.Builder().
@@ -52,8 +51,8 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("expecting not to find config map")
 
-		cm := &v1.ConfigMap{}
 		Eventually(func() error {
+			cm := &v1.ConfigMap{}
 			return manager.Client().Get(ctx, types.NamespacedName{
 				Name:      fixtures.API.Name,
 				Namespace: fixtures.API.Namespace,
@@ -62,10 +61,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("calling gateway endpoint, expecting status 200")
 
-		endpoint := constants.BuildAPIEndpoint(fixtures.API)
 		Eventually(func() error {
-			res, callErr := httpClient.Get(endpoint)
-			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
+			url := endpoint.ForV2(fixtures.API)
+			return httpCli.Get(url, nil)
 		}, timeout, interval).Should(Succeed())
 	})
 })

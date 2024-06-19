@@ -47,7 +47,7 @@ type APIs struct {
 	*client.Client
 }
 
-type httpImportMethod = func(string, any, any, ...xhttp.RequestTransformer) error
+type httpImportMethod = func(xhttp.URL, any, any, ...xhttp.RequestTransformer) error
 
 func NewAPIs(client *client.Client) *APIs {
 	return &APIs{Client: client}
@@ -57,7 +57,7 @@ func (svc *APIs) GetByCrossID(crossID string) (*model.ApiListItem, error) {
 	url := svc.EnvV1Target("apis").WithQueryParam(crossIDParam, crossID)
 	apis := new([]model.ApiListItem)
 
-	if err := svc.HTTP.Get(url.String(), apis); err != nil {
+	if err := svc.HTTP.Get(url, apis); err != nil {
 		return nil, err
 	}
 
@@ -72,7 +72,7 @@ func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
 	url := svc.EnvV1Target("apis").WithPath(apiID)
 	api := new(model.ApiEntity)
 
-	if err := svc.HTTP.Get(url.String(), api); err != nil {
+	if err := svc.HTTP.Get(url, api); err != nil {
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func (svc *APIs) GetV4ByID(apiID string) (*v1alpha1.ApiV4DefinitionSpec, error) 
 	url := svc.EnvV2Target("apis").WithPath(apiID)
 	resp := new(v1alpha1.ApiV4DefinitionSpec)
 
-	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
+	if err := svc.HTTP.Get(url, &resp); err != nil {
 		return nil, err
 	}
 
@@ -96,7 +96,7 @@ func (svc *APIs) ImportV2(method string, spec *v2.Api) (*model.ApiEntity, error)
 	api := new(model.ApiEntity)
 	fun := svc.getImportFunc(method)
 
-	if err := fun(url.String(), apiImport, api); err != nil {
+	if err := fun(url, apiImport, api); err != nil {
 		return nil, err
 	}
 
@@ -107,7 +107,7 @@ func (svc *APIs) ImportV4(spec *v4.Api) (*v1alpha1.ApiV4DefinitionStatus, error)
 	url := svc.EnvV2Target("apis/_import/crd")
 
 	status := new(v1alpha1.ApiV4DefinitionStatus)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	if err := svc.HTTP.Put(url, spec, status); err != nil {
 		return nil, err
 	}
 
@@ -123,33 +123,33 @@ func (svc *APIs) getImportFunc(method string) httpImportMethod {
 
 func (svc *APIs) UpdateState(apiID string, action model.Action) error {
 	url := svc.EnvV1Target("apis").WithPath(apiID).WithQueryParam(stateActionParam, string(action))
-	return svc.HTTP.Post(url.String(), nil, nil)
+	return svc.HTTP.Post(url, nil, nil)
 }
 
 func (svc *APIs) DeleteV2(apiID string) error {
 	url := svc.EnvV1Target("apis").WithPath(apiID).WithQueryParams(deleteParams)
-	return svc.HTTP.Delete(url.String(), nil)
+	return svc.HTTP.Delete(url, nil)
 }
 
 func (svc *APIs) DeleteV4(apiID string) error {
 	url := svc.EnvV2Target("apis").WithPath(apiID).WithQueryParams(deleteParams)
-	return svc.HTTP.Delete(url.String(), nil)
+	return svc.HTTP.Delete(url, nil)
 }
 
 func (svc *APIs) SetKubernetesContext(apiID string) error {
 	url := svc.EnvV1Target("apis").WithPath(apiID).WithPath("definition-context")
-	return svc.HTTP.Put(url.String(), model.NewKubernetesContext(), nil)
+	return svc.HTTP.Put(url, model.NewKubernetesContext(), nil)
 }
 
 func (svc *APIs) Deploy(id string) error {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("deploy")
-	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
+	return svc.HTTP.Post(url, new(model.ApiDeployment), nil)
 }
 
 func (svc *APIs) ExportV2(id string) (*v1alpha1.ApiDefinition, error) {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("/crd")
 	api := new(v1alpha1.ApiDefinition)
-	if err := svc.HTTP.GetYAML(url.String(), api); err != nil {
+	if err := svc.HTTP.GetYAML(url, api); err != nil {
 		return nil, err
 	}
 	return api, nil

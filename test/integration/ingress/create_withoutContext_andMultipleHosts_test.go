@@ -29,6 +29,7 @@ import (
 	iErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/endpoint"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -110,7 +111,9 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		By("checking routing to httpbin-1")
 
 		host := new(Host)
-		url := fmt.Sprintf("%s/ingress/foo%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix())
+		url := endpoint.FromStrURL(
+			fmt.Sprintf("%s/ingress/foo%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix()),
+		)
 
 		Eventually(func() error {
 			return httpCli.Get(url, host, xhttp.WithHost("foo.example.com"))
@@ -121,7 +124,10 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		By("checking routing to httpbin-2")
 
 		host = new(Host)
-		url = fmt.Sprintf("%s/ingress/bar%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix())
+
+		url = endpoint.FromStrURL(
+			fmt.Sprintf("%s/ingress/bar%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix()),
+		)
 
 		Eventually(func() error {
 			return httpCli.Get(url, host, xhttp.WithHost("bar.example.com"))
@@ -132,7 +138,9 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		By("checking routing to httpbin-3")
 
 		host = new(Host)
-		url = fmt.Sprintf("%s/ingress/baz%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix())
+		url = endpoint.FromStrURL(
+			fmt.Sprintf("%s/ingress/baz%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix()),
+		)
 
 		Eventually(func() error {
 			return httpCli.Get(url, host)

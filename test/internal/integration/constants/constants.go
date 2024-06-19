@@ -16,10 +16,6 @@ package constants
 
 import (
 	"time"
-
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 const (
@@ -132,20 +128,3 @@ const (
 
 	Application = SamplesPath + "/apim/application/application.yml"
 )
-
-func BuildAPIEndpoint(api *v1alpha1.ApiDefinition) string {
-	return GatewayUrl + api.Spec.Proxy.VirtualHosts[0].Path
-}
-
-func BuildAPIV4Endpoint(l v4.Listener) string {
-	switch t := l.(type) {
-	case *v4.GenericListener:
-		return BuildAPIV4Endpoint(t.ToListener())
-	case *v4.HttpListener:
-		return GatewayUrl + t.Paths[0].Path
-	case *v4.TCPListener:
-		return t.Hosts[0]
-	}
-
-	return ""
-}
