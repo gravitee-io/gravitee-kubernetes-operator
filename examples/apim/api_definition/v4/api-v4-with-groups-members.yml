@@ -56,7 +56,7 @@ spec:
       security:
         type: "KEY_LESS"
   groups:
-    - b53e7784-2e9d-4305-be77-842e9dc30541
+    - developers
   members:
     - source: gravitee
       sourceId: antoine.kamiel@graviteesource.com
