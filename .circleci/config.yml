@@ -524,7 +524,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":kubernetes: Gravitee Kubernetes Operator - <https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/latest|Version ${CIRCLE_TAG}> has been released 🎉"
+                    "text": ":kubernetes: Gravitee Kubernetes Operator - <https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/${CIRCLE_TAG}|Version ${CIRCLE_TAG}> has been released 🎉"
                   }
                 }
               ]
