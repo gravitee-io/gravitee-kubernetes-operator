@@ -1,11 +1,11 @@
 pull_request_rules:
     - name: Apply commits on `alpha`
       conditions:
-          - label=apply-on-alpha
+          - label=apply-on-master
       actions:
           backport:
               branches:
-                  - alpha
+                  - master
               assignees:
                   - "{{ author }}"
               body: |
@@ -17,14 +17,14 @@ pull_request_rules:
 
                   ----
                   {{ cherry_pick_error }}
-              title: "[alpha] {{ title }}"
-    - name: Apply commits on `beta`
+              title: "[master] {{ title }}"
+    - name: Apply commits on `4.4.x`
       conditions:
-          - label=apply-on-beta
+          - label=apply-on-4-4-x
       actions:
           backport:
               branches:
-                  - beta
+                  - 4.4.x
               assignees:
                   - "{{ author }}"
               body: |
@@ -36,4 +36,23 @@ pull_request_rules:
 
                   ----
                   {{ cherry_pick_error }}
-              title: "[beta] {{ title }}"
+              title: "[4.4.x] {{ title }}"
+    - name: Apply commits on `4.3.x`
+      conditions:
+          - label=apply-on-4-3-x
+      actions:
+          backport:
+              branches:
+                  - 4.3.x
+              assignees:
+                  - "{{ author }}"
+              body: |
+                  This is an automatic copy of pull request #{{number}} done by [Mergify](https://mergify.com).
+
+                  ----
+
+                  {{ body }}
+
+                  ----
+                  {{ cherry_pick_error }}
+              title: "[4.3.x] {{ title }}"
