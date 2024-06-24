@@ -41,6 +41,8 @@ rbacProxy:
     repository: quay.io/brancz/kube-rbac-proxy
     ## @param rbacProxy.image.tag Specifies the docker image tag to use.
     tag: v0.18.0
+    ## @param rbacProxy.image.pullPolicy Specifies the pullPolicy to use when starting a new container
+    pullPolicy: IfNotPresent
 
 ## @section Controller Manager
 ## @descriptionStart
@@ -52,6 +54,8 @@ manager:
     repository: graviteeio/kubernetes-operator
     ## @param manager.image.tag Specifies the docker image tag to use. If no value is set, the chart version will be used.
     tag: ""
+    ## @param manager.image.pullPolicy Specifies the pullPolicy to use when starting a new container
+    pullPolicy: IfNotPresent
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
     json: true
