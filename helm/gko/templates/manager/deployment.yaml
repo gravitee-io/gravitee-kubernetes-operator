@@ -53,6 +53,7 @@ spec:
             - --logtostderr=true
             - --v=0
           image: '{{ .Values.rbacProxy.image.repository }}:{{ .Values.rbacProxy.image.tag }}'
+          imagePullPolicy: '{{ .Values.rbacProxy.image.pullPolicy }}'
           name: kube-rbac-proxy
           ports:
             - containerPort: 8443
@@ -76,7 +77,7 @@ spec:
                 name: '{{ .Values.manager.configMap.name }}'
                 optional: true
           image: '{{ .Values.manager.image.repository }}:{{ default .Chart.Version .Values.manager.image.tag }}'
-          imagePullPolicy: Always
+          imagePullPolicy: '{{ .Values.manager.image.pullPolicy }}'
           livenessProbe:
             httpGet:
               path: /healthz
