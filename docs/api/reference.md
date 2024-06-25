@@ -2168,13 +2168,6 @@ Proxy Failover
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>-</b></td>
-        <td>integer</td>
-        <td>
-          The status of the endpoint (Down, TransitionallyDown, TransitionallyUp, Up)<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>backup</b></td>
         <td>boolean</td>
         <td>
@@ -2313,21 +2306,21 @@ Specify EndpointHealthCheck service settings
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Service is enabled or not?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>inherit</b></td>
         <td>boolean</td>
         <td>
           Is service inherited or not?<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is service enabled or not?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
@@ -3105,19 +3098,19 @@ Endpoint Discovery Service
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Service is enabled or not?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
           Configuration, arbitrary map of key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is service enabled or not?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3169,19 +3162,19 @@ Dynamic Property Service
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Service is enabled or not?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
           Configuration, arbitrary map of key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is service enabled or not?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3231,11 +3224,11 @@ Health Check Service
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          Service is enabled or not?<br/>
+          Is service enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
@@ -3811,19 +3804,19 @@ Endpoint Discovery Service
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Service is enabled or not?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
           Configuration, arbitrary map of key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is service enabled or not?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3875,19 +3868,19 @@ Dynamic Property Service
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Service is enabled or not?<br/>
-          <br/>
-            <i>Default</i>: false<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
           Configuration, arbitrary map of key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is service enabled or not?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3937,11 +3930,11 @@ Health Check Service
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
-          Service is enabled or not?<br/>
+          Is service enabled or not?<br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
