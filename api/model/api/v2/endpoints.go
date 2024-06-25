@@ -18,15 +18,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 )
 
-type EndpointStatus int
-
-const (
-	Down EndpointStatus = iota
-	TransitionallyDown
-	TransitionallyUp
-	Up
-)
-
 type EndpointType string
 
 const (
@@ -43,8 +34,6 @@ type Endpoint struct {
 	Weight int `json:"weight,omitempty"`
 	// Indicate that this ia a back-end endpoint
 	Backup bool `json:"backup,omitempty"`
-	// The status of the endpoint (Down, TransitionallyDown, TransitionallyUp, Up)
-	Status EndpointStatus `json:"-,omitempty"`
 	// The endpoint tenants
 	Tenants []string `json:"tenants,omitempty"`
 	// The type of endpoint (HttpEndpointType or GrpcEndpointType)
