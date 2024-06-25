@@ -23,7 +23,8 @@ type Service struct {
 	// Service name
 	Name string `json:"name,omitempty"`
 	// +kubebuilder:default:=false
-	// Service is enabled or not?
+	// +kubebuilder:validation:Optional
+	// Is service enabled or not?
 	Enabled bool `json:"enabled"`
 }
 
