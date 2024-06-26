@@ -689,6 +689,8 @@ var (
 		"pisicchio",
 
 		"haeyaert",
+
+		"bordigoni",
 	}
 )
 
