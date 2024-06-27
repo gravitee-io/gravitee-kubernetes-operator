@@ -389,6 +389,9 @@ jobs:
       - keeper/env-export:
           secret-url: keeper://hfnQD5TEfxzwRXUKhJhM-A/field/password
           var-name: JIRA_TOKEN
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
       - run:
           name: Switch to release branch
           command: |
