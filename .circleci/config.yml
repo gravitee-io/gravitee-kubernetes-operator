@@ -39,7 +39,7 @@ executors:
     resource_class: small
 
 commands:
-  notify-on-failure:
+  cmd-notify-on-failure:
     steps:
       - keeper/env-export:
           secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
@@ -50,7 +50,7 @@ commands:
           event: fail
           template: basic_fail_1
 
-  load-snyk-env:
+  cmd-load-snyk-env:
     parameters:
       integration_id_key:
         type: string
@@ -90,7 +90,7 @@ commands:
                 name: Setting docker image tag
                 command: echo "export DOCKER_IMAGE_TAG=$(git describe --tags --abbrev=0)" >> ${BASH_ENV}
 
-  add-docker-image-to-snyk:
+  cmd-add-docker-image-to-snyk:
     steps:
       - checkout
       - run:
@@ -108,7 +108,7 @@ commands:
             }" \
             "https://api.snyk.io/api/v1/org/${SNYK_ORG_ID}/integrations/${SNYK_INTEGRATION_ID}/import"
 jobs:
-  lint-sources:
+  job-lint-sources:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
@@ -125,7 +125,7 @@ jobs:
             - /home/circleci/.cache
             - /home/circleci/go/pkg/mod
 
-  lint-licenses:
+  job-lint-licenses:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>
     steps:
@@ -136,7 +136,7 @@ jobs:
           command: make lint-licenses
       - go/save-cache
 
-  lint-commits:
+  job-lint-commits:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
@@ -151,7 +151,7 @@ jobs:
               -x @commitlint/config-conventional \
               --from $(git describe --tags --abbrev=0)
 
-  lint-resources:
+  job-lint-resources:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
@@ -179,7 +179,7 @@ jobs:
             make helm-reference
             git diff --quiet HEAD helm/gko/README.md
 
-  unit-test:
+  job-unit-test:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>
     resource_class: small
@@ -190,7 +190,7 @@ jobs:
           name: Run unit tests
           command: make -s unit
 
-  integration-test:
+  job-integration-test:
     machine:
       image: ubuntu-2204:2024.01.2
       docker_layer_caching: true
@@ -256,7 +256,7 @@ jobs:
             - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
 
-  login-to-azure:
+  job-login-to-azure:
     executor:
       name: azure-cli
     parameters:
@@ -290,7 +290,7 @@ jobs:
           paths:
             - .kube/config
 
-  publish-private-image:
+  job-publish-private-image:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     parameters:
@@ -320,7 +320,7 @@ jobs:
             IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-push
             docker logout graviteeio.azurecr.io
 
-  helm-install:
+  job-helm-install:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
@@ -357,9 +357,9 @@ jobs:
             kubectl rollout restart deployment gko-controller-manager \
               -n << parameters.namespace >>
       - go/save-cache
-      - notify-on-failure
+      - cmd-notify-on-failure
 
-  release:
+  job-release:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
@@ -509,7 +509,8 @@ jobs:
                 name: Publish Github Release << pipeline.parameters.release-version >>
                 command: |
                   gh release create << pipeline.parameters.release-version >> /tmp/custom-resource-definitions.zip -F /tmp/CHANGELOG.md
-  notify-release-slack:
+  
+  job-notify-release-slack:
     docker:
       - image: cimg/base:stable
     resource_class: small
@@ -533,7 +534,7 @@ jobs:
               ]
             }
 
-  helm-lint:
+  job-helm-lint:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
@@ -544,7 +545,7 @@ jobs:
           name: Lint Helm chart
           command: helm lint helm/gko
 
-  helm-test:
+  job-helm-test:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
@@ -559,7 +560,7 @@ jobs:
           command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
       - go/save-cache
 
-  sonarcloud-analysis:
+  job-sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
     docker:
       - image: sonarsource/sonar-scanner-cli:5.0.1
@@ -577,9 +578,9 @@ jobs:
       - run:
           name: Run Sonarcloud analysis
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
-      - notify-on-failure
+      - cmd-notify-on-failure
 
-  add-docker-images-to-snyk:
+  job-add-docker-images-to-snyk:
     docker:
       - image: cimg/base:stable
     resource_class: small
@@ -587,9 +588,9 @@ jobs:
       integration_id_key:
         type: string
     steps:
-      - load-snyk-env:
+      - cmd-load-snyk-env:
           integration_id_key: << parameters.integration_id_key >>
-      - add-docker-image-to-snyk
+      - cmd-add-docker-image-to-snyk
 
 workflows:
   pull_requests:
@@ -608,17 +609,17 @@ workflows:
               - "test"
               - << pipeline.parameters.trigger >>
     jobs:
-      - lint-sources:
+      - job-lint-sources:
           name: Lint sources
-      - lint-licenses:
+      - job-lint-licenses:
           name: Lint licenses
-      - lint-commits:
+      - job-lint-commits:
           name: Lint commits
-      - lint-resources:
+      - job-lint-resources:
           name: Lint resources
-      - unit-test:
+      - job-unit-test:
           name: Run unit tests
-      - integration-test:
+      - job-integration-test:
           name: Run IT with context
           context: cicd-orchestrator
           requires:
@@ -628,7 +629,7 @@ workflows:
             - Lint resources
             - Run unit tests
           ginkgo-filter: withContext
-      - integration-test:
+      - job-integration-test:
           name: Run IT without context
           context: cicd-orchestrator
           requires:
@@ -638,13 +639,13 @@ workflows:
             - Lint resources
             - Run unit tests
           ginkgo-filter: withoutContext
-      - helm-lint:
+      - job-helm-lint:
           name: Lint Helm chart
-      - helm-test:
+      - job-helm-test:
           name: Test Helm chart
           requires:
             - Lint Helm chart
-      - sonarcloud-analysis:
+      - job-sonarcloud-analysis:
           name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
@@ -658,13 +659,13 @@ workflows:
                 - master
                 - << pipeline.git.branch >>
     jobs:
-      - helm-test:
+      - job-helm-test:
           name: Test chart
-      - login-to-azure:
+      - job-login-to-azure:
           name: Authenticate on cluster
           context: cicd-orchestrator
           clusterName: devs-preprod
-      - publish-private-image:
+      - job-publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: master-latest
@@ -672,13 +673,13 @@ workflows:
           requires:
             - Test chart
             - Authenticate on cluster
-      - add-docker-images-to-snyk:
+      - job-add-docker-images-to-snyk:
           name: Trigger snyk import
           context: cicd-orchestrator
           requires:
             - Stage image
           integration_id_key: gravitee_gko_acr_integration_id
-      - helm-install:
+      - job-helm-install:
           name: Deploy in << matrix.namespace >>
           context: cicd-orchestrator
           matrix:
@@ -696,13 +697,13 @@ workflows:
         - release
         - << pipeline.parameters.trigger >>
     jobs:
-      - release:
+      - job-release:
           name: Release
           context: cicd-orchestrator
 
   notify-release:
     jobs:
-      - notify-release-slack:
+      - job-notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
           context: cicd-orchestrator
           filters:
@@ -713,7 +714,7 @@ workflows:
 
   trigger-snyk-on-release:
     jobs:
-      - add-docker-images-to-snyk:
+      - job-add-docker-images-to-snyk:
           name: Trigger snyk import
           context: cicd-orchestrator
           integration_id_key: gravitee_gko_dockerhub_integration_id
