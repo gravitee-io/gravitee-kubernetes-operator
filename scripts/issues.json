@@ -1,0 +1,2130 @@
+[
+    {
+        "expand": "operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,customfield_10070.properties,renderedFields",
+        "id": "28692",
+        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28692",
+        "key": "GKO-327",
+        "fields": {
+            "statuscategorychangedate": "2024-06-25T19:00:10.436+0200",
+            "issuetype": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10042",
+                "id": "10042",
+                "description": "A snyk or security issue that we want to give resolution visibility on Github and to appears in the changelog",
+                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10564?size=medium",
+                "name": "Public Security",
+                "subtask": false,
+                "avatarId": 10564,
+                "hierarchyLevel": 0
+            },
+            "customfield_10070": null,
+            "customfield_10071": null,
+            "timespent": null,
+            "customfield_10072": null,
+            "customfield_10073": null,
+            "customfield_10074": null,
+            "project": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/project/10030",
+                "id": "10030",
+                "key": "GKO",
+                "name": "Gravitee K8s Operator",
+                "projectTypeKey": "software",
+                "simplified": false,
+                "avatarUrls": {
+                    "48x48": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401",
+                    "24x24": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=small",
+                    "16x16": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=xsmall",
+                    "32x32": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=medium"
+                }
+            },
+            "fixVersions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10381",
+                    "id": "10381",
+                    "description": "",
+                    "name": "4.4.1",
+                    "archived": false,
+                    "released": false
+                },
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10389",
+                    "id": "10389",
+                    "description": "",
+                    "name": "4.3.8",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "aggregatetimespent": null,
+            "customfield_10034": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/customFieldOption/10369",
+                "value": "GKO",
+                "id": "10369"
+            },
+            "customfield_10079": null,
+            "resolution": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/resolution/10000",
+                "id": "10000",
+                "description": "Ce ticket a été traité.",
+                "name": "Terminé"
+            },
+            "customfield_10035": [],
+            "customfield_10036": null,
+            "customfield_10037": null,
+            "customfield_10027": null,
+            "customfield_10028": null,
+            "customfield_10029": null,
+            "customfield_10108": null,
+            "customfield_10109": null,
+            "resolutiondate": "2024-06-25T19:00:10.409+0200",
+            "workratio": -1,
+            "lastViewed": null,
+            "watches": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-327/watchers",
+                "watchCount": 1,
+                "isWatching": false
+            },
+            "created": "2024-06-25T18:59:59.336+0200",
+            "customfield_10140": null,
+            "customfield_10141": null,
+            "customfield_10020": [
+                {
+                    "id": 362,
+                    "name": "GKO Sprint 59",
+                    "state": "active",
+                    "boardId": 59,
+                    "goal": "Wrap up the K8s deployment research, and kick-off CRD validation !",
+                    "startDate": "2024-06-24T10:02:18.088Z",
+                    "endDate": "2024-07-03T22:00:00.000Z"
+                }
+            ],
+            "customfield_10021": null,
+            "customfield_10022": null,
+            "customfield_10023": null,
+            "priority": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                "name": "Normal",
+                "id": "10005"
+            },
+            "customfield_10068": "",
+            "customfield_10024": null,
+            "customfield_10069": 0,
+            "customfield_10025": "10000_*:*_1_*:*_11118_*|*_10001_*:*_1_*:*_0",
+            "labels": [],
+            "customfield_10026": null,
+            "customfield_10016": null,
+            "customfield_10017": null,
+            "customfield_10018": {
+                "hasEpicLinkFieldDependency": false,
+                "showField": false,
+                "nonEditableReason": {
+                    "reason": "PLUGIN_LICENSE_ERROR",
+                    "message": "Le lien parent est uniquement disponible pour les utilisateurs Jira Premium."
+                }
+            },
+            "customfield_10139": null,
+            "customfield_10019": "0|i02uvf:",
+            "timeestimate": null,
+            "aggregatetimeoriginalestimate": null,
+            "versions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10301",
+                    "id": "10301",
+                    "description": "",
+                    "name": "4.4.0",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "issuelinks": [],
+            "assignee": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "updated": "2024-06-26T10:05:33.640+0200",
+            "status": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                "description": "",
+                "iconUrl": "https://gravitee.atlassian.net/",
+                "name": "Terminé(e)",
+                "id": "10001",
+                "statusCategory": {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                    "id": 3,
+                    "key": "done",
+                    "colorName": "green",
+                    "name": "Terminé"
+                }
+            },
+            "components": [],
+            "timeoriginalestimate": null,
+            "description": {
+                "version": 1,
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "While the kube RBAC proxy image tag is configurable and can be changed to an up to date version easily, we should provide the latest version in the default values because Artifact Hub reports a vulnerability on the current tag we use"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "customfield_10010": null,
+            "customfield_10098": null,
+            "customfield_10014": null,
+            "customfield_10015": null,
+            "customfield_10005": null,
+            "customfield_10006": null,
+            "security": null,
+            "customfield_10007": null,
+            "customfield_10008": null,
+            "aggregatetimeestimate": null,
+            "customfield_10009": null,
+            "summary": "default image tag for Kube RBAC proxy should be upgraded",
+            "creator": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10081": null,
+            "subtasks": [],
+            "customfield_10160": null,
+            "customfield_10040": null,
+            "customfield_10041": null,
+            "customfield_10042": null,
+            "reporter": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10000": "{}",
+            "aggregateprogress": {
+                "progress": 0,
+                "total": 0
+            },
+            "customfield_10001": null,
+            "customfield_10123": null,
+            "customfield_10002": null,
+            "customfield_10124": null,
+            "customfield_10003": null,
+            "customfield_10048": null,
+            "customfield_10004": null,
+            "customfield_10169": null,
+            "customfield_10115": "9825",
+            "customfield_10038": null,
+            "customfield_10039": null,
+            "customfield_10117": null,
+            "environment": null,
+            "duedate": null,
+            "progress": {
+                "progress": 0,
+                "total": 0
+            },
+            "votes": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-327/votes",
+                "votes": 0,
+                "hasVoted": false
+            }
+        }
+    },
+    {
+        "expand": "operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,customfield_10070.properties,renderedFields",
+        "id": "28633",
+        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28633",
+        "key": "GKO-325",
+        "fields": {
+            "statuscategorychangedate": "2024-06-26T10:06:46.042+0200",
+            "issuetype": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10079",
+                "id": "10079",
+                "description": "",
+                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10578?size=medium",
+                "name": "Public Improvement",
+                "subtask": false,
+                "avatarId": 10578,
+                "hierarchyLevel": 0
+            },
+            "customfield_10070": null,
+            "customfield_10071": null,
+            "timespent": null,
+            "customfield_10072": null,
+            "customfield_10073": null,
+            "customfield_10074": null,
+            "project": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/project/10030",
+                "id": "10030",
+                "key": "GKO",
+                "name": "Gravitee K8s Operator",
+                "projectTypeKey": "software",
+                "simplified": false,
+                "avatarUrls": {
+                    "48x48": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401",
+                    "24x24": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=small",
+                    "16x16": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=xsmall",
+                    "32x32": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=medium"
+                }
+            },
+            "fixVersions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10381",
+                    "id": "10381",
+                    "description": "",
+                    "name": "4.4.1",
+                    "archived": false,
+                    "released": false
+                },
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10389",
+                    "id": "10389",
+                    "description": "",
+                    "name": "4.3.8",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "customfield_10034": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/customFieldOption/10369",
+                "value": "GKO",
+                "id": "10369"
+            },
+            "aggregatetimespent": null,
+            "resolution": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/resolution/10000",
+                "id": "10000",
+                "description": "Ce ticket a été traité.",
+                "name": "Terminé"
+            },
+            "customfield_10079": null,
+            "customfield_10035": [],
+            "customfield_10036": null,
+            "customfield_10037": null,
+            "customfield_10027": null,
+            "customfield_10028": null,
+            "customfield_10029": null,
+            "customfield_10108": null,
+            "customfield_10109": null,
+            "resolutiondate": "2024-06-26T10:06:46.020+0200",
+            "workratio": -1,
+            "lastViewed": null,
+            "watches": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-325/watchers",
+                "watchCount": 1,
+                "isWatching": false
+            },
+            "created": "2024-06-24T14:44:40.453+0200",
+            "customfield_10140": null,
+            "customfield_10141": null,
+            "customfield_10020": [
+                {
+                    "id": 362,
+                    "name": "GKO Sprint 59",
+                    "state": "active",
+                    "boardId": 59,
+                    "goal": "Wrap up the K8s deployment research, and kick-off CRD validation !",
+                    "startDate": "2024-06-24T10:02:18.088Z",
+                    "endDate": "2024-07-03T22:00:00.000Z"
+                }
+            ],
+            "customfield_10021": null,
+            "customfield_10022": null,
+            "customfield_10023": null,
+            "priority": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                "name": "Normal",
+                "id": "10005"
+            },
+            "customfield_10024": null,
+            "customfield_10068": "",
+            "customfield_10025": "3_*:*_1_*:*_57555_*|*_10000_*:*_1_*:*_61927_*|*_10002_*:*_1_*:*_69724159_*|*_10001_*:*_1_*:*_0_*|*_10004_*:*_1_*:*_86281989",
+            "customfield_10069": 0,
+            "labels": [],
+            "customfield_10026": null,
+            "customfield_10016": null,
+            "customfield_10017": null,
+            "customfield_10139": null,
+            "customfield_10018": {
+                "hasEpicLinkFieldDependency": false,
+                "showField": false,
+                "nonEditableReason": {
+                    "reason": "PLUGIN_LICENSE_ERROR",
+                    "message": "Le lien parent est uniquement disponible pour les utilisateurs Jira Premium."
+                }
+            },
+            "customfield_10019": "0|i02ul7:",
+            "aggregatetimeoriginalestimate": null,
+            "timeestimate": null,
+            "versions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10301",
+                    "id": "10301",
+                    "description": "",
+                    "name": "4.4.0",
+                    "archived": false,
+                    "released": false
+                },
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10390",
+                    "id": "10390",
+                    "description": "",
+                    "name": "4.3.7",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "issuelinks": [],
+            "assignee": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "updated": "2024-06-26T10:06:46.038+0200",
+            "status": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                "description": "",
+                "iconUrl": "https://gravitee.atlassian.net/",
+                "name": "Terminé(e)",
+                "id": "10001",
+                "statusCategory": {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                    "id": 3,
+                    "key": "done",
+                    "colorName": "green",
+                    "name": "Terminé"
+                }
+            },
+            "components": [],
+            "timeoriginalestimate": null,
+            "description": {
+                "version": 1,
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Image pull policy should be configurable both for the rbac proxy and the manager container, and default to IfNotPresent as the default setup uses the release image that will never be mutated."
+                            }
+                        ]
+                    }
+                ]
+            },
+            "customfield_10098": null,
+            "customfield_10010": null,
+            "customfield_10014": null,
+            "customfield_10015": null,
+            "customfield_10005": null,
+            "customfield_10006": null,
+            "security": null,
+            "customfield_10007": null,
+            "customfield_10008": null,
+            "customfield_10009": null,
+            "aggregatetimeestimate": null,
+            "summary": "make image pull policies configurable in helm chart",
+            "creator": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10081": null,
+            "subtasks": [],
+            "customfield_10160": null,
+            "customfield_10040": null,
+            "customfield_10041": null,
+            "customfield_10042": null,
+            "reporter": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10000": "{pullrequest={dataType=pullrequest, state=OPEN, stateCount=1}, json={\"cachedValue\":{\"errors\":[],\"summary\":{\"pullrequest\":{\"overall\":{\"count\":1,\"lastUpdated\":\"2024-06-24T14:46:18.000+0200\",\"stateCount\":1,\"state\":\"OPEN\",\"dataType\":\"pullrequest\",\"open\":true},\"byInstanceType\":{\"GitHub\":{\"count\":1,\"name\":\"GitHub\"}}}}},\"isStale\":true}}",
+            "aggregateprogress": {
+                "progress": 0,
+                "total": 0
+            },
+            "customfield_10001": null,
+            "customfield_10123": null,
+            "customfield_10002": null,
+            "customfield_10124": null,
+            "customfield_10003": null,
+            "customfield_10048": null,
+            "customfield_10169": null,
+            "customfield_10004": null,
+            "customfield_10038": null,
+            "customfield_10115": "9819",
+            "customfield_10039": null,
+            "customfield_10117": null,
+            "environment": null,
+            "duedate": null,
+            "progress": {
+                "progress": 0,
+                "total": 0
+            },
+            "votes": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-325/votes",
+                "votes": 0,
+                "hasVoted": false
+            }
+        }
+    },
+    {
+        "expand": "operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,customfield_10070.properties,renderedFields",
+        "id": "28631",
+        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28631",
+        "key": "GKO-324",
+        "fields": {
+            "statuscategorychangedate": "2024-06-26T10:06:30.797+0200",
+            "issuetype": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10015",
+                "id": "10015",
+                "description": "A released issue our customers are facing and we want to give resolution visibility on Github",
+                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10579?size=medium",
+                "name": "Public Bug",
+                "subtask": false,
+                "avatarId": 10579,
+                "hierarchyLevel": 0
+            },
+            "customfield_10070": null,
+            "customfield_10071": null,
+            "customfield_10072": null,
+            "timespent": null,
+            "customfield_10073": null,
+            "customfield_10074": null,
+            "project": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/project/10030",
+                "id": "10030",
+                "key": "GKO",
+                "name": "Gravitee K8s Operator",
+                "projectTypeKey": "software",
+                "simplified": false,
+                "avatarUrls": {
+                    "48x48": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401",
+                    "24x24": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=small",
+                    "16x16": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=xsmall",
+                    "32x32": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=medium"
+                }
+            },
+            "fixVersions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10381",
+                    "id": "10381",
+                    "description": "",
+                    "name": "4.4.1",
+                    "archived": false,
+                    "released": false
+                },
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10389",
+                    "id": "10389",
+                    "description": "",
+                    "name": "4.3.8",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "customfield_10034": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/customFieldOption/10369",
+                "value": "GKO",
+                "id": "10369"
+            },
+            "aggregatetimespent": null,
+            "customfield_10035": [],
+            "customfield_10079": null,
+            "resolution": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/resolution/10000",
+                "id": "10000",
+                "description": "Ce ticket a été traité.",
+                "name": "Terminé"
+            },
+            "customfield_10036": null,
+            "customfield_10037": null,
+            "customfield_10027": null,
+            "customfield_10028": null,
+            "customfield_10029": null,
+            "customfield_10108": null,
+            "customfield_10109": null,
+            "resolutiondate": "2024-06-26T10:06:30.765+0200",
+            "workratio": -1,
+            "watches": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-324/watchers",
+                "watchCount": 1,
+                "isWatching": false
+            },
+            "lastViewed": null,
+            "created": "2024-06-24T14:22:32.305+0200",
+            "customfield_10140": null,
+            "customfield_10020": [
+                {
+                    "id": 362,
+                    "name": "GKO Sprint 59",
+                    "state": "active",
+                    "boardId": 59,
+                    "goal": "Wrap up the K8s deployment research, and kick-off CRD validation !",
+                    "startDate": "2024-06-24T10:02:18.088Z",
+                    "endDate": "2024-07-03T22:00:00.000Z"
+                }
+            ],
+            "customfield_10141": null,
+            "customfield_10021": null,
+            "customfield_10022": null,
+            "priority": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                "name": "Normal",
+                "id": "10005"
+            },
+            "customfield_10023": null,
+            "customfield_10068": "",
+            "customfield_10024": null,
+            "customfield_10025": "3_*:*_1_*:*_1231110_*|*_10000_*:*_1_*:*_104690_*|*_10002_*:*_1_*:*_69830533_*|*_10001_*:*_1_*:*_0_*|*_10004_*:*_1_*:*_86272187",
+            "customfield_10069": 0,
+            "labels": [],
+            "customfield_10026": null,
+            "customfield_10016": null,
+            "customfield_10017": null,
+            "customfield_10018": {
+                "hasEpicLinkFieldDependency": false,
+                "showField": false,
+                "nonEditableReason": {
+                    "reason": "PLUGIN_LICENSE_ERROR",
+                    "message": "Le lien parent est uniquement disponible pour les utilisateurs Jira Premium."
+                }
+            },
+            "customfield_10139": null,
+            "customfield_10019": "0|i02i0v:",
+            "aggregatetimeoriginalestimate": null,
+            "timeestimate": null,
+            "versions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10301",
+                    "id": "10301",
+                    "description": "",
+                    "name": "4.4.0",
+                    "archived": false,
+                    "released": false
+                },
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10390",
+                    "id": "10390",
+                    "description": "",
+                    "name": "4.3.7",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "issuelinks": [],
+            "assignee": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "updated": "2024-06-26T10:06:30.791+0200",
+            "status": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                "description": "",
+                "iconUrl": "https://gravitee.atlassian.net/",
+                "name": "Terminé(e)",
+                "id": "10001",
+                "statusCategory": {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                    "id": 3,
+                    "key": "done",
+                    "colorName": "green",
+                    "name": "Terminé"
+                }
+            },
+            "components": [],
+            "timeoriginalestimate": null,
+            "description": {
+                "version": 1,
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "The default value for kube rbac proxy version should be updated in our default helm values to the latest."
+                            }
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Latest is v0.18.0"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "customfield_10010": null,
+            "customfield_10098": null,
+            "customfield_10014": null,
+            "customfield_10015": null,
+            "customfield_10005": null,
+            "customfield_10006": null,
+            "customfield_10007": null,
+            "security": null,
+            "customfield_10008": null,
+            "aggregatetimeestimate": null,
+            "customfield_10009": null,
+            "summary": "default version of kube rbac proxy is outdated",
+            "creator": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10081": null,
+            "subtasks": [],
+            "customfield_10160": null,
+            "customfield_10040": null,
+            "customfield_10041": null,
+            "customfield_10042": null,
+            "reporter": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "aggregateprogress": {
+                "progress": 0,
+                "total": 0
+            },
+            "customfield_10000": "{pullrequest={dataType=pullrequest, state=OPEN, stateCount=1}, json={\"cachedValue\":{\"errors\":[],\"summary\":{\"pullrequest\":{\"overall\":{\"count\":1,\"lastUpdated\":\"2024-06-24T14:25:43.000+0200\",\"stateCount\":1,\"state\":\"OPEN\",\"dataType\":\"pullrequest\",\"open\":true},\"byInstanceType\":{\"GitHub\":{\"count\":1,\"name\":\"GitHub\"}}}}},\"isStale\":true}}",
+            "customfield_10001": null,
+            "customfield_10123": null,
+            "customfield_10002": null,
+            "customfield_10124": null,
+            "customfield_10003": null,
+            "customfield_10004": null,
+            "customfield_10048": null,
+            "customfield_10169": null,
+            "customfield_10038": null,
+            "customfield_10115": "9818",
+            "customfield_10039": null,
+            "customfield_10117": null,
+            "environment": null,
+            "duedate": null,
+            "progress": {
+                "progress": 0,
+                "total": 0
+            },
+            "votes": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-324/votes",
+                "votes": 0,
+                "hasVoted": false
+            }
+        }
+    },
+    {
+        "expand": "operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,customfield_10070.properties,renderedFields",
+        "id": "28470",
+        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28470",
+        "key": "GKO-319",
+        "fields": {
+            "statuscategorychangedate": "2024-06-26T10:05:26.226+0200",
+            "issuetype": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10015",
+                "id": "10015",
+                "description": "A released issue our customers are facing and we want to give resolution visibility on Github",
+                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10579?size=medium",
+                "name": "Public Bug",
+                "subtask": false,
+                "avatarId": 10579,
+                "hierarchyLevel": 0
+            },
+            "customfield_10070": null,
+            "customfield_10071": null,
+            "customfield_10072": null,
+            "timespent": null,
+            "customfield_10073": null,
+            "customfield_10074": null,
+            "project": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/project/10030",
+                "id": "10030",
+                "key": "GKO",
+                "name": "Gravitee K8s Operator",
+                "projectTypeKey": "software",
+                "simplified": false,
+                "avatarUrls": {
+                    "48x48": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401",
+                    "24x24": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=small",
+                    "16x16": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=xsmall",
+                    "32x32": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=medium"
+                }
+            },
+            "fixVersions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10381",
+                    "id": "10381",
+                    "description": "",
+                    "name": "4.4.1",
+                    "archived": false,
+                    "released": false
+                },
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10389",
+                    "id": "10389",
+                    "description": "",
+                    "name": "4.3.8",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "customfield_10034": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/customFieldOption/10369",
+                "value": "GKO",
+                "id": "10369"
+            },
+            "aggregatetimespent": null,
+            "resolution": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/resolution/10000",
+                "id": "10000",
+                "description": "Ce ticket a été traité.",
+                "name": "Terminé"
+            },
+            "customfield_10079": null,
+            "customfield_10035": [],
+            "customfield_10036": null,
+            "customfield_10037": null,
+            "customfield_10027": null,
+            "customfield_10028": null,
+            "customfield_10029": null,
+            "customfield_10108": null,
+            "customfield_10109": null,
+            "resolutiondate": "2024-06-26T10:05:26.187+0200",
+            "workratio": -1,
+            "watches": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-319/watchers",
+                "watchCount": 1,
+                "isWatching": false
+            },
+            "lastViewed": null,
+            "created": "2024-06-19T12:06:42.814+0200",
+            "customfield_10140": null,
+            "customfield_10141": null,
+            "customfield_10020": [
+                {
+                    "id": 362,
+                    "name": "GKO Sprint 59",
+                    "state": "active",
+                    "boardId": 59,
+                    "goal": "Wrap up the K8s deployment research, and kick-off CRD validation !",
+                    "startDate": "2024-06-24T10:02:18.088Z",
+                    "endDate": "2024-07-03T22:00:00.000Z"
+                }
+            ],
+            "customfield_10021": null,
+            "customfield_10022": null,
+            "priority": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                "name": "Normal",
+                "id": "10005"
+            },
+            "customfield_10023": null,
+            "customfield_10068": "",
+            "customfield_10024": null,
+            "customfield_10069": 0,
+            "customfield_10025": "3_*:*_1_*:*_3586_*|*_10000_*:*_1_*:*_542839447_*|*_10002_*:*_1_*:*_54680401_*|*_10001_*:*_1_*:*_0",
+            "labels": [],
+            "customfield_10026": null,
+            "customfield_10016": null,
+            "customfield_10017": null,
+            "customfield_10139": null,
+            "customfield_10018": {
+                "hasEpicLinkFieldDependency": false,
+                "showField": false,
+                "nonEditableReason": {
+                    "reason": "PLUGIN_LICENSE_ERROR",
+                    "message": "Le lien parent est uniquement disponible pour les utilisateurs Jira Premium."
+                }
+            },
+            "customfield_10019": "0|i02tur:",
+            "timeestimate": null,
+            "aggregatetimeoriginalestimate": null,
+            "versions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10301",
+                    "id": "10301",
+                    "description": "",
+                    "name": "4.4.0",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "issuelinks": [
+                {
+                    "id": "21842",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21842",
+                    "type": {
+                        "id": "10007",
+                        "name": "Defect",
+                        "inward": "created by",
+                        "outward": "created",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10007"
+                    },
+                    "inwardIssue": {
+                        "id": "26548",
+                        "key": "GKO-125",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/26548",
+                        "fields": {
+                            "summary": "[Test Execution] Regression Tests for v4.4 release",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10008",
+                                "id": "10008",
+                                "description": "This is the Xray Test Execution Issue Type. Used to execute test cases already defined.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10557?size=medium",
+                                "name": "Test Execution",
+                                "subtask": false,
+                                "avatarId": 10557,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "21839",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21839",
+                    "type": {
+                        "id": "10007",
+                        "name": "Defect",
+                        "inward": "created by",
+                        "outward": "created",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10007"
+                    },
+                    "inwardIssue": {
+                        "id": "26691",
+                        "key": "GKO-149",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/26691",
+                        "fields": {
+                            "summary": "[Test Execution] Sprint 58",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10008",
+                                "id": "10008",
+                                "description": "This is the Xray Test Execution Issue Type. Used to execute test cases already defined.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10557?size=medium",
+                                "name": "Test Execution",
+                                "subtask": false,
+                                "avatarId": 10557,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "21840",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21840",
+                    "type": {
+                        "id": "10007",
+                        "name": "Defect",
+                        "inward": "created by",
+                        "outward": "created",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10007"
+                    },
+                    "inwardIssue": {
+                        "id": "28314",
+                        "key": "GKO-303",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28314",
+                        "fields": {
+                            "summary": "Import an exported V2 API CRD",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10005",
+                                "id": "10005",
+                                "description": "This is the Xray Test Issue Type. Used to define test cases of different types that can be executed multiple times using Test Execution issues.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10554?size=medium",
+                                "name": "Test",
+                                "subtask": false,
+                                "avatarId": 10554,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "21841",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21841",
+                    "type": {
+                        "id": "10006",
+                        "name": "Test",
+                        "inward": "is tested by",
+                        "outward": "tests",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10006"
+                    },
+                    "inwardIssue": {
+                        "id": "28314",
+                        "key": "GKO-303",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28314",
+                        "fields": {
+                            "summary": "Import an exported V2 API CRD",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10005",
+                                "id": "10005",
+                                "description": "This is the Xray Test Issue Type. Used to define test cases of different types that can be executed multiple times using Test Execution issues.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10554?size=medium",
+                                "name": "Test",
+                                "subtask": false,
+                                "avatarId": 10554,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                }
+            ],
+            "assignee": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=61aa2cf9ef18ca0071a56691",
+                "accountId": "61aa2cf9ef18ca0071a56691",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/initials/AC-3.png"
+                },
+                "displayName": "Antoine Cordier",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "updated": "2024-06-26T10:05:26.222+0200",
+            "status": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                "description": "",
+                "iconUrl": "https://gravitee.atlassian.net/",
+                "name": "Terminé(e)",
+                "id": "10001",
+                "statusCategory": {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                    "id": 3,
+                    "key": "done",
+                    "colorName": "green",
+                    "name": "Terminé"
+                }
+            },
+            "components": [],
+            "timeoriginalestimate": null,
+            "description": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "When I export a v2 API in the UI (console) as CRD then it’s not possible to re-import that yaml file, it needs to be modified first because there’s a `status` field under the endpoint configuration that is pointed out as unknown when doing a `kubectl apply`. After removing that status field (`status: \"UP\"`) the deployment succeeds. The attachment shows the exported file in which I deactivated that status field to make the import work."
+                            }
+                        ]
+                    },
+                    {
+                        "type": "heading",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Error message:"
+                            }
+                        ],
+                        "attrs": {
+                            "level": 3
+                        }
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "#error-message",
+                                "marks": [
+                                    {
+                                        "type": "link",
+                                        "attrs": {
+                                            "href": "#error-message"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "`Error from server (BadRequest): error when creating \"/Users/christian.tschacher/Downloads/ct-export-test-v2-1-crd.yml\": ApiDefinition in version \"v1alpha1\" cannot be handled as a ApiDefinition: strict decoding error: unknown field \"spec.proxy.groups<span class=\"error\">[0]</span>.endpoints<span class=\"error\">[0]</span>.status\"`"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "customfield_10010": null,
+            "customfield_10098": null,
+            "customfield_10014": null,
+            "customfield_10015": null,
+            "customfield_10005": null,
+            "customfield_10006": null,
+            "customfield_10007": null,
+            "security": null,
+            "customfield_10008": null,
+            "customfield_10009": null,
+            "aggregatetimeestimate": null,
+            "summary": "v2 API exported as CRD can't be re-imported due to unknown field status",
+            "creator": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=611fb36e4016870069434bfa",
+                "accountId": "611fb36e4016870069434bfa",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/48",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/24",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/16",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/32"
+                },
+                "displayName": "Christian Tschacher",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10081": null,
+            "subtasks": [],
+            "customfield_10160": null,
+            "customfield_10040": null,
+            "customfield_10041": null,
+            "customfield_10042": null,
+            "reporter": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=611fb36e4016870069434bfa",
+                "accountId": "611fb36e4016870069434bfa",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/48",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/24",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/16",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/32"
+                },
+                "displayName": "Christian Tschacher",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10000": "{pullrequest={dataType=pullrequest, state=MERGED, stateCount=6}, json={\"cachedValue\":{\"errors\":[],\"summary\":{\"pullrequest\":{\"overall\":{\"count\":6,\"lastUpdated\":\"2024-06-26T10:06:05.000+0200\",\"stateCount\":6,\"state\":\"MERGED\",\"dataType\":\"pullrequest\",\"open\":false},\"byInstanceType\":{\"GitHub\":{\"count\":6,\"name\":\"GitHub\"}}}}},\"isStale\":true}}",
+            "aggregateprogress": {
+                "progress": 0,
+                "total": 0
+            },
+            "customfield_10001": null,
+            "customfield_10123": null,
+            "customfield_10002": null,
+            "customfield_10124": null,
+            "customfield_10003": null,
+            "customfield_10169": null,
+            "customfield_10048": null,
+            "customfield_10004": null,
+            "customfield_10038": null,
+            "customfield_10115": "9824",
+            "customfield_10039": null,
+            "environment": {
+                "version": 1,
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "dev-cluster, 4.4 environment"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "customfield_10117": null,
+            "duedate": null,
+            "progress": {
+                "progress": 0,
+                "total": 0
+            },
+            "votes": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-319/votes",
+                "votes": 0,
+                "hasVoted": false
+            }
+        }
+    },
+    {
+        "expand": "operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,customfield_10070.properties,renderedFields",
+        "id": "28456",
+        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28456",
+        "key": "GKO-318",
+        "fields": {
+            "statuscategorychangedate": "2024-06-19T11:00:11.199+0200",
+            "issuetype": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10015",
+                "id": "10015",
+                "description": "A released issue our customers are facing and we want to give resolution visibility on Github",
+                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10579?size=medium",
+                "name": "Public Bug",
+                "subtask": false,
+                "avatarId": 10579,
+                "hierarchyLevel": 0
+            },
+            "customfield_10070": null,
+            "customfield_10071": null,
+            "timespent": null,
+            "customfield_10072": null,
+            "customfield_10073": null,
+            "customfield_10074": null,
+            "project": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/project/10030",
+                "id": "10030",
+                "key": "GKO",
+                "name": "Gravitee K8s Operator",
+                "projectTypeKey": "software",
+                "simplified": false,
+                "avatarUrls": {
+                    "48x48": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401",
+                    "24x24": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=small",
+                    "16x16": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=xsmall",
+                    "32x32": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=medium"
+                }
+            },
+            "fixVersions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10381",
+                    "id": "10381",
+                    "description": "",
+                    "name": "4.4.1",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "aggregatetimespent": null,
+            "customfield_10034": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/customFieldOption/10369",
+                "value": "GKO",
+                "id": "10369"
+            },
+            "customfield_10079": null,
+            "customfield_10035": [],
+            "resolution": null,
+            "customfield_10036": null,
+            "customfield_10037": null,
+            "customfield_10027": null,
+            "customfield_10028": null,
+            "customfield_10029": null,
+            "customfield_10108": null,
+            "customfield_10109": null,
+            "resolutiondate": null,
+            "workratio": -1,
+            "watches": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-318/watchers",
+                "watchCount": 1,
+                "isWatching": false
+            },
+            "lastViewed": null,
+            "created": "2024-06-19T09:45:01.786+0200",
+            "customfield_10140": null,
+            "customfield_10141": null,
+            "customfield_10020": null,
+            "customfield_10021": null,
+            "customfield_10022": null,
+            "priority": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                "name": "Normal",
+                "id": "10005"
+            },
+            "customfield_10023": null,
+            "customfield_10068": "",
+            "customfield_10024": null,
+            "customfield_10069": 0,
+            "customfield_10025": null,
+            "labels": [],
+            "customfield_10026": null,
+            "customfield_10016": null,
+            "customfield_10017": null,
+            "customfield_10139": null,
+            "customfield_10018": {
+                "hasEpicLinkFieldDependency": false,
+                "showField": false,
+                "nonEditableReason": {
+                    "reason": "PLUGIN_LICENSE_ERROR",
+                    "message": "Le lien parent est uniquement disponible pour les utilisateurs Jira Premium."
+                }
+            },
+            "customfield_10019": "0|i02trv:",
+            "timeestimate": null,
+            "aggregatetimeoriginalestimate": null,
+            "versions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10301",
+                    "id": "10301",
+                    "description": "",
+                    "name": "4.4.0",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "issuelinks": [
+                {
+                    "id": "21827",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21827",
+                    "type": {
+                        "id": "10007",
+                        "name": "Defect",
+                        "inward": "created by",
+                        "outward": "created",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10007"
+                    },
+                    "inwardIssue": {
+                        "id": "26548",
+                        "key": "GKO-125",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/26548",
+                        "fields": {
+                            "summary": "[Test Execution] Regression Tests for v4.4 release",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10008",
+                                "id": "10008",
+                                "description": "This is the Xray Test Execution Issue Type. Used to execute test cases already defined.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10557?size=medium",
+                                "name": "Test Execution",
+                                "subtask": false,
+                                "avatarId": 10557,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "21828",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21828",
+                    "type": {
+                        "id": "10007",
+                        "name": "Defect",
+                        "inward": "created by",
+                        "outward": "created",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10007"
+                    },
+                    "inwardIssue": {
+                        "id": "28181",
+                        "key": "GKO-277",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28181",
+                        "fields": {
+                            "summary": "Add/remove/update inline documentation pages to V4 API CRD",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10005",
+                                "id": "10005",
+                                "description": "This is the Xray Test Issue Type. Used to define test cases of different types that can be executed multiple times using Test Execution issues.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10554?size=medium",
+                                "name": "Test",
+                                "subtask": false,
+                                "avatarId": 10554,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "21831",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21831",
+                    "type": {
+                        "id": "10006",
+                        "name": "Test",
+                        "inward": "is tested by",
+                        "outward": "tests",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10006"
+                    },
+                    "inwardIssue": {
+                        "id": "28181",
+                        "key": "GKO-277",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28181",
+                        "fields": {
+                            "summary": "Add/remove/update inline documentation pages to V4 API CRD",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10005",
+                                "id": "10005",
+                                "description": "This is the Xray Test Issue Type. Used to define test cases of different types that can be executed multiple times using Test Execution issues.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10554?size=medium",
+                                "name": "Test",
+                                "subtask": false,
+                                "avatarId": 10554,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                }
+            ],
+            "assignee": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=612f58346b666100690a7629",
+                "accountId": "612f58346b666100690a7629",
+                "avatarUrls": {
+                    "48x48": "https://secure.gravatar.com/avatar/3d6026c23542864ce28fd00fb2fff4ae?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKA-3.png",
+                    "24x24": "https://secure.gravatar.com/avatar/3d6026c23542864ce28fd00fb2fff4ae?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKA-3.png",
+                    "16x16": "https://secure.gravatar.com/avatar/3d6026c23542864ce28fd00fb2fff4ae?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKA-3.png",
+                    "32x32": "https://secure.gravatar.com/avatar/3d6026c23542864ce28fd00fb2fff4ae?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKA-3.png"
+                },
+                "displayName": "Kamiel Ahmadpour",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "updated": "2024-06-25T21:16:00.844+0200",
+            "status": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/status/10000",
+                "description": "",
+                "iconUrl": "https://gravitee.atlassian.net/",
+                "name": "À faire",
+                "id": "10000",
+                "statusCategory": {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/2",
+                    "id": 2,
+                    "key": "new",
+                    "colorName": "blue-gray",
+                    "name": "A faire"
+                }
+            },
+            "components": [],
+            "timeoriginalestimate": null,
+            "description": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "The documentation for v4 APIs is not fully read-only. When you click on the name of custom pages you can still edit the text field and also toggle between private and public."
+                            }
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "![Screenshot 2024-06-19 at 09.38.14.png](/attachments/16406?name=Screenshot 2024-06-19 at 09.38.14.png)"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "The changes however can not be saved or published, so this doesn't has any impact and is thus more an improvement recommendation.",
+                                "marks": [
+                                    {
+                                        "type": "strong"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "customfield_10098": null,
+            "customfield_10010": null,
+            "customfield_10014": null,
+            "customfield_10015": null,
+            "customfield_10005": null,
+            "customfield_10006": null,
+            "security": null,
+            "customfield_10007": null,
+            "customfield_10008": null,
+            "aggregatetimeestimate": null,
+            "customfield_10009": null,
+            "summary": "v4 documentation not fully read-only",
+            "creator": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=611fb36e4016870069434bfa",
+                "accountId": "611fb36e4016870069434bfa",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/48",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/24",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/16",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/32"
+                },
+                "displayName": "Christian Tschacher",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10081": null,
+            "subtasks": [],
+            "customfield_10160": null,
+            "customfield_10040": null,
+            "customfield_10041": null,
+            "customfield_10042": null,
+            "reporter": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=611fb36e4016870069434bfa",
+                "accountId": "611fb36e4016870069434bfa",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/48",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/24",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/16",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/32"
+                },
+                "displayName": "Christian Tschacher",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "aggregateprogress": {
+                "progress": 0,
+                "total": 0
+            },
+            "customfield_10000": "{}",
+            "customfield_10001": null,
+            "customfield_10123": null,
+            "customfield_10002": null,
+            "customfield_10124": null,
+            "customfield_10003": null,
+            "customfield_10004": null,
+            "customfield_10048": null,
+            "customfield_10169": null,
+            "customfield_10038": null,
+            "customfield_10115": "9826",
+            "customfield_10039": null,
+            "customfield_10117": null,
+            "environment": {
+                "version": 1,
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "dev-cluster, 4.4 namespace"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "duedate": null,
+            "progress": {
+                "progress": 0,
+                "total": 0
+            },
+            "votes": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-318/votes",
+                "votes": 0,
+                "hasVoted": false
+            }
+        }
+    },
+    {
+        "expand": "operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,customfield_10070.properties,renderedFields",
+        "id": "28451",
+        "self": "https://gravitee.atlassian.net/rest/api/3/issue/28451",
+        "key": "GKO-317",
+        "fields": {
+            "statuscategorychangedate": "2024-06-18T23:15:26.468+0200",
+            "issuetype": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10004",
+                "id": "10004",
+                "description": "An issue we found during our internal tests that has not been released yet or we don't want to give visibility on Github",
+                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10303?size=medium",
+                "name": "Private Bug",
+                "subtask": false,
+                "avatarId": 10303,
+                "hierarchyLevel": 0
+            },
+            "customfield_10070": null,
+            "customfield_10071": null,
+            "timespent": null,
+            "customfield_10072": null,
+            "customfield_10073": null,
+            "customfield_10074": null,
+            "customfield_10030": null,
+            "project": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/project/10030",
+                "id": "10030",
+                "key": "GKO",
+                "name": "Gravitee K8s Operator",
+                "projectTypeKey": "software",
+                "simplified": false,
+                "avatarUrls": {
+                    "48x48": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401",
+                    "24x24": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=small",
+                    "16x16": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=xsmall",
+                    "32x32": "https://gravitee.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10401?size=medium"
+                }
+            },
+            "fixVersions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10381",
+                    "id": "10381",
+                    "description": "",
+                    "name": "4.4.1",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "customfield_10034": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/customFieldOption/10369",
+                "value": "GKO",
+                "id": "10369"
+            },
+            "aggregatetimespent": null,
+            "resolution": null,
+            "customfield_10035": [],
+            "customfield_10079": null,
+            "customfield_10036": null,
+            "customfield_10037": null,
+            "customfield_10027": null,
+            "customfield_10028": null,
+            "customfield_10029": null,
+            "customfield_10108": null,
+            "customfield_10109": null,
+            "resolutiondate": null,
+            "workratio": -1,
+            "lastViewed": null,
+            "watches": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-317/watchers",
+                "watchCount": 1,
+                "isWatching": false
+            },
+            "created": "2024-06-18T23:15:24.842+0200",
+            "customfield_10140": null,
+            "customfield_10020": null,
+            "customfield_10141": null,
+            "customfield_10021": null,
+            "customfield_10022": null,
+            "customfield_10023": null,
+            "priority": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                "name": "Normal",
+                "id": "10005"
+            },
+            "customfield_10068": "",
+            "customfield_10024": null,
+            "customfield_10069": 0,
+            "customfield_10025": null,
+            "customfield_10026": null,
+            "labels": [],
+            "customfield_10016": null,
+            "customfield_10017": null,
+            "customfield_10139": null,
+            "customfield_10018": {
+                "hasEpicLinkFieldDependency": false,
+                "showField": false,
+                "nonEditableReason": {
+                    "reason": "PLUGIN_LICENSE_ERROR",
+                    "message": "Le lien parent est uniquement disponible pour les utilisateurs Jira Premium."
+                }
+            },
+            "customfield_10019": "0|i02tqr:",
+            "timeestimate": null,
+            "aggregatetimeoriginalestimate": null,
+            "versions": [
+                {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/version/10301",
+                    "id": "10301",
+                    "description": "",
+                    "name": "4.4.0",
+                    "archived": false,
+                    "released": false
+                }
+            ],
+            "issuelinks": [
+                {
+                    "id": "21819",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21819",
+                    "type": {
+                        "id": "10007",
+                        "name": "Defect",
+                        "inward": "created by",
+                        "outward": "created",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10007"
+                    },
+                    "inwardIssue": {
+                        "id": "26548",
+                        "key": "GKO-125",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/26548",
+                        "fields": {
+                            "summary": "[Test Execution] Regression Tests for v4.4 release",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10008",
+                                "id": "10008",
+                                "description": "This is the Xray Test Execution Issue Type. Used to execute test cases already defined.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10557?size=medium",
+                                "name": "Test Execution",
+                                "subtask": false,
+                                "avatarId": 10557,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "21820",
+                    "self": "https://gravitee.atlassian.net/rest/api/3/issueLink/21820",
+                    "type": {
+                        "id": "10007",
+                        "name": "Defect",
+                        "inward": "created by",
+                        "outward": "created",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issueLinkType/10007"
+                    },
+                    "inwardIssue": {
+                        "id": "26625",
+                        "key": "GKO-141",
+                        "self": "https://gravitee.atlassian.net/rest/api/3/issue/26625",
+                        "fields": {
+                            "summary": "Update a V4 message API",
+                            "status": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/status/10001",
+                                "description": "",
+                                "iconUrl": "https://gravitee.atlassian.net/",
+                                "name": "Terminé(e)",
+                                "id": "10001",
+                                "statusCategory": {
+                                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/3",
+                                    "id": 3,
+                                    "key": "done",
+                                    "colorName": "green",
+                                    "name": "Terminé"
+                                }
+                            },
+                            "priority": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/priority/10005",
+                                "iconUrl": "https://gravitee.atlassian.net/images/icons/priorities/medium.svg",
+                                "name": "Normal",
+                                "id": "10005"
+                            },
+                            "issuetype": {
+                                "self": "https://gravitee.atlassian.net/rest/api/3/issuetype/10005",
+                                "id": "10005",
+                                "description": "This is the Xray Test Issue Type. Used to define test cases of different types that can be executed multiple times using Test Execution issues.",
+                                "iconUrl": "https://gravitee.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10554?size=medium",
+                                "name": "Test",
+                                "subtask": false,
+                                "avatarId": 10554,
+                                "hierarchyLevel": 0
+                            }
+                        }
+                    }
+                }
+            ],
+            "assignee": null,
+            "updated": "2024-06-19T10:57:00.912+0200",
+            "status": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/status/10000",
+                "description": "",
+                "iconUrl": "https://gravitee.atlassian.net/",
+                "name": "À faire",
+                "id": "10000",
+                "statusCategory": {
+                    "self": "https://gravitee.atlassian.net/rest/api/3/statuscategory/2",
+                    "id": 2,
+                    "key": "new",
+                    "colorName": "blue-gray",
+                    "name": "A faire"
+                }
+            },
+            "components": [],
+            "timeoriginalestimate": null,
+            "description": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": []
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "While I tried to verify whether I can successfully update some details in the entrypoint configuration, I noticed that the details of the API entrypoint configuration are not accessible for the user."
+                            }
+                        ]
+                    },
+                    {
+                        "type": "mediaSingle",
+                        "content": [
+                            {
+                                "type": "media",
+                                "attrs": {
+                                    "type": "file",
+                                    "id": "e33b0cc7-f3b7-4b2f-8778-d561c9aef296",
+                                    "collection": "",
+                                    "width": 1638,
+                                    "height": 731,
+                                    "alt": "Screenshot 2024-06-18 at 23.08.45.png"
+                                }
+                            }
+                        ],
+                        "attrs": {
+                            "layout": "align-start"
+                        }
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": []
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "In comparison, it looks better for the endpoint configuration where I can access it (read-only) by clicking the eye icon:"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "mediaSingle",
+                        "content": [
+                            {
+                                "type": "media",
+                                "attrs": {
+                                    "type": "file",
+                                    "id": "acd548d5-4939-411d-a4e3-93a2c8ca9343",
+                                    "collection": "",
+                                    "width": 1644,
+                                    "height": 563,
+                                    "alt": "Screenshot 2024-06-18 at 23.09.23.png"
+                                }
+                            }
+                        ],
+                        "attrs": {
+                            "layout": "align-start"
+                        }
+                    }
+                ]
+            },
+            "customfield_10010": null,
+            "customfield_10098": null,
+            "customfield_10014": null,
+            "customfield_10015": null,
+            "customfield_10005": null,
+            "customfield_10006": null,
+            "customfield_10007": null,
+            "security": null,
+            "customfield_10008": null,
+            "customfield_10009": null,
+            "aggregatetimeestimate": null,
+            "summary": "Details of entrypoint configuration not accessible",
+            "creator": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=611fb36e4016870069434bfa",
+                "accountId": "611fb36e4016870069434bfa",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/48",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/24",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/16",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/32"
+                },
+                "displayName": "Christian Tschacher",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10081": null,
+            "subtasks": [],
+            "customfield_10160": null,
+            "customfield_10040": null,
+            "customfield_10041": null,
+            "customfield_10042": null,
+            "reporter": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/user?accountId=611fb36e4016870069434bfa",
+                "accountId": "611fb36e4016870069434bfa",
+                "avatarUrls": {
+                    "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/48",
+                    "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/24",
+                    "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/16",
+                    "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/611fb36e4016870069434bfa/59f21e82-30c3-4ed0-9f1a-91891526845a/32"
+                },
+                "displayName": "Christian Tschacher",
+                "active": true,
+                "timeZone": "Europe/Paris",
+                "accountType": "atlassian"
+            },
+            "customfield_10000": "{}",
+            "aggregateprogress": {
+                "progress": 0,
+                "total": 0
+            },
+            "customfield_10001": null,
+            "customfield_10002": null,
+            "customfield_10123": null,
+            "customfield_10124": null,
+            "customfield_10003": null,
+            "customfield_10169": null,
+            "customfield_10048": null,
+            "customfield_10004": null,
+            "customfield_10038": null,
+            "customfield_10039": null,
+            "environment": {
+                "version": 1,
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "dev-cluster, 4.4 namespace"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "customfield_10117": null,
+            "duedate": null,
+            "progress": {
+                "progress": 0,
+                "total": 0
+            },
+            "votes": {
+                "self": "https://gravitee.atlassian.net/rest/api/3/issue/GKO-317/votes",
+                "votes": 0,
+                "hasVoted": false
+            }
+        }
+    }
+]

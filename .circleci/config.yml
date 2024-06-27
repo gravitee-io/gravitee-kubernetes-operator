@@ -473,14 +473,14 @@ jobs:
       #             git push --tags origin $RELEASE_BRANCH
       - run:
           name: Generate Changelog
-          command: npx zx scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
-      - when:
-          condition: 
-            note: << pipeline.parameters.dry-run >>
-          steps:
-            - run:
-                name: Print Changelog
-                command: cat /tmp/CHANGELOG.md
+          command: npx zx scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> #> /tmp/CHANGELOG.md
+      # - when:
+      #     condition: 
+      #       note: << pipeline.parameters.dry-run >>
+      #     steps:
+      #       - run:
+      #           name: Print Changelog
+      #           command: cat /tmp/CHANGELOG.md
       # - run:
       #     name: Generate Release Artifacts
       #     command: |

@@ -1,0 +1,37 @@
+[
+    {
+        "key": "GKO-327",
+        "githubIssue": "9825",
+        "summary": "default image tag for Kube RBAC proxy should be upgraded",
+        "components": [],
+        "type": "Public Security"
+    },
+    {
+        "key": "GKO-325",
+        "githubIssue": "9819",
+        "summary": "make image pull policies configurable in helm chart",
+        "components": [],
+        "type": "Public Improvement"
+    },
+    {
+        "key": "GKO-324",
+        "githubIssue": "9818",
+        "summary": "default version of kube rbac proxy is outdated",
+        "components": [],
+        "type": "Public Bug"
+    },
+    {
+        "key": "GKO-319",
+        "githubIssue": "9824",
+        "summary": "v2 API exported as CRD can't be re-imported due to unknown field status",
+        "components": [],
+        "type": "Public Bug"
+    },
+    {
+        "key": "GKO-318",
+        "githubIssue": "9826",
+        "summary": "v4 documentation not fully read-only",
+        "components": [],
+        "type": "Public Bug"
+    }
+]
