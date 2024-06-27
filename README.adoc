@@ -14,10 +14,10 @@ You can use the Gravitee Kubernetes Operator (GKO) to define, deploy, and publis
 
 You can find detailed information about the Gravitee Kubernetes Operator in the following sections of the Gravitee user documentation:
 
-  * link:https://documentation.gravitee.io/apim/guides/gravitee-kubernetes-operator[Overview^]
-  * link:https://documentation.gravitee.io/apim/getting-started/install-and-upgrade-guides/install-on-kubernetes/architecture-overview[Architecture^]
-  * link:https://documentation.gravitee.io/apim/guides/gravitee-kubernetes-operator/quick-start[Quick Start^]
-  * link:https://documentation.gravitee.io/apim/guides/gravitee-kubernetes-operator/installation[Installation and deployment^]
+  * link:https://documentation.gravitee.io/gravitee-kubernetes-operator-gko[Overview^]
+  * link:https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/overview/example-architecture[Architecture^]
+  * link:https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/getting-started/quickstart-guide[Quick Start^]
+  * https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/getting-started/installation[Installation and deployment^]
 
 The GKO API reference documentation is available https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/master/docs/api/reference.md[here^].
 
