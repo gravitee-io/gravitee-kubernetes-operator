@@ -42,7 +42,7 @@ func (in *Application) DeepCopyInto(out *Application) {
 	}
 	if in.AppKeyMode != nil {
 		in, out := &in.AppKeyMode, &out.AppKeyMode
-		*out = new(KeyMode)
+		*out = new(AppKeyMode)
 		**out = **in
 	}
 	if in.Metadata != nil {

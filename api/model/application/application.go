@@ -16,7 +16,7 @@
 package application
 
 // +kubebuilder:validation:Enum=SHARED;EXCLUSIVE;UNSPECIFIED;
-type KeyMode string
+type AppKeyMode string
 
 type SimpleSettings struct {
 	// Application Type
@@ -76,7 +76,7 @@ type Application struct {
 	// Application Description
 	Description string `json:"description,omitempty"`
 	// Application Type
-	ApplicationType string `json:"type,omitempty"`
+	Type string `json:"type,omitempty"`
 	// The ClientId identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.
 	ClientId string `json:"clientId,omitempty"`
 	// List of application Redirect Uris
@@ -99,9 +99,10 @@ type Application struct {
 	// An URL pointing to the picture to use when displaying the application on the portal
 	PictureURL string `json:"picture_url,omitempty"`
 	// Application settings
-	Settings *Setting `json:"settings,omitempty"`
+	// +kubebuilder:validation:Required
+	Settings *Setting `json:"settings"`
 	// The API key mode to use. If shared, the application will reuse the same API key across various subscriptions.
-	AppKeyMode *KeyMode `json:"app_key_mode,omitempty"`
+	AppKeyMode *AppKeyMode `json:"app_key_mode,omitempty"`
 	// Should membership notifications be disabled or not ?
 	DisableMembershipNotifications bool `json:"disable_membership_notifications,omitempty"`
 	// Application metadata

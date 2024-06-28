@@ -27,7 +27,8 @@ import (
 // +kubebuilder:object:generate=true
 type ApplicationSpec struct {
 	application.Application `json:",inline"`
-	Context                 *refs.NamespacedName `json:"contextRef,omitempty"`
+	// +kubebuilder:validation:Required
+	Context *refs.NamespacedName `json:"contextRef"`
 }
 
 // ApplicationStatus defines the observed state of Application.
@@ -63,8 +64,8 @@ type ApplicationList struct {
 	Items           []Application `json:"items"`
 }
 
-func (api *Application) IsBeingDeleted() bool {
-	return !api.ObjectMeta.DeletionTimestamp.IsZero()
+func (app *Application) IsBeingDeleted() bool {
+	return !app.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
 func init() {
