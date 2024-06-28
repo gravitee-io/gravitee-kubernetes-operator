@@ -7268,10 +7268,24 @@ Application is the main resource handled by the Kubernetes Operator
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#applicationspeccontextref">contextRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Application name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#applicationspecsettings">settings</a></b></td>
+        <td>object</td>
+        <td>
+          Application settings<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -7295,13 +7309,6 @@ Application is the main resource handled by the Kubernetes Operator
         <td>string</td>
         <td>
           The ClientId identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#applicationspeccontextref">contextRef</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7378,13 +7385,6 @@ Application ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#applicationspecsettings">settings</a></b></td>
-        <td>object</td>
-        <td>
-          Application settings<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
@@ -7423,63 +7423,6 @@ Application ID<br/>
         <td>string</td>
         <td>
           <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### Application.spec.metadata[index]
-[Go to parent definition](#applicationspec)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Metadata Name<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>defaultValue</b></td>
-        <td>string</td>
-        <td>
-          Metadata DefaultValue<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>format</b></td>
-        <td>enum</td>
-        <td>
-          Metadata Format<br/>
-          <br/>
-            <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>hidden</b></td>
-        <td>boolean</td>
-        <td>
-          Metadata is hidden or not?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>value</b></td>
-        <td>string</td>
-        <td>
-          Metadata Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7631,6 +7574,63 @@ Application settings
         <td>[]string</td>
         <td>
           List of Oauth client response types<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Application.spec.metadata[index]
+[Go to parent definition](#applicationspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Metadata Name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>defaultValue</b></td>
+        <td>string</td>
+        <td>
+          Metadata DefaultValue<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>format</b></td>
+        <td>enum</td>
+        <td>
+          Metadata Format<br/>
+          <br/>
+            <i>Enum</i>: STRING, NUMERIC, BOOLEAN, DATE, MAIL, URL<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>hidden</b></td>
+        <td>boolean</td>
+        <td>
+          Metadata is hidden or not?<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Metadata Value<br/>
         </td>
         <td>false</td>
       </tr></tbody>

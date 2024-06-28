@@ -16,133 +16,27 @@ package internal
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
 
 func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
-	if err := createUpdateApplication(ctx, application); err != nil {
-		return err
-	}
-
-	return createUpdateApplicationMetadata(ctx, application)
-}
-
-func createUpdateApplication(ctx context.Context, application *v1alpha1.Application) error {
 	spec := &application.Spec
 	spec.Origin = "KUBERNETES"
+	spec.ID = application.Status.ID
 
 	apim, err := apim.FromContextRef(ctx, spec.Context)
 	if err != nil {
 		return err
 	}
 
-	app, err := apim.Applications.GetByID(application.Status.ID)
-	if errors.IgnoreNotFound(err) != nil {
-		return errors.NewContextError(err)
-	}
-
-	method := http.MethodPost
-	if app != nil {
-		method = http.MethodPut
-		spec.ID = app.Id
-		// to avoid getting error from APIM because of having no settings
-		if spec.Settings == nil {
-			spec.Settings = app.Settings
-		}
-	}
-
-	mgmtApp, mgmtErr := apim.Applications.CreateUpdate(method, &spec.Application)
+	status, mgmtErr := apim.Applications.CreateOrUpdate(&spec.Application)
 	if mgmtErr != nil {
 		return errors.NewContextError(mgmtErr)
 	}
 
-	spec.ID = mgmtApp.Id
-	application.Status.ID = mgmtApp.Id
-	application.Status.EnvID = apim.EnvID()
-	application.Status.OrgID = apim.OrgID()
-
+	status.DeepCopyInto(&application.Status)
 	return nil
-}
-
-func createUpdateApplicationMetadata(ctx context.Context, app *v1alpha1.Application) error {
-	spec := &app.Spec
-	if spec.Metadata == nil {
-		app.Status.Status = custom.ProcessingStatusCompleted
-		return nil
-	}
-
-	apimCli, err := apim.FromContextRef(ctx, spec.Context)
-	if err != nil {
-		return err
-	}
-
-	appMetaData, err := apimCli.Applications.GetMetadataByApplicationID(app.Status.ID)
-	if err != nil {
-		return errors.NewContextError(err)
-	}
-
-	// All this method Will be removed once we created a dedicated endpoint in APIM for creating Application using GKO
-	for _, metadata := range *spec.Metadata {
-		md := struct {
-			application.Metadata
-			ApplicationId string `json:"applicationId"`
-			Key           string `json:"key,omitempty"`
-		}{
-			Metadata:      metadata,
-			ApplicationId: spec.ID,
-		}
-		method := http.MethodPost
-		key := findMetadataKey(appMetaData, md.Name)
-		if key != "" {
-			// update
-			md.Key = key
-			method = http.MethodPut
-		}
-
-		_, mgmtErr := apimCli.Applications.CreateUpdateMetadata(method, spec.ID, md, key)
-		if mgmtErr != nil {
-			return errors.NewContextError(mgmtErr)
-		}
-	}
-
-	// Delete removed metadata
-	for _, metadata := range *appMetaData {
-		if metadataIsRemoved(spec.Metadata, metadata.Name) {
-			err = apimCli.Applications.DeleteMetadata(app.Status.ID, metadata.Key)
-			if errors.IgnoreNotFound(err) != nil {
-				return err
-			}
-		}
-	}
-
-	app.Status.Status = custom.ProcessingStatusCompleted
-
-	return nil
-}
-
-func findMetadataKey(appMetadata *[]apimModel.ApplicationMetaData, name string) string {
-	for _, md := range *appMetadata {
-		if md.Name == name {
-			return md.Key
-		}
-	}
-
-	return ""
-}
-
-func metadataIsRemoved(metadata *[]application.Metadata, name string) bool {
-	for _, md := range *metadata {
-		if md.Name == name {
-			return false
-		}
-	}
-
-	return true
 }

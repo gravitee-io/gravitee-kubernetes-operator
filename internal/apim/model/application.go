@@ -19,17 +19,17 @@ import (
 )
 
 type Application struct {
-	Id          string               `json:"id,omitempty"`
-	Name        string               `json:"name,omitempty"`
-	Status      string               `json:"status,omitempty"`
-	Description string               `json:"description,omitempty"`
-	Settings    *application.Setting `json:"settings,omitempty"`
-	Background  string               `json:"background,omitempty"`
-	Domain      string               `json:"domain,omitempty"`
-	Groups      []string             `json:"groups,omitempty"`
-	Picture     string               `json:"picture,omitempty"`
-	AppKeyMode  *application.KeyMode `json:"app_key_mode,omitempty"`
-	AppType     string               `json:"type,omitempty"`
+	Id          string                  `json:"id,omitempty"`
+	Name        string                  `json:"name,omitempty"`
+	Status      string                  `json:"status,omitempty"`
+	Description string                  `json:"description,omitempty"`
+	Settings    *application.Setting    `json:"settings,omitempty"`
+	Background  string                  `json:"background,omitempty"`
+	Domain      string                  `json:"domain,omitempty"`
+	Groups      []string                `json:"groups,omitempty"`
+	Picture     string                  `json:"picture,omitempty"`
+	AppKeyMode  *application.AppKeyMode `json:"app_key_mode,omitempty"`
+	AppType     string                  `json:"type,omitempty"`
 }
 
 type ApplicationMetaData struct {

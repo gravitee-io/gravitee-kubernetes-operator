@@ -18,7 +18,9 @@ import (
 	"fmt"
 	"net/http"
 
-	errors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
@@ -81,23 +83,15 @@ func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.Appl
 	return application, nil
 }
 
-func (svc *Applications) CreateUpdate(method string, spec *application.Application) (*model.Application, error) {
-	url := svc.EnvV1Target(applicationsPath)
-	if spec.ID != "" {
-		url = svc.EnvV1Target(applicationsPath).WithPath(spec.ID)
-	}
+func (svc *Applications) CreateOrUpdate(spec *application.Application) (*v1alpha1.ApplicationStatus, error) {
+	url := svc.EnvV2Target(fmt.Sprintf("%s/_import/crd", applicationsPath))
 
-	fun := svc.HTTP.Post
-	if method == http.MethodPut {
-		fun = svc.HTTP.Put
-	}
-
-	application := new(model.Application)
-	if err := fun(url.String(), spec, application); err != nil {
+	status := new(v1alpha1.ApplicationStatus)
+	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
 		return nil, err
 	}
 
-	return application, nil
+	return status, nil
 }
 
 func (svc *Applications) Delete(appId string) error {
@@ -105,7 +99,7 @@ func (svc *Applications) Delete(appId string) error {
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *Applications) CreateUpdateMetadata(method string, appId string,
+func (svc *Applications) CreateOrUpdateMetadata(method string, appId string,
 	spec any, key string) (*model.ApplicationMetaData, error) {
 	url := svc.EnvV1Target(applicationsPath).WithPath(appId).WithPath(metadataPath)
 	fun := svc.HTTP.Post

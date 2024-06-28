@@ -23,9 +23,11 @@ spec:
     name: "dev-ctx"
     namespace: "default"
   name: "K8S-Application"
-  type: "WEB"
   domain: "https://example.com"
-  description: "K8s Application"
+  description: "K8s Application 2"
+  settings:
+    app:
+      type: WEB
   metadata:
     - name: "test metadata 1"
       format: "STRING"
