@@ -1,3 +1,7 @@
+## The Gravitee Kubernetes Operator changelog has moved
+
+For release notes and changelog, please checkout our [documentation website](https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/releases-and-changelog/changelog)
+
 ## [0.13.1](https://github.com/gravitee-io/gravitee-kubernetes-operator/compare/0.13.0...0.13.1) (2024-04-26)
 
 

@@ -105,3 +105,13 @@ export const HELM = {
   chartsRepo,
   releaseBranch,
 };
+
+const docsRepo = "gravitee-io/gravitee-platform-docs";
+const docsRepoURL = `https://github.com/gravitee-io/${docsRepo}`;
+
+export const Docs = {
+  repo: docsRepo,
+  repoURL: docsRepoURL,
+  baseFolder: "docs/gko",
+  changelogFolder: "releases-and-changelog/changelog",
+};
