@@ -496,7 +496,9 @@ jobs:
             - run:
                 name: Publish Github Release << pipeline.parameters.release-version >> as latest
                 command: |
-                  gh release create --latest << pipeline.parameters.release-version >> /tmp/custom-resource-definitions.zip -F /tmp/CHANGELOG.md
+                  gh release create --latest << pipeline.parameters.release-version >> \
+                    /tmp/custom-resource-definitions.zip \
+                    -F /tmp/CHANGELOG.md
       - when:
           condition:
             and:
@@ -507,8 +509,21 @@ jobs:
             - run:
                 name: Publish Github Release << pipeline.parameters.release-version >>
                 command: |
-                  gh release create << pipeline.parameters.release-version >> /tmp/custom-resource-definitions.zip -F /tmp/CHANGELOG.md
-  
+                  gh release create << pipeline.parameters.release-version >> \
+                    /tmp/custom-resource-definitions.zip \
+                    -F /tmp/CHANGELOG.md
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - gh/setup
+            - run:
+                name: Submit Release Changelog for << pipeline.parameters.release-version >>
+                command: |
+                  npx zx scripts/submit-changelog.mjs \
+                    --version << pipeline.parameters.release-version >> \
+                    --file /tmp/CHANGELOG.md --output /tmp/pr.txt
+
   job-notify-release-slack:
     docker:
       - image: cimg/base:stable

@@ -92,9 +92,13 @@ function groupByType(issues) {
 }
 
 function buildTypeLogs([type, issues]) {
-  return `${EOL}### ${LOG_TYPES.get(type).label}${EOL}${EOL}${issues
-    .map(buildSummary)
-    .join(EOL)}`;
+  return `
+<details>
+<summary>${LOG_TYPES.get(type).label}</summary>
+
+${issues.map(buildSummary).join(EOL)}
+</details>
+`;
 }
 
 function buildSummary(issue) {
@@ -103,10 +107,30 @@ function buildSummary(issue) {
     : `${TAB}* ${issue.summary}`;
 }
 
+const releaseDate = new Date().toLocaleDateString("en-US", DATE_OPTS);
+const releaseChangelogHeader = `## Gravitee Kubernetes Operator ${VERSION} - ${releaseDate}`;
+const noChangeMessage = `
+${releaseChangelogHeader}
+
+There is nothing new in version ${VERSION}.
+
+> This version was generated to keep the kubernetes operator in sync with other gravitee products.
+
+`;
+
 const jiraVersion = await getJiraVersion(VERSION);
+
+if (!jiraVersion) {
+  echo(noChangeMessage);
+  await $`exit 0`;
+}
+
 const jiraIssues = await getJiraIssues(jiraVersion.id);
 
-echo(`
-## GKO ${VERSION} - ${new Date().toLocaleDateString("en-US", DATE_OPTS)}
-${groupByType(jiraIssues).map(buildTypeLogs).join(EOL)}
+if (jiraIssues.length === 0) {
+  echo(noChangeMessage);
+} else {
+  echo(`${releaseChangelogHeader}
+    ${groupByType(jiraIssues).map(buildTypeLogs).join(EOL)}
 `);
+}
