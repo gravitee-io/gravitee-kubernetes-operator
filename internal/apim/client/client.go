@@ -64,16 +64,11 @@ func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
 		return nil, err
 	}
 
-	// /management
 	root := base.WithPath(basePath)
 
-	// /organizations
-	org := base.WithPath(orgPath, orgID)
+	org := root.WithPath(orgPath, orgID)
 
-	// /management/organizations/{orgID}/environments/{envID}
-	envV1 := root.WithPath(orgPath, orgID).WithPath(envPath, envID)
-
-	// /management/v2/organizations/{orgID}/environments/{envID}
+	envV1 := org.WithPath(envPath, envID)
 	envV2 := root.WithPath("v2").WithPath(orgPath, orgID).WithPath(envPath, envID)
 
 	return &URLs{org, envV1, envV2}, nil

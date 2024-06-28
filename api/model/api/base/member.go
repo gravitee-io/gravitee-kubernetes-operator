@@ -29,3 +29,19 @@ type Member struct {
 	// +kubebuilder:default:=USER
 	Role string `json:"role,omitempty"`
 }
+
+func NewGraviteeMember(username, role string) *Member {
+	return &Member{
+		Source:   "gravitee",
+		SourceId: username,
+		Role:     role,
+	}
+}
+
+func NewMemoryMember(username, role string) *Member {
+	return &Member{
+		Source:   "memory",
+		SourceId: username,
+		Role:     role,
+	}
+}

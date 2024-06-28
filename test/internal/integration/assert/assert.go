@@ -99,7 +99,7 @@ func Equals(field string, expected, given any) error {
 
 func NotEmptySlice[T any](field string, value []T) error {
 	if len(value) == 0 {
-		return fmt.Errorf("expected %s not to be empty", field)
+		return fmt.Errorf("expected %#v not to be empty", field)
 	}
 	return nil
 }
@@ -157,7 +157,7 @@ func NotFoundError(err error) error {
 }
 
 func newAssertEqualError(field string, expected, given any) error {
-	return fmt.Errorf("expected %s to be %v, got %v", field, expected, given)
+	return fmt.Errorf("expected %s to be %#v, got %#v", field, expected, given)
 }
 
 func getObjectEvents(obj client.Object) func() []string {
