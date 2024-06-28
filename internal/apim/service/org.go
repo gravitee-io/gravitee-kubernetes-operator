@@ -12,9 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package service
 
-type Group struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+)
+
+type Org struct {
+	*client.Client
+}
+
+func NewOrg(client *client.Client) *Org {
+	return &Org{Client: client}
+}
+
+func (svc *Org) CreateUser(user *model.User) error {
+	url := svc.OrgTarget("users")
+	return svc.HTTP.Post(url.String(), user, user)
 }

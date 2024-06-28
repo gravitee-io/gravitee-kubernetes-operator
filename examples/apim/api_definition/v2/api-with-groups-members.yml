@@ -39,12 +39,9 @@ spec:
   groups:
     - developers
   members:
-    - source: gravitee
-      sourceId: Eloise25@hotmail.com
+    - source: memory
+      sourceId: api1
       role: USER
-    - source: gravitee
-      sourceId: Isadore.Brekke@hotmail.com
-      role: USER
-    - source: gravitee
-      sourceId: Sonny71@yahoo.com
+    - source: memory
+      sourceId: user
       role: USER
