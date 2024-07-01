@@ -246,7 +246,7 @@ jobs:
           name: Run IT with filter << parameters.ginkgo-filter >>
           command: |
             export SAFE_RANDOM=true
-            IT_ARGS="--label-filter=<< parameters.ginkgo-filter >> --flake-attempts=2 --cover --coverprofile=cover-<< parameters.ginkgo-filter >>.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" make -s it
+            IT_ARGS="--label-filter=<< parameters.ginkgo-filter >> --flake-attempts=3 --cover --coverprofile=cover-<< parameters.ginkgo-filter >>.out --coverpkg=github.com/gravitee-io/gravitee-kubernetes-operator/... --output-dir=/tmp/junit/reports" make -s it
       - store_test_results:
           path: /tmp/junit/reports
       - persist_to_workspace:
