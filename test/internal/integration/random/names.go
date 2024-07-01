@@ -654,7 +654,7 @@ var (
 
 		"fernandes",
 
-		"timoska",
+		"timovska",
 
 		"stojanovski",
 
