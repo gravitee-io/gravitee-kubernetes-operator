@@ -7480,17 +7480,17 @@ Application settings
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>client_id</b></td>
-        <td>string</td>
-        <td>
-          ClientId is the client id of the application<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
           Application Type<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>client_id</b></td>
+        <td>string</td>
+        <td>
+          ClientId is the client id of the application<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7519,7 +7519,14 @@ Application settings
         <td>
           Oauth client application type<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>grant_types</b></td>
+        <td>[]string</td>
+        <td>
+          List of Oauth client grant types<br/>
+        </td>
+        <td>true</td>
       </tr><tr>
         <td><b>client_id</b></td>
         <td>string</td>
@@ -7539,13 +7546,6 @@ Application settings
         <td>string</td>
         <td>
           Oauth client uri<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>grant_types</b></td>
-        <td>[]string</td>
-        <td>
-          List of Oauth client grant types<br/>
         </td>
         <td>false</td>
       </tr><tr>

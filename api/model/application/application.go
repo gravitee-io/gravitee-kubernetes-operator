@@ -20,14 +20,14 @@ type AppKeyMode string
 
 type SimpleSettings struct {
 	// Application Type
-	AppType string `json:"type,omitempty"`
+	AppType string `json:"type"`
 	// ClientId is the client id of the application
 	ClientId string `json:"client_id,omitempty"`
 }
 
 type OAuthClientSettings struct {
 	// Oauth client application type
-	ApplicationType string `json:"application_type,omitempty"`
+	ApplicationType string `json:"application_type"`
 	// Oauth client id
 	ClientId string `json:"client_id,omitempty"`
 	// Oauth client secret
@@ -35,7 +35,7 @@ type OAuthClientSettings struct {
 	// Oauth client uri
 	ClientURI string `json:"client_uri,omitempty"`
 	// List of Oauth client grant types
-	GrantTypes []string `json:"grant_types,omitempty"`
+	GrantTypes []string `json:"grant_types"`
 	// Oauth client logo uri
 	LogoURI string `json:"logo_uri,omitempty"`
 	// List of Oauth client redirect uris
