@@ -168,6 +168,8 @@ spec:
                       type:
                         description: Application Type
                         type: string
+                    required:
+                    - type
                     type: object
                   oauth:
                     properties:
@@ -205,6 +207,9 @@ spec:
                         items:
                           type: string
                         type: array
+                    required:
+                    - application_type
+                    - grant_types
                     type: object
                 type: object
               type:
