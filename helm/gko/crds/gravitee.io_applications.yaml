@@ -91,7 +91,8 @@ spec:
                 description: Application Description
                 type: string
               disable_membership_notifications:
-                description: Should membership notifications be disabled or not ?
+                description: Should members get notified when they are added to the
+                  application ?
                 type: boolean
               domain:
                 description: Application domain
