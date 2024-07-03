@@ -102,8 +102,9 @@ type Application struct {
 	Settings *Setting `json:"settings,omitempty"`
 	// The API key mode to use. If shared, the application will reuse the same API key across various subscriptions.
 	AppKeyMode *KeyMode `json:"app_key_mode,omitempty"`
-	// Should membership notifications be disabled or not ?
-	DisableMembershipNotifications bool `json:"disable_membership_notifications,omitempty"`
+	// +kubebuilder:validation:Optional
+	// Should members get notified when they are added to the application ?
+	DisableMembershipNotifications bool `json:"disable_membership_notifications"`
 	// Application metadata
 	Metadata *[]Metadata `json:"metadata,omitempty"`
 }

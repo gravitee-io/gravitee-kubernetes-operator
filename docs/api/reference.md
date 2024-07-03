@@ -7315,7 +7315,7 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>disable_membership_notifications</b></td>
         <td>boolean</td>
         <td>
-          Should membership notifications be disabled or not ?<br/>
+          Should members get notified when they are added to the application ?<br/>
         </td>
         <td>false</td>
       </tr><tr>
