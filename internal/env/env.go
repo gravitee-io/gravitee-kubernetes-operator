@@ -16,6 +16,7 @@ package env
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
@@ -28,15 +29,28 @@ const (
 	NS                     = "NAMESPACE"
 	ApplyCRDs              = "APPLY_CRDS"
 	EnableMetrics          = "ENABLE_METRICS"
+	EnableWebhook          = "ENABLE_WEBHOOK"
+	WebhookNS              = "WEBHOOK_NAMESPACE"
+	WebhookServiceName     = "WEBHOOK_SERVICE_NAME"
+	WebhookPort            = "WEBHOOK_SERVICE_PORT"
+	WebhookCertSecret      = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not a hardcoded secret
 	InsecureSkipCertVerify = "INSECURE_SKIP_CERT_VERIFY"
 	TrueString             = "true"
 	IngressClasses         = "INGRESS_CLASSES"
+
+	// This default are applied when running the app locally.
+	defaultWebhookPort = 9443
 )
 
 var Config = struct {
 	NS                 string
 	ApplyCRDs          bool
 	EnableMetrics      bool
+	EnableWebhook      bool
+	WebhookNS          string
+	WebhookService     string
+	WebhookPort        int
+	WebhookCertSecret  string
 	Development        bool
 	CMTemplate404Name  string
 	CMTemplate404NS    string
@@ -52,9 +66,22 @@ func init() {
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
 	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == TrueString
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
+	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
+	Config.WebhookNS = os.Getenv(WebhookNS)
+	Config.WebhookService = os.Getenv(WebhookServiceName)
+	Config.WebhookCertSecret = os.Getenv(WebhookCertSecret)
+	Config.WebhookPort = parseInt(WebhookPort, defaultWebhookPort)
 	var ingressClass string
 	if ingressClass = keys.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
 		ingressClass = os.Getenv(IngressClasses)
 	}
 	Config.IngressClasses = strings.Split(ingressClass, ",")
+}
+
+func parseInt(key string, defaultValue int) int {
+	value, err := strconv.Atoi(os.Getenv(key))
+	if err != nil {
+		return defaultValue
+	}
+	return value
 }

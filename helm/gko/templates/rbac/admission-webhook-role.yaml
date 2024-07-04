@@ -13,13 +13,13 @@
 # limitations under the License.
 
 {{- if .Values.rbac.create }}
-{{- if not .Values.rbac.skipClusterRoles }}
-{{- if .Values.manager.applyCRDs }}
+{{- if .Values.manager.webhook.enabled }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  name: {{ template "rbac.ResourcePatchClusterRoleName" . }}
+  name: {{ template "rbac.AdmissionWebhookRoleName" . }}
+  namespace: '{{ .Release.Namespace }}'
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -36,32 +36,5 @@ rules:
     verbs:
       - get
       - update
-  - apiGroups:
-      - apiextensions.k8s.io
-    resources:
-      - customresourcedefinitions
-    verbs:
-      - get
-  - apiGroups:
-      - apiextensions.k8s.io
-    resourceNames:
-      - managementcontexts.gravitee.io
-      - apidefinitions.gravitee.io
-      - apiv4definitions.gravitee.io
-      - applications.gravitee.io
-      - apiresources.gravitee.io
-    resources:
-      - customresourcedefinitions
-    verbs:
-      - patch
-      - create
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-{{- end }}
 {{- end }}
 {{- end }}

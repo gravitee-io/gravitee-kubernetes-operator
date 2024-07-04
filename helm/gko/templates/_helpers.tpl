@@ -121,10 +121,24 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+ Create the name of the manager role for Validation Webhook patch
+ */}}
+{{- define "rbac.AdmissionWebhookRoleName" -}}
+   {{ template "rbac.serviceAccountName" . }}-validation-webhook-role
+{{- end }}
+
+{{/*
  Create the name of the manager cluster role binding for CRD patch
  */}}
 {{- define "rbac.ResourcePatchClusterRoleBindingName" -}}
    {{ template "rbac.ResourcePatchClusterRoleName" . }}-binding
+{{- end }}
+
+{{/*
+ Create the name of the manager role binding for Validation Webhook patch
+ */}}
+{{- define "rbac.AdmissionWebhookRoleBindingName" -}}
+   {{ template "rbac.AdmissionWebhookRoleName" . }}-binding
 {{- end }}
 
 {{/*

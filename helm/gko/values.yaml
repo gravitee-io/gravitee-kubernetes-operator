@@ -91,7 +91,20 @@ manager:
   httpClient:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
-
+  webhook:
+    ## @param manager.webhook.enabled If true, the manager will register a webhook server operating on custom resources.
+    enabled: true
+    service:
+      ## @param manager.webhook.service.name The service used to expose the webhook server.
+      name: gko-webhook
+      ## @param manager.webhook.service.port Which port the webhook server will listen to.
+      port: 9443
+    cert:
+      ## @param manager.webhook.cert.create If true, a secret will be created to store the webhook server certificate.
+      create: true
+      secret:
+        ## @param manager.webhook.cert.secret.name The name of the secret storing the webhook server certificate.
+        name: gko-webhook-cert
 ## @section ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.
