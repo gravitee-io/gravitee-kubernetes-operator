@@ -18,24 +18,27 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"embed"
 	"flag"
+	"fmt"
 	"io/fs"
 	"os"
 
+	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
 	"gopkg.in/yaml.v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
-
-	v1 "k8s.io/api/networking/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
@@ -44,7 +47,6 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 
-	"k8s.io/client-go/dynamic"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -54,7 +56,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -72,8 +73,6 @@ var (
 	helm embed.FS
 )
 
-const managerPort = 9443
-
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
@@ -90,6 +89,20 @@ func main() {
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+
+	var webhookServer webhook.Server
+	if env.Config.EnableWebhook {
+		patchAdmissionWebhook()
+		webhookServer = webhook.NewServer(webhook.Options{
+			CertDir:  "/tmp/webhook-server/certs",
+			Port:     env.Config.WebhookPort,
+			CertName: wk.CertName,
+			KeyName:  wk.KeyName,
+			TLSOpts: []func(*tls.Config){func(config *tls.Config) {
+				config.InsecureSkipVerify = true
+			}},
+		})
+	}
 
 	opts := zap.Options{
 		Development:          env.Config.Development,
@@ -113,11 +126,9 @@ func main() {
 	metrics := metricServer.Options{BindAddress: metricsAddr}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:  scheme,
-		Metrics: metrics,
-		WebhookServer: webhook.NewServer(webhook.Options{
-			Port: managerPort,
-		}),
+		Scheme:                 scheme,
+		Metrics:                metrics,
+		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
@@ -142,6 +153,14 @@ func main() {
 	}
 
 	registerControllers(mgr)
+
+	if env.Config.EnableWebhook {
+		err = setupAdmissionWebhooks(mgr)
+		if err != nil {
+			setupLog.Error(err, "unable to start manager")
+			os.Exit(1)
+		}
+	}
 
 	//+kubebuilder:scaffold:builder
 
@@ -281,4 +300,41 @@ func applyCRDs() error {
 
 		return err
 	})
+}
+
+func patchAdmissionWebhook() {
+	setupLog.Info("setting up Admission Webhook Server")
+	webhookPatcher := wk.NewWebhookPatcher()
+	svc := env.Config.WebhookService
+	host := fmt.Sprintf("host=%s,%s.default,%s.default.svc,%s.svc.cluster.local", svc, svc, svc, svc)
+	err := webhookPatcher.CreateSecret(context.Background(), env.Config.WebhookCertSecret, env.Config.WebhookNS, host)
+	if err != nil {
+		panic(err)
+	}
+
+	err = webhookPatcher.UpdateCaBundle(context.Background(), wk.Name, env.Config.WebhookCertSecret, env.Config.WebhookNS)
+	if err != nil {
+		setupLog.Error(err, "Can not update CA bundle for GKO webhook. GKO can not start")
+		panic(err)
+	}
+}
+
+func setupAdmissionWebhooks(mgr manager.Manager) error {
+	if err := (&v1alpha1.ApiResource{}).SetupWebhookWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (&v1alpha1.ApiDefinition{}).SetupWebhookWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (&v1alpha1.ApiV4Definition{}).SetupWebhookWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (&v1alpha1.Application{}).SetupWebhookWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (&v1alpha1.ManagementContext{}).SetupWebhookWithManager(mgr); err != nil {
+		return err
+	}
+
+	return nil
 }
