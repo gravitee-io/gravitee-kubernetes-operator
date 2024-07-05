@@ -63,6 +63,21 @@ export function isEmptyString(str) {
   return !isNonEmptyString(str);
 }
 
+// see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy
+// should be replaced by the native function when available
+export function groupBy(arr, func) {
+  const groups = new Map();
+  for (const item of arr) {
+    const key = func(item);
+    if (groups.has(key)) {
+      groups.get(key).push(item);
+    } else {
+      groups.set(func(item), [item]);
+    }
+  }
+  return groups;
+}
+
 // Color loggers
 const green = newLoggerFn(chalk.green);
 const blue = newLoggerFn(chalk.blue);
@@ -89,4 +104,14 @@ export const HELM = {
   crdDir,
   chartsRepo,
   releaseBranch,
+};
+
+const docsRepo = "gravitee-io/gravitee-platform-docs";
+const docsRepoURL = `https://github.com/gravitee-io/${docsRepo}`;
+
+export const Docs = {
+  repo: docsRepo,
+  repoURL: docsRepoURL,
+  baseFolder: "docs/gko",
+  changelogFolder: "releases-and-changelog/changelog",
 };
