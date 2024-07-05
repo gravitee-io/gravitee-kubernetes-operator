@@ -59,6 +59,25 @@ export function isNonEmptyString(str) {
   return String(str) === str && str.trim().length > 0;
 }
 
+export function isEmptyString(str) {
+  return !isNonEmptyString(str);
+}
+
+// see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy
+// should be replaced by the native function when available
+export function groupBy(arr, func) {
+  const groups = new Map();
+  for (const item of arr) {
+    const key = func(item);
+    if (groups.has(key)) {
+      groups.get(key).push(item);
+    } else {
+      groups.set(func(item), [item]);
+    }
+  }
+  return groups;
+}
+
 // Color loggers
 const green = newLoggerFn(chalk.green);
 const blue = newLoggerFn(chalk.blue);
@@ -71,14 +90,8 @@ export const LOG = Object.seal({ green, blue, magenta, yellow, red, log });
 // Path to the local helm chart directory
 const chartDir = path.join(__dirname, "..", "helm", "gko");
 
-// Path to the helm templates directory
-const templateDir = path.join(chartDir, "templates");
-
 // Path to the helm crds directory. This resources are not templated.
 const crdDir = path.join(chartDir, "crds");
-
-// The template file is the file that contains all the resources except the CRDs. This file can be templated.
-const templateFile = path.join(templateDir, "bundle.yaml");
 
 // The gravitee.io official helm charts repository
 const chartsRepo = "gravitee-io/helm-charts";
@@ -88,9 +101,17 @@ const releaseBranch = "gh-pages";
 
 export const HELM = {
   chartDir,
-  templateDir,
-  templateFile,
   crdDir,
   chartsRepo,
   releaseBranch,
+};
+
+const docsRepo = "gravitee-io/gravitee-platform-docs";
+const docsRepoURL = `https://github.com/gravitee-io/${docsRepo}`;
+
+export const Docs = {
+  repo: docsRepo,
+  repoURL: docsRepoURL,
+  baseFolder: "docs/gko",
+  changelogFolder: "releases-and-changelog/changelog",
 };
