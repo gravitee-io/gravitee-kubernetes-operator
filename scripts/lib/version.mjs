@@ -27,4 +27,8 @@ export class Version {
   branch() {
     return `${this.major}.${this.minor}.x`;
   }
+
+  family() {
+    return `${this.major}.x`;
+  }
 }
