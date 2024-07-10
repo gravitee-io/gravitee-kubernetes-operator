@@ -368,6 +368,16 @@ is managed using a kubernetes operator<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>execution_mode</b></td>
+        <td>enum</td>
+        <td>
+          Execution mode that eventually runs the API in the gateway<br/>
+          <br/>
+            <i>Enum</i>: v3, v4-emulation-engine<br/>
+            <i>Default</i>: v4-emulation-engine<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>flow_mode</b></td>
         <td>enum</td>
         <td>
