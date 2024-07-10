@@ -465,6 +465,14 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>notifyMembers</b></td>
+        <td>boolean</td>
+        <td>
+          If true, new members added to the API spec will
+be notified when the API is synced with APIM.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspecpageskey">pages</a></b></td>
         <td>map[string]object</td>
         <td>
@@ -4428,6 +4436,14 @@ field of the resource.<br/>
         <td>string</td>
         <td>
           API name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notifyMembers</b></td>
+        <td>boolean</td>
+        <td>
+          If true, new members added to the API spec will
+be notified when the API is synced with APIM.<br/>
         </td>
         <td>false</td>
       </tr><tr>

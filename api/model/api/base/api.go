@@ -62,6 +62,11 @@ type ApiBase struct {
 	// The list of categories the API belongs to.
 	// Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
 	Categories []string `json:"categories"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:true
+	// If true, new members added to the API spec will
+	// be notified when the API is synced with APIM.
+	NotifyMembers bool `json:"notifyMembers"`
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;

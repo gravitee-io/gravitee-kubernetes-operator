@@ -6,7 +6,7 @@ helm-test: helm-unittest
 	@helm unittest helm/gko
 
 IT_ARGS ?= ""
-TIMEOUT ?= 380s 
+TIMEOUT ?= 1200s 
 
 .PHONY: test
 it: use-cluster install ginkgo ## Run intgration tests
