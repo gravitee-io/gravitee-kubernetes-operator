@@ -62,6 +62,11 @@ type Api struct {
 	// Renaming a key is the equivalent of deleting the page and recreating
 	// it holding a new ID in APIM.
 	Pages map[string]*Page `json:"pages"`
+
+	// Execution mode that eventually runs the API in the gateway
+	// +kubebuilder:default:=v4-emulation-engine
+	// +kubebuilder:validation:Enum=v3;v4-emulation-engine;
+	ExecutionMode string `json:"execution_mode,omitempty"`
 }
 
 const (
