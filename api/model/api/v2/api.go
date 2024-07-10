@@ -45,4 +45,8 @@ type Api struct {
 	// +kubebuilder:validation:Optional
 	// API plans
 	Plans []*Plan `json:"plans"`
+	// Execution mode that eventually runs the API in the gateway
+	// +kubebuilder:default:=v4-emulation-engine
+	// +kubebuilder:validation:Enum=v3;v4-emulation-engine;
+	ExecutionMode string `json:"execution_mode,omitempty"`
 }
