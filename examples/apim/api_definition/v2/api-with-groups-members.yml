@@ -48,3 +48,4 @@ spec:
     - source: gravitee
       sourceId: Sonny71@yahoo.com
       role: USER
+  notifyMembers: false
