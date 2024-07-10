@@ -31,5 +31,6 @@ func ToApiImport(spec *v2.Api) *ApiImport {
 	}
 	spec.Pages = nil
 	apiImport.Pages = pages
+	apiImport.DisableMembershipNotifications = !spec.NotifyMembers
 	return apiImport
 }

@@ -45,3 +45,4 @@ spec:
     - source: memory
       sourceId: user
       role: USER
+  notifyMembers: false

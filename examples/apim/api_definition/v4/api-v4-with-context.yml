@@ -52,3 +52,4 @@ spec:
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
+  notifyMembers: false
