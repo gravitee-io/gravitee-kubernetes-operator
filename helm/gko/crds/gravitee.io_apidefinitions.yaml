@@ -118,6 +118,13 @@ spec:
               description:
                 description: API description
                 type: string
+              execution_mode:
+                default: v4-emulation-engine
+                description: Execution mode that eventually runs the API in the gateway
+                enum:
+                - v3
+                - v4-emulation-engine
+                type: string
               flow_mode:
                 default: DEFAULT
                 description: The flow mode of the API. The value is either `DEFAULT`
