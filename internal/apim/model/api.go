@@ -103,6 +103,7 @@ type ApiDeployment struct {
 }
 
 type ApiImport struct {
-	*v2.Api `json:",inline"`
-	Pages   []*PageImport `json:"pages,omitempty"`
+	*v2.Api                        `json:",inline"`
+	DisableMembershipNotifications bool          `json:"disable_membership_notifications,omitempty"`
+	Pages                          []*PageImport `json:"pages,omitempty"`
 }

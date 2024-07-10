@@ -739,6 +739,11 @@ spec:
               name:
                 description: API name
                 type: string
+              notifyMembers:
+                description: |-
+                  If true, new members added to the API spec will
+                  be notified when the API is synced with APIM.
+                type: boolean
               pages:
                 additionalProperties:
                   properties:
