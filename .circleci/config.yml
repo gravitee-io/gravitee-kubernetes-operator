@@ -75,7 +75,7 @@ commands:
                 command: echo "export DOCKER_IMAGE_NAME=kubernetes-operator" >> ${BASH_ENV}
             - run:
                 name: Setting docker image tag
-                command: echo "export DOCKER_IMAGE_TAG=4.3.X-latest" >> ${BASH_ENV}
+                command: echo "export DOCKER_IMAGE_TAG=4.3.x-latest" >> ${BASH_ENV}
       - when:
           condition:
             equal:
@@ -240,7 +240,7 @@ jobs:
           name: Start cluster
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=4.3.X-latest
+            export APIM_IMAGE_TAG=4.3.x-latest
             make start-cluster
       - run:
           name: Run IT with filter << parameters.ginkgo-filter >>
@@ -682,7 +682,7 @@ workflows:
       - job-publish-private-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
-          tag: 4.3.X-latest
+          tag: 4.3.x-latest
           context: cicd-orchestrator
           requires:
             - Test chart
@@ -701,7 +701,7 @@ workflows:
               namespace:
                 - apim-apim-4-3-x
               image: [graviteeio.azurecr.io/kubernetes-operator]
-              tag: [4.3.X-latest]
+              tag: [4.3.x-latest]
           requires:
             - Stage image
 
