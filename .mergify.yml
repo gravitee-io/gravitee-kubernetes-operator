@@ -1,5 +1,5 @@
 pull_request_rules:
-    - name: Apply commits on `alpha`
+    - name: Apply commits on `master`
       conditions:
           - label=apply-on-master
       actions:
