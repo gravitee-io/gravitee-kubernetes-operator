@@ -17,6 +17,13 @@
 package v1alpha1
 
 import (
+	"context"
+	"net"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
+	errors "github.com/pkg/errors"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -35,6 +42,10 @@ func (context *ManagementContext) SetupWebhookWithManager(mgr ctrl.Manager) erro
 func (context *ManagementContext) Default() {}
 
 func (context *ManagementContext) ValidateCreate() (admission.Warnings, error) {
+	if err := resolveManagementContext(context); err != nil {
+		return admission.Warnings{}, err
+	}
+
 	return admission.Warnings{}, nil
 }
 
@@ -44,4 +55,24 @@ func (context *ManagementContext) ValidateUpdate(_ runtime.Object) (admission.Wa
 
 func (*ManagementContext) ValidateDelete() (admission.Warnings, error) {
 	return admission.Warnings{}, nil
+}
+
+func resolveManagementContext(ctx *ManagementContext) error {
+	urLs, _ := client.NewURLs(ctx.Spec.BaseUrl, ctx.Spec.OrgId, ctx.Spec.EnvId)
+
+	httpClient := http.NewClient(context.Background(), nil)
+	cli := client.Client{
+		HTTP: httpClient,
+		URLs: urLs,
+	}
+
+	api := make(map[string]interface{})
+	err := httpClient.Get(cli.EnvV1Target("apis").WithPath(uuid.NewV4String()).String(), api)
+
+	var opError *net.OpError
+	if errors.As(err, &opError) {
+		return err
+	}
+
+	return nil
 }
