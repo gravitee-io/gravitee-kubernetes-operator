@@ -16,66 +16,67 @@ package admissionwebhook
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
-	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Webhook", labels.WithContext, func() {
-	timeout := constants.EventualTimeout
-
+var _ = Describe("Webhook", labels.WithoutContext, func() {
+	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
-	It("should create Key, Cert and CA", func() {
+
+	It("Show throws error APIM is not accessible", func() {
 		cli := manager.Client()
-		secret := &corev1.Secret{
+		mCtx := &v1alpha1.ManagementContext{
+			TypeMeta: metav1.TypeMeta{},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "webhook-secret" + random.GetSuffix(),
+				Name:      "webhook-ctx" + random.GetSuffix(),
 				Namespace: "default",
 			},
+			Spec: v1alpha1.ManagementContextSpec{
+				Context: &management.Context{
+					BaseUrl: "https://gko.example.com",
+					EnvId:   "DEFAULT",
+					OrgId:   "DEFAULT",
+					Auth: &management.Auth{
+						BearerToken: "test",
+					},
+				},
+			},
 		}
-		Expect(cli.Create(context.Background(), secret)).To(Succeed())
-		webhookPatcher := wk.NewWebhookPatcher()
-		Expect(webhookPatcher.CreateSecret(context.Background(), secret.Name,
-			secret.Namespace, "webhook.server")).To(Succeed())
 
+		Expect(cli.Create(context.Background(), mCtx)).To(Succeed())
+
+		ctx := new(v1alpha1.ManagementContext)
 		Eventually(func() error {
 			err := cli.Get(context.Background(), types.NamespacedName{
-				Namespace: secret.Namespace,
-				Name:      secret.Name,
-			}, secret)
+				Namespace: mCtx.Namespace,
+				Name:      mCtx.Name,
+			}, ctx)
 
 			if err != nil {
 				return err
 			}
-
-			if secret.Data == nil {
-				return fmt.Errorf("webhook secret data is nil")
-			}
-
-			if secret.Data["ca"] == nil {
-				return fmt.Errorf("webhook secret CA is nil")
-			}
-
-			if secret.Data["cert"] == nil {
-				return fmt.Errorf("webhook secret Cert is nil")
-			}
-
-			if secret.Data["key"] == nil {
-				return fmt.Errorf("webhook secret Key is nil")
-			}
-
 			return nil
-		}, timeout, interval).Should(Succeed())
+		}).Should(Succeed())
 
+		Consistently(func() error {
+			warnings, err := ctx.ValidateCreate()
+			if len(warnings) != 0 {
+				return nil
+			}
+
+			return err
+		}, timeout, interval).ShouldNot(Succeed())
 	})
 })

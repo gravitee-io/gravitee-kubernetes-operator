@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Create", labels.WithContext, func() {
+var _ = Describe("Webhook", labels.WithContext, func() {
 	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
 
