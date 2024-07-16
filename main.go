@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"strings"
 
 	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
 	"gopkg.in/yaml.v3"
@@ -306,7 +307,15 @@ func patchAdmissionWebhook() {
 	setupLog.Info("setting up Admission Webhook Server")
 	webhookPatcher := wk.NewWebhookPatcher()
 	svc := env.Config.WebhookService
-	host := fmt.Sprintf("host=%s,%s.default,%s.default.svc,%s.svc.cluster.local", svc, svc, svc, svc)
+	host := strings.Join(
+		[]string{
+			fmt.Sprintf("host=%s", svc),
+			fmt.Sprintf("%s.%s", svc, env.Config.WebhookNS),
+			fmt.Sprintf("%s.%s.svc", svc, env.WebhookNS),
+			fmt.Sprintf("%s.%s.svc.cluster.local", svc, env.WebhookNS),
+		},
+		",",
+	)
 	err := webhookPatcher.CreateSecret(context.Background(), env.Config.WebhookCertSecret, env.Config.WebhookNS, host)
 	if err != nil {
 		panic(err)
