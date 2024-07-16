@@ -348,6 +348,7 @@ jobs:
               --set manager.scope.cluster=false \
               --set manager.image.repository=<< parameters.image >> \
               --set manager.image.tag=<< parameters.tag >> \
+              --set manager.image.pullPolicy=Always \
               --set serviceAccount.name=gko-<< parameters.namespace >> \
               -n << parameters.namespace >>
       - run:
