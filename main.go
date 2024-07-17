@@ -307,21 +307,22 @@ func patchAdmissionWebhook() {
 	setupLog.Info("setting up Admission Webhook Server")
 	webhookPatcher := wk.NewWebhookPatcher()
 	svc := env.Config.WebhookService
+	ns := env.Config.WebhookNS
 	host := strings.Join(
 		[]string{
 			fmt.Sprintf("host=%s", svc),
-			fmt.Sprintf("%s.%s", svc, env.Config.WebhookNS),
-			fmt.Sprintf("%s.%s.svc", svc, env.WebhookNS),
-			fmt.Sprintf("%s.%s.svc.cluster.local", svc, env.WebhookNS),
+			fmt.Sprintf("%s.%s", svc, ns),
+			fmt.Sprintf("%s.%s.svc", svc, ns),
+			fmt.Sprintf("%s.%s.svc.cluster.local", svc, ns),
 		},
 		",",
 	)
-	err := webhookPatcher.CreateSecret(context.Background(), env.Config.WebhookCertSecret, env.Config.WebhookNS, host)
+	err := webhookPatcher.CreateSecret(context.Background(), env.Config.WebhookCertSecret, ns, host)
 	if err != nil {
 		panic(err)
 	}
 
-	err = webhookPatcher.UpdateCaBundle(context.Background(), wk.Name, env.Config.WebhookCertSecret, env.Config.WebhookNS)
+	err = webhookPatcher.UpdateCaBundle(context.Background(), wk.Name, env.Config.WebhookCertSecret, ns)
 	if err != nil {
 		setupLog.Error(err, "Can not update CA bundle for GKO webhook. GKO can not start")
 		panic(err)
