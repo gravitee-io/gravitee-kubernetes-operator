@@ -154,7 +154,7 @@ func GenerateCerts(ctx context.Context, host string) ([]byte, []byte, []byte) {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		IsCA:                  true,
-		Subject:               pkix.Name{Organization: []string{"nil1"}},
+		Subject:               pkix.Name{Organization: []string{"gravitee.io"}},
 	}
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &rootTemplate, &rootTemplate, &rootKey.PublicKey, rootKey)
@@ -183,7 +183,7 @@ func GenerateCerts(ctx context.Context, host string) ([]byte, []byte, []byte) {
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		IsCA:                  false,
-		Subject:               pkix.Name{Organization: []string{"nil2"}},
+		Subject:               pkix.Name{Organization: []string{"gko"}},
 	}
 	hosts := strings.Split(host, ",")
 	for _, h := range hosts {
