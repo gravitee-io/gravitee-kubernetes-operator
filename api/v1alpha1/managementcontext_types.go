@@ -45,8 +45,8 @@ type ManagementContext struct {
 	Status ManagementContextStatus `json:"status,omitempty"`
 }
 
-func (context *ManagementContext) GetNamespacedName() *refs.NamespacedName {
-	return &refs.NamespacedName{Namespace: context.Namespace, Name: context.Name}
+func (ctx *ManagementContext) GetNamespacedName() *refs.NamespacedName {
+	return &refs.NamespacedName{Namespace: ctx.Namespace, Name: ctx.Name}
 }
 
 // +kubebuilder:object:root=true
@@ -61,6 +61,6 @@ func init() {
 	SchemeBuilder.Register(&ManagementContext{}, &ManagementContextList{})
 }
 
-func (context *ManagementContext) IsBeingDeleted() bool {
-	return !context.ObjectMeta.DeletionTimestamp.IsZero()
+func (ctx *ManagementContext) IsBeingDeleted() bool {
+	return !ctx.ObjectMeta.DeletionTimestamp.IsZero()
 }

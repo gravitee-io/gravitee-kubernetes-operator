@@ -310,7 +310,7 @@ func patchAdmissionWebhook() {
 	ns := env.Config.WebhookNS
 	host := strings.Join(
 		[]string{
-			fmt.Sprintf("host=%s", svc),
+			svc,
 			fmt.Sprintf("%s.%s", svc, ns),
 			fmt.Sprintf("%s.%s.svc", svc, ns),
 			fmt.Sprintf("%s.%s.svc.cluster.local", svc, ns),

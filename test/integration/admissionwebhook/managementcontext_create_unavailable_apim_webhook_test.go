@@ -16,6 +16,7 @@ package admissionwebhook
 
 import (
 	"context"
+	"errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -35,7 +36,7 @@ var _ = Describe("Webhook", labels.WithoutContext, func() {
 	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
 
-	It("Show throws error APIM is not accessible", func() {
+	It("Show gives warning when APIM is not accessible", func() {
 		cli := manager.Client()
 		mCtx := &v1alpha1.ManagementContext{
 			TypeMeta: metav1.TypeMeta{},
@@ -71,12 +72,12 @@ var _ = Describe("Webhook", labels.WithoutContext, func() {
 		}).Should(Succeed())
 
 		Consistently(func() error {
-			warnings, err := ctx.ValidateCreate()
-			if len(warnings) != 0 {
+			warnings, _ := ctx.ValidateCreate()
+			if len(warnings) != 1 {
 				return nil
 			}
 
-			return err
+			return errors.New(warnings[0])
 		}, timeout, interval).ShouldNot(Succeed())
 	})
 })
