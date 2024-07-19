@@ -58,7 +58,7 @@ func validateApi(api *ApiV4Definition) (admission.Warnings, error) {
 	if api.HasContext() {
 		mCtx := new(ManagementContext)
 		if err := k8s.GetClient().Get(context.Background(), api.ContextRef().NamespacedName(), mCtx); err != nil {
-			return admission.Warnings{}, fmt.Errorf("can't create api [%s] because it is using "+
+			return admission.Warnings{}, fmt.Errorf("can't create API [%s] because it is using "+
 				"management context [%v] that doesn't exist in the cluster", api.Name, api.ContextRef().NamespacedName())
 		}
 	} else {
@@ -132,7 +132,7 @@ func findDuplicatePath(existingPaths []string, newPaths []string) error {
 	for _, ep := range existingPaths {
 		for _, np := range newPaths {
 			if ep == np {
-				return fmt.Errorf("invalid api context path. the same path already exist [%s]", ep)
+				return fmt.Errorf("invalid API context path [%s]. Another API with the same path already exists", ep)
 			}
 		}
 	}
