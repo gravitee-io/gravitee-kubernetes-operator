@@ -469,6 +469,7 @@ spec:
                       - ASCIIDOC
                       - FOLDER
                       - SYSTEM_FOLDER
+                      - ROOT
                       type: string
                     visibility:
                       default: PUBLIC

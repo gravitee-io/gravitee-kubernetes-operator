@@ -1080,7 +1080,7 @@ List of path operators
         <td>
           The type of the documentation page or folder.<br/>
           <br/>
-            <i>Enum</i>: MARKDOWN, SWAGGER, ASYNCAPI, ASCIIDOC, FOLDER, SYSTEM_FOLDER<br/>
+            <i>Enum</i>: MARKDOWN, SWAGGER, ASYNCAPI, ASCIIDOC, FOLDER, SYSTEM_FOLDER, ROOT<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -6622,7 +6622,7 @@ APIM exports and can be safely ignored.<br/>
         <td>
           The type of the documentation page or folder.<br/>
           <br/>
-            <i>Enum</i>: MARKDOWN, SWAGGER, ASYNCAPI, ASCIIDOC, FOLDER, SYSTEM_FOLDER<br/>
+            <i>Enum</i>: MARKDOWN, SWAGGER, ASYNCAPI, ASCIIDOC, FOLDER, SYSTEM_FOLDER, ROOT<br/>
         </td>
         <td>true</td>
       </tr><tr>
