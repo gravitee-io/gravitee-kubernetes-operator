@@ -51,7 +51,7 @@ type Page struct {
 	// This field can be edited safely if you want to rename a page.
 	Name string `json:"name,omitempty"`
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=MARKDOWN;SWAGGER;ASYNCAPI;ASCIIDOC;FOLDER;SYSTEM_FOLDER
+	// +kubebuilder:validation:Enum=MARKDOWN;SWAGGER;ASYNCAPI;ASCIIDOC;FOLDER;SYSTEM_FOLDER;ROOT
 	// The type of the documentation page or folder.
 	Type string `json:"type"`
 	// +kubebuilder:validation:Optional
