@@ -62,8 +62,8 @@ func validateManagementContext(ctx *ManagementContext) (admission.Warnings, erro
 		secret := new(corev1.Secret)
 		err := k8s.GetClient().Get(context.Background(), ctx.Spec.SecretRef().NamespacedName(), secret)
 		if err != nil {
-			return admission.Warnings{}, errors.Wrap(err, fmt.Sprintf("can't create management context because it is using "+
-				"sercret [%v] that doesn't exist in the cluster", ctx.Spec.SecretRef()))
+			return admission.Warnings{}, fmt.Errorf("can't create management context [%s] because it is using "+
+				"sercret [%v] that doesn't exist in the cluster", ctx.Name, ctx.Spec.SecretRef())
 		}
 	}
 
@@ -88,7 +88,7 @@ func checkAPIAvailability(ctx *ManagementContext) error {
 
 	var opError *net.OpError
 	if errors.As(err, &opError) {
-		return err
+		return fmt.Errorf("unable to reach APIM, [%s] is not available", ctx.Spec.BaseUrl)
 	}
 
 	return nil
