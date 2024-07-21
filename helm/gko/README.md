@@ -69,6 +69,7 @@ This is where you can configure the deployment itself and the way the operator w
 | `manager.applyCRDs`                         | 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup. | `true`                           |
 | `manager.metrics.enabled`                   | If true, a metrics server will be created so that metrics can be scraped using prometheus.                                                      | `true`                           |
 | `manager.httpClient.insecureSkipCertVerify` | If true, the manager HTTP client will not verify the certificate used by the Management API.                                                    | `false`                          |
+| `manager.httpClient.timeoutSeconds`         | he timeout (in seconds) used when issuing request to the Management API.                                                                        | `5`                              |
 
 ### ingress
 
