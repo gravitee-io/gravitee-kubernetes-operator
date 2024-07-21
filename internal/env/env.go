@@ -16,32 +16,42 @@ package env
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 )
 
 const (
-	CMTemplate404Name      = "TEMPLATE_404_CONFIG_MAP_NAME"
-	CMTemplate404NS        = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
-	Development            = "DEV_MODE"
-	NS                     = "NAMESPACE"
-	ApplyCRDs              = "APPLY_CRDS"
-	EnableMetrics          = "ENABLE_METRICS"
-	InsecureSkipCertVerify = "INSECURE_SKIP_CERT_VERIFY"
-	TrueString             = "true"
-	IngressClasses         = "INGRESS_CLASSES"
+	CMTemplate404Name                = "TEMPLATE_404_CONFIG_MAP_NAME"
+	CMTemplate404NS                  = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
+	Development                      = "DEV_MODE"
+	NS                               = "NAMESPACE"
+	ApplyCRDs                        = "APPLY_CRDS"
+	EnableMetrics                    = "ENABLE_METRICS"
+	HttpCLientInsecureSkipCertVerify = "HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY"
+	HttpClientTimeoutSeconds         = "HTTP_CLIENT_TIMEOUT_SECONDS"
+	TrueString                       = "true"
+	IngressClasses                   = "INGRESS_CLASSES"
+
+	defaultHttpCLientTimeout = 5
 )
 
 var Config = struct {
-	NS                 string
-	ApplyCRDs          bool
-	EnableMetrics      bool
-	Development        bool
-	CMTemplate404Name  string
-	CMTemplate404NS    string
-	InsecureSkipVerify bool
-	IngressClasses     []string
+	NS                           string
+	ApplyCRDs                    bool
+	EnableMetrics                bool
+	EnableWebhook                bool
+	WebhookNS                    string
+	WebhookService               string
+	WebhookPort                  int
+	WebhookCertSecret            string
+	Development                  bool
+	CMTemplate404Name            string
+	CMTemplate404NS              string
+	HTTPClientInsecureSkipVerify bool
+	HTTPClientTimeoutSeconds     int
+	IngressClasses               []string
 }{}
 
 func init() {
@@ -50,11 +60,20 @@ func init() {
 	Config.Development = os.Getenv(Development) == TrueString
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
-	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == TrueString
+	Config.HTTPClientInsecureSkipVerify = os.Getenv(HttpCLientInsecureSkipCertVerify) == TrueString
+	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpCLientTimeout)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
 	var ingressClass string
 	if ingressClass = keys.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
 		ingressClass = os.Getenv(IngressClasses)
 	}
 	Config.IngressClasses = strings.Split(ingressClass, ",")
+}
+
+func parseInt(key string, defaultValue int) int {
+	value, err := strconv.Atoi(os.Getenv(key))
+	if err != nil {
+		return defaultValue
+	}
+	return value
 }

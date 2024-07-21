@@ -106,7 +106,7 @@ func main() {
 		metricsAddr = "0" // disables metrics
 	}
 
-	if env.Config.InsecureSkipVerify {
+	if env.Config.HTTPClientInsecureSkipVerify {
 		setupLog.Info("TLS verification is skipped for APIM HTTP client")
 	}
 
