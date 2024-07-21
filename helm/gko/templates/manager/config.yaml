@@ -47,5 +47,6 @@ data:
   TEMPLATE_404_CONFIG_MAP_NAMESPACE: {{ $template404.namespace }}
   {{- end }}
   {{- if or .Values.manager.httpClient.insecureSkipCertVerify .Values.httpClient.insecureSkipCertVerify }}
-  INSECURE_SKIP_CERT_VERIFY: "true"
+  HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY: "true"
   {{- end }}
+  HTTP_CLIENT_TIMEOUT_SECONDS: {{ quote .Values.manager.httpClient.timeoutSeconds }}

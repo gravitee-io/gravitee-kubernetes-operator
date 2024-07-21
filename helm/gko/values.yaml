@@ -92,6 +92,8 @@ manager:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
 
+    ## @param manager.httpClient.timeoutSeconds he timeout (in seconds) used when issuing request to the Management API.
+    timeoutSeconds: 5
 ## @section ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.
