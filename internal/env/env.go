@@ -23,39 +23,42 @@ import (
 )
 
 const (
-	CMTemplate404Name      = "TEMPLATE_404_CONFIG_MAP_NAME"
-	CMTemplate404NS        = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
-	Development            = "DEV_MODE"
-	NS                     = "NAMESPACE"
-	ApplyCRDs              = "APPLY_CRDS"
-	EnableMetrics          = "ENABLE_METRICS"
-	EnableWebhook          = "ENABLE_WEBHOOK"
-	WebhookNS              = "WEBHOOK_NAMESPACE"
-	WebhookServiceName     = "WEBHOOK_SERVICE_NAME"
-	WebhookPort            = "WEBHOOK_SERVICE_PORT"
-	WebhookCertSecret      = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not a hardcoded secret
-	InsecureSkipCertVerify = "INSECURE_SKIP_CERT_VERIFY"
-	TrueString             = "true"
-	IngressClasses         = "INGRESS_CLASSES"
+	CMTemplate404Name                = "TEMPLATE_404_CONFIG_MAP_NAME"
+	CMTemplate404NS                  = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
+	Development                      = "DEV_MODE"
+	NS                               = "NAMESPACE"
+	ApplyCRDs                        = "APPLY_CRDS"
+	EnableMetrics                    = "ENABLE_METRICS"
+	EnableWebhook                    = "ENABLE_WEBHOOK"
+	WebhookNS                        = "WEBHOOK_NAMESPACE"
+	WebhookServiceName               = "WEBHOOK_SERVICE_NAME"
+	WebhookPort                      = "WEBHOOK_SERVICE_PORT"
+	WebhookCertSecret                = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not a hardcoded secret
+	HttpCLientInsecureSkipCertVerify = "HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY"
+	HttpClientTimeoutSeconds         = "HTTP_CLIENT_TIMEOUT_SECONDS"
+	TrueString                       = "true"
+	IngressClasses                   = "INGRESS_CLASSES"
 
 	// This default are applied when running the app locally.
-	defaultWebhookPort = 9443
+	defaultWebhookPort       = 9443
+	defaultHttpCLientTimeout = 5
 )
 
 var Config = struct {
-	NS                 string
-	ApplyCRDs          bool
-	EnableMetrics      bool
-	EnableWebhook      bool
-	WebhookNS          string
-	WebhookService     string
-	WebhookPort        int
-	WebhookCertSecret  string
-	Development        bool
-	CMTemplate404Name  string
-	CMTemplate404NS    string
-	InsecureSkipVerify bool
-	IngressClasses     []string
+	NS                           string
+	ApplyCRDs                    bool
+	EnableMetrics                bool
+	EnableWebhook                bool
+	WebhookNS                    string
+	WebhookService               string
+	WebhookPort                  int
+	WebhookCertSecret            string
+	Development                  bool
+	CMTemplate404Name            string
+	CMTemplate404NS              string
+	HTTPClientInsecureSkipVerify bool
+	HTTPClientTimeoutSeconds     int
+	IngressClasses               []string
 }{}
 
 func init() {
@@ -64,7 +67,8 @@ func init() {
 	Config.Development = os.Getenv(Development) == TrueString
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
-	Config.InsecureSkipVerify = os.Getenv(InsecureSkipCertVerify) == TrueString
+	Config.HTTPClientInsecureSkipVerify = os.Getenv(HttpCLientInsecureSkipCertVerify) == TrueString
+	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpCLientTimeout)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
 	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
 	Config.WebhookNS = os.Getenv(WebhookNS)
