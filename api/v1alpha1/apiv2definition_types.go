@@ -58,24 +58,7 @@ type ApiDefinitionV2Spec struct {
 
 // ApiDefinitionStatus defines the observed state of API Definition.
 type ApiDefinitionStatus struct {
-	OrgID string `json:"organizationId,omitempty"`
-	EnvID string `json:"environmentId,omitempty"`
-	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
-	ID      string `json:"id,omitempty"`
-	CrossID string `json:"crossId,omitempty"`
-	// The processing status of the API definition.
-	Status custom.ProcessingStatus `json:"processingStatus,omitempty"`
-	// This field is kept for backward compatibility and shall be removed in future versions.
-	// Use processingStatus instead.
-	DeprecatedStatus custom.ProcessingStatus `json:"status,omitempty"`
-
-	// The state of the API. Can be either STARTED or STOPPED.
-	State base.ApiState `json:"state,omitempty"`
-
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-	// This field is kept for backward compatibility and shall be removed in future versions.
-	// Use observedGeneration instead.
-	DeprecatedObservedGeneration int64 `json:"generation,omitempty"`
+	base.Status `json:",inline"`
 }
 
 var _ list.Item = &ApiDefinition{}
@@ -189,7 +172,7 @@ func (spec *ApiDefinitionV2Spec) Hash() string {
 }
 
 func (s *ApiDefinitionStatus) SetProcessingStatus(status custom.ProcessingStatus) {
-	s.Status = status
+	s.ProcessingStatus = status
 }
 
 func (s *ApiDefinitionStatus) SetObservedGeneration(g int64) {

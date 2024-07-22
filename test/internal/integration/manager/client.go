@@ -18,15 +18,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var cli client.Client
-
 func Client() client.Client {
-	return cli
+	return k8s.GetClient()
 }
 
 func GetLatest[T client.Object](ctx context.Context, obj T) error {

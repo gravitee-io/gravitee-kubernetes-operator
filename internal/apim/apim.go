@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
@@ -74,42 +73,40 @@ func FromContext(ctx context.Context, managementContext *management.Context) (*A
 }
 
 func FromContextRef(ctx context.Context, ref custom.ResourceRef) (*APIM, error) {
-	managementContext, err := resolveManagementContext(ctx, ref)
+	managementContext, err := resolveContext(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
 	return FromContext(ctx, managementContext)
 }
 
-func resolveManagementContext(
+func resolveContext(
 	ctx context.Context,
 	ref custom.ResourceRef,
 ) (*management.Context, error) {
-	managementContext := new(v1alpha1.ManagementContext)
+	log.FromContext(ctx).
+		WithValues("namespace", ref.GetNamespace()).
+		WithValues("name", ref.GetName()).
+		Info("Resolving management context")
 
-	nsm := ref.NamespacedName()
-
-	log.FromContext(ctx).Info("Resolving management context", "namespace", nsm.Namespace, "name", nsm.Name)
-
-	if err := k8s.GetClient().Get(ctx, nsm, managementContext); err != nil {
+	context, err := k8s.ResolveContext(ctx, ref)
+	if err != nil {
 		return nil, err
 	}
 
-	if err := resolveContextSecrets(ctx, managementContext); err != nil {
+	if err = resolveContextSecrets(ctx, context, ref); err != nil {
 		return nil, err
 	}
 
-	return managementContext.Spec.Context, nil
+	return context, nil
 }
 
-func resolveContextSecrets(ctx context.Context, context *v1alpha1.ManagementContext) error {
-	management := context.Spec
-
-	if management.HasSecretRef() {
+func resolveContextSecrets(ctx context.Context, context *management.Context, ref custom.ResourceRef) error {
+	if context.HasSecretRef() {
 		secret := new(coreV1.Secret)
 
-		secretKey := management.SecretRef().NamespacedName()
-		secretKey.Namespace = getSecretNamespace(context)
+		secretKey := context.SecretRef().NamespacedName()
+		secretKey.Namespace = getSecretNamespace(context, ref)
 
 		if err := k8s.GetClient().Get(ctx, secretKey, secret); err != nil {
 			return err
@@ -119,17 +116,17 @@ func resolveContextSecrets(ctx context.Context, context *v1alpha1.ManagementCont
 		username := string(secret.Data[usernameSecretKey])
 		password := string(secret.Data[passwordSecretKey])
 
-		management.SetToken(bearerToken)
-		management.SetCredentials(username, password)
+		context.SetToken(bearerToken)
+		context.SetCredentials(username, password)
 	}
 
 	return nil
 }
 
-func getSecretNamespace(context *v1alpha1.ManagementContext) string {
-	secretRef := context.Spec.SecretRef()
+func getSecretNamespace(context *management.Context, ref custom.ResourceRef) string {
+	secretRef := context.SecretRef()
 	if secretRef.Namespace != "" {
 		return secretRef.Namespace
 	}
-	return context.Namespace
+	return ref.GetNamespace()
 }

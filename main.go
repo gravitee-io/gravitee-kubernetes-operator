@@ -26,6 +26,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,7 +39,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
@@ -136,6 +136,8 @@ func main() {
 		Cache:                  buildCacheOptions(env.Config.NS),
 	})
 
+	k8s.RegisterClient(mgr.GetClient())
+
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
@@ -175,8 +177,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	k8s.RegisterClient(mgr.GetClient())
-
 	setupLog.Info("starting manager")
 	if startErr := mgr.Start(ctrl.SetupSignalHandler()); startErr != nil {
 		setupLog.Error(startErr, "problem running manager")
@@ -199,45 +199,45 @@ func registerControllers(mgr manager.Manager) {
 	const msg = "unable to create controller"
 	const controller = "controller"
 	if err := (&apidefinition.Reconciler{
-		Client:   mgr.GetClient(),
+		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiDefinitionList{}),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, msg, controller, "ApiDefinition")
 		os.Exit(1)
 	}
 
 	if err := (&apidefinition.V4Reconciler{
-		Client:   mgr.GetClient(),
+		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, msg, controller, "ApiV4Definition")
 		os.Exit(1)
 	}
 
 	if err := (&managementcontext.Reconciler{
-		Client:   mgr.GetClient(),
+		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ManagementContextList{}),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, msg, controller, "ManagementContext")
 		os.Exit(1)
 	}
 	if err := (&ingress.Reconciler{
-		Client:   mgr.GetClient(),
+		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1.IngressList{}),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1.IngressList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, msg, controller, "Ingress")
 		os.Exit(1)
 	}
 	if err := (&apiresource.Reconciler{
-		Client:   mgr.GetClient(),
+		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
 	}).SetupWithManager(mgr); err != nil {
@@ -245,17 +245,17 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 	if err := (&application.Reconciler{
-		Client:   mgr.GetClient(),
+		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("application-controller"),
-		Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApplicationList{}),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, msg, controller, "Application")
 		os.Exit(1)
 	}
 
 	if err := (&secrets.Reconciler{
-		Client: mgr.GetClient(),
+		Client: k8s.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, msg, controller, "Secret")

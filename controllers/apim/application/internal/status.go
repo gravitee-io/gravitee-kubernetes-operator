@@ -28,11 +28,11 @@ func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application)
 	}
 
 	application.Status.ObservedGeneration = application.ObjectMeta.Generation
-	application.Status.Status = custom.ProcessingStatusCompleted
+	application.Status.ProcessingStatus = custom.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, application)
 }
 
 func UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application) error {
-	application.Status.Status = custom.ProcessingStatusFailed
+	application.Status.ProcessingStatus = custom.ProcessingStatusFailed
 	return k8s.GetClient().Status().Update(ctx, application)
 }

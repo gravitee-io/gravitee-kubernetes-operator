@@ -12,31 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apim
 
 import (
-	"context"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 )
 
-func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
-	spec := &application.Spec
-	spec.Origin = "KUBERNETES"
-	spec.ID = application.Status.ID
+// APIs brings support for managing gravitee.io APIM APIs.
+type Export struct {
+	*client.Client
+}
 
-	apim, err := apim.FromContextRef(ctx, spec.Context)
-	if err != nil {
-		return err
+func NewExport(client *client.Client) *Export {
+	return &Export{Client: client}
+}
+
+func (svc *Export) V2Api(id string) (*v1alpha1.ApiDefinition, error) {
+	url := svc.EnvV1Target("apis").WithPath(id).WithPath("/crd")
+	exported := new(v1alpha1.ApiDefinition)
+	if err := svc.HTTP.GetYAML(url.String(), &exported); err != nil {
+		return nil, err
 	}
-
-	status, mgmtErr := apim.Applications.CreateOrUpdate(&spec.Application)
-	if mgmtErr != nil {
-		return errors.NewContextError(mgmtErr)
-	}
-
-	status.DeepCopyInto(&application.Status.Status)
-	return nil
+	return exported, nil
 }

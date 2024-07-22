@@ -82,7 +82,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
 		if err := template.Compile(ctx, application); err != nil {
-			application.Status.Status = custom.ProcessingStatusFailed
+			application.Status.ProcessingStatus = custom.ProcessingStatusFailed
 			return err
 		}
 

@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
@@ -83,10 +81,10 @@ func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.Appl
 	return application, nil
 }
 
-func (svc *Applications) CreateOrUpdate(spec *application.Application) (*v1alpha1.ApplicationStatus, error) {
+func (svc *Applications) CreateOrUpdate(spec *application.Application) (*application.Status, error) {
 	url := svc.EnvV2Target(fmt.Sprintf("%s/_import/crd", applicationsPath))
 
-	status := new(v1alpha1.ApplicationStatus)
+	status := new(application.Status)
 	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
 		return nil, err
 	}
