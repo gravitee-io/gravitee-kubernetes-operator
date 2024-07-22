@@ -17,7 +17,11 @@ package management
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
+
+var _ custom.Auth = &Auth{}
+var _ custom.BasicAuth = &BasicAuth{}
 
 type Context struct {
 	// The URL of a management API instance
@@ -36,6 +40,31 @@ type Context struct {
 	Auth *Auth `json:"auth"`
 }
 
+// GetAuth implements custom.Context.
+func (c *Context) GetAuth() custom.Auth {
+	return c.Auth
+}
+
+// GetEnv implements custom.Context.
+func (c *Context) GetEnv() string {
+	return c.EnvId
+}
+
+// GetOrg implements custom.Context.
+func (c *Context) GetOrg() string {
+	return c.OrgId
+}
+
+// GetSecretRef implements custom.Context.
+func (c *Context) GetSecretRef() custom.ResourceRef {
+	return c.Auth.SecretRef
+}
+
+// GetURL implements custom.Context.
+func (c *Context) GetURL() string {
+	return c.BaseUrl
+}
+
 type Auth struct {
 	// The bearer token used to authenticate against the API Management instance
 	// (must be generated from an admin account)
@@ -46,11 +75,54 @@ type Auth struct {
 	SecretRef *refs.NamespacedName `json:"secretRef,omitempty"`
 }
 
+// GetBearerToken implements custom.Auth.
+func (in *Auth) GetBearerToken() string {
+	return in.BearerToken
+}
+
+// HasCredentials implements custom.Auth.
+func (in *Auth) HasCredentials() bool {
+	return in.Credentials != nil
+}
+
+// GetCredentials implements custom.Auth.
+func (in *Auth) GetCredentials() custom.BasicAuth {
+	return in.Credentials
+}
+
+// GetSecretRef implements custom.Auth.
+func (in *Auth) GetSecretRef() custom.ResourceRef {
+	return in.SecretRef
+}
+
+// SetCredentials implements custom.Auth.
+func (in *Auth) SetCredentials(username string, password string) {
+	in.Credentials = &BasicAuth{
+		Username: username,
+		Password: password,
+	}
+}
+
+// SetToken implements custom.Auth.
+func (in *Auth) SetToken(token string) {
+	in.BearerToken = token
+}
+
 type BasicAuth struct {
 	// +kubebuilder:validation:Required
 	Username string `json:"username,omitempty"`
 	// +kubebuilder:validation:Required
 	Password string `json:"password,omitempty"`
+}
+
+// GetPassword implements custom.BasicAuth.
+func (in *BasicAuth) GetPassword() string {
+	return in.Password
+}
+
+// GetUsername implements custom.BasicAuth.
+func (in *BasicAuth) GetUsername() string {
+	return in.Username
 }
 
 func (c *Context) HasAuthentication() bool {

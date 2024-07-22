@@ -27,6 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var _ custom.ContextAwareResource = &Application{}
+
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
 type ApplicationSpec struct {
@@ -89,6 +91,14 @@ func (app *Application) HasContext() bool {
 
 func (app *Application) ID() string {
 	return app.Status.ID
+}
+
+func (app *Application) OrgID() string {
+	return app.Status.OrgID
+}
+
+func (app *Application) EnvID() string {
+	return app.Status.EnvID
 }
 
 func (app *Application) DeepCopyResource() custom.Resource {

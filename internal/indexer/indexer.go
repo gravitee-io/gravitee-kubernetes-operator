@@ -17,7 +17,7 @@ package indexer
 import (
 	"context"
 
-	gio "github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
@@ -54,29 +54,34 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	errs := make([]error, 0)
 
 	contextIndexer := newIndexer(ApiContextField, indexManagementContexts)
-	if err := cache.IndexField(ctx, &gio.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func); err != nil {
+	if err := cache.IndexField(ctx, &v1alpha1.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
 	apiV4ContextIndexer := newIndexer(ApiV4ContextField, indexApiV4ManagementContexts)
-	if err := cache.IndexField(ctx, &gio.ApiV4Definition{}, apiV4ContextIndexer.Field,
+	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4ContextIndexer.Field,
 		apiV4ContextIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
 	resourceIndexer := newIndexer(ApiResourceField, indexApiResourceRefs)
-	if err := cache.IndexField(ctx, &gio.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func); err != nil {
+	if err := cache.IndexField(ctx, &v1alpha1.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
 	apiV4ResourceIndexer := newIndexer(ApiV4ResourceField, indexIApiV4ResourceRefs)
-	if err := cache.IndexField(ctx, &gio.ApiV4Definition{}, apiV4ResourceIndexer.Field,
+	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4ResourceIndexer.Field,
 		apiV4ResourceIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
 	secretRefIndexer := newIndexer(SecretRefField, indexManagementContextSecrets)
-	if err := cache.IndexField(ctx, &gio.ManagementContext{}, secretRefIndexer.Field, secretRefIndexer.Func); err != nil {
+	if err := cache.IndexField(
+		ctx,
+		&v1alpha1.ManagementContext{},
+		secretRefIndexer.Field,
+		secretRefIndexer.Func,
+	); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -91,7 +96,7 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	}
 
 	appContextIndexer := newIndexer(AppContextField, indexApplicationManagementContexts)
-	if err := cache.IndexField(ctx, &gio.Application{}, appContextIndexer.Field, appContextIndexer.Func); err != nil {
+	if err := cache.IndexField(ctx, &v1alpha1.Application{}, appContextIndexer.Field, appContextIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -120,7 +125,7 @@ func newIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) I
 	}
 }
 
-func indexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
+func indexManagementContexts(api *v1alpha1.ApiDefinition, fields *[]string) {
 	if api.Spec.Context == nil {
 		return
 	}
@@ -128,7 +133,7 @@ func indexManagementContexts(api *gio.ApiDefinition, fields *[]string) {
 	*fields = append(*fields, api.Spec.Context.String())
 }
 
-func indexApiV4ManagementContexts(api *gio.ApiV4Definition, fields *[]string) {
+func indexApiV4ManagementContexts(api *v1alpha1.ApiV4Definition, fields *[]string) {
 	if api.Spec.Context == nil {
 		return
 	}
@@ -136,13 +141,13 @@ func indexApiV4ManagementContexts(api *gio.ApiV4Definition, fields *[]string) {
 	*fields = append(*fields, api.Spec.Context.String())
 }
 
-func indexManagementContextSecrets(context *gio.ManagementContext, fields *[]string) {
+func indexManagementContextSecrets(context *v1alpha1.ManagementContext, fields *[]string) {
 	if context.Spec.HasSecretRef() {
 		*fields = append(*fields, context.Spec.SecretRef().String())
 	}
 }
 
-func indexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
+func indexApiResourceRefs(api *v1alpha1.ApiDefinition, fields *[]string) {
 	if api.Spec.Resources == nil {
 		return
 	}
@@ -154,7 +159,7 @@ func indexApiResourceRefs(api *gio.ApiDefinition, fields *[]string) {
 	}
 }
 
-func indexIApiV4ResourceRefs(api *gio.ApiV4Definition, fields *[]string) {
+func indexIApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 	if api.Spec.Resources == nil {
 		return
 	}
@@ -188,7 +193,7 @@ func indexTLSSecret(ing *v1.Ingress, fields *[]string) {
 	}
 }
 
-func indexApplicationManagementContexts(application *gio.Application, fields *[]string) {
+func indexApplicationManagementContexts(application *v1alpha1.Application, fields *[]string) {
 	if application.Spec.Context == nil {
 		return
 	}

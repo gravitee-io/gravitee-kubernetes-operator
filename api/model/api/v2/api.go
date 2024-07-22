@@ -17,7 +17,10 @@ package v2
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
+
+var _ custom.ApiDefinition = &Api{}
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
@@ -67,6 +70,15 @@ type Api struct {
 	// +kubebuilder:default:=v4-emulation-engine
 	// +kubebuilder:validation:Enum=v3;v4-emulation-engine;
 	ExecutionMode string `json:"execution_mode,omitempty"`
+}
+
+func (api *Api) GetDefinitionVersion() custom.ApiDefinitionVersion {
+	return custom.ApiV2
+}
+
+// TODO implement when v2 admission handles paths
+func (api *Api) GetContextPaths() ([]string, error) {
+	return make([]string, 0), nil
 }
 
 const (

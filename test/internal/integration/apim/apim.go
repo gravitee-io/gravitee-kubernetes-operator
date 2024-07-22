@@ -41,7 +41,7 @@ func NewClient(ctx context.Context) *APIM {
 		Build().
 		Context
 
-	apim, err := apim.FromContext(ctx, context.Spec.Context)
+	apim, err := apim.FromContext(ctx, context, context.GetNamespace())
 	Expect(err).ToNot(HaveOccurred())
 
 	subscriptions := service.NewSubscriptions(apim.APIs.Client)

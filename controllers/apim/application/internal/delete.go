@@ -32,7 +32,7 @@ func Delete(
 		return nil
 	}
 
-	apim, apimErr := apim.FromContextRef(ctx, application.Spec.Context)
+	apim, apimErr := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
 	if apimErr != nil {
 		return apimErr
 	}

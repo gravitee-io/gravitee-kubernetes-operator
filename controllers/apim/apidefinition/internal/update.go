@@ -71,7 +71,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	log.FromContext(ctx).Info("Syncing API with APIM")
 
-	apim, apimErr := apim.FromContextRef(ctx, spec.Context)
+	apim, apimErr := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
 	if apimErr != nil {
 		return apimErr
 	}
@@ -142,7 +142,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 
 	if spec.Context != nil {
 		log.FromContext(ctx).Info("Syncing API with APIM")
-		apim, err := apim.FromContextRef(ctx, spec.Context)
+		apim, err := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
 		if err != nil {
 			return err
 		}

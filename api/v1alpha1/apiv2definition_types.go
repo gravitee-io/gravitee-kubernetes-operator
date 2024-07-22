@@ -29,7 +29,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -61,7 +60,6 @@ type ApiDefinitionStatus struct {
 	base.Status `json:",inline"`
 }
 
-var _ list.Item = &ApiDefinition{}
 var _ custom.ApiDefinition = &ApiDefinition{}
 var _ custom.Status = &ApiDefinitionStatus{}
 var _ custom.Spec = &ApiDefinitionV2Spec{}
@@ -143,7 +141,7 @@ func (api *ApiDefinition) OrgID() string {
 	return api.Status.OrgID
 }
 
-func (api *ApiDefinition) Version() custom.ApiDefinitionVersion {
+func (api *ApiDefinition) GetDefinitionVersion() custom.ApiDefinitionVersion {
 	return custom.ApiV2
 }
 
@@ -165,6 +163,10 @@ func (api *ApiDefinition) ContextRef() custom.ResourceRef {
 
 func (api *ApiDefinition) HasContext() bool {
 	return api.Spec.Context != nil
+}
+
+func (api *ApiDefinition) GetContextPaths() ([]string, error) {
+	return api.Spec.GetContextPaths()
 }
 
 func (spec *ApiDefinitionV2Spec) Hash() string {
@@ -201,22 +203,12 @@ func (s *ApiDefinitionStatus) DeepCopyTo(obj client.Object) error {
 	return nil
 }
 
-var _ list.Interface = &ApiDefinitionList{}
-
 // ApiDefinitionList contains a list of ApiDefinition.
 // +kubebuilder:object:root=true
 type ApiDefinitionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ApiDefinition `json:"items"`
-}
-
-func (l *ApiDefinitionList) GetItems() []list.Item {
-	items := make([]list.Item, len(l.Items))
-	for i := range l.Items {
-		items[i] = &l.Items[i]
-	}
-	return items
 }
 
 func init() {

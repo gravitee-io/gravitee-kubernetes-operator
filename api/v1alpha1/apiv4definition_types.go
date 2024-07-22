@@ -22,11 +22,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/list"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -43,7 +41,7 @@ type ApiV4DefinitionStatus struct {
 	v4.Status `json:",inline"`
 }
 
-var _ custom.ApiDefinition = &ApiV4Definition{}
+var _ custom.ApiDefinitionResource = &ApiV4Definition{}
 var _ custom.Status = &ApiDefinitionStatus{}
 var _ custom.Spec = &ApiDefinitionV2Spec{}
 
@@ -78,7 +76,7 @@ func (api *ApiV4Definition) IsBeingDeleted() bool {
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiV4Definition) PickID(mCtx *management.Context) string {
+func (api *ApiV4Definition) PickID(mCtx custom.Context) string {
 	if api.Status.ID != "" {
 		return api.Status.ID
 	}
@@ -88,7 +86,7 @@ func (api *ApiV4Definition) PickID(mCtx *management.Context) string {
 	}
 
 	if mCtx != nil {
-		return uuid.FromStrings(api.PickCrossID(), mCtx.OrgId, mCtx.EnvId)
+		return uuid.FromStrings(api.PickCrossID(), mCtx.GetOrg(), mCtx.GetEnv())
 	}
 
 	return string(api.UID)
@@ -202,6 +200,14 @@ func (api *ApiV4Definition) GetObjectMeta() *metav1.ObjectMeta {
 	return &api.ObjectMeta
 }
 
+func (api *ApiV4Definition) GetContextPaths() ([]string, error) {
+	return api.Spec.GetContextPaths()
+}
+
+func (api *ApiV4Definition) GetDefinitionVersion() custom.ApiDefinitionVersion {
+	return custom.ApiV4
+}
+
 func (spec *ApiV4DefinitionSpec) Hash() string {
 	return hash.Calculate(spec)
 }
@@ -246,14 +252,6 @@ type ApiV4DefinitionList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ApiV4Definition `json:"items"`
-}
-
-func (l *ApiV4DefinitionList) GetItems() []list.Item {
-	items := make([]list.Item, len(l.Items))
-	for i := range l.Items {
-		items[i] = &l.Items[i]
-	}
-	return items
 }
 
 func init() {

@@ -41,7 +41,7 @@ const requeueAfterTime = time.Second * 5
 
 func Reconcile(
 	ctx context.Context,
-	apiDefinition custom.ApiDefinition,
+	apiDefinition custom.ApiDefinitionResource,
 	r record.EventRecorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
@@ -66,7 +66,7 @@ func Reconcile(
 
 func reconcileApiDefinition(
 	ctx context.Context,
-	apiDefinition custom.ApiDefinition,
+	apiDefinition custom.ApiDefinitionResource,
 	events *event.Recorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)

@@ -45,10 +45,19 @@ type Resource interface {
 
 // +k8s:deepcopy-gen=false
 type ApiDefinition interface {
+	GetDefinitionVersion() ApiDefinitionVersion
+	GetContextPaths() ([]string, error)
+}
+
+// +k8s:deepcopy-gen=false
+type ApiDefinitionResource interface {
 	ContextAwareResource
-	Version() ApiDefinitionVersion
-	OrgID() string
-	EnvID() string
+	ApiDefinition
+}
+
+// +k8s:deepcopy-gen=false
+type ApplicationResource interface {
+	ContextAwareResource
 }
 
 // +k8s:deepcopy-gen=false
@@ -70,6 +79,46 @@ type ContextAwareResource interface {
 	ContextRef() ResourceRef
 	HasContext() bool
 	ID() string
+	OrgID() string
+	EnvID() string
+}
+
+// +k8s:deepcopy-gen=false
+type SecretAware interface {
+	GetSecretRef() ResourceRef
+	HasSecretRef() bool
+}
+
+// +k8s:deepcopy-gen=false
+type Context interface {
+	SecretAware
+	GetURL() string
+	GetEnv() string
+	GetOrg() string
+	HasAuthentication() bool
+	GetAuth() Auth
+}
+
+// +k8s:deepcopy-gen=false
+type ContextResource interface {
+	Context
+	Resource
+}
+
+// +k8s:deepcopy-gen=false
+type Auth interface {
+	GetBearerToken() string
+	HasCredentials() bool
+	GetCredentials() BasicAuth
+	GetSecretRef() ResourceRef
+	SetCredentials(username, password string)
+	SetToken(token string)
+}
+
+// +k8s:deepcopy-gen=false
+type BasicAuth interface {
+	GetUsername() string
+	GetPassword() string
 }
 
 // +k8s:deepcopy-gen=false

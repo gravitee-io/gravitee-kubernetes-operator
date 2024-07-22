@@ -16,6 +16,7 @@ package apidefinition
 
 import (
 	"context"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -88,7 +89,13 @@ var _ = Describe("Update", labels.WithContext, func() {
 			if err != nil {
 				return err
 			}
-			return assert.Equals("members", expectedMembers, export.Spec.Members)
+			return assert.SliceEqualsSorted(
+				"members",
+				expectedMembers, export.Spec.Members,
+				func(a, b *base.Member) int {
+					return strings.Compare(a.SourceId, b.SourceId)
+				},
+			)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 	})
 })

@@ -17,10 +17,19 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var _ custom.ContextResource = &ManagementContext{}
+var _ custom.Spec = &ManagementContextSpec{}
+var _ custom.Status = &ManagementContextStatus{}
 
 // ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
@@ -28,8 +37,45 @@ type ManagementContextSpec struct {
 	*management.Context `json:",inline"`
 }
 
+// Hash implements custom.Spec.
+func (spec *ManagementContextSpec) Hash() string {
+	return hash.Calculate(spec)
+}
+
 // ManagementContextStatus defines the observed state of an API Context.
 type ManagementContextStatus struct {
+}
+
+// DeepCopyFrom implements custom.Status.
+func (st *ManagementContextStatus) DeepCopyFrom(obj client.Object) error {
+	switch t := obj.(type) {
+	case *ManagementContext:
+		t.Status.DeepCopyInto(st)
+		return nil
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
+}
+
+// DeepCopyTo implements custom.Status.
+func (st *ManagementContextStatus) DeepCopyTo(obj client.Object) error {
+	switch t := obj.(type) {
+	case *ManagementContext:
+		st.DeepCopyInto(&t.Status)
+		return nil
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
+}
+
+// SetObservedGeneration implements custom.Status.
+func (st *ManagementContextStatus) SetObservedGeneration(g int64) {
+	// Not implemented
+}
+
+// SetProcessingStatus implements custom.Status.
+func (st *ManagementContextStatus) SetProcessingStatus(status custom.ProcessingStatus) {
+	// Not implemented
 }
 
 // +kubebuilder:object:root=true
@@ -43,6 +89,56 @@ type ManagementContext struct {
 
 	Spec   ManagementContextSpec   `json:"spec,omitempty"`
 	Status ManagementContextStatus `json:"status,omitempty"`
+}
+
+// DeepCopyResource implements custom.Context.
+func (ctx *ManagementContext) DeepCopyResource() custom.Resource {
+	return ctx.DeepCopy()
+}
+
+// GetSpec implements custom.Context.
+func (ctx *ManagementContext) GetSpec() custom.Spec {
+	return &ctx.Spec
+}
+
+// GetStatus implements custom.Context.
+func (ctx *ManagementContext) GetStatus() custom.Status {
+	return &ctx.Status
+}
+
+// GetAuth implements custom.Context.
+func (ctx *ManagementContext) GetAuth() custom.Auth {
+	return ctx.Spec.Context.Auth
+}
+
+// GetEnv implements custom.Context.
+func (ctx *ManagementContext) GetEnv() string {
+	return ctx.Spec.EnvId
+}
+
+// GetOrg implements custom.Context.
+func (ctx *ManagementContext) GetOrg() string {
+	return ctx.Spec.OrgId
+}
+
+// GetSecretRef implements custom.Context.
+func (ctx *ManagementContext) GetSecretRef() custom.ResourceRef {
+	return ctx.Spec.SecretRef()
+}
+
+// GetURL implements custom.Context.
+func (ctx *ManagementContext) GetURL() string {
+	return ctx.Spec.BaseUrl
+}
+
+// HasAuthentication implements custom.Context.
+func (ctx *ManagementContext) HasAuthentication() bool {
+	return ctx.Spec.Auth != nil
+}
+
+// HasSecretRef implements custom.Context.
+func (ctx *ManagementContext) HasSecretRef() bool {
+	return ctx.HasAuthentication() && ctx.Spec.Auth.SecretRef != nil
 }
 
 func (ctx *ManagementContext) GetNamespacedName() *refs.NamespacedName {

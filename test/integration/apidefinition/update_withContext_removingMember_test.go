@@ -16,6 +16,7 @@ package apidefinition
 
 import (
 	"context"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -71,7 +72,13 @@ var _ = Describe("Update", labels.WithContext, func() {
 			if err != nil {
 				return err
 			}
-			return assert.Equals("members", []*base.Member{primaryOwner, saMember}, export.Spec.Members)
+			return assert.SliceEqualsSorted(
+				"members",
+				[]*base.Member{primaryOwner, saMember}, export.Spec.Members,
+				func(a, b *base.Member) int {
+					return strings.Compare(a.SourceId, b.SourceId)
+				},
+			)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 
 		By("removing service account from API members")
