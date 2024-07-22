@@ -4159,24 +4159,14 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td><b>crossId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The Cross ID is used to identify an API that has been promoted from one environment to another.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>environmentId</b></td>
         <td>string</td>
         <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>generation</b></td>
-        <td>integer</td>
-        <td>
-          This field is kept for backward compatibility and shall be removed in future versions.
-Use observedGeneration instead.<br/>
-          <br/>
-            <i>Format</i>: int64<br/>
+          The environment ID, if a management context has been defined to sync with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4190,7 +4180,7 @@ Use observedGeneration instead.<br/>
         <td><b>observedGeneration</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          This is the object generation observed during the latest reconcile.<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -4199,7 +4189,7 @@ Use observedGeneration instead.<br/>
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The organization ID, if a management context has been defined to sync with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4216,14 +4206,6 @@ Use observedGeneration instead.<br/>
           The state of the API. Can be either STARTED or STOPPED.<br/>
           <br/>
             <i>Enum</i>: STARTED, STOPPED<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>status</b></td>
-        <td>string</td>
-        <td>
-          This field is kept for backward compatibility and shall be removed in future versions.
-Use processingStatus instead.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7099,28 +7081,28 @@ ApiV4DefinitionStatus defines the observed state of API Definition.
         <td><b>crossId</b></td>
         <td>string</td>
         <td>
-          The Cross ID of the API definition if a management context has been defined to sync the API with an APIM instance<br/>
+          The Cross ID is used to identify an API that has been promoted from one environment to another.<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>environmentId</b></td>
         <td>string</td>
         <td>
-          The environment ID, if a management context has been defined to sync the API with an APIM instance<br/>
+          The environment ID, if a management context has been defined to sync with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          The ID of the API definition if a management context has been defined to sync the API with an APIM instance<br/>
+          The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>observedGeneration</b></td>
         <td>integer</td>
         <td>
-          Last generation of the CRD resource<br/>
+          This is the object generation observed during the latest reconcile.<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -7129,7 +7111,7 @@ ApiV4DefinitionStatus defines the observed state of API Definition.
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
-          The organisation ID, if a management context has been defined to sync the API with an APIM instance<br/>
+          The organization ID, if a management context has been defined to sync with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7150,9 +7132,11 @@ to sync the API with an APIM instance<br/>
         <td>false</td>
       </tr><tr>
         <td><b>state</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The state of the API. Can be either STARTED or STOPPED.<br/>
+          <br/>
+            <i>Enum</i>: STARTED, STOPPED<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7687,21 +7671,21 @@ ApplicationStatus defines the observed state of Application.
         <td><b>environmentId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The environment ID, if a management context has been defined to sync with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
-          The ID of the Application in the Gravitee API Management instance (if an API context has been configured).<br/>
+          The ID of the Application, if a management context has been defined to sync with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>observedGeneration</b></td>
         <td>integer</td>
         <td>
-          <br/>
+          This is the object generation observed during the latest reconcile.<br/>
           <br/>
             <i>Format</i>: int64<br/>
         </td>
@@ -7710,14 +7694,15 @@ ApplicationStatus defines the observed state of Application.
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
-          <br/>
+          The organization ID, if a management context has been defined to sync with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>processingStatus</b></td>
         <td>string</td>
         <td>
-          The processing status of the Application.<br/>
+          The processing status of the Application.
+The value is `Completed` if the sync with APIM succeeded, Failed otherwise.<br/>
         </td>
         <td>false</td>
       </tr></tbody>

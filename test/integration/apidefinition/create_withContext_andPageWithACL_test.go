@@ -66,7 +66,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("checking that exported API has page with ACL")
 
 		Eventually(func() error {
-			api, xErr := apim.APIs.ExportV2(fixtures.API.Status.ID)
+			api, xErr := apim.Export.V2Api(fixtures.API.Status.ID)
 			if xErr != nil {
 				return xErr
 			}

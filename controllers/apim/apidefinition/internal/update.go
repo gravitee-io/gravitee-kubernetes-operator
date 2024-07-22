@@ -151,7 +151,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		if err != nil {
 			return err
 		}
-		apiDefinition.Status = *status
+		apiDefinition.Status.Status = *status
 		log.FromContext(ctx).WithValues("id", spec.ID).Info("API successfully synced with APIM")
 	} else {
 		spec.ID = cp.PickID(nil)

@@ -50,27 +50,27 @@ func StrEndingWithPath(str, path string) error {
 }
 
 func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
-	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }
 
 func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }
 
 func ApplicationCompleted(app *v1alpha1.Application) error {
-	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, app.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusCompleted, app.Status.ProcessingStatus)
 }
 
 func ApplicationFailed(app *v1alpha1.Application) error {
-	return Equals(reconcileStatus, custom.ProcessingStatusFailed, app.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusFailed, app.Status.ProcessingStatus)
 }
 
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
-	return Equals(reconcileStatus, custom.ProcessingStatusFailed, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }
 
 func ApiV4Failed(apiDefinition *v1alpha1.ApiV4Definition) error {
-	return Equals(reconcileStatus, custom.ProcessingStatusFailed, apiDefinition.Status.Status)
+	return Equals(reconcileStatus, custom.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }
 
 func NoErrorAndHTTPStatus(err error, res *http.Response, expectedStatus int) error {

@@ -20,46 +20,31 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ custom.ResourceRef = &NamespacedName{}
+var _ custom.ResourceRef = NamespacedName{}
 
 type NamespacedName struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace,omitempty"`
 }
 
-// SetNamespace implements custom.ResourceRef.
-func (n *NamespacedName) SetNamespace(ns string) {
-	n.Namespace = ns
-}
-
-// IsMissingNamespace implements custom.ResourceRef.
-func (n *NamespacedName) IsMissingNamespace() bool {
-	return !n.HasNameSpace()
-}
-
 // GetName implements custom.ResourceRef.
-func (n *NamespacedName) GetName() string {
+func (n NamespacedName) GetName() string {
 	return n.Name
 }
 
 // GetNamespace implements custom.ResourceRef.
-func (n *NamespacedName) GetNamespace() string {
+func (n NamespacedName) GetNamespace() string {
 	return n.Namespace
-}
-
-// HasNameSpace implements custom.ResourceRef.
-func (n *NamespacedName) HasNameSpace() bool {
-	return n.Namespace != ""
 }
 
 func NewNamespacedName(namespace, name string) NamespacedName {
 	return NamespacedName{Namespace: namespace, Name: name}
 }
 
-func (n *NamespacedName) NamespacedName() types.NamespacedName {
+func (n NamespacedName) NamespacedName() types.NamespacedName {
 	return types.NamespacedName{Namespace: n.Namespace, Name: n.Name}
 }
 
-func (n *NamespacedName) String() string {
+func (n NamespacedName) String() string {
 	return n.Namespace + "/" + n.Name
 }

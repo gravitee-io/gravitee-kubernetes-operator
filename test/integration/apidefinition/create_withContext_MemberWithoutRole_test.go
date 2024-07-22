@@ -65,7 +65,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("checking that member without role has default role assigned in exported API")
 
 		Eventually(func() error {
-			apiExport, err := apim.APIs.ExportV2(fixtures.API.Status.ID)
+			apiExport, err := apim.Export.V2Api(fixtures.API.Status.ID)
 			if err != nil {
 				return err
 			}

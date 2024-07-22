@@ -1271,24 +1271,25 @@ spec:
             description: ApiV4DefinitionStatus defines the observed state of API Definition.
             properties:
               crossId:
-                description: The Cross ID of the API definition if a management context
-                  has been defined to sync the API with an APIM instance
+                description: The Cross ID is used to identify an API that has been
+                  promoted from one environment to another.
                 type: string
               environmentId:
                 description: The environment ID, if a management context has been
-                  defined to sync the API with an APIM instance
+                  defined to sync with an APIM instance
                 type: string
               id:
-                description: The ID of the API definition if a management context
-                  has been defined to sync the API with an APIM instance
+                description: The ID of the API definition in the Gravitee API Management
+                  instance (if an API context has been configured).
                 type: string
               observedGeneration:
-                description: Last generation of the CRD resource
+                description: This is the object generation observed during the latest
+                  reconcile.
                 format: int64
                 type: integer
               organizationId:
-                description: The organisation ID, if a management context has been
-                  defined to sync the API with an APIM instance
+                description: The organization ID, if a management context has been
+                  defined to sync with an APIM instance
                 type: string
               plans:
                 additionalProperties:
@@ -1303,6 +1304,9 @@ spec:
                 type: string
               state:
                 description: The state of the API. Can be either STARTED or STOPPED.
+                enum:
+                - STARTED
+                - STOPPED
                 type: string
             type: object
         type: object

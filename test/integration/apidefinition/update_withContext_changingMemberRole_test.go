@@ -65,11 +65,11 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("checking that exported API has two members")
 
 		Eventually(func() error {
-			apiExport, err := apim.APIs.ExportV2(fixtures.API.Status.ID)
+			export, err := apim.Export.V2Api(fixtures.API.Status.ID)
 			if err != nil {
 				return err
 			}
-			return assert.Equals("members", []*base.Member{primaryOwner, saMember}, apiExport.Spec.Members)
+			return assert.Equals("members", []*base.Member{primaryOwner, saMember}, export.Spec.Members)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 
 		By("changing role of API member from REVIEWER to USER")
@@ -84,11 +84,11 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("checking that exported API has one member left")
 
 		Eventually(func() error {
-			apiExport, err := apim.APIs.ExportV2(fixtures.API.Status.ID)
+			export, err := apim.Export.V2Api(fixtures.API.Status.ID)
 			if err != nil {
 				return err
 			}
-			return assert.Equals("members", expectedMembers, apiExport.Spec.Members)
+			return assert.Equals("members", expectedMembers, export.Spec.Members)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 	})
 })

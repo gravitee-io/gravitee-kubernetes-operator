@@ -75,6 +75,8 @@ type ContextAwareResource interface {
 // +k8s:deepcopy-gen=false
 type ResourceRef interface {
 	fmt.Stringer
+	GetName() string
+	GetNamespace() string
 	NamespacedName() types.NamespacedName
 	GetName() string
 	GetNamespace() string

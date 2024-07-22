@@ -90,10 +90,8 @@ func init() {
 
 	runtimeUtil.Must(err)
 
-	cli = mgr.GetClient()
-
 	// register client so that tested code has access to it
-	k8s.RegisterClient(cli)
+	k8s.RegisterClient(mgr.GetClient())
 
 	cache := mgr.GetCache()
 
@@ -114,43 +112,43 @@ func init() {
 
 	runtimeUtil.Must(
 		(&apidefinition.Reconciler{
-			Client:   cli,
+			Client:   Client(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("apidefinition_controller"),
-			Watcher:  watch.New(context.Background(), cli, &v1alpha1.ApiDefinitionList{}),
+			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ApiDefinitionList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&apidefinition.V4Reconciler{
-			Client:   cli,
+			Client:   Client(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
-			Watcher:  watch.New(context.Background(), cli, &v1alpha1.ApiV4DefinitionList{}),
+			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ApiV4DefinitionList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&managementcontext.Reconciler{
-			Client:   cli,
+			Client:   Client(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("managementcontext_controller"),
-			Watcher:  watch.New(context.Background(), cli, &v1alpha1.ManagementContextList{}),
+			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ManagementContextList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&ingress.Reconciler{
-			Client:   mgr.GetClient(),
+			Client:   Client(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("ingress-controller"),
-			Watcher:  watch.New(context.Background(), mgr.GetClient(), &netV1.IngressList{}),
+			Watcher:  watch.New(context.Background(), Client(), &netV1.IngressList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&apiresource.Reconciler{
-			Client:   mgr.GetClient(),
+			Client:   Client(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
 		}).SetupWithManager(mgr),
@@ -158,16 +156,16 @@ func init() {
 
 	runtimeUtil.Must(
 		(&application.Reconciler{
-			Client:   mgr.GetClient(),
+			Client:   Client(),
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("application-controller"),
-			Watcher:  watch.New(context.Background(), mgr.GetClient(), &v1alpha1.ApplicationList{}),
+			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ApplicationList{}),
 		}).SetupWithManager(mgr),
 	)
 
 	runtimeUtil.Must(
 		(&secrets.Reconciler{
-			Client: mgr.GetClient(),
+			Client: Client(),
 			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr),
 	)
