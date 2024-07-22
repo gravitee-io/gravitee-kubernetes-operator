@@ -15,23 +15,19 @@
 package admissionwebhook
 
 import (
-	"context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Webhook", labels.WithContext, func() {
 	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
-
-	ctx := context.Background()
 
 	It("should get errors for API update because of existing path", func() {
 		fixtures := fixture.
@@ -42,13 +38,14 @@ var _ = Describe("Webhook", labels.WithContext, func() {
 
 		By("Check API update validation")
 		Eventually(func() error {
-			api := new(v1alpha1.ApiV4Definition)
-			if err := manager.Client().Get(ctx, types.NamespacedName{
-				Name:      fixtures.APIv4.Name,
-				Namespace: fixtures.APIv4.Namespace,
-			}, api); err != nil {
-				return err
+			api := &v1alpha1.ApiV4Definition{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fixtures.APIv4.Name + "-duplicate",
+					Namespace: fixtures.APIv4.Namespace,
+				},
 			}
+
+			fixtures.APIv4.Spec.DeepCopyInto(&api.Spec)
 
 			_, err := api.ValidateUpdate(nil)
 			return err

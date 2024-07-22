@@ -17,6 +17,8 @@ package admissionwebhook
 import (
 	"context"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -24,7 +26,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Webhook", labels.WithContext, func() {
@@ -42,11 +43,16 @@ var _ = Describe("Webhook", labels.WithContext, func() {
 
 		By("Check API creation validation")
 		Eventually(func() error {
-			api := new(v1alpha1.ApiV4Definition)
-			if err := manager.Client().Get(ctx, types.NamespacedName{
-				Name:      fixtures.APIv4.Name,
-				Namespace: fixtures.APIv4.Namespace,
-			}, api); err != nil {
+			api := &v1alpha1.ApiV4Definition{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fixtures.APIv4.Name + "-duplicate",
+					Namespace: fixtures.APIv4.Namespace,
+				},
+			}
+
+			fixtures.APIv4.Spec.DeepCopyInto(&api.Spec)
+
+			if err := manager.Client().Create(ctx, api); err != nil {
 				return err
 			}
 

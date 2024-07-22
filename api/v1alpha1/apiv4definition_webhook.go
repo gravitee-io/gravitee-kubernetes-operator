@@ -22,6 +22,10 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -55,7 +59,7 @@ func (*ApiV4Definition) ValidateDelete() (admission.Warnings, error) {
 
 func validateApi(api *ApiV4Definition) (admission.Warnings, error) {
 	// make sure Management Context exist before creating the API Definition resource
-	if api.HasContext() {
+	if api.HasContext() { //nolint:nestif // nested if is needed
 		mCtx := new(ManagementContext)
 		if err := k8s.GetClient().Get(context.Background(), api.ContextRef().NamespacedName(), mCtx); err != nil {
 			return admission.Warnings{}, fmt.Errorf("can't create API [%s] because it is using "+
@@ -64,13 +68,22 @@ func validateApi(api *ApiV4Definition) (admission.Warnings, error) {
 	} else {
 		// check for unique context path
 		apis := new(ApiV4DefinitionList)
-		if err := k8s.GetClient().List(context.Background(), apis); err != nil {
+		listOpts := client.ListOptions{}
+		if !env.Config.CheckApiContextPathConflictInCluster {
+			listOpts = client.ListOptions{
+				Namespace: api.Namespace,
+			}
+		}
+
+		if err := k8s.GetClient().List(context.Background(), apis, &listOpts); err != nil {
 			return admission.Warnings{}, err
 		}
 
 		existingListeners := make([]*v4.GenericListener, 0)
 		for _, item := range apis.Items {
-			existingListeners = append(existingListeners, item.Spec.Listeners...)
+			if api.Name != item.Name || api.Namespace != item.Namespace {
+				existingListeners = append(existingListeners, item.Spec.Listeners...)
+			}
 		}
 
 		if err := validateApiContextPath(existingListeners, api.Spec.Listeners); err != nil {
