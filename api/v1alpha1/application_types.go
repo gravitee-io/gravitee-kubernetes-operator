@@ -19,7 +19,10 @@ package v1alpha1
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+<<<<<<< HEAD
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+=======
+>>>>>>> f7e6318 (refactor: reduce dependency between internal and api)
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,14 +35,7 @@ type ApplicationSpec struct {
 
 // ApplicationStatus defines the observed state of Application.
 type ApplicationStatus struct {
-	OrgID string `json:"organizationId,omitempty"`
-	EnvID string `json:"environmentId,omitempty"`
-	// The ID of the Application in the Gravitee API Management instance (if an API context has been configured).
-	ID string `json:"id,omitempty"`
-	// The processing status of the Application.
-	Status custom.ProcessingStatus `json:"processingStatus,omitempty"`
-
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+	application.Status `json:",inline"`
 }
 
 // +kubebuilder:object:root=true

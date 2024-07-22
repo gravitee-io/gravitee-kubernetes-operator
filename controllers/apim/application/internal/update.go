@@ -63,11 +63,15 @@ func createUpdateApplication(ctx context.Context, application *v1alpha1.Applicat
 		return errors.NewContextError(mgmtErr)
 	}
 
+<<<<<<< HEAD
 	spec.ID = mgmtApp.Id
 	application.Status.ID = mgmtApp.Id
 	application.Status.EnvID = apim.EnvID()
 	application.Status.OrgID = apim.OrgID()
 
+=======
+	status.DeepCopyInto(&application.Status.Status)
+>>>>>>> f7e6318 (refactor: reduce dependency between internal and api)
 	return nil
 }
 

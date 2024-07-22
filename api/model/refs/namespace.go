@@ -27,6 +27,19 @@ type NamespacedName struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
+<<<<<<< HEAD
+=======
+// GetName implements custom.ResourceRef.
+func (n NamespacedName) GetName() string {
+	return n.Name
+}
+
+// GetNamespace implements custom.ResourceRef.
+func (n NamespacedName) GetNamespace() string {
+	return n.Namespace
+}
+
+>>>>>>> f7e6318 (refactor: reduce dependency between internal and api)
 func NewNamespacedName(namespace, name string) NamespacedName {
 	return NamespacedName{Namespace: namespace, Name: name}
 }

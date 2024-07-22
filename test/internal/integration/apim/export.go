@@ -12,32 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8s
+package apim
 
 import (
-	"sync"
-
-	"k8s.io/client-go/dynamic"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	ctrl "sigs.k8s.io/controller-runtime"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 )
 
-var cli client.Client
-var dynamicClient *dynamic.DynamicClient
-var once sync.Once
-
-func RegisterClient(c client.Client) {
-	once.Do(func() {
-		cli = c
-		dynamicClient = dynamic.NewForConfigOrDie(ctrl.GetConfigOrDie())
-	})
+// APIs brings support for managing gravitee.io APIM APIs.
+type Export struct {
+	*client.Client
 }
 
-func GetClient() client.Client {
-	return cli
+func NewExport(client *client.Client) *Export {
+	return &Export{Client: client}
 }
 
-func GetDynamicClient() *dynamic.DynamicClient {
-	return dynamicClient
+func (svc *Export) V2Api(id string) (*v1alpha1.ApiDefinition, error) {
+	url := svc.EnvV1Target("apis").WithPath(id).WithPath("/crd")
+	exported := new(v1alpha1.ApiDefinition)
+	if err := svc.HTTP.GetYAML(url.String(), &exported); err != nil {
+		return nil, err
+	}
+	return exported, nil
 }

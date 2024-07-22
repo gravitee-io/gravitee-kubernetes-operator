@@ -39,17 +39,17 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 	switch t := e.Object.(type) {
 	case *v1alpha1.ApiDefinition:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.Status != custom.ProcessingStatusCompleted
+			t.Status.ProcessingStatus != custom.ProcessingStatusCompleted
 	case *v1alpha1.ApiV4Definition:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.Status != custom.ProcessingStatusCompleted
+			t.Status.ProcessingStatus != custom.ProcessingStatusCompleted
 	case *v1alpha1.ManagementContext:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
 	case *v1alpha1.ApiResource:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Application:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.Status != custom.ProcessingStatusCompleted
+			t.Status.ProcessingStatus != custom.ProcessingStatusCompleted
 	case *netV1.Ingress:
 		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
 	case *corev1.Secret:

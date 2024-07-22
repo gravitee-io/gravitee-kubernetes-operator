@@ -218,18 +218,26 @@ spec:
             description: ApplicationStatus defines the observed state of Application.
             properties:
               environmentId:
+                description: The environment ID, if a management context has been
+                  defined to sync with an APIM instance
                 type: string
               id:
-                description: The ID of the Application in the Gravitee API Management
-                  instance (if an API context has been configured).
+                description: The ID of the Application, if a management context has
+                  been defined to sync with an APIM instance
                 type: string
               observedGeneration:
+                description: This is the object generation observed during the latest
+                  reconcile.
                 format: int64
                 type: integer
               organizationId:
+                description: The organization ID, if a management context has been
+                  defined to sync with an APIM instance
                 type: string
               processingStatus:
-                description: The processing status of the Application.
+                description: |-
+                  The processing status of the Application.
+                  The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
                 type: string
             type: object
         type: object

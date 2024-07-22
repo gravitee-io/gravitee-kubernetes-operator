@@ -12,32 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8s
+package v4
 
-import (
-	"sync"
+import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
-	"k8s.io/client-go/dynamic"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-)
-
-var cli client.Client
-var dynamicClient *dynamic.DynamicClient
-var once sync.Once
-
-func RegisterClient(c client.Client) {
-	once.Do(func() {
-		cli = c
-		dynamicClient = dynamic.NewForConfigOrDie(ctrl.GetConfigOrDie())
-	})
-}
-
-func GetClient() client.Client {
-	return cli
-}
-
-func GetDynamicClient() *dynamic.DynamicClient {
-	return dynamicClient
+type Status struct {
+	base.Status `json:",inline"`
+	// This field is used to store the list of plans that have been created
+	// for the API definition if a management context has been defined
+	// to sync the API with an APIM instance
+	Plans map[string]string `json:"plans,omitempty"`
 }

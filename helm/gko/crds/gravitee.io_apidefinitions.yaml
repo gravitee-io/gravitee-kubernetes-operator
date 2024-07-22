@@ -1641,23 +1641,25 @@ spec:
             description: ApiDefinitionStatus defines the observed state of API Definition.
             properties:
               crossId:
+                description: The Cross ID is used to identify an API that has been
+                  promoted from one environment to another.
                 type: string
               environmentId:
+                description: The environment ID, if a management context has been
+                  defined to sync with an APIM instance
                 type: string
-              generation:
-                description: |-
-                  This field is kept for backward compatibility and shall be removed in future versions.
-                  Use observedGeneration instead.
-                format: int64
-                type: integer
               id:
                 description: The ID of the API definition in the Gravitee API Management
                   instance (if an API context has been configured).
                 type: string
               observedGeneration:
+                description: This is the object generation observed during the latest
+                  reconcile.
                 format: int64
                 type: integer
               organizationId:
+                description: The organization ID, if a management context has been
+                  defined to sync with an APIM instance
                 type: string
               processingStatus:
                 description: The processing status of the API definition.
@@ -1667,11 +1669,6 @@ spec:
                 enum:
                 - STARTED
                 - STOPPED
-                type: string
-              status:
-                description: |-
-                  This field is kept for backward compatibility and shall be removed in future versions.
-                  Use processingStatus instead.
                 type: string
             type: object
         type: object

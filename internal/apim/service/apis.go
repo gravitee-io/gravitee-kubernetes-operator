@@ -18,7 +18,6 @@ import (
 	"net/http"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
@@ -79,9 +78,9 @@ func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
 	return api, nil
 }
 
-func (svc *APIs) GetV4ByID(apiID string) (*v1alpha1.ApiV4DefinitionSpec, error) {
+func (svc *APIs) GetV4ByID(apiID string) (*v4.Api, error) {
 	url := svc.EnvV2Target("apis").WithPath(apiID)
-	resp := new(v1alpha1.ApiV4DefinitionSpec)
+	resp := new(v4.Api)
 
 	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
 		return nil, err
@@ -103,10 +102,10 @@ func (svc *APIs) ImportV2(method string, spec *v2.Api) (*model.ApiEntity, error)
 	return api, nil
 }
 
-func (svc *APIs) ImportV4(spec *v4.Api) (*v1alpha1.ApiV4DefinitionStatus, error) {
+func (svc *APIs) ImportV4(spec *v4.Api) (*v4.Status, error) {
 	url := svc.EnvV2Target("apis/_import/crd")
 
-	status := new(v1alpha1.ApiV4DefinitionStatus)
+	status := new(v4.Status)
 	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
 		return nil, err
 	}
@@ -144,13 +143,4 @@ func (svc *APIs) SetKubernetesContext(apiID string) error {
 func (svc *APIs) Deploy(id string) error {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("deploy")
 	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
-}
-
-func (svc *APIs) ExportV2(id string) (*v1alpha1.ApiDefinition, error) {
-	url := svc.EnvV1Target("apis").WithPath(id).WithPath("/crd")
-	api := new(v1alpha1.ApiDefinition)
-	if err := svc.HTTP.GetYAML(url.String(), api); err != nil {
-		return nil, err
-	}
-	return api, nil
 }

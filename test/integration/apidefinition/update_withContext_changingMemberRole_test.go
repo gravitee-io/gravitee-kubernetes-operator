@@ -24,60 +24,71 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Create", labels.WithContext, func() {
+var _ = Describe("Update", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 
 	ctx := context.Background()
 
-	It("should import page with ACLs in APIM", func() {
+	It("should change the role of an API member", func() {
 		fixtures := fixture.
 			Builder().
-			WithAPI(constants.ApiWithMarkdownPage).
+			WithAPI(constants.ApiWithMembersAndGroups).
 			WithContext(constants.ContextWithCredentialsFile).
 			Build()
 
-		groupName := random.GetName()
-
-		acl := []base.AccessControl{
-			{
-				ReferenceId:   groupName,
-				ReferenceType: "GROUP",
-			},
-		}
-
-		fixtures.API.Spec.Pages["markdown"].AccessControls = acl
-
-		By("initializing a group in APIM")
+		By("initializing a service account in current organization")
 
 		apim := apim.NewClient(ctx)
 
-		Expect(apim.Env.CreateGroup(&model.Group{Name: groupName})).To(Succeed())
+		saName := random.GetName()
 
-		By("applying resources")
+		Expect(apim.Org.CreateUser(model.NewServiceAccount(saName))).To(Succeed())
+
+		By("applying the API with created service account as members")
+
+		primaryOwner := base.NewMemoryMember("admin", "PRIMARY_OWNER")
+
+		saMember := base.NewGraviteeMember(saName, "REVIEWER")
+
+		fixtures.API.Spec.Members = []*base.Member{saMember}
 
 		fixtures = fixtures.Apply()
 
-		By("exporting the API")
+		By("checking that exported API has two members")
 
 		Eventually(func() error {
-			api, xErr := apim.Export.V2Api(fixtures.API.Status.ID)
-			if xErr != nil {
-				return xErr
-			}
-
-			page := api.Spec.Pages["hello-markdown"]
-
-			if err := assert.NotNil("page", page); err != nil {
+			export, err := apim.Export.V2Api(fixtures.API.Status.ID)
+			if err != nil {
 				return err
 			}
+			return assert.Equals("members", []*base.Member{primaryOwner, saMember}, export.Spec.Members)
+		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 
-			return assert.Equals("accessControls", page.AccessControls, acl)
+		By("changing role of API member from REVIEWER to USER")
+		saMember.Role = "USER"
+		expectedMembers := []*base.Member{primaryOwner, saMember}
+		fixtures.API.Spec.Members = expectedMembers
+
+		Eventually(func() error {
+			return manager.UpdateSafely(ctx, fixtures.API)
+		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
+
+		By("checking that exported API has one member left")
+
+		Eventually(func() error {
+			export, err := apim.Export.V2Api(fixtures.API.Status.ID)
+			if err != nil {
+				return err
+			}
+			return assert.Equals("members", expectedMembers, export.Spec.Members)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 	})
 })

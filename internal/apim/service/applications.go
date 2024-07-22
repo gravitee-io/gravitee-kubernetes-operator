@@ -18,7 +18,11 @@ import (
 	"fmt"
 	"net/http"
 
+<<<<<<< HEAD
 	errors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+=======
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+>>>>>>> f7e6318 (refactor: reduce dependency between internal and api)
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
@@ -81,6 +85,7 @@ func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.Appl
 	return application, nil
 }
 
+<<<<<<< HEAD
 func (svc *Applications) CreateUpdate(method string, spec *application.Application) (*model.Application, error) {
 	url := svc.EnvV1Target(applicationsPath)
 	if spec.ID != "" {
@@ -94,6 +99,13 @@ func (svc *Applications) CreateUpdate(method string, spec *application.Applicati
 
 	application := new(model.Application)
 	if err := fun(url.String(), spec, application); err != nil {
+=======
+func (svc *Applications) CreateOrUpdate(spec *application.Application) (*application.Status, error) {
+	url := svc.EnvV2Target(fmt.Sprintf("%s/_import/crd", applicationsPath))
+
+	status := new(application.Status)
+	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+>>>>>>> f7e6318 (refactor: reduce dependency between internal and api)
 		return nil, err
 	}
 
