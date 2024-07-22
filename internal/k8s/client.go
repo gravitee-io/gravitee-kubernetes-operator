@@ -15,29 +15,15 @@
 package k8s
 
 import (
-	"sync"
-
-	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var cli client.Client
-var dynamicClient *dynamic.DynamicClient
-var once sync.Once
 
 func RegisterClient(c client.Client) {
-	once.Do(func() {
-		cli = c
-		dynamicClient = dynamic.NewForConfigOrDie(ctrl.GetConfigOrDie())
-	})
+	cli = c
 }
 
 func GetClient() client.Client {
 	return cli
-}
-
-func GetDynamicClient() *dynamic.DynamicClient {
-	return dynamicClient
 }

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -95,6 +96,12 @@ func Equals(field string, expected, given any) error {
 		return newAssertEqualError(field, expected, given)
 	}
 	return nil
+}
+
+func SliceEqualsSorted[S ~[]E, E any](field string, expected S, given S, comp func(a, b E) int) error {
+	slices.SortFunc(expected, comp)
+	slices.SortFunc(given, comp)
+	return Equals(field, expected, given)
 }
 
 func NotEmptySlice[T any](field string, value []T) error {

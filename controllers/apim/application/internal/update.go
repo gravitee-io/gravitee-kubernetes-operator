@@ -27,7 +27,7 @@ func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) erro
 	spec.Origin = "KUBERNETES"
 	spec.ID = application.Status.ID
 
-	apim, err := apim.FromContextRef(ctx, spec.Context)
+	apim, err := apim.FromContextRef(ctx, spec.Context, application.GetNamespace())
 	if err != nil {
 		return err
 	}

@@ -33,7 +33,7 @@ import (
 // First return value defines if we should requeue or not.
 func SyncApiDefinitionTemplate(
 	ctx context.Context,
-	api custom.ApiDefinition, ns string) error {
+	api custom.ApiDefinitionResource, ns string) error {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
 	// deletion by populating .metadata.deletionTimestamp
 	if !api.GetDeletionTimestamp().IsZero() {

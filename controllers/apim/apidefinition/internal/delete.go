@@ -25,7 +25,7 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func Delete(ctx context.Context, api custom.ApiDefinition) error {
+func Delete(ctx context.Context, api custom.ApiDefinitionResource) error {
 	if !util.ContainsFinalizer(api, keys.ApiDefinitionFinalizer) {
 		return nil
 	}
@@ -41,17 +41,17 @@ func Delete(ctx context.Context, api custom.ApiDefinition) error {
 	return nil
 }
 
-func deleteWithContext(ctx context.Context, api custom.ApiDefinition) error {
-	apim, err := apim.FromContextRef(ctx, api.ContextRef())
+func deleteWithContext(ctx context.Context, api custom.ApiDefinitionResource) error {
+	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
 	if err != nil {
 		return err
 	}
 	switch {
-	case api.Version() == custom.ApiV2:
+	case api.GetDefinitionVersion() == custom.ApiV2:
 		return errors.IgnoreNotFound(apim.APIs.DeleteV2(api.ID()))
-	case api.Version() == custom.ApiV4:
+	case api.GetDefinitionVersion() == custom.ApiV4:
 		return errors.IgnoreNotFound(apim.APIs.DeleteV4(api.ID()))
 	default:
-		return fmt.Errorf("unknown version %s", api.Version())
+		return fmt.Errorf("unknown version %s", api.GetDefinitionVersion())
 	}
 }

@@ -15,36 +15,36 @@
 package apim
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
 
-func toHttpAuth(management *management.Context) *http.Auth {
+func toHttpAuth(management custom.Context) *http.Auth {
 	if !management.HasAuthentication() {
 		return nil
 	}
 
 	return &http.Auth{
-		Basic: toBasicAuth(management.Auth),
-		Token: toBearer(management.Auth),
+		Basic: toBasicAuth(management.GetAuth()),
+		Token: toBearer(management.GetAuth()),
 	}
 }
 
-func toBasicAuth(auth *management.Auth) *http.BasicAuth {
-	if auth == nil || auth.Credentials == nil {
+func toBasicAuth(auth custom.Auth) *http.BasicAuth {
+	if auth == nil || !auth.HasCredentials() {
 		return nil
 	}
 
 	return &http.BasicAuth{
-		Username: auth.Credentials.Username,
-		Password: auth.Credentials.Password,
+		Username: auth.GetCredentials().GetUsername(),
+		Password: auth.GetCredentials().GetPassword(),
 	}
 }
 
-func toBearer(auth *management.Auth) http.BearerToken {
+func toBearer(auth custom.Auth) http.BearerToken {
 	if auth == nil {
 		return ""
 	}
 
-	return http.BearerToken(auth.BearerToken)
+	return http.BearerToken(auth.GetBearerToken())
 }
