@@ -359,6 +359,7 @@ spec:
                 description: API name
                 type: string
               notifyMembers:
+                default: true
                 description: |-
                   If true, new members added to the API spec will
                   be notified when the API is synced with APIM.
