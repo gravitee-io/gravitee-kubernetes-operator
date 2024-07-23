@@ -480,6 +480,8 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         <td>
           If true, new members added to the API spec will
 be notified when the API is synced with APIM.<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4454,6 +4456,8 @@ field of the resource.<br/>
         <td>
           If true, new members added to the API spec will
 be notified when the API is synced with APIM.<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
