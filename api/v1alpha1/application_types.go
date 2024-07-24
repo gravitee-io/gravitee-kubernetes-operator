@@ -17,11 +17,19 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var _ custom.ContextAwareResource = &Application{}
+var _ custom.Spec = &ApplicationSpec{}
+var _ custom.Status = &ApplicationStatus{}
 
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
@@ -57,6 +65,16 @@ type Application struct {
 	Status ApplicationStatus `json:"status,omitempty"`
 }
 
+// GetSpec implements custom.Resource.
+func (app *Application) GetSpec() custom.Spec {
+	return &app.Spec
+}
+
+// GetStatus implements custom.Resource.
+func (app *Application) GetStatus() custom.Status {
+	return &app.Status
+}
+
 // +kubebuilder:object:root=true
 type ApplicationList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -70,4 +88,54 @@ func (app *Application) IsBeingDeleted() bool {
 
 func init() {
 	SchemeBuilder.Register(&Application{}, &ApplicationList{})
+}
+
+func (app *Application) ContextRef() custom.ResourceRef {
+	return app.Spec.Context
+}
+
+func (app *Application) HasContext() bool {
+	return app.Spec.Context != nil
+}
+
+func (app *Application) ID() string {
+	return app.Status.ID
+}
+
+func (app *Application) DeepCopyResource() custom.Resource {
+	return app.DeepCopy()
+}
+
+func (spec *ApplicationSpec) Hash() string {
+	return hash.Calculate(spec)
+}
+
+func (s *ApplicationStatus) DeepCopyFrom(obj client.Object) error {
+	switch t := obj.(type) {
+	case *Application:
+		t.Status.DeepCopyInto(s)
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
+
+	return nil
+}
+
+func (s *ApplicationStatus) DeepCopyTo(api client.Object) error {
+	switch t := api.(type) {
+	case *Application:
+		s.DeepCopyInto(&t.Status)
+	default:
+		return fmt.Errorf("unknown type %T", t)
+	}
+
+	return nil
+}
+
+func (s *ApplicationStatus) SetObservedGeneration(g int64) {
+	s.ObservedGeneration = g
+}
+
+func (s *ApplicationStatus) SetProcessingStatus(status custom.ProcessingStatus) {
+	s.Status = status
 }

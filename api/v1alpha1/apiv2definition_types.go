@@ -133,8 +133,8 @@ func (api *ApiDefinition) GetOrGenerateCrossID() string {
 	return uuid.FromStrings(api.GetNamespacedName().String())
 }
 
-func (api *ApiDefinition) GetNamespacedName() refs.NamespacedName {
-	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
+func (api *ApiDefinition) GetNamespacedName() *refs.NamespacedName {
+	return &refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
 func (spec *ApiDefinitionV2Spec) SetDefinitionContext() {
