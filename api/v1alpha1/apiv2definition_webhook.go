@@ -17,6 +17,7 @@
 package v1alpha1
 
 import (
+	commonMutate "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/common/mutate"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -32,7 +33,9 @@ func (api *ApiDefinition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-func (api *ApiDefinition) Default() {}
+func (api *ApiDefinition) Default() {
+	commonMutate.SetDefaults(api)
+}
 
 func (api *ApiDefinition) ValidateCreate() (admission.Warnings, error) {
 	return admission.Warnings{}, nil

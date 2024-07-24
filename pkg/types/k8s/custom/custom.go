@@ -76,4 +76,9 @@ type ContextAwareResource interface {
 type ResourceRef interface {
 	fmt.Stringer
 	NamespacedName() types.NamespacedName
+	GetName() string
+	GetNamespace() string
+	HasNameSpace() bool
+	IsMissingNamespace() bool
+	SetNamespace(ns string)
 }

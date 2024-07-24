@@ -214,8 +214,8 @@ func (api *ApiV4Definition) Version() custom.ApiDefinitionVersion {
 	return custom.ApiV4
 }
 
-func (api *ApiV4Definition) GetNamespacedName() refs.NamespacedName {
-	return refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
+func (api *ApiV4Definition) GetNamespacedName() *refs.NamespacedName {
+	return &refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
 func (api *ApiV4Definition) GetObjectMeta() *metav1.ObjectMeta {

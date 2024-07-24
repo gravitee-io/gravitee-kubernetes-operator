@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	commonMutate "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/common/mutate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -43,7 +44,9 @@ func (api *ApiV4Definition) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-func (api *ApiV4Definition) Default() {}
+func (api *ApiV4Definition) Default() {
+	commonMutate.SetDefaults(api)
+}
 
 func (api *ApiV4Definition) ValidateCreate() (admission.Warnings, error) {
 	return validateApi(api)
