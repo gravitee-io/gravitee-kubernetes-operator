@@ -19,13 +19,10 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"net"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/webhook"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -67,29 +64,10 @@ func validateManagementContext(ctx *ManagementContext) (admission.Warnings, erro
 		}
 	}
 
-	if err := checkAPIAvailability(ctx); err != nil {
+	ctxRef := refs.NewNamespacedName(ctx.Namespace, ctx.Name)
+	if err := wk.CheckAPIMAvailability(&ctxRef); err != nil {
 		return admission.Warnings{err.Error()}, nil //nolint:nilerr // changed to warning
 	}
 
 	return admission.Warnings{}, nil
-}
-
-func checkAPIAvailability(ctx *ManagementContext) error {
-	urLs, _ := client.NewURLs(ctx.Spec.BaseUrl, ctx.Spec.OrgId, ctx.Spec.EnvId)
-
-	httpClient := http.NewClient(context.Background(), nil)
-	cli := client.Client{
-		HTTP: httpClient,
-		URLs: urLs,
-	}
-
-	api := make(map[string]interface{})
-	err := httpClient.Get(cli.EnvV1Target("apis").WithPath(uuid.NewV4String()).String(), api)
-
-	var opError *net.OpError
-	if errors.As(err, &opError) {
-		return fmt.Errorf("unable to reach APIM, [%s] is not available", ctx.Spec.BaseUrl)
-	}
-
-	return nil
 }
