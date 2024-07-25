@@ -35,3 +35,6 @@ nodes:
         # gravitee-apim-gateway (https)
       - containerPort: 30084
         hostPort: 30084
+        # gko-controller debug port
+      - containerPort: 32767
+        hostPort: 32767
