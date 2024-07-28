@@ -16,8 +16,10 @@ package service
 
 import (
 	"net/http"
+	"strconv"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
@@ -102,8 +104,16 @@ func (svc *APIs) ImportV2(method string, spec *v2.Api) (*model.ApiEntity, error)
 	return api, nil
 }
 
-func (svc *APIs) ImportV4(spec *v4.Api) (*v4.Status, error) {
-	url := svc.EnvV2Target("apis/_import/crd")
+func (svc *APIs) ImportV4(spec custom.Spec) (*v4.Status, error) {
+	return svc.importV4(spec, false)
+}
+
+func (svc *APIs) DryRunImportV4(spec custom.Spec) (*v4.Status, error) {
+	return svc.importV4(spec, true)
+}
+
+func (svc *APIs) importV4(spec custom.Spec, dryRun bool) (*v4.Status, error) {
+	url := svc.EnvV2Target("apis/_import/crd").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
 	status := new(v4.Status)
 	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {

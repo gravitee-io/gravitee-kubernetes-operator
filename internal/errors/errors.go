@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 
 	kErrors "k8s.io/apimachinery/pkg/util/errors"
@@ -127,6 +128,19 @@ func IsNotFound(err error) bool {
 		return serverError.StatusCode == http.StatusNotFound
 	}
 	return false
+}
+
+func IsBadRequest(err error) bool {
+	serverError := &ServerError{}
+	if errors.As(err, serverError) {
+		return serverError.StatusCode == http.StatusBadRequest
+	}
+	return false
+}
+
+func IsNetworkError(err error) bool {
+	opErr := new(net.OpError)
+	return errors.As(err, &opErr)
 }
 
 func IsUnauthorized(err error) bool {

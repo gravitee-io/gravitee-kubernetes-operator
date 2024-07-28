@@ -33,7 +33,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
-var _ = Describe("Webhook", labels.WithoutContext, func() {
+var _ = Describe("Validate update", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	admissionCtrl := mctx.AdmissionCtrl{}

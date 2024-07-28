@@ -28,12 +28,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Webhook", labels.WithContext, func() {
+var _ = Describe("Validate update", labels.WithoutContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := v4.AdmissionCtrl{}
 
-	It("should get errors for API update because of existing path", func() {
+	It("should return error on API update with conflicting path", func() {
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4).

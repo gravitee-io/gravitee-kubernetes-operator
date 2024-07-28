@@ -7092,6 +7092,14 @@ ApiV4DefinitionStatus defines the observed state of API Definition.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionstatuserrors">errors</a></b></td>
+        <td>object</td>
+        <td>
+          When API has been created regardless of errors, this field is
+used to persist the error message encountered during admission<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
@@ -7137,6 +7145,45 @@ to sync the API with an APIM instance<br/>
           The state of the API. Can be either STARTED or STOPPED.<br/>
           <br/>
             <i>Enum</i>: STARTED, STOPPED<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.status.errors
+[Go to parent definition](#apiv4definitionstatus)
+
+
+
+When API has been created regardless of errors, this field is
+used to persist the error message encountered during admission
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>severe</b></td>
+        <td>[]string</td>
+        <td>
+          severe errors do not pass admission and will block reconcile
+hence, this field should always be during the admission phase
+and is very unlikely to be persisted in the status<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>warning</b></td>
+        <td>[]string</td>
+        <td>
+          warning errors do not block object reconciliation,
+most of the time because the value is ignored or defaulted
+when the API gets synced with APIM<br/>
         </td>
         <td>false</td>
       </tr></tbody>
