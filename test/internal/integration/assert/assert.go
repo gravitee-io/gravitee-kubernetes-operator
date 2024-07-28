@@ -125,6 +125,13 @@ func NotEmptyString(field string, value string) error {
 	return nil
 }
 
+func Nil(field string, value any) error {
+	if value != nil && !reflect.ValueOf(value).IsNil() {
+		return fmt.Errorf("expected %s to be nil", field)
+	}
+	return nil
+}
+
 func NotNil(field string, value any) error {
 	if value == nil || reflect.ValueOf(value).IsNil() {
 		return fmt.Errorf("expected %s not to be nil", field)

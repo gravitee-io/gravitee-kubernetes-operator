@@ -33,8 +33,8 @@ type AdmissionError struct {
 }
 
 type AdmissionErrors struct {
-	Warning []*AdmissionError `json:"warning"`
-	Severe  []*AdmissionError `json:"severe"`
+	Warning []*AdmissionError
+	Severe  []*AdmissionError
 }
 
 func NewAdmissionErrors() *AdmissionErrors {
@@ -56,6 +56,9 @@ func (errs *AdmissionErrors) Map() (admission.Warnings, error) {
 }
 
 func (errs *AdmissionErrors) MergeWith(other *AdmissionErrors) *AdmissionErrors {
+	if other == nil {
+		return errs
+	}
 	errs.Warning = append(errs.Warning, other.Warning...)
 	errs.Severe = append(errs.Severe, other.Severe...)
 	return errs

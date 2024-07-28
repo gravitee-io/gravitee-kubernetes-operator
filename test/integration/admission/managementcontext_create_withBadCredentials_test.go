@@ -17,44 +17,45 @@ package admission
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/types"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-var _ = Describe("Webhook", labels.WithoutContext, func() {
-	timeout := constants.EventualTimeout / 10
+var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
-	admissionCtrl := mctx.AdmissionCtrl{}
 	ctx := context.Background()
-	cli := manager.Client()
+	admissionCtrl := mctx.AdmissionCtrl{}
 
 	It("should return error if secret is missing", func() {
+
+		By("setting invalid credentials onto context")
+
 		fixtures := fixture.Builder().
-			WithContext(constants.ContextWithSecretFile).
+			WithContext(constants.ContextWithBadCredentialsFile).
 			Build().
 			Apply()
 
-		mCtx := new(v1alpha1.ManagementContext)
-		Eventually(func() error {
-			return cli.Get(context.Background(), types.NamespacedName{
-				Namespace: fixtures.Context.Namespace,
-				Name:      fixtures.Context.Name,
-			}, mCtx)
-		}, timeout, interval).Should(Succeed())
+		By("validating the context")
 
 		Consistently(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, mCtx)
-			return err
-		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
+			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Context)
+			return assert.Equals(
+				"error",
+				errors.NewSevere(
+					"bad credentials for context [%s]",
+					fixtures.Context.Name,
+				),
+				err,
+			)
+		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 })

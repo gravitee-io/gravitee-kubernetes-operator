@@ -17,6 +17,8 @@ package admission
 import (
 	"context"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -25,35 +27,38 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Validate", labels.WithContext, func() {
+var _ = Describe("Validate create", labels.WithoutContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := v4.AdmissionCtrl{}
 
-	It("should get errors for API creation, missing management context", func() {
+	It("should return error on API creation with conflicting path", func() {
 		fixtures := fixture.
 			Builder().
-			WithAPIv4(constants.ApiV4WithContextFile).
+			WithAPIv4(constants.ApiV4).
 			Build().
 			Apply()
 
-		By("checking that API update does not pass validation")
+		By("checking that API creation does not pass validation")
 
-		Consistently(func() error {
-			api := new(v1alpha1.ApiV4Definition)
+		Eventually(func() error {
+			api := &v1alpha1.ApiV4Definition{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fixtures.APIv4.Name + "-duplicate",
+					Namespace: fixtures.APIv4.Namespace,
+				},
+			}
 
-			if err := manager.Client().Get(ctx, types.NamespacedName{
-				Name:      fixtures.APIv4.Name,
-				Namespace: fixtures.APIv4.Namespace,
-			}, api); err != nil {
+			fixtures.APIv4.Spec.DeepCopyInto(&api.Spec)
+
+			if err := manager.Client().Create(ctx, api); err != nil {
 				return err
 			}
 
-			_, err := admissionCtrl.ValidateUpdate(ctx, api, api)
+			_, err := admissionCtrl.ValidateCreate(ctx, api)
 			return err
-		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
+		}, constants.EventualTimeout, interval).ShouldNot(Succeed())
 	})
 })

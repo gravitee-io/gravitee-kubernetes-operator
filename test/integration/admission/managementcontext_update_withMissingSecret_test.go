@@ -17,12 +17,10 @@ package admission
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -33,44 +31,30 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
-var _ = Describe("Validate", labels.WithoutContext, func() {
+var _ = Describe("Validate update", labels.WithContext, func() {
 	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
-	ctx := context.Background()
 	admissionCtrl := mctx.AdmissionCtrl{}
+	ctx := context.Background()
 	cli := manager.Client()
 
-	It("should return warning if APIM is not accessible", func() {
-		mCtx := &v1alpha1.ManagementContext{
-			TypeMeta: metav1.TypeMeta{},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "webhook-ctx" + random.GetSuffix(),
-				Namespace: "default",
-			},
-			Spec: v1alpha1.ManagementContextSpec{
-				Context: &management.Context{
-					BaseUrl: "https://gko.example.com",
-					EnvId:   "DEFAULT",
-					OrgId:   "DEFAULT",
-					Auth: &management.Auth{
-						BearerToken: "test",
-					},
-				},
-			},
-		}
+	It("should return error if secret is missing", func() {
+		fixtures := fixture.Builder().
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
 
-		Expect(cli.Create(context.Background(), mCtx)).To(Succeed())
-
+		mCtx := new(v1alpha1.ManagementContext)
 		Eventually(func() error {
 			return cli.Get(context.Background(), types.NamespacedName{
-				Namespace: mCtx.Namespace,
-				Name:      mCtx.Name,
+				Namespace: fixtures.Context.Namespace,
+				Name:      fixtures.Context.Name,
 			}, mCtx)
 		}, timeout, interval).Should(Succeed())
 
 		Consistently(func() error {
-			warnings, _ := admissionCtrl.ValidateCreate(ctx, mCtx)
-			return assert.SliceOfSize("warnings", warnings, 1)
-		}, timeout, interval).Should(Succeed())
+			_, err := admissionCtrl.ValidateCreate(ctx, mCtx)
+			return err
+		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
 	})
 })

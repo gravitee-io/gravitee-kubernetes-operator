@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func validate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	if context, ok := obj.(custom.ContextResource); ok {
@@ -54,7 +54,7 @@ func validateContextIsAvailable(ctx context.Context, context custom.ContextResou
 	}
 	_, err = apim.Env.Get()
 
-	if err != nil {
+	if errors.IsNetworkError(err) {
 		return errors.NewWarning(
 			"unable to reach APIM, [%s] is not available",
 			apim.Context.GetURL(),
@@ -68,12 +68,5 @@ func validateContextIsAvailable(ctx context.Context, context custom.ContextResou
 		)
 	}
 
-	if errors.IsNotFound(err) {
-		return errors.NewSevere(
-			"environment [%s/%s] could not be found in APIM",
-			apim.Context.GetOrg(), apim.Context.GetEnv(),
-		)
-	}
-
-	return nil
+	return errors.NewSevere(err.Error())
 }

@@ -20,6 +20,7 @@ import (
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -33,18 +34,23 @@ import (
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-
 	if api, ok := obj.(custom.ApiDefinitionResource); ok {
 		errs = errs.MergeWith(base.ValidateCreate(ctx, obj))
 		if errs.IsSevere() {
 			return errs
 		}
 		errs.Add(validateNoConflictingPath(ctx, api))
+		if errs.IsSevere() {
+			return errs
+		}
+		if api.HasContext() {
+			errs = errs.MergeWith(validateDryRun(ctx, api))
+		}
 	}
-
 	return errs
 }
 
+// TODO this should be move to base once implemented for v2
 func validateNoConflictingPath(ctx context.Context, api custom.ApiDefinitionResource) *errors.AdmissionError {
 	apiPaths, err := api.GetContextPaths()
 	if err != nil {
@@ -63,6 +69,30 @@ func validateNoConflictingPath(ctx context.Context, api custom.ApiDefinitionReso
 		}
 	}
 	return nil
+}
+
+func validateDryRun(ctx context.Context, api custom.ApiDefinitionResource) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+	if err != nil {
+		errs.AddSevere(err.Error())
+	}
+	status, err := apim.APIs.DryRunImportV4(api.GetSpec())
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+	for _, severe := range status.Errors.Severe {
+		errs.AddSevere(severe)
+	}
+	if errs.IsSevere() {
+		return errs
+	}
+	for _, warning := range status.Errors.Warning {
+		errs.AddWarning(warning)
+	}
+	return errs
 }
 
 func getExistingPaths(ctx context.Context, api custom.ApiDefinitionResource) ([]string, error) {

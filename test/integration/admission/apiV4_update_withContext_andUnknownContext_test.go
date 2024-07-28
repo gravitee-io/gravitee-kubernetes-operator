@@ -28,22 +28,23 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Webhook", labels.WithContext, func() {
+var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := v4.AdmissionCtrl{}
 
-	It("should get errors for API update, missing management context", func() {
+	It("should return error on API update with missing management context", func() {
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4WithContextFile).
 			Build().
 			Apply()
 
-		By("checking that validation fails")
+		By("checking that API update does not pass validation")
 
 		Consistently(func() error {
 			api := new(v1alpha1.ApiV4Definition)
+
 			if err := manager.Client().Get(ctx, types.NamespacedName{
 				Name:      fixtures.APIv4.Name,
 				Namespace: fixtures.APIv4.Namespace,

@@ -147,7 +147,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 			return err
 		}
 		spec.ID = cp.PickID(apim.Context)
-		status, err := apim.APIs.ImportV4(&spec.Api)
+		status, err := apim.APIs.ImportV4(spec)
 		if err != nil {
 			return err
 		}

@@ -17,6 +17,7 @@ package admission
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -28,20 +29,26 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 )
 
-var _ = Describe("Webhook", labels.WithoutContext, func() {
-	timeout := constants.EventualTimeout / 10
+var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := mctx.AdmissionCtrl{}
 
 	It("should return error if secret is missing", func() {
+
+		By("setting unknown environment onto context")
+
 		fixtures := fixture.Builder().
-			WithContext(constants.ContextWithSecretFile).
+			WithContext(constants.ContextWithCredentialsFile).
 			Build()
+
+		fixtures.Context.Spec.EnvId = "unknown"
+
+		By("validating the context")
 
 		Consistently(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Context)
-			return err
-		}, timeout, interval).Should(HaveOccurred())
+			return assert.NotNil("error", err)
+		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 })

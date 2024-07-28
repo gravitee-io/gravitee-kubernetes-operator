@@ -48,7 +48,7 @@ func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context,
 	obj runtime.Object,
 ) (admission.Warnings, error) {
-	return validate(ctx, obj).Map()
+	return validateCreate(ctx, obj).Map()
 }
 
 // ValidateDelete implements admission.CustomValidator.
