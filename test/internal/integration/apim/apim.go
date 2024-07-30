@@ -30,7 +30,6 @@ type APIM struct {
 
 	Subscriptions *service.Subscriptions
 	Pages         *service.Pages
-	Env           *service.Env
 	Org           *service.Org
 	Export        *Export
 }
@@ -46,7 +45,6 @@ func NewClient(ctx context.Context) *APIM {
 
 	subscriptions := service.NewSubscriptions(apim.APIs.Client)
 	pages := service.NewPages(apim.APIs.Client)
-	env := service.NewEnv(apim.APIs.Client)
 	org := service.NewOrg(apim.APIs.Client)
 	export := NewExport(apim.APIs.Client)
 
@@ -54,7 +52,6 @@ func NewClient(ctx context.Context) *APIM {
 		APIM:          apim,
 		Subscriptions: subscriptions,
 		Pages:         pages,
-		Env:           env,
 		Org:           org,
 		Export:        export,
 	}

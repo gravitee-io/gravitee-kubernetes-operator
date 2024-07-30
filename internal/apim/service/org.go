@@ -19,6 +19,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
+// Org brings support for managing gravitee.io APIM support for organization level operations.
+// This service is used for testing purposes only and not initialized by the operator manager.
 type Org struct {
 	*client.Client
 }

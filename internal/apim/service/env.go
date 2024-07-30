@@ -27,6 +27,7 @@ func NewEnv(client *client.Client) *Env {
 	return &Env{Client: client}
 }
 
+// CreateGroup For tests purposes only.
 func (svc *Env) CreateGroup(group *model.Group) error {
 	url := svc.EnvV1Target("configuration").WithPath("groups")
 	return svc.HTTP.Post(url.String(), group, group)

@@ -16,7 +16,6 @@ package service
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
@@ -30,8 +29,7 @@ const (
 	metadataPath     = "/metadata"
 )
 
-// Applications brings support for managing gravitee.io APIM applications
-// This service is used for testing purposes only and not initialized by the operator manager.
+// Applications brings support for managing gravitee.io APIM applications.
 type Applications struct {
 	*client.Client
 }
@@ -40,6 +38,7 @@ func NewApplications(client *client.Client) *Applications {
 	return &Applications{Client: client}
 }
 
+// Search For tests purposes only.
 func (svc *Applications) Search(query string, status string) ([]model.Application, error) {
 	url := svc.EnvV1Target(applicationsPath).WithQueryParam("query", query).WithQueryParam("status", status)
 	applications := new([]model.Application)
@@ -51,34 +50,36 @@ func (svc *Applications) Search(query string, status string) ([]model.Applicatio
 	return *applications, nil
 }
 
+// GetByID For tests purposes only.
 func (svc *Applications) GetByID(appID string) (*model.Application, error) {
 	if appID == "" {
 		return nil, errors.NewNotFoundError()
 	}
 
 	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
-	application := new(model.Application)
+	app := new(model.Application)
 
-	if err := svc.HTTP.Get(url.String(), application); err != nil {
+	if err := svc.HTTP.Get(url.String(), app); err != nil {
 		return nil, err
 	}
 
-	return application, nil
+	return app, nil
 }
 
+// GetMetadataByApplicationID For tests purposes only.
 func (svc *Applications) GetMetadataByApplicationID(appID string) (*[]model.ApplicationMetaData, error) {
 	if appID == "" {
 		return nil, fmt.Errorf("can't retrieve metadata without application id")
 	}
 
 	url := svc.EnvV1Target(applicationsPath).WithPath(appID).WithPath(metadataPath)
-	application := new([]model.ApplicationMetaData)
+	app := new([]model.ApplicationMetaData)
 
-	if err := svc.HTTP.Get(url.String(), application); err != nil {
+	if err := svc.HTTP.Get(url.String(), app); err != nil {
 		return nil, err
 	}
 
-	return application, nil
+	return app, nil
 }
 
 func (svc *Applications) CreateOrUpdate(spec *application.Application) (*application.Status, error) {
@@ -94,27 +95,5 @@ func (svc *Applications) CreateOrUpdate(spec *application.Application) (*applica
 
 func (svc *Applications) Delete(appID string) error {
 	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
-	return svc.HTTP.Delete(url.String(), nil)
-}
-
-func (svc *Applications) CreateOrUpdateMetadata(method string, appID string,
-	spec any, key string) (*model.ApplicationMetaData, error) {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appID).WithPath(metadataPath)
-	fun := svc.HTTP.Post
-	if method == http.MethodPut {
-		url = url.WithPath(key)
-		fun = svc.HTTP.Put
-	}
-
-	md := new(model.ApplicationMetaData)
-	if err := fun(url.String(), spec, md); err != nil {
-		return nil, err
-	}
-
-	return md, nil
-}
-
-func (svc *Applications) DeleteMetadata(appID string, key string) error {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appID).WithPath(metadataPath).WithPath(key)
 	return svc.HTTP.Delete(url.String(), nil)
 }
