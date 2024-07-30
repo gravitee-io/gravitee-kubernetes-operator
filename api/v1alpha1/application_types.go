@@ -89,15 +89,15 @@ func (app *Application) HasContext() bool {
 	return app.Spec.Context != nil
 }
 
-func (app *Application) ID() string {
+func (app *Application) GetID() string {
 	return app.Status.ID
 }
 
-func (app *Application) OrgID() string {
+func (app *Application) GetOrgID() string {
 	return app.Status.OrgID
 }
 
-func (app *Application) EnvID() string {
+func (app *Application) GetEnvID() string {
 	return app.Status.EnvID
 }
 

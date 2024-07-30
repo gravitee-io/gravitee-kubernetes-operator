@@ -46,7 +46,7 @@ const (
 	ApiWithRateLimit                    = SamplesPath + "/apim/api_definition/v2/api-with-rate-limit.yml"
 	ApiWithStateStopped                 = SamplesPath + "/apim/api_definition/v2/api-with-state-stopped.yml"
 	ApiWithSyncFromAPIM                 = SamplesPath + "/apim/api_definition/v2/api-with-sync-from-apim.yml"
-	ApiWithIds                          = SamplesPath + "/apim/api_definition/v2/api-with-ids.yml"
+	ApiWithIDs                          = SamplesPath + "/apim/api_definition/v2/api-with-ids.yml"
 	ApiWithDisabledPolicy               = SamplesPath + "/apim/api_definition/v2/api-with-disabled-policy.yml"
 	ApiWithTemplatingFile               = SamplesPath + "/apim/api_definition/v2/api-with-templating.yml"
 	ApiWithTemplatingSecretFile         = SamplesPath + "/apim/api_definition/v2/api-with-templating-secret.yml"

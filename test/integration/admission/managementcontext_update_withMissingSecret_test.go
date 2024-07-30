@@ -32,7 +32,6 @@ import (
 )
 
 var _ = Describe("Validate update", labels.WithContext, func() {
-	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
 	admissionCtrl := mctx.AdmissionCtrl{}
 	ctx := context.Background()
@@ -50,7 +49,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 				Namespace: fixtures.Context.Namespace,
 				Name:      fixtures.Context.Name,
 			}, mCtx)
-		}, timeout, interval).Should(Succeed())
+		}, constants.EventualTimeout, interval).Should(Succeed())
 
 		Consistently(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, mCtx)

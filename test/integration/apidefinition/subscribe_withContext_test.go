@@ -69,16 +69,16 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 		api, err := apim.APIs.GetByID(fixtures.API.Status.ID)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(api.Plans).ToNot(BeEmpty())
-		planID := api.Plans[0].Id
+		planID := api.Plans[0].ID
 
 		By("calling rest API expecting to application to subscribe to API")
 
-		subscription, err := apim.Subscriptions.Subscribe(fixtures.API.Status.ID, app.Id, planID)
+		subscription, err := apim.Subscriptions.Subscribe(fixtures.API.Status.ID, app.ID, planID)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("calling rest API expecting to find subscription API key")
 
-		keys, err := apim.Subscriptions.GetApiKeys(fixtures.API.Status.ID, subscription.Id)
+		keys, err := apim.Subscriptions.GetApiKeys(fixtures.API.Status.ID, subscription.ID)
 		Expect(err).ToNot(HaveOccurred())
 		Expect(keys).ToNot(BeEmpty())
 		key := keys[0].Key

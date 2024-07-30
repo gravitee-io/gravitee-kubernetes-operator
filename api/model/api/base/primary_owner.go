@@ -17,7 +17,7 @@ package base
 type PrimaryOwner struct {
 	// +kubebuilder:validation:Required
 	// PrimaryOwner ID
-	Id string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// +kubebuilder:validation:Optional
 	// PrimaryOwner email
 	Email string `json:"email,omitempty"`

@@ -46,7 +46,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		acl := []base.AccessControl{
 			{
-				ReferenceId:   groupName,
+				ReferenceID:   groupName,
 				ReferenceType: "GROUP",
 			},
 		}

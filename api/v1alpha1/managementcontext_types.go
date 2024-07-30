@@ -111,14 +111,14 @@ func (ctx *ManagementContext) GetAuth() custom.Auth {
 	return ctx.Spec.Context.Auth
 }
 
-// GetEnv implements custom.Context.
-func (ctx *ManagementContext) GetEnv() string {
-	return ctx.Spec.EnvId
+// GetEnvID implements custom.Context.
+func (ctx *ManagementContext) GetEnvID() string {
+	return ctx.Spec.EnvID
 }
 
-// GetOrg implements custom.Context.
-func (ctx *ManagementContext) GetOrg() string {
-	return ctx.Spec.OrgId
+// GetOrgID implements custom.Context.
+func (ctx *ManagementContext) GetOrgID() string {
+	return ctx.Spec.OrgID
 }
 
 // GetSecretRef implements custom.Context.

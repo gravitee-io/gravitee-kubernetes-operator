@@ -42,12 +42,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 			Apply()
 
 		apim := apim.NewClient(ctx)
-		apiId := fixtures.API.Status.ID
+		apiID := fixtures.API.Status.ID
 
 		By("checking pages number in APIM")
 
 		Eventually(func() error {
-			pages, err := apim.Pages.FindByAPI(apiId)
+			pages, err := apim.Pages.FindByAPI(apiID)
 			if err != nil {
 				return err
 			}
@@ -61,7 +61,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		Expect(markdown).ToNot(BeNil())
 
 		Eventually(func() error {
-			pages, err := apim.Pages.FindByAPI(apiId, model.NewPageQuery().WithType("MARKDOWN"))
+			pages, err := apim.Pages.FindByAPI(apiID, model.NewPageQuery().WithType("MARKDOWN"))
 			if err != nil {
 				return err
 			}

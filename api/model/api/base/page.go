@@ -26,7 +26,7 @@ type PageSource struct {
 type AccessControl struct {
 	// +kubebuilder:validation:Required
 	// The ID denied or granted by the access control (currently only group names are supported)
-	ReferenceId string `json:"referenceId,omitempty"`
+	ReferenceID string `json:"referenceId,omitempty"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=GROUP;
 	// The type of reference denied or granted by the access control

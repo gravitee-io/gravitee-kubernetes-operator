@@ -49,8 +49,8 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			Spec: v1alpha1.ManagementContextSpec{
 				Context: &management.Context{
 					BaseUrl: "https://gko.example.com",
-					EnvId:   "DEFAULT",
-					OrgId:   "DEFAULT",
+					EnvID:   "DEFAULT",
+					OrgID:   "DEFAULT",
 					Auth: &management.Auth{
 						BearerToken: "test",
 					},

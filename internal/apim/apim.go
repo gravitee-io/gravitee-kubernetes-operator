@@ -35,17 +35,17 @@ type APIM struct {
 
 // EnvID returns the environment ID of the current managed APIM instance.
 func (apim *APIM) EnvID() string {
-	return apim.Context.GetEnv()
+	return apim.Context.GetEnvID()
 }
 
 // OrgID returns the organization ID of the current managed APIM instance.
 func (apim *APIM) OrgID() string {
-	return apim.Context.GetOrg()
+	return apim.Context.GetOrgID()
 }
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
 func FromContext(ctx context.Context, context custom.Context, parentNs string) (*APIM, error) {
-	orgID, envID := context.GetOrg(), context.GetEnv()
+	orgID, envID := context.GetOrgID(), context.GetEnvID()
 	urls, err := client.NewURLs(context.GetURL(), orgID, envID)
 	if err != nil {
 		return nil, err

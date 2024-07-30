@@ -18,7 +18,6 @@ package v4
 import (
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
@@ -223,8 +222,12 @@ func parseListener(l Listener) []string {
 		{
 			paths := make([]string, 0)
 			for _, path := range t.Paths {
-				p := fmt.Sprintf("%s/%s", path.Host, path.Path)
-				paths = append(paths, strings.ReplaceAll(p, "//", "/"))
+				if path.Host != "" {
+					p := fmt.Sprintf("%s/%s", path.Host, path.Path)
+					paths = append(paths, p)
+				} else {
+					paths = append(paths, path.Path)
+				}
 			}
 			return paths
 		}

@@ -96,15 +96,15 @@ func (spec *ApiDefinitionV2Spec) SetDefinitionContext() {
 	}
 }
 
-func (api *ApiDefinition) EnvID() string {
+func (api *ApiDefinition) GetEnvID() string {
 	return api.Status.EnvID
 }
 
-func (api *ApiDefinition) ID() string {
+func (api *ApiDefinition) GetID() string {
 	return api.Status.ID
 }
 
-func (api *ApiDefinition) OrgID() string {
+func (api *ApiDefinition) GetOrgID() string {
 	return api.Status.OrgID
 }
 
@@ -143,17 +143,17 @@ func (api *ApiDefinition) GetDefinition() custom.ApiDefinition {
 func (api *ApiDefinition) PopulateIDs(_ custom.Context) {
 	api.Spec.ID = api.pickID()
 	api.Spec.CrossID = api.pickCrossID()
-	api.generateEmptyPlanCrossIds()
+	api.generateEmptyPlanCrossIDs()
 	api.generatePageIDs()
 }
 
-// For each plan, generate a CrossId from Api Id & Plan Name if not defined.
-func (api *ApiDefinition) generateEmptyPlanCrossIds() {
+// For each plan, generate a Cross id from Api id & Plan Name if not defined.
+func (api *ApiDefinition) generateEmptyPlanCrossIDs() {
 	plans := api.Spec.Plans
 
 	for _, plan := range plans {
-		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromStrings(api.Spec.ID, separator, plan.Name)
+		if plan.CrossID == "" {
+			plan.CrossID = uuid.FromStrings(api.Spec.ID, separator, plan.Name)
 		}
 	}
 }

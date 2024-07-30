@@ -34,7 +34,6 @@ import (
 )
 
 var _ = Describe("Validate create", labels.WithContext, func() {
-	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := mctx.AdmissionCtrl{}
@@ -50,8 +49,8 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			Spec: v1alpha1.ManagementContextSpec{
 				Context: &management.Context{
 					BaseUrl: "https://gko.example.com",
-					EnvId:   "DEFAULT",
-					OrgId:   "DEFAULT",
+					EnvID:   "DEFAULT",
+					OrgID:   "DEFAULT",
 					Auth: &management.Auth{
 						BearerToken: "test",
 					},
@@ -66,11 +65,11 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 				Namespace: mCtx.Namespace,
 				Name:      mCtx.Name,
 			}, mCtx)
-		}, timeout, interval).Should(Succeed())
+		}, constants.EventualTimeout, interval).Should(Succeed())
 
 		Consistently(func() error {
 			warnings, _ := admissionCtrl.ValidateCreate(ctx, mCtx)
 			return assert.SliceOfSize("warnings", warnings, 1)
-		}, timeout, interval).Should(Succeed())
+		}, constants.ConsistentTimeout, interval).Should(Succeed())
 	})
 })

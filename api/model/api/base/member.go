@@ -22,7 +22,7 @@ type Member struct {
 	// Member source ID
 	// +kubebuilder:validation:Required
 	// +kubebuilder:example:=user@email.com
-	SourceId string `json:"sourceId"`
+	SourceID string `json:"sourceId"`
 	// Member display name
 	DisplayName string `json:"displayName,omitempty"`
 	// The API role associated with this Member
@@ -33,7 +33,7 @@ type Member struct {
 func NewGraviteeMember(username, role string) *Member {
 	return &Member{
 		Source:   "gravitee",
-		SourceId: username,
+		SourceID: username,
 		Role:     role,
 	}
 }
@@ -41,7 +41,7 @@ func NewGraviteeMember(username, role string) *Member {
 func NewMemoryMember(username, role string) *Member {
 	return &Member{
 		Source:   "memory",
-		SourceId: username,
+		SourceID: username,
 		Role:     role,
 	}
 }

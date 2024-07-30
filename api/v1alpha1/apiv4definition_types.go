@@ -95,7 +95,7 @@ func (api *ApiV4Definition) pickID(mCtx custom.Context) string {
 	}
 
 	if mCtx != nil {
-		return uuid.FromStrings(api.pickCrossID(), mCtx.GetOrg(), mCtx.GetEnv())
+		return uuid.FromStrings(api.pickCrossID(), mCtx.GetOrgID(), mCtx.GetEnvID())
 	}
 
 	return string(api.UID)
@@ -119,10 +119,10 @@ func (api *ApiV4Definition) pickPlanIDs() map[string]*v4.Plan {
 	for key, plan := range api.Spec.Plans {
 		p := plan.DeepCopy()
 		if id, ok := api.Status.Plans[key]; ok {
-			p.Id = id
-		} else if plan.Id == "" {
+			p.ID = id
+		} else if plan.ID == "" {
 			namespacedName := api.GetNamespacedName()
-			p.Id = uuid.FromStrings(namespacedName.String(), key)
+			p.ID = uuid.FromStrings(namespacedName.String(), key)
 		}
 		plans[key] = p
 	}
@@ -151,18 +151,18 @@ func (api *ApiV4Definition) pickPageIDs() map[string]*v4.Page {
 	return pages
 }
 
-// EnvID implements custom.ApiDefinition.
-func (api *ApiV4Definition) EnvID() string {
+// GetEnvID implements custom.ApiDefinition.
+func (api *ApiV4Definition) GetEnvID() string {
 	return api.Status.EnvID
 }
 
-// ID implements custom.ApiDefinition.
-func (api *ApiV4Definition) ID() string {
+// GetID implements custom.ApiDefinition.
+func (api *ApiV4Definition) GetID() string {
 	return api.Status.ID
 }
 
-// OrgID implements custom.ApiDefinition.
-func (api *ApiV4Definition) OrgID() string {
+// GetOrgID implements custom.ApiDefinition.
+func (api *ApiV4Definition) GetOrgID() string {
 	return api.Status.OrgID
 }
 

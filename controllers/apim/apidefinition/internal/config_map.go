@@ -38,8 +38,8 @@ const (
 	gioTypeKey           = "gio-type"
 	orgKey               = "organizationId"
 	envKey               = "environmentId"
-	defaultEnvId         = "DEFAULT"
-	defaultOrgId         = "DEFAULT"
+	defaultEnvID         = "DEFAULT"
+	defaultOrgID         = "DEFAULT"
 )
 
 func updateConfigMap(
@@ -93,12 +93,12 @@ func saveConfigMap(
 		definitionVersionKey: apiDefinition.GetResourceVersion(),
 	}
 
-	if apiDefinition.OrgID() != "" {
-		cm.Data[orgKey] = apiDefinition.OrgID()
-		cm.Data[envKey] = apiDefinition.EnvID()
+	if apiDefinition.GetOrgID() != "" {
+		cm.Data[orgKey] = apiDefinition.GetOrgID()
+		cm.Data[envKey] = apiDefinition.GetEnvID()
 	} else {
-		cm.Data[orgKey] = defaultOrgId
-		cm.Data[envKey] = defaultEnvId
+		cm.Data[orgKey] = defaultOrgID
+		cm.Data[envKey] = defaultEnvID
 	}
 
 	var payload any

@@ -51,12 +51,12 @@ func (svc *Applications) Search(query string, status string) ([]model.Applicatio
 	return *applications, nil
 }
 
-func (svc *Applications) GetByID(appId string) (*model.Application, error) {
-	if appId == "" {
+func (svc *Applications) GetByID(appID string) (*model.Application, error) {
+	if appID == "" {
 		return nil, errors.NewNotFoundError()
 	}
 
-	url := svc.EnvV1Target(applicationsPath).WithPath(appId)
+	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
 	application := new(model.Application)
 
 	if err := svc.HTTP.Get(url.String(), application); err != nil {
@@ -66,12 +66,12 @@ func (svc *Applications) GetByID(appId string) (*model.Application, error) {
 	return application, nil
 }
 
-func (svc *Applications) GetMetadataByApplicationID(appId string) (*[]model.ApplicationMetaData, error) {
-	if appId == "" {
+func (svc *Applications) GetMetadataByApplicationID(appID string) (*[]model.ApplicationMetaData, error) {
+	if appID == "" {
 		return nil, fmt.Errorf("can't retrieve metadata without application id")
 	}
 
-	url := svc.EnvV1Target(applicationsPath).WithPath(appId).WithPath(metadataPath)
+	url := svc.EnvV1Target(applicationsPath).WithPath(appID).WithPath(metadataPath)
 	application := new([]model.ApplicationMetaData)
 
 	if err := svc.HTTP.Get(url.String(), application); err != nil {
@@ -92,14 +92,14 @@ func (svc *Applications) CreateOrUpdate(spec *application.Application) (*applica
 	return status, nil
 }
 
-func (svc *Applications) Delete(appId string) error {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appId)
+func (svc *Applications) Delete(appID string) error {
+	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *Applications) CreateOrUpdateMetadata(method string, appId string,
+func (svc *Applications) CreateOrUpdateMetadata(method string, appID string,
 	spec any, key string) (*model.ApplicationMetaData, error) {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appId).WithPath(metadataPath)
+	url := svc.EnvV1Target(applicationsPath).WithPath(appID).WithPath(metadataPath)
 	fun := svc.HTTP.Post
 	if method == http.MethodPut {
 		url = url.WithPath(key)
@@ -114,7 +114,7 @@ func (svc *Applications) CreateOrUpdateMetadata(method string, appId string,
 	return md, nil
 }
 
-func (svc *Applications) DeleteMetadata(appId string, key string) error {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appId).WithPath(metadataPath).WithPath(key)
+func (svc *Applications) DeleteMetadata(appID string, key string) error {
+	url := svc.EnvV1Target(applicationsPath).WithPath(appID).WithPath(metadataPath).WithPath(key)
 	return svc.HTTP.Delete(url.String(), nil)
 }

@@ -80,9 +80,9 @@ type ContextAwareResource interface {
 	Resource
 	ContextRef() ResourceRef
 	HasContext() bool
-	ID() string
-	OrgID() string
-	EnvID() string
+	GetID() string
+	GetOrgID() string
+	GetEnvID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -95,8 +95,8 @@ type SecretAware interface {
 type Context interface {
 	SecretAware
 	GetURL() string
-	GetEnv() string
-	GetOrg() string
+	GetEnvID() string
+	GetOrgID() string
 	HasAuthentication() bool
 	GetAuth() Auth
 }

@@ -20,13 +20,13 @@ import (
 )
 
 // Retrieve the plan ids from the management apiEntity.
-func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, mgmtApi *apimModel.ApiEntity) {
+func retrieveMgmtPlanIDs(spec *v1alpha1.ApiDefinitionV2Spec, mgmtApi *apimModel.ApiEntity) {
 	plans := spec.Plans
 
 	for _, plan := range plans {
 		for _, mgmtPlan := range mgmtApi.Plans {
-			if plan.CrossId == mgmtPlan.CrossId {
-				plan.Id = mgmtPlan.Id
+			if plan.CrossID == mgmtPlan.CrossID {
+				plan.ID = mgmtPlan.ID
 				plan.Api = mgmtPlan.Api
 			}
 		}

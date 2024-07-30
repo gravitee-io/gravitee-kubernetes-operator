@@ -76,7 +76,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 				"members",
 				[]*base.Member{primaryOwner, saMember}, export.Spec.Members,
 				func(a, b *base.Member) int {
-					return strings.Compare(a.SourceId, b.SourceId)
+					return strings.Compare(a.SourceID, b.SourceID)
 				},
 			)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
