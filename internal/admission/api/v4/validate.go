@@ -19,6 +19,8 @@ import (
 	"net/url"
 	"slices"
 
+	mbase "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -40,6 +42,12 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		if errs.IsSevere() {
 			return errs
 		}
+
+		errs.Add(validateApiPlan(ctx, api))
+		if errs.IsSevere() {
+			return errs
+		}
+
 		errs.Add(validateNoConflictingPath(ctx, api))
 		if errs.IsSevere() {
 			return errs
@@ -49,6 +57,23 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		}
 	}
 	return errs
+}
+
+func validateApiPlan(_ context.Context, api custom.ApiDefinitionResource) *errors.AdmissionError {
+	cp, _ := api.DeepCopyResource().(custom.ApiDefinitionResource)
+
+	apiDef, ok := cp.GetDefinition().(*v4.Api)
+	if !ok {
+		return errors.NewSevere("unable to validate the CRD because it is not a v4 API")
+	}
+
+	if apiDef.State == mbase.StateStarted &&
+		len(apiDef.Plans) == 0 {
+		return errors.NewSevere("cannot apply API [%s]. Its state is set to STARTED,"+
+			" but the API has no plans. APIs must have at least one plan in order to be deployed.", apiDef.Name)
+	}
+
+	return nil
 }
 
 // TODO this should be move to base once implemented for v2
