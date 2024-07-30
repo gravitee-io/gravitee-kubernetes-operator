@@ -100,9 +100,9 @@ func Equals(field string, expected, given any) error {
 
 func SliceEqualsSorted[S ~[]E, E any](field string, expected S, given S, comp func(a, b E) int) error {
 	ecp, gcp := make([]E, len(expected)), make([]E, len(given))
-	copy(ecp, given)
+	copy(ecp, expected)
 	slices.SortFunc(ecp, comp)
-	copy(gcp, expected)
+	copy(gcp, given)
 	slices.SortFunc(gcp, comp)
 	return Equals(field, ecp, gcp)
 }
