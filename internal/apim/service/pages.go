@@ -19,6 +19,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
+// Pages brings support for managing gravitee.io APIM support for pages.
+// This service is used for testing purposes only and not initialized by the operator manager.
 type Pages struct {
 	*client.Client
 }

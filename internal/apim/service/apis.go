@@ -68,6 +68,7 @@ func (svc *APIs) GetByCrossID(crossID string) (*model.ApiListItem, error) {
 	return &(*apis)[0], nil
 }
 
+// GetByID For tests purposes only.
 func (svc *APIs) GetByID(apiID string) (*model.ApiEntity, error) {
 	url := svc.EnvV1Target("apis").WithPath(apiID)
 	api := new(model.ApiEntity)
