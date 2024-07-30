@@ -29,6 +29,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const separator = "/"
+
 // ApiV4DefinitionSpec defines the desired state of ApiDefinition.
 // +kubebuilder:object:generate=true
 type ApiV4DefinitionSpec struct {
@@ -71,12 +73,19 @@ func (api *ApiV4Definition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-// PickID returns the ID of the API definition, when a context has been defined at the spec level.
+func (api *ApiV4Definition) PopulateIDs(context custom.Context) {
+	api.Spec.ID = api.pickID(context)
+	api.Spec.CrossID = api.pickCrossID()
+	api.Spec.Pages = api.pickPageIDs()
+	api.Spec.Plans = api.pickPlanIDs()
+}
+
+// pickID returns the ID of the API definition, when a context has been defined at the spec level.
 // The ID might be returned from the API status, meaning that the API is already known.
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiV4Definition) PickID(mCtx custom.Context) string {
+func (api *ApiV4Definition) pickID(mCtx custom.Context) string {
 	if api.Status.ID != "" {
 		return api.Status.ID
 	}
@@ -86,13 +95,13 @@ func (api *ApiV4Definition) PickID(mCtx custom.Context) string {
 	}
 
 	if mCtx != nil {
-		return uuid.FromStrings(api.PickCrossID(), mCtx.GetOrg(), mCtx.GetEnv())
+		return uuid.FromStrings(api.pickCrossID(), mCtx.GetOrg(), mCtx.GetEnv())
 	}
 
 	return string(api.UID)
 }
 
-func (api *ApiV4Definition) PickCrossID() string {
+func (api *ApiV4Definition) pickCrossID() string {
 	if api.Status.CrossID != "" {
 		return api.Status.CrossID
 	}
@@ -105,7 +114,7 @@ func (api *ApiV4Definition) PickCrossID() string {
 	return uuid.FromStrings(namespacedName.String())
 }
 
-func (api *ApiV4Definition) PickPlanIDs() map[string]*v4.Plan {
+func (api *ApiV4Definition) pickPlanIDs() map[string]*v4.Plan {
 	plans := make(map[string]*v4.Plan, len(api.Spec.Plans))
 	for key, plan := range api.Spec.Plans {
 		p := plan.DeepCopy()
@@ -120,18 +129,7 @@ func (api *ApiV4Definition) PickPlanIDs() map[string]*v4.Plan {
 	return plans
 }
 
-const separator = "/"
-
-// GetOrGenerateEmptyPlanCrossID For each plan, generate a CrossId from Api Id & Plan Name if not defined.
-func (api *ApiV4Definition) GetOrGenerateEmptyPlanCrossID() {
-	for name, plan := range api.Spec.Plans {
-		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromStrings(api.PickCrossID(), separator, name)
-		}
-	}
-}
-
-func (api *ApiV4Definition) PickPageIDs() map[string]*v4.Page {
+func (api *ApiV4Definition) pickPageIDs() map[string]*v4.Page {
 	pages := make(map[string]*v4.Page, len(api.Spec.Pages))
 	for name, page := range api.Spec.Pages {
 		p := page.DeepCopy()
@@ -206,6 +204,10 @@ func (api *ApiV4Definition) GetContextPaths() ([]string, error) {
 
 func (api *ApiV4Definition) GetDefinitionVersion() custom.ApiDefinitionVersion {
 	return custom.ApiV4
+}
+
+func (api *ApiV4Definition) GetDefinition() custom.ApiDefinition {
+	return &api.Spec.Api
 }
 
 func (spec *ApiV4DefinitionSpec) Hash() string {

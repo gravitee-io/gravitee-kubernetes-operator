@@ -74,11 +74,21 @@ func validateNoConflictingPath(ctx context.Context, api custom.ApiDefinitionReso
 func validateDryRun(ctx context.Context, api custom.ApiDefinitionResource) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+	cp, _ := api.DeepCopyResource().(custom.ApiDefinitionResource)
+
+	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
 		errs.AddSevere(err.Error())
 	}
-	status, err := apim.APIs.DryRunImportV4(api.GetSpec())
+
+	cp.PopulateIDs(apim.Context)
+
+	impl, ok := cp.GetDefinition().(*v4.Api)
+	if !ok {
+		errs.AddSevere("unable to call dry run import because api is not a v4 API")
+	}
+
+	status, err := apim.APIs.DryRunImportV4(impl)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
