@@ -1188,6 +1188,10 @@ spec:
                     type:
                       description: Resource Type
                       type: string
+                  required:
+                  - configuration
+                  - name
+                  - type
                   type: object
                 type: array
               responseTemplates:

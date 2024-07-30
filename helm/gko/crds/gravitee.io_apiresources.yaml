@@ -65,6 +65,10 @@ spec:
               type:
                 description: Resource Type
                 type: string
+            required:
+            - configuration
+            - name
+            - type
             type: object
           status:
             type: object
