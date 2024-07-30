@@ -7369,7 +7369,7 @@ Application is the main resource handled by the Kubernetes Operator
         <td><b>clientId</b></td>
         <td>string</td>
         <td>
-          The ClientId identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.<br/>
+          The ClientID identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7551,7 +7551,7 @@ Application settings
         <td><b>client_id</b></td>
         <td>string</td>
         <td>
-          ClientId is the client id of the application<br/>
+          ClientID is the client id of the application<br/>
         </td>
         <td>false</td>
       </tr></tbody>

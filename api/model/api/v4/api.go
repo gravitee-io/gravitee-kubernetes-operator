@@ -17,7 +17,6 @@ package v4
 
 import (
 	"fmt"
-	"net/url"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
@@ -199,13 +198,7 @@ func (api *Api) GetDefinitionVersion() custom.ApiDefinitionVersion {
 func (api *Api) GetContextPaths() ([]string, error) {
 	paths := make([]string, 0)
 	for _, l := range api.Listeners {
-		for _, s := range parseListener(l) {
-			p, err := url.Parse(s)
-			if err != nil {
-				return paths, err
-			}
-			paths = append(paths, p.String())
-		}
+		paths = append(paths, parseListener(l)...)
 	}
 	return paths, nil
 }
