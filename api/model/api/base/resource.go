@@ -24,11 +24,11 @@ type Resource struct {
 	// Resource is enabled or not?
 	Enabled bool `json:"enabled"`
 	// Resource Name
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 	// Resource Type
-	ResourceType string `json:"type,omitempty"`
+	Type string `json:"type"`
 	// Resource Configuration, arbitrary map of key-values
-	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
+	Configuration *utils.GenericStringMap `json:"configuration"`
 }
 
 type ResourceOrRef struct {
