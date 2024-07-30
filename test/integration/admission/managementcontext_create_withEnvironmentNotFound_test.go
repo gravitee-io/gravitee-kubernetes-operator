@@ -49,6 +49,6 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		Consistently(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Context)
 			return assert.NotNil("error", err)
-		}, constants.EventualTimeout, interval).Should(Succeed())
+		}, constants.ConsistentTimeout, interval).Should(Succeed())
 	})
 })

@@ -34,7 +34,6 @@ import (
 )
 
 var _ = Describe("Validate update", labels.WithContext, func() {
-	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	admissionCtrl := mctx.AdmissionCtrl{}
 	ctx := context.Background()
@@ -66,11 +65,11 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 				Namespace: mCtx.Namespace,
 				Name:      mCtx.Name,
 			}, mCtx)
-		}, timeout, interval).Should(Succeed())
+		}, constants.EventualTimeout, interval).Should(Succeed())
 
 		Consistently(func() error {
 			warnings, _ := admissionCtrl.ValidateUpdate(ctx, mCtx, mCtx)
 			return assert.SliceOfSize("warnings", warnings, 1)
-		}, timeout, interval).ShouldNot(Succeed())
+		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
 	})
 })

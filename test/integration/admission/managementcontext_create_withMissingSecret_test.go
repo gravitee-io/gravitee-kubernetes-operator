@@ -29,7 +29,6 @@ import (
 )
 
 var _ = Describe("Validate create", labels.WithContext, func() {
-	timeout := constants.EventualTimeout / 10
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := mctx.AdmissionCtrl{}
@@ -42,6 +41,6 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		Consistently(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Context)
 			return err
-		}, timeout, interval).Should(HaveOccurred())
+		}, constants.ConsistentTimeout, interval).Should(HaveOccurred())
 	})
 })
