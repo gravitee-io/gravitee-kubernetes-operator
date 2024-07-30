@@ -56,6 +56,6 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 				),
 				err,
 			)
-		}, constants.EventualTimeout, interval).Should(Succeed())
+		}, constants.ConsistentTimeout, interval).Should(Succeed())
 	})
 })

@@ -25,7 +25,7 @@ import (
 const (
 	Namespace = "default"
 
-	ConsistentTimeout = time.Second * 3
+	ConsistentTimeout = time.Second * 2
 	EventualTimeout   = time.Second * 30
 	Interval          = time.Millisecond * 250
 
