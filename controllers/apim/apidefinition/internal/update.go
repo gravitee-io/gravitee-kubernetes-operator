@@ -49,13 +49,13 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	spec := &cp.Spec
 	formerStatus := cp.Status
 
-	spec.ID = cp.PickID()
 	spec.SetDefinitionContext()
-	generateEmptyPlanCrossIds(spec)
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
 		return err
 	}
+
+	cp.PopulateIDs(nil)
 
 	if !apiDefinition.HasContext() {
 		if !spec.IsLocal {
@@ -75,9 +75,6 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	if apimErr != nil {
 		return apimErr
 	}
-
-	generatePageIDs(cp)
-	spec.CrossID = cp.PickCrossID()
 
 	_, findErr := apim.APIs.GetByCrossID(spec.CrossID)
 	if errors.IgnoreNotFound(findErr) != nil {
@@ -135,9 +132,6 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		return err
 	}
 
-	spec.CrossID = cp.PickCrossID()
-	spec.Plans = cp.PickPlanIDs()
-	spec.Pages = cp.PickPageIDs()
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
 	if spec.Context != nil {
@@ -146,15 +140,15 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		if err != nil {
 			return err
 		}
-		spec.ID = cp.PickID(apim.Context)
-		status, err := apim.APIs.ImportV4(spec)
+		cp.PopulateIDs(apim.Context)
+		status, err := apim.APIs.ImportV4(&spec.Api)
 		if err != nil {
 			return err
 		}
 		apiDefinition.Status.Status = *status
 		log.FromContext(ctx).WithValues("id", spec.ID).Info("API successfully synced with APIM")
 	} else {
-		spec.ID = cp.PickID(nil)
+		cp.PopulateIDs(nil)
 	}
 
 	if spec.DefinitionContext.SyncFrom == v4.OriginManagement || spec.State == base.StateStopped {

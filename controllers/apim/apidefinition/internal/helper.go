@@ -17,39 +17,7 @@ package internal
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	apimModel "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 )
-
-const separator = "/"
-
-// For each plan, generate a CrossId from Api Id & Plan Name if not defined.
-func generateEmptyPlanCrossIds(spec *v1alpha1.ApiDefinitionV2Spec) {
-	plans := spec.Plans
-
-	for _, plan := range plans {
-		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromStrings(spec.ID, separator, plan.Name)
-		}
-	}
-}
-
-func generatePageIDs(api *v1alpha1.ApiDefinition) {
-	spec := &api.Spec
-	pages := spec.Pages
-	for name, page := range pages {
-		page.API = spec.ID
-		apiName := api.GetNamespacedName().String()
-		if page.CrossID == "" {
-			page.CrossID = uuid.FromStrings(apiName, separator, name)
-		}
-		if page.ID == "" {
-			page.ID = uuid.FromStrings(spec.ID, separator, name)
-		}
-		if page.Parent != "" {
-			page.ParentID = uuid.FromStrings(spec.ID, separator, page.Parent)
-		}
-	}
-}
 
 // Retrieve the plan ids from the management apiEntity.
 func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, mgmtApi *apimModel.ApiEntity) {

@@ -60,7 +60,7 @@ type ApiDefinitionStatus struct {
 	base.Status `json:",inline"`
 }
 
-var _ custom.ApiDefinition = &ApiDefinition{}
+var _ custom.ApiDefinitionResource = &ApiDefinition{}
 var _ custom.Status = &ApiDefinitionStatus{}
 var _ custom.Spec = &ApiDefinitionV2Spec{}
 
@@ -79,39 +79,6 @@ type ApiDefinition struct {
 
 	Spec   ApiDefinitionV2Spec `json:"spec,omitempty"`
 	Status ApiDefinitionStatus `json:"status,omitempty"`
-}
-
-// PickID returns the ID of the API definition, when a context has been defined at the spec level.
-// The ID might be returned from the API status, meaning that the API is already known.
-// If the API is unknown, the ID is either given from the spec if given,
-// or generated from the API UID and the context key to ensure uniqueness
-// in case the API is replicated on a same APIM instance.
-func (api *ApiDefinition) PickID() string {
-	if api.Status.ID != "" {
-		return api.Status.ID
-	}
-
-	if api.Spec.ID != "" {
-		return api.Spec.ID
-	}
-
-	return string(api.UID)
-}
-
-func (api *ApiDefinition) PickCrossID() string {
-	if api.Status.CrossID != "" {
-		return api.Status.CrossID
-	}
-
-	return api.GetOrGenerateCrossID()
-}
-
-func (api *ApiDefinition) GetOrGenerateCrossID() string {
-	if api.Spec.CrossID != "" {
-		return api.Spec.CrossID
-	}
-
-	return uuid.FromStrings(api.GetNamespacedName().String())
 }
 
 func (api *ApiDefinition) GetNamespacedName() *refs.NamespacedName {
@@ -167,6 +134,79 @@ func (api *ApiDefinition) HasContext() bool {
 
 func (api *ApiDefinition) GetContextPaths() ([]string, error) {
 	return api.Spec.GetContextPaths()
+}
+
+func (api *ApiDefinition) GetDefinition() custom.ApiDefinition {
+	return &api.Spec.Api
+}
+
+func (api *ApiDefinition) PopulateIDs(_ custom.Context) {
+	api.Spec.ID = api.pickID()
+	api.Spec.CrossID = api.pickCrossID()
+	api.generateEmptyPlanCrossIds()
+	api.generatePageIDs()
+}
+
+// For each plan, generate a CrossId from Api Id & Plan Name if not defined.
+func (api *ApiDefinition) generateEmptyPlanCrossIds() {
+	plans := api.Spec.Plans
+
+	for _, plan := range plans {
+		if plan.CrossId == "" {
+			plan.CrossId = uuid.FromStrings(api.Spec.ID, separator, plan.Name)
+		}
+	}
+}
+
+func (api *ApiDefinition) generatePageIDs() {
+	spec := &api.Spec
+	pages := spec.Pages
+	for name, page := range pages {
+		page.API = spec.ID
+		apiName := api.GetNamespacedName().String()
+		if page.CrossID == "" {
+			page.CrossID = uuid.FromStrings(apiName, separator, name)
+		}
+		if page.ID == "" {
+			page.ID = uuid.FromStrings(spec.ID, separator, name)
+		}
+		if page.Parent != "" {
+			page.ParentID = uuid.FromStrings(spec.ID, separator, page.Parent)
+		}
+	}
+}
+
+// PickID returns the ID of the API definition, when a context has been defined at the spec level.
+// The ID might be returned from the API status, meaning that the API is already known.
+// If the API is unknown, the ID is either given from the spec if given,
+// or generated from the API UID and the context key to ensure uniqueness
+// in case the API is replicated on a same APIM instance.
+func (api *ApiDefinition) pickID() string {
+	if api.Status.ID != "" {
+		return api.Status.ID
+	}
+
+	if api.Spec.ID != "" {
+		return api.Spec.ID
+	}
+
+	return string(api.UID)
+}
+
+func (api *ApiDefinition) pickCrossID() string {
+	if api.Status.CrossID != "" {
+		return api.Status.CrossID
+	}
+
+	return api.getOrGenerateCrossID()
+}
+
+func (api *ApiDefinition) getOrGenerateCrossID() string {
+	if api.Spec.CrossID != "" {
+		return api.Spec.CrossID
+	}
+
+	return uuid.FromStrings(api.GetNamespacedName().String())
 }
 
 func (spec *ApiDefinitionV2Spec) Hash() string {

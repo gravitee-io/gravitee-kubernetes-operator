@@ -46,13 +46,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		By("preparing API for import")
 
 		fixtures.APIv4.Spec.DefinitionContext = apiV4.NewDefaultKubernetesContext()
-
-		fixtures.APIv4.Spec.ID = fixtures.APIv4.PickID(fixtures.Context)
-		fixtures.APIv4.Spec.CrossID = fixtures.APIv4.PickCrossID()
-		planIDs := fixtures.APIv4.PickPlanIDs()
-		for k, v := range planIDs {
-			fixtures.APIv4.Spec.Plans[k].Id = v.Id
-		}
+		fixtures.APIv4.PopulateIDs(fixtures.Context)
 
 		By("adding an unknown member to the API")
 

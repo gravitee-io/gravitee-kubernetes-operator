@@ -22,6 +22,7 @@ import (
 
 var _ custom.Auth = &Auth{}
 var _ custom.BasicAuth = &BasicAuth{}
+var _ custom.Context = &Context{}
 
 type Context struct {
 	// The URL of a management API instance

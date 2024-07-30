@@ -68,5 +68,9 @@ func validateContextIsAvailable(ctx context.Context, context custom.ContextResou
 		)
 	}
 
-	return errors.NewSevere(err.Error())
+	if errors.IsBadRequest(err) {
+		return errors.NewSevere(err.Error())
+	}
+
+	return nil
 }

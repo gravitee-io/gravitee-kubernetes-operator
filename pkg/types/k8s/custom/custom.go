@@ -53,6 +53,8 @@ type ApiDefinition interface {
 type ApiDefinitionResource interface {
 	ContextAwareResource
 	ApiDefinition
+	GetDefinition() ApiDefinition
+	PopulateIDs(context Context)
 }
 
 // +k8s:deepcopy-gen=false
