@@ -42,12 +42,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 			Apply()
 
 		apim := apim.NewClient(ctx)
-		apiId := fixtures.APIv4.Status.ID
+		apiID := fixtures.APIv4.Status.ID
 
 		By("checking pages number in APIM")
 
 		Eventually(func() error {
-			pages, err := apim.Pages.FindByAPIV4(apiId)
+			pages, err := apim.Pages.FindByAPIV4(apiID)
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		Expect(swagger).ToNot(BeNil())
 
 		Eventually(func() error {
-			pages, err := apim.Pages.FindByAPIV4(apiId, model.NewPageQuery().WithType("SWAGGER"))
+			pages, err := apim.Pages.FindByAPIV4(apiID, model.NewPageQuery().WithType("SWAGGER"))
 			if err != nil {
 				return err
 			}

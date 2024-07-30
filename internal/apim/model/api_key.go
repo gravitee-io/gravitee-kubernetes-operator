@@ -15,6 +15,6 @@
 package model
 
 type ApiKeyEntity struct {
-	Id  string `json:"id"`
+	ID  string `json:"id"`
 	Key string `json:"key"`
 }

@@ -54,7 +54,7 @@ func NewKubernetesContext() *DefinitionContext {
 }
 
 type ApiListItem struct {
-	Id                string `json:"id"`
+	ID                string `json:"id"`
 	Name              string `json:"name"`
 	State             string `json:"state"`
 	Visibility        string `json:"visibility"`
@@ -80,8 +80,8 @@ func ApiStateToAction(s base.ApiState) Action {
 }
 
 type Plan struct {
-	Id       string           `json:"id"`
-	CrossId  string           `json:"crossId"`
+	ID       string           `json:"id"`
+	CrossID  string           `json:"crossId"`
 	Name     string           `json:"name"`
 	Security PlanSecurityType `json:"security"`
 	Status   PlanStatus       `json:"status"`

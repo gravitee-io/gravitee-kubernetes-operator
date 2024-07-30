@@ -21,15 +21,15 @@ type AppKeyMode string
 type SimpleSettings struct {
 	// Application Type
 	AppType string `json:"type"`
-	// ClientId is the client id of the application
-	ClientId string `json:"client_id,omitempty"`
+	// ClientID is the client id of the application
+	ClientID string `json:"client_id,omitempty"`
 }
 
 type OAuthClientSettings struct {
 	// Oauth client application type
 	ApplicationType string `json:"application_type"`
 	// Oauth client id
-	ClientId string `json:"client_id,omitempty"`
+	ClientID string `json:"client_id,omitempty"`
 	// Oauth client secret
 	ClientSecret string `json:"client_secret,omitempty"`
 	// Oauth client uri
@@ -77,8 +77,8 @@ type Application struct {
 	Description string `json:"description,omitempty"`
 	// Application Type
 	Type string `json:"type,omitempty"`
-	// The ClientId identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.
-	ClientId string `json:"clientId,omitempty"`
+	// The ClientID identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.
+	ClientID string `json:"clientId,omitempty"`
 	// List of application Redirect Uris
 	RedirectUris []string `json:"redirectUris,omitempty"`
 

@@ -28,7 +28,7 @@ type Consumer struct {
 	// Consumer type (possible values TAG)
 	ConsumerType ConsumerType `json:"consumerType,omitempty"`
 	// Consumer ID
-	ConsumerId string `json:"consumerId,omitempty"`
+	ConsumerID string `json:"consumerId,omitempty"`
 }
 
 type Plan struct {

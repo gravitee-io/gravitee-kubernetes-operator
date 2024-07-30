@@ -19,7 +19,7 @@ import (
 )
 
 type Application struct {
-	Id          string                  `json:"id,omitempty"`
+	ID          string                  `json:"id,omitempty"`
 	Name        string                  `json:"name,omitempty"`
 	Status      string                  `json:"status,omitempty"`
 	Description string                  `json:"description,omitempty"`
@@ -34,7 +34,7 @@ type Application struct {
 
 type ApplicationMetaData struct {
 	Name          string                      `json:"name"`
-	ApplicationId string                      `json:"applicationId,omitempty"`
+	ApplicationID string                      `json:"applicationId,omitempty"`
 	Value         string                      `json:"value,omitempty"`
 	DefaultValue  string                      `json:"defaultValue,omitempty"`
 	Format        *application.MetaDataFormat `json:"format,omitempty"`

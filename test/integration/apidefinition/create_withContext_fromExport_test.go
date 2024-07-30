@@ -41,7 +41,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	It("should update existing api in management API", func() {
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithSecretFile).
-			WithAPI(constants.ApiWithIds).
+			WithAPI(constants.ApiWithIDs).
 			Build()
 
 		By("creating API in management api")

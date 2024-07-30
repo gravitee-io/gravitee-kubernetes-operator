@@ -253,7 +253,7 @@ issues:
   max-same-issues: 50
 
   exclude:
-    - ".*(Id|Api|Url|Http).* should be .*(ID|API|URL|HTTP).*"
+    - ".*(Api|Url|Http).* should be .*(API|URL|HTTP).*"
 
   exclude-rules:
     - source: "^//\\s*go:generate\\s"

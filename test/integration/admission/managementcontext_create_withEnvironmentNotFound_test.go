@@ -42,7 +42,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			WithContext(constants.ContextWithCredentialsFile).
 			Build()
 
-		fixtures.Context.Spec.EnvId = "unknown"
+		fixtures.Context.Spec.EnvID = "unknown"
 
 		By("validating the context")
 

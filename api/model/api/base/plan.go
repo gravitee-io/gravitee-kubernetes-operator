@@ -30,11 +30,11 @@ type PlanValidation string
 
 type Plan struct {
 	// Plan ID
-	Id string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// The plan Cross ID.
 	// This field is used to identify plans defined for an API
 	// that has been promoted between different environments.
-	CrossId string `json:"crossId,omitempty"`
+	CrossID string `json:"crossId,omitempty"`
 	// Plan Description
 	Description string `json:"description"`
 	// List of plan tags
@@ -71,11 +71,11 @@ func (plan *Plan) WithStatus(status PlanStatus) *Plan {
 }
 
 func (plan *Plan) WithID(id string) *Plan {
-	plan.Id = id
+	plan.ID = id
 	return plan
 }
 
 func (plan *Plan) WithCrossID(id string) *Plan {
-	plan.CrossId = id
+	plan.CrossID = id
 	return plan
 }

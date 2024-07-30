@@ -97,10 +97,10 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	apiDefinition.Status.EnvID = apim.EnvID()
 	apiDefinition.Status.OrgID = apim.OrgID()
 	apiDefinition.Status.State = base.ApiState(mgmtApi.State)
-	retrieveMgmtPlanIds(spec, mgmtApi)
+	retrieveMgmtPlanIDs(spec, mgmtApi)
 
 	if mgmtApi.ShouldSetKubernetesContext() {
-		if err := apim.APIs.SetKubernetesContext(apiDefinition.ID()); err != nil {
+		if err := apim.APIs.SetKubernetesContext(apiDefinition.GetID()); err != nil {
 			return errors.NewContextError(err)
 		}
 	}
@@ -112,11 +112,11 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	if err := deleteConfigMap(ctx, apiDefinition); err != nil {
 		return err
 	}
-	if err := apim.APIs.Deploy(apiDefinition.ID()); err != nil {
+	if err := apim.APIs.Deploy(apiDefinition.GetID()); err != nil {
 		return err
 	}
 	if formerStatus.State != spec.State {
-		return apim.APIs.UpdateState(apiDefinition.ID(), model.ApiStateToAction(spec.State))
+		return apim.APIs.UpdateState(apiDefinition.GetID(), model.ApiStateToAction(spec.State))
 	}
 
 	return nil

@@ -30,10 +30,10 @@ type Context struct {
 	BaseUrl string `json:"baseUrl"`
 	// An existing organization id targeted by the context on the management API instance.
 	// +kubebuilder:validation:Required
-	OrgId string `json:"organizationId"`
+	OrgID string `json:"organizationId"`
 	// An existing environment id targeted by the context within the organization.
 	// +kubebuilder:validation:Required
-	EnvId string `json:"environmentId"`
+	EnvID string `json:"environmentId"`
 	// Auth defines the authentication method used to connect to the API Management.
 	// Can be either basic authentication credentials, a bearer token
 	// or a reference to a kubernetes secret holding one of these two configurations.
@@ -46,14 +46,14 @@ func (c *Context) GetAuth() custom.Auth {
 	return c.Auth
 }
 
-// GetEnv implements custom.Context.
-func (c *Context) GetEnv() string {
-	return c.EnvId
+// GetEnvID implements custom.Context.
+func (c *Context) GetEnvID() string {
+	return c.EnvID
 }
 
-// GetOrg implements custom.Context.
-func (c *Context) GetOrg() string {
-	return c.OrgId
+// GetOrgID implements custom.Context.
+func (c *Context) GetOrgID() string {
+	return c.OrgID
 }
 
 // GetSecretRef implements custom.Context.

@@ -43,12 +43,12 @@ var _ = Describe("Update", labels.WithContext, func() {
 			Apply()
 
 		apim := apim.NewClient(ctx)
-		apiId := fixtures.APIv4.Status.ID
+		apiID := fixtures.APIv4.Status.ID
 
 		By("checking pages number in APIM")
 
 		Eventually(func() error {
-			pages, err := apim.Pages.FindByAPIV4(apiId)
+			pages, err := apim.Pages.FindByAPIV4(apiID)
 			if err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("checking that markdown page has been deleted in APIM")
 
 		Eventually(func() error {
-			pages, err := apim.Pages.FindByAPIV4(apiId, model.NewPageQuery().WithType("MARKDOWN"))
+			pages, err := apim.Pages.FindByAPIV4(apiID, model.NewPageQuery().WithType("MARKDOWN"))
 			if err != nil {
 				return err
 			}
