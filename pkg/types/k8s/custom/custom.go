@@ -44,9 +44,17 @@ type Resource interface {
 }
 
 // +k8s:deepcopy-gen=false
+type DefinitionContext interface {
+	GetOrigin() string
+	SetOrigin(string)
+}
+
+// +k8s:deepcopy-gen=false
 type ApiDefinition interface {
 	GetDefinitionVersion() ApiDefinitionVersion
 	GetContextPaths() ([]string, error)
+	SetDefinitionContext(DefinitionContext)
+	GetDefinitionContext() DefinitionContext
 }
 
 // +k8s:deepcopy-gen=false
@@ -55,6 +63,8 @@ type ApiDefinitionResource interface {
 	ApiDefinition
 	GetDefinition() ApiDefinition
 	PopulateIDs(context Context)
+	SetDefinitionContext(DefinitionContext)
+	GetDefinitionContext() DefinitionContext
 }
 
 // +k8s:deepcopy-gen=false

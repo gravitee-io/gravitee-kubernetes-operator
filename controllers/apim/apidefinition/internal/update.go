@@ -49,7 +49,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	spec := &cp.Spec
 	formerStatus := cp.Status
 
-	spec.SetDefinitionContext()
+	spec.EnsureDefinitionContext()
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
 		return err

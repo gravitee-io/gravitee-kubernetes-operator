@@ -17,6 +17,7 @@ package v4
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
@@ -103,6 +104,8 @@ const (
 	OriginManagement DefinitionContextOrigin = "MANAGEMENT"
 )
 
+var _ custom.DefinitionContext = &DefinitionContext{}
+
 type DefinitionContext struct {
 	// The definition context origin where the API definition is managed.
 	// The value is always `KUBERNETES` for an API managed by the operator.
@@ -128,19 +131,48 @@ func NewDefaultKubernetesContext() *DefinitionContext {
 	}
 }
 
-func (ctx DefinitionContext) MergeWith(rhs *DefinitionContext) *DefinitionContext {
-	lhs := new(DefinitionContext)
-	ctx.DeepCopyInto(lhs)
-	if rhs == nil {
+func (ctx *DefinitionContext) MergeWith(rhs custom.DefinitionContext) *DefinitionContext {
+	if reflect.ValueOf(rhs).IsNil() {
+		return ctx
+	}
+	if impl, ok := rhs.(*DefinitionContext); ok {
+		if ctx == nil {
+			return impl
+		}
+		lhs := new(DefinitionContext)
+		ctx.DeepCopyInto(lhs)
+		if impl.Origin != "" {
+			lhs.Origin = impl.Origin
+		}
+		if impl.SyncFrom != "" {
+			lhs.SyncFrom = impl.SyncFrom
+		}
 		return lhs
 	}
-	if rhs.Origin != "" {
-		lhs.Origin = rhs.Origin
+	return ctx
+}
+
+func (ctx *DefinitionContext) GetOrigin() string {
+	if ctx == nil {
+		return string(OriginKubernetes)
 	}
-	if rhs.SyncFrom != "" {
-		lhs.SyncFrom = rhs.SyncFrom
+	return string(ctx.Origin)
+}
+
+func (ctx *DefinitionContext) SetOrigin(origin string) {
+	if ctx != nil {
+		ctx.Origin = DefinitionContextOrigin(origin)
 	}
-	return lhs
+}
+
+func (api *Api) GetDefinitionContext() custom.DefinitionContext {
+	return api.DefinitionContext
+}
+
+func (api *Api) SetDefinitionContext(ctx custom.DefinitionContext) {
+	if impl, ok := ctx.(*DefinitionContext); ok {
+		api.DefinitionContext = impl
+	}
 }
 
 // Converts the API to its gateway definition equivalent.

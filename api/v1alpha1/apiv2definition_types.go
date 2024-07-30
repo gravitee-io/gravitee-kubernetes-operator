@@ -85,7 +85,7 @@ func (api *ApiDefinition) GetNamespacedName() *refs.NamespacedName {
 	return &refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }
 
-func (spec *ApiDefinitionV2Spec) SetDefinitionContext() {
+func (spec *ApiDefinitionV2Spec) EnsureDefinitionContext() {
 	spec.DefinitionContext = &v2.DefinitionContext{
 		Mode:     v2.ModeFullyManaged,
 		Origin:   v2.OriginKubernetes,
@@ -138,6 +138,14 @@ func (api *ApiDefinition) GetContextPaths() ([]string, error) {
 
 func (api *ApiDefinition) GetDefinition() custom.ApiDefinition {
 	return &api.Spec.Api
+}
+
+func (api *ApiDefinition) GetDefinitionContext() custom.DefinitionContext {
+	return api.Spec.GetDefinitionContext()
+}
+
+func (api *ApiDefinition) SetDefinitionContext(ctx custom.DefinitionContext) {
+	api.Spec.SetDefinitionContext(ctx)
 }
 
 func (api *ApiDefinition) PopulateIDs(_ custom.Context) {
