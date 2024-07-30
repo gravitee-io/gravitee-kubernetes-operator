@@ -21,6 +21,7 @@ import (
 )
 
 var _ custom.ApiDefinition = &Api{}
+var _ custom.DefinitionContext = &DefinitionContext{}
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
@@ -94,4 +95,27 @@ type DefinitionContext struct {
 	Mode string `json:"mode,omitempty"`
 	// +kubebuilder:default:=kubernetes
 	SyncFrom string `json:"syncFrom,omitempty"`
+}
+
+func (api *Api) GetDefinitionContext() custom.DefinitionContext {
+	return api.DefinitionContext
+}
+
+func (api *Api) SetDefinitionContext(ctx custom.DefinitionContext) {
+	if impl, ok := ctx.(*DefinitionContext); ok {
+		api.DefinitionContext = impl
+	}
+}
+
+func (ctx *DefinitionContext) GetOrigin() string {
+	if ctx == nil {
+		return OriginKubernetes
+	}
+	return ctx.Origin
+}
+
+func (ctx *DefinitionContext) SetOrigin(origin string) {
+	if ctx != nil {
+		ctx.Origin = origin
+	}
 }

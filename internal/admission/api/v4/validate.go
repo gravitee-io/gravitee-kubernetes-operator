@@ -114,6 +114,7 @@ func validateDryRun(ctx context.Context, api custom.ApiDefinitionResource) *erro
 	}
 
 	cp.PopulateIDs(apim.Context)
+	cp.SetDefinitionContext(v4.NewDefaultKubernetesContext().MergeWith(cp.GetDefinitionContext()))
 
 	impl, ok := cp.GetDefinition().(*v4.Api)
 	if !ok {

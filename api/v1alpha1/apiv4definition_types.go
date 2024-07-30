@@ -206,6 +206,14 @@ func (api *ApiV4Definition) GetDefinitionVersion() custom.ApiDefinitionVersion {
 	return custom.ApiV4
 }
 
+func (api *ApiV4Definition) GetDefinitionContext() custom.DefinitionContext {
+	return api.Spec.GetDefinitionContext()
+}
+
+func (api *ApiV4Definition) SetDefinitionContext(ctx custom.DefinitionContext) {
+	api.Spec.SetDefinitionContext(ctx)
+}
+
 func (api *ApiV4Definition) GetDefinition() custom.ApiDefinition {
 	return &api.Spec.Api
 }
