@@ -34,7 +34,7 @@ func resolveRefSpec[T any](
 	if err != nil {
 		return target, err
 	}
-	return Convert(dynamic.Object["spec"], target)
+	return convert(dynamic.Object["spec"], target)
 }
 
 func resolveRef[T any](
@@ -48,7 +48,7 @@ func resolveRef[T any](
 	if err != nil {
 		return target, err
 	}
-	return Convert(dynamic.Object, target)
+	return convert(dynamic.Object, target)
 }
 
 func resolveDynamic(

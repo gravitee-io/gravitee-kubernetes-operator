@@ -227,12 +227,12 @@ func (api *Api) GetDefinitionVersion() custom.ApiDefinitionVersion {
 	return custom.ApiV4
 }
 
-func (api *Api) GetContextPaths() ([]string, error) {
+func (api *Api) GetContextPaths() []string {
 	paths := make([]string, 0)
 	for _, l := range api.Listeners {
 		paths = append(paths, parseListener(l)...)
 	}
-	return paths, nil
+	return paths
 }
 
 func parseListener(l Listener) []string {

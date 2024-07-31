@@ -17,10 +17,8 @@ package admission
 import (
 	"context"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
@@ -31,25 +29,24 @@ import (
 var _ = Describe("Validate update", labels.WithoutContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := admission.AdmissionCtrl{}
 
 	It("should return error on API update with conflicting path", func() {
 		fixtures := fixture.
 			Builder().
+			WithAPI(constants.Api).
 			WithAPIv4(constants.ApiV4).
 			Build().
 			Apply()
 
-		By("Check API update validation")
+		By("checking that API update does not pass validation")
+
 		Eventually(func() error {
-			api := &v1alpha1.ApiV4Definition{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fixtures.APIv4.Name + "-duplicate",
-					Namespace: fixtures.APIv4.Namespace,
-				},
-			}
-			fixtures.APIv4.Spec.DeepCopyInto(&api.Spec)
-			_, err := admissionCtrl.ValidateUpdate(ctx, api, api)
+			desired := fixtures.APIv4.DeepCopy()
+			existingPath := fixtures.API.Spec.Proxy.VirtualHosts[0].Path
+			listener, _ := desired.Spec.Listeners[0].ToListener().(*v4.HttpListener)
+			listener.Paths[0].Path = existingPath
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, desired)
 			return err
 		}, constants.EventualTimeout, interval).ShouldNot(Succeed())
 	})

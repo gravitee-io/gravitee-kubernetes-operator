@@ -254,6 +254,7 @@ issues:
 
   exclude:
     - ".*(Api|Url|Http).* should be .*(API|URL|HTTP).*"
+    - 'declaration of "(err)" shadows declaration at'
 
   exclude-rules:
     - source: "^//\\s*go:generate\\s"
