@@ -16,11 +16,9 @@ package dynamic
 
 import (
 	"encoding/json"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-func Convert[T any](source any, target T) (T, error) {
+func convert[T any](source any, target T) (T, error) {
 	b, err := json.Marshal(source)
 	if err != nil {
 		return target, err
@@ -31,17 +29,4 @@ func Convert[T any](source any, target T) (T, error) {
 	}
 
 	return target, nil
-}
-
-func ConvertList[T any](list *unstructured.UnstructuredList) ([]T, error) {
-	apis := make([]T, 0)
-	t := new(T)
-	for _, it := range list.Items {
-		api, err := Convert(it.Object["spec"], *t)
-		if err != nil {
-			return apis, err
-		}
-		apis = append(apis, api)
-	}
-	return apis, nil
 }

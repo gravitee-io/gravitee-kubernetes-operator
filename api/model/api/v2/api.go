@@ -16,6 +16,8 @@
 package v2
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
@@ -77,9 +79,22 @@ func (api *Api) GetDefinitionVersion() custom.ApiDefinitionVersion {
 	return custom.ApiV2
 }
 
-// TODO implement when v2 admission handles paths
-func (api *Api) GetContextPaths() ([]string, error) {
-	return make([]string, 0), nil
+func (api *Api) GetContextPaths() []string {
+	paths := make([]string, 0)
+	proxy := api.Proxy
+	if proxy == nil {
+		return paths
+	}
+	for _, vh := range proxy.VirtualHosts {
+		host, path := vh.Host, vh.Path
+		if host != "" {
+			paths = append(paths, fmt.Sprintf("%s/%s", host, path))
+		} else {
+			paths = append(paths, path)
+		}
+	}
+
+	return paths
 }
 
 const (

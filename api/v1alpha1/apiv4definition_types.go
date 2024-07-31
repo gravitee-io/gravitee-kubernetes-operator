@@ -198,8 +198,15 @@ func (api *ApiV4Definition) GetObjectMeta() *metav1.ObjectMeta {
 	return &api.ObjectMeta
 }
 
-func (api *ApiV4Definition) GetContextPaths() ([]string, error) {
+func (api *ApiV4Definition) GetContextPaths() []string {
 	return api.Spec.GetContextPaths()
+}
+
+func (api *ApiV4Definition) GetRef() custom.ResourceRef {
+	return &refs.NamespacedName{
+		Name:      api.Name,
+		Namespace: api.Namespace,
+	}
 }
 
 func (api *ApiV4Definition) GetDefinitionVersion() custom.ApiDefinitionVersion {

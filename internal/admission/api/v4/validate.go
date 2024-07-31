@@ -16,23 +16,15 @@ package v4
 
 import (
 	"context"
-	"net/url"
-	"slices"
 
-	mbase "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	baseModel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
@@ -43,12 +35,11 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 			return errs
 		}
 
-		errs.Add(validateApiPlan(ctx, api))
+		errs.Add(validateApiPlans(ctx, api))
 		if errs.IsSevere() {
 			return errs
 		}
 
-		errs.Add(validateNoConflictingPath(ctx, api))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -59,7 +50,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateApiPlan(_ context.Context, api custom.ApiDefinitionResource) *errors.AdmissionError {
+func validateApiPlans(_ context.Context, api custom.ApiDefinitionResource) *errors.AdmissionError {
 	cp, _ := api.DeepCopyResource().(custom.ApiDefinitionResource)
 
 	apiDef, ok := cp.GetDefinition().(*v4.Api)
@@ -67,39 +58,12 @@ func validateApiPlan(_ context.Context, api custom.ApiDefinitionResource) *error
 		return errors.NewSevere("unable to validate the CRD because it is not a v4 API")
 	}
 
-	if apiDef.State == mbase.StateStarted &&
+	if apiDef.State == baseModel.StateStarted &&
 		len(apiDef.Plans) == 0 {
 		return errors.NewSevere("cannot apply API [%s]. Its state is set to STARTED,"+
 			" but the API has no plans. APIs must have at least one plan in order to be deployed.", apiDef.Name)
 	}
 
-	return nil
-}
-
-// TODO this should be move to base once implemented for v2
-func validateNoConflictingPath(ctx context.Context, api custom.ApiDefinitionResource) *errors.AdmissionError {
-	apiPaths, err := api.GetContextPaths()
-	if err != nil {
-		return errors.NewSevere(err.Error())
-	}
-	existingPaths, err := getExistingPaths(ctx, api)
-	if err != nil {
-		return errors.NewSevere(err.Error())
-	}
-	for _, apiPath := range apiPaths {
-		if _, pErr := url.Parse(apiPath); pErr != nil {
-			return errors.NewSevere(
-				"path [%s] is invalid",
-				apiPath,
-			)
-		}
-		if slices.Contains(existingPaths, apiPath) {
-			return errors.NewSevere(
-				"invalid API context path [%s]. Another API with the same path already exists",
-				apiPath,
-			)
-		}
-	}
 	return nil
 }
 
@@ -136,50 +100,4 @@ func validateDryRun(ctx context.Context, api custom.ApiDefinitionResource) *erro
 		errs.AddWarning(warning)
 	}
 	return errs
-}
-
-func getExistingPaths(ctx context.Context, api custom.ApiDefinitionResource) ([]string, error) {
-	existingPaths := make([]string, 0)
-	unstructuredList, err := getListOfExistingApis(ctx, api.GetNamespace())
-	if err != nil {
-		return existingPaths, err
-	}
-
-	for _, item := range unstructuredList.Items {
-		converted, cErr := dynamic.Convert(item.Object["spec"], new(v4.Api))
-		if cErr != nil {
-			return existingPaths, cErr
-		}
-		convertedPaths, pErr := converted.GetContextPaths()
-		if pErr != nil {
-			return existingPaths, pErr
-		}
-		if !isCurrentApi(item, api) {
-			existingPaths = append(existingPaths, convertedPaths...)
-		}
-	}
-	return existingPaths, nil
-}
-
-func isCurrentApi(item unstructured.Unstructured, api custom.ApiDefinitionResource) bool {
-	return api.GetName() == item.Object["metadata"].(map[string]interface{})["name"] &&
-		api.GetNamespace() == item.Object["metadata"].(map[string]interface{})["namespace"]
-}
-
-func getListOfExistingApis(ctx context.Context, ns string) (*unstructured.UnstructuredList, error) {
-	gvr := schema.GroupVersionResource{
-		Group:    "gravitee.io",
-		Version:  "v1alpha1",
-		Resource: "apiv4definitions",
-	}
-	if !env.Config.CheckApiContextPathConflictInCluster {
-		return dynamic.GetClient().
-			Resource(gvr).
-			Namespace(ns).
-			List(ctx, metav1.ListOptions{})
-	} else {
-		return dynamic.GetClient().
-			Resource(gvr).
-			List(ctx, metav1.ListOptions{})
-	}
 }

@@ -132,7 +132,7 @@ func (api *ApiDefinition) HasContext() bool {
 	return api.Spec.Context != nil
 }
 
-func (api *ApiDefinition) GetContextPaths() ([]string, error) {
+func (api *ApiDefinition) GetContextPaths() []string {
 	return api.Spec.GetContextPaths()
 }
 
@@ -146,6 +146,13 @@ func (api *ApiDefinition) GetDefinitionContext() custom.DefinitionContext {
 
 func (api *ApiDefinition) SetDefinitionContext(ctx custom.DefinitionContext) {
 	api.Spec.SetDefinitionContext(ctx)
+}
+
+func (api *ApiDefinition) GetRef() custom.ResourceRef {
+	return &refs.NamespacedName{
+		Name:      api.Name,
+		Namespace: api.Namespace,
+	}
 }
 
 func (api *ApiDefinition) PopulateIDs(_ custom.Context) {
