@@ -29,8 +29,7 @@ import (
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -41,13 +40,13 @@ const requeueAfterTime = time.Second * 5
 
 func Reconcile(
 	ctx context.Context,
-	apiDefinition custom.ApiDefinitionResource,
+	apiDefinition core.ApiDefinitionResource,
 	r record.EventRecorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	events := event.NewRecorder(r)
 
-	if apiDefinition.GetAnnotations()[keys.IngressTemplateAnnotation] == "true" {
+	if apiDefinition.GetAnnotations()[core.IngressTemplateAnnotation] == "true" {
 		logger.Info("syncing template", "template", apiDefinition.GetName())
 		if err := template.Compile(ctx, apiDefinition); err != nil {
 			return ctrl.Result{}, err
@@ -66,18 +65,18 @@ func Reconcile(
 
 func reconcileApiDefinition(
 	ctx context.Context,
-	apiDefinition custom.ApiDefinitionResource,
+	apiDefinition core.ApiDefinitionResource,
 	events *event.Recorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	dc := apiDefinition.DeepCopyResource()
 	status := apiDefinition.GetStatus()
 	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), dc, func() error {
-		util.AddFinalizer(apiDefinition, keys.ApiDefinitionFinalizer)
-		k8s.AddAnnotation(apiDefinition, keys.LastSpecHash, apiDefinition.GetSpec().Hash())
+		util.AddFinalizer(apiDefinition, core.ApiDefinitionFinalizer)
+		k8s.AddAnnotation(apiDefinition, core.LastSpecHashAnnotation, apiDefinition.GetSpec().Hash())
 
 		if err := template.Compile(ctx, apiDefinition); err != nil {
-			status.SetProcessingStatus(custom.ProcessingStatusFailed)
+			status.SetProcessingStatus(core.ProcessingStatusFailed)
 			return err
 		}
 

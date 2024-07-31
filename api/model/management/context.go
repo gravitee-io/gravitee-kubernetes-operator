@@ -17,12 +17,12 @@ package management
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
-var _ custom.Auth = &Auth{}
-var _ custom.BasicAuth = &BasicAuth{}
-var _ custom.Context = &Context{}
+var _ core.Auth = &Auth{}
+var _ core.BasicAuth = &BasicAuth{}
+var _ core.Context = &Context{}
 
 type Context struct {
 	// The URL of a management API instance
@@ -42,7 +42,7 @@ type Context struct {
 }
 
 // GetAuth implements custom.Context.
-func (c *Context) GetAuth() custom.Auth {
+func (c *Context) GetAuth() core.Auth {
 	return c.Auth
 }
 
@@ -57,7 +57,7 @@ func (c *Context) GetOrgID() string {
 }
 
 // GetSecretRef implements custom.Context.
-func (c *Context) GetSecretRef() custom.ResourceRef {
+func (c *Context) GetSecretRef() core.ResourceRef {
 	return c.Auth.SecretRef
 }
 
@@ -87,12 +87,12 @@ func (in *Auth) HasCredentials() bool {
 }
 
 // GetCredentials implements custom.Auth.
-func (in *Auth) GetCredentials() custom.BasicAuth {
+func (in *Auth) GetCredentials() core.BasicAuth {
 	return in.Credentials
 }
 
 // GetSecretRef implements custom.Auth.
-func (in *Auth) GetSecretRef() custom.ResourceRef {
+func (in *Auth) GetSecretRef() core.ResourceRef {
 	return in.SecretRef
 }
 

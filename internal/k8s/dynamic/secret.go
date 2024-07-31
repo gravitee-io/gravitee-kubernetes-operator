@@ -19,18 +19,18 @@ import (
 
 	coreV1 "k8s.io/api/core/v1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func ExpectResolvedSecret(ctx context.Context, ref custom.ResourceRef, parentNs string) error {
+func ExpectResolvedSecret(ctx context.Context, ref core.ResourceRef, parentNs string) error {
 	if _, err := ResolveSecret(ctx, ref, parentNs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ResolveSecret(ctx context.Context, ref custom.ResourceRef, parentNs string) (*coreV1.Secret, error) {
+func ResolveSecret(ctx context.Context, ref core.ResourceRef, parentNs string) (*coreV1.Secret, error) {
 	return resolveRef(ctx, ref, parentNs, schema.GroupVersionResource{
 		Group:    "",
 		Version:  "v1",

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package custom
+package core
 
 import (
 	"fmt"
@@ -40,6 +40,7 @@ type Resource interface {
 	client.Object
 	GetSpec() Spec
 	GetStatus() Status
+	GetRef() ResourceRef
 	DeepCopyResource() Resource
 }
 
@@ -65,7 +66,6 @@ type ApiDefinitionResource interface {
 	PopulateIDs(context Context)
 	SetDefinitionContext(DefinitionContext)
 	GetDefinitionContext() DefinitionContext
-	GetRef() ResourceRef
 }
 
 // +k8s:deepcopy-gen=false

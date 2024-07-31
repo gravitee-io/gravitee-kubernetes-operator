@@ -27,8 +27,8 @@ import (
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -60,9 +60,9 @@ type ApiDefinitionStatus struct {
 	base.Status `json:",inline"`
 }
 
-var _ custom.ApiDefinitionResource = &ApiDefinition{}
-var _ custom.Status = &ApiDefinitionStatus{}
-var _ custom.Spec = &ApiDefinitionV2Spec{}
+var _ core.ApiDefinitionResource = &ApiDefinition{}
+var _ core.Status = &ApiDefinitionStatus{}
+var _ core.Spec = &ApiDefinitionV2Spec{}
 
 // ApiDefinition is the Schema for the apidefinitions API.
 // +kubebuilder:object:root=true
@@ -108,23 +108,23 @@ func (api *ApiDefinition) GetOrgID() string {
 	return api.Status.OrgID
 }
 
-func (api *ApiDefinition) GetDefinitionVersion() custom.ApiDefinitionVersion {
-	return custom.ApiV2
+func (api *ApiDefinition) GetDefinitionVersion() core.ApiDefinitionVersion {
+	return core.ApiV2
 }
 
-func (api *ApiDefinition) GetSpec() custom.Spec {
+func (api *ApiDefinition) GetSpec() core.Spec {
 	return &api.Spec
 }
 
-func (api *ApiDefinition) GetStatus() custom.Status {
+func (api *ApiDefinition) GetStatus() core.Status {
 	return &api.Status
 }
 
-func (api *ApiDefinition) DeepCopyResource() custom.Resource {
+func (api *ApiDefinition) DeepCopyResource() core.Resource {
 	return api.DeepCopy()
 }
 
-func (api *ApiDefinition) ContextRef() custom.ResourceRef {
+func (api *ApiDefinition) ContextRef() core.ResourceRef {
 	return api.Spec.Context
 }
 
@@ -136,26 +136,26 @@ func (api *ApiDefinition) GetContextPaths() []string {
 	return api.Spec.GetContextPaths()
 }
 
-func (api *ApiDefinition) GetDefinition() custom.ApiDefinition {
+func (api *ApiDefinition) GetDefinition() core.ApiDefinition {
 	return &api.Spec.Api
 }
 
-func (api *ApiDefinition) GetDefinitionContext() custom.DefinitionContext {
+func (api *ApiDefinition) GetDefinitionContext() core.DefinitionContext {
 	return api.Spec.GetDefinitionContext()
 }
 
-func (api *ApiDefinition) SetDefinitionContext(ctx custom.DefinitionContext) {
+func (api *ApiDefinition) SetDefinitionContext(ctx core.DefinitionContext) {
 	api.Spec.SetDefinitionContext(ctx)
 }
 
-func (api *ApiDefinition) GetRef() custom.ResourceRef {
+func (api *ApiDefinition) GetRef() core.ResourceRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,
 		Namespace: api.Namespace,
 	}
 }
 
-func (api *ApiDefinition) PopulateIDs(_ custom.Context) {
+func (api *ApiDefinition) PopulateIDs(_ core.Context) {
 	api.Spec.ID = api.pickID()
 	api.Spec.CrossID = api.pickCrossID()
 	api.generateEmptyPlanCrossIDs()
@@ -228,7 +228,7 @@ func (spec *ApiDefinitionV2Spec) Hash() string {
 	return hash.Calculate(spec)
 }
 
-func (s *ApiDefinitionStatus) SetProcessingStatus(status custom.ProcessingStatus) {
+func (s *ApiDefinitionStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
 }
 

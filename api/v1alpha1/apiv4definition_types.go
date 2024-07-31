@@ -23,8 +23,8 @@ import (
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -43,9 +43,9 @@ type ApiV4DefinitionStatus struct {
 	v4.Status `json:",inline"`
 }
 
-var _ custom.ApiDefinitionResource = &ApiV4Definition{}
-var _ custom.Status = &ApiDefinitionStatus{}
-var _ custom.Spec = &ApiDefinitionV2Spec{}
+var _ core.ApiDefinitionResource = &ApiV4Definition{}
+var _ core.Status = &ApiDefinitionStatus{}
+var _ core.Spec = &ApiDefinitionV2Spec{}
 
 // ApiV4Definition is the Schema for the v4 apidefinitions API.
 // +kubebuilder:object:root=true
@@ -73,7 +73,7 @@ func (api *ApiV4Definition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-func (api *ApiV4Definition) PopulateIDs(context custom.Context) {
+func (api *ApiV4Definition) PopulateIDs(context core.Context) {
 	api.Spec.ID = api.pickID(context)
 	api.Spec.CrossID = api.pickCrossID()
 	api.Spec.Pages = api.pickPageIDs()
@@ -85,7 +85,7 @@ func (api *ApiV4Definition) PopulateIDs(context custom.Context) {
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiV4Definition) pickID(mCtx custom.Context) string {
+func (api *ApiV4Definition) pickID(mCtx core.Context) string {
 	if api.Status.ID != "" {
 		return api.Status.ID
 	}
@@ -166,19 +166,19 @@ func (api *ApiV4Definition) GetOrgID() string {
 	return api.Status.OrgID
 }
 
-func (api *ApiV4Definition) GetSpec() custom.Spec {
+func (api *ApiV4Definition) GetSpec() core.Spec {
 	return &api.Spec
 }
 
-func (api *ApiV4Definition) GetStatus() custom.Status {
+func (api *ApiV4Definition) GetStatus() core.Status {
 	return &api.Status
 }
 
-func (api *ApiV4Definition) DeepCopyResource() custom.Resource {
+func (api *ApiV4Definition) DeepCopyResource() core.Resource {
 	return api.DeepCopy()
 }
 
-func (api *ApiV4Definition) ContextRef() custom.ResourceRef {
+func (api *ApiV4Definition) ContextRef() core.ResourceRef {
 	return api.Spec.Context
 }
 
@@ -186,8 +186,8 @@ func (api *ApiV4Definition) HasContext() bool {
 	return api.Spec.Context != nil
 }
 
-func (api *ApiV4Definition) Version() custom.ApiDefinitionVersion {
-	return custom.ApiV4
+func (api *ApiV4Definition) Version() core.ApiDefinitionVersion {
+	return core.ApiV4
 }
 
 func (api *ApiV4Definition) GetNamespacedName() *refs.NamespacedName {
@@ -202,26 +202,26 @@ func (api *ApiV4Definition) GetContextPaths() []string {
 	return api.Spec.GetContextPaths()
 }
 
-func (api *ApiV4Definition) GetRef() custom.ResourceRef {
+func (api *ApiV4Definition) GetRef() core.ResourceRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,
 		Namespace: api.Namespace,
 	}
 }
 
-func (api *ApiV4Definition) GetDefinitionVersion() custom.ApiDefinitionVersion {
-	return custom.ApiV4
+func (api *ApiV4Definition) GetDefinitionVersion() core.ApiDefinitionVersion {
+	return core.ApiV4
 }
 
-func (api *ApiV4Definition) GetDefinitionContext() custom.DefinitionContext {
+func (api *ApiV4Definition) GetDefinitionContext() core.DefinitionContext {
 	return api.Spec.GetDefinitionContext()
 }
 
-func (api *ApiV4Definition) SetDefinitionContext(ctx custom.DefinitionContext) {
+func (api *ApiV4Definition) SetDefinitionContext(ctx core.DefinitionContext) {
 	api.Spec.SetDefinitionContext(ctx)
 }
 
-func (api *ApiV4Definition) GetDefinition() custom.ApiDefinition {
+func (api *ApiV4Definition) GetDefinition() core.ApiDefinition {
 	return &api.Spec.Api
 }
 
@@ -233,7 +233,7 @@ func (spec *ApiV4DefinitionSpec) GetManagementContext() *refs.NamespacedName {
 	return spec.Context
 }
 
-func (s *ApiV4DefinitionStatus) SetProcessingStatus(status custom.ProcessingStatus) {
+func (s *ApiV4DefinitionStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
 }
 

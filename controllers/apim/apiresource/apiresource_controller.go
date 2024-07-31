@@ -25,8 +25,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -65,8 +65,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 	dc := apiResource.DeepCopy()
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
-		util.AddFinalizer(apiResource, keys.ApiResourceFinalizer)
-		k8s.AddAnnotation(apiResource, keys.LastSpecHash, hash.Calculate(&apiResource.Spec))
+		util.AddFinalizer(apiResource, core.ApiResourceFinalizer)
+		k8s.AddAnnotation(apiResource, core.LastSpecHashAnnotation, hash.Calculate(&apiResource.Spec))
 
 		if err := template.Compile(ctx, apiResource); err != nil {
 			return err

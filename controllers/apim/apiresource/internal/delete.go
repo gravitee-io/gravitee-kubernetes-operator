@@ -20,9 +20,9 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -30,7 +30,7 @@ func Delete(
 	ctx context.Context,
 	resource *v1alpha1.ApiResource,
 ) error {
-	if !util.ContainsFinalizer(resource, keys.ApiResourceFinalizer) {
+	if !util.ContainsFinalizer(resource, core.ApiResourceFinalizer) {
 		return nil
 	}
 
@@ -64,7 +64,7 @@ func Delete(
 		return fmt.Errorf("resource is referenced and will remain")
 	}
 
-	util.RemoveFinalizer(resource, keys.ApiResourceFinalizer)
+	util.RemoveFinalizer(resource, core.ApiResourceFinalizer)
 
 	return nil
 }

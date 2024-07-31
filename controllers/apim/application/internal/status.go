@@ -18,8 +18,8 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
 
 func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application) error {
@@ -28,11 +28,11 @@ func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application)
 	}
 
 	application.Status.ObservedGeneration = application.ObjectMeta.Generation
-	application.Status.ProcessingStatus = custom.ProcessingStatusCompleted
+	application.Status.ProcessingStatus = core.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, application)
 }
 
 func UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application) error {
-	application.Status.ProcessingStatus = custom.ProcessingStatusFailed
+	application.Status.ProcessingStatus = core.ProcessingStatusFailed
 	return k8s.GetClient().Status().Update(ctx, application)
 }

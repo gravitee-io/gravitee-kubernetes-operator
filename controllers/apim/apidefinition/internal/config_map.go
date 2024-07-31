@@ -20,9 +20,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	types1 "github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,7 +62,7 @@ func updateConfigMap(
 
 func saveConfigMap(
 	ctx context.Context,
-	apiDefinition types1.ApiDefinitionResource,
+	apiDefinition core.ApiDefinitionResource,
 ) error {
 	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}
@@ -85,8 +84,8 @@ func saveConfigMap(
 
 	cm.CreationTimestamp = metav1.Now()
 	cm.Labels = map[string]string{
-		managedByKey: keys.CrdGroup,
-		gioTypeKey:   keys.CrdApiDefinitionResource + "." + keys.CrdGroup,
+		managedByKey: core.CrdGroup,
+		gioTypeKey:   core.CrdApiDefinitionResource + "." + core.CrdGroup,
 	}
 
 	cm.Data = map[string]string{

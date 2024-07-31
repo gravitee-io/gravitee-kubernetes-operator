@@ -16,11 +16,11 @@
 package refs
 
 import (
-	types1 "github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ types1.ResourceRef = &NamespacedName{}
+var _ core.ResourceRef = &NamespacedName{}
 
 type NamespacedName struct {
 	Name      string `json:"name"`

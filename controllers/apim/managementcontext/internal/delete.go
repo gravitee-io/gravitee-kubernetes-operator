@@ -19,9 +19,9 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"golang.org/x/net/context"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -30,7 +30,7 @@ func Delete(
 	ctx context.Context,
 	instance *v1alpha1.ManagementContext,
 ) error {
-	if !util.ContainsFinalizer(instance, keys.ManagementContextFinalizer) {
+	if !util.ContainsFinalizer(instance, core.ManagementContextFinalizer) {
 		return nil
 	}
 
@@ -82,7 +82,7 @@ func Delete(
 			instance.Name, len(apps.Items))
 	}
 
-	util.RemoveFinalizer(instance, keys.ManagementContextFinalizer)
+	util.RemoveFinalizer(instance, core.ManagementContextFinalizer)
 
 	return nil
 }

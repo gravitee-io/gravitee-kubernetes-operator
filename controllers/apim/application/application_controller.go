@@ -30,8 +30,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/go-logr/logr"
@@ -78,11 +77,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := application.DeepCopy()
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
-		util.AddFinalizer(application, keys.ApplicationFinalizer)
-		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
+		util.AddFinalizer(application, core.ApplicationFinalizer)
+		k8s.AddAnnotation(application, core.LastSpecHashAnnotation, hash.Calculate(&application.Spec))
 
 		if err := template.Compile(ctx, application); err != nil {
-			application.Status.ProcessingStatus = custom.ProcessingStatusFailed
+			application.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
 

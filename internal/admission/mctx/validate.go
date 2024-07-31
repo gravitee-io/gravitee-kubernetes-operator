@@ -18,16 +18,16 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if context, ok := obj.(custom.ContextResource); ok {
+	if context, ok := obj.(core.ContextResource); ok {
 		errs.Add(validateSecretRef(ctx, context))
 		errs.Add(validateContextIsAvailable(ctx, context))
 	}
@@ -35,7 +35,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateSecretRef(ctx context.Context, context custom.ContextResource) *errors.AdmissionError {
+func validateSecretRef(ctx context.Context, context core.ContextResource) *errors.AdmissionError {
 	if context.HasSecretRef() {
 		if err := dynamic.ExpectResolvedSecret(ctx, context.GetSecretRef(), context.GetNamespace()); err != nil {
 			return errors.NewSevere(
@@ -47,7 +47,7 @@ func validateSecretRef(ctx context.Context, context custom.ContextResource) *err
 	return nil
 }
 
-func validateContextIsAvailable(ctx context.Context, context custom.ContextResource) *errors.AdmissionError {
+func validateContextIsAvailable(ctx context.Context, context core.ContextResource) *errors.AdmissionError {
 	apim, err := apim.FromContext(ctx, context, context.GetNamespace())
 	if err != nil {
 		return errors.NewSevere(err.Error())

@@ -15,11 +15,11 @@
 package apim
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
 
-func toHttpAuth(management custom.Context) *http.Auth {
+func toHttpAuth(management core.Context) *http.Auth {
 	if !management.HasAuthentication() {
 		return nil
 	}
@@ -30,7 +30,7 @@ func toHttpAuth(management custom.Context) *http.Auth {
 	}
 }
 
-func toBasicAuth(auth custom.Auth) *http.BasicAuth {
+func toBasicAuth(auth core.Auth) *http.BasicAuth {
 	if auth == nil || !auth.HasCredentials() {
 		return nil
 	}
@@ -41,7 +41,7 @@ func toBasicAuth(auth custom.Auth) *http.BasicAuth {
 	}
 }
 
-func toBearer(auth custom.Auth) http.BearerToken {
+func toBearer(auth core.Auth) http.BearerToken {
 	if auth == nil {
 		return ""
 	}

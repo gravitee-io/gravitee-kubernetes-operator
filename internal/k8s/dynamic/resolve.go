@@ -17,7 +17,7 @@ package dynamic
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -25,7 +25,7 @@ import (
 
 func resolveRefSpec[T any](
 	ctx context.Context,
-	ref custom.ResourceRef,
+	ref core.ResourceRef,
 	parentNs string,
 	gvr schema.GroupVersionResource,
 	target T,
@@ -39,7 +39,7 @@ func resolveRefSpec[T any](
 
 func resolveRef[T any](
 	ctx context.Context,
-	ref custom.ResourceRef,
+	ref core.ResourceRef,
 	parentNs string,
 	gvr schema.GroupVersionResource,
 	target T,
@@ -53,7 +53,7 @@ func resolveRef[T any](
 
 func resolveDynamic(
 	ctx context.Context,
-	ref custom.ResourceRef,
+	ref core.ResourceRef,
 	parentNs string,
 	gvr schema.GroupVersionResource,
 ) (*unstructured.Unstructured, error) {

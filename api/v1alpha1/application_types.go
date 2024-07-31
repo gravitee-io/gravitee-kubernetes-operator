@@ -21,13 +21,13 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ custom.ContextAwareResource = &Application{}
+var _ core.ContextAwareResource = &Application{}
 
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
@@ -72,16 +72,16 @@ func init() {
 }
 
 // GetSpec implements custom.Resource.
-func (app *Application) GetSpec() custom.Spec {
+func (app *Application) GetSpec() core.Spec {
 	return &app.Spec
 }
 
 // GetStatus implements custom.Resource.
-func (app *Application) GetStatus() custom.Status {
+func (app *Application) GetStatus() core.Status {
 	return &app.Status
 }
 
-func (app *Application) ContextRef() custom.ResourceRef {
+func (app *Application) ContextRef() core.ResourceRef {
 	return app.Spec.Context
 }
 
@@ -101,8 +101,15 @@ func (app *Application) GetEnvID() string {
 	return app.Status.EnvID
 }
 
-func (app *Application) DeepCopyResource() custom.Resource {
+func (app *Application) DeepCopyResource() core.Resource {
 	return app.DeepCopy()
+}
+
+func (app *Application) GetRef() core.ResourceRef {
+	return &refs.NamespacedName{
+		Name:      app.Name,
+		Namespace: app.Namespace,
+	}
 }
 
 func (spec *ApplicationSpec) Hash() string {
@@ -135,6 +142,6 @@ func (s *ApplicationStatus) SetObservedGeneration(g int64) {
 	s.ObservedGeneration = g
 }
 
-func (s *ApplicationStatus) SetProcessingStatus(status custom.ProcessingStatus) {
+func (s *ApplicationStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.Status.ProcessingStatus = status
 }

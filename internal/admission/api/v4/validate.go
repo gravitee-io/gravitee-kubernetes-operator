@@ -22,14 +22,14 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if api, ok := obj.(custom.ApiDefinitionResource); ok {
+	if api, ok := obj.(core.ApiDefinitionResource); ok {
 		errs = errs.MergeWith(base.ValidateCreate(ctx, obj))
 		if errs.IsSevere() {
 			return errs
@@ -50,8 +50,8 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateApiPlans(_ context.Context, api custom.ApiDefinitionResource) *errors.AdmissionError {
-	cp, _ := api.DeepCopyResource().(custom.ApiDefinitionResource)
+func validateApiPlans(_ context.Context, api core.ApiDefinitionResource) *errors.AdmissionError {
+	cp, _ := api.DeepCopyResource().(core.ApiDefinitionResource)
 
 	apiDef, ok := cp.GetDefinition().(*v4.Api)
 	if !ok {
@@ -67,10 +67,10 @@ func validateApiPlans(_ context.Context, api custom.ApiDefinitionResource) *erro
 	return nil
 }
 
-func validateDryRun(ctx context.Context, api custom.ApiDefinitionResource) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, api core.ApiDefinitionResource) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := api.DeepCopyResource().(custom.ApiDefinitionResource)
+	cp, _ := api.DeepCopyResource().(core.ApiDefinitionResource)
 
 	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {

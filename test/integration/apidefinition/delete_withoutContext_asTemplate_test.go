@@ -20,7 +20,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -50,7 +50,7 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 			if err != nil {
 				return err
 			}
-			return assert.HasFinalizer(fixtures.API, keys.ApiDefinitionTemplateFinalizer)
+			return assert.HasFinalizer(fixtures.API, core.ApiDefinitionTemplateFinalizer)
 		}, timeout, interval).Should(Succeed())
 
 		By("deleting the template")

@@ -20,8 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	netv1 "k8s.io/api/networking/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,15 +32,15 @@ import (
 // First return value defines if we should requeue or not.
 func SyncApiDefinitionTemplate(
 	ctx context.Context,
-	api custom.ApiDefinitionResource, ns string) error {
+	api core.ApiDefinitionResource, ns string) error {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
 	// deletion by populating .metadata.deletionTimestamp
 	if !api.GetDeletionTimestamp().IsZero() {
 		return doDelete(ctx, api, ns)
 	}
 
-	if !util.ContainsFinalizer(api, keys.ApiDefinitionTemplateFinalizer) {
-		util.AddFinalizer(api, keys.ApiDefinitionTemplateFinalizer)
+	if !util.ContainsFinalizer(api, core.ApiDefinitionTemplateFinalizer) {
+		util.AddFinalizer(api, core.ApiDefinitionTemplateFinalizer)
 		return k8s.GetClient().Update(ctx, api)
 	}
 
@@ -49,7 +48,7 @@ func SyncApiDefinitionTemplate(
 }
 
 func doDelete(ctx context.Context, apiDefinition client.Object, namespace string) error {
-	if !util.ContainsFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer) {
+	if !util.ContainsFinalizer(apiDefinition, core.ApiDefinitionTemplateFinalizer) {
 		return nil
 	}
 
@@ -64,7 +63,7 @@ func doDelete(ctx context.Context, apiDefinition client.Object, namespace string
 	var ingresses []string
 
 	for i := range ingressList.Items {
-		if ingressList.Items[i].GetAnnotations()[keys.IngressTemplateAnnotation] == apiDefinition.GetName() {
+		if ingressList.Items[i].GetAnnotations()[core.IngressTemplateAnnotation] == apiDefinition.GetName() {
 			ingresses = append(ingresses, ingressList.Items[i].GetName())
 		}
 	}
@@ -74,7 +73,7 @@ func doDelete(ctx context.Context, apiDefinition client.Object, namespace string
 		return fmt.Errorf("can not delete %s %v depends on it", apiDefinition.GetName(), ingresses)
 	}
 
-	util.RemoveFinalizer(apiDefinition, keys.ApiDefinitionTemplateFinalizer)
+	util.RemoveFinalizer(apiDefinition, core.ApiDefinitionTemplateFinalizer)
 
 	return k8s.GetClient().Update(ctx, apiDefinition)
 }

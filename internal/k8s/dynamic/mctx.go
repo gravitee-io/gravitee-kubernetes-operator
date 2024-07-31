@@ -18,8 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -29,17 +28,17 @@ const (
 	passwordSecretKey    = "password"
 )
 
-func ExpectResolvedContext(ctx context.Context, ref custom.ResourceRef, parentNs string) error {
+func ExpectResolvedContext(ctx context.Context, ref core.ResourceRef, parentNs string) error {
 	if _, err := ResolveContext(ctx, ref, parentNs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ResolveContext(ctx context.Context, ref custom.ResourceRef, parentNs string) (*management.Context, error) {
+func ResolveContext(ctx context.Context, ref core.ResourceRef, parentNs string) (*management.Context, error) {
 	context, err := resolveRefSpec(ctx, ref, parentNs, schema.GroupVersionResource{
-		Group:    keys.CrdGroup,
-		Version:  keys.CrdVersion,
+		Group:    core.CrdGroup,
+		Version:  core.CrdVersion,
 		Resource: "managementcontexts",
 	}, new(management.Context))
 	if err != nil {

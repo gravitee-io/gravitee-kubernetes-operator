@@ -17,7 +17,7 @@ package fixture
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -73,7 +73,7 @@ func (o *Objects) applyIngress(cli client.Client, ctx context.Context) {
 		if err != nil {
 			return err
 		}
-		return assert.HasFinalizer(o.Ingress, keys.IngressFinalizer)
+		return assert.HasFinalizer(o.Ingress, core.IngressFinalizer)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Ingress.Name)
 }
 
@@ -85,7 +85,7 @@ func (o *Objects) applyAPIv4(cli client.Client, ctx context.Context) {
 			return err
 		}
 		if isTemplate(o.APIv4) {
-			return assert.HasFinalizer(o.APIv4, keys.ApiDefinitionTemplateFinalizer)
+			return assert.HasFinalizer(o.APIv4, core.ApiDefinitionTemplateFinalizer)
 		}
 		if err = assert.ApiV4Completed(o.APIv4); err != nil {
 			return assert.ApiV4Failed(o.APIv4)
@@ -102,7 +102,7 @@ func (o *Objects) applyAPI(cli client.Client, ctx context.Context) {
 			return err
 		}
 		if isTemplate(o.API) {
-			return assert.HasFinalizer(o.API, keys.ApiDefinitionTemplateFinalizer)
+			return assert.HasFinalizer(o.API, core.ApiDefinitionTemplateFinalizer)
 		}
 		if err = assert.ApiCompleted(o.API); err != nil {
 			return assert.ApiFailed(o.API)
@@ -132,7 +132,7 @@ func (o *Objects) applyResource(cli client.Client, ctx context.Context) {
 		if err != nil {
 			return err
 		}
-		return assert.HasFinalizer(o.Resource, keys.ApiResourceFinalizer)
+		return assert.HasFinalizer(o.Resource, core.ApiResourceFinalizer)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Resource.Name)
 }
 
@@ -143,6 +143,6 @@ func (o *Objects) applyContext(cli client.Client, ctx context.Context) {
 		if err != nil {
 			return err
 		}
-		return assert.HasFinalizer(o.Context, keys.ManagementContextFinalizer)
+		return assert.HasFinalizer(o.Context, core.ManagementContextFinalizer)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Context.Name)
 }

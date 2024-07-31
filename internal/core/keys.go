@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package keys
+package core
 
 // Kubernetes Ingresses.
 const (
@@ -23,7 +23,7 @@ const (
 	IngressClassAnnotationValue = "graviteeio"
 	IngressTemplateAnnotation   = "gravitee.io/template"
 	GraviteePemRegistryLabel    = "kubernetes-pem-registry"
-	LastSpecHash                = "gravitee.io/last-spec-hash"
+	LastSpecHashAnnotation      = "gravitee.io/last-spec-hash"
 )
 
 // Gravitee.io CRDs.
