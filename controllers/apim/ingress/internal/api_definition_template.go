@@ -20,9 +20,9 @@ import (
 	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress/internal/mapper"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -39,7 +39,7 @@ func resolveApiDefinitionTemplate(
 ) (*v1alpha1.ApiDefinition, error) {
 	var apiDefinition *v1alpha1.ApiDefinition
 
-	if name, ok := ingress.Annotations[keys.IngressTemplateAnnotation]; ok {
+	if name, ok := ingress.Annotations[core.IngressTemplateAnnotation]; ok {
 		apiDefinition = &v1alpha1.ApiDefinition{}
 		cli := k8s.GetClient()
 		if err := cli.Get(

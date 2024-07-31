@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
 const (
@@ -79,7 +79,7 @@ func init() {
 	Config.WebhookPort = parseInt(WebhookPort, defaultWebhookPort)
 	Config.CheckApiContextPathConflictInCluster = os.Getenv(CheckApiContextPathConflictInCluster) == TrueString
 	var ingressClass string
-	if ingressClass = keys.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
+	if ingressClass = core.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
 		ingressClass = os.Getenv(IngressClasses)
 	}
 	Config.IngressClasses = strings.Split(ingressClass, ",")

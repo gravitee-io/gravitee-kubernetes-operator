@@ -19,9 +19,9 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 )
 
 // APIM wraps services needed to sync resources with a given environment on a Gravitee.io APIM instance.
@@ -30,7 +30,7 @@ type APIM struct {
 	Applications *service.Applications
 	Env          *service.Env
 
-	Context custom.Context
+	Context core.Context
 }
 
 // EnvID returns the environment ID of the current managed APIM instance.
@@ -44,7 +44,7 @@ func (apim *APIM) OrgID() string {
 }
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
-func FromContext(ctx context.Context, context custom.Context, parentNs string) (*APIM, error) {
+func FromContext(ctx context.Context, context core.Context, parentNs string) (*APIM, error) {
 	orgID, envID := context.GetOrgID(), context.GetEnvID()
 	urls, err := client.NewURLs(context.GetURL(), orgID, envID)
 	if err != nil {
@@ -64,7 +64,7 @@ func FromContext(ctx context.Context, context custom.Context, parentNs string) (
 	}, nil
 }
 
-func FromContextRef(ctx context.Context, ref custom.ResourceRef, parentNs string) (*APIM, error) {
+func FromContextRef(ctx context.Context, ref core.ResourceRef, parentNs string) (*APIM, error) {
 	context, err := dynamic.ResolveContext(ctx, ref, parentNs)
 	if err != nil {
 		return nil, err

@@ -18,8 +18,8 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -28,7 +28,7 @@ func ValidateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 
 	errs.Add(ctxref.Validate(ctx, obj))
 
-	if api, ok := obj.(custom.ApiDefinitionResource); ok {
+	if api, ok := obj.(core.ApiDefinitionResource); ok {
 		errs.Add(validateNoConflictingPath(ctx, api))
 	}
 

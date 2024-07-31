@@ -19,8 +19,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -28,7 +28,7 @@ func Delete(
 	ctx context.Context,
 	application *v1alpha1.Application,
 ) error {
-	if !util.ContainsFinalizer(application, keys.ApplicationFinalizer) {
+	if !util.ContainsFinalizer(application, core.ApplicationFinalizer) {
 		return nil
 	}
 
@@ -41,7 +41,7 @@ func Delete(
 		return err
 	}
 
-	util.RemoveFinalizer(application, keys.ApplicationFinalizer)
+	util.RemoveFinalizer(application, core.ApplicationFinalizer)
 
 	return nil
 }

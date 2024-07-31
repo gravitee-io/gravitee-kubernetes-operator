@@ -17,7 +17,7 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	v1 "k8s.io/api/networking/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -31,7 +31,7 @@ func Delete(
 		return err
 	}
 
-	util.RemoveFinalizer(ingress, keys.IngressFinalizer)
+	util.RemoveFinalizer(ingress, core.IngressFinalizer)
 
 	return nil
 }

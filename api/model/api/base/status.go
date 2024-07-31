@@ -14,7 +14,7 @@
 
 package base
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 
 type Status struct {
 	// The organization ID, if a management context has been defined to sync with an APIM instance
@@ -26,7 +26,7 @@ type Status struct {
 	// The Cross ID is used to identify an API that has been promoted from one environment to another.
 	CrossID string `json:"crossId,omitempty"`
 	// The processing status of the API definition.
-	ProcessingStatus custom.ProcessingStatus `json:"processingStatus,omitempty"`
+	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 	// The state of the API. Can be either STARTED or STOPPED.
 	State ApiState `json:"state,omitempty"`
 	// This is the object generation observed during the latest reconcile.

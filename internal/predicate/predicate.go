@@ -17,9 +17,8 @@ package predicate
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	corev1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -38,22 +37,22 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 
 	switch t := e.Object.(type) {
 	case *v1alpha1.ApiDefinition:
-		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.ProcessingStatus != custom.ProcessingStatusCompleted
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec) ||
+			t.Status.ProcessingStatus != core.ProcessingStatusCompleted
 	case *v1alpha1.ApiV4Definition:
-		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.ProcessingStatus != custom.ProcessingStatusCompleted
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec) ||
+			t.Status.ProcessingStatus != core.ProcessingStatusCompleted
 	case *v1alpha1.ManagementContext:
-		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.ApiResource:
-		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Application:
-		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec) ||
-			t.Status.ProcessingStatus != custom.ProcessingStatusCompleted
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec) ||
+			t.Status.ProcessingStatus != core.ProcessingStatusCompleted
 	case *netV1.Ingress:
-		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Spec)
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *corev1.Secret:
-		return e.Object.GetAnnotations()[keys.LastSpecHash] != hash.Calculate(&t.Data)
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Data)
 	default:
 		return false
 	}

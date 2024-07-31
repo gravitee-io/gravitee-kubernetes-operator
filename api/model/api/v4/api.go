@@ -20,7 +20,7 @@ import (
 	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
 // +kubebuilder:validation:Enum=PROXY;MESSAGE;
@@ -29,7 +29,7 @@ type ApiType string
 // +kubebuilder:validation:Enum=PUBLISHED;UNPUBLISHED;
 type ApiV4LifecycleState string
 
-var _ custom.ApiDefinition = &Api{}
+var _ core.ApiDefinition = &Api{}
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
@@ -104,7 +104,7 @@ const (
 	OriginManagement DefinitionContextOrigin = "MANAGEMENT"
 )
 
-var _ custom.DefinitionContext = &DefinitionContext{}
+var _ core.DefinitionContext = &DefinitionContext{}
 
 type DefinitionContext struct {
 	// The definition context origin where the API definition is managed.
@@ -131,7 +131,7 @@ func NewDefaultKubernetesContext() *DefinitionContext {
 	}
 }
 
-func (ctx *DefinitionContext) MergeWith(rhs custom.DefinitionContext) *DefinitionContext {
+func (ctx *DefinitionContext) MergeWith(rhs core.DefinitionContext) *DefinitionContext {
 	if reflect.ValueOf(rhs).IsNil() {
 		return ctx
 	}
@@ -165,11 +165,11 @@ func (ctx *DefinitionContext) SetOrigin(origin string) {
 	}
 }
 
-func (api *Api) GetDefinitionContext() custom.DefinitionContext {
+func (api *Api) GetDefinitionContext() core.DefinitionContext {
 	return api.DefinitionContext
 }
 
-func (api *Api) SetDefinitionContext(ctx custom.DefinitionContext) {
+func (api *Api) SetDefinitionContext(ctx core.DefinitionContext) {
 	if impl, ok := ctx.(*DefinitionContext); ok {
 		api.DefinitionContext = impl
 	}
@@ -223,8 +223,8 @@ func (api *Api) getGatewayDefinitionEndpointGroups() []*EndpointGroup {
 	return endpointGroups
 }
 
-func (api *Api) GetDefinitionVersion() custom.ApiDefinitionVersion {
-	return custom.ApiV4
+func (api *Api) GetDefinitionVersion() core.ApiDefinitionVersion {
+	return core.ApiV4
 }
 
 func (api *Api) GetContextPaths() []string {

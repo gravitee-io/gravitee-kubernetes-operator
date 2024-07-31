@@ -23,8 +23,8 @@ import (
 	"text/template"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -142,7 +142,7 @@ func resolveSecret(ctx context.Context, obj runtime.Object, name string) (string
 }
 
 func addFinalizer(ctx context.Context, obj client.Object) error {
-	if !util.ContainsFinalizer(obj, keys.TemplatingFinalizer) {
+	if !util.ContainsFinalizer(obj, core.TemplatingFinalizer) {
 		var object client.Object
 		switch obj.(type) {
 		case *v1.ConfigMap:
@@ -157,7 +157,7 @@ func addFinalizer(ctx context.Context, obj client.Object) error {
 			return err
 		}
 
-		util.AddFinalizer(object, keys.TemplatingFinalizer)
+		util.AddFinalizer(object, core.TemplatingFinalizer)
 
 		return cli.Update(ctx, object)
 	}

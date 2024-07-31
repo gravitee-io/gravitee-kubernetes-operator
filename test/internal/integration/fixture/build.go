@@ -19,9 +19,8 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 	coreV1 "k8s.io/api/core/v1"
@@ -94,10 +93,10 @@ func (b *FSBuilder) setupIngress(obj *Objects, ing **netV1.Ingress, suffix strin
 	obj.Ingress.Name += suffix
 	obj.Ingress.Namespace = constants.Namespace
 	if obj.API != nil && isTemplate(obj.API) {
-		obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.API.Name
+		obj.Ingress.Annotations[core.IngressTemplateAnnotation] = obj.API.Name
 	}
 	if obj.APIv4 != nil && isTemplate(obj.APIv4) {
-		obj.Ingress.Annotations[keys.IngressTemplateAnnotation] = obj.APIv4.Name
+		obj.Ingress.Annotations[core.IngressTemplateAnnotation] = obj.APIv4.Name
 	}
 
 	randomizeIngressRules(obj.Ingress, suffix)
@@ -206,8 +205,8 @@ func randomizeIngressRules(ing *netV1.Ingress, suffix string) {
 	}
 }
 
-func isTemplate(api custom.ApiDefinitionResource) bool {
-	return api.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
+func isTemplate(api core.ApiDefinitionResource) bool {
+	return api.GetAnnotations()[core.IngressTemplateAnnotation] == env.TrueString
 }
 
 func (b *FSBuilder) AddSecret(file string) *FSBuilder {

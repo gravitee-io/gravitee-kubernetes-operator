@@ -18,8 +18,8 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -172,11 +172,11 @@ func indexIApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 }
 
 func indexApiTemplate(ing *v1.Ingress, fields *[]string) {
-	if ing.Annotations[keys.IngressTemplateAnnotation] == "" {
+	if ing.Annotations[core.IngressTemplateAnnotation] == "" {
 		return
 	}
 
-	*fields = append(*fields, ing.Namespace+"/"+ing.Annotations[keys.IngressTemplateAnnotation])
+	*fields = append(*fields, ing.Namespace+"/"+ing.Annotations[core.IngressTemplateAnnotation])
 }
 
 func indexTLSSecret(ing *v1.Ingress, fields *[]string) {

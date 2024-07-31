@@ -18,14 +18,14 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if app, ok := obj.(custom.ApplicationResource); ok {
+	if app, ok := obj.(core.ApplicationResource); ok {
 		errs.Add(ctxref.Validate(ctx, app))
 	}
 	return errs

@@ -23,9 +23,9 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/el"
 	xhttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	v1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -124,7 +124,7 @@ func getHosts(ingress *v1.Ingress) map[string]bool {
 func buildApiCopy(apiDefinition *v1alpha1.ApiDefinition, ingress *v1.Ingress) *v1alpha1.ApiDefinition {
 	spec := *apiDefinition.Spec.DeepCopy()
 	spec.Name = ingress.Name
-	spec.Description = keys.IngressLabel
+	spec.Description = core.IngressLabel
 	spec.Version = v1alpha1.GroupVersion.Version
 
 	return &v1alpha1.ApiDefinition{
@@ -132,7 +132,7 @@ func buildApiCopy(apiDefinition *v1alpha1.ApiDefinition, ingress *v1.Ingress) *v
 			Name:      ingress.Name,
 			Namespace: ingress.Namespace,
 			Annotations: map[string]string{
-				keys.Extends: keys.IngressLabel,
+				core.Extends: core.IngressLabel,
 			},
 		},
 		Spec: spec,

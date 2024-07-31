@@ -15,14 +15,14 @@
 package k8s
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	netV1 "k8s.io/api/networking/v1"
 )
 
 func IsGraviteeIngress(ingress *netV1.Ingress) bool {
 	var ingressClassName string
-	if ingressClassName = ingress.GetAnnotations()[keys.IngressClassAnnotation]; ingress.Spec.IngressClassName != nil {
+	if ingressClassName = ingress.GetAnnotations()[core.IngressClassAnnotation]; ingress.Spec.IngressClassName != nil {
 		ingressClassName = *(ingress.Spec.IngressClassName)
 	}
 

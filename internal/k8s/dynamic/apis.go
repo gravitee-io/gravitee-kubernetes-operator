@@ -19,8 +19,8 @@ import (
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -29,10 +29,10 @@ import (
 
 type ListOptions struct {
 	Namespace string
-	Excluded  []custom.ResourceRef
+	Excluded  []core.ResourceRef
 }
 
-func GetAPIs(ctx context.Context, opts ListOptions) ([]custom.ApiDefinition, error) {
+func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
 	v2Apis, err := getV2Apis(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -41,13 +41,13 @@ func GetAPIs(ctx context.Context, opts ListOptions) ([]custom.ApiDefinition, err
 	if err != nil {
 		return nil, err
 	}
-	apis := make([]custom.ApiDefinition, 0)
+	apis := make([]core.ApiDefinition, 0)
 	apis = append(apis, v2Apis...)
 	apis = append(apis, v4Apis...)
 	return apis, nil
 }
 
-func getV2Apis(ctx context.Context, opts ListOptions) ([]custom.ApiDefinition, error) {
+func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
 	gvr := schema.GroupVersionResource{
 		Group:    "gravitee.io",
 		Version:  "v1alpha1",
@@ -55,7 +55,7 @@ func getV2Apis(ctx context.Context, opts ListOptions) ([]custom.ApiDefinition, e
 	}
 	resource := getResource(gvr, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
-	apis := make([]custom.ApiDefinition, 0)
+	apis := make([]core.ApiDefinition, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func getV2Apis(ctx context.Context, opts ListOptions) ([]custom.ApiDefinition, e
 	return apis, nil
 }
 
-func getV4Apis(ctx context.Context, opts ListOptions) ([]custom.ApiDefinition, error) {
+func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
 	gvr := schema.GroupVersionResource{
 		Group:    "gravitee.io",
 		Version:  "v1alpha1",
@@ -84,7 +84,7 @@ func getV4Apis(ctx context.Context, opts ListOptions) ([]custom.ApiDefinition, e
 	if err != nil {
 		return nil, err
 	}
-	apis := make([]custom.ApiDefinition, 0)
+	apis := make([]core.ApiDefinition, 0)
 	for _, item := range list.Items {
 		if isExcluded(item, opts) {
 			continue

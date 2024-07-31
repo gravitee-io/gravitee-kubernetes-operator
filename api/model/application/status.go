@@ -14,7 +14,7 @@
 
 package application
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 
 type Status struct {
 	// The organization ID, if a management context has been defined to sync with an APIM instance
@@ -25,7 +25,7 @@ type Status struct {
 	ID string `json:"id,omitempty"`
 	// The processing status of the Application.
 	// The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
-	ProcessingStatus custom.ProcessingStatus `json:"processingStatus,omitempty"`
+	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 	// This is the object generation observed during the latest reconcile.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }

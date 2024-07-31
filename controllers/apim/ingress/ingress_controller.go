@@ -26,9 +26,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
@@ -70,8 +70,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := e.NewRecorder(r.Recorder)
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, ingress, func() error {
-		util.AddFinalizer(ingress, keys.IngressFinalizer)
-		k8s.AddAnnotation(ingress, keys.LastSpecHash, hash.Calculate(&ingress.Spec))
+		util.AddFinalizer(ingress, core.IngressFinalizer)
+		k8s.AddAnnotation(ingress, core.LastSpecHashAnnotation, hash.Calculate(&ingress.Spec))
 
 		if err := template.Compile(ctx, ingress); err != nil {
 			return err
@@ -103,7 +103,7 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 		case *netV1.Ingress:
 			return k8s.IsGraviteeIngress(t)
 		case *v1alpha1.ApiDefinition:
-			return t.GetAnnotations()[keys.IngressTemplateAnnotation] == env.TrueString
+			return t.GetAnnotations()[core.IngressTemplateAnnotation] == env.TrueString
 		case *corev1.Secret:
 			return t.Type == "kubernetes.io/tls"
 		default:

@@ -17,14 +17,14 @@ package ctxref
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func Validate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	if ctxAware, ok := obj.(custom.ContextAwareResource); ok {
+	if ctxAware, ok := obj.(core.ContextAwareResource); ok {
 		if ctxAware.HasContext() {
 			return validateContextRefExists(ctx, ctxAware)
 		}
@@ -32,7 +32,7 @@ func Validate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
 	return nil
 }
 
-func validateContextRefExists(ctx context.Context, ctxAware custom.ContextAwareResource) *errors.AdmissionError {
+func validateContextRefExists(ctx context.Context, ctxAware core.ContextAwareResource) *errors.AdmissionError {
 	ctxRef := ctxAware.ContextRef()
 	if err := dynamic.ExpectResolvedContext(ctx, ctxRef, ctxAware.GetNamespace()); err != nil {
 		return errors.NewSevere(

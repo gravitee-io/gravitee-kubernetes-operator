@@ -19,11 +19,11 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
-var _ custom.ApiDefinition = &Api{}
-var _ custom.DefinitionContext = &DefinitionContext{}
+var _ core.ApiDefinition = &Api{}
+var _ core.DefinitionContext = &DefinitionContext{}
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
@@ -75,8 +75,8 @@ type Api struct {
 	ExecutionMode string `json:"execution_mode,omitempty"`
 }
 
-func (api *Api) GetDefinitionVersion() custom.ApiDefinitionVersion {
-	return custom.ApiV2
+func (api *Api) GetDefinitionVersion() core.ApiDefinitionVersion {
+	return core.ApiV2
 }
 
 func (api *Api) GetContextPaths() []string {
@@ -112,11 +112,11 @@ type DefinitionContext struct {
 	SyncFrom string `json:"syncFrom,omitempty"`
 }
 
-func (api *Api) GetDefinitionContext() custom.DefinitionContext {
+func (api *Api) GetDefinitionContext() core.DefinitionContext {
 	return api.DefinitionContext
 }
 
-func (api *Api) SetDefinitionContext(ctx custom.DefinitionContext) {
+func (api *Api) SetDefinitionContext(ctx core.DefinitionContext) {
 	if impl, ok := ctx.(*DefinitionContext); ok {
 		api.DefinitionContext = impl
 	}

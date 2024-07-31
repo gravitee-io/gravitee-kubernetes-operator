@@ -21,15 +21,15 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ custom.ContextResource = &ManagementContext{}
-var _ custom.Spec = &ManagementContextSpec{}
-var _ custom.Status = &ManagementContextStatus{}
+var _ core.ContextResource = &ManagementContext{}
+var _ core.Spec = &ManagementContextSpec{}
+var _ core.Status = &ManagementContextStatus{}
 
 // ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
@@ -74,7 +74,7 @@ func (st *ManagementContextStatus) SetObservedGeneration(g int64) {
 }
 
 // SetProcessingStatus implements custom.Status.
-func (st *ManagementContextStatus) SetProcessingStatus(status custom.ProcessingStatus) {
+func (st *ManagementContextStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	// Not implemented
 }
 
@@ -92,22 +92,22 @@ type ManagementContext struct {
 }
 
 // DeepCopyResource implements custom.Context.
-func (ctx *ManagementContext) DeepCopyResource() custom.Resource {
+func (ctx *ManagementContext) DeepCopyResource() core.Resource {
 	return ctx.DeepCopy()
 }
 
 // GetSpec implements custom.Context.
-func (ctx *ManagementContext) GetSpec() custom.Spec {
+func (ctx *ManagementContext) GetSpec() core.Spec {
 	return &ctx.Spec
 }
 
 // GetStatus implements custom.Context.
-func (ctx *ManagementContext) GetStatus() custom.Status {
+func (ctx *ManagementContext) GetStatus() core.Status {
 	return &ctx.Status
 }
 
 // GetAuth implements custom.Context.
-func (ctx *ManagementContext) GetAuth() custom.Auth {
+func (ctx *ManagementContext) GetAuth() core.Auth {
 	return ctx.Spec.Context.Auth
 }
 
@@ -121,8 +121,15 @@ func (ctx *ManagementContext) GetOrgID() string {
 	return ctx.Spec.OrgID
 }
 
+func (ctx *ManagementContext) GetRef() core.ResourceRef {
+	return &refs.NamespacedName{
+		Name:      ctx.Name,
+		Namespace: ctx.Namespace,
+	}
+}
+
 // GetSecretRef implements custom.Context.
-func (ctx *ManagementContext) GetSecretRef() custom.ResourceRef {
+func (ctx *ManagementContext) GetSecretRef() core.ResourceRef {
 	return ctx.Spec.SecretRef()
 }
 
@@ -143,6 +150,10 @@ func (ctx *ManagementContext) HasSecretRef() bool {
 
 func (ctx *ManagementContext) GetNamespacedName() *refs.NamespacedName {
 	return &refs.NamespacedName{Namespace: ctx.Namespace, Name: ctx.Name}
+}
+
+func (ctx *ManagementContext) GetContext() core.Context {
+	return ctx.Spec.Context
 }
 
 // +kubebuilder:object:root=true

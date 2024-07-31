@@ -30,7 +30,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+	core1 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	core "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -65,16 +65,16 @@ func updateIngressTLSReference(
 		}
 
 		// If finalizer not present, add it;
-		if !util.ContainsFinalizer(secret, keys.KeyPairFinalizer) {
+		if !util.ContainsFinalizer(secret, core1.KeyPairFinalizer) {
 			log.FromContext(ctx).Info("adding finalizer to the tls secret")
 
-			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, keys.KeyPairFinalizer)
-			k8s.AddAnnotation(secret, keys.LastSpecHash, hash.Calculate(&secret.Data))
+			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, core1.KeyPairFinalizer)
+			k8s.AddAnnotation(secret, core1.LastSpecHashAnnotation, hash.Calculate(&secret.Data))
 			if err := cli.Update(ctx, secret); err != nil {
 				return client.IgnoreNotFound(err)
 			}
 		} else {
-			secret.Annotations[keys.LastSpecHash] = hash.Calculate(&secret.Data)
+			secret.Annotations[core1.LastSpecHashAnnotation] = hash.Calculate(&secret.Data)
 			if err := cli.Update(ctx, secret); err != nil {
 				return err
 			}
@@ -129,7 +129,7 @@ func deleteIngressTLSReference(
 				"secret is used by another ingress, it will not be deleted from the keystore")
 		} else {
 			log.FromContext(ctx).Info("removing finalizer from secret", "secret", secret.Name)
-			util.RemoveFinalizer(secret, keys.KeyPairFinalizer)
+			util.RemoveFinalizer(secret, core1.KeyPairFinalizer)
 
 			if err = cli.Update(ctx, secret); err != nil {
 				return err
@@ -206,7 +206,7 @@ func getPemRegistryConfigMapsToUpdate(
 	ing *netV1.Ingress) ([]*core.ConfigMap, error) {
 	pemRegistryConfigMaps := &core.ConfigMapList{}
 	filter := &client.ListOptions{
-		LabelSelector: labels.SelectorFromSet(labels.Set{keys.GraviteeComponentLabel: keys.GraviteePemRegistryLabel}),
+		LabelSelector: labels.SelectorFromSet(labels.Set{core1.GraviteeComponentLabel: core1.GraviteePemRegistryLabel}),
 	}
 	var err error
 
@@ -222,8 +222,8 @@ func getPemRegistryConfigMapsToUpdate(
 	pemRegistriesToUpdate := make([]*core.ConfigMap, 0)
 	for i := range pemRegistryConfigMaps.Items {
 		item := pemRegistryConfigMaps.Items[i]
-		if (ing.Spec.IngressClassName != nil && item.Labels[keys.IngressClassAnnotation] == *ing.Spec.IngressClassName) ||
-			item.Labels[keys.IngressClassAnnotation] == ing.GetAnnotations()[keys.IngressClassAnnotation] {
+		if (ing.Spec.IngressClassName != nil && item.Labels[core1.IngressClassAnnotation] == *ing.Spec.IngressClassName) ||
+			item.Labels[core1.IngressClassAnnotation] == ing.GetAnnotations()[core1.IngressClassAnnotation] {
 			pemRegistriesToUpdate = append(pemRegistriesToUpdate, &item)
 		}
 	}
