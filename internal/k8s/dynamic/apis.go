@@ -48,12 +48,7 @@ func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error
 }
 
 func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
-	gvr := schema.GroupVersionResource{
-		Group:    "gravitee.io",
-		Version:  "v1alpha1",
-		Resource: "apidefinitions",
-	}
-	resource := getResource(gvr, opts.Namespace)
+	resource := getResource(ApiGVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
 	apis := make([]core.ApiDefinition, 0)
 	if err != nil {
@@ -74,12 +69,7 @@ func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, err
 }
 
 func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
-	gvr := schema.GroupVersionResource{
-		Group:    "gravitee.io",
-		Version:  "v1alpha1",
-		Resource: "apiv4definitions",
-	}
-	resource := getResource(gvr, opts.Namespace)
+	resource := getResource(ApiV4GVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err

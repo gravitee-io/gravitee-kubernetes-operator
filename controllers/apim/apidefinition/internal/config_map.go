@@ -84,8 +84,8 @@ func saveConfigMap(
 
 	cm.CreationTimestamp = metav1.Now()
 	cm.Labels = map[string]string{
-		managedByKey: core.CrdGroup,
-		gioTypeKey:   core.CrdApiDefinitionResource + "." + core.CrdGroup,
+		managedByKey: core.CRDGroup,
+		gioTypeKey:   core.CRDApiDefinitionResource + "." + core.CRDGroup,
 	}
 
 	cm.Data = map[string]string{
