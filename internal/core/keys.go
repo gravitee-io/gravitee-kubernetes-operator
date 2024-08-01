@@ -14,8 +14,14 @@
 
 package core
 
-// Kubernetes Ingresses.
 const (
+	CRDGroup   = "gravitee.io"
+	CRDVersion = "v1alpha1"
+
+	CRDManagementContextResource = "managementcontexts"
+	CRDApiDefinitionResource     = "apidefinitions"
+	CRDApiV4DefinitionResource   = "apiv4definitions"
+
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"
 	IngressLabelValue           = "graviteeio"
@@ -24,21 +30,9 @@ const (
 	IngressTemplateAnnotation   = "gravitee.io/template"
 	GraviteePemRegistryLabel    = "kubernetes-pem-registry"
 	LastSpecHashAnnotation      = "gravitee.io/last-spec-hash"
-)
 
-// Gravitee.io CRDs.
-const (
-	CrdGroup   = "gravitee.io"
-	CrdVersion = "v1alpha1"
+	Extends = "gravitee.io/extends"
 
-	CrdManagementContextResource = "managementcontext"
-	CrdApiDefinitionResource     = "apidefinitions"
-)
-
-const Extends = "gravitee.io/extends"
-
-// Kubernetes Finalizers.
-const (
 	ApiDefinitionFinalizer         = "finalizers.gravitee.io/apidefinitiondeletion"
 	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
 	ManagementContextFinalizer     = "finalizers.gravitee.io/managementcontextdeletion"
@@ -49,4 +43,8 @@ const (
 	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
 	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
+
+	BearerTokenSecretKey = "bearerToken"
+	UsernameSecretKey    = "username"
+	PasswordSecretKey    = "password"
 )

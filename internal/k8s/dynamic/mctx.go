@@ -19,13 +19,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-)
-
-const (
-	bearerTokenSecretKey = "bearerToken"
-	usernameSecretKey    = "username"
-	passwordSecretKey    = "password"
 )
 
 func ExpectResolvedContext(ctx context.Context, ref core.ResourceRef, parentNs string) error {
@@ -36,11 +29,7 @@ func ExpectResolvedContext(ctx context.Context, ref core.ResourceRef, parentNs s
 }
 
 func ResolveContext(ctx context.Context, ref core.ResourceRef, parentNs string) (*management.Context, error) {
-	context, err := resolveRefSpec(ctx, ref, parentNs, schema.GroupVersionResource{
-		Group:    core.CrdGroup,
-		Version:  core.CrdVersion,
-		Resource: "managementcontexts",
-	}, new(management.Context))
+	context, err := resolveRefSpec(ctx, ref, parentNs, ManagementContextGVR, new(management.Context))
 	if err != nil {
 		return nil, err
 	}
@@ -54,9 +43,9 @@ func injectSecretIfAny(ctx context.Context, mCtx *management.Context, parentNs s
 		if err != nil {
 			return nil, err
 		}
-		bearerToken := string(secret.Data[bearerTokenSecretKey])
-		username := string(secret.Data[usernameSecretKey])
-		password := string(secret.Data[passwordSecretKey])
+		bearerToken := string(secret.Data[core.BearerTokenSecretKey])
+		username := string(secret.Data[core.UsernameSecretKey])
+		password := string(secret.Data[core.PasswordSecretKey])
 
 		mCtx.SetToken(bearerToken)
 		mCtx.SetCredentials(username, password)
