@@ -27,7 +27,7 @@ import (
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if context, ok := obj.(core.ContextResource); ok {
+	if context, ok := obj.(core.ContextObject); ok {
 		errs.Add(validateSecretRef(ctx, context))
 		errs.Add(validateContextIsAvailable(ctx, context))
 	}
@@ -35,7 +35,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateSecretRef(ctx context.Context, context core.ContextResource) *errors.AdmissionError {
+func validateSecretRef(ctx context.Context, context core.ContextObject) *errors.AdmissionError {
 	if context.HasSecretRef() {
 		if err := dynamic.ExpectResolvedSecret(ctx, context.GetSecretRef(), context.GetNamespace()); err != nil {
 			return errors.NewSevere(
@@ -47,7 +47,7 @@ func validateSecretRef(ctx context.Context, context core.ContextResource) *error
 	return nil
 }
 
-func validateContextIsAvailable(ctx context.Context, context core.ContextResource) *errors.AdmissionError {
+func validateContextIsAvailable(ctx context.Context, context core.ContextObject) *errors.AdmissionError {
 	apim, err := apim.FromContext(ctx, context, context.GetNamespace())
 	if err != nil {
 		return errors.NewSevere(err.Error())

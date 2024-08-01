@@ -15,6 +15,8 @@
 // +kubebuilder:object:generate=true
 package base
 
+import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+
 type ApiBase struct {
 	// The API ID. If empty, this field will take the value of the `metadata.uid`
 	// field of the resource.
@@ -67,6 +69,15 @@ type ApiBase struct {
 	// If true, new members added to the API spec will
 	// be notified when the API is synced with APIM.
 	NotifyMembers bool `json:"notifyMembers"`
+}
+
+// GetResources implements core.ApiDefinitionModel.
+func (api *ApiBase) GetResources() []core.ObjectOrRef[core.ResourceModel] {
+	refs := make([]core.ObjectOrRef[core.ResourceModel], len(api.Resources))
+	for i := range api.Resources {
+		refs[i] = api.Resources[i]
+	}
+	return refs
 }
 
 // +kubebuilder:validation:Enum=PUBLIC;PRIVATE;

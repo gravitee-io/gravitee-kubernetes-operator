@@ -43,7 +43,7 @@ type ApiV4DefinitionStatus struct {
 	v4.Status `json:",inline"`
 }
 
-var _ core.ApiDefinitionResource = &ApiV4Definition{}
+var _ core.ApiDefinitionObject = &ApiV4Definition{}
 var _ core.Status = &ApiDefinitionStatus{}
 var _ core.Spec = &ApiDefinitionV2Spec{}
 
@@ -73,7 +73,11 @@ func (api *ApiV4Definition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-func (api *ApiV4Definition) PopulateIDs(context core.Context) {
+func (api *ApiV4Definition) GetResources() []core.ObjectOrRef[core.ResourceModel] {
+	return api.Spec.GetResources()
+}
+
+func (api *ApiV4Definition) PopulateIDs(context core.ContextModel) {
 	api.Spec.ID = api.pickID(context)
 	api.Spec.CrossID = api.pickCrossID()
 	api.Spec.Pages = api.pickPageIDs()
@@ -85,7 +89,7 @@ func (api *ApiV4Definition) PopulateIDs(context core.Context) {
 // If the API is unknown, the ID is either given from the spec if given,
 // or generated from the API UID and the context key to ensure uniqueness
 // in case the API is replicated on a same APIM instance.
-func (api *ApiV4Definition) pickID(mCtx core.Context) string {
+func (api *ApiV4Definition) pickID(mCtx core.ContextModel) string {
 	if api.Status.ID != "" {
 		return api.Status.ID
 	}
@@ -174,11 +178,11 @@ func (api *ApiV4Definition) GetStatus() core.Status {
 	return &api.Status
 }
 
-func (api *ApiV4Definition) DeepCopyResource() core.Resource {
+func (api *ApiV4Definition) DeepCopyResource() core.Object {
 	return api.DeepCopy()
 }
 
-func (api *ApiV4Definition) ContextRef() core.ResourceRef {
+func (api *ApiV4Definition) ContextRef() core.ObjectRef {
 	return api.Spec.Context
 }
 
@@ -202,7 +206,7 @@ func (api *ApiV4Definition) GetContextPaths() []string {
 	return api.Spec.GetContextPaths()
 }
 
-func (api *ApiV4Definition) GetRef() core.ResourceRef {
+func (api *ApiV4Definition) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,
 		Namespace: api.Namespace,
@@ -221,7 +225,7 @@ func (api *ApiV4Definition) SetDefinitionContext(ctx core.DefinitionContext) {
 	api.Spec.SetDefinitionContext(ctx)
 }
 
-func (api *ApiV4Definition) GetDefinition() core.ApiDefinition {
+func (api *ApiV4Definition) GetDefinition() core.ApiDefinitionModel {
 	return &api.Spec.Api
 }
 

@@ -29,8 +29,8 @@ import (
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if api, ok := obj.(core.ApiDefinitionResource); ok {
-		errs = errs.MergeWith(base.ValidateCreate(ctx, obj))
+	if api, ok := obj.(core.ApiDefinitionObject); ok {
+		errs.MergeWith(base.ValidateCreate(ctx, obj))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -44,14 +44,14 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 			return errs
 		}
 		if api.HasContext() {
-			errs = errs.MergeWith(validateDryRun(ctx, api))
+			errs.MergeWith(validateDryRun(ctx, api))
 		}
 	}
 	return errs
 }
 
-func validateApiPlans(_ context.Context, api core.ApiDefinitionResource) *errors.AdmissionError {
-	cp, _ := api.DeepCopyResource().(core.ApiDefinitionResource)
+func validateApiPlans(_ context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
+	cp, _ := api.DeepCopyResource().(core.ApiDefinitionObject)
 
 	apiDef, ok := cp.GetDefinition().(*v4.Api)
 	if !ok {
@@ -67,10 +67,10 @@ func validateApiPlans(_ context.Context, api core.ApiDefinitionResource) *errors
 	return nil
 }
 
-func validateDryRun(ctx context.Context, api core.ApiDefinitionResource) *errors.AdmissionErrors {
+func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := api.DeepCopyResource().(core.ApiDefinitionResource)
+	cp, _ := api.DeepCopyResource().(core.ApiDefinitionObject)
 
 	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {

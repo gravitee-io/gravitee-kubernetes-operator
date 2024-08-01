@@ -29,7 +29,7 @@ type ApiType string
 // +kubebuilder:validation:Enum=PUBLISHED;UNPUBLISHED;
 type ApiV4LifecycleState string
 
-var _ core.ApiDefinition = &Api{}
+var _ core.ApiDefinitionModel = &Api{}
 
 type Api struct {
 	*base.ApiBase `json:",inline"`

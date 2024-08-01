@@ -23,14 +23,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func ExpectResolvedSecret(ctx context.Context, ref core.ResourceRef, parentNs string) error {
+func ExpectResolvedSecret(ctx context.Context, ref core.ObjectRef, parentNs string) error {
 	if _, err := ResolveSecret(ctx, ref, parentNs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ResolveSecret(ctx context.Context, ref core.ResourceRef, parentNs string) (*coreV1.Secret, error) {
+func ResolveSecret(ctx context.Context, ref core.ObjectRef, parentNs string) (*coreV1.Secret, error) {
 	return resolveRef(ctx, ref, parentNs, schema.GroupVersionResource{
 		Group:    "",
 		Version:  "v1",

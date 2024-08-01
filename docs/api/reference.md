@@ -3658,26 +3658,19 @@ while PROXY identifies the request issued to the upstream service.<br/>
         <td>
           Resource Configuration, arbitrary map of key-values<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is resource enabled or not?<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Resource Name<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          Resource Type<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Resource is enabled or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3685,6 +3678,13 @@ while PROXY identifies the request issued to the upstream service.<br/>
         <td>object</td>
         <td>
           Reference to a resource<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          Resource Type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6878,26 +6878,19 @@ Specify the primary member that owns the API
         <td>
           Resource Configuration, arbitrary map of key-values<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is resource enabled or not?<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Resource Name<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          Resource Type<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Resource is enabled or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6905,6 +6898,13 @@ Specify the primary member that owns the API
         <td>object</td>
         <td>
           Reference to a resource<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          Resource Type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7249,26 +7249,26 @@ ApiResourceSpec defines the desired state of ApiResource.
         <td>
           Resource Configuration, arbitrary map of key-values<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Is resource enabled or not?<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
           Resource Name<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
           Resource Type<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>enabled</b></td>
-        <td>boolean</td>
-        <td>
-          Resource is enabled or not?<br/>
         </td>
         <td>false</td>
       </tr></tbody>

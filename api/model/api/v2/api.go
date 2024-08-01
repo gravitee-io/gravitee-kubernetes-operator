@@ -22,7 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
-var _ core.ApiDefinition = &Api{}
+var _ core.ApiDefinitionModel = &Api{}
 var _ core.DefinitionContext = &DefinitionContext{}
 
 type Api struct {

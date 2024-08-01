@@ -21,6 +21,7 @@ const (
 	CRDManagementContextResource = "managementcontexts"
 	CRDApiDefinitionResource     = "apidefinitions"
 	CRDApiV4DefinitionResource   = "apiv4definitions"
+	CRDResourceResource          = "apiresources"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"

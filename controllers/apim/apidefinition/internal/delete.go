@@ -24,7 +24,7 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func Delete(ctx context.Context, api core.ApiDefinitionResource) error {
+func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 	if !util.ContainsFinalizer(api, core.ApiDefinitionFinalizer) {
 		return nil
 	}
@@ -40,7 +40,7 @@ func Delete(ctx context.Context, api core.ApiDefinitionResource) error {
 	return nil
 }
 
-func deleteWithContext(ctx context.Context, api core.ApiDefinitionResource) error {
+func deleteWithContext(ctx context.Context, api core.ApiDefinitionObject) error {
 	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
 	if err != nil {
 		return err

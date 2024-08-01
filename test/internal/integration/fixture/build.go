@@ -205,7 +205,7 @@ func randomizeIngressRules(ing *netV1.Ingress, suffix string) {
 	}
 }
 
-func isTemplate(api core.ApiDefinitionResource) bool {
+func isTemplate(api core.ApiDefinitionObject) bool {
 	return api.GetAnnotations()[core.IngressTemplateAnnotation] == env.TrueString
 }
 

@@ -12,34 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ctxref
+package resource
 
 import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func Validate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	if ctxAware, ok := obj.(core.ContextAwareObject); ok {
-		if ctxAware.HasContext() {
-			return validateContextRefExists(ctx, ctxAware)
-		}
+func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+	if res, ok := obj.(core.ResourceModel); ok {
+		return ValidateModel(ctx, res)
 	}
-	return nil
+	return errors.NewAdmissionErrors()
 }
 
-func validateContextRefExists(ctx context.Context, ctxAware core.ContextAwareObject) *errors.AdmissionError {
-	ctxRef := ctxAware.ContextRef()
-	if err := dynamic.ExpectResolvedContext(ctx, ctxRef, ctxAware.GetNamespace()); err != nil {
-		return errors.NewSevere(
-			"resource [%s] references management context [%v] that doesn't exist in the cluster",
-			ctxAware.GetName(),
-			ctxRef,
-		)
+func ValidateModel(ctx context.Context, res core.ResourceModel) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if res.GetType() == "" {
+		errs.AddSevere("missing required value in property [type]")
 	}
-	return nil
+
+	if res.GetResourceName() == "" {
+		errs.AddSevere("missing required value in property [name]")
+	}
+
+	if res.GetConfig() == nil {
+		errs.AddSevere("missing required value in property [configuration]")
+	}
+
+	return errs
 }

@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ core.ResourceRef = &NamespacedName{}
+var _ core.ObjectRef = &NamespacedName{}
 
 type NamespacedName struct {
 	Name      string `json:"name"`

@@ -39,6 +39,12 @@ var ManagementContextGVR = schema.GroupVersionResource{
 	Resource: core.CRDManagementContextResource,
 }
 
+var ResourceGVR = schema.GroupVersionResource{
+	Group:    core.CRDGroup,
+	Version:  core.CRDVersion,
+	Resource: core.CRDResourceResource,
+}
+
 var SecretGVR = schema.GroupVersionResource{
 	Group:    "",
 	Version:  "v1",

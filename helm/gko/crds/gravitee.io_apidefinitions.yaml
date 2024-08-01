@@ -1446,7 +1446,7 @@ spec:
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                     enabled:
-                      description: Resource is enabled or not?
+                      description: Is resource enabled or not?
                       type: boolean
                     name:
                       description: Resource Name
@@ -1464,10 +1464,6 @@ spec:
                     type:
                       description: Resource Type
                       type: string
-                  required:
-                  - configuration
-                  - name
-                  - type
                   type: object
                 type: array
               response_templates:

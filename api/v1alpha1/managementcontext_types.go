@@ -27,7 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ core.ContextResource = &ManagementContext{}
+var _ core.ContextObject = &ManagementContext{}
+var _ core.ContextModel = &ManagementContext{}
 var _ core.Spec = &ManagementContextSpec{}
 var _ core.Status = &ManagementContextStatus{}
 
@@ -92,7 +93,7 @@ type ManagementContext struct {
 }
 
 // DeepCopyResource implements custom.Context.
-func (ctx *ManagementContext) DeepCopyResource() core.Resource {
+func (ctx *ManagementContext) DeepCopyResource() core.Object {
 	return ctx.DeepCopy()
 }
 
@@ -121,7 +122,7 @@ func (ctx *ManagementContext) GetOrgID() string {
 	return ctx.Spec.OrgID
 }
 
-func (ctx *ManagementContext) GetRef() core.ResourceRef {
+func (ctx *ManagementContext) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      ctx.Name,
 		Namespace: ctx.Namespace,
@@ -129,7 +130,7 @@ func (ctx *ManagementContext) GetRef() core.ResourceRef {
 }
 
 // GetSecretRef implements custom.Context.
-func (ctx *ManagementContext) GetSecretRef() core.ResourceRef {
+func (ctx *ManagementContext) GetSecretRef() core.ObjectRef {
 	return ctx.Spec.SecretRef()
 }
 
@@ -152,7 +153,7 @@ func (ctx *ManagementContext) GetNamespacedName() *refs.NamespacedName {
 	return &refs.NamespacedName{Namespace: ctx.Namespace, Name: ctx.Name}
 }
 
-func (ctx *ManagementContext) GetContext() core.Context {
+func (ctx *ManagementContext) GetContext() core.ContextModel {
 	return ctx.Spec.Context
 }
 

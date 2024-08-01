@@ -21,14 +21,14 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
-func ExpectResolvedContext(ctx context.Context, ref core.ResourceRef, parentNs string) error {
+func ExpectResolvedContext(ctx context.Context, ref core.ObjectRef, parentNs string) error {
 	if _, err := ResolveContext(ctx, ref, parentNs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ResolveContext(ctx context.Context, ref core.ResourceRef, parentNs string) (*management.Context, error) {
+func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (*management.Context, error) {
 	context, err := resolveRefSpec(ctx, ref, parentNs, ManagementContextGVR, new(management.Context))
 	if err != nil {
 		return nil, err

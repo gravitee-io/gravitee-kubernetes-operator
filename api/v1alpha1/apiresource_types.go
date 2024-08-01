@@ -17,9 +17,19 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+var _ core.ResourceObject = &ApiResource{}
+var _ core.ResourceModel = &ApiResource{}
 
 // ApiResourceSpec defines the desired state of ApiResource.
 // +kubebuilder:object:generate=true
@@ -27,7 +37,39 @@ type ApiResourceSpec struct {
 	*base.Resource `json:",inline"`
 }
 
+// Hash implements core.Spec.
+func (spec ApiResourceSpec) Hash() string {
+	return hash.Calculate(spec)
+}
+
 type ApiResourceStatus struct {
+}
+
+// DeepCopyFrom implements core.Status.
+func (s *ApiResourceStatus) DeepCopyFrom(obj client.Object) error {
+	if res, ok := obj.(*ApiResource); ok {
+		res.Status.DeepCopyInto(s)
+		return nil
+	}
+	return fmt.Errorf("unknown type %T", obj)
+}
+
+// DeepCopyTo implements core.Status.
+func (s *ApiResourceStatus) DeepCopyTo(obj client.Object) error {
+	if res, ok := obj.(*ApiResource); ok {
+		s.DeepCopyInto(&res.Status)
+		return nil
+	}
+	return fmt.Errorf("unknown type %T", obj)
+}
+
+// SetObservedGeneration implements core.Status.
+func (s *ApiResourceStatus) SetObservedGeneration(g int64) {
+
+}
+
+// SetProcessingStatus implements core.Status.
+func (s *ApiResourceStatus) SetProcessingStatus(status core.ProcessingStatus) {
 }
 
 //+kubebuilder:object:root=true
@@ -41,8 +83,42 @@ type ApiResource struct {
 	Status ApiResourceStatus `json:"status,omitempty"`
 }
 
+// GetResourceName implements core.ResourceModel.
+func (res *ApiResource) GetResourceName() string {
+	return res.Spec.GetResourceName()
+}
+
+// GetConfig implements core.ResourceModel.
+func (res *ApiResource) GetConfig() *utils.GenericStringMap {
+	return res.Spec.GetConfig()
+}
+
+// GetType implements core.ResourceModel.
+func (res *ApiResource) GetType() string {
+	return res.Spec.GetType()
+}
+
 func (res *ApiResource) IsBeingDeleted() bool {
 	return !res.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (res *ApiResource) DeepCopyResource() core.Object {
+	return res.DeepCopy()
+}
+
+func (res *ApiResource) GetSpec() core.Spec {
+	return res.Spec
+}
+
+func (res *ApiResource) GetStatus() core.Status {
+	return &res.Status
+}
+
+func (res *ApiResource) GetRef() core.ObjectRef {
+	return &refs.NamespacedName{
+		Namespace: res.Namespace,
+		Name:      res.Name,
+	}
 }
 
 //+kubebuilder:object:root=true
