@@ -29,10 +29,10 @@ import (
 
 type ListOptions struct {
 	Namespace string
-	Excluded  []core.ResourceRef
+	Excluded  []core.ObjectRef
 }
 
-func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
+func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
 	v2Apis, err := getV2Apis(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -41,16 +41,16 @@ func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error
 	if err != nil {
 		return nil, err
 	}
-	apis := make([]core.ApiDefinition, 0)
+	apis := make([]core.ApiDefinitionModel, 0)
 	apis = append(apis, v2Apis...)
 	apis = append(apis, v4Apis...)
 	return apis, nil
 }
 
-func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
+func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
 	resource := getResource(ApiGVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
-	apis := make([]core.ApiDefinition, 0)
+	apis := make([]core.ApiDefinitionModel, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -68,13 +68,13 @@ func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, err
 	return apis, nil
 }
 
-func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinition, error) {
+func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
 	resource := getResource(ApiV4GVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
-	apis := make([]core.ApiDefinition, 0)
+	apis := make([]core.ApiDefinitionModel, 0)
 	for _, item := range list.Items {
 		if isExcluded(item, opts) {
 			continue

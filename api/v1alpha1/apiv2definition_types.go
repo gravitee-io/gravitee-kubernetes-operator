@@ -60,7 +60,7 @@ type ApiDefinitionStatus struct {
 	base.Status `json:",inline"`
 }
 
-var _ core.ApiDefinitionResource = &ApiDefinition{}
+var _ core.ApiDefinitionObject = &ApiDefinition{}
 var _ core.Status = &ApiDefinitionStatus{}
 var _ core.Spec = &ApiDefinitionV2Spec{}
 
@@ -120,11 +120,11 @@ func (api *ApiDefinition) GetStatus() core.Status {
 	return &api.Status
 }
 
-func (api *ApiDefinition) DeepCopyResource() core.Resource {
+func (api *ApiDefinition) DeepCopyResource() core.Object {
 	return api.DeepCopy()
 }
 
-func (api *ApiDefinition) ContextRef() core.ResourceRef {
+func (api *ApiDefinition) ContextRef() core.ObjectRef {
 	return api.Spec.Context
 }
 
@@ -136,7 +136,7 @@ func (api *ApiDefinition) GetContextPaths() []string {
 	return api.Spec.GetContextPaths()
 }
 
-func (api *ApiDefinition) GetDefinition() core.ApiDefinition {
+func (api *ApiDefinition) GetDefinition() core.ApiDefinitionModel {
 	return &api.Spec.Api
 }
 
@@ -148,18 +148,23 @@ func (api *ApiDefinition) SetDefinitionContext(ctx core.DefinitionContext) {
 	api.Spec.SetDefinitionContext(ctx)
 }
 
-func (api *ApiDefinition) GetRef() core.ResourceRef {
+func (api *ApiDefinition) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,
 		Namespace: api.Namespace,
 	}
 }
 
-func (api *ApiDefinition) PopulateIDs(_ core.Context) {
+func (api *ApiDefinition) PopulateIDs(_ core.ContextModel) {
 	api.Spec.ID = api.pickID()
 	api.Spec.CrossID = api.pickCrossID()
 	api.generateEmptyPlanCrossIDs()
 	api.generatePageIDs()
+}
+
+// GetResources implements core.ApiDefinitionModel.
+func (api *ApiDefinition) GetResources() []core.ObjectOrRef[core.ResourceModel] {
+	return api.Spec.GetResources()
 }
 
 // For each plan, generate a Cross id from Api id & Plan Name if not defined.

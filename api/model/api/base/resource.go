@@ -17,18 +17,34 @@ package base
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
+
+var _ core.ResourceModel = &Resource{}
+var _ core.ObjectOrRef[core.ResourceModel] = &ResourceOrRef{}
 
 type Resource struct {
 	// +kubebuilder:validation:Optional
-	// Resource is enabled or not?
+	// Is resource enabled or not?
 	Enabled bool `json:"enabled"`
 	// Resource Name
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 	// Resource Type
-	Type string `json:"type"`
+	Type string `json:"type,omitempty"`
 	// Resource Configuration, arbitrary map of key-values
-	Configuration *utils.GenericStringMap `json:"configuration"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
+}
+
+func (r *Resource) GetType() string {
+	return r.Name
+}
+
+func (r *Resource) GetResourceName() string {
+	return r.Name
+}
+
+func (r *Resource) GetConfig() *utils.GenericStringMap {
+	return r.Configuration
 }
 
 type ResourceOrRef struct {
@@ -40,4 +56,12 @@ type ResourceOrRef struct {
 
 func (r *ResourceOrRef) IsRef() bool {
 	return r.Ref != nil
+}
+
+func (r *ResourceOrRef) GetRef() core.ObjectRef {
+	return r.Ref
+}
+
+func (r *ResourceOrRef) GetObject() core.ResourceModel {
+	return r.Resource
 }

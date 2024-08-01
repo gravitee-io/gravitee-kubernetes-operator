@@ -17,6 +17,7 @@ package core
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -36,12 +37,19 @@ const (
 )
 
 // +k8s:deepcopy-gen=false
-type Resource interface {
+type Object interface {
 	client.Object
 	GetSpec() Spec
 	GetStatus() Status
-	GetRef() ResourceRef
-	DeepCopyResource() Resource
+	GetRef() ObjectRef
+	DeepCopyResource() Object
+}
+
+// +k8s:deepcopy-gen=false
+type ObjectOrRef[T any] interface {
+	IsRef() bool
+	GetRef() ObjectRef
+	GetObject() T
 }
 
 // +k8s:deepcopy-gen=false
@@ -51,26 +59,27 @@ type DefinitionContext interface {
 }
 
 // +k8s:deepcopy-gen=false
-type ApiDefinition interface {
+type ApiDefinitionModel interface {
 	GetDefinitionVersion() ApiDefinitionVersion
 	GetContextPaths() []string
 	SetDefinitionContext(DefinitionContext)
 	GetDefinitionContext() DefinitionContext
+	GetResources() []ObjectOrRef[ResourceModel]
 }
 
 // +k8s:deepcopy-gen=false
-type ApiDefinitionResource interface {
-	ContextAwareResource
-	ApiDefinition
-	GetDefinition() ApiDefinition
-	PopulateIDs(context Context)
+type ApiDefinitionObject interface {
+	ContextAwareObject
+	ApiDefinitionModel
+	GetDefinition() ApiDefinitionModel
+	PopulateIDs(context ContextModel)
 	SetDefinitionContext(DefinitionContext)
 	GetDefinitionContext() DefinitionContext
 }
 
 // +k8s:deepcopy-gen=false
-type ApplicationResource interface {
-	ContextAwareResource
+type ApplicationObject interface {
+	ContextAwareObject
 }
 
 // +k8s:deepcopy-gen=false
@@ -87,9 +96,9 @@ type Status interface {
 }
 
 // +k8s:deepcopy-gen=false
-type ContextAwareResource interface {
-	Resource
-	ContextRef() ResourceRef
+type ContextAwareObject interface {
+	Object
+	ContextRef() ObjectRef
 	HasContext() bool
 	GetID() string
 	GetOrgID() string
@@ -98,12 +107,12 @@ type ContextAwareResource interface {
 
 // +k8s:deepcopy-gen=false
 type SecretAware interface {
-	GetSecretRef() ResourceRef
+	GetSecretRef() ObjectRef
 	HasSecretRef() bool
 }
 
 // +k8s:deepcopy-gen=false
-type Context interface {
+type ContextModel interface {
 	SecretAware
 	GetURL() string
 	GetEnvID() string
@@ -113,9 +122,9 @@ type Context interface {
 }
 
 // +k8s:deepcopy-gen=false
-type ContextResource interface {
-	Context
-	Resource
+type ContextObject interface {
+	ContextModel
+	Object
 }
 
 // +k8s:deepcopy-gen=false
@@ -123,7 +132,7 @@ type Auth interface {
 	GetBearerToken() string
 	HasCredentials() bool
 	GetCredentials() BasicAuth
-	GetSecretRef() ResourceRef
+	GetSecretRef() ObjectRef
 	SetCredentials(username, password string)
 	SetToken(token string)
 }
@@ -135,7 +144,7 @@ type BasicAuth interface {
 }
 
 // +k8s:deepcopy-gen=false
-type ResourceRef interface {
+type ObjectRef interface {
 	fmt.Stringer
 	NamespacedName() types.NamespacedName
 	GetName() string
@@ -143,4 +152,16 @@ type ResourceRef interface {
 	HasNameSpace() bool
 	IsMissingNamespace() bool
 	SetNamespace(ns string)
+}
+
+// +k8s:deepcopy-gen=false
+type ResourceObject interface {
+	Object
+}
+
+// +k8s:deepcopy-gen=false
+type ResourceModel interface {
+	GetType() string
+	GetResourceName() string
+	GetConfig() *utils.GenericStringMap
 }

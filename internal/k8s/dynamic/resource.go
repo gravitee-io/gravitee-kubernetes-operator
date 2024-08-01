@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package dynamic
 
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func UpdateStatusSuccess(ctx context.Context, api core.Object) error {
-	if !api.GetDeletionTimestamp().IsZero() {
-		return nil
+func ExpectResolvedResource(ctx context.Context, ref core.ObjectRef, parentNs string) error {
+	if _, err := ResolveResource(ctx, ref, parentNs); err != nil {
+		return err
 	}
-
-	api.GetStatus().SetProcessingStatus(core.ProcessingStatusCompleted)
-	api.GetStatus().SetObservedGeneration(api.GetGeneration())
-	return k8s.GetClient().Status().Update(ctx, api)
+	return nil
 }
 
-func UpdateStatusFailure(ctx context.Context, api core.Object) error {
-	api.GetStatus().SetProcessingStatus(core.ProcessingStatusFailed)
-	return k8s.GetClient().Status().Update(ctx, api)
+func ResolveResource(ctx context.Context, ref core.ObjectRef, parentNs string) (core.ResourceModel, error) {
+	res, err := resolveRefSpec(ctx, ref, parentNs, ResourceGVR, new(base.Resource))
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

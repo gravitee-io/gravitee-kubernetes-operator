@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ core.ContextAwareResource = &Application{}
+var _ core.ContextAwareObject = &Application{}
 
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
@@ -81,7 +81,7 @@ func (app *Application) GetStatus() core.Status {
 	return &app.Status
 }
 
-func (app *Application) ContextRef() core.ResourceRef {
+func (app *Application) ContextRef() core.ObjectRef {
 	return app.Spec.Context
 }
 
@@ -101,11 +101,11 @@ func (app *Application) GetEnvID() string {
 	return app.Status.EnvID
 }
 
-func (app *Application) DeepCopyResource() core.Resource {
+func (app *Application) DeepCopyResource() core.Object {
 	return app.DeepCopy()
 }
 
-func (app *Application) GetRef() core.ResourceRef {
+func (app *Application) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      app.Name,
 		Namespace: app.Namespace,

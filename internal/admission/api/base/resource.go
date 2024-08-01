@@ -12,34 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ctxref
+package base
 
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func Validate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	if ctxAware, ok := obj.(core.ContextAwareObject); ok {
-		if ctxAware.HasContext() {
-			return validateContextRefExists(ctx, ctxAware)
+func validateResourceOrRefs(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	for _, res := range api.GetResources() {
+		if res.IsRef() && dynamic.ExpectResolvedResource(ctx, res.GetRef(), api.GetNamespace()) != nil {
+			errs.AddSevere("api references resource [%s] that does not exist in the cluster", res.GetRef())
+		} else {
+			errs.MergeWith(resource.ValidateModel(ctx, res.GetObject()))
 		}
 	}
-	return nil
-}
-
-func validateContextRefExists(ctx context.Context, ctxAware core.ContextAwareObject) *errors.AdmissionError {
-	ctxRef := ctxAware.ContextRef()
-	if err := dynamic.ExpectResolvedContext(ctx, ctxRef, ctxAware.GetNamespace()); err != nil {
-		return errors.NewSevere(
-			"resource [%s] references management context [%v] that doesn't exist in the cluster",
-			ctxAware.GetName(),
-			ctxRef,
-		)
-	}
-	return nil
+	return errs
 }

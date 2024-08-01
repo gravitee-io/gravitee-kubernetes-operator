@@ -28,8 +28,9 @@ func ValidateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 
 	errs.Add(ctxref.Validate(ctx, obj))
 
-	if api, ok := obj.(core.ApiDefinitionResource); ok {
+	if api, ok := obj.(core.ApiDefinitionObject); ok {
 		errs.Add(validateNoConflictingPath(ctx, api))
+		errs.MergeWith(validateResourceOrRefs(ctx, api))
 	}
 
 	return errs

@@ -19,7 +19,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
-func toHttpAuth(management core.Context) *http.Auth {
+func toHttpAuth(management core.ContextModel) *http.Auth {
 	if !management.HasAuthentication() {
 		return nil
 	}

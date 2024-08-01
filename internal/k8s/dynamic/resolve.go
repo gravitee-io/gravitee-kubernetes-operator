@@ -25,7 +25,7 @@ import (
 
 func resolveRefSpec[T any](
 	ctx context.Context,
-	ref core.ResourceRef,
+	ref core.ObjectRef,
 	parentNs string,
 	gvr schema.GroupVersionResource,
 	target T,
@@ -39,7 +39,7 @@ func resolveRefSpec[T any](
 
 func resolveRef[T any](
 	ctx context.Context,
-	ref core.ResourceRef,
+	ref core.ObjectRef,
 	parentNs string,
 	gvr schema.GroupVersionResource,
 	target T,
@@ -53,7 +53,7 @@ func resolveRef[T any](
 
 func resolveDynamic(
 	ctx context.Context,
-	ref core.ResourceRef,
+	ref core.ObjectRef,
 	parentNs string,
 	gvr schema.GroupVersionResource,
 ) (*unstructured.Unstructured, error) {

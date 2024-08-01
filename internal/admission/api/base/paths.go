@@ -24,7 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-func validateNoConflictingPath(ctx context.Context, api core.ApiDefinitionResource) *errors.AdmissionError {
+func validateNoConflictingPath(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
 	apiPaths := api.GetContextPaths()
 	existingPaths, err := getExistingPaths(ctx, api)
 	if err != nil {
@@ -47,11 +47,11 @@ func validateNoConflictingPath(ctx context.Context, api core.ApiDefinitionResour
 	return nil
 }
 
-func getExistingPaths(ctx context.Context, api core.ApiDefinitionResource) ([]string, error) {
+func getExistingPaths(ctx context.Context, api core.ApiDefinitionObject) ([]string, error) {
 	existingPaths := make([]string, 0)
 	apis, err := dynamic.GetAPIs(ctx, dynamic.ListOptions{
 		Namespace: api.GetNamespace(),
-		Excluded: []core.ResourceRef{
+		Excluded: []core.ObjectRef{
 			api.GetRef(),
 		},
 	})

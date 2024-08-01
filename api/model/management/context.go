@@ -22,7 +22,7 @@ import (
 
 var _ core.Auth = &Auth{}
 var _ core.BasicAuth = &BasicAuth{}
-var _ core.Context = &Context{}
+var _ core.ContextModel = &Context{}
 
 type Context struct {
 	// The URL of a management API instance
@@ -57,7 +57,7 @@ func (c *Context) GetOrgID() string {
 }
 
 // GetSecretRef implements custom.Context.
-func (c *Context) GetSecretRef() core.ResourceRef {
+func (c *Context) GetSecretRef() core.ObjectRef {
 	return c.Auth.SecretRef
 }
 
@@ -92,7 +92,7 @@ func (in *Auth) GetCredentials() core.BasicAuth {
 }
 
 // GetSecretRef implements custom.Auth.
-func (in *Auth) GetSecretRef() core.ResourceRef {
+func (in *Auth) GetSecretRef() core.ObjectRef {
 	return in.SecretRef
 }
 

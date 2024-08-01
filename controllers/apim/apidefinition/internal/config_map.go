@@ -62,7 +62,7 @@ func updateConfigMap(
 
 func saveConfigMap(
 	ctx context.Context,
-	apiDefinition core.ApiDefinitionResource,
+	apiDefinition core.ApiDefinitionObject,
 ) error {
 	// Create config map with some specific metadata that will be used to check changes across 'Update' events.
 	cm := &v1.ConfigMap{}

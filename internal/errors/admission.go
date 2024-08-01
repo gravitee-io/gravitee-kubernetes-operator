@@ -55,13 +55,12 @@ func (errs *AdmissionErrors) Map() (admission.Warnings, error) {
 	return warnings, errs.Severe[0]
 }
 
-func (errs *AdmissionErrors) MergeWith(other *AdmissionErrors) *AdmissionErrors {
+func (errs *AdmissionErrors) MergeWith(other *AdmissionErrors) {
 	if other == nil {
-		return errs
+		return
 	}
 	errs.Warning = append(errs.Warning, other.Warning...)
 	errs.Severe = append(errs.Severe, other.Severe...)
-	return errs
 }
 
 func (errs *AdmissionErrors) IsSevere() bool {

@@ -30,6 +30,7 @@ import (
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
+	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
 	"gopkg.in/yaml.v3"
@@ -334,7 +335,7 @@ func patchAdmissionWebhook() {
 }
 
 func setupAdmissionWebhooks(mgr manager.Manager) error {
-	if err := (&v1alpha1.ApiResource{}).SetupWebhookWithManager(mgr); err != nil {
+	if err := (resourceAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	if err := (v2Admission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {

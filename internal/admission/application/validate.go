@@ -25,7 +25,7 @@ import (
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if app, ok := obj.(core.ApplicationResource); ok {
+	if app, ok := obj.(core.ApplicationObject); ok {
 		errs.Add(ctxref.Validate(ctx, app))
 	}
 	return errs
