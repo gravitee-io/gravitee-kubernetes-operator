@@ -17,6 +17,7 @@ package uuid
 import (
 	"testing"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -28,8 +29,8 @@ func TestUUID(t *testing.T) {
 
 var _ = Describe("FromStrings", func() {
 	It("generates a predictable UUID", func() {
-		firstRun := FromStrings("foo", "bar")
-		secondRun := FromStrings("foo", "bar")
+		firstRun := uuid.FromStrings("foo", "bar")
+		secondRun := uuid.FromStrings("foo", "bar")
 		Expect(secondRun).To(Equal(firstRun))
 	})
 })
