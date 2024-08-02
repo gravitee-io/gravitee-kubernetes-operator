@@ -56,12 +56,10 @@ type Api struct {
 	// +kubebuilder:validation:MinItems:=1
 	// List of Endpoint groups
 	EndpointGroups []*EndpointGroup `json:"endpointGroups"`
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinProperties:=1
 	// A map of plan identifiers to plan
 	// Keys uniquely identify plans and are used to keep them in sync
 	// when using a management context.
-	Plans map[string]*Plan `json:"plans"`
+	Plans map[string]*Plan `json:"plans,omitempty"`
 	// API Flow Execution
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
 	// +kubebuilder:validation:Optional

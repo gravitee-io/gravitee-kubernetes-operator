@@ -1123,7 +1123,6 @@ spec:
                   A map of plan identifiers to plan
                   Keys uniquely identify plans and are used to keep them in sync
                   when using a management context.
-                minProperties: 1
                 type: object
               primaryOwner:
                 description: Specify the primary member that owns the API
@@ -1263,7 +1262,6 @@ spec:
             required:
             - endpointGroups
             - listeners
-            - plans
             - type
             - version
             type: object
