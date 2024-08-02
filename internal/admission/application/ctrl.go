@@ -30,7 +30,7 @@ var _ webhook.CustomDefaulter = AdmissionCtrl{}
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.ManagementContext{}).
+		For(&v1alpha1.Application{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
