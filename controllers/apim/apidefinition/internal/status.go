@@ -27,7 +27,6 @@ func UpdateStatusSuccess(ctx context.Context, api core.Object) error {
 	}
 
 	api.GetStatus().SetProcessingStatus(core.ProcessingStatusCompleted)
-	api.GetStatus().SetObservedGeneration(api.GetGeneration())
 	return k8s.GetClient().Status().Update(ctx, api)
 }
 

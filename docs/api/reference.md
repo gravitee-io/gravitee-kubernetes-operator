@@ -4177,15 +4177,6 @@ ApiDefinitionStatus defines the observed state of API Definition.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>observedGeneration</b></td>
-        <td>integer</td>
-        <td>
-          This is the object generation observed during the latest reconcile.<br/>
-          <br/>
-            <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
@@ -7107,15 +7098,6 @@ used to persist the error message encountered during admission<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>observedGeneration</b></td>
-        <td>integer</td>
-        <td>
-          This is the object generation observed during the latest reconcile.<br/>
-          <br/>
-            <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
@@ -7726,15 +7708,6 @@ ApplicationStatus defines the observed state of Application.
         <td>string</td>
         <td>
           The ID of the Application, if a management context has been defined to sync with an APIM instance<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>observedGeneration</b></td>
-        <td>integer</td>
-        <td>
-          This is the object generation observed during the latest reconcile.<br/>
-          <br/>
-            <i>Format</i>: int64<br/>
         </td>
         <td>false</td>
       </tr><tr>

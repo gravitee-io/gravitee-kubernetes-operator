@@ -241,10 +241,6 @@ func (s *ApiV4DefinitionStatus) SetProcessingStatus(status core.ProcessingStatus
 	s.ProcessingStatus = status
 }
 
-func (s *ApiV4DefinitionStatus) SetObservedGeneration(g int64) {
-	s.ObservedGeneration = g
-}
-
 func (s *ApiV4DefinitionStatus) DeepCopyFrom(api client.Object) error {
 	switch t := api.(type) {
 	case *ApiV4Definition:

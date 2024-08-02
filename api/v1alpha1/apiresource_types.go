@@ -29,7 +29,6 @@ import (
 )
 
 var _ core.ResourceObject = &ApiResource{}
-var _ core.ResourceModel = &ApiResource{}
 
 // ApiResourceSpec defines the desired state of ApiResource.
 // +kubebuilder:object:generate=true
@@ -61,11 +60,6 @@ func (s *ApiResourceStatus) DeepCopyTo(obj client.Object) error {
 		return nil
 	}
 	return fmt.Errorf("unknown type %T", obj)
-}
-
-// SetObservedGeneration implements core.Status.
-func (s *ApiResourceStatus) SetObservedGeneration(g int64) {
-
 }
 
 // SetProcessingStatus implements core.Status.

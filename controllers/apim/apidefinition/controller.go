@@ -69,7 +69,7 @@ func reconcileApiDefinition(
 	events *event.Recorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	dc := apiDefinition.DeepCopyResource()
+	dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
 	status := apiDefinition.GetStatus()
 	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), dc, func() error {
 		util.AddFinalizer(apiDefinition, core.ApiDefinitionFinalizer)

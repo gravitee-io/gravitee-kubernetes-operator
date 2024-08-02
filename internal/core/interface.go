@@ -42,7 +42,6 @@ type Object interface {
 	GetSpec() Spec
 	GetStatus() Status
 	GetRef() ObjectRef
-	DeepCopyResource() Object
 }
 
 // +k8s:deepcopy-gen=false
@@ -90,7 +89,6 @@ type Spec interface {
 // +k8s:deepcopy-gen=false
 type Status interface {
 	SetProcessingStatus(status ProcessingStatus)
-	SetObservedGeneration(g int64)
 	DeepCopyFrom(obj client.Object) error
 	DeepCopyTo(obj client.Object) error
 }
@@ -156,6 +154,7 @@ type ObjectRef interface {
 
 // +k8s:deepcopy-gen=false
 type ResourceObject interface {
+	ResourceModel
 	Object
 }
 

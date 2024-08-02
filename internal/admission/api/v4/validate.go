@@ -51,7 +51,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 }
 
 func validateApiPlans(_ context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
-	cp, _ := api.DeepCopyResource().(core.ApiDefinitionObject)
+	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
 
 	apiDef, ok := cp.GetDefinition().(*v4.Api)
 	if !ok {
@@ -70,7 +70,7 @@ func validateApiPlans(_ context.Context, api core.ApiDefinitionObject) *errors.A
 func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := api.DeepCopyResource().(core.ApiDefinitionObject)
+	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
 
 	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
