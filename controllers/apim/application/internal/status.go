@@ -27,7 +27,6 @@ func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application)
 		return nil
 	}
 
-	application.Status.ObservedGeneration = application.ObjectMeta.Generation
 	application.Status.ProcessingStatus = core.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, application)
 }

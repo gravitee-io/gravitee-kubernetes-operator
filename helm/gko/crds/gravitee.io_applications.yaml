@@ -232,11 +232,6 @@ spec:
                 description: The ID of the Application, if a management context has
                   been defined to sync with an APIM instance
                 type: string
-              observedGeneration:
-                description: This is the object generation observed during the latest
-                  reconcile.
-                format: int64
-                type: integer
               organizationId:
                 description: The organization ID, if a management context has been
                   defined to sync with an APIM instance

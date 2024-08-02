@@ -29,6 +29,4 @@ type Status struct {
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 	// The state of the API. Can be either STARTED or STOPPED.
 	State ApiState `json:"state,omitempty"`
-	// This is the object generation observed during the latest reconcile.
-	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }

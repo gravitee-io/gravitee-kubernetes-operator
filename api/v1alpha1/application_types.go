@@ -138,10 +138,6 @@ func (s *ApplicationStatus) DeepCopyTo(api client.Object) error {
 	return nil
 }
 
-func (s *ApplicationStatus) SetObservedGeneration(g int64) {
-	s.ObservedGeneration = g
-}
-
 func (s *ApplicationStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.Status.ProcessingStatus = status
 }

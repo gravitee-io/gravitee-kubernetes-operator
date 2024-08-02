@@ -69,11 +69,6 @@ func (st *ManagementContextStatus) DeepCopyTo(obj client.Object) error {
 	}
 }
 
-// SetObservedGeneration implements custom.Status.
-func (st *ManagementContextStatus) SetObservedGeneration(g int64) {
-	// Not implemented
-}
-
 // SetProcessingStatus implements custom.Status.
 func (st *ManagementContextStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	// Not implemented

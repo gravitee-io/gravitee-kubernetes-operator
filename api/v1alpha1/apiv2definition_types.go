@@ -237,10 +237,6 @@ func (s *ApiDefinitionStatus) SetProcessingStatus(status core.ProcessingStatus) 
 	s.ProcessingStatus = status
 }
 
-func (s *ApiDefinitionStatus) SetObservedGeneration(g int64) {
-	s.ObservedGeneration = g
-}
-
 func (s *ApiDefinitionStatus) DeepCopyFrom(obj client.Object) error {
 	switch t := obj.(type) {
 	case *ApiDefinition:
