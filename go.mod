@@ -7,7 +7,7 @@ toolchain go1.22.5
 require (
 	github.com/moby/moby v27.1.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.19.1
-	github.com/onsi/gomega v1.34.0
+	github.com/onsi/gomega v1.34.1
 	github.com/zeebo/xxh3 v1.0.2
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
@@ -28,8 +28,8 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
+	golang.org/x/tools v0.23.0 // indirect
 )
 
 require (
