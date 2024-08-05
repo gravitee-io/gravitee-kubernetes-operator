@@ -28,7 +28,6 @@ COPY main.go main.go
 COPY api/ api/
 COPY internal/ internal/
 COPY controllers/ controllers/
-COPY pkg/ pkg/
 
 # Copy the CRD manifests
 COPY helm/gko/crds/ helm/gko/crds/
