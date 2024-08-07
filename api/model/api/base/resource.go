@@ -28,11 +28,11 @@ type Resource struct {
 	// Is resource enabled or not?
 	Enabled bool `json:"enabled"`
 	// Resource Name
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 	// Resource Type
-	Type string `json:"type,omitempty"`
+	Type string `json:"type"`
 	// Resource Configuration, arbitrary map of key-values
-	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
+	Configuration *utils.GenericStringMap `json:"configuration"`
 }
 
 func (r *Resource) GetType() string {
