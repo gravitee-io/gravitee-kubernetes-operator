@@ -33,15 +33,15 @@ func ValidateModel(ctx context.Context, res core.ResourceModel) *errors.Admissio
 	errs := errors.NewAdmissionErrors()
 
 	if res.GetType() == "" {
-		errs.AddSevere("missing required value in property [type]")
+		errs.AddSevere("missing required string value in API resource property [type]")
 	}
 
 	if res.GetResourceName() == "" {
-		errs.AddSevere("missing required value in property [name]")
+		errs.AddSevere("missing required string value in API resource property [name]")
 	}
 
 	if res.GetConfig() == nil {
-		errs.AddSevere("missing required value in property [configuration]")
+		errs.AddSevere("missing required object value in API resource property [configuration]")
 	}
 
 	return errs
