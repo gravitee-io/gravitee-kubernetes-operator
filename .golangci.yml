@@ -267,7 +267,7 @@ issues:
       linters: [ errorlint ]
     - source: "^//"
       linters: [ lll ]
-    - path: "(_test\\.go|fixtures.go)"
+    - path: "(_test\\.go|fixtures.go|constants.go)"
       linters:
         - bodyclose
         - dupl

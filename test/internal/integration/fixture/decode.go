@@ -15,9 +15,8 @@
 package fixture
 
 import (
-	"os"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/examples"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	coreV1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
@@ -61,7 +60,7 @@ func decodeList[T client.Object](paths []string, rcv T, kind schema.GroupVersion
 }
 
 func decode[T client.Object](path string, rcv T, kind schema.GroupVersionKind) T {
-	data, err := os.ReadFile(path)
+	data, err := examples.FS.ReadFile(path)
 	Expect(err).ToNot(HaveOccurred())
 
 	decoded, _, err := universalDecode(data, &kind, rcv)
