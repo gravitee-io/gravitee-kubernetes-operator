@@ -65,3 +65,9 @@ func (r *ResourceOrRef) GetRef() core.ObjectRef {
 func (r *ResourceOrRef) GetObject() core.ResourceModel {
 	return r.Resource
 }
+
+func (r *ResourceOrRef) SetObject(obj core.ResourceModel) {
+	if v, ok := obj.(*Resource); ok {
+		r.Resource = v
+	}
+}
