@@ -36,7 +36,7 @@ type Resource struct {
 }
 
 func (r *Resource) GetType() string {
-	return r.Name
+	return r.Type
 }
 
 func (r *Resource) GetResourceName() string {
