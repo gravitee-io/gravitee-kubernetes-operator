@@ -17,8 +17,9 @@ package admission
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"

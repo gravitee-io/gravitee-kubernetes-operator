@@ -15,7 +15,9 @@
 // +kubebuilder:object:generate=true
 package base
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+)
 
 type ApiBase struct {
 	// The API ID. If empty, this field will take the value of the `metadata.uid`

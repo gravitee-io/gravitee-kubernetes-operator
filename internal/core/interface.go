@@ -49,6 +49,7 @@ type ObjectOrRef[T any] interface {
 	IsRef() bool
 	GetRef() ObjectRef
 	GetObject() T
+	SetObject(obj T)
 }
 
 // +k8s:deepcopy-gen=false

@@ -17,6 +17,8 @@ package base
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -26,11 +28,25 @@ import (
 func validateResourceOrRefs(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 	for _, res := range api.GetResources() {
-		if res.IsRef() && dynamic.ExpectResolvedResource(ctx, res.GetRef(), api.GetNamespace()) != nil {
-			errs.AddSevere("api references resource [%s] that does not exist in the cluster", res.GetRef())
+		if res.IsRef() {
+			if r, err := dynamic.ResolveResource(ctx, res.GetRef(), api.GetNamespace()); err != nil {
+				errs.AddSevere("api references resource [%s] that does not exist in the cluster", res.GetRef())
+			} else {
+				res.SetObject(toResourceOrRef(r))
+			}
 		} else {
 			errs.MergeWith(resource.ValidateModel(ctx, res.GetObject()))
 		}
 	}
+
 	return errs
+}
+
+func toResourceOrRef(r core.ResourceModel) core.ResourceModel {
+	return &base.Resource{
+		Enabled:       true,
+		Name:          r.GetResourceName(),
+		Type:          r.GetType(),
+		Configuration: r.GetConfig(),
+	}
 }
