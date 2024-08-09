@@ -24,7 +24,6 @@ import (
 
 func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
 	spec := &application.Spec
-	spec.Origin = "KUBERNETES"
 	spec.ID = application.Status.ID
 
 	apim, err := apim.FromContextRef(ctx, spec.Context, application.GetNamespace())

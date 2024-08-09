@@ -86,7 +86,14 @@ func (svc *Applications) CreateOrUpdate(spec *application.Application) (*applica
 	url := svc.EnvV2Target(fmt.Sprintf("%s/_import/crd", applicationsPath))
 
 	status := new(application.Status)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	apimApp := struct {
+		*application.Application
+		Origin string `json:"origin"`
+	}{
+		Application: spec,
+		Origin:      "kubernetes",
+	}
+	if err := svc.HTTP.Put(url.String(), apimApp, status); err != nil {
 		return nil, err
 	}
 
