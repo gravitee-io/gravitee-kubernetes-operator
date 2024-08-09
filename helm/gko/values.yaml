@@ -140,3 +140,9 @@ ingress:
 httpClient:
    ## @param httpClient.insecureSkipCertVerify see manager.httpClient.insecureSkipCertVerify
   insecureSkipCertVerify: false
+
+dev:
+  ## @skip dev.debug This is used by dev for debug only.
+  debug:
+    enabled: false
+    port: 32767

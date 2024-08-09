@@ -14,4 +14,5 @@ docker-build: ## Build docker image with the manager.
 docker-push: ## Push docker image with the manager.
 	docker push ${IMG}:${TAG}
 
-
+docker-build-debug: ## Build docker image with remote debug enabled
+	docker build -f Dockerfile.debug -t ${IMG}:${TAG} .

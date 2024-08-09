@@ -72,6 +72,12 @@ spec:
             - --leader-elect
           command:
             - /manager
+          {{- if .Values.dev.debug.enabled }}
+          ports:
+            - containerPort: {{ .Values.dev.debug.port }}
+              name: debugger
+              protocol: TCP          
+          {{- end }}
           envFrom:
             - configMapRef:
                 name: '{{ .Values.manager.configMap.name }}'
@@ -103,8 +109,10 @@ spec:
               name: webhook-cert
               readOnly: true
           {{- end }}
+      {{- if not .Values.dev.debug.enabled }}
       securityContext:
         runAsNonRoot: true
+      {{- end }}
       serviceAccountName: {{ template "rbac.serviceAccountName" . }}
       {{- if .Values.manager.webhook.enabled }}
       volumes:
