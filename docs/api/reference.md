@@ -7332,26 +7332,10 @@ Application is the main resource handled by the Kubernetes Operator
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>app_key_mode</b></td>
-        <td>enum</td>
-        <td>
-          The API key mode to use. If shared, the application will reuse the same API key across various subscriptions.<br/>
-          <br/>
-            <i>Enum</i>: SHARED, EXCLUSIVE, UNSPECIFIED<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>background</b></td>
         <td>string</td>
         <td>
           The base64 encoded background to use for this application when displaying it on the portal<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>clientId</b></td>
-        <td>string</td>
-        <td>
-          The ClientID identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7362,7 +7346,7 @@ Application is the main resource handled by the Kubernetes Operator
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>disable_membership_notifications</b></td>
+        <td><b>disableMembershipNotifications</b></td>
         <td>boolean</td>
         <td>
           Should members get notified when they are added to the application ?<br/>
@@ -7398,15 +7382,6 @@ Application ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>origin</b></td>
-        <td>enum</td>
-        <td>
-          The origin which is used to create this Application<br/>
-          <br/>
-            <i>Enum</i>: kubernetes<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>picture</b></td>
         <td>string</td>
         <td>
@@ -7414,24 +7389,10 @@ Application ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>picture_url</b></td>
+        <td><b>pictureUrl</b></td>
         <td>string</td>
         <td>
-          An URL pointing to the picture to use when displaying the application on the portal<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>redirectUris</b></td>
-        <td>[]string</td>
-        <td>
-          List of application Redirect Uris<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          Application Type<br/>
+          A URL pointing to the picture to use when displaying the application on the portal<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7530,7 +7491,7 @@ Application settings
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>client_id</b></td>
+        <td><b>clientId</b></td>
         <td>string</td>
         <td>
           ClientID is the client id of the application<br/>
@@ -7557,66 +7518,24 @@ Application settings
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>application_type</b></td>
+        <td><b>applicationType</b></td>
         <td>string</td>
         <td>
           Oauth client application type<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>grant_types</b></td>
+        <td><b>grantTypes</b></td>
         <td>[]string</td>
         <td>
           List of Oauth client grant types<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>client_id</b></td>
-        <td>string</td>
-        <td>
-          Oauth client id<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>client_secret</b></td>
-        <td>string</td>
-        <td>
-          Oauth client secret<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>client_uri</b></td>
-        <td>string</td>
-        <td>
-          Oauth client uri<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>logo_uri</b></td>
-        <td>string</td>
-        <td>
-          Oauth client logo uri<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>redirect_uris</b></td>
+        <td><b>redirectUris</b></td>
         <td>[]string</td>
         <td>
           List of Oauth client redirect uris<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>renew_client_secret_supported</b></td>
-        <td>boolean</td>
-        <td>
-          Whether client secret renewing is supported or not<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>response_types</b></td>
-        <td>[]string</td>
-        <td>
-          List of Oauth client response types<br/>
         </td>
         <td>false</td>
       </tr></tbody>
