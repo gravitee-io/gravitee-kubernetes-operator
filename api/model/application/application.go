@@ -15,35 +15,20 @@
 // +kubebuilder:object:generate=true
 package application
 
-// +kubebuilder:validation:Enum=SHARED;EXCLUSIVE;UNSPECIFIED;
-type AppKeyMode string
-
 type SimpleSettings struct {
 	// Application Type
 	AppType string `json:"type"`
 	// ClientID is the client id of the application
-	ClientID string `json:"client_id,omitempty"`
+	ClientID string `json:"clientId,omitempty"`
 }
 
 type OAuthClientSettings struct {
 	// Oauth client application type
-	ApplicationType string `json:"application_type"`
-	// Oauth client id
-	ClientID string `json:"client_id,omitempty"`
-	// Oauth client secret
-	ClientSecret string `json:"client_secret,omitempty"`
-	// Oauth client uri
-	ClientURI string `json:"client_uri,omitempty"`
+	ApplicationType string `json:"applicationType"`
 	// List of Oauth client grant types
-	GrantTypes []string `json:"grant_types"`
-	// Oauth client logo uri
-	LogoURI string `json:"logo_uri,omitempty"`
+	GrantTypes []string `json:"grantTypes"`
 	// List of Oauth client redirect uris
-	RedirectUris []string `json:"redirect_uris,omitempty"`
-	// Whether client secret renewing is supported or not
-	RenewClientSecretSupported bool `json:"renew_client_secret_supported,omitempty"`
-	// List of Oauth client response types
-	ResponseTypes []string `json:"response_types,omitempty"`
+	RedirectUris []string `json:"redirectUris,omitempty"`
 }
 
 type Setting struct {
@@ -75,16 +60,7 @@ type Application struct {
 	// +kubebuilder:validation:Required
 	// Application Description
 	Description string `json:"description,omitempty"`
-	// Application Type
-	Type string `json:"type,omitempty"`
-	// The ClientID identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.
-	ClientID string `json:"clientId,omitempty"`
-	// List of application Redirect Uris
-	RedirectUris []string `json:"redirectUris,omitempty"`
 
-	// The origin which is used to create this Application
-	// +kubebuilder:validation:Enum=kubernetes;
-	Origin string `json:"origin,omitempty"`
 	// io.gravitee.definition.model.Application
 	// Application ID
 	ID string `json:"id,omitempty"`
@@ -96,16 +72,14 @@ type Application struct {
 	Groups []string `json:"groups,omitempty"`
 	// The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL)
 	Picture string `json:"picture,omitempty"`
-	// An URL pointing to the picture to use when displaying the application on the portal
-	PictureURL string `json:"picture_url,omitempty"`
+	// A URL pointing to the picture to use when displaying the application on the portal
+	PictureURL string `json:"pictureUrl,omitempty"`
 	// Application settings
 	// +kubebuilder:validation:Required
 	Settings *Setting `json:"settings"`
-	// The API key mode to use. If shared, the application will reuse the same API key across various subscriptions.
-	AppKeyMode *AppKeyMode `json:"app_key_mode,omitempty"`
 	// +kubebuilder:validation:Optional
 	// Should members get notified when they are added to the application ?
-	DisableMembershipNotifications bool `json:"disable_membership_notifications"`
+	DisableMembershipNotifications bool `json:"disableMembershipNotifications"`
 	// Application metadata
 	Metadata *[]Metadata `json:"metadata,omitempty"`
 }
