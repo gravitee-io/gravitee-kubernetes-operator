@@ -65,6 +65,3 @@ spec:
         --
         This is markdown.
       visibility: PRIVATE
-      accessControls: 
-        - referenceType: GROUP
-          referenceId: developers
