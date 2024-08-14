@@ -42,7 +42,7 @@ import (
 func updateIngressTLSReference(
 	ctx context.Context,
 	ingress *netV1.Ingress) error {
-	if ingress.Spec.TLS == nil || len(ingress.Spec.TLS) == 0 {
+	if len(ingress.Spec.TLS) == 0 {
 		log.FromContext(ctx).Info("no TLS will be configured")
 		return nil
 	}
