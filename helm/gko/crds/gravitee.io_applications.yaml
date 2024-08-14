@@ -78,10 +78,6 @@ spec:
               description:
                 description: Application Description
                 type: string
-              disableMembershipNotifications:
-                description: Should members get notified when they are added to the
-                  application ?
-                type: boolean
               domain:
                 description: Application domain
                 type: string
@@ -128,6 +124,9 @@ spec:
               name:
                 description: Application name
                 type: string
+              notifyMembers:
+                description: Notify members when they are added to the application
+                type: boolean
               picture:
                 description: The base64 encoded picture to use for this application
                   when displaying it on the portal (if not relying on an URL)
