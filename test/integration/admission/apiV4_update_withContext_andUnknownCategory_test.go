@@ -65,7 +65,10 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			}
 			return assert.Equals(
 				"warning",
-				errors.NewWarning("category [%s] is not defined in environment [DEFAULT]", unknownCategory).Error(),
+				errors.NewWarningf(
+					"category [%s] is not defined in environment [DEFAULT]",
+					unknownCategory,
+				).Error(),
 				warnings[0],
 			)
 		}, constants.EventualTimeout, interval).Should(Succeed())

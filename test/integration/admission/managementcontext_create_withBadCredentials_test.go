@@ -50,7 +50,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Context)
 			return assert.Equals(
 				"error",
-				errors.NewSevere(
+				errors.NewSeveref(
 					"bad credentials for context [%s]",
 					fixtures.Context.Name,
 				),

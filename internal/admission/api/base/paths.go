@@ -32,13 +32,13 @@ func validateNoConflictingPath(ctx context.Context, api core.ApiDefinitionObject
 	}
 	for _, apiPath := range apiPaths {
 		if _, err := url.Parse(apiPath); err != nil {
-			return errors.NewSevere(
+			return errors.NewSeveref(
 				"path [%s] is invalid",
 				apiPath,
 			)
 		}
 		if slices.Contains(existingPaths, apiPath) {
-			return errors.NewSevere(
+			return errors.NewSeveref(
 				"invalid API context path [%s]. Another API with the same path already exists",
 				apiPath,
 			)

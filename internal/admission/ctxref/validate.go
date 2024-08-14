@@ -35,7 +35,7 @@ func Validate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
 func validateContextRefExists(ctx context.Context, ctxAware core.ContextAwareObject) *errors.AdmissionError {
 	ctxRef := ctxAware.ContextRef()
 	if err := dynamic.ExpectResolvedContext(ctx, ctxRef, ctxAware.GetNamespace()); err != nil {
-		return errors.NewSevere(
+		return errors.NewSeveref(
 			"resource [%s] references management context [%v] that doesn't exist in the cluster",
 			ctxAware.GetName(),
 			ctxRef,

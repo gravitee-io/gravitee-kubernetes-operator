@@ -68,7 +68,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			}
 			return assert.Equals(
 				"warning",
-				errors.NewWarning(
+				errors.NewWarningf(
 					"Member [%s] of source [gravitee] could not be found in organization [DEFAULT]",
 					unknownMemberName,
 				).Error(),

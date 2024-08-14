@@ -69,7 +69,10 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 			return assert.Equals(
 				"severe",
-				errors.NewSevere("Resource [%s] configuration is not valid", fixtures.APIv4.Spec.Resources[0].Name).Error(),
+				errors.NewSeveref(
+					"Resource [%s] configuration is not valid",
+					fixtures.APIv4.Spec.Resources[0].Name,
+				).Error(),
 				err.Error(),
 			)
 		}, constants.EventualTimeout, interval).Should(Succeed())
