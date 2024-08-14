@@ -38,7 +38,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 func validateSecretRef(ctx context.Context, context core.ContextObject) *errors.AdmissionError {
 	if context.HasSecretRef() {
 		if err := dynamic.ExpectResolvedSecret(ctx, context.GetSecretRef(), context.GetNamespace()); err != nil {
-			return errors.NewSevere(
+			return errors.NewSeveref(
 				"secret [%v] doesn't exist in the cluster",
 				context.GetSecretRef(),
 			)
@@ -55,14 +55,14 @@ func validateContextIsAvailable(ctx context.Context, context core.ContextObject)
 	_, err = apim.Env.Get()
 
 	if errors.IsNetworkError(err) {
-		return errors.NewWarning(
+		return errors.NewWarningf(
 			"unable to reach APIM, [%s] is not available",
 			apim.Context.GetURL(),
 		)
 	}
 
 	if errors.IsUnauthorized(err) {
-		return errors.NewSevere(
+		return errors.NewSeveref(
 			"bad credentials for context [%s]",
 			context.GetName(),
 		)

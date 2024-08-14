@@ -60,8 +60,11 @@ func validateApiPlans(_ context.Context, api core.ApiDefinitionObject) *errors.A
 
 	if apiDef.State == baseModel.StateStarted &&
 		len(apiDef.Plans) == 0 {
-		return errors.NewSevere("cannot apply API [%s]. Its state is set to STARTED,"+
-			" but the API has no plans. APIs must have at least one plan in order to be deployed.", apiDef.Name)
+		return errors.NewSeveref(
+			"cannot apply API [%s]. Its state is set to STARTED but the API has no plans. "+
+				"APIs must have at least one plan in order to be deployed.",
+			apiDef.Name,
+		)
 	}
 
 	return nil

@@ -30,7 +30,10 @@ func validateResourceOrRefs(ctx context.Context, api core.ApiDefinitionObject) *
 	for _, res := range api.GetResources() {
 		if res.IsRef() {
 			if r, err := dynamic.ResolveResource(ctx, res.GetRef(), api.GetNamespace()); err != nil {
-				errs.AddSevere("api references resource [%s] that does not exist in the cluster", res.GetRef())
+				errs.AddSeveref(
+					"api references resource [%s] that does not exist in the cluster",
+					res.GetRef(),
+				)
 			} else {
 				res.SetObject(toResourceOrRef(r))
 			}

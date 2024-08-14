@@ -67,12 +67,20 @@ func (errs *AdmissionErrors) IsSevere() bool {
 	return len(errs.Severe) > 0
 }
 
-func (errs *AdmissionErrors) AddSevere(format string, args ...any) {
-	errs.Severe = append(errs.Severe, NewSevere(format, args...))
+func (errs *AdmissionErrors) AddSeveref(format string, args ...any) {
+	errs.Severe = append(errs.Severe, NewSeveref(format, args...))
 }
 
-func (errs *AdmissionErrors) AddWarning(format string, args ...any) {
-	errs.Warning = append(errs.Warning, NewWarning(format, args...))
+func (errs *AdmissionErrors) AddWarningf(format string, args ...any) {
+	errs.Warning = append(errs.Warning, NewWarningf(format, args...))
+}
+
+func (errs *AdmissionErrors) AddSevere(message string) {
+	errs.Severe = append(errs.Severe, NewSevere(message))
+}
+
+func (errs *AdmissionErrors) AddWarning(message string) {
+	errs.Warning = append(errs.Warning, NewWarning(message))
 }
 
 func (errs *AdmissionErrors) Add(err *AdmissionError) {
@@ -91,14 +99,28 @@ func (err *AdmissionError) Error() string {
 	return err.Message
 }
 
-func NewSevere(format string, args ...any) *AdmissionError {
+func NewSevere(message string) *AdmissionError {
+	return &AdmissionError{
+		Severity: Severe,
+		Message:  message,
+	}
+}
+
+func NewWarning(message string) *AdmissionError {
+	return &AdmissionError{
+		Severity: Warning,
+		Message:  message,
+	}
+}
+
+func NewSeveref(format string, args ...any) *AdmissionError {
 	return &AdmissionError{
 		Severity: Severe,
 		Message:  fmt.Sprintf(format, args...),
 	}
 }
 
-func NewWarning(format string, args ...any) *AdmissionError {
+func NewWarningf(format string, args ...any) *AdmissionError {
 	return &AdmissionError{
 		Severity: Warning,
 		Message:  fmt.Sprintf(format, args...),

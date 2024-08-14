@@ -48,9 +48,11 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 
 			return assert.Equals(
 				"severe",
-				errors.NewSevere("cannot apply API [%s]. Its state is set to STARTED,"+
+				errors.NewSeveref("cannot apply API [%s]. Its state is set to STARTED"+
 					" but the API has no plans. APIs must have at least one plan in order to"+
-					" be deployed.", fixtures.APIv4.Name).Error(),
+					" be deployed.",
+					fixtures.APIv4.Name,
+				).Error(),
 				err.Error(),
 			)
 		}, constants.EventualTimeout, interval).Should(Succeed())
