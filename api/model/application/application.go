@@ -78,8 +78,8 @@ type Application struct {
 	// +kubebuilder:validation:Required
 	Settings *Setting `json:"settings"`
 	// +kubebuilder:validation:Optional
-	// Should members get notified when they are added to the application ?
-	DisableMembershipNotifications bool `json:"disableMembershipNotifications"`
+	// Notify members when they are added to the application
+	NotifyMembers bool `json:"notifyMembers"`
 	// Application metadata
 	Metadata *[]Metadata `json:"metadata,omitempty"`
 }

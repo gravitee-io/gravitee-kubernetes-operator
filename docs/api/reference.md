@@ -7346,13 +7346,6 @@ Application is the main resource handled by the Kubernetes Operator
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>disableMembershipNotifications</b></td>
-        <td>boolean</td>
-        <td>
-          Should members get notified when they are added to the application ?<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>domain</b></td>
         <td>string</td>
         <td>
@@ -7379,6 +7372,13 @@ Application ID<br/>
         <td>[]object</td>
         <td>
           Application metadata<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notifyMembers</b></td>
+        <td>boolean</td>
+        <td>
+          Notify members when they are added to the application<br/>
         </td>
         <td>false</td>
       </tr><tr>
