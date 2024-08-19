@@ -91,6 +91,31 @@ spec:
                   io.gravitee.definition.model.Application
                   Application ID
                 type: string
+              members:
+                description: Application members
+                items:
+                  properties:
+                    reference:
+                      description: User's reference for user providing from an identity
+                        provider
+                      type: string
+                    role:
+                      default: USER
+                      description: Role's name
+                      type: string
+                    source:
+                      description: Member source
+                      example: gravitee
+                      type: string
+                    sourceId:
+                      description: Member source ID
+                      example: user@email.com
+                      type: string
+                  required:
+                  - source
+                  - sourceId
+                  type: object
+                type: array
               metadata:
                 description: Application metadata
                 items:

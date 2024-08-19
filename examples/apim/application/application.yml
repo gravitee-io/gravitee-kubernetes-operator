@@ -24,7 +24,7 @@ spec:
     namespace: "default"
   name: "K8S-Application"
   domain: "https://example.com"
-  description: "K8s Application 2"
+  description: "K8s Application"
   settings:
     app:
       type: WEB
@@ -33,4 +33,10 @@ spec:
       format: "STRING"
     - name: "test metadata 2"
       format: "STRING"
-
+#  members:
+#    - source: "gravitee"
+#      sourceId: "email1@email.example.com"
+#      role: OWNER
+#    - source: "gravitee"
+#      sourceId: "email2@email.example.com"
+#      role: USER
