@@ -53,6 +53,23 @@ type Metadata struct {
 	Hidden bool `json:"hidden,omitempty"`
 }
 
+type Member struct {
+	// Member source
+	// +kubebuilder:validation:Required
+	// +kubebuilder:example:=gravitee
+	Source string `json:"source"`
+	// Member source ID
+	// +kubebuilder:validation:Required
+	// +kubebuilder:example:=user@email.com
+	SourceID string `json:"sourceId"`
+	// User's reference for user providing from an identity provider
+	Reference *string `json:"reference,omitempty"`
+	// Role's name
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=`USER`
+	Role string `json:"role"`
+}
+
 type Application struct {
 	// +kubebuilder:validation:Required
 	// Application name
@@ -82,4 +99,6 @@ type Application struct {
 	NotifyMembers bool `json:"notifyMembers"`
 	// Application metadata
 	Metadata *[]Metadata `json:"metadata,omitempty"`
+	// Application members
+	Members *[]Member `json:"members,omitempty"`
 }

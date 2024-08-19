@@ -7368,6 +7368,13 @@ Application ID<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#applicationspecmembersindex">members</a></b></td>
+        <td>[]object</td>
+        <td>
+          Application members<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#applicationspecmetadataindex">metadata</a></b></td>
         <td>[]object</td>
         <td>
@@ -7536,6 +7543,56 @@ Application settings
         <td>[]string</td>
         <td>
           List of Oauth client redirect uris<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Application.spec.members[index]
+[Go to parent definition](#applicationspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>source</b></td>
+        <td>string</td>
+        <td>
+          Member source<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>sourceId</b></td>
+        <td>string</td>
+        <td>
+          Member source ID<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reference</b></td>
+        <td>string</td>
+        <td>
+          User's reference for user providing from an identity provider<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>role</b></td>
+        <td>string</td>
+        <td>
+          Role's name<br/>
+          <br/>
+            <i>Default</i>: USER<br/>
         </td>
         <td>false</td>
       </tr></tbody>

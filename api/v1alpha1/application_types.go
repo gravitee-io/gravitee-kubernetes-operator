@@ -90,7 +90,15 @@ func (app *Application) HasContext() bool {
 }
 
 func (app *Application) GetID() string {
-	return app.Status.ID
+	if app.Status.ID != "" {
+		return app.Status.ID
+	}
+
+	if app.Spec.ID != "" {
+		return app.Spec.ID
+	}
+
+	return string(app.UID)
 }
 
 func (app *Application) GetOrgID() string {
