@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/sort"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -98,7 +99,7 @@ func Equals(field string, expected, given any) error {
 	return nil
 }
 
-func SliceEqualsSorted[S ~[]E, E any](field string, expected S, given S, comp func(a, b E) int) error {
+func SliceEqualsSorted[S ~[]E, E any](field string, expected S, given S, comp sort.Comparator[E]) error {
 	ecp, gcp := make([]E, len(expected)), make([]E, len(given))
 	copy(ecp, expected)
 	slices.SortFunc(ecp, comp)

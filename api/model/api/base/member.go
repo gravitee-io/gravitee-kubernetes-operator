@@ -14,6 +14,8 @@
 
 package base
 
+import "fmt"
+
 type Member struct {
 	// Member source
 	// +kubebuilder:validation:Required
@@ -28,6 +30,13 @@ type Member struct {
 	// The API role associated with this Member
 	// +kubebuilder:default:=USER
 	Role string `json:"role,omitempty"`
+}
+
+func (m *Member) String() string {
+	return fmt.Sprintf(
+		"{Source:%s,SourceID:%s,DisplayName:%s,Role:%s}",
+		m.Source, m.SourceID, m.DisplayName, m.Role,
+	)
 }
 
 func NewGraviteeMember(username, role string) *Member {
