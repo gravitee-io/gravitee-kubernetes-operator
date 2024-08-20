@@ -16,6 +16,7 @@ package v4
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 )
 
 type Status struct {
@@ -26,16 +27,5 @@ type Status struct {
 	Plans map[string]string `json:"plans,omitempty"`
 	// When API has been created regardless of errors, this field is
 	// used to persist the error message encountered during admission
-	Errors Errors `json:"errors,omitempty"`
-}
-
-type Errors struct {
-	// warning errors do not block object reconciliation,
-	// most of the time because the value is ignored or defaulted
-	// when the API gets synced with APIM
-	Warning []string `json:"warning,omitempty"`
-	// severe errors do not pass admission and will block reconcile
-	// hence, this field should always be during the admission phase
-	// and is very unlikely to be persisted in the status
-	Severe []string `json:"severe,omitempty"`
+	Errors status.Errors `json:"errors,omitempty"`
 }

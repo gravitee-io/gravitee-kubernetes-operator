@@ -14,7 +14,10 @@
 
 package application
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+)
 
 type Status struct {
 	// The organization ID, if a management context has been defined to sync with an APIM instance
@@ -26,4 +29,7 @@ type Status struct {
 	// The processing status of the Application.
 	// The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
+	// When API has been created regardless of errors, this field is
+	// used to persist the error message encountered during admission
+	Errors status.Errors `json:"errors,omitempty"`
 }

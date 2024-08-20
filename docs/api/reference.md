@@ -7680,6 +7680,14 @@ ApplicationStatus defines the observed state of Application.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#applicationstatuserrors">errors</a></b></td>
+        <td>object</td>
+        <td>
+          When API has been created regardless of errors, this field is
+used to persist the error message encountered during admission<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
@@ -7699,6 +7707,45 @@ ApplicationStatus defines the observed state of Application.
         <td>
           The processing status of the Application.
 The value is `Completed` if the sync with APIM succeeded, Failed otherwise.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Application.status.errors
+[Go to parent definition](#applicationstatus)
+
+
+
+When API has been created regardless of errors, this field is
+used to persist the error message encountered during admission
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>severe</b></td>
+        <td>[]string</td>
+        <td>
+          severe errors do not pass admission and will block reconcile
+hence, this field should always be during the admission phase
+and is very unlikely to be persisted in the status<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>warning</b></td>
+        <td>[]string</td>
+        <td>
+          warning errors do not block object reconciliation,
+most of the time because the value is ignored or defaulted
+when the API gets synced with APIM<br/>
         </td>
         <td>false</td>
       </tr></tbody>

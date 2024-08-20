@@ -16,6 +16,7 @@ package service
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
@@ -83,7 +84,17 @@ func (svc *Applications) GetMetadataByApplicationID(appID string) (*[]model.Appl
 }
 
 func (svc *Applications) CreateOrUpdate(spec *application.Application) (*application.Status, error) {
-	url := svc.EnvV2Target(fmt.Sprintf("%s/_import/crd", applicationsPath))
+	return svc.createOrUpdate(spec, false)
+}
+
+func (svc *Applications) DryRunCreateOrUpdate(spec *application.Application) (*application.Status, error) {
+	return svc.createOrUpdate(spec, true)
+}
+
+func (svc *Applications) createOrUpdate(spec *application.Application, dryRun bool) (*application.Status, error) {
+	url := svc.EnvV2Target(applicationsPath).
+		WithPath("/_import/crd").
+		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
 	status := new(application.Status)
 	apimApp := struct {
@@ -93,6 +104,7 @@ func (svc *Applications) CreateOrUpdate(spec *application.Application) (*applica
 		Application: spec,
 		Origin:      "kubernetes",
 	}
+
 	if err := svc.HTTP.Put(url.String(), apimApp, status); err != nil {
 		return nil, err
 	}
