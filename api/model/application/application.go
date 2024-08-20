@@ -15,6 +15,11 @@
 // +kubebuilder:object:generate=true
 package application
 
+import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+
+var _ core.ApplicationModel = &Application{}
+var _ core.ApplicationSettings = &Setting{}
+
 type SimpleSettings struct {
 	// Application Type
 	AppType string `json:"type"`
@@ -34,6 +39,11 @@ type OAuthClientSettings struct {
 type Setting struct {
 	App   *SimpleSettings      `json:"app,omitempty"`
 	Oauth *OAuthClientSettings `json:"oauth,omitempty"`
+}
+
+// IsOAuth implements core.ApplicationSettings.
+func (in *Setting) IsOAuth() bool {
+	return in.Oauth != nil
 }
 
 // +kubebuilder:validation:Enum=STRING;NUMERIC;BOOLEAN;DATE;MAIL;URL;
@@ -77,7 +87,6 @@ type Application struct {
 	// +kubebuilder:validation:Required
 	// Application Description
 	Description string `json:"description,omitempty"`
-
 	// io.gravitee.definition.model.Application
 	// Application ID
 	ID string `json:"id,omitempty"`
@@ -101,4 +110,9 @@ type Application struct {
 	Metadata *[]Metadata `json:"metadata,omitempty"`
 	// Application members
 	Members *[]Member `json:"members,omitempty"`
+}
+
+// GetSettings implements core.ApplicationModel.
+func (in *Application) GetSettings() core.ApplicationSettings {
+	return in.Settings
 }

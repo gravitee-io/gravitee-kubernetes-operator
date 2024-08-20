@@ -206,6 +206,28 @@ spec:
                 description: The environment ID, if a management context has been
                   defined to sync with an APIM instance
                 type: string
+              errors:
+                description: |-
+                  When API has been created regardless of errors, this field is
+                  used to persist the error message encountered during admission
+                properties:
+                  severe:
+                    description: |-
+                      severe errors do not pass admission and will block reconcile
+                      hence, this field should always be during the admission phase
+                      and is very unlikely to be persisted in the status
+                    items:
+                      type: string
+                    type: array
+                  warning:
+                    description: |-
+                      warning errors do not block object reconciliation,
+                      most of the time because the value is ignored or defaulted
+                      when the API gets synced with APIM
+                    items:
+                      type: string
+                    type: array
+                type: object
               id:
                 description: The ID of the Application, if a management context has
                   been defined to sync with an APIM instance

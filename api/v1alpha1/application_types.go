@@ -27,7 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ core.ContextAwareObject = &Application{}
+var _ core.ApplicationObject = &Application{}
+var _ core.Spec = &ApplicationSpec{}
 
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
@@ -103,6 +104,10 @@ func (app *Application) GetID() string {
 
 func (app *Application) GetOrgID() string {
 	return app.Status.OrgID
+}
+
+func (app *Application) GetModel() core.ApplicationModel {
+	return &app.Spec.Application
 }
 
 func (app *Application) GetEnvID() string {

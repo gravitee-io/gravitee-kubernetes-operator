@@ -78,8 +78,19 @@ type ApiDefinitionObject interface {
 }
 
 // +k8s:deepcopy-gen=false
+type ApplicationSettings interface {
+	IsOAuth() bool
+}
+
+// +k8s:deepcopy-gen=false
+type ApplicationModel interface {
+	GetSettings() ApplicationSettings
+}
+
+// +k8s:deepcopy-gen=false
 type ApplicationObject interface {
 	ContextAwareObject
+	GetModel() ApplicationModel
 }
 
 // +k8s:deepcopy-gen=false
