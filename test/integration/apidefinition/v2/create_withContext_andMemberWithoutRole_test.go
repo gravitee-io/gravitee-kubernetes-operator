@@ -16,7 +16,6 @@ package v2
 
 import (
 	"context"
-	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -26,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/sort"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -75,9 +75,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			return assert.SliceEqualsSorted(
 				"members",
 				expectedMembers, exportedMembers,
-				func(a, b *base.Member) int {
-					return strings.Compare(a.Source+a.SourceID, b.Source+b.SourceID)
-				},
+				sort.MembersComparator,
 			)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 	})
