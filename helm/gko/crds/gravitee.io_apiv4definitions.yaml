@@ -1124,22 +1124,6 @@ spec:
                   Keys uniquely identify plans and are used to keep them in sync
                   when using a management context.
                 type: object
-              primaryOwner:
-                description: Specify the primary member that owns the API
-                properties:
-                  displayName:
-                    description: PrimaryOwner Display Name
-                    type: string
-                  email:
-                    description: PrimaryOwner email
-                    type: string
-                  id:
-                    description: PrimaryOwner ID
-                    type: string
-                  type:
-                    description: PrimaryOwner type
-                    type: string
-                type: object
               properties:
                 description: List of Properties for the API
                 items:

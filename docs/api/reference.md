@@ -514,13 +514,6 @@ it holding a new ID in APIM.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apidefinitionspecprimaryowner">primaryOwner</a></b></td>
-        <td>object</td>
-        <td>
-          Specify the primary member that owns the API<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#apidefinitionspecpropertiesindex">properties</a></b></td>
         <td>[]object</td>
         <td>
@@ -1803,54 +1796,6 @@ Rule policy
         <td>string</td>
         <td>
           Policy name<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiDefinition.spec.primaryOwner
-[Go to parent definition](#apidefinitionspec)
-
-
-
-Specify the primary member that owns the API
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>displayName</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner Display Name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>email</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner email<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>id</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner ID<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4449,13 +4394,6 @@ when using a management context.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#apiv4definitionspecprimaryowner">primaryOwner</a></b></td>
-        <td>object</td>
-        <td>
-          Specify the primary member that owns the API<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b><a href="#apiv4definitionspecpropertiesindex">properties</a></b></td>
         <td>[]object</td>
         <td>
@@ -6745,54 +6683,6 @@ Plan security
         <td>object</td>
         <td>
           Plan security configuration, a map of arbitrary key-values<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### ApiV4Definition.spec.primaryOwner
-[Go to parent definition](#apiv4definitionspec)
-
-
-
-Specify the primary member that owns the API
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>displayName</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner Display Name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>email</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner email<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>id</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner ID<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          PrimaryOwner type<br/>
         </td>
         <td>false</td>
       </tr></tbody>
