@@ -32,8 +32,29 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		if errs.IsSevere() {
 			return errs
 		}
+		errs.MergeWith(validateSettings(app))
+		if errs.IsSevere() {
+			return errs
+		}
 		errs.MergeWith(validateDryRun(ctx, app))
+		if errs.IsSevere() {
+			return errs
+		}
 	}
+	return errs
+}
+
+func validateSettings(app core.ApplicationObject) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	model := app.GetModel()
+	if model.HasSettings() {
+		settings := model.GetSettings()
+		if settings.IsOAuth() && settings.IsSimple() {
+			errs.AddSevere("configuring both OAuth and simple settings is not allowed")
+		}
+	}
+
 	return errs
 }
 

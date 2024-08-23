@@ -46,6 +46,11 @@ func (in *Setting) IsOAuth() bool {
 	return in.Oauth != nil
 }
 
+// IsSimple implements core.ApplicationSettings.
+func (in *Setting) IsSimple() bool {
+	return in.App != nil
+}
+
 // +kubebuilder:validation:Enum=STRING;NUMERIC;BOOLEAN;DATE;MAIL;URL;
 type MetaDataFormat string
 
@@ -115,4 +120,9 @@ type Application struct {
 // GetSettings implements core.ApplicationModel.
 func (in *Application) GetSettings() core.ApplicationSettings {
 	return in.Settings
+}
+
+// HasSettings implements core.ApplicationModel.
+func (in *Application) HasSettings() bool {
+	return in.Settings != nil
 }
