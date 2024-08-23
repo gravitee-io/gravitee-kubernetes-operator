@@ -86,7 +86,6 @@ type ApplicationSettings interface {
 // +k8s:deepcopy-gen=false
 type ApplicationModel interface {
 	GetSettings() ApplicationSettings
-	HasSettings() bool
 }
 
 // +k8s:deepcopy-gen=false

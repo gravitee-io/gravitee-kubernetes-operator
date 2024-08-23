@@ -29,12 +29,12 @@ import (
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var _ = Describe("Validate create", labels.WithContext, func() {
+var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := admission.AdmissionCtrl{}
 
-	It("should return error on create with wrong settings", func() {
+	It("should return error on create when moving from Simple to Oauth Settings", func() {
 		fixtures := fixture.
 			Builder().
 			WithApplication(constants.Application).
@@ -42,20 +42,23 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			Build().
 			Apply()
 
-		By("adding oauth settings while simple settings are set")
+		By("moving from oauth settings to simple settings")
 
-		fixtures.Application.Spec.Settings.Oauth = &application.OAuthClientSettings{
+		newApp := fixtures.Application.DeepCopy()
+
+		newApp.Spec.Settings.Oauth = &application.OAuthClientSettings{
 			ApplicationType: "WEB",
 		}
+		newApp.Spec.Settings.App = nil
 
 		By("checking that application validation returns error")
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Application)
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Application, newApp)
 			return assert.Equals(
 				"error",
 				errors.NewSevere(
-					"configuring both OAuth and simple settings is not allowed",
+					"moving from simple to Oauth settings is not allowed",
 				),
 				err,
 			)

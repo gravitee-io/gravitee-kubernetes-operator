@@ -44,15 +44,43 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
+func validateUpdate(
+	ctx context.Context,
+	oldObj runtime.Object,
+	newObj runtime.Object,
+) *errors.AdmissionErrors {
+	errs := validateCreate(ctx, newObj)
+	oldApp, ook := oldObj.(core.ApplicationObject)
+	newApp, nok := newObj.(core.ApplicationObject)
+	if ook && nok {
+		errs.MergeWith(validateSettingsUpdate(oldApp, newApp))
+	}
+	return errs
+}
+
 func validateSettings(app core.ApplicationObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	model := app.GetModel()
-	if model.HasSettings() {
-		settings := model.GetSettings()
-		if settings.IsOAuth() && settings.IsSimple() {
-			errs.AddSevere("configuring both OAuth and simple settings is not allowed")
-		}
+
+	settings := model.GetSettings()
+	if settings.IsOAuth() && settings.IsSimple() {
+		errs.AddSevere("configuring both OAuth and simple settings is not allowed")
+	}
+
+	return errs
+}
+
+func validateSettingsUpdate(oldApp, newApp core.ApplicationObject) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	oldModel, newModel := oldApp.GetModel(), newApp.GetModel()
+	oldSettings, newSettings := oldModel.GetSettings(), newModel.GetSettings()
+
+	if oldSettings.IsOAuth() && newSettings.IsSimple() {
+		errs.AddSevere("moving from OAuth to simple settings is not allowed")
+	} else if oldSettings.IsSimple() && newSettings.IsOAuth() {
+		errs.AddSevere("moving from simple to Oauth settings is not allowed")
 	}
 
 	return errs
