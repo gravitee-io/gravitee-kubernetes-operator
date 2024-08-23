@@ -7470,17 +7470,17 @@ Application settings
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>reference</b></td>
+        <td><b>displayName</b></td>
         <td>string</td>
         <td>
-          User's reference for user providing from an identity provider<br/>
+          Member display name<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b>role</b></td>
         <td>string</td>
         <td>
-          Role's name<br/>
+          The API role associated with this Member<br/>
           <br/>
             <i>Default</i>: USER<br/>
         </td>

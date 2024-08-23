@@ -95,13 +95,12 @@ spec:
                 description: Application members
                 items:
                   properties:
-                    reference:
-                      description: User's reference for user providing from an identity
-                        provider
+                    displayName:
+                      description: Member display name
                       type: string
                     role:
                       default: USER
-                      description: Role's name
+                      description: The API role associated with this Member
                       type: string
                     source:
                       description: Member source
