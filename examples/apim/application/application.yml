@@ -16,13 +16,13 @@
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
-  name: basic-application
+  name: simple-application
   namespace: default
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "K8S-Application"
+  name: "simple-app"
   domain: "https://example.com"
   description: "K8s Application"
   settings:
@@ -33,10 +33,3 @@ spec:
       format: "STRING"
     - name: "test metadata 2"
       format: "STRING"
-#  members:
-#    - source: "gravitee"
-#      sourceId: "email1@email.example.com"
-#      role: OWNER
-#    - source: "gravitee"
-#      sourceId: "email2@email.example.com"
-#      role: USER

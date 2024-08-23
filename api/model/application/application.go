@@ -77,12 +77,11 @@ type Member struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:example:=user@email.com
 	SourceID string `json:"sourceId"`
-	// User's reference for user providing from an identity provider
-	Reference *string `json:"reference,omitempty"`
-	// Role's name
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=`USER`
-	Role string `json:"role"`
+	// Member display name
+	DisplayName string `json:"displayName,omitempty"`
+	// The API role associated with this Member
+	// +kubebuilder:default:=USER
+	Role string `json:"role,omitempty"`
 }
 
 type Application struct {
