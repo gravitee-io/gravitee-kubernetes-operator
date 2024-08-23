@@ -48,8 +48,6 @@ type ApiBase struct {
 	// +kubebuilder:default:=PRIVATE
 	// Should the API be publicly available from the portal or not ?
 	Visibility ApiVisibility `json:"visibility,omitempty"`
-	// Specify the primary member that owns the API
-	PrimaryOwner *PrimaryOwner `json:"primaryOwner,omitempty"`
 	// +kubebuilder:validation:Optional
 	// List of Properties for the API
 	Properties []*Property `json:"properties"`

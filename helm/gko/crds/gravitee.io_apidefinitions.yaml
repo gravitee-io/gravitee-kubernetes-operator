@@ -744,22 +744,6 @@ spec:
                   - security
                   type: object
                 type: array
-              primaryOwner:
-                description: Specify the primary member that owns the API
-                properties:
-                  displayName:
-                    description: PrimaryOwner Display Name
-                    type: string
-                  email:
-                    description: PrimaryOwner email
-                    type: string
-                  id:
-                    description: PrimaryOwner ID
-                    type: string
-                  type:
-                    description: PrimaryOwner type
-                    type: string
-                type: object
               properties:
                 description: List of Properties for the API
                 items:
