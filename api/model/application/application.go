@@ -121,8 +121,3 @@ type Application struct {
 func (in *Application) GetSettings() core.ApplicationSettings {
 	return in.Settings
 }
-
-// HasSettings implements core.ApplicationModel.
-func (in *Application) HasSettings() bool {
-	return in.Settings != nil
-}

@@ -53,7 +53,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		By("checking that application validation returns warnings")
 
 		Eventually(func() error {
-			warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Application, fixtures.Application)
+			warnings, err := admissionCtrl.ValidateCreate(ctx, fixtures.Application)
 			if err != nil {
 				return err
 			}
