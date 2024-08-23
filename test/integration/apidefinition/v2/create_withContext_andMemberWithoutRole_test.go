@@ -52,7 +52,6 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		By("applying the API with created service account as members")
 
-		primaryOwner := base.NewMemoryMember("admin", "PRIMARY_OWNER")
 		saMemberWithoutRole := base.NewGraviteeMember(saName, "")
 		fixtures.API.Spec.Members = []*base.Member{saMemberWithoutRole}
 		fixtures = fixtures.Apply()
@@ -60,7 +59,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("setting up expected members")
 
 		expectedMemberWithDefaultRole := base.NewGraviteeMember(saName, "USER")
-		expectedMembers := []*base.Member{expectedMemberWithDefaultRole, primaryOwner}
+		expectedMembers := []*base.Member{expectedMemberWithDefaultRole}
 
 		By("checking that member without role has default role assigned in exported API")
 

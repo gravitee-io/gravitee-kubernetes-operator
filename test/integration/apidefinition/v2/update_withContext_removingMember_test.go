@@ -55,11 +55,9 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		By("applying the API with created service account as members")
 
-		primaryOwner := base.NewMemoryMember("admin", "PRIMARY_OWNER")
-
 		saMember := base.NewGraviteeMember(saName, "REVIEWER")
 
-		expectedMembers := []*base.Member{primaryOwner}
+		expectedMembers := []*base.Member{}
 
 		fixtures.API.Spec.Members = []*base.Member{saMember}
 
@@ -74,7 +72,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			}
 			return assert.SliceEqualsSorted(
 				"members",
-				[]*base.Member{primaryOwner, saMember}, export.Spec.Members,
+				[]*base.Member{saMember}, export.Spec.Members,
 				sort.MembersComparator,
 			)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
