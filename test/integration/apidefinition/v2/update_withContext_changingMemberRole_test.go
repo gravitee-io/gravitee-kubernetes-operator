@@ -55,8 +55,6 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		By("applying the API with created service account as members")
 
-		primaryOwner := base.NewMemoryMember("admin", "PRIMARY_OWNER")
-
 		saMember := base.NewGraviteeMember(saName, "REVIEWER")
 
 		fixtures.API.Spec.Members = []*base.Member{saMember}
@@ -72,7 +70,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			}
 			return assert.SliceEqualsSorted(
 				"members",
-				[]*base.Member{primaryOwner, saMember},
+				[]*base.Member{saMember},
 				export.Spec.Members,
 				sort.MembersComparator,
 			)
@@ -80,7 +78,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		By("changing role of API member from REVIEWER to USER")
 		saMember.Role = "USER"
-		expectedMembers := []*base.Member{primaryOwner, saMember}
+		expectedMembers := []*base.Member{saMember}
 		fixtures.API.Spec.Members = expectedMembers
 
 		Eventually(func() error {
