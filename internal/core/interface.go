@@ -80,6 +80,7 @@ type ApiDefinitionObject interface {
 // +k8s:deepcopy-gen=false
 type ApplicationSettings interface {
 	IsOAuth() bool
+	GetOAuthType() string
 	IsSimple() bool
 }
 

@@ -34,22 +34,27 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	ctx := context.Background()
 	admissionCtrl := admission.AdmissionCtrl{}
 
-	It("should return error on update when moving from Simple to Oauth Settings", func() {
+	It("should return error on update when changing oauth application type", func() {
 		fixtures := fixture.
 			Builder().
 			WithApplication(constants.Application).
 			WithContext(constants.ContextWithCredentialsFile).
-			Build().
-			Apply()
+			Build()
 
-		By("moving from oauth settings to simple settings")
+		By("creating an OAuth application")
+
+		fixtures.Application.Spec.Settings.App = nil
+		fixtures.Application.Spec.Settings.Oauth = &application.OAuthClientSettings{
+			ApplicationType: "WEB",
+			GrantTypes:      []string{"client_credentials"},
+		}
+
+		fixtures.Apply()
+
+		By("changing the oauth application type")
 
 		newApp := fixtures.Application.DeepCopy()
-
-		newApp.Spec.Settings.Oauth = &application.OAuthClientSettings{
-			ApplicationType: "WEB",
-		}
-		newApp.Spec.Settings.App = nil
+		newApp.Spec.Settings.Oauth.ApplicationType = "MOBILE"
 
 		By("checking that application validation returns error")
 
@@ -58,7 +63,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				errors.NewSevere(
-					"moving from simple to Oauth settings is not allowed",
+					"updating OAuth application type is not allowed",
 				),
 				err,
 			)
