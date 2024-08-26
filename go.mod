@@ -1,8 +1,6 @@
 module github.com/gravitee-io/gravitee-kubernetes-operator
 
-go 1.22.0
-
-toolchain go1.23.0
+go 1.23.1
 
 require (
 	github.com/moby/moby v27.1.2+incompatible
