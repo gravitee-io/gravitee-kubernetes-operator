@@ -83,6 +83,10 @@ func validateSettingsUpdate(oldApp, newApp core.ApplicationObject) *errors.Admis
 		errs.AddSevere("moving from simple to Oauth settings is not allowed")
 	}
 
+	if newSettings.GetOAuthType() != oldSettings.GetOAuthType() {
+		errs.AddSevere("updating OAuth application type is not allowed")
+	}
+
 	return errs
 }
 

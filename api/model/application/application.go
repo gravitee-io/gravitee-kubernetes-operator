@@ -46,6 +46,14 @@ func (in *Setting) IsOAuth() bool {
 	return in.Oauth != nil
 }
 
+// GetOAuthType implements core.ApplicationSettings.
+func (in *Setting) GetOAuthType() string {
+	if !in.IsOAuth() {
+		return ""
+	}
+	return in.Oauth.ApplicationType
+}
+
 // IsSimple implements core.ApplicationSettings.
 func (in *Setting) IsSimple() bool {
 	return in.App != nil
