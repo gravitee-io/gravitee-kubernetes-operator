@@ -74,7 +74,7 @@ type Application struct {
 	Name string `json:"name"`
 	// +kubebuilder:validation:Required
 	// Application Description
-	Description string `json:"description,omitempty"`
+	Description string `json:"description"`
 	// Application Type
 	ApplicationType string `json:"type,omitempty"`
 	// The ClientId identifying the application. This field is required when subscribing to an OAUTH2 / JWT plan.
