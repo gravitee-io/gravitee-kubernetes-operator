@@ -90,7 +90,7 @@ type Application struct {
 	Name string `json:"name"`
 	// +kubebuilder:validation:Required
 	// Application Description
-	Description string `json:"description,omitempty"`
+	Description string `json:"description"`
 	// io.gravitee.definition.model.Application
 	// Application ID
 	ID string `json:"id,omitempty"`

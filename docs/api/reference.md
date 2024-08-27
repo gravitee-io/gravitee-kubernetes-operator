@@ -7208,6 +7208,13 @@ Application is the main resource handled by the Kubernetes Operator
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Application Description<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
@@ -7226,13 +7233,6 @@ Application is the main resource handled by the Kubernetes Operator
         <td>string</td>
         <td>
           The base64 encoded background to use for this application when displaying it on the portal<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          Application Description<br/>
         </td>
         <td>false</td>
       </tr><tr>

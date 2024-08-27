@@ -195,6 +195,7 @@ spec:
                 type: object
             required:
             - contextRef
+            - description
             - name
             - settings
             type: object
