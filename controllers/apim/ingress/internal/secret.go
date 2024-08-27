@@ -39,7 +39,7 @@ import (
 )
 
 func (d *Delegate) updateIngressTLSReference(ingress *netV1.Ingress) error {
-	if ingress.Spec.TLS == nil || len(ingress.Spec.TLS) == 0 {
+	if len(ingress.Spec.TLS) == 0 {
 		d.log.Info("no TLS will be configured")
 		return nil
 	}

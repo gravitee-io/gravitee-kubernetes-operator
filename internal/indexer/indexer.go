@@ -145,7 +145,7 @@ func indexTLSSecret(ing *v1.Ingress, fields *[]string) {
 		return
 	}
 
-	if ing.Spec.TLS == nil || len(ing.Spec.TLS) == 0 {
+	if len(ing.Spec.TLS) == 0 {
 		return
 	}
 
