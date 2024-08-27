@@ -90,16 +90,18 @@ func (app *Application) HasContext() bool {
 	return app.Spec.Context != nil
 }
 
-func (app *Application) GetID() string {
+func (app *Application) PopulateIDs(mCtx core.ContextModel) {
 	if app.Status.ID != "" {
-		return app.Status.ID
+		app.Spec.ID = app.Status.ID
 	}
 
-	if app.Spec.ID != "" {
-		return app.Spec.ID
+	if app.Spec.ID == "" {
+		app.Spec.ID = string(app.UID)
 	}
+}
 
-	return string(app.UID)
+func (app *Application) GetID() string {
+	return app.Status.ID
 }
 
 func (app *Application) GetOrgID() string {

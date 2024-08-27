@@ -100,6 +100,8 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 		errs.AddSevere(err.Error())
 	}
 
+	cp.PopulateIDs(apim.Context)
+
 	impl, ok := cp.GetModel().(*application.Application)
 	if !ok {
 		errs.AddSeveref("unable to call dry run (unknown type %T)", impl)

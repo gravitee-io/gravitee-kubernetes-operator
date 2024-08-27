@@ -24,12 +24,13 @@ import (
 
 func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
 	spec := &application.Spec
-	spec.ID = application.GetID()
 
 	apim, err := apim.FromContextRef(ctx, spec.Context, application.GetNamespace())
 	if err != nil {
 		return err
 	}
+
+	application.PopulateIDs(apim.Context)
 
 	status, mgmtErr := apim.Applications.CreateOrUpdate(&spec.Application)
 	if mgmtErr != nil {
