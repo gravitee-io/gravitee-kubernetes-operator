@@ -212,6 +212,7 @@ spec:
                 description: Application Type
                 type: string
             required:
+            - description
             - name
             type: object
           status:
