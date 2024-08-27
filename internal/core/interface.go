@@ -72,7 +72,6 @@ type ApiDefinitionObject interface {
 	ContextAwareObject
 	ApiDefinitionModel
 	GetDefinition() ApiDefinitionModel
-	PopulateIDs(context ContextModel)
 	SetDefinitionContext(DefinitionContext)
 	GetDefinitionContext() DefinitionContext
 }
@@ -113,6 +112,7 @@ type ContextAwareObject interface {
 	ContextRef() ObjectRef
 	HasContext() bool
 	GetID() string
+	PopulateIDs(context ContextModel)
 	GetOrgID() string
 	GetEnvID() string
 }
