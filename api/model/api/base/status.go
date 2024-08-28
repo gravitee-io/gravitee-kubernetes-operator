@@ -14,7 +14,10 @@
 
 package base
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+)
 
 type Status struct {
 	// The organization ID, if a management context has been defined to sync with an APIM instance
@@ -29,4 +32,11 @@ type Status struct {
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 	// The state of the API. Can be either STARTED or STOPPED.
 	State ApiState `json:"state,omitempty"`
+	// This field is used to store the list of plans that have been created
+	// for the API definition if a management context has been defined
+	// to sync the API with an APIM instance
+	Plans map[string]string `json:"plans,omitempty"`
+	// When API has been created regardless of errors, this field is
+	// used to persist the error message encountered during admission
+	Errors status.Errors `json:"errors,omitempty"`
 }

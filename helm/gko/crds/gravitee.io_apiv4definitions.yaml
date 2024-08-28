@@ -1246,6 +1246,7 @@ spec:
             required:
             - endpointGroups
             - listeners
+            - name
             - type
             - version
             type: object

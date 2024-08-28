@@ -158,7 +158,7 @@ func (api *ApiDefinition) GetRef() core.ObjectRef {
 func (api *ApiDefinition) PopulateIDs(_ core.ContextModel) {
 	api.Spec.ID = api.pickID()
 	api.Spec.CrossID = api.pickCrossID()
-	api.generateEmptyPlanCrossIDs()
+	api.generateEmptyPlanIDs()
 	api.generatePageIDs()
 }
 
@@ -168,12 +168,16 @@ func (api *ApiDefinition) GetResources() []core.ObjectOrRef[core.ResourceModel] 
 }
 
 // For each plan, generate a Cross id from Api id & Plan Name if not defined.
-func (api *ApiDefinition) generateEmptyPlanCrossIDs() {
+func (api *ApiDefinition) generateEmptyPlanIDs() {
 	plans := api.Spec.Plans
 
 	for _, plan := range plans {
 		if plan.CrossID == "" {
 			plan.CrossID = uuid.FromStrings(api.Spec.ID, separator, plan.Name)
+		}
+
+		if plan.ID == "" {
+			plan.ID = uuid.FromStrings(plan.CrossID, separator, plan.Name)
 		}
 	}
 }

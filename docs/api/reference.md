@@ -311,6 +311,20 @@ See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          API description<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          API name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>version</b></td>
         <td>string</td>
         <td>
@@ -358,13 +372,6 @@ is managed using a kubernetes operator<br/>
           Shows the time that the API is deployed<br/>
           <br/>
             <i>Format</i>: int64<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          API description<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -465,13 +472,6 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         <td>[]object</td>
         <td>
           List of API metadata entries<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          API name<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4115,6 +4115,14 @@ ApiDefinitionStatus defines the observed state of API Definition.
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionstatuserrors">errors</a></b></td>
+        <td>object</td>
+        <td>
+          When API has been created regardless of errors, this field is
+used to persist the error message encountered during admission<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
@@ -4126,6 +4134,15 @@ ApiDefinitionStatus defines the observed state of API Definition.
         <td>string</td>
         <td>
           The organization ID, if a management context has been defined to sync with an APIM instance<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>plans</b></td>
+        <td>map[string]string</td>
+        <td>
+          This field is used to store the list of plans that have been created
+for the API definition if a management context has been defined
+to sync the API with an APIM instance<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4142,6 +4159,45 @@ ApiDefinitionStatus defines the observed state of API Definition.
           The state of the API. Can be either STARTED or STOPPED.<br/>
           <br/>
             <i>Enum</i>: STARTED, STOPPED<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.status.errors
+[Go to parent definition](#apidefinitionstatus)
+
+
+
+When API has been created regardless of errors, this field is
+used to persist the error message encountered during admission
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>severe</b></td>
+        <td>[]string</td>
+        <td>
+          severe errors do not pass admission and will block reconcile
+hence, this field should always be during the admission phase
+and is very unlikely to be persisted in the status<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>warning</b></td>
+        <td>[]string</td>
+        <td>
+          warning errors do not block object reconciliation,
+most of the time because the value is ignored or defaulted
+when the API gets synced with APIM<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4213,6 +4269,13 @@ ApiV4DefinitionSpec defines the desired state of ApiDefinition.
         <td>[]object</td>
         <td>
           List of listeners for this API<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          API name<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4350,13 +4413,6 @@ field of the resource.<br/>
         <td>[]object</td>
         <td>
           List of API metadata entries<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          API name<br/>
         </td>
         <td>false</td>
       </tr><tr>
