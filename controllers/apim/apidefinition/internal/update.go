@@ -17,7 +17,6 @@ package internal
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -25,10 +24,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -45,10 +42,7 @@ func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 
 func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition) error {
 	cp := apiDefinition.DeepCopy()
-
 	spec := &cp.Spec
-	formerStatus := cp.Status
-
 	spec.EnsureDefinitionContext()
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
@@ -71,38 +65,18 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	log.FromContext(ctx).Info("Syncing API with APIM")
 
-	apim, apimErr := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
+	apimClient, apimErr := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
 	if apimErr != nil {
 		return apimErr
 	}
 
-	_, findErr := apim.APIs.GetByCrossID(spec.CrossID)
-	if errors.IgnoreNotFound(findErr) != nil {
-		return errors.NewContextError(findErr)
-	}
-
-	importMethod := http.MethodPost
-	if findErr == nil {
-		importMethod = http.MethodPut
-	}
-
-	mgmtApi, mgmtErr := apim.APIs.ImportV2(importMethod, &spec.Api)
+	status, mgmtErr := apimClient.APIs.ImportV2(&spec.Api)
 	if mgmtErr != nil {
 		return errors.NewContextError(mgmtErr)
 	}
 
-	spec.ID = mgmtApi.ID
-	apiDefinition.Status.ID = mgmtApi.ID
-	apiDefinition.Status.CrossID = mgmtApi.CrossID
-	apiDefinition.Status.EnvID = apim.EnvID()
-	apiDefinition.Status.OrgID = apim.OrgID()
-	apiDefinition.Status.State = base.ApiState(mgmtApi.State)
-	retrieveMgmtPlanIDs(spec, mgmtApi)
-
-	if mgmtApi.ShouldSetKubernetesContext() {
-		if err := apim.APIs.SetKubernetesContext(apiDefinition.GetID()); err != nil {
-			return errors.NewContextError(err)
-		}
+	apiDefinition.Status = v1alpha1.ApiDefinitionStatus{
+		Status: *status,
 	}
 
 	if spec.IsLocal {
@@ -111,12 +85,6 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	if err := deleteConfigMap(ctx, apiDefinition); err != nil {
 		return err
-	}
-	if err := apim.APIs.Deploy(apiDefinition.GetID()); err != nil {
-		return err
-	}
-	if formerStatus.State != spec.State {
-		return apim.APIs.UpdateState(apiDefinition.GetID(), model.ApiStateToAction(spec.State))
 	}
 
 	return nil
@@ -136,12 +104,12 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 
 	if spec.Context != nil {
 		log.FromContext(ctx).Info("Syncing API with APIM")
-		apim, err := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
+		apimClient, err := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
 		if err != nil {
 			return err
 		}
-		cp.PopulateIDs(apim.Context)
-		status, err := apim.APIs.ImportV4(&spec.Api)
+		cp.PopulateIDs(apimClient.Context)
+		status, err := apimClient.APIs.ImportV4(&spec.Api)
 		if err != nil {
 			return err
 		}

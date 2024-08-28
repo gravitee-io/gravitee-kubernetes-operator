@@ -30,9 +30,7 @@ type ApiBase struct {
 	// If empty, a UUID will be generated based on the namespace and name of the resource.
 	CrossID string `json:"crossId,omitempty"`
 	// API name
-	Name string `json:"name,omitempty"`
-	// API description
-	Description string `json:"description,omitempty"`
+	Name string `json:"name"`
 	// +kubebuilder:validation:Required
 	// API version
 	Version string `json:"version"`

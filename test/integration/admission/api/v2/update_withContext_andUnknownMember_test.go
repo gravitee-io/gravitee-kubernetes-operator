@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v4
+package v2
 
 import (
 	"context"
 
+	apiv2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	apiV4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -33,33 +34,37 @@ import (
 var _ = Describe("Validate create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := v2.AdmissionCtrl{}
 
 	It("should return warning on API creation with unknown member", func() {
 		fixtures := fixture.
 			Builder().
-			WithAPIv4(constants.ApiV4).
+			WithAPI(constants.Api).
 			WithContext(constants.ContextWithCredentialsFile).
 			Build().
 			Apply()
 
 		By("preparing API for import")
 
-		fixtures.APIv4.Spec.DefinitionContext = apiV4.NewDefaultKubernetesContext()
-		fixtures.APIv4.PopulateIDs(fixtures.Context)
+		fixtures.API.Spec.DefinitionContext = &apiv2.DefinitionContext{
+			Origin:   apiv2.OriginKubernetes,
+			Mode:     apiv2.ModeFullyManaged,
+			SyncFrom: apiv2.OriginKubernetes,
+		}
+		fixtures.API.PopulateIDs(fixtures.Context)
 
 		By("adding an unknown member to the API")
 
 		unknownMemberName := random.GetName()
 
-		fixtures.APIv4.Spec.Members = []*base.Member{
+		fixtures.API.Spec.Members = []*base.Member{
 			base.NewGraviteeMember(unknownMemberName, "REVIEWER"),
 		}
 
 		By("checking that API validation returns warnings")
 
 		Eventually(func() error {
-			warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, fixtures.APIv4)
+			warnings, err := admissionCtrl.ValidateUpdate(ctx, fixtures.API, fixtures.API)
 			if err != nil {
 				return err
 			}
