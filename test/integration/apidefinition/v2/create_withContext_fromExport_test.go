@@ -58,7 +58,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			if err := apim.APIs.DeleteV2(fixtures.API.Spec.ID); errors.IgnoreNotFound(err) != nil {
 				return err
 			}
-			_, err := apim.APIs.ImportV2(http.MethodPost, &fixtures.API.Spec.Api)
+			_, err := apim.APIs.ImportV2(&fixtures.API.Spec.Api)
 			return err
 		}, timeout, interval).Should(Succeed())
 

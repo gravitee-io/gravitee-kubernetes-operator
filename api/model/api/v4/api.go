@@ -33,6 +33,8 @@ var _ core.ApiDefinitionModel = &Api{}
 
 type Api struct {
 	*base.ApiBase `json:",inline"`
+	// API description
+	Description string `json:"description,omitempty"`
 	// +kubebuilder:default:=`V4`
 	// +kubebuilder:validation:Enum=`V4`;
 	// The definition version of the API.

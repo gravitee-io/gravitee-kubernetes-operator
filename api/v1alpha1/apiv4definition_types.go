@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -40,7 +42,7 @@ type ApiV4DefinitionSpec struct {
 
 // ApiV4DefinitionStatus defines the observed state of API Definition.
 type ApiV4DefinitionStatus struct {
-	v4.Status `json:",inline"`
+	base.Status `json:",inline"`
 }
 
 var _ core.ApiDefinitionObject = &ApiV4Definition{}
