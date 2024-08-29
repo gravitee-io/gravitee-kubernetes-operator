@@ -25,20 +25,27 @@ var _ core.BasicAuth = &BasicAuth{}
 var _ core.ContextModel = &Context{}
 
 type Context struct {
-	// The URL of a management API instance
-	// +kubebuilder:validation:Pattern=`^http(s?):\/\/.+$`
-	BaseUrl string `json:"baseUrl"`
+	// The URL of a management API instance.
+	// This is optional when this context targets Gravitee Cloud otherwise it is required.
+	BaseUrl string `json:"baseUrl,omitempty"`
 	// An existing organization id targeted by the context on the management API instance.
-	// +kubebuilder:validation:Required
-	OrgID string `json:"organizationId"`
+	// This is optional when this context targets Gravitee Cloud otherwise it is required.
+	OrgID string `json:"organizationId,omitempty"`
 	// An existing environment id targeted by the context within the organization.
-	// +kubebuilder:validation:Required
-	EnvID string `json:"environmentId"`
+	// This is optional when this context targets Gravitee Cloud
+	// and your cloud token contains only one environment ID, otherwise it is required.
+	EnvID string `json:"environmentId,omitempty"`
 	// Auth defines the authentication method used to connect to the API Management.
 	// Can be either basic authentication credentials, a bearer token
 	// or a reference to a kubernetes secret holding one of these two configurations.
-	// +kubebuilder:validation:Required
-	Auth *Auth `json:"auth"`
+	// This is optional when this context targets Gravitee Cloud.
+	Auth *Auth `json:"auth,omitempty"`
+	// Cloud when set (token or secretRef) this context will target Gravitee Cloud.
+	// BaseUrl will be defaulted from token data if not set,
+	// Auth is defaulted to use the token (bearerToken),
+	// OrgID is extracted from the token,
+	// EnvID is defaulted when the token contains exactly one environment.
+	Cloud *Cloud `json:"cloud,omitempty"`
 }
 
 // GetAuth implements custom.Context.
@@ -66,13 +73,44 @@ func (c *Context) GetURL() string {
 	return c.BaseUrl
 }
 
+// HasCloud implements custom.Context.
+func (c *Context) HasCloud() bool {
+	return c.Cloud != nil
+}
+
+// GetCloud implements custom.Context.
+func (c *Context) GetCloud() core.Cloud {
+	return c.Cloud
+}
+
+func (c *Context) ConfigureCloud(url string, orgID string, envID string) {
+	c.BaseUrl = url
+	c.OrgID = orgID
+	c.EnvID = envID
+
+	if !c.HasAuthentication() {
+		c.Auth = &Auth{}
+	}
+
+	// override Auth to be bearer token
+	if c.GetCloud().HasSecretRef() {
+		c.GetAuth().SetSecretRef(c.GetCloud().GetSecretRef())
+		c.Auth.BearerToken = ""
+	} else {
+		c.GetAuth().SetToken(c.GetCloud().GetToken())
+		c.Auth.SecretRef = nil
+	}
+	c.Auth.Credentials = nil
+}
+
 type Auth struct {
 	// The bearer token used to authenticate against the API Management instance
 	// (must be generated from an admin account)
 	BearerToken string `json:"bearerToken,omitempty"`
 	// The Basic credentials used to authenticate against the API Management instance.
 	Credentials *BasicAuth `json:"credentials,omitempty"`
-	// A secret reference holding either a bearer token or the user name and password used for basic authentication
+	// A secret reference holding either a "bearerToken" key for bearer token authentication
+	// or "username" and "password" keys for basic authentication
 	SecretRef *refs.NamespacedName `json:"secretRef,omitempty"`
 }
 
@@ -94,6 +132,12 @@ func (in *Auth) GetCredentials() core.BasicAuth {
 // GetSecretRef implements custom.Auth.
 func (in *Auth) GetSecretRef() core.ObjectRef {
 	return in.SecretRef
+}
+
+// SetSecretRef implements custom.Auth.
+func (in *Auth) SetSecretRef(ref core.ObjectRef) {
+	nsm := refs.NewNamespacedName(ref.GetNamespace(), ref.GetName())
+	in.SecretRef = &nsm
 }
 
 // SetCredentials implements custom.Auth.
@@ -163,4 +207,29 @@ func (c *Context) SetCredentials(username, password string) {
 		Username: username,
 		Password: password,
 	}
+}
+
+type Cloud struct {
+	// Token plain text Gravitee cloud token (JWT)
+	// +kubebuilder:validation:Optional
+	Token string `json:"token,omitempty"`
+	// SecretRef secret reference holding the Gravitee cloud token in the "cloudToken" key
+	// +kubebuilder:validation:Optional
+	SecretRef *refs.NamespacedName `json:"secretRef,omitempty"`
+}
+
+func (c *Cloud) HasSecretRef() bool {
+	return c.SecretRef != nil && c.SecretRef.GetName() != ""
+}
+
+func (c *Cloud) GetSecretRef() core.ObjectRef {
+	return c.SecretRef
+}
+
+func (c *Cloud) GetToken() string {
+	return c.Token
+}
+
+func (c *Cloud) IsEnabled() bool {
+	return c.Token != "" || c.HasSecretRef()
 }

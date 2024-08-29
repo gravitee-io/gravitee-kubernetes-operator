@@ -111,30 +111,46 @@ ManagementContext represents the configuration for a specific environment
         <td>
           Auth defines the authentication method used to connect to the API Management.
 Can be either basic authentication credentials, a bearer token
-or a reference to a kubernetes secret holding one of these two configurations.<br/>
+or a reference to a kubernetes secret holding one of these two configurations.
+This is optional when this context targets Gravitee Cloud.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>baseUrl</b></td>
         <td>string</td>
         <td>
-          The URL of a management API instance<br/>
+          The URL of a management API instance.
+This is optional when this context targets Gravitee Cloud otherwise it is required.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#managementcontextspeccloud">cloud</a></b></td>
+        <td>object</td>
+        <td>
+          Cloud when set (token or secretRef) this context will target Gravitee Cloud.
+BaseUrl will be defaulted from token data if not set,
+Auth is defaulted to use the token (bearerToken),
+OrgID is extracted from the token,
+EnvID is defaulted when the token contains exactly one environment.<br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>environmentId</b></td>
         <td>string</td>
         <td>
-          An existing environment id targeted by the context within the organization.<br/>
+          An existing environment id targeted by the context within the organization.
+This is optional when this context targets Gravitee Cloud
+and your cloud token contains only one environment ID, otherwise it is required.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b>organizationId</b></td>
         <td>string</td>
         <td>
-          An existing organization id targeted by the context on the management API instance.<br/>
+          An existing organization id targeted by the context on the management API instance.
+This is optional when this context targets Gravitee Cloud otherwise it is required.<br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -147,6 +163,7 @@ or a reference to a kubernetes secret holding one of these two configurations.<b
 Auth defines the authentication method used to connect to the API Management.
 Can be either basic authentication credentials, a bearer token
 or a reference to a kubernetes secret holding one of these two configurations.
+This is optional when this context targets Gravitee Cloud.
 
 <table>
     <thead>
@@ -176,7 +193,8 @@ or a reference to a kubernetes secret holding one of these two configurations.
         <td><b><a href="#managementcontextspecauthsecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
-          A secret reference holding either a bearer token or the user name and password used for basic authentication<br/>
+          A secret reference holding either a "bearerToken" key for bearer token authentication
+or "username" and "password" keys for basic authentication<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -222,7 +240,80 @@ The Basic credentials used to authenticate against the API Management instance.
 
 
 
-A secret reference holding either a bearer token or the user name and password used for basic authentication
+A secret reference holding either a "bearerToken" key for bearer token authentication
+or "username" and "password" keys for basic authentication
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.cloud
+[Go to parent definition](#managementcontextspec)
+
+
+
+Cloud when set (token or secretRef) this context will target Gravitee Cloud.
+BaseUrl will be defaulted from token data if not set,
+Auth is defaulted to use the token (bearerToken),
+OrgID is extracted from the token,
+EnvID is defaulted when the token contains exactly one environment.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#managementcontextspeccloudsecretref">secretRef</a></b></td>
+        <td>object</td>
+        <td>
+          SecretRef secret reference holding the Gravitee cloud token in the "cloudToken" key<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>token</b></td>
+        <td>string</td>
+        <td>
+          Token plain text Gravitee cloud token (JWT)<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ManagementContext.spec.cloud.secretRef
+[Go to parent definition](#managementcontextspeccloud)
+
+
+
+SecretRef secret reference holding the Gravitee cloud token in the "cloudToken" key
 
 <table>
     <thead>

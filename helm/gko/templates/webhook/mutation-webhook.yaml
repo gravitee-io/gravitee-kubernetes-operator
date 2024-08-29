@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- if .Values.rbac.create }}
 {{- if .Values.manager.webhook.enabled }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
 metadata:
-  name: {{ template "rbac.AdmissionWebhookRoleName" . }}
-  namespace: '{{ .Release.Namespace }}'
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -28,14 +24,34 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-rules:
+  name: gko-mutating-webhook-configurations
+  namespace: {{ .Release.Namespace }}
+webhooks:
+- name: v1alpha1.gravitee.io.managementcontext
+  clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /mutate-gravitee-io-v1alpha1-managementcontext
+        port: 443
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  objectSelector: {}
+  reinvocationPolicy: Never
+  rules:
   - apiGroups:
-      - admissionregistration.k8s.io
+    - gravitee.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
     resources:
-      - validatingwebhookconfigurations
-      - mutatingwebhookconfigurations
-    verbs:
-      - get
-      - update
-{{- end }}
+    - managementcontexts
+    scope: '*'
+  namespaceSelector: {}
+  sideEffects: None
+  timeoutSeconds: 10
+  admissionReviewVersions:
+    - v1
 {{- end }}

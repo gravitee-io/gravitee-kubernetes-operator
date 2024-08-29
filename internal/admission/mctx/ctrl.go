@@ -19,14 +19,13 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-var _ webhook.CustomValidator = AdmissionCtrl{}
-var _ webhook.CustomDefaulter = AdmissionCtrl{}
+var _ admission.CustomValidator = AdmissionCtrl{}
+var _ admission.CustomDefaulter = AdmissionCtrl{}
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
@@ -40,7 +39,7 @@ type AdmissionCtrl struct{}
 
 // Default implements admission.CustomDefaulter.
 func (a AdmissionCtrl) Default(ctx context.Context, obj runtime.Object) error {
-	return nil
+	return SetDefaults(ctx, obj)
 }
 
 // ValidateCreate implements admission.CustomValidator.
