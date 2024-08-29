@@ -674,46 +674,6 @@ workflows:
           requires:
             - Run IT with context
             - Run IT without context
-  deploy:
-    when:
-      and:
-        - or:
-            - equal:
-                - master
-                - << pipeline.git.branch >>
-    jobs:
-      - job-helm-test:
-          name: Test chart
-      - job-login-to-azure:
-          name: Authenticate on cluster
-          context: cicd-orchestrator
-          clusterName: devs-preprod
-      - job-publish-private-image:
-          name: Stage image
-          image: graviteeio.azurecr.io/kubernetes-operator
-          tag: 4.4.x-latest
-          context: cicd-orchestrator
-          requires:
-            - Test chart
-            - Authenticate on cluster
-      - job-add-docker-images-to-snyk:
-          name: Trigger snyk import
-          context: cicd-orchestrator
-          requires:
-            - Stage image
-          integration_id_key: gravitee_gko_acr_integration_id
-      - job-helm-install:
-          name: Deploy in << matrix.namespace >>
-          context: cicd-orchestrator
-          matrix:
-            parameters:
-              namespace:
-                - apim-apim-4-4-x
-              image: [graviteeio.azurecr.io/kubernetes-operator]
-              tag: [4.4.x-latest]
-          requires:
-            - Stage image
-
   release:
     when:
       equal:
