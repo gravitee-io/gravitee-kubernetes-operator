@@ -327,9 +327,23 @@ func patchAdmissionWebhook() {
 		panic(err)
 	}
 
-	err = webhookPatcher.UpdateCaBundle(context.Background(), wk.Name, env.Config.WebhookCertSecret, ns)
+	err = webhookPatcher.UpdateValidationCaBundle(
+		context.Background(),
+		wk.ValidatingWebhookName,
+		env.Config.WebhookCertSecret,
+		ns)
 	if err != nil {
-		setupLog.Error(err, "Can not update CA bundle for GKO webhook. GKO can not start")
+		setupLog.Error(err, "Can not update CA bundle for GKO validation webhook. GKO can not start")
+		panic(err)
+	}
+
+	err = webhookPatcher.UpdateMutationCaBundle(
+		context.Background(),
+		wk.MutatingWebhookName,
+		env.Config.WebhookCertSecret,
+		ns)
+	if err != nil {
+		setupLog.Error(err, "Can not update CA bundle for GKO mutation webhook. GKO can not start")
 		panic(err)
 	}
 }

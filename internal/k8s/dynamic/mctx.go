@@ -43,7 +43,12 @@ func injectSecretIfAny(ctx context.Context, mCtx *management.Context, parentNs s
 		if err != nil {
 			return nil, err
 		}
-		bearerToken := string(secret.Data[core.BearerTokenSecretKey])
+		var bearerToken string
+		if mCtx.HasCloud() {
+			bearerToken = string(secret.Data[core.CloudTokenSecretKey])
+		} else {
+			bearerToken = string(secret.Data[core.BearerTokenSecretKey])
+		}
 		username := string(secret.Data[core.UsernameSecretKey])
 		password := string(secret.Data[core.PasswordSecretKey])
 

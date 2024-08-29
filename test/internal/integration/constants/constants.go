@@ -34,11 +34,17 @@ const (
 	GatewayUrl    = "http://" + GatewayHost + ":" + GatewayPort
 	ManagementUrl = "http://localhost:30083/management"
 
-	ContextSecretFile             = "management_context/dev/management-context-secret.yml"
-	ContextWithSecretFile         = "management_context/dev/management-context-with-secret-ref.yml"
-	ContextWithCredentialsFile    = "management_context/dev/management-context-with-credentials.yml"
-	ContextWithBadCredentialsFile = "management_context/dev/management-context-with-bearer-token.yml"
-	ContextWithBadURLFile         = "management_context/debug/management-context-with-credentials.yml"
+	ContextSecretFile                       = "management_context/dev/management-context-secret.yml"
+	ContextWithSecretFile                   = "management_context/dev/management-context-with-secret-ref.yml"
+	ContextWithCredentialsFile              = "management_context/dev/management-context-with-credentials.yml"
+	ContextWithBadCredentialsFile           = "management_context/dev/management-context-with-bearer-token.yml"
+	ContextWithBadURLFile                   = "management_context/debug/management-context-with-credentials.yml"
+	ContextCloudWithSecretRefFile           = "management_context/cloud/cloud-mctx-with-secret-ref.yml"
+	ContextCloudWithUnknownSecretRefFile    = "management_context/cloud/cloud-mctx-with-unknown-secret-ref.yml"
+	ContextCloudWithBearerSecretRefFile     = "management_context/cloud/cloud-mctx-with-bearer-secret-ref.yml"
+	ContextCloudWithSecretRefAndAuthRefFile = "management_context/cloud/cloud-mctx-with-secret-ref-and-auth-secret-ref.yml"
+	ContextCloudTokenSecretFile             = "management_context/cloud/cloud-token-secret.yml"
+	ContextCloudBearerSecretFile            = "management_context/cloud/cloud-bearer-secret.yml"
 
 	// V2 APIs.
 	Api                                 = "apim/api_definition/v2/api.yml"

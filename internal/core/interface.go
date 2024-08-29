@@ -134,6 +134,9 @@ type ContextModel interface {
 	GetOrgID() string
 	HasAuthentication() bool
 	GetAuth() Auth
+	HasCloud() bool
+	GetCloud() Cloud
+	ConfigureCloud(url string, orgID string, envID string)
 }
 
 // +k8s:deepcopy-gen=false
@@ -150,12 +153,20 @@ type Auth interface {
 	GetSecretRef() ObjectRef
 	SetCredentials(username, password string)
 	SetToken(token string)
+	SetSecretRef(ref ObjectRef)
 }
 
 // +k8s:deepcopy-gen=false
 type BasicAuth interface {
 	GetUsername() string
 	GetPassword() string
+}
+
+// +k8s:deepcopy-gen=false
+type Cloud interface {
+	SecretAware
+	GetToken() string
+	IsEnabled() bool
 }
 
 // +k8s:deepcopy-gen=false

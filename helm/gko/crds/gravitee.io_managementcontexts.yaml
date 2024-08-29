@@ -64,6 +64,7 @@ spec:
                   Auth defines the authentication method used to connect to the API Management.
                   Can be either basic authentication credentials, a bearer token
                   or a reference to a kubernetes secret holding one of these two configurations.
+                  This is optional when this context targets Gravitee Cloud.
                 properties:
                   bearerToken:
                     description: |-
@@ -80,8 +81,9 @@ spec:
                         type: string
                     type: object
                   secretRef:
-                    description: A secret reference holding either a bearer token
-                      or the user name and password used for basic authentication
+                    description: |-
+                      A secret reference holding either a "bearerToken" key for bearer token authentication
+                      or "username" and "password" keys for basic authentication
                     properties:
                       name:
                         type: string
@@ -92,22 +94,44 @@ spec:
                     type: object
                 type: object
               baseUrl:
-                description: The URL of a management API instance
-                pattern: ^http(s?):\/\/.+$
+                description: |-
+                  The URL of a management API instance.
+                  This is optional when this context targets Gravitee Cloud otherwise it is required.
                 type: string
+              cloud:
+                description: |-
+                  Cloud when set (token or secretRef) this context will target Gravitee Cloud.
+                  BaseUrl will be defaulted from token data if not set,
+                  Auth is defaulted to use the token (bearerToken),
+                  OrgID is extracted from the token,
+                  EnvID is defaulted when the token contains exactly one environment.
+                properties:
+                  secretRef:
+                    description: SecretRef secret reference holding the Gravitee cloud
+                      token in the "cloudToken" key
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  token:
+                    description: Token plain text Gravitee cloud token (JWT)
+                    type: string
+                type: object
               environmentId:
-                description: An existing environment id targeted by the context within
-                  the organization.
+                description: |-
+                  An existing environment id targeted by the context within the organization.
+                  This is optional when this context targets Gravitee Cloud
+                  and your cloud token contains only one environment ID, otherwise it is required.
                 type: string
               organizationId:
-                description: An existing organization id targeted by the context on
-                  the management API instance.
+                description: |-
+                  An existing organization id targeted by the context on the management API instance.
+                  This is optional when this context targets Gravitee Cloud otherwise it is required.
                 type: string
-            required:
-            - auth
-            - baseUrl
-            - environmentId
-            - organizationId
             type: object
           status:
             description: ManagementContextStatus defines the observed state of an
