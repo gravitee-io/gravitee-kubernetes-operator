@@ -16,6 +16,8 @@ package mctx
 
 import (
 	"context"
+	"regexp"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -28,11 +30,47 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	errs := errors.NewAdmissionErrors()
 
 	if context, ok := obj.(core.ContextObject); ok {
-		errs.Add(validateSecretRef(ctx, context))
+		if !context.HasCloud() || !context.GetCloud().IsEnabled() {
+			errs.Add(validateRequiredField(context))
+			errs.Add(validateSecretRef(ctx, context))
+		}
 		errs.Add(validateContextIsAvailable(ctx, context))
 	}
 
 	return errs
+}
+
+func validateRequiredField(context core.ContextObject) *errors.AdmissionError {
+	err := checkEmpty(context.GetURL(), "[baseUrl]")
+	if err != nil {
+		return err
+	}
+
+	if ok, _ := regexp.Match("^http(s?)://.+$", []byte(context.GetURL())); !ok {
+		return errors.NewSevere("[baseUrl] is not a valid URL")
+	}
+
+	err = checkEmpty(context.GetOrgID(), "[orgId]")
+	if err != nil {
+		return err
+	}
+
+	err = checkEmpty(context.GetEnvID(), "[envId]")
+	if err != nil {
+		return err
+	}
+
+	if !context.HasAuthentication() {
+		return errors.NewSevere("[auth] is mandatory when cloud is not enabled")
+	}
+	return nil
+}
+
+func checkEmpty(s string, field string) *errors.AdmissionError {
+	if s == "" || strings.TrimSpace(s) == "" {
+		return errors.NewSevere(field + " is mandatory when cloud is not enabled")
+	}
+	return nil
 }
 
 func validateSecretRef(ctx context.Context, context core.ContextObject) *errors.AdmissionError {

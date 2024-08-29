@@ -170,7 +170,6 @@ linters:
     - errname # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error.
     - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
     - exhaustive # check exhaustiveness of enum switch statements
-    - exportloopref # checks for pointers to enclosing loop variables
     - forbidigo # Forbids identifiers
     - funlen # Tool for detection of long functions
     - gocognit # Computes and checks the cognitive complexity of functions

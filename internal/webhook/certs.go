@@ -36,10 +36,11 @@ import (
 )
 
 const (
-	CertName = "cert"
-	KeyName  = "key"
-	caName   = "ca"
-	Name     = "gko-validating-webhook-configurations"
+	CertName              = "cert"
+	KeyName               = "key"
+	caName                = "ca"
+	ValidatingWebhookName = "gko-validating-webhook-configurations"
+	MutatingWebhookName   = "gko-mutating-webhook-configurations"
 )
 
 type Patcher struct {
@@ -72,7 +73,7 @@ func (p *Patcher) CreateSecret(ctx context.Context, secretName, namespace, host 
 	return nil
 }
 
-func (p *Patcher) UpdateCaBundle(ctx context.Context, webhookName, secretName, ns string) error {
+func (p *Patcher) UpdateValidationCaBundle(ctx context.Context, webhookName, secretName, ns string) error {
 	webhookConfig, err := p.client.AdmissionregistrationV1().
 		ValidatingWebhookConfigurations().Get(ctx, webhookName, metav1.GetOptions{})
 
@@ -92,6 +93,32 @@ func (p *Patcher) UpdateCaBundle(ctx context.Context, webhookName, secretName, n
 		ValidatingWebhookConfigurations().Update(ctx, webhookConfig, metav1.UpdateOptions{})
 	if err != nil {
 		log.FromContext(ctx).Error(err, "can't update GKO validating webhook configuration")
+		return err
+	}
+
+	return nil
+}
+
+func (p *Patcher) UpdateMutationCaBundle(ctx context.Context, webhookName, secretName, ns string) error {
+	webhookConfig, err := p.client.AdmissionregistrationV1().
+		MutatingWebhookConfigurations().Get(ctx, webhookName, metav1.GetOptions{})
+
+	if errors.IsNotFound(err) {
+		log.FromContext(ctx).Error(err, "GKO mutating webhook configuration doesn't exit.")
+		return err
+	} else if err != nil {
+		log.FromContext(ctx).Error(err, "unable to get mutating webhook")
+		return err
+	}
+
+	caBundle := p.getCaFromSecret(ctx, secretName, ns)
+	for i := range webhookConfig.Webhooks {
+		webhookConfig.Webhooks[i].ClientConfig.CABundle = caBundle
+	}
+	_, err = p.client.AdmissionregistrationV1().
+		MutatingWebhookConfigurations().Update(ctx, webhookConfig, metav1.UpdateOptions{})
+	if err != nil {
+		log.FromContext(ctx).Error(err, "can't update GKO mutating webhook configuration")
 		return err
 	}
 

@@ -45,6 +45,7 @@ const (
 	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 
+	CloudTokenSecretKey  = "cloudToken"
 	BearerTokenSecretKey = "bearerToken"
 	UsernameSecretKey    = "username"
 	PasswordSecretKey    = "password"

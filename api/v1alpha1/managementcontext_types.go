@@ -148,6 +148,18 @@ func (ctx *ManagementContext) GetNamespacedName() *refs.NamespacedName {
 	return &refs.NamespacedName{Namespace: ctx.Namespace, Name: ctx.Name}
 }
 
+func (ctx *ManagementContext) HasCloud() bool {
+	return ctx.Spec.HasCloud()
+}
+
+func (ctx *ManagementContext) GetCloud() core.Cloud {
+	return ctx.Spec.Cloud
+}
+
+func (ctx *ManagementContext) ConfigureCloud(url string, orgID string, envID string) {
+	ctx.Spec.ConfigureCloud(url, orgID, envID)
+}
+
 func (ctx *ManagementContext) GetContext() core.ContextModel {
 	return ctx.Spec.Context
 }
