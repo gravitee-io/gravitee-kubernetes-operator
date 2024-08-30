@@ -37,9 +37,6 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 			return errs
 		}
 		errs.MergeWith(validateDryRun(ctx, app))
-		if errs.IsSevere() {
-			return errs
-		}
 	}
 	return errs
 }
@@ -49,11 +46,26 @@ func validateUpdate(
 	oldObj runtime.Object,
 	newObj runtime.Object,
 ) *errors.AdmissionErrors {
-	errs := validateCreate(ctx, newObj)
+	errs := errors.NewAdmissionErrors()
+	if errs.IsSevere() {
+		return errs
+	}
 	oldApp, ook := oldObj.(core.ApplicationObject)
 	newApp, nok := newObj.(core.ApplicationObject)
 	if ook && nok {
+		errs.Add(ctxref.Validate(ctx, newApp))
+		if errs.IsSevere() {
+			return errs
+		}
+		errs.MergeWith(validateSettings(newApp))
+		if errs.IsSevere() {
+			return errs
+		}
 		errs.MergeWith(validateSettingsUpdate(oldApp, newApp))
+		if errs.IsSevere() {
+			return errs
+		}
+		errs.MergeWith(validateDryRun(ctx, newApp))
 	}
 	return errs
 }
