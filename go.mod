@@ -6,7 +6,7 @@ toolchain go1.22.6
 
 require (
 	github.com/moby/moby v27.1.2+incompatible
-	github.com/onsi/ginkgo/v2 v2.20.1
+	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
 	github.com/zeebo/xxh3 v1.0.2
 	k8s.io/apimachinery v0.30.3
