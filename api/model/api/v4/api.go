@@ -175,6 +175,14 @@ func (api *Api) SetDefinitionContext(ctx core.DefinitionContext) {
 	}
 }
 
+func (api *Api) GetState() string {
+	return string(api.State)
+}
+
+func (api *Api) HasPlans() bool {
+	return len(api.Plans) > 0
+}
+
 // Converts the API to its gateway definition equivalent.
 func (api *Api) ToGatewayDefinition() GatewayDefinitionApi {
 	def := GatewayDefinitionApi{Api: api}

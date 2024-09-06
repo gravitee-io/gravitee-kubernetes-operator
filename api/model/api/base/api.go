@@ -106,3 +106,7 @@ type ResponseTemplate struct {
 	Headers    map[string]string `json:"headers,omitempty"`
 	Body       string            `json:"body,omitempty"`
 }
+
+func (api *ApiBase) GetName() string {
+	return api.Name
+}

@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v4
+package v2
 
 import (
 	"context"
 
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -26,29 +27,31 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validate update", labels.WithContext, func() {
+var _ = Describe("Validate create", labels.WithoutContext, func() {
 	ctx := context.Background()
-	admissionCtrl := v4.AdmissionCtrl{}
+	admissionCtrl := adm.AdmissionCtrl{}
 
-	It("should return error on API update with no plans and state STARTED", func() {
+	It("should return error on API creation with no plans and state 'STARTED'", func() {
 		fixtures := fixture.
 			Builder().
-			WithAPIv4(constants.ApiV4).
+			WithAPI(constants.Api).
 			Build()
 
-		By("removing existing plans")
+		By("removing plans while API is started")
 
-		clear(fixtures.APIv4.Spec.Plans)
+		fixtures.API.Spec.Plans = nil
+		fixtures.API.Spec.State = base.StateStarted
 
-		By("checking that API validation returns errors")
+		By("checking that API creation does not pass validation")
 
-		_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, fixtures.APIv4)
+		_, err := admissionCtrl.ValidateCreate(ctx, fixtures.API)
 
 		Expect(err).To(Equal(
-			errors.NewSeveref("cannot apply API [%s]. Its state is set to STARTED, "+
-				"but the API has no plans. APIs must have at least one plan in order to "+
-				"be deployed.",
-				fixtures.APIv4.Name,
+			errors.NewSeveref(
+				"cannot apply API [%s]. "+
+					"Its state is set to STARTED, but the API has no plans. "+
+					"APIs must have at least one plan in order to be deployed.",
+				fixtures.API.GetName(),
 			),
 		))
 	})

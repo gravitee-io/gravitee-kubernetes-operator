@@ -19,7 +19,6 @@ import (
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
@@ -28,7 +27,6 @@ import (
 )
 
 var _ = Describe("Validate create", labels.WithContext, func() {
-	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := v4.AdmissionCtrl{}
 
@@ -36,23 +34,22 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4).
-			Build().
-			Apply()
+			Build()
 
 		By("removing existing plans")
+
 		clear(fixtures.APIv4.Spec.Plans)
 
 		By("checking that API validation returns errors")
-		Eventually(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.APIv4)
 
-			return assert.Equals(
-				"severe",
-				errors.NewSeveref("cannot apply API [%s]. Its state is set to STARTED"+
-					" but the API has no plans. APIs must have at least one plan in order to"+
-					" be deployed.", fixtures.APIv4.Name).Error(),
-				err.Error(),
-			)
-		}, constants.EventualTimeout, interval).Should(Succeed())
+		_, err := admissionCtrl.ValidateCreate(ctx, fixtures.APIv4)
+
+		Expect(err).To(Equal(
+			errors.NewSeveref("cannot apply API [%s]. Its state is set to STARTED, "+
+				"but the API has no plans. APIs must have at least one plan in order to "+
+				"be deployed.",
+				fixtures.APIv4.Name,
+			),
+		))
 	})
 })
