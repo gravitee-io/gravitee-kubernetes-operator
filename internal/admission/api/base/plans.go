@@ -15,28 +15,18 @@
 package base
 
 import (
-	"context"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func ValidateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
-	errs := errors.NewAdmissionErrors()
-
-	errs.Add(ctxref.Validate(ctx, obj))
-
-	if api, ok := obj.(core.ApiDefinitionObject); ok {
-		errs.Add(validatePlans(api))
-		errs.Add(validateNoConflictingPath(ctx, api))
-		errs.MergeWith(validateResourceOrRefs(ctx, api))
+func validatePlans(api core.ApiDefinitionObject) *errors.AdmissionError {
+	if !api.HasPlans() && api.GetState() != "STOPPED" {
+		return errors.NewSeveref(
+			"cannot apply API [%s]. "+
+				"Its state is set to STARTED, but the API has no plans. "+
+				"APIs must have at least one plan in order to be deployed.",
+			api.GetName(),
+		)
 	}
-
-	return errs
-}
-
-func ValidateUpdate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
-	return ValidateCreate(ctx, obj)
+	return nil
 }

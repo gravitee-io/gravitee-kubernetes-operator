@@ -17,8 +17,6 @@ package v4
 import (
 	"context"
 
-	baseModel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -35,7 +33,6 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 			return errs
 		}
 
-		errs.Add(validateApiPlans(ctx, api))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -48,26 +45,6 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		}
 	}
 	return errs
-}
-
-func validateApiPlans(_ context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
-	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
-
-	apiDef, ok := cp.GetDefinition().(*v4.Api)
-	if !ok {
-		return errors.NewSevere("unable to validate the CRD because it is not a v4 API")
-	}
-
-	if apiDef.State == baseModel.StateStarted &&
-		len(apiDef.Plans) == 0 {
-		return errors.NewSeveref(
-			"cannot apply API [%s]. Its state is set to STARTED but the API has no plans. "+
-				"APIs must have at least one plan in order to be deployed.",
-			apiDef.Name,
-		)
-	}
-
-	return nil
 }
 
 func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionErrors {

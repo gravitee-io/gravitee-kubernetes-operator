@@ -79,6 +79,14 @@ func (api *ApiV4Definition) GetResources() []core.ObjectOrRef[core.ResourceModel
 	return api.Spec.GetResources()
 }
 
+func (api *ApiV4Definition) GetState() string {
+	return api.Spec.GetState()
+}
+
+func (api *ApiV4Definition) HasPlans() bool {
+	return api.Spec.HasPlans()
+}
+
 func (api *ApiV4Definition) PopulateIDs(context core.ContextModel) {
 	api.Spec.ID = api.pickID(context)
 	api.Spec.CrossID = api.pickCrossID()

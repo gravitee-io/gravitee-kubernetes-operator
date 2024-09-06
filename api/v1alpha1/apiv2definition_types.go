@@ -148,6 +148,14 @@ func (api *ApiDefinition) SetDefinitionContext(ctx core.DefinitionContext) {
 	api.Spec.SetDefinitionContext(ctx)
 }
 
+func (api *ApiDefinition) GetState() string {
+	return api.Spec.GetState()
+}
+
+func (api *ApiDefinition) HasPlans() bool {
+	return api.Spec.HasPlans()
+}
+
 func (api *ApiDefinition) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,

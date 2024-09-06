@@ -81,6 +81,14 @@ func (api *Api) GetDefinitionVersion() core.ApiDefinitionVersion {
 	return core.ApiV2
 }
 
+func (api *Api) GetState() string {
+	return string(api.State)
+}
+
+func (api *Api) HasPlans() bool {
+	return len(api.Plans) > 0
+}
+
 func (api *Api) GetContextPaths() []string {
 	paths := make([]string, 0)
 	proxy := api.Proxy

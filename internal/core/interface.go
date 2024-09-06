@@ -60,11 +60,14 @@ type DefinitionContext interface {
 
 // +k8s:deepcopy-gen=false
 type ApiDefinitionModel interface {
+	GetName() string
 	GetDefinitionVersion() ApiDefinitionVersion
 	GetContextPaths() []string
 	SetDefinitionContext(DefinitionContext)
 	GetDefinitionContext() DefinitionContext
 	GetResources() []ObjectOrRef[ResourceModel]
+	GetState() string
+	HasPlans() bool
 }
 
 // +k8s:deepcopy-gen=false
