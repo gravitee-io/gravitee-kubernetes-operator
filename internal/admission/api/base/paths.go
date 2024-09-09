@@ -17,7 +17,7 @@ package base
 import (
 	"context"
 	"net/url"
-	"slices"
+	"path/filepath"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -37,7 +37,8 @@ func validateNoConflictingPath(ctx context.Context, api core.ApiDefinitionObject
 				apiPath,
 			)
 		}
-		if slices.Contains(existingPaths, apiPath) {
+
+		if isConflictingPath(existingPaths, apiPath) {
 			return errors.NewSeveref(
 				"invalid API context path [%s]. Another API with the same path already exists",
 				apiPath,
@@ -64,4 +65,13 @@ func getExistingPaths(ctx context.Context, api core.ApiDefinitionObject) ([]stri
 		existingPaths = append(existingPaths, apiPaths...)
 	}
 	return existingPaths, nil
+}
+
+func isConflictingPath(existingPaths []string, path string) bool {
+	for _, existingPath := range existingPaths {
+		if filepath.Clean(existingPath) == filepath.Clean(path) {
+			return true
+		}
+	}
+	return false
 }
