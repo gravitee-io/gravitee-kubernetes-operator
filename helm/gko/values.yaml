@@ -40,7 +40,7 @@ rbacProxy:
     ## @param rbacProxy.image.repository Specifies the docker registry and image name to use.
     repository: quay.io/brancz/kube-rbac-proxy
     ## @param rbacProxy.image.tag Specifies the docker image tag to use.
-    tag: v0.18.0
+    tag: v0.18.1
     ## @param rbacProxy.image.pullPolicy Specifies the pullPolicy to use when starting a new container
     pullPolicy: IfNotPresent
 
