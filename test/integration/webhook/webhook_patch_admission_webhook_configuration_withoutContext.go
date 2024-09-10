@@ -86,7 +86,7 @@ var _ = Describe("Webhook", labels.WithContext, func() {
 		wvc := newWebhookAdmissionConfiguration()
 		Expect(cli.Create(context.Background(), wvc)).To(Succeed())
 
-		Expect(webhookPatcher.UpdateCaBundle(context.Background(), wvc.Name, secret.Name, secret.Namespace)).To(Succeed())
+		Expect(webhookPatcher.UpdateValidationCaBundle(context.Background(), wvc.Name, secret.Name, secret.Namespace)).To(Succeed())
 
 		Eventually(func() error {
 			if err := cli.Get(context.Background(), types.NamespacedName{

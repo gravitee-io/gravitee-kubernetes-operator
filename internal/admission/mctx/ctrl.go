@@ -16,6 +16,7 @@ package mctx
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,6 +41,7 @@ type AdmissionCtrl struct{}
 
 // Default implements admission.CustomDefaulter.
 func (a AdmissionCtrl) Default(ctx context.Context, obj runtime.Object) error {
+	fmt.Println("Context Default")
 	return nil
 }
 

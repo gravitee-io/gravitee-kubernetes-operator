@@ -1,0 +1,42 @@
+{{- if .Values.manager.webhook.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+  name: gko-mutating-webhook-configurations
+  namespace: {{ .Release.Namespace }}
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /mutate-gravitee-io-v1alpha1-managementcontext
+        port: 443
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: v1alpha1.gravitee.io.managementcontext
+  objectSelector: {}
+  reinvocationPolicy: Never
+  rules:
+  - apiGroups:
+    - gravitee.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - managementcontexts
+    scope: '*'
+  sideEffects: None
+  timeoutSeconds: 30
+{{- end }}
