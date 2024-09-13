@@ -1,6 +1,7 @@
 version: 2.1
 
 orbs:
+  gravitee: gravitee-io/gravitee@4.6.1
   kubernetes: circleci/kubernetes@1.3.1
   go: circleci/go@1.11.0
   helm: circleci/helm@3.0.2
@@ -153,18 +154,13 @@ jobs:
             curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
             chmod +x /tmp/kind
             sudo mv /tmp/kind /usr/local/bin/
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
-          var-name: AZURE_DOCKER_REGISTRY_USERNAME
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
-          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
           name: Create junit reports directory
           command: mkdir -p "/tmp/junit/reports"
-      - run:
-          name: Docker login
-          command: echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login --username $AZURE_DOCKER_REGISTRY_USERNAME --password-stdin graviteeio.azurecr.io
       - run:
           name: Install ginkgo
           command: make ginkgo
@@ -195,41 +191,7 @@ jobs:
             - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
 
-  job-login-to-azure:
-    executor:
-      name: azure-cli
-    parameters:
-      clusterName:
-        type: enum
-        enum: ["devs-preprod"]
-        description: Name of the Azure k8s cluster
-    steps:
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
-          var-name: AZURE_SP
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
-          var-name: AZURE_TENANT
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
-          var-name: AZURE_SP_PASSWORD
-      - when:
-          condition:
-            equal:
-              - devs-preprod
-              - << parameters.clusterName >>
-          steps:
-            - run:
-                name: Get ~/.kube/config from Azure
-                command: |
-                  az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
-                  az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - .kube/config
-
-  job-publish-private-image:
+  job-stage-image:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     parameters:
@@ -240,24 +202,19 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - helm/install_helm_client
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
-          var-name: AZURE_DOCKER_REGISTRY_USERNAME
-      - keeper/env-export:
-          secret-url: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
-          var-name: AZURE_DOCKER_REGISTRY_PASSWORD
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
       - run:
           name: Publish image << parameters.image >>:<<parameters.tag >>
           command: |
-            echo $AZURE_DOCKER_REGISTRY_PASSWORD | docker login \
-              --username $AZURE_DOCKER_REGISTRY_USERNAME \
-              --password-stdin graviteeio.azurecr.io
             IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-push
-            docker logout graviteeio.azurecr.io
+      - gravitee/docker-logout:
+          registry: graviteeio.azurecr.io
 
   job-helm-install:
     docker:
@@ -600,20 +557,11 @@ workflows:
                 - master
                 - << pipeline.git.branch >>
     jobs:
-      - job-helm-test:
-          name: Test chart
-      - job-login-to-azure:
-          name: Authenticate on cluster
-          context: cicd-orchestrator
-          clusterName: devs-preprod
-      - job-publish-private-image:
+      - job-stage-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: master-latest
           context: cicd-orchestrator
-          requires:
-            - Test chart
-            - Authenticate on cluster
       - job-helm-install:
           name: Deploy in << matrix.namespace >>
           context: cicd-orchestrator
