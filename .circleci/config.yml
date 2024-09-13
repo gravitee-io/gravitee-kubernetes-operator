@@ -7,6 +7,7 @@ orbs:
   keeper: gravitee-io/keeper@0.6.3
   slack: circleci/slack@4.13.3
   gh: circleci/github-cli@2.4.0
+  aquasec: gravitee-io/aquasec@1.0.0
 
 parameters:
   go-version:
@@ -38,17 +39,6 @@ executors:
     resource_class: small
 
 commands:
-  cmd-notify-on-failure:
-    steps:
-      - keeper/env-export:
-          secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
-          var-name: SLACK_ACCESS_TOKEN
-      - slack/notify:
-          channel: C02JENTV2AX
-          branch_pattern: master,[0-9]+\.[0-9]+\.x
-          event: fail
-          template: basic_fail_1
-
   cmd-load-snyk-env:
     parameters:
       integration_id_key:
@@ -365,7 +355,6 @@ jobs:
             kubectl rollout restart deployment gko-controller-manager \
               -n << parameters.namespace >>
       - go/save-cache
-      - cmd-notify-on-failure
 
   job-release:
     docker:
@@ -601,7 +590,6 @@ jobs:
       - run:
           name: Run Sonarcloud analysis
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
-      - cmd-notify-on-failure
 
   job-add-docker-images-to-snyk:
     docker:
