@@ -16,11 +16,10 @@ parameters:
     default: "1.23.1"
   trigger:
     type: enum
-    default: ""
+    default: none
     enum:
       - release
-      - test
-      - ""
+      - none
   release-version:
     type: string
     default: ""
@@ -39,6 +38,27 @@ executors:
       - image: mcr.microsoft.com/azure-cli:2.63.0
     resource_class: small
 
+commands:
+  cmd-setup-aqua-scan:
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://QeHHkvALPob4pgs1hMd9Gw/custom_field/API Key
+          var-name: AQUA_KEY
+      - keeper/env-export:
+          secret-url: keeper://QeHHkvALPob4pgs1hMd9Gw/custom_field/Secret
+          var-name: AQUA_SECRET
+      - keeper/env-export:
+          secret-url: keeper://LYg-wdlM5UDzSqFFH6Kyig/field/login
+          var-name: AQUA_USERNAME
+      - keeper/env-export:
+          secret-url: keeper://LYg-wdlM5UDzSqFFH6Kyig/field/password
+          var-name: AQUA_PASSWORD
+      - keeper/env-export:
+          secret-url: keeper://QeHHkvALPob4pgs1hMd9Gw/custom_field/ScannerToken
+          var-name: SCANNER_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
 jobs:
   job-lint-sources:
     docker:
@@ -210,9 +230,18 @@ jobs:
           name: Build image << parameters.image >>
           command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
       - run:
-          name: Publish image << parameters.image >>:<<parameters.tag >>
+          name: Push image << parameters.image >>:<<parameters.tag >>
           command: |
             IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-push
+      - cmd-setup-aqua-scan
+      - aquasec/install_billy
+      - aquasec/pull_aqua_scanner_image
+      - aquasec/register_artifact:
+          artifact_to_register: graviteeio.azurecr.io/<< parameters.image >>:<< parameters.tag >>
+          debug: true
+      - aquasec/scan_docker_image:
+          docker_image_to_scan: graviteeio.azurecr.io/<< parameters.image >>:<< parameters.tag >>
+          scanner_url: https://82fb8f75da.cloud.aquasec.com
       - gravitee/docker-logout:
           registry: graviteeio.azurecr.io
 
@@ -493,18 +522,10 @@ jobs:
 workflows:
   pull-request:
     when:
-      and:
-        - not:
-            equal:
-              - master
-              - << pipeline.git.branch >>
+      and:           
         - not:
             equal:
               - "release"
-              - << pipeline.parameters.trigger >>
-        - not:
-            equal:
-              - "test"
               - << pipeline.parameters.trigger >>
     jobs:
       - job-lint-sources:
@@ -549,12 +570,23 @@ workflows:
           requires:
             - Run IT with context
             - Run IT without context
+      - aquasec/fs_scan:
+          context: cicd-orchestrator
+          pre-steps:
+            - cmd-setup-aqua-scan
+          requires:
+            - Run IT with context
+            - Run IT without context
   post-merge:
     when:
       and:
-        - equal:
-            - master
-            - << pipeline.git.branch >>
+        - or:
+          - equal:
+              - master
+              - << pipeline.git.branch >>
+          - equal:
+              - /^[0-9]+\.[0-9]+\.x$/
+              - << pipeline.git.branch >>
         - not:
             equal:
               - "release"
@@ -566,6 +598,13 @@ workflows:
           tag: master-latest
           context: cicd-orchestrator
       - job-helm-install:
+          filters:
+            branches:
+              only:
+                - master
+            tags:
+              ignore:
+                - /.*/
           name: Deploy in << matrix.namespace >>
           context: cicd-orchestrator
           matrix:
