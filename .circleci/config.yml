@@ -491,7 +491,7 @@ jobs:
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
 
 workflows:
-  pull_requests:
+  check-pr:
     when:
       and:
         - not:
@@ -552,10 +552,13 @@ workflows:
   deploy:
     when:
       and:
-        - or:
-            - equal:
-                - master
-                - << pipeline.git.branch >>
+        - equal:
+            - master
+            - << pipeline.git.branch >>
+        - not:
+            equal:
+              - "release"
+              - << pipeline.parameters.trigger >>
     jobs:
       - job-stage-image:
           name: Stage image
