@@ -38,64 +38,6 @@ executors:
       - image: mcr.microsoft.com/azure-cli:2.63.0
     resource_class: small
 
-commands:
-  cmd-load-snyk-env:
-    parameters:
-      integration_id_key:
-        type: string
-    steps:
-      - checkout
-      - keeper/env-export:
-          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_gko_org_api_token
-          var-name: SNYK_API_TOKEN
-      - keeper/env-export:
-          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/gravitee_gko_org_id
-          var-name: SNYK_ORG_ID
-      - keeper/env-export:
-          secret-url: keeper://s83JmReKpBZWjHdud6ZAlg/custom_field/<< parameters.integration_id_key >>
-          var-name: SNYK_INTEGRATION_ID
-      - when:
-          condition:
-            equal:
-              - gravitee_gko_acr_integration_id
-              - << parameters.integration_id_key >>
-          steps:
-            - run:
-                name: Setting docker image name
-                command: echo "export DOCKER_IMAGE_NAME=kubernetes-operator" >> ${BASH_ENV}
-            - run:
-                name: Setting docker image tag
-                command: echo "export DOCKER_IMAGE_TAG=master-latest" >> ${BASH_ENV}
-      - when:
-          condition:
-            equal:
-              - gravitee_gko_dockerhub_integration_id
-              - << parameters.integration_id_key >>
-          steps:
-            - run:
-                name: Setting docker image name
-                command: echo "export DOCKER_IMAGE_NAME=graviteeio/kubernetes-operator" >> ${BASH_ENV}
-            - run:
-                name: Setting docker image tag
-                command: echo "export DOCKER_IMAGE_TAG=$(git describe --tags --abbrev=0)" >> ${BASH_ENV}
-
-  cmd-add-docker-image-to-snyk:
-    steps:
-      - checkout
-      - run:
-          name: Add Docker image to Snyk
-          command: |
-            curl --fail \
-                 --include \
-                 --request POST \
-                 --header "Content-Type: application/json; charset=utf-8" \
-                 --header "Authorization: token ${SNYK_API_TOKEN}" \
-                 --data-binary "{
-              \"target\": {
-                \"name\": \"${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}\"
-              }
-            }" \
-            "https://api.snyk.io/api/v1/org/${SNYK_ORG_ID}/integrations/${SNYK_INTEGRATION_ID}/import"
 jobs:
   job-lint-sources:
     docker:
@@ -591,18 +533,6 @@ jobs:
           name: Run Sonarcloud analysis
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
 
-  job-add-docker-images-to-snyk:
-    docker:
-      - image: cimg/base:stable
-    resource_class: small
-    parameters:
-      integration_id_key:
-        type: string
-    steps:
-      - cmd-load-snyk-env:
-          integration_id_key: << parameters.integration_id_key >>
-      - cmd-add-docker-image-to-snyk
-
 workflows:
   pull_requests:
     when:
@@ -684,12 +614,6 @@ workflows:
           requires:
             - Test chart
             - Authenticate on cluster
-      - job-add-docker-images-to-snyk:
-          name: Trigger snyk import
-          context: cicd-orchestrator
-          requires:
-            - Stage image
-          integration_id_key: gravitee_gko_acr_integration_id
       - job-helm-install:
           name: Deploy in << matrix.namespace >>
           context: cicd-orchestrator
@@ -717,18 +641,6 @@ workflows:
       - job-notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
           context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
-
-  trigger-snyk-on-release:
-    jobs:
-      - job-add-docker-images-to-snyk:
-          name: Trigger snyk import
-          context: cicd-orchestrator
-          integration_id_key: gravitee_gko_dockerhub_integration_id
           filters:
             branches:
               ignore: /.*/
