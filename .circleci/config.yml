@@ -491,7 +491,7 @@ jobs:
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
 
 workflows:
-  check-pr:
+  pull-request:
     when:
       and:
         - not:
@@ -549,7 +549,7 @@ workflows:
           requires:
             - Run IT with context
             - Run IT without context
-  deploy:
+  post-merge:
     when:
       and:
         - equal:
@@ -587,7 +587,7 @@ workflows:
           name: Release
           context: cicd-orchestrator
 
-  notify-release:
+  post-release:
     jobs:
       - job-notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
