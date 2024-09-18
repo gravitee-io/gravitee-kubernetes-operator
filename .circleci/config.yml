@@ -223,18 +223,6 @@ jobs:
             - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
 
-  job-azure-login:
-    executor:
-      name: azure-cli
-    steps:
-      - cmd-setup-azure-login
-      - run:
-          name: Run az job-azure-login
-          command: |
-            az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
-            az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
-
-
   job-stage-image:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -287,7 +275,6 @@ jobs:
       - helm/install_helm_client
       - kubernetes/install-kubectl
       - azure-cli/install
-
       - go/load-cache
       - cmd-setup-azure-login
       - run:
@@ -503,6 +490,21 @@ jobs:
               ]
             }
 
+  job-scan-release:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    steps:
+    - setup_remote_docker
+    - cmd-setup-aqua-scan
+    - aquasec/install_billy
+    - aquasec/pull_aqua_scanner_image
+    - aquasec/register_artifact:
+        artifact_to_register: graviteeio/kubernetes-operator:${CIRCLE_TAG}
+        debug: true
+    - aquasec/scan_docker_image:
+        docker_image_to_scan: graviteeio/kubernetes-operator:${CIRCLE_TAG}
+        scanner_url: https://82fb8f75da.cloud.aquasec.com
+
   job-helm-lint:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -665,3 +667,6 @@ workflows:
               ignore: /.*/
             tags:
               only: /\d+\.\d+\.\d+/
+      - job-scan-release:
+          name: Run security scan on release
+          context: cicd-orchestrator
