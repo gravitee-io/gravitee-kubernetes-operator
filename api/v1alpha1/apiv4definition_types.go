@@ -147,8 +147,8 @@ const separator = "/"
 // GetOrGenerateEmptyPlanCrossID For each plan, generate a CrossId from Api Id & Plan Name if not defined.
 func (api *ApiV4Definition) GetOrGenerateEmptyPlanCrossID() {
 	for name, plan := range api.Spec.Plans {
-		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromStrings(api.PickCrossID(), separator, name)
+		if plan.CrossID == "" {
+			plan.CrossID = uuid.FromStrings(api.PickCrossID(), separator, name)
 		}
 	}
 }
