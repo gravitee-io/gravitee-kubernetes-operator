@@ -670,3 +670,8 @@ workflows:
       - job-scan-release:
           name: Run security scan on release
           context: cicd-orchestrator
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /\d+\.\d+\.\d+/
