@@ -103,9 +103,10 @@ func defaultApiDefinitionTemplate() *v1alpha1.ApiDefinition {
 			Api: v2.Api{
 				Plans: []*v2.Plan{
 					v2.NewPlan(
-						base.NewPlan("Default ingress keyless plan").
+						base.NewPlan().
 							WithStatus(base.PublishedPlanStatus),
-					).WithSecurity("KEY_LESS").WithName("Key Less"),
+					).WithDescription("Default ingress keyless plan").
+						WithSecurity("KEY_LESS").WithName("Key Less"),
 				},
 				ApiBase: &base.ApiBase{
 					Version: "1.0.0",

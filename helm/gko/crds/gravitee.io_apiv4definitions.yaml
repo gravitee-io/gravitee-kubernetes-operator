@@ -1116,7 +1116,6 @@ spec:
                       - MANUAL
                       type: string
                   required:
-                  - description
                   - name
                   type: object
                 description: |-
