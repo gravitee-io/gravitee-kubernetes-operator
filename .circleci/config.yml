@@ -490,21 +490,6 @@ jobs:
               ]
             }
 
-  job-scan-release:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
-    steps:
-    - setup_remote_docker
-    - cmd-setup-aqua-scan
-    - aquasec/install_billy
-    - aquasec/pull_aqua_scanner_image
-    - aquasec/register_artifact:
-        artifact_to_register: graviteeio/kubernetes-operator:${CIRCLE_TAG}
-        debug: true
-    - aquasec/scan_docker_image:
-        docker_image_to_scan: graviteeio/kubernetes-operator:${CIRCLE_TAG}
-        scanner_url: https://82fb8f75da.cloud.aquasec.com
-
   job-helm-lint:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -667,11 +652,35 @@ workflows:
               ignore: /.*/
             tags:
               only: /\d+\.\d+\.\d+/
-      - job-scan-release:
-          name: Run security scan on release
+      - aquasec/register_artifact:
+          name: Register artifact
           context: cicd-orchestrator
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /\d+\.\d+\.\d+/
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+      - aquasec/docker_image_scan:
+          name: Scan docker image
+          context: cicd-orchestrator
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /\d+\.\d+\.\d+/
+          requires:
+            - Register artifact
+          scanner_url: https://82fb8f75da.cloud.aquasec.com
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+
