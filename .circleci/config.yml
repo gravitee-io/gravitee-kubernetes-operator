@@ -8,7 +8,7 @@ orbs:
   keeper: gravitee-io/keeper@0.6.3
   slack: circleci/slack@4.13.3
   gh: circleci/github-cli@2.4.0
-  aquasec: gravitee-io/aquasec@1.0.0
+  aquasec: gravitee-io/aquasec@1.0.2
 
 parameters:
   go-version:
@@ -624,6 +624,7 @@ workflows:
           tag: master-latest
           context: cicd-orchestrator
       - job-azure-login:
+          context: cicd-orchestrator
           filters:
             branches:
               only:
