@@ -59,6 +59,17 @@ commands:
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
+  cmd-setup-azure-login:
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
+          var-name: AZURE_SP
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
+          var-name: AZURE_TENANT
+      - keeper/env-export:
+          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
+          var-name: AZURE_SP_PASSWORD
 jobs:
   job-lint-sources:
     docker:
@@ -210,6 +221,21 @@ jobs:
           paths:
             - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
+
+  job-azure-login:
+    executor:
+      name: azure-cli
+    steps:
+      - cmd-setup-azure-login
+      - run:
+          name: Run az job-azure-login
+          command: |
+            az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
+            az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - .kube/config
 
   job-stage-image:
     docker:
@@ -597,6 +623,14 @@ workflows:
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: master-latest
           context: cicd-orchestrator
+      - job-azure-login:
+          filters:
+            branches:
+              only:
+                - master
+            tags:
+              ignore:
+                - /.*/
       - job-helm-install:
           filters:
             branches:
