@@ -27,8 +27,8 @@ func generateEmptyPlanCrossIds(spec *v1alpha1.ApiDefinitionV2Spec) {
 	plans := spec.Plans
 
 	for _, plan := range plans {
-		if plan.CrossId == "" {
-			plan.CrossId = uuid.FromStrings(spec.ID, separator, plan.Name)
+		if plan.CrossID == "" {
+			plan.CrossID = uuid.FromStrings(spec.ID, separator, plan.Name)
 		}
 	}
 }
@@ -57,7 +57,7 @@ func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, mgmtApi *apimModel.
 
 	for _, plan := range plans {
 		for _, mgmtPlan := range mgmtApi.Plans {
-			if plan.CrossId == mgmtPlan.CrossId {
+			if plan.CrossID == mgmtPlan.CrossId {
 				plan.Id = mgmtPlan.Id
 				plan.Api = mgmtPlan.Api
 			}

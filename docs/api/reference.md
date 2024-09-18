@@ -5194,13 +5194,6 @@ TrustStore type (possible values PEM, PKCS12, JKS)
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>description</b></td>
-        <td>string</td>
-        <td>
-          Plan Description<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>name</b></td>
         <td>string</td>
         <td>
@@ -5236,6 +5229,13 @@ that has been promoted between different environments.<br/>
         <td>string</td>
         <td>
           Plan definition version<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Plan Description<br/>
         </td>
         <td>false</td>
       </tr><tr>

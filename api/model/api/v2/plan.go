@@ -33,8 +33,11 @@ type Consumer struct {
 
 type Plan struct {
 	*base.Plan `json:",inline"`
+
 	// Plan name
 	Name string `json:"name"`
+	// Plan Description
+	Description string `json:"description"`
 	// Plan Security
 	Security string `json:"security"`
 	// Plan Security definition
@@ -61,6 +64,11 @@ func NewPlan(base *base.Plan) *Plan {
 
 func (plan *Plan) WithName(name string) *Plan {
 	plan.Name = name
+	return plan
+}
+
+func (plan *Plan) WithDescription(description string) *Plan {
+	plan.Description = description
 	return plan
 }
 
