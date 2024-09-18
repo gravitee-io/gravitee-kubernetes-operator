@@ -35,6 +35,9 @@ type Plan struct {
 	// if a management context is used to sync the API with APIM
 	Name string `json:"name"`
 
+	// Plan Description
+	Description string `json:"description,omitempty"`
+
 	// Plan definition version
 	DefinitionVersion DefinitionVersion `json:"definitionVersion,omitempty"`
 

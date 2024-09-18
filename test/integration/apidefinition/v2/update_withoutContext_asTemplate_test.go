@@ -78,9 +78,10 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		updated := fixtures.API.DeepCopy()
 		updated.Spec.Plans = append(updated.Spec.Plans,
 			v2.NewPlan(
-				base.NewPlan("Default keyless plan").
+				base.NewPlan().
 					WithStatus(base.PublishedPlanStatus),
-			).WithSecurity("KEY_LESS").WithName("Key Less"),
+			).WithDescription("Default keyless plan").
+				WithSecurity("KEY_LESS").WithName("Key Less"),
 		)
 
 		Eventually(func() error {
