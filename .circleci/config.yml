@@ -232,10 +232,7 @@ jobs:
           command: |
             az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
             az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - .kube/config
+
 
   job-stage-image:
     docker:
@@ -289,9 +286,12 @@ jobs:
       - helm/install_helm_client
       - kubernetes/install-kubectl
       - go/load-cache
-      - attach_workspace:
-          name: Restore Kubernetes config
-          at: ~/
+      - cmd-setup-azure-login
+      - run:
+          name: Run az job-azure-login
+          command: |
+            az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
+            az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
       - run:
           name: Helm install the operator
           command: |
@@ -623,16 +623,8 @@ workflows:
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: master-latest
           context: cicd-orchestrator
-      - job-azure-login:
-          context: cicd-orchestrator
-          filters:
-            branches:
-              only:
-                - master
-            tags:
-              ignore:
-                - /.*/
       - job-helm-install:
+          context: cicd-orchestrator
           filters:
             branches:
               only:
@@ -641,7 +633,6 @@ workflows:
               ignore:
                 - /.*/
           name: Deploy in << matrix.namespace >>
-          context: cicd-orchestrator
           matrix:
             parameters:
               namespace:
