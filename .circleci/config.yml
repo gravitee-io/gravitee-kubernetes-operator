@@ -9,6 +9,7 @@ orbs:
   slack: circleci/slack@4.13.3
   gh: circleci/github-cli@2.4.0
   aquasec: gravitee-io/aquasec@1.0.2
+  azure-cli: circleci/azure-cli@1.2.2
 
 parameters:
   go-version:
@@ -285,6 +286,8 @@ jobs:
       - checkout
       - helm/install_helm_client
       - kubernetes/install-kubectl
+      - azure-cli/install
+
       - go/load-cache
       - cmd-setup-azure-login
       - run:
