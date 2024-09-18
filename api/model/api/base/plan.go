@@ -34,9 +34,13 @@ type Plan struct {
 	// The plan Cross ID.
 	// This field is used to identify plans defined for an API
 	// that has been promoted between different environments.
+<<<<<<< HEAD
 	CrossId string `json:"crossId,omitempty"`
 	// Plan Description
 	Description string `json:"description"`
+=======
+	CrossID string `json:"crossId,omitempty"`
+>>>>>>> a48de25 (fix: make plan description optional)
 	// List of plan tags
 	Tags []string `json:"tags,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -57,9 +61,8 @@ type Plan struct {
 	Type PlanType `json:"type,omitempty"`
 }
 
-func NewPlan(description string) *Plan {
+func NewPlan() *Plan {
 	return &Plan{
-		Description:     description,
 		Tags:            []string{},
 		Characteristics: []string{},
 	}

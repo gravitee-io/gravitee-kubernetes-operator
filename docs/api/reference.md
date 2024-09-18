@@ -6795,6 +6795,7 @@ Specify the primary member that owns the API
         </tr>
     </thead>
     <tbody><tr>
+<<<<<<< HEAD
         <td><b>displayName</b></td>
         <td>string</td>
         <td>
@@ -6806,6 +6807,75 @@ Specify the primary member that owns the API
         <td>string</td>
         <td>
           PrimaryOwner email<br/>
+=======
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Plan display name, this will be the name displayed in the UI
+if a management context is used to sync the API with APIM<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>characteristics</b></td>
+        <td>[]string</td>
+        <td>
+          List of plan characteristics<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>comment_required</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate of comment is required for this plan or not<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          The plan Cross ID.
+This field is used to identify plans defined for an API
+that has been promoted between different environments.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>definitionVersion</b></td>
+        <td>string</td>
+        <td>
+          Plan definition version<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          Plan Description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>excludedGroups</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindex">flows</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of plan flows<br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>generalConditions</b></td>
+        <td>string</td>
+        <td>
+          The general conditions defined to use this plan<br/>
+>>>>>>> a48de25 (fix: make plan description optional)
         </td>
         <td>false</td>
       </tr><tr>
