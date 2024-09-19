@@ -17,6 +17,8 @@ package mctx
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -27,9 +29,24 @@ import (
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
+<<<<<<< HEAD
 	if context, ok := obj.(core.ContextObject); ok {
 		errs.Add(validateSecretRef(ctx, context))
 		errs.Add(validateContextIsAvailable(ctx, context))
+=======
+	// Should be the first validation, it will also compile the templates internally
+	tmpErr := admission.CompileAndValidateTemplate(ctx, obj)
+	if tmpErr != nil {
+		errs.Add(tmpErr)
+	}
+
+	if mCtx, ok := obj.(core.ContextObject); ok {
+		if !mCtx.HasCloud() || !mCtx.GetCloud().IsEnabled() {
+			errs.Add(validateRequiredField(mCtx))
+			errs.Add(validateSecretRef(ctx, mCtx))
+		}
+		errs.Add(validateContextIsAvailable(ctx, mCtx))
+>>>>>>> 7bba912 (feat: add validation for templating)
 	}
 
 	return errs

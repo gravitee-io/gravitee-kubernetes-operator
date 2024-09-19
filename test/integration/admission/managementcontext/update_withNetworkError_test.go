@@ -70,6 +70,6 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		Consistently(func() error {
 			warnings, _ := admissionCtrl.ValidateUpdate(ctx, mCtx, mCtx)
 			return assert.SliceOfSize("warnings", warnings, 1)
-		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
+		}, constants.ConsistentTimeout, interval).Should(Succeed())
 	})
 })
