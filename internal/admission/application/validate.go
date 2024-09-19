@@ -17,6 +17,8 @@ package application
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -28,6 +30,11 @@ import (
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 	if app, ok := obj.(core.ApplicationObject); ok {
+		// Should be the first validation, it will also compile the templates internally
+		errs.Add(admission.CompileAndValidateTemplate(ctx, app))
+		if errs.IsSevere() {
+			return errs
+		}
 		errs.Add(ctxref.Validate(ctx, app))
 		if errs.IsSevere() {
 			return errs
@@ -53,6 +60,11 @@ func validateUpdate(
 	oldApp, ook := oldObj.(core.ApplicationObject)
 	newApp, nok := newObj.(core.ApplicationObject)
 	if ook && nok {
+		// Should be the first validation, it will also compile the templates internally
+		errs.Add(admission.CompileAndValidateTemplate(ctx, newApp))
+		if errs.IsSevere() {
+			return errs
+		}
 		errs.Add(ctxref.Validate(ctx, newApp))
 		if errs.IsSevere() {
 			return errs
