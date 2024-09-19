@@ -17,6 +17,8 @@ package base
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -25,6 +27,13 @@ import (
 
 func ValidateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
+
+	// Should be the first validation, it will also compile the templates internally
+	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+
+	if errs.IsSevere() {
+		return errs
+	}
 
 	errs.Add(ctxref.Validate(ctx, obj))
 

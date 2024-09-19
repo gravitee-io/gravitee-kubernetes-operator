@@ -17,6 +17,8 @@ package ctxref
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -34,6 +36,13 @@ func Validate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
 
 func validateContextRefExists(ctx context.Context, ctxAware core.ContextAwareObject) *errors.AdmissionError {
 	ctxRef := ctxAware.ContextRef()
+
+	// Should be the first validation, it will also compile the templates internally
+	tmpErr := admission.CompileAndValidateTemplate(ctx, ctxAware)
+	if tmpErr != nil {
+		return tmpErr
+	}
+
 	if err := dynamic.ExpectResolvedContext(ctx, ctxRef, ctxAware.GetNamespace()); err != nil {
 		return errors.NewSeveref(
 			"resource [%s] references management context [%v] that doesn't exist in the cluster",

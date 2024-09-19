@@ -18,6 +18,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
+
 	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -29,6 +32,17 @@ func TestResources(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "API v2 Admission Suite")
 }
+
+var _ = SynchronizedBeforeSuite(func() {
+	// NOSONAR mandatory noop
+}, func() {
+	fixture.Builder().
+		AddSecret(constants.ContextSecretFile).
+		AddSecret(constants.ApiWithTemplatingSecretFile).
+		AddConfigMap(constants.ApiWithTemplatingConfigMapFile).
+		Build().
+		Apply()
+})
 
 var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
