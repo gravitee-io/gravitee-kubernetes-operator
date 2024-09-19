@@ -63,5 +63,5 @@ func (a AdmissionCtrl) ValidateUpdate(
 	oldObj runtime.Object,
 	newObj runtime.Object,
 ) (admission.Warnings, error) {
-	return admission.Warnings{}, nil
+	return validateCreate(ctx, newObj).Map()
 }
