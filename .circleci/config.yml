@@ -608,6 +608,10 @@ workflows:
               - "release"
               - << pipeline.parameters.trigger >>
     jobs:
+      - aquasec/fs_scan:
+          context: cicd-orchestrator
+          pre-steps:
+            - cmd-setup-aqua-scan
       - job-stage-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
@@ -631,6 +635,7 @@ workflows:
               tag: [master-latest]
           requires:
             - Stage image
+      
 
   release:
     when:
