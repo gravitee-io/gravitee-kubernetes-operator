@@ -79,6 +79,10 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		Status: *status,
 	}
 
+	if err := apimClient.APIs.SetKubernetesContext(spec.ID, spec.DefinitionContext); err != nil {
+		return errors.NewContextError(err)
+	}
+
 	if spec.IsLocal {
 		return updateConfigMap(ctx, cp)
 	}

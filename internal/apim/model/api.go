@@ -36,8 +36,9 @@ func (api *ApiEntity) ShouldSetKubernetesContext() bool {
 }
 
 type DefinitionContext struct {
-	Origin string `json:"origin,omitempty"`
-	Mode   string `json:"mode,omitempty"`
+	Origin   string `json:"origin,omitempty"`
+	Mode     string `json:"mode,omitempty"`
+	SyncFrom string `json:"syncFrom,omitempty"`
 }
 
 const (
@@ -48,8 +49,9 @@ const (
 
 func NewKubernetesContext() *DefinitionContext {
 	return &DefinitionContext{
-		Origin: OriginKubernetes,
-		Mode:   ModeFullyManaged,
+		Origin:   OriginKubernetes,
+		Mode:     ModeFullyManaged,
+		SyncFrom: OriginKubernetes,
 	}
 }
 

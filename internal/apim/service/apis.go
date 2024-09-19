@@ -16,6 +16,7 @@ package service
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
@@ -138,9 +139,13 @@ func (svc *APIs) DeleteV4(apiID string) error {
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *APIs) SetKubernetesContext(apiID string) error {
-	url := svc.EnvV1Target("apis").WithPath(apiID).WithPath("definition-context")
-	return svc.HTTP.Put(url.String(), model.NewKubernetesContext(), nil)
+func (svc *APIs) SetKubernetesContext(apiId string, definitionContext *v2.DefinitionContext) error {
+	url := svc.EnvV1Target("apis").WithPath(apiId).WithPath("definition-context")
+	ctx := model.NewKubernetesContext()
+	if strings.EqualFold(definitionContext.SyncFrom, v2.OriginManagement) {
+		ctx.SyncFrom = v2.OriginManagement
+	}
+	return svc.HTTP.Put(url.String(), ctx, nil)
 }
 
 func (svc *APIs) Deploy(id string) error {
