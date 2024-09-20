@@ -594,29 +594,30 @@ workflows:
             - Run IT with context
             - Run IT without context
   post-merge:
-    when:
-      and:
-        - or:
-          - equal:
-              - master
-              - << pipeline.git.branch >>
-          - equal:
-              - /^[0-9]+\.[0-9]+\.x$/
-              - << pipeline.git.branch >>
-        - not:
-            equal:
-              - "release"
-              - << pipeline.parameters.trigger >>
     jobs:
       - aquasec/fs_scan:
           context: cicd-orchestrator
           pre-steps:
             - cmd-setup-aqua-scan
+          filters:
+            branches:
+              only:
+              - /^[0-9]+\.[0-9]+\.x$/
+              - master
+            tags:
+              ignore: /.*/
       - job-stage-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
           tag: 4.5.x-latest
           context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+              - /^[0-9]+\.[0-9]+\.x$/
+              - master
+            tags:
+              ignore: /.*/
       - job-helm-install:
           context: cicd-orchestrator
           filters:
@@ -635,8 +636,6 @@ workflows:
               tag: [master-latest]
           requires:
             - Stage image
-      
-
   release:
     when:
       equal:
@@ -646,7 +645,6 @@ workflows:
       - job-release:
           name: Release
           context: cicd-orchestrator
-
   post-release:
     jobs:
       - job-notify-release-slack:
