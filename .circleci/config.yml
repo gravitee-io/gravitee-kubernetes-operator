@@ -609,7 +609,7 @@ workflows:
       - job-stage-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
-          tag: 4.3.x-latest
+          tag: 4.4.x-latest
           context: cicd-orchestrator
           filters:
             branches:
