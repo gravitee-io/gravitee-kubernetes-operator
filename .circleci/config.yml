@@ -645,7 +645,6 @@ workflows:
       - job-release:
           name: Release
           context: cicd-orchestrator
-
   post-release:
     jobs:
       - job-notify-release-slack:
