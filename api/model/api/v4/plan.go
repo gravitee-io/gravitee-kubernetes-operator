@@ -42,7 +42,7 @@ type Plan struct {
 	DefinitionVersion DefinitionVersion `json:"definitionVersion,omitempty"`
 
 	// Plan security
-	Security PlanSecurity `json:"security,omitempty"`
+	Security *PlanSecurity `json:"security,omitempty"`
 
 	// The plan mode
 	// +kubebuilder:validation:Optional
@@ -68,14 +68,16 @@ type GatewayDefinitionPlan struct {
 	Name  string `json:"name"`
 }
 
-func (plan *Plan) WithSecurity(security PlanSecurity) *Plan {
+func (plan *Plan) WithSecurity(security *PlanSecurity) *Plan {
 	plan.Security = security
 	return plan
 }
 
 func (plan *Plan) ToGatewayDefinition(name string) *GatewayDefinitionPlan {
 	def := &GatewayDefinitionPlan{Plan: plan, Name: name}
-	def.Security.Type = Enum(plan.Security.Type).ToGatewayDefinition()
+	if plan.Security != nil {
+		def.Security.Type = Enum(plan.Security.Type).ToGatewayDefinition()
+	}
 	def.Mode = PlanMode(Enum(plan.Mode).ToGatewayDefinition())
 	def.Status = base.PlanStatus(Enum(plan.Status).ToGatewayDefinition())
 	flows := make([]*Flow, len(plan.Flows))
