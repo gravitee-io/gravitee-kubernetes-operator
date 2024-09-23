@@ -796,7 +796,11 @@ func (in *Plan) DeepCopyInto(out *Plan) {
 		*out = new(base.Plan)
 		(*in).DeepCopyInto(*out)
 	}
-	in.Security.DeepCopyInto(&out.Security)
+	if in.Security != nil {
+		in, out := &in.Security, &out.Security
+		*out = new(PlanSecurity)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Flows != nil {
 		in, out := &in.Flows, &out.Flows
 		*out = make([]*Flow, len(*in))
