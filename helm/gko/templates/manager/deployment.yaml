@@ -42,7 +42,7 @@ spec:
       annotations:
         checksum/config: '{{ include (print $.Template.BasePath "/manager/config.yaml") .
           | sha256sum }}'
-        meta.helm.sh/releaseTimestamp: {{ now | unixEpoch | quote }}
+        meta.helm.sh/releasedAt: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }}
         kubectl.kubernetes.io/default-container: manager
       labels:
         control-plane: controller-manager
