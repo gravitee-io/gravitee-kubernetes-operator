@@ -56,6 +56,10 @@ spec:
         - {{ .Values.rbacProxy.image.pullSecret | toYaml }}
 {{- end }}
 {{- end }}
+{{- with .Values.manager.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
       containers:
 {{- if and .Values.manager.metrics.enabled .Values.rbacProxy.enabled }}
         - args:
