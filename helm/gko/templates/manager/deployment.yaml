@@ -47,7 +47,10 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
-      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
 {{- if and .Values.manager.metrics.enabled .Values.rbacProxy.enabled }}
         - args:
