@@ -135,7 +135,7 @@ const (
 	IngressWithTLSSecretFile   = "ingress/ingress-with-tls-secret.yml"
 	IngressResponse404CMFile   = "ingress/ingress-response-404-config-map.yaml"
 
-	Application = "apim/application/application.yml"
+	Application = "apim/application/web-app.yaml"
 )
 
 func BuildAPIEndpoint(api *v1alpha1.ApiDefinition) string {
