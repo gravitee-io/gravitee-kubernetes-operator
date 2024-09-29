@@ -16,11 +16,11 @@
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
-  name: simple-application
+  name: simple-application-with-client-id
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "simple-app"
+  name: "simple-application-with-client-id"
   domain: "https://example.com"
   description: |
     A hands-free application. 
@@ -28,8 +28,4 @@ spec:
   settings:
     app:
       type: WEB
-  metadata:
-  - name: "test metadata 1"
-    format: "STRING"
-  - name: "test metadata 2"
-    format: "STRING"
+      clientId: "my-client-id"
