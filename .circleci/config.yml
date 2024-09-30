@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   gravitee: gravitee-io/gravitee@4.6.2
   kubernetes: circleci/kubernetes@1.3.1
-  go: circleci/go@1.11.0
+  go: circleci/go@1.12.0
   helm: circleci/helm@3.0.2
   keeper: gravitee-io/keeper@0.6.3
   slack: circleci/slack@4.13.3
