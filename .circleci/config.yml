@@ -19,6 +19,7 @@ parameters:
     type: enum
     default: none
     enum:
+      - test
       - release
       - none
   release-version:
@@ -32,6 +33,9 @@ parameters:
   dry-run:
     type: boolean
     default: true
+  branch:
+    type: string
+    default: master
 
 executors:
   azure-cli:
@@ -171,6 +175,7 @@ jobs:
       ginkgo-filter:
         type: enum
         enum:
+          - integration
           - withContext
           - withoutContext
     steps:
@@ -534,7 +539,13 @@ jobs:
       - run:
           name: Run Sonarcloud analysis
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
-
+  job-fail:
+    description: This is a test job for slack notifications
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>
+    steps:
+      - run:
+          command: exit 1
 workflows:
   pull-request:
     when:
@@ -542,6 +553,10 @@ workflows:
         - not:
             equal:
               - "release"
+              - << pipeline.parameters.trigger >>
+        - not:
+            equal:
+              - "test"
               - << pipeline.parameters.trigger >>
     jobs:
       - job-lint-sources:
@@ -645,7 +660,6 @@ workflows:
       - job-release:
           name: Release
           context: cicd-orchestrator
-
   post-release:
     jobs:
       - job-notify-release-slack:
@@ -687,4 +701,37 @@ workflows:
             - run:
                 name: Store docker image version
                 command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
-
+  test:
+    when:
+      equal:
+        - test
+        - << pipeline.parameters.trigger >>
+    jobs:
+      # - job-integration-test:
+      #     name: Run all integration tests
+      #     context: cicd-orchestrator
+      #     ginkgo-filter: integration
+      #     post-steps:
+      #     - keeper/env-export:
+      #         secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+      #         var-name: SLACK_ACCESS_TOKEN
+      #     - run:
+      #         command: echo 'export CIRCLE_BRANCH="<< pipeline.parameters.branch >>"' >> $BASH_ENV
+      #     - slack/notify:
+      #       channel: C06F602EWBD
+      #       event: fail
+      #       template: basic_fail_1
+      #       when: on_fail
+      #       branch_pattern: << pipeline.parameters.branch >>
+      - job-fail:
+          name: Run all integration tests
+          context: cicd-orchestrator
+          post-steps:
+          - keeper/env-export:
+              secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+              var-name: SLACK_ACCESS_TOKEN
+          - slack/notify:
+              channel: C06F602EWBD
+              event: fail
+              template: basic_fail_1
+              branch_pattern: master,[0-9]+\.[0-9]+\.x,
