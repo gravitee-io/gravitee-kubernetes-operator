@@ -18,21 +18,21 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Which version should we release ?'
+        description: "Which version should we release ?"
         required: true
         type: string
       latest:
-        description: 'Is this version the latest version ?'
+        description: "Is this version the latest version ?"
         required: false
         default: false
         type: boolean
       dry-run:
-        description: 'Should this run as a dry run ?'
+        description: "Should this run as a dry run ?"
         required: true
         default: true
         type: boolean
       pipeline-branch:
-        description: 'On which branch is your circleci pipeline located ?'
+        description: "On which branch is your circleci pipeline located ?"
         required: true
         default: "master"
         type: string
@@ -41,14 +41,15 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ inputs.version }}
-      LATEST:  ${{ inputs.latest }}
-      DRY_RUN:  ${{ inputs.dry-run }}
+      LATEST: ${{ inputs.latest }}
+      DRY_RUN: ${{ inputs.dry-run }}
       PIPELINE_BRANCH: ${{ inputs.pipeline-branch }}
       CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: "Trigger release pipeline"
         run: |
           echo "🚀 Releasing version ${VERSION}"
