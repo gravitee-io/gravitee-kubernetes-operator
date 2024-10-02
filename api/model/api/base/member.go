@@ -26,6 +26,7 @@ type Member struct {
 	// +kubebuilder:example:=user@email.com
 	SourceID string `json:"sourceId"`
 	// Member display name
+	// +kubebuilder:validation:Optional
 	DisplayName string `json:"displayName,omitempty"`
 	// The API role associated with this Member
 	// +kubebuilder:default:=USER

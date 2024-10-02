@@ -54,12 +54,13 @@ type Logging struct {
 	// Which part of the request/response should be logged ?
 	Content LoggingContent `json:"content,omitempty"`
 	// The logging condition (supports EL expressions)
+	// +kubebuilder:validation:Optional
 	Condition string `json:"condition,omitempty"`
 }
 
 type Analytics struct {
 	// Analytics Enabled or not?
-	Enabled bool `json:"enabled"`
+	Enabled bool `json:"enabled,omitempty"`
 	// Analytics Sampling
 	Sampling *Sampling `json:"sampling,omitempty"`
 	// Analytics Logging

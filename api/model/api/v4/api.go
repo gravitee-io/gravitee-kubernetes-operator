@@ -34,6 +34,7 @@ var _ core.ApiDefinitionModel = &Api{}
 type Api struct {
 	*base.ApiBase `json:",inline"`
 	// API description
+	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
 	// +kubebuilder:default:=`V4`
 	// +kubebuilder:validation:Enum=`V4`;
@@ -42,7 +43,8 @@ type Api struct {
 	// The API Definition context is used to identify the Kubernetes origin of the API,
 	// and define whether the API definition should be synchronized
 	// from an API instance or from a config map created in the cluster (which is the default)
-	DefinitionContext *DefinitionContext `json:"definitionContext,omitempty"`
+	// +kubebuilder:validation:Optional
+	DefinitionContext *DefinitionContext `json:"definitionContext"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=`UNPUBLISHED`
 	// API life cycle state can be one of the values PUBLISHED, UNPUBLISHED
@@ -61,7 +63,8 @@ type Api struct {
 	// A map of plan identifiers to plan
 	// Keys uniquely identify plans and are used to keep them in sync
 	// when using a management context.
-	Plans map[string]*Plan `json:"plans,omitempty"`
+	// +kubebuilder:validation:Optional
+	Plans map[string]*Plan `json:"plans"`
 	// API Flow Execution
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -73,9 +76,11 @@ type Api struct {
 	// API Services
 	Services *ApiServices `json:"services,omitempty"`
 	// A list of Response Templates for the API
-	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
+	// +kubebuilder:validation:Optional
+	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"responseTemplates"`
 	// List of members associated with the API
-	Members []*base.Member `json:"members,omitempty"`
+	// +kubebuilder:validation:Optional
+	Members []*base.Member `json:"members"`
 	// +kubebuilder:validation:Optional
 	// A map of pages objects.
 	//

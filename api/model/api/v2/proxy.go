@@ -18,10 +18,13 @@ import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
 type VirtualHost struct {
 	// Host name
+	// +kubebuilder:validation:Optional
 	Host string `json:"host,omitempty"`
 	// Path
+	// +kubebuilder:validation:Optional
 	Path string `json:"path,omitempty"`
 	// Indicate if Entrypoint should be overridden or not
+	// +kubebuilder:validation:Optional
 	OverrideEntrypoint bool `json:"override_entrypoint,omitempty"`
 }
 
@@ -34,9 +37,11 @@ func NewVirtualHost(host, path string) *VirtualHost {
 
 type Proxy struct {
 	// list of Virtual hosts fot the proxy
-	VirtualHosts []*VirtualHost `json:"virtual_hosts,omitempty"`
+	// +kubebuilder:validation:Optional
+	VirtualHosts []*VirtualHost `json:"virtual_hosts"`
 	// List of endpoint groups of the proxy
-	Groups []*EndpointGroup `json:"groups,omitempty"`
+	// +kubebuilder:validation:Optional
+	Groups []*EndpointGroup `json:"groups"`
 	// Proxy Failover
 	Failover *Failover `json:"failover,omitempty"`
 	// Proxy Cors
@@ -44,7 +49,9 @@ type Proxy struct {
 	// Logging
 	Logging *Logging `json:"logging,omitempty"`
 	// Strip Context Path
+	// +kubebuilder:validation:Optional
 	StripContextPath bool `json:"strip_context_path,omitempty"`
 	// Preserve Host
+	// +kubebuilder:validation:Optional
 	PreserveHost bool `json:"preserve_host,omitempty"`
 }

@@ -25,7 +25,9 @@ type MetadataEntry struct {
 	// Metadata Format
 	Format MetadataFormat `json:"format"`
 	// Metadata Value
+	// +kubebuilder:validation:Optional
 	Value string `json:"value,omitempty"`
 	// Metadata Default value
+	// +kubebuilder:validation:Optional
 	DefaultValue string `json:"defaultValue,omitempty"`
 }

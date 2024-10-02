@@ -27,18 +27,24 @@ const (
 
 type Endpoint struct {
 	// Name of the endpoint
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// The end target of this endpoint (backend)
+	// +kubebuilder:validation:Optional
 	Target string `json:"target,omitempty"`
 	// Endpoint weight used for load-balancing
+	// +kubebuilder:validation:Optional
 	Weight int `json:"weight,omitempty"`
 	// Indicate that this ia a back-end endpoint
+	// +kubebuilder:validation:Optional
 	Backup bool `json:"backup,omitempty"`
 	// The endpoint tenants
-	Tenants []string `json:"tenants,omitempty"`
+	// +kubebuilder:validation:Optional
+	Tenants []string `json:"tenants"`
 	// The type of endpoint (HttpEndpointType or GrpcEndpointType)
 	Type EndpointType `json:"type,omitempty"`
 	// Is endpoint inherited or not
+	// +kubebuilder:validation:Optional
 	Inherit bool `json:"inherit,omitempty"`
 	// Configure the HTTP Proxy settings to reach target if needed
 	HttpProxy *base.HttpProxy `json:"proxy,omitempty"`
@@ -47,7 +53,8 @@ type Endpoint struct {
 	// Custom HTTP SSL client options used for this endpoint
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
 	// List of headers for this endpoint
-	Headers []base.HttpHeader `json:"headers,omitempty"`
+	// +kubebuilder:validation:Optional
+	Headers []base.HttpHeader `json:"headers"`
 	// Specify EndpointHealthCheck service settings
 	HealthCheck *EndpointHealthCheckService `json:"healthcheck,omitempty"`
 }
@@ -81,9 +88,11 @@ func NewLoadBalancer(algo LoadBalancerType) *LoadBalancer {
 
 type EndpointGroup struct {
 	// EndpointGroup name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// List of Endpoints belonging to this group
-	Endpoints []*Endpoint `json:"endpoints,omitempty"`
+	// +kubebuilder:validation:Optional
+	Endpoints []*Endpoint `json:"endpoints"`
 	// The LoadBalancer Type
 	LoadBalancer LoadBalancer `json:"load_balancing,omitempty"`
 	// Specify different Endpoint Services
@@ -95,7 +104,8 @@ type EndpointGroup struct {
 	// Custom HTTP SSL client options used for this EndpointGroup
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
 	// List of headers needed for this EndpointGroup
-	Headers map[string]string `json:"headers,omitempty"`
+	// +kubebuilder:validation:Optional
+	Headers map[string]string `json:"headers"`
 }
 
 func NewHttpEndpointGroup(name string) *EndpointGroup {
@@ -110,9 +120,12 @@ type FailoverCase string
 
 type Failover struct {
 	// Maximum number of attempts
+	// +kubebuilder:validation:Optional
 	MaxAttempts int `json:"maxAttempts,omitempty"`
 	// Retry timeout
+	// +kubebuilder:validation:Optional
 	RetryTimeout int64 `json:"retryTimeout,omitempty"`
 	// List of Failover cases
-	Cases []FailoverCase `json:"cases,omitempty"`
+	// +kubebuilder:validation:Optional
+	Cases []FailoverCase `json:"cases"`
 }

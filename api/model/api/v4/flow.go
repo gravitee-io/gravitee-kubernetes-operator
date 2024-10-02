@@ -26,6 +26,7 @@ type Flow struct {
 	ID string `json:"id,omitempty"`
 
 	// Flow name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 
 	// +kubebuilder:default:=true
@@ -33,22 +34,28 @@ type Flow struct {
 	Enabled bool `json:"enabled"`
 
 	// List of Flow selectors
-	Selectors []*FlowSelector `json:"selectors,omitempty"`
+	// +kubebuilder:validation:Optional
+	Selectors []*FlowSelector `json:"selectors"`
 
 	// List of Request flow steps
-	Request []*FlowStep `json:"request,omitempty"`
+	// +kubebuilder:validation:Optional
+	Request []*FlowStep `json:"request"`
 
 	// List of Response flow steps
-	Response []*FlowStep `json:"response,omitempty"`
+	// +kubebuilder:validation:Optional
+	Response []*FlowStep `json:"response"`
 
 	// List of Subscribe flow steps
-	Subscribe []*FlowStep `json:"subscribe,omitempty"`
+	// +kubebuilder:validation:Optional
+	Subscribe []*FlowStep `json:"subscribe"`
 
 	// List of Publish flow steps
-	Publish []*FlowStep `json:"publish,omitempty"`
+	// +kubebuilder:validation:Optional
+	Publish []*FlowStep `json:"publish"`
 
 	// List of tags
-	Tags []string `json:"tags,omitempty"`
+	// +kubebuilder:validation:Optional
+	Tags []string `json:"tags"`
 }
 
 func NewFlow(name string) *Flow {

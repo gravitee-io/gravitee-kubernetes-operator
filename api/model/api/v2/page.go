@@ -20,9 +20,9 @@ type Page struct {
 	*base.Page `json:",inline"`
 	// If the page is private, defines a set of user groups with access
 	// +kubebuilder:validation:Optional
-	AccessControls []base.AccessControl `json:"accessControls,omitempty"`
+	AccessControls []base.AccessControl `json:"accessControls"`
 	// if true, the references defined in the accessControls list will be
 	// denied access instead of being granted
 	// +kubebuilder:validation:Optional
-	ExcludedAccessControl bool `json:"excludedAccessControls"`
+	ExcludedAccessControl bool `json:"excludedAccessControls,omitempty"`
 }

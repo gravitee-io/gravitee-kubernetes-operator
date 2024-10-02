@@ -41,7 +41,8 @@ const (
 
 type DLQ struct {
 	// The endpoint to use when a message should be sent to the dead letter queue.
-	Endpoint string `json:"endpoint,omitempty"`
+	// +kubebuilder:validation:Optional
+	Endpoint string `json:"endpoint"`
 }
 
 type EntryPointType string
@@ -95,7 +96,8 @@ type AbstractListener struct {
 	Type ListenerType `json:"type"`
 	// +kubebuilder:validation:Required
 	Entrypoints []*Entrypoint `json:"entrypoints"`
-	Servers     []string      `json:"servers,omitempty"`
+	// +kubebuilder:validation:Optional
+	Servers []string `json:"servers"`
 }
 
 type HttpListener struct {
@@ -171,8 +173,9 @@ type Entrypoint struct {
 	Type string `json:"type"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default:=`AUTO`
-	Qos           QosType                 `json:"qos"`
-	Dlq           *DLQ                    `json:"dlq,omitempty"`
+	Qos QosType `json:"qos"`
+	Dlq *DLQ    `json:"dlq,omitempty"`
+	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 

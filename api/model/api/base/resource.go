@@ -26,12 +26,15 @@ var _ core.ObjectOrRef[core.ResourceModel] = &ResourceOrRef{}
 type Resource struct {
 	// +kubebuilder:validation:Optional
 	// Is resource enabled or not?
-	Enabled bool `json:"enabled"`
+	Enabled bool `json:"enabled,omitempty"`
 	// Resource Name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// Resource Type
+	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 	// Resource Configuration, arbitrary map of key-values
+	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
