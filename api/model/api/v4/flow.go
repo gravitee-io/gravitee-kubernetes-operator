@@ -26,6 +26,7 @@ type Flow struct {
 	ID string `json:"id,omitempty"`
 
 	// Flow name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 
 	// +kubebuilder:default:=true
@@ -33,21 +34,27 @@ type Flow struct {
 	Enabled bool `json:"enabled"`
 
 	// List of Flow selectors
+	// +kubebuilder:validation:Optional
 	Selectors []*FlowSelector `json:"selectors,omitempty"`
 
 	// List of Request flow steps
+	// +kubebuilder:validation:Optional
 	Request []*FlowStep `json:"request,omitempty"`
 
 	// List of Response flow steps
+	// +kubebuilder:validation:Optional
 	Response []*FlowStep `json:"response,omitempty"`
 
 	// List of Subscribe flow steps
+	// +kubebuilder:validation:Optional
 	Subscribe []*FlowStep `json:"subscribe,omitempty"`
 
 	// List of Publish flow steps
+	// +kubebuilder:validation:Optional
 	Publish []*FlowStep `json:"publish,omitempty"`
 
 	// List of tags
+	// +kubebuilder:validation:Optional
 	Tags []string `json:"tags,omitempty"`
 }
 
@@ -74,6 +81,7 @@ func (fl Flow) ToGatewayDefinition() *Flow {
 type FlowStep struct {
 	base.FlowStep `json:",inline"`
 	// The message condition (supports EL expressions)
+	// +kubebuilder:validation:Optional
 	MessageCondition string `json:"messageCondition,omitempty"`
 }
 

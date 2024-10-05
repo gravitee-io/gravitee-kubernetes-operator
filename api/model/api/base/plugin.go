@@ -18,19 +18,25 @@ import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 type Plugin struct {
 	// Plugin Policy
+	// +kubebuilder:validation:Optional
 	Policy string `json:"policy,omitempty"`
 	// Plugin Resource
+	// +kubebuilder:validation:Optional
 	Resource string `json:"resource,omitempty"`
 	// Plugin Configuration, a map of arbitrary key-values
+	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 type PluginReference struct {
 	// Plugin Reference Namespace
+	// +kubebuilder:validation:Optional
 	Namespace string `json:"namespace,omitempty"`
 	// Plugin Reference Resource
+	// +kubebuilder:validation:Optional
 	Resource string `json:"resource,omitempty"`
 	// Plugin Reference Name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 }
 
@@ -38,9 +44,11 @@ type PluginRevision struct {
 	// Plugin reference
 	PluginReference *PluginReference `json:"pluginReference,omitempty"`
 	// Plugin Generation
+	// +kubebuilder:validation:Optional
 	Generation int64 `json:"generation,omitempty"`
 	// Plugin
 	Plugin *Plugin `json:"plugin,omitempty"`
 	// Plugin Revision Hash code
+	// +kubebuilder:validation:Optional
 	HashCode string `json:"hashCode,omitempty"`
 }

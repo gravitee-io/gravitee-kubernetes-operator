@@ -29,13 +29,18 @@ type FlowStep struct {
 	// Indicate if this FlowStep is enabled or not
 	Enabled bool `json:"enabled"`
 	// FlowStep policy
+	// +kubebuilder:validation:Optional
 	Policy string `json:"policy,omitempty"`
 	// FlowStep name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// FlowStep description
+	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
 	// FlowStep configuration is a map of arbitrary key-values
+	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 	// FlowStep condition
+	// +kubebuilder:validation:Optional
 	Condition string `json:"condition,omitempty"`
 }

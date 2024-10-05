@@ -33,6 +33,7 @@ type OAuthClientSettings struct {
 	// List of Oauth client grant types
 	GrantTypes []string `json:"grantTypes"`
 	// List of Oauth client redirect uris
+	// +kubebuilder:validation:Optional
 	RedirectUris []string `json:"redirectUris,omitempty"`
 }
 
@@ -67,12 +68,15 @@ type Metadata struct {
 	// Metadata Name
 	Name string `json:"name"`
 	// Metadata Value
+	// +kubebuilder:validation:Optional
 	Value string `json:"value,omitempty"`
 	// Metadata DefaultValue
+	// +kubebuilder:validation:Optional
 	DefaultValue string `json:"defaultValue,omitempty"`
 	// Metadata Format
 	Format *MetaDataFormat `json:"format,omitempty"`
 	// Metadata is hidden or not?
+	// +kubebuilder:validation:Optional
 	Hidden bool `json:"hidden,omitempty"`
 }
 
@@ -86,6 +90,7 @@ type Member struct {
 	// +kubebuilder:example:=user@email.com
 	SourceID string `json:"sourceId"`
 	// Member display name
+	// +kubebuilder:validation:Optional
 	DisplayName string `json:"displayName,omitempty"`
 	// The API role associated with this Member
 	// +kubebuilder:default:=USER
@@ -103,14 +108,19 @@ type Application struct {
 	// Application ID
 	ID string `json:"id,omitempty"`
 	// The base64 encoded background to use for this application when displaying it on the portal
+	// +kubebuilder:validation:Optional
 	Background string `json:"background,omitempty"`
 	// Application domain
+	// +kubebuilder:validation:Optional
 	Domain string `json:"domain,omitempty"`
 	// Application groups
+	// +kubebuilder:validation:Optional
 	Groups []string `json:"groups,omitempty"`
 	// The base64 encoded picture to use for this application when displaying it on the portal (if not relying on an URL)
+	// +kubebuilder:validation:Optional
 	Picture string `json:"picture,omitempty"`
 	// A URL pointing to the picture to use when displaying the application on the portal
+	// +kubebuilder:validation:Optional
 	PictureURL string `json:"pictureUrl,omitempty"`
 	// Application settings
 	// +kubebuilder:validation:Required
@@ -119,8 +129,10 @@ type Application struct {
 	// Notify members when they are added to the application
 	NotifyMembers bool `json:"notifyMembers"`
 	// Application metadata
+	// +kubebuilder:validation:Optional
 	Metadata *[]Metadata `json:"metadata,omitempty"`
 	// Application members
+	// +kubebuilder:validation:Optional
 	Members *[]Member `json:"members,omitempty"`
 }
 
