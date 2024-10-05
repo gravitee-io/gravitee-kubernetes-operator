@@ -28,6 +28,7 @@ type Consumer struct {
 	// Consumer type (possible values TAG)
 	ConsumerType ConsumerType `json:"consumerType,omitempty"`
 	// Consumer ID
+	// +kubebuilder:validation:Optional
 	ConsumerID string `json:"consumerId,omitempty"`
 }
 
@@ -41,17 +42,23 @@ type Plan struct {
 	// Plan Security
 	Security string `json:"security"`
 	// Plan Security definition
+	// +kubebuilder:validation:Optional
 	SecurityDefinition string `json:"securityDefinition,omitempty"`
 	// A map of different paths (alongside their Rules) for this Plan
+	// +kubebuilder:validation:Optional
 	Paths map[string][]Rule `json:"paths,omitempty"`
 	// Specify the API associated with this plan
+	// +kubebuilder:validation:Optional
 	Api string `json:"api,omitempty"`
 	// Plan selection rule
+	// +kubebuilder:validation:Optional
 	SelectionRule string `json:"selectionRule,omitempty"`
 	// List of different flows for this Plan
-	Flows []Flow `json:"flows,omitempty"`
+	// +kubebuilder:validation:Optional
+	Flows []Flow `json:"flows"`
 	// List of excluded groups for this plan
-	ExcludedGroups []string `json:"excluded_groups,omitempty"`
+	// +kubebuilder:validation:Optional
+	ExcludedGroups []string `json:"excluded_groups"`
 }
 
 func NewPlan(base *base.Plan) *Plan {
@@ -79,7 +86,9 @@ func (plan *Plan) WithSecurity(security string) *Plan {
 
 type Path struct {
 	// Path
+	// +kubebuilder:validation:Optional
 	Path string `json:"path,omitempty"`
 	// Path Rules
-	Rules []*Rule `json:"rules,omitempty"`
+	// +kubebuilder:validation:Optional
+	Rules []*Rule `json:"rules"`
 }

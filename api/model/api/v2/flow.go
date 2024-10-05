@@ -29,6 +29,7 @@ const (
 
 type PathOperator struct {
 	// Operator path
+	// +kubebuilder:validation:Optional
 	Path string `json:"path,omitempty"`
 	// +kubebuilder:default:=STARTS_WITH
 	// Operator (possible values STARTS_WITH or EQUALS)
@@ -46,22 +47,28 @@ type Flow struct {
 	// Flow ID
 	ID string `json:"id,omitempty"`
 	// Flow name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// List of path operators
 	PathOperator *PathOperator `json:"path-operator,omitempty"`
 	// Flow pre step
-	Pre []base.FlowStep `json:"pre,omitempty"`
+	// +kubebuilder:validation:Optional
+	Pre []base.FlowStep `json:"pre"`
 	// Flow post step
-	Post []base.FlowStep `json:"post,omitempty"`
+	// +kubebuilder:validation:Optional
+	Post []base.FlowStep `json:"post"`
 	// +kubebuilder:default:=true
 	// Indicate if this flow is enabled or disabled
 	Enabled bool `json:"enabled"`
 	// A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
-	Methods []base.HttpMethod `json:"methods,omitempty"`
+	// +kubebuilder:validation:Optional
+	Methods []base.HttpMethod `json:"methods"`
 	// Flow condition
+	// +kubebuilder:validation:Optional
 	Condition string `json:"condition,omitempty"`
 	// List of the consumers of this Flow
-	Consumers []Consumer `json:"consumers,omitempty"`
+	// +kubebuilder:validation:Optional
+	Consumers []Consumer `json:"consumers"`
 }
 
 func NewFlow(name string) Flow {
@@ -78,18 +85,23 @@ func NewFlow(name string) Flow {
 
 type Policy struct {
 	// Policy name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// Policy configuration is a map of arbitrary key-values
+	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 type Rule struct {
 	// List of http methods for this Rule (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
-	Methods []base.HttpMethod `json:"methods,omitempty"`
+	// +kubebuilder:validation:Optional
+	Methods []base.HttpMethod `json:"methods"`
 	// Rule policy
 	Policy *Policy `json:"policy,omitempty"`
 	// Rule description
+	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
 	// Indicate if the Rule is enabled or not
+	// +kubebuilder:validation:Optional
 	Enabled bool `json:"enabled,omitempty"`
 }

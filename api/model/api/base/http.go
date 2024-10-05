@@ -33,17 +33,21 @@ type Cors struct {
 	// Indicate if the cors enabled or not
 	Enabled bool `json:"enabled"`
 	// Access Control -  List of Allowed origins
-	AccessControlAllowOrigin []string `json:"allowOrigin,omitempty"`
+	// +kubebuilder:validation:Optional
+	AccessControlAllowOrigin []string `json:"allowOrigin"`
 	// Access Control - List of Exposed Headers
-	AccessControlExposeHeaders []string `json:"exposeHeaders,omitempty"`
+	// +kubebuilder:validation:Optional
+	AccessControlExposeHeaders []string `json:"exposeHeaders"`
 	// Access Control -  Max age
 	AccessControlMaxAge int `json:"maxAge"`
 	// Access Control - Allow credentials or not
 	AccessControlAllowCredentials bool `json:"allowCredentials"`
 	// Access Control - List of allowed methods
-	AccessControlAllowMethods []string `json:"allowMethods,omitempty"`
+	// +kubebuilder:validation:Optional
+	AccessControlAllowMethods []string `json:"allowMethods"`
 	// Access Control - List of allowed headers
-	AccessControlAllowHeaders []string `json:"allowHeaders,omitempty"`
+	// +kubebuilder:validation:Optional
+	AccessControlAllowHeaders []string `json:"allowHeaders"`
 	// +kubebuilder:default:=false
 	// Run policies or not
 	RunPolicies bool `json:"runPolicies,omitempty"`
@@ -51,8 +55,10 @@ type Cors struct {
 
 type HttpClientOptions struct {
 	//  Idle Timeout for the http connection
+	// +kubebuilder:validation:Optional
 	IdleTimeout uint64 `json:"idleTimeout,omitempty"`
 	// Connection timeout of the http connection
+	// +kubebuilder:validation:Optional
 	ConnectTimeout uint64 `json:"connectTimeout,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=true
@@ -62,11 +68,13 @@ type HttpClientOptions struct {
 	// Should keep alive be used for the HTTP connection ?
 	KeepAliveTimeout uint64 `json:"keepAliveTimeout"`
 	// Read timeout
+	// +kubebuilder:validation:Optional
 	ReadTimeout uint64 `json:"readTimeout,omitempty"`
 	// +kubebuilder:default:=false
 	// Should HTTP/1.1 pipelining be used for the connection or not ?
 	Pipelining bool `json:"pipelining"`
 	// HTTP max concurrent connections
+	// +kubebuilder:validation:Optional
 	MaxConcurrentConnections int `json:"maxConcurrentConnections,omitempty"`
 	// +kubebuilder:default:=false
 	// Should compression be used or not ?
@@ -108,12 +116,16 @@ type HttpProxy struct {
 	// If true, the proxy defined at the system level will be used
 	UseSystemProxy bool `json:"useSystemProxy,omitempty"`
 	// Proxy host name
+	// +kubebuilder:validation:Optional
 	Host string `json:"host,omitempty"`
 	// The HTTP proxy port
+	// +kubebuilder:validation:Optional
 	Port int `json:"port,omitempty"`
 	// The HTTP proxy username (if the proxy requires authentication)
+	// +kubebuilder:validation:Optional
 	Username string `json:"username,omitempty"`
 	// The HTTP proxy password (if the proxy requires authentication)
+	// +kubebuilder:validation:Optional
 	Password string `json:"password,omitempty"`
 	// The HTTP proxy type (possible values Http, Socks4, Socks5)
 	HttpProxyType HttpProxyType `json:"type,omitempty"`
@@ -121,7 +133,9 @@ type HttpProxy struct {
 
 type HttpHeader struct {
 	// The HTTP header name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// The HTTP header value
+	// +kubebuilder:validation:Optional
 	Value string `json:"value,omitempty"`
 }

@@ -23,7 +23,8 @@ import (
 var _ core.ObjectRef = &NamespacedName{}
 
 type NamespacedName struct {
-	Name      string `json:"name"`
+	Name string `json:"name"`
+	// +kubebuilder:validation:Optional
 	Namespace string `json:"namespace,omitempty"`
 }
 

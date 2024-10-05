@@ -37,6 +37,7 @@ type Api struct {
 	// API life cycle state can be one of the values CREATED, PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED
 	LifecycleState base.LifecycleState `json:"lifecycle_state,omitempty"`
 	// Shows the time that the API is deployed
+	// +kubebuilder:validation:Optional
 	DeployedAt uint64 `json:"deployedAt,omitempty"`
 	// +kubebuilder:default:=`2.0.0`
 	// The definition version of the API. For v1alpha1 resources, this field should always set to `2.0.0`.
@@ -58,9 +59,11 @@ type Api struct {
 	// API plans
 	Plans []*Plan `json:"plans"`
 	// A list of Response Templates for the API
+	// +kubebuilder:validation:Optional
 	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"response_templates,omitempty"`
 	// List of members associated with the API
-	Members []*base.Member `json:"members,omitempty"`
+	// +kubebuilder:validation:Optional
+	Members []*base.Member `json:"members"`
 	// +kubebuilder:validation:Optional
 	// A map of pages objects.
 	//

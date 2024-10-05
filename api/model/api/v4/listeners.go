@@ -41,6 +41,7 @@ const (
 
 type DLQ struct {
 	// The endpoint to use when a message should be sent to the dead letter queue.
+	// +kubebuilder:validation:Optional
 	Endpoint string `json:"endpoint,omitempty"`
 }
 
@@ -95,13 +96,15 @@ type AbstractListener struct {
 	Type ListenerType `json:"type"`
 	// +kubebuilder:validation:Required
 	Entrypoints []*Entrypoint `json:"entrypoints"`
-	Servers     []string      `json:"servers,omitempty"`
+	// +kubebuilder:validation:Optional
+	Servers []string `json:"servers"`
 }
 
 type HttpListener struct {
 	*AbstractListener `json:",inline"`
 	// +kubebuilder:validation:Required
-	Paths        []*Path  `json:"paths"`
+	Paths []*Path `json:"paths"`
+	// +kubebuilder:validation:Optional
 	PathMappings []string `json:"pathMappings"`
 }
 
@@ -161,6 +164,7 @@ func (l *TCPListener) ListenerType() ListenerType {
 }
 
 type Path struct {
+	// +kubebuilder:validation:Optional
 	Host string `json:"host,omitempty"`
 	// +kubebuilder:validation:Required
 	Path string `json:"path"`
@@ -171,8 +175,9 @@ type Entrypoint struct {
 	Type string `json:"type"`
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default:=`AUTO`
-	Qos           QosType                 `json:"qos"`
-	Dlq           *DLQ                    `json:"dlq,omitempty"`
+	Qos QosType `json:"qos"`
+	Dlq *DLQ    `json:"dlq,omitempty"`
+	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
