@@ -3700,6 +3700,8 @@ while PROXY identifies the request issued to the upstream service.<br/>
         <td>boolean</td>
         <td>
           Is resource enabled or not?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6912,6 +6914,8 @@ Plan security
         <td>boolean</td>
         <td>
           Is resource enabled or not?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7274,6 +7278,8 @@ ApiResourceSpec defines the desired state of ApiResource.
         <td>boolean</td>
         <td>
           Is resource enabled or not?<br/>
+          <br/>
+            <i>Default</i>: true<br/>
         </td>
         <td>false</td>
       </tr><tr>

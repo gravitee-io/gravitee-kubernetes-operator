@@ -36,6 +36,7 @@ type Plan struct {
 	Name string `json:"name"`
 
 	// Plan Description
+	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
 
 	// Plan definition version
@@ -51,6 +52,7 @@ type Plan struct {
 	Mode PlanMode `json:"mode,omitempty"`
 
 	// Plan selection rule
+	// +kubebuilder:validation:Optional
 	SelectionRule string `json:"selectionRule,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
@@ -60,6 +62,7 @@ type Plan struct {
 	// +kubebuilder:default:={}
 	ExcludedGroups []string `json:"excludedGroups"`
 	// The general conditions defined to use this plan
+	// +kubebuilder:validation:Optional
 	GeneralConditions string `json:"generalConditions,omitempty"`
 }
 
@@ -94,6 +97,7 @@ type PlanSecurity struct {
 	Type string `json:"type"`
 
 	// Plan security configuration, a map of arbitrary key-values
+	// +kubebuilder:validation:Optional
 	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
