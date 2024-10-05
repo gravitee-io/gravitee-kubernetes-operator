@@ -16,9 +16,11 @@ package v4
 
 type Logging struct {
 	// The logging condition. This field is evaluated for HTTP requests and supports EL expressions.
+	// +kubebuilder:validation:Optional
 	Condition string `json:"condition,omitempty"`
 
 	// The logging message condition. This field is evaluated for messages and supports EL expressions.
+	// +kubebuilder:validation:Optional
 	MessageCondition string `json:"messageCondition,omitempty"`
 
 	// Defines which component of the request should be included in the log payload.

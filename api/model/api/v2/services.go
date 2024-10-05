@@ -21,6 +21,7 @@ import (
 
 type Service struct {
 	// Service name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// +kubebuilder:default:=false
 	// +kubebuilder:validation:Optional
@@ -30,19 +31,24 @@ type Service struct {
 
 type ScheduledService struct {
 	*Service `json:",inline"`
+	// +kubebuilder:validation:Optional
 	Schedule string `json:"schedule,omitempty"`
 }
 
 type EndpointDiscoveryService struct {
 	*Service `json:",inline"`
 	// Provider name
+	// +kubebuilder:validation:Optional
 	Provider string `json:"provider,omitempty"`
 	// Configuration, arbitrary map of key-values
+	// +kubebuilder:validation:Optional
 	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 	// Is it secondary or not?
+	// +kubebuilder:validation:Optional
 	Secondary bool `json:"secondary,omitempty"`
 	// List of tenants
-	Tenants []string `json:"tenants,omitempty"`
+	// +kubebuilder:validation:Optional
+	Tenants []string `json:"tenants"`
 }
 
 // +kubebuilder:validation:Enum=HTTP;
@@ -56,6 +62,7 @@ type DynamicPropertyService struct {
 	*ScheduledService `json:",inline"`
 	Provider          DynamicPropertyProvider `json:"provider,omitempty"`
 	// Configuration, arbitrary map of key-values
+	// +kubebuilder:validation:Optional
 	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
@@ -71,7 +78,8 @@ type Services struct {
 type HealthCheckService struct {
 	*ScheduledService `json:",inline"`
 	// List of health check steps
-	Steps []*HealthCheckStep `json:"steps,omitempty"`
+	// +kubebuilder:validation:Optional
+	Steps []*HealthCheckStep `json:"steps"`
 }
 
 type EndpointHealthCheckService struct {
@@ -82,6 +90,7 @@ type EndpointHealthCheckService struct {
 
 type HealthCheckStep struct {
 	// Health Check Step Name
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 	// Health Check Step Request
 	Request HealthCheckRequest `json:"request,omitempty"`
@@ -91,17 +100,21 @@ type HealthCheckStep struct {
 
 type HealthCheckRequest struct {
 	// The path of the endpoint handling the health check request
+	// +kubebuilder:validation:Optional
 	Path string `json:"path,omitempty"`
 	// The HTTP method to use when issuing the health check request
 	Method base.HttpMethod `json:"method,omitempty"`
 	// List of HTTP headers to include in the health check request
-	Headers []base.HttpHeader `json:"headers,omitempty"`
+	// +kubebuilder:validation:Optional
+	Headers []base.HttpHeader `json:"headers"`
 	// Health Check Request Body
+	// +kubebuilder:validation:Optional
 	Body string `json:"body,omitempty"`
 	// If true, the health check request will be issued without prepending the context path of the API.
 	FromRoot bool `json:"fromRoot"`
 }
 
 type HealthCheckResponse struct {
-	Assertions []string `json:"assertions,omitempty"`
+	// +kubebuilder:validation:Optional
+	Assertions []string `json:"assertions"`
 }

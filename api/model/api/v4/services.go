@@ -21,12 +21,14 @@ type Service struct {
 	Enabled bool `json:"enabled"`
 
 	// Service Type
+	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 
 	// Service Override Configuration or not?
 	OverrideConfig bool `json:"overrideConfiguration"`
 
 	// Service Configuration, a map of arbitrary key-values
+	// +kubebuilder:validation:Optional
 	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 

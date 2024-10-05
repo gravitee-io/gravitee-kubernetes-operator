@@ -36,19 +36,23 @@ type Plan struct {
 	// that has been promoted between different environments.
 	CrossID string `json:"crossId,omitempty"`
 	// List of plan tags
-	Tags []string `json:"tags,omitempty"`
+	// +kubebuilder:validation:Optional
+	Tags []string `json:"tags"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=PUBLISHED
 	// The plan status
 	Status PlanStatus `json:"status,omitempty"`
 	// List of plan characteristics
-	Characteristics []string `json:"characteristics,omitempty"`
+	// +kubebuilder:validation:Optional
+	Characteristics []string `json:"characteristics"`
 	// +kubebuilder:default:=AUTO
 	// Plan validation strategy
 	Validation PlanValidation `json:"validation,omitempty"`
 	// Indicate of comment is required for this plan or not
+	// +kubebuilder:validation:Optional
 	CommentRequired bool `json:"comment_required,omitempty"`
 	// Plan order
+	// +kubebuilder:validation:Optional
 	Order int `json:"order,omitempty"`
 	// +kubebuilder:default:=API
 	// Plan type

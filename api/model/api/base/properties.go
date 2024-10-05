@@ -16,11 +16,15 @@ package base
 
 type Property struct {
 	// Property Key
+	// +kubebuilder:validation:Optional
 	Key string `json:"key,omitempty"`
 	// Property Value
+	// +kubebuilder:validation:Optional
 	Value string `json:"value,omitempty"`
 	// Property Encrypted or not?
+	// +kubebuilder:validation:Optional
 	Encrypted bool `json:"encrypted,omitempty"`
 	// Property is dynamic or not?
+	// +kubebuilder:validation:Optional
 	Dynamic bool `json:"dynamic,omitempty"`
 }
