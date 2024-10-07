@@ -623,7 +623,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - 4.5.x
             tags:
               ignore:
                 - /.*/
@@ -631,9 +631,9 @@ workflows:
           matrix:
             parameters:
               namespace:
-                - apim-apim-master
+                - apim-apim-4-5-x
               image: [graviteeio.azurecr.io/kubernetes-operator]
-              tag: [master-latest]
+              tag: [4.5.x-latest]
           requires:
             - Stage image
   release:
