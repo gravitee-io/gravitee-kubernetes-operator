@@ -623,7 +623,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - 4.5.x
             tags:
               ignore:
                 - /.*/
