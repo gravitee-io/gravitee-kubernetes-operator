@@ -157,10 +157,6 @@ jobs:
              make -s unit
       - store_test_results:
           path: /tmp/junit/reports
-      - persist_to_workspace:
-          root: /tmp/junit/reports
-          paths:
-            - cover-unit.out
   
   job-integration-test:
     machine:
