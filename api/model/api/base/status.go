@@ -21,10 +21,13 @@ import (
 
 type Status struct {
 	// The organization ID, if a management context has been defined to sync with an APIM instance
+	// +kubebuilder:validation:Optional
 	OrgID string `json:"organizationId,omitempty"`
 	// The environment ID, if a management context has been defined to sync with an APIM instance
+	// +kubebuilder:validation:Optional
 	EnvID string `json:"environmentId,omitempty"`
 	// The ID of the API definition in the Gravitee API Management instance (if an API context has been configured).
+	// +kubebuilder:validation:Optional
 	ID string `json:"id,omitempty"`
 	// The Cross ID is used to identify an API that has been promoted from one environment to another.
 	CrossID string `json:"crossId,omitempty"`
@@ -35,6 +38,7 @@ type Status struct {
 	// This field is used to store the list of plans that have been created
 	// for the API definition if a management context has been defined
 	// to sync the API with an APIM instance
+	// +kubebuilder:validation:Optional
 	Plans map[string]string `json:"plans,omitempty"`
 	// When API has been created regardless of errors, this field is
 	// used to persist the error message encountered during admission

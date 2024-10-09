@@ -28,6 +28,7 @@ const (
 
 type Endpoint struct {
 	// The endpoint name (this value should be unique across endpoints)
+	// +kubebuilder:validation:Optional
 	Name string `json:"name,omitempty"`
 
 	// +kubebuilder:validation:Required
@@ -35,15 +36,18 @@ type Endpoint struct {
 	Type string `json:"type,omitempty"`
 
 	// Endpoint Weight
+	// +kubebuilder:validation:Optional
 	Weight int `json:"weight,omitempty"`
 
 	// Should endpoint group configuration be inherited or not ?
 	Inherit bool `json:"inheritConfiguration"`
 
 	// Endpoint Configuration, arbitrary map of key-values
+	// +kubebuilder:validation:Optional
 	Config *utils.GenericStringMap `json:"configuration,omitempty"`
 
 	// Endpoint Configuration Override, arbitrary map of key-values
+	// +kubebuilder:validation:Optional
 	ConfigOverride *utils.GenericStringMap `json:"sharedConfigurationOverride,omitempty"`
 
 	// Endpoint Services
@@ -53,6 +57,7 @@ type Endpoint struct {
 	Secondary bool `json:"secondary"`
 
 	// List of endpoint tenants
+	// +kubebuilder:validation:Optional
 	Tenants []string `json:"tenants,omitempty"`
 }
 
@@ -93,12 +98,15 @@ type EndpointGroup struct {
 	// Endpoint group name
 	Name string `json:"name"`
 	// Endpoint group type
+	// +kubebuilder:validation:Optional
 	Type string `json:"type,omitempty"`
 	// Endpoint group load balancer
 	LoadBalancer *LoadBalancer `json:"loadBalancer,omitempty"`
 	// Endpoint group shared configuration, arbitrary map of key-values
+	// +kubebuilder:validation:Optional
 	SharedConfig *utils.GenericStringMap `json:"sharedConfiguration,omitempty"`
 	// List of endpoint for the group
+	// +kubebuilder:validation:Optional
 	Endpoints []*Endpoint `json:"endpoints,omitempty"`
 	// Endpoint group services
 	Services *EndpointGroupServices `json:"services,omitempty"`
@@ -107,6 +115,7 @@ type EndpointGroup struct {
 	// Endpoint group http client SSL options
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
 	// Endpoint group headers, arbitrary map of key-values
+	// +kubebuilder:validation:Optional
 	Headers map[string]string `json:"headers,omitempty"`
 }
 
