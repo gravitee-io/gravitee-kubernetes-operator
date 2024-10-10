@@ -150,7 +150,6 @@ jobs:
   job-unit-test:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>
-    resource_class: small
     steps:
       - checkout
       - go/mod-download-cached
