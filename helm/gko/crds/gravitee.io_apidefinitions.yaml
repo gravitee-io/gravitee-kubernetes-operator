@@ -17,7 +17,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.16.4
   name: apidefinitions.gravitee.io
 spec:
   group: gravitee.io
@@ -290,10 +290,8 @@ spec:
                 description: |-
                   local defines if the api is local or not.
 
-
                   If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
                   but without setting the update flag in the datastore.
-
 
                   If false, the Operator will not create the ConfigMaps for the Gateway.
                   Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
@@ -383,6 +381,9 @@ spec:
                             enum:
                             - GROUP
                             type: string
+                        required:
+                        - referenceId
+                        - referenceType
                         type: object
                       type: array
                     api:
@@ -480,15 +481,14 @@ spec:
                       - PRIVATE
                       type: string
                   required:
+                  - name
                   - type
                   type: object
                 description: |-
                   A map of pages objects.
 
-
                   Keys uniquely identify pages and are used to keep them in sync
                   with APIM when using a management context.
-
 
                   Renaming a key is the equivalent of deleting the page and recreating
                   it holding a new ID in APIM.
@@ -1619,6 +1619,7 @@ spec:
                 - PRIVATE
                 type: string
             required:
+            - definition_context
             - description
             - name
             - version
