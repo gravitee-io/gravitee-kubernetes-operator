@@ -43,6 +43,8 @@ rbacProxy:
     tag: v0.18.1
     ## @param rbacProxy.image.pullPolicy Specifies the pullPolicy to use when starting a new container
     pullPolicy: IfNotPresent
+    ## @param rbacProxy.image.pullSecret Specifies the secret holding the credentials used to pull image from the registry
+    pullSecret: {}
 
 ## @section Controller Manager
 ## @descriptionStart
@@ -56,6 +58,8 @@ manager:
     tag: ""
     ## @param manager.image.pullPolicy Specifies the pullPolicy to use when starting a new container
     pullPolicy: IfNotPresent
+    ## @param manager.image.pullSecret Specifies the secret holding the credentials used to pull image from the registry
+    pullSecret: {}
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
     json: true
