@@ -41,8 +41,8 @@ type Interface interface {
 	WatchTLSSecret() *handler.Funcs
 }
 
-type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.RateLimitingInterface)
-type CreateFunc = func(context.Context, event.CreateEvent, workqueue.RateLimitingInterface)
+type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
+type CreateFunc = func(context.Context, event.CreateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
 
 type Type struct {
 	ctx        context.Context
@@ -71,7 +71,7 @@ func (w *Type) WatchContexts(index indexer.IndexField) *handler.Funcs {
 }
 
 func ContextSecrets() *handler.Funcs {
-	queueSecrets := func(obj client.Object, q workqueue.RateLimitingInterface) {
+	queueSecrets := func(obj client.Object, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		ctx, ok := obj.(*v1alpha1.ManagementContext)
 		if !ok {
 			return
@@ -92,10 +92,10 @@ func ContextSecrets() *handler.Funcs {
 	}
 
 	return &handler.Funcs{
-		CreateFunc: func(_ context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
+		CreateFunc: func(_ context.Context, e event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 			queueSecrets(e.Object, q)
 		},
-		DeleteFunc: func(_ context.Context, e event.DeleteEvent, q workqueue.RateLimitingInterface) {
+		DeleteFunc: func(_ context.Context, e event.DeleteEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 			queueSecrets(e.Object, q)
 		},
 	}
@@ -133,7 +133,7 @@ func (w *Type) WatchTLSSecret() *handler.Funcs {
 // The lookupField is the field that is used to lookup the resources.
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
 func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
-	return func(_ context.Context, e event.UpdateEvent, q workqueue.RateLimitingInterface) {
+	return func(_ context.Context, e event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		ref := refs.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
 		w.queueByFieldReferencing(field, ref, q)
 	}
@@ -146,7 +146,7 @@ func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
 // This can be used to reconcile resources when have been created before their dependencies.
 // For example, when an API is created before the management context it references.
 func (w *Type) CreateFromLookup(field indexer.IndexField) CreateFunc {
-	return func(_ context.Context, e event.CreateEvent, q workqueue.RateLimitingInterface) {
+	return func(_ context.Context, e event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		ref := refs.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
 		w.queueByFieldReferencing(field, ref, q)
 	}
@@ -155,7 +155,7 @@ func (w *Type) CreateFromLookup(field indexer.IndexField) CreateFunc {
 func (w *Type) queueByFieldReferencing(
 	field indexer.IndexField,
 	ref refs.NamespacedName,
-	q workqueue.RateLimitingInterface,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	objectList, err := list.OfType(w.objectList)
 
