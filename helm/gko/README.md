@@ -43,12 +43,13 @@ Kube RBAC Proxy is deployed as a sidecar container and restricts access to the p
 
 ⚠️ If this is disabled, the prometheus metrics endpoint will be exposed with no access control at all.
 
-| Name                         | Description                                                   | Value                            |
-| ---------------------------- | ------------------------------------------------------------- | -------------------------------- |
-| `rbacProxy.enabled`          | Specifies if the kube-rbac-proxy sidecar should be enabled.   | `true`                           |
-| `rbacProxy.image.repository` | Specifies the docker registry and image name to use.          | `quay.io/brancz/kube-rbac-proxy` |
-| `rbacProxy.image.tag`        | Specifies the docker image tag to use.                        | `v0.18.0`                        |
-| `rbacProxy.image.pullPolicy` | Specifies the pullPolicy to use when starting a new container | `IfNotPresent`                   |
+| Name                         | Description                                                                       | Value                            |
+| ---------------------------- | --------------------------------------------------------------------------------- | -------------------------------- |
+| `rbacProxy.enabled`          | Specifies if the kube-rbac-proxy sidecar should be enabled.                       | `true`                           |
+| `rbacProxy.image.repository` | Specifies the docker registry and image name to use.                              | `quay.io/brancz/kube-rbac-proxy` |
+| `rbacProxy.image.tag`        | Specifies the docker image tag to use.                                            | `v0.18.0`                        |
+| `rbacProxy.image.pullPolicy` | Specifies the pullPolicy to use when starting a new container                     | `IfNotPresent`                   |
+| `rbacProxy.image.pullSecret` | Specifies the secret holding the credentials used to pull image from the registry | `""`                             |
 
 ### Controller Manager
 
@@ -59,6 +60,7 @@ This is where you can configure the deployment itself and the way the operator w
 | `manager.image.repository`                  | Specifies the docker registry and image name to use.                                                                                            | `graviteeio/kubernetes-operator` |
 | `manager.image.tag`                         | Specifies the docker image tag to use. If no value is set, the chart version will be used.                                                      | `""`                             |
 | `manager.image.pullPolicy`                  | Specifies the pullPolicy to use when starting a new container                                                                                   | `IfNotPresent`                   |
+| `manager.image.pullSecret`                  | Specifies the secret holding the credentials used to pull image from the registry                                                               | `""`                             |
 | `manager.logs.json`                         | Whether to output manager logs in JSON format.                                                                                                  | `true`                           |
 | `manager.configMap.name`                    | The name of the config map used to set the manager config from this values.                                                                     | `gko-config`                     |
 | `manager.resources.limits.cpu`              | The CPU resources limits for the GKO Manager container                                                                                          | `500m`                           |
