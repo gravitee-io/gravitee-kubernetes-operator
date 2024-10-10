@@ -45,6 +45,15 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+{{- if or .Values.manager.image.pullSecret .Values.rbacProxy.image.pullSecret }}
+      imagePullSecrets:
+{{- if .Values.manager.image.pullSecret }}
+        - {{ .Values.manager.image.pullSecret | toYaml }}
+{{- end }}
+{{- if .Values.rbacProxy.image.pullSecret }}
+        - {{ .Values.rbacProxy.image.pullSecret | toYaml }}
+{{- end }}
+{{- end }}
       containers:
 {{- if and .Values.manager.metrics.enabled .Values.rbacProxy.enabled }}
         - args:
