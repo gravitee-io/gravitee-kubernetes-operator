@@ -48,7 +48,7 @@ tests:
     set:
       manager:
         metrics:
-            enabled: false
+          enabled: false
     asserts:
       - hasDocuments:
           count: 1
@@ -56,4 +56,59 @@ tests:
           path: spec.template.spec.containers
           count: 1
 
+  - it: Should not have image pull secrets by default
+    template: "manager/deployment.yaml"
+    asserts:
+      - isNull:
+          path: spec.template.spec.imagePullSecrets
 
+  - it: Should have rbacProxy image pull secret
+    template: "manager/deployment.yaml"
+    set:
+      rbacProxy:
+        image:
+          pullSecret: hush-hush
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.imagePullSecrets
+      - lengthEqual:
+          path: spec.template.spec.imagePullSecrets
+          count: 1
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0]
+          value: hush-hush
+
+  - it: Should have manager image pull secret
+    template: "manager/deployment.yaml"
+    set:
+      manager:
+        image:
+          pullSecret: hush-hush
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.imagePullSecrets
+      - lengthEqual:
+          path: spec.template.spec.imagePullSecrets
+          count: 1
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0]
+          value: hush-hush
+
+  - it: Should have both image pull secrets
+    template: "manager/deployment.yaml"
+    set:
+      manager:
+        image:
+          pullSecret: hush-hush
+      rbacProxy:
+        image:
+          pullSecret: hush-hush
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.imagePullSecrets
+      - lengthEqual:
+          path: spec.template.spec.imagePullSecrets
+          count: 2
+      - equal:
+          path: spec.template.spec.imagePullSecrets[*]
+          value: hush-hush
