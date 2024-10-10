@@ -18,9 +18,13 @@ on:
   schedule:
     - cron: "00 05 * * 1-5"
 jobs:
-  trigger-release:
+  trigger-test-suite:
     runs-on: ubuntu-latest
+    env:
+      BRANCH: ${{ matrix.branch }}
+      CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
     strategy:
+      fail-fast: false
       matrix:
         branch:
           - 4.3.x
@@ -35,4 +39,4 @@ jobs:
       - name: "Trigger test pipeline and notify on failure"
         run: |
           echo "🧪 Triggering test pipeline"
-          npx zx scripts/trigger-test.mjs --notify true --branch ${{ matrix.branch }}
+          npx zx scripts/trigger-test.mjs --notify true --branch ${BRANCH}
