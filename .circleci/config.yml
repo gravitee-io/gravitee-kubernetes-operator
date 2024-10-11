@@ -549,15 +549,9 @@ jobs:
 workflows:
   pull-request:
     when:
-      and:
-        - not:
-            equal:
-              - "release"
-              - << pipeline.parameters.trigger >>
-        - not:
-            equal:
-              - "test"
-              - << pipeline.parameters.trigger >>
+      equal:
+        - none
+        - << pipeline.parameters.trigger >>
     jobs:
       - job-lint-sources:
           name: Lint sources
@@ -609,6 +603,10 @@ workflows:
             - Run IT with context
             - Run IT without context
   post-merge:
+    when:
+      equal:
+        - none
+        - << pipeline.parameters.trigger >>
     jobs:
       - aquasec/fs_scan:
           context: cicd-orchestrator
@@ -661,6 +659,10 @@ workflows:
           name: Release
           context: cicd-orchestrator
   post-release:
+    when:
+      equal:
+        - none
+        - << pipeline.parameters.trigger >>
     jobs:
       - job-notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
