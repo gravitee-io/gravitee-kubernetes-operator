@@ -37,3 +37,6 @@ gko-config-default.yml
 cache/
 bundle/
 bundle.yml
+
+# MacOS
+.DS_Store
