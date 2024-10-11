@@ -16,7 +16,7 @@ ADDLICENSE ?= $(LOCALBIN)/addlicense
 ALL_TOOLS = controller-gen ginkgo crdoc golangci-lint addlicense helm-unittest
 
 ## Tool Versions
-CONTROLLER_TOOLS_VERSION ?= v0.14.0
+CONTROLLER_TOOLS_VERSION ?= v0.16.4
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.

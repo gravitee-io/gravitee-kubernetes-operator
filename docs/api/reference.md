@@ -223,14 +223,14 @@ The Basic credentials used to authenticate against the API Management instance.
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>username</b></td>
         <td>string</td>
         <td>
           <br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -402,6 +402,14 @@ See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.
         </tr>
     </thead>
     <tbody><tr>
+        <td><b><a href="#apidefinitionspecdefinition_context">definition_context</a></b></td>
+        <td>object</td>
+        <td>
+          The definition context is used to inform a management API instance that this API definition
+is managed using a kubernetes operator<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
@@ -446,14 +454,6 @@ this ID identifies the API across those different environments.
 Setting this ID also allows to take control over an existing API on an APIM instance
 (by setting the same value as defined in APIM).
 If empty, a UUID will be generated based on the namespace and name of the resource.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#apidefinitionspecdefinition_context">definition_context</a></b></td>
-        <td>object</td>
-        <td>
-          The definition context is used to inform a management API instance that this API definition
-is managed using a kubernetes operator<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -539,10 +539,8 @@ field of the resource.<br/>
         <td>
           local defines if the api is local or not.
 
-
 If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
 but without setting the update flag in the datastore.
-
 
 If false, the Operator will not create the ConfigMaps for the Gateway.
 Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
@@ -581,10 +579,8 @@ be notified when the API is synced with APIM.<br/>
         <td>
           A map of pages objects.
 
-
 Keys uniquely identify pages and are used to keep them in sync
 with APIM when using a management context.
-
 
 Renaming a key is the equivalent of deleting the page and recreating
 it holding a new ID in APIM.<br/>
@@ -671,40 +667,6 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
 </table>
 
 
-### ApiDefinition.spec.contextRef
-[Go to parent definition](#apidefinitionspec)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>namespace</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
 ### ApiDefinition.spec.definition_context
 [Go to parent definition](#apidefinitionspec)
 
@@ -747,6 +709,40 @@ is managed using a kubernetes operator
           <br/>
           <br/>
             <i>Default</i>: kubernetes<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.contextRef
+[Go to parent definition](#apidefinitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1161,6 +1157,14 @@ List of path operators
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          This is the display name of the page in APIM and on the portal.
+This field can be edited safely if you want to rename a page.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>enum</td>
         <td>
@@ -1231,14 +1235,6 @@ denied access instead of being granted<br/>
 an API exported from APIM to make the operator take control over it.
 If not set, this ID will be generated in a predictable manner based on
 the map key associated to this entry in the API.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          This is the display name of the page in APIM and on the portal.
-This field can be edited safely if you want to rename a page.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1320,7 +1316,7 @@ each time the source is fetched.<br/>
         <td>
           The ID denied or granted by the access control (currently only group names are supported)<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr><tr>
         <td><b>referenceType</b></td>
         <td>enum</td>
@@ -1330,7 +1326,7 @@ Currently only GROUP is supported<br/>
           <br/>
             <i>Enum</i>: GROUP<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
@@ -4522,10 +4518,8 @@ be notified when the API is synced with APIM.<br/>
         <td>
           A map of pages objects.
 
-
 Keys uniquely identify pages and are used to keep them in sync
 with APIM when using a management context.
-
 
 Renaming a key is the equivalent of deleting the page and recreating
 it holding a new ID in APIM.<br/>
@@ -4714,6 +4708,13 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          Endpoint Type<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>configuration</b></td>
         <td>object</td>
         <td>
@@ -4746,13 +4747,6 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         <td>[]string</td>
         <td>
           List of endpoint tenants<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>type</b></td>
-        <td>string</td>
-        <td>
-          Endpoint Type<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6111,6 +6105,14 @@ APIM exports and can be safely ignored.<br/>
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          This is the display name of the page in APIM and on the portal.
+This field can be edited safely if you want to rename a page.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>enum</td>
         <td>
@@ -6166,14 +6168,6 @@ the map key associated to this entry in the API.<br/>
 an API exported from APIM to make the operator take control over it.
 If not set, this ID will be generated in a predictable manner based on
 the map key associated to this entry in the API.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          This is the display name of the page in APIM and on the portal.
-This field can be edited safely if you want to rename a page.<br/>
         </td>
         <td>false</td>
       </tr><tr>
