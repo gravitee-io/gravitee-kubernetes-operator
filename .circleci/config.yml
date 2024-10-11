@@ -19,6 +19,7 @@ parameters:
     type: enum
     default: none
     enum:
+      - test
       - release
       - none
   release-version:
@@ -32,6 +33,9 @@ parameters:
   dry-run:
     type: boolean
     default: true
+  notify:
+    type: boolean
+    default: false
 
 executors:
   azure-cli:
@@ -173,6 +177,7 @@ jobs:
         enum:
           - withContext
           - withoutContext
+          - integration
     steps:
       - checkout
       - go/install:
@@ -538,11 +543,9 @@ jobs:
 workflows:
   pull-request:
     when:
-      and:           
-        - not:
-            equal:
-              - "release"
-              - << pipeline.parameters.trigger >>
+      equal:
+        - none
+        - << pipeline.parameters.trigger >>
     jobs:
       - job-lint-sources:
           name: Lint sources
@@ -594,6 +597,10 @@ workflows:
             - Run IT with context
             - Run IT without context
   post-merge:
+    when:
+      equal:
+        - none
+        - << pipeline.parameters.trigger >>
     jobs:
       - aquasec/fs_scan:
           context: cicd-orchestrator
@@ -646,6 +653,10 @@ workflows:
           name: Release
           context: cicd-orchestrator
   post-release:
+    when:
+      equal:
+        - none
+        - << pipeline.parameters.trigger >>
     jobs:
       - job-notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
@@ -687,3 +698,31 @@ workflows:
                 name: Store docker image version
                 command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
 
+  test:
+    when:
+      equal:
+        - test
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-integration-test:
+          name: Run all integration tests
+          context: cicd-orchestrator
+          ginkgo-filter: integration
+          pre-steps:
+            - keeper/env-export:
+                secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+                var-name: SLACK_ACCESS_TOKEN
+          post-steps:
+            - when:
+                condition: << pipeline.parameters.notify >>
+                steps:
+                  - slack/notify:
+                      channel: C07QP2Z7Z9V
+                      event: fail
+                      template: basic_fail_1
+                      branch_pattern: ".+"
+                  - slack/notify:
+                      channel: C07QP2Z7Z9V
+                      event: pass
+                      template: basic_success_1
+                      branch_pattern: ".+"
