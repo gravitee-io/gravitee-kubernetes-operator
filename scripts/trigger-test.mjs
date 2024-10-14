@@ -31,7 +31,10 @@ const parameters = {
   notify: NOTIFY,
 };
 
-LOG.blue(`Parameters: ${JSON.stringify(parameters)}`);
+LOG.blue(`
+  Parameters: ${JSON.stringify(parameters)},
+  Branch: ${BRANCH}
+`);
 
 const pipelineURL = await triggerPipeline(parameters, BRANCH);
 
