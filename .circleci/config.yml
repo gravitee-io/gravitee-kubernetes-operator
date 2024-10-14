@@ -696,6 +696,9 @@ workflows:
             - run:
                 name: Store docker image version
                 command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+            - run:
+                name: Pull docker image
+                command: docker pull "graviteeio/kubernetes-operator:${CIRCLE_TAG}"
   test:
     when:
       equal:
