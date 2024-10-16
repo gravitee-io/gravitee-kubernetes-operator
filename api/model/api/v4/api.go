@@ -34,6 +34,7 @@ var _ core.ApiDefinitionModel = &Api{}
 type Api struct {
 	*base.ApiBase `json:",inline"`
 	// API description
+	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
 	// +kubebuilder:default:=`V4`
 	// +kubebuilder:validation:Enum=`V4`;
@@ -61,6 +62,7 @@ type Api struct {
 	// A map of plan identifiers to plan
 	// Keys uniquely identify plans and are used to keep them in sync
 	// when using a management context.
+	// +kubebuilder:validation:Optional
 	Plans map[string]*Plan `json:"plans,omitempty"`
 	// API Flow Execution
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
@@ -73,8 +75,10 @@ type Api struct {
 	// API Services
 	Services *ApiServices `json:"services,omitempty"`
 	// A list of Response Templates for the API
+	// +kubebuilder:validation:Optional
 	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
 	// List of members associated with the API
+	// +kubebuilder:validation:Optional
 	Members []*base.Member `json:"members,omitempty"`
 	// +kubebuilder:validation:Optional
 	// A map of pages objects.

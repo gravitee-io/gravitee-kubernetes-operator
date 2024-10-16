@@ -57,6 +57,7 @@ type ApiBase struct {
 	// of an <a href="#apiresource">existing API resource definition</a>.
 	Resources []*ResourceOrRef `json:"resources"`
 	// List of groups associated with the API
+	// +kubebuilder:validation:Optional
 	Groups []string `json:"groups,omitempty"`
 	// +kubebuilder:validation:Optional
 	// The list of categories the API belongs to.
@@ -102,9 +103,12 @@ const (
 )
 
 type ResponseTemplate struct {
-	StatusCode int               `json:"status,omitempty"`
-	Headers    map[string]string `json:"headers,omitempty"`
-	Body       string            `json:"body,omitempty"`
+	// +kubebuilder:validation:Optional
+	StatusCode int `json:"status,omitempty"`
+	// +kubebuilder:validation:Optional
+	Headers map[string]string `json:"headers,omitempty"`
+	// +kubebuilder:validation:Optional
+	Body string `json:"body,omitempty"`
 }
 
 func (api *ApiBase) GetName() string {

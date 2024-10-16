@@ -59,7 +59,7 @@ type Page struct {
 	Content string `json:"content,omitempty"`
 	// +kubebuilder:validation:Optional
 	// The order used to display the page in APIM and on the portal.
-	Order uint64 `json:"order"`
+	Order uint64 `json:"order,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=false
 	// If true, the page will be accessible from the portal (default is false)

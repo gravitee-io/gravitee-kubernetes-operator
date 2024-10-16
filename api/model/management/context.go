@@ -27,13 +27,16 @@ var _ core.ContextModel = &Context{}
 type Context struct {
 	// The URL of a management API instance.
 	// This is optional when this context targets Gravitee Cloud otherwise it is required.
+	// +kubebuilder:validation:Optional
 	BaseUrl string `json:"baseUrl,omitempty"`
 	// An existing organization id targeted by the context on the management API instance.
 	// This is optional when this context targets Gravitee Cloud otherwise it is required.
+	// +kubebuilder:validation:Optional
 	OrgID string `json:"organizationId,omitempty"`
 	// An existing environment id targeted by the context within the organization.
 	// This is optional when this context targets Gravitee Cloud
 	// and your cloud token contains only one environment ID, otherwise it is required.
+	// +kubebuilder:validation:Optional
 	EnvID string `json:"environmentId,omitempty"`
 	// Auth defines the authentication method used to connect to the API Management.
 	// Can be either basic authentication credentials, a bearer token
@@ -106,6 +109,7 @@ func (c *Context) ConfigureCloud(url string, orgID string, envID string) {
 type Auth struct {
 	// The bearer token used to authenticate against the API Management instance
 	// (must be generated from an admin account)
+	// +kubebuilder:validation:Optional
 	BearerToken string `json:"bearerToken,omitempty"`
 	// The Basic credentials used to authenticate against the API Management instance.
 	Credentials *BasicAuth `json:"credentials,omitempty"`

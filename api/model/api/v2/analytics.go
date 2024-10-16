@@ -54,6 +54,7 @@ type Logging struct {
 	// Which part of the request/response should be logged ?
 	Content LoggingContent `json:"content,omitempty"`
 	// The logging condition (supports EL expressions)
+	// +kubebuilder:validation:Optional
 	Condition string `json:"condition,omitempty"`
 }
 
