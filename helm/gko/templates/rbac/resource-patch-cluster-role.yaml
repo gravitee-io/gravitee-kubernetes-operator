@@ -33,10 +33,20 @@ rules:
       - admissionregistration.k8s.io
     resources:
       - validatingwebhookconfigurations
+    verbs:
+      - get
+      - update
+    resourceNames:
+      - gko-validating-webhook-configurations
+  - apiGroups:
+      - admissionregistration.k8s.io
+    resources:
       - mutatingwebhookconfigurations
     verbs:
       - get
       - update
+    resourceNames:
+      - gko-mutating-webhook-configurations
   - apiGroups:
       - apiextensions.k8s.io
     resources:
