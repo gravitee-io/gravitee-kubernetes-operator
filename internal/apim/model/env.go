@@ -18,3 +18,13 @@ type Env struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
+
+type Group struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+type Category struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
