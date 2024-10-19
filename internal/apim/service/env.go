@@ -33,6 +33,12 @@ func (svc *Env) CreateGroup(group *model.Group) error {
 	return svc.HTTP.Post(url.String(), group, group)
 }
 
+// CreateCategory For tests purposes only.
+func (svc *Env) CreateCategory(category *model.Category) error {
+	url := svc.EnvV1Target("configuration").WithPath("categories")
+	return svc.HTTP.Post(url.String(), category, category)
+}
+
 func (svc *Env) Get() (*model.Env, error) {
 	env := new(model.Env)
 	if err := svc.HTTP.Get(svc.URLs.EnvV2.String(), env); err != nil {
