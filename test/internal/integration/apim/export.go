@@ -36,3 +36,12 @@ func (svc *Export) V2Api(id string) (*v1alpha1.ApiDefinition, error) {
 	}
 	return exported, nil
 }
+
+func (svc *Export) V4Api(id string) (*v1alpha1.ApiV4Definition, error) {
+	url := svc.EnvV2Target("apis").WithPath(id).WithPath("/_export/crd")
+	exported := new(v1alpha1.ApiV4Definition)
+	if err := svc.HTTP.GetYAML(url.String(), &exported); err != nil {
+		return nil, err
+	}
+	return exported, nil
+}
