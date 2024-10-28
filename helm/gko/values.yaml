@@ -77,7 +77,8 @@ manager:
       cpu: 5m
       ## @param manager.resources.requests.memory The requested memory for the GKO Manager container
       memory: 64Mi
-
+  ## @param manager.tolerations Set pods tolerations. Please see https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ about this topic. 
+  tolerations: []
   scope:
     ## @param manager.scope.cluster Use false to listen only in the release namespace.
     cluster: true
