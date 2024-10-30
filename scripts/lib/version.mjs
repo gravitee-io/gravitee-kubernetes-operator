@@ -15,20 +15,26 @@
  */
 
 export class Version {
-  major;
-  minor;
-  patch;
+  majorDigit;
+  minorDigit;
+  patchDigit;
 
   constructor(version) {
-    const [major, minor, patch] = [...version.split(".").map(Number)];
-    Object.assign(this, { major, minor, patch });
+    const [majorDigit, minorDigit, patchDigit] = [
+      ...version.split(".").map(Number),
+    ];
+    Object.assign(this, { majorDigit, minorDigit, patchDigit });
   }
 
   branch() {
-    return `${this.major}.${this.minor}.x`;
+    return `${this.majorDigit}.${this.minorDigit}.x`;
   }
 
-  family() {
-    return `${this.major}.x`;
+  minor() {
+    return `${this.majorDigit}.${this.minorDigit}`;
+  }
+
+  isNoPatch() {
+    return this.patchDigit === 0;
   }
 }
