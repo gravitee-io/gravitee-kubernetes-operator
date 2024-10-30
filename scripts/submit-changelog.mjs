@@ -61,16 +61,19 @@ if (isEmptyString(GITHUB_TOKEN)) {
 
 const version = new Version(VERSION);
 
-if (version.patch === 0) {
+if (version.isNoPatch()) {
   LOG.yellow(
     `No changelog to generate (version ${VERSION} is a new minor version)`
   );
   await $`exit 0`;
 }
 
-const changelogFile = `${Docs.baseFolder}/${version.family()}/${
+const changelogFile = `${Docs.baseFolder}/${version.minor()}/${
   Docs.changelogFolder
 }/gko-${version.branch()}.md`;
+
+LOG.blue(`Writing changelog to ${changelogFile}`);
+
 const releaseChangelog = fs.readFileSync(RELEASE_CHANGELOG_FILE, "utf8").trim();
 const changelogHeader = `# GKO ${version.branch()}`;
 const prBranch = `release-gko-${VERSION}`;
