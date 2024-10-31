@@ -81,6 +81,8 @@ spec:
                 type: array
               contextRef:
                 properties:
+                  kind:
+                    type: string
                   name:
                     type: string
                   namespace:
@@ -1436,6 +1438,8 @@ spec:
                     ref:
                       description: Reference to a resource
                       properties:
+                        kind:
+                          type: string
                         name:
                           type: string
                         namespace:

@@ -14,6 +14,27 @@
 
 package model
 
-type Subscription struct {
+type SubscriptionResponse struct {
 	ID string `json:"id"`
+}
+
+type SubscriptionRequest struct {
+	AppID  string `json:"applicationId"`
+	PlanID string `json:"planId"`
+}
+
+type Subscription struct {
+	ID         string `json:"id"`
+	ApiID      string `json:"apiId"`
+	AppID      string `json:"applicationId"`
+	PlanID     string `json:"planId"`
+	Status     string `json:"status"`
+	StartingAt string `json:"startingAt"`
+	EndingAt   string `json:"endingAt"`
+}
+
+type SubscriptionStatus struct {
+	ID         string `json:"id,omitempty"`
+	StartingAt string `json:"startingAt,omitempty"`
+	EndingAt   string `json:"endingAt,omitempty"`
 }

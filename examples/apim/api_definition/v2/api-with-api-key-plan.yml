@@ -16,22 +16,22 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: apikey-example-with-ctx
+  name: api-with-api-key
   namespace: "default"
 spec:
-  name: "K8s ApiKey Example"
+  name: "api-with-api-key"
   contextRef:
     name: "dev-ctx"
     namespace: "default"
   version: "1.0"
   description: "Api managed by Gravitee Kubernetes Operator with Key plan"
   plans:
-    - name: 'Apikey'
+    - name: 'API_KEY'
       description: 'Api key plan'
       security: API_KEY
   proxy:
     virtual_hosts:
-      - path: "/k8s-apikey-with-ctx"
+      - path: "/api-with-api-key"
     groups:
       - name: default-group
         endpoints:

@@ -17,7 +17,6 @@ package service
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 )
 
 // Subscriptions brings support for managing gravitee.io APIM support for subscriptions.
@@ -30,29 +29,50 @@ func NewSubscriptions(client *client.Client) *Subscriptions {
 	return &Subscriptions{Client: client}
 }
 
-func (svc *Subscriptions) APITarget(apiID string) *http.URL {
-	return svc.EnvV1Target("apis").WithPath(apiID).WithPath("subscriptions")
-}
+func (svc *Subscriptions) Import(spec *model.Subscription) (*model.SubscriptionStatus, error) {
+	url := svc.EnvV2Target("apis").WithPath(spec.ApiID).
+		WithPath("subscriptions").WithPath("spec").
+		WithPath("_import")
 
-func (svc *Subscriptions) Subscribe(apiID, applicationID, planID string) (*model.Subscription, error) {
-	url := svc.APITarget(apiID).WithQueryParams(
-		map[string]string{
-			planParam:        planID,
-			applicationParam: applicationID,
-		},
-	)
+	status := new(model.SubscriptionStatus)
 
-	subscription := new(model.Subscription)
-
-	if err := svc.HTTP.Post(url.String(), nil, subscription); err != nil {
+	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
 		return nil, err
 	}
 
-	return subscription, nil
+	return status, nil
+}
+
+// TODO: replace this import 👆
+func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.SubscriptionResponse, error) {
+	url := svc.EnvV2Target("apis").WithPath(apiID).WithPath("subscriptions")
+
+	request := &model.SubscriptionRequest{
+		AppID:  appID,
+		PlanID: planID,
+	}
+
+	response := new(model.SubscriptionResponse)
+
+	if err := svc.HTTP.Post(url.String(), request, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (svc *Subscriptions) Delete(spec *model.Subscription) error {
+	url := svc.EnvV2Target("apis").WithPath(spec.ApiID).
+		WithPath("subscriptions").WithPath("spec").WithPath(spec.ID)
+
+	return svc.HTTP.Delete(url.String(), nil)
 }
 
 func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiKeyEntity, error) {
-	url := svc.APITarget(apiID).WithPath(subscriptionID).WithPath("apikeys")
+	url := svc.EnvV1Target("apis").WithPath(apiID).
+		WithPath("subscriptions").WithPath(subscriptionID).
+		WithPath("apikeys")
+
 	apiKeys := new([]model.ApiKeyEntity)
 
 	if err := svc.HTTP.Get(url.String(), apiKeys); err != nil {

@@ -46,6 +46,10 @@ Resources
         <tr>
             <td><a href="#application">Application</a></td>
             <td></td>
+        </tr>
+        <tr>
+            <td><a href="#subscription">Subscription</a></td>
+            <td></td>
         </tr></tbody>
 </table>
 
@@ -260,6 +264,13 @@ or "username" and "password" keys for basic authentication
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
@@ -331,6 +342,13 @@ SecretRef secret reference holding the Gravitee cloud token in the "cloudToken" 
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
@@ -694,6 +712,13 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
@@ -3746,6 +3771,13 @@ Reference to a resource
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
@@ -5519,6 +5551,13 @@ Analytics Sampling
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
@@ -6953,6 +6992,13 @@ Reference to a resource
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
@@ -7459,6 +7505,13 @@ Application ID<br/>
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>namespace</b></td>
         <td>string</td>
         <td>
@@ -7768,6 +7821,223 @@ and is very unlikely to be persisted in the status<br/>
           warning errors do not block object reconciliation,
 most of the time because the value is ignored or defaulted
 when the API gets synced with APIM<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Subscription
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#subscriptionspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#subscriptionstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Subscription.spec
+[Go to parent definition](#subscription)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#subscriptionspecapi">api</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#subscriptionspecapplication">application</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>plan</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>endingAt</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Subscription.spec.api
+[Go to parent definition](#subscriptionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Subscription.spec.application
+[Go to parent definition](#subscriptionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Subscription.status
+[Go to parent definition](#subscription)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>endingAt</b></td>
+        <td>string</td>
+        <td>
+          The expiry date for the subscription (no date means no expiry)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          Subscription ID<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>processingStatus</b></td>
+        <td>string</td>
+        <td>
+          This value is `Completed` if the sync with APIM succeeded, Failed otherwise.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>startedAt</b></td>
+        <td>string</td>
+        <td>
+          When the subscription was started and made available<br/>
         </td>
         <td>false</td>
       </tr></tbody>

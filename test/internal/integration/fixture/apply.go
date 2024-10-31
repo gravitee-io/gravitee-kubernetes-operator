@@ -59,6 +59,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyAPIv4(cli, ctx)
 	}
 
+	if o.Subscription != nil {
+		o.applySubscription(cli, ctx)
+	}
+
 	if o.Ingress != nil {
 		o.applyIngress(cli, ctx)
 	}
@@ -145,4 +149,18 @@ func (o *Objects) applyContext(cli client.Client, ctx context.Context) {
 		}
 		return assert.HasFinalizer(o.Context, core.ManagementContextFinalizer)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Context.Name)
+}
+
+func (o *Objects) applySubscription(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.Subscription)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Subscription)
+		if err != nil {
+			return err
+		}
+		if err = assert.SubscriptionCompleted(o.Subscription); err != nil {
+			return assert.SubscriptionFailed(o.Subscription)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Subscription.Name)
 }

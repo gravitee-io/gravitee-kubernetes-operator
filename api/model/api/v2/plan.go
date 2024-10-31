@@ -16,9 +16,12 @@ package v2
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
 type ConsumerType int
+
+var _ core.PlanModel = &Plan{}
 
 const (
 	TAG ConsumerType = iota
@@ -68,6 +71,10 @@ func NewPlan(base *base.Plan) *Plan {
 		Flows: []Flow{},
 		Paths: &paths,
 	}
+}
+
+func (plan *Plan) GetSecurityType() string {
+	return plan.Security
 }
 
 func (plan *Plan) WithName(name string) *Plan {

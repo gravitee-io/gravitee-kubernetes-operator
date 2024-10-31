@@ -71,6 +71,10 @@ func (plan *Plan) WithStatus(status PlanStatus) *Plan {
 	return plan
 }
 
+func (plan *Plan) GetID() string {
+	return plan.ID
+}
+
 func (plan *Plan) WithID(id string) *Plan {
 	plan.ID = id
 	return plan

@@ -31,6 +31,8 @@ import (
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
+	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
 	"gopkg.in/yaml.v3"
@@ -43,6 +45,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	v1 "k8s.io/api/networking/v1"
 
@@ -259,6 +262,15 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 
+	if err := (&subscription.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, msg, controller, "Subscription")
+		os.Exit(1)
+	}
+
 	if err := (&secrets.Reconciler{
 		Client: k8s.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -364,6 +376,8 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 	if err := (mctxAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
-
+	if err := (subAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
 	return nil
 }

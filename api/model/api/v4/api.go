@@ -187,6 +187,17 @@ func (api *Api) HasPlans() bool {
 	return api.Plans != nil && len(*api.Plans) > 0
 }
 
+func (api *Api) GetPlan(name string) core.PlanModel {
+	if api.Plans == nil {
+		return nil
+	}
+	return (*api.Plans)[name]
+}
+
+func (api *Api) IsStopped() bool {
+	return api.State == base.StateStopped
+}
+
 // Converts the API to its gateway definition equivalent.
 func (api *Api) ToGatewayDefinition() GatewayDefinitionApi {
 	def := GatewayDefinitionApi{Api: api}

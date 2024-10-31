@@ -49,7 +49,7 @@ func (*CustomError) Error() string { return "heyo !" }
 func Compile(ctx context.Context, obj runtime.Object) error {
 	switch t := obj.(type) {
 	case *v1alpha1.ApiDefinition, *v1alpha1.ApiV4Definition, *v1alpha1.ManagementContext,
-		*v1alpha1.Application, *netv1.Ingress, *v1alpha1.ApiResource:
+		*v1alpha1.Application, *netv1.Ingress, *v1alpha1.ApiResource, *v1alpha1.Subscription:
 		return exec(ctx, obj)
 	default:
 		return fmt.Errorf("unsupported object type %v", t)

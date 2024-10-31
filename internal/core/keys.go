@@ -19,6 +19,7 @@ const (
 	CRDVersion = "v1alpha1"
 
 	CRDManagementContextResource = "managementcontexts"
+	CRDApplicationResource       = "applications"
 	CRDApiDefinitionResource     = "apidefinitions"
 	CRDApiV4DefinitionResource   = "apiv4definitions"
 	CRDResourceResource          = "apiresources"
@@ -43,6 +44,7 @@ const (
 	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
 	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
 	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
+	SubscriptionFinalizer            = "finalizers.gravitee.io/subscriptions"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 
 	CloudTokenSecretKey  = "cloudToken"

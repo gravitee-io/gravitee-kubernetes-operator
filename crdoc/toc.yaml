@@ -13,9 +13,9 @@
 # limitations under the License.
 
 metadata:
-  title: "Gravitee Kubernetes Operator API Reference"
+  title: "Gravitee Kubernetes Operator"
   weight: 1
-  description: "API Reference example"
+  description: "API Reference"
 groups:
   - group: gravitee.io
     version: v1alpha1
@@ -25,3 +25,4 @@ groups:
       - name: ApiV4Definition
       - name: ApiResource
       - name: Application
+      - name: Subscription

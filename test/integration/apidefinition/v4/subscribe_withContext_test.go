@@ -77,7 +77,7 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 		By("calling rest API expecting to find subscription API key")
 
 		keys, err := apim.Subscriptions.GetApiKeys(fixtures.APIv4.Status.ID, subscription.ID)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred(), fixtures.APIv4.Name)
 		Expect(keys).ToNot(BeEmpty())
 		key := keys[0].Key
 
@@ -91,6 +91,6 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 			req.Header.Set("X-Gravitee-Api-Key", key)
 			res, httpErr := httpClient.Do(req)
 			return assert.NoErrorAndHTTPStatus(httpErr, res, http.StatusOK)
-		}, timeout, interval).Should(Succeed())
+		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 	})
 })

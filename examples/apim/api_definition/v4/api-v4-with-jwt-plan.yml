@@ -1,0 +1,74 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: api-v4-with-jwt-plan
+spec:
+  contextRef:
+    name: dev-ctx
+  definitionContext:
+    syncFrom: MANAGEMENT
+  name: "api-v4-jwt-plan"
+  description: "API v4 with a JWT plan"
+  version: "1.0"
+  type: PROXY
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/v4/echo-jwt"
+      entrypoints:
+        - type: http-proxy
+          qos: AUTO
+  endpointGroups:
+    - name: Default HTTP proxy group
+      type: http-proxy
+      endpoints:
+        - name: Default HTTP proxy
+          type: http-proxy
+          inheritConfiguration: false
+          configuration:
+            target: https://api.gravitee.io/echo
+          secondary: false
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  plans:
+    JWT:
+      name: "jwt"
+      description: "A JWT plan"
+      security:
+        type: "JWT"
+        configuration:
+          signature: "RSA_RS256"
+          publicKeyResolver: "GIVEN_KEY"
+          resolverParameter: |
+            -----BEGIN PUBLIC KEY-----
+            MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAv8YGSPoQEl7lXnp8OHkb
+            AOPYZ81rzXkmO83d0P8G78qWzi3gPnODm6Qxi2NbgcWXqQlZXxPkDTS3Xck1V3WY
+            E9voqQE7UEwpFBolqtUHQqL4w2vr/eUtZv9t3DdtoCcIj4xLmJUw7PS7jAb9quq0
+            XiVN692d6LI62T+9LyN+kcWHTpUyMBB8oxfQ9ekkGHskTc6LgYovKK+9lKoJv6gg
+            0ge8YAFbpjJBZbVX3jV8qeszgw9Xdhs3w/S8QnvWa3Cv0+c47oxZjXwpAa8ARzfn
+            D/5oK4CWRRy+t3QUndSR0cBR+bU0YFks3mmbl514/ywOXRf/sZmXaJkNejfNHQVa
+            hJgj/Z3W3F8GKksuFF14+BK2KX30bsQL3e4SeN0Wv6DF1UloG0T396yDd/o7L3ZC
+            DBlRB44OZ8sO3h8iSW7wVX0sGj/OKc4smo5dgP0r4+Fm2EVmVFU5YvEkFcy0Xoth
+            QmLwq0lJc7BdRMpAfRZLbW5WSlb2jgvxA/VI/ScLTRWZI7DGbzHRBS6J8Rnt3Inq
+            jo7mUV1juBs3RhpxdOmg1LpGLAtQdcSSnX3IyyEVbzTVb22Px0EGAlKzMs6bnTJf
+            3TbZd/C0iqd6QOyaTh7D4Nr7ClfWAaYGZBA/FsHWA88fOsIQCtovWjp9A8i1+VQ5
+            HEy1rpaHPGHt1DFt2hu+d3MCAwEAAQ==
+            -----END PUBLIC KEY-----
+          userClaim: "sub"
+          clientIdClaim: "client_id"

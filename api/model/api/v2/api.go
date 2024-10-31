@@ -92,6 +92,19 @@ func (api *Api) HasPlans() bool {
 	return len(api.Plans) > 0
 }
 
+func (api *Api) GetPlan(name string) core.PlanModel {
+	for _, plan := range api.Plans {
+		if plan.Name == name {
+			return plan
+		}
+	}
+	return nil
+}
+
+func (api *Api) IsStopped() bool {
+	return api.State == base.StateStopped
+}
+
 func (api *Api) GetContextPaths() []string {
 	paths := make([]string, 0)
 	proxy := api.Proxy

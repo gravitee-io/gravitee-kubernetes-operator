@@ -162,4 +162,31 @@ webhooks:
     timeoutSeconds: 10
     admissionReviewVersions:
       - v1
+  - name: v1alpha1.gravitee.io.subscription
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-subscription
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'subscriptions'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    namespaceSelector: {}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
 {{- end }}

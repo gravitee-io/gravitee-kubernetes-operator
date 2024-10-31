@@ -28,6 +28,7 @@ import (
 type APIM struct {
 	APIs         *service.APIs
 	Applications *service.Applications
+	Subscription *service.Subscriptions
 	Env          *service.Env
 
 	Context core.ContextModel
@@ -63,6 +64,7 @@ func FromContext(ctx context.Context, context core.ContextModel, parentNs string
 	return &APIM{
 		APIs:         service.NewAPIs(client),
 		Applications: service.NewApplications(client),
+		Subscription: service.NewSubscriptions(client),
 		Env:          service.NewEnv(client),
 		Context:      context,
 	}, nil

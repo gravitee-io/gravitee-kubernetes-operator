@@ -28,14 +28,15 @@ import (
 )
 
 type Files struct {
-	Secrets     []string
-	ConfigMaps  []string
-	Context     string
-	Resource    string
-	API         string
-	APIv4       string
-	Application string
-	Ingress     string
+	Secrets      []string
+	ConfigMaps   []string
+	Context      string
+	Resource     string
+	API          string
+	APIv4        string
+	Application  string
+	Ingress      string
+	Subscription string
 }
 
 type FSBuilder struct {
@@ -71,6 +72,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if app := decodeIfDefined(f.Application, &v1alpha1.Application{}, appKind); app != nil {
 		b.setupApplication(obj, app, suffix)
+	}
+
+	if sub := decodeIfDefined(f.Subscription, &v1alpha1.Subscription{}, subscriptionKind); sub != nil {
+		b.setupSubscription(obj, sub, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -167,6 +172,14 @@ func (b *FSBuilder) setupAPI(obj *Objects, api **v1alpha1.ApiDefinition, suffix 
 	randomizeAPIPaths(obj.API, suffix)
 }
 
+func (b *FSBuilder) setupSubscription(obj *Objects, sub **v1alpha1.Subscription, suffix string) {
+	obj.Subscription = *sub
+	obj.Subscription.Name += suffix
+	obj.Subscription.Namespace = constants.Namespace
+	obj.Subscription.Spec.API.Name += suffix
+	obj.Subscription.Spec.App.Name += suffix
+}
+
 func randomizeAPIPaths(api *v1alpha1.ApiDefinition, suffix string) {
 	if !isTemplate(api) {
 		for _, vh := range api.Spec.Proxy.VirtualHosts {
@@ -221,6 +234,11 @@ func (b *FSBuilder) AddConfigMap(file string) *FSBuilder {
 
 func (b *FSBuilder) WithContext(file string) *FSBuilder {
 	b.files.Context = file
+	return b
+}
+
+func (b *FSBuilder) WithSubscription(file string) *FSBuilder {
+	b.files.Subscription = file
 	return b
 }
 

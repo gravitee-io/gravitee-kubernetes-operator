@@ -85,6 +85,8 @@ spec:
                       A secret reference holding either a "bearerToken" key for bearer token authentication
                       or "username" and "password" keys for basic authentication
                     properties:
+                      kind:
+                        type: string
                       name:
                         type: string
                       namespace:
@@ -110,6 +112,8 @@ spec:
                     description: SecretRef secret reference holding the Gravitee cloud
                       token in the "cloudToken" key
                     properties:
+                      kind:
+                        type: string
                       name:
                         type: string
                       namespace:

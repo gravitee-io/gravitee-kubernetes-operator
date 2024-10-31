@@ -19,8 +19,10 @@ import (
 
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,6 +32,22 @@ import (
 type ListOptions struct {
 	Namespace string
 	Excluded  []core.ObjectRef
+}
+
+func ResolveAPI(ctx context.Context, ref core.ObjectRef, parentNs string) (core.ApiDefinitionObject, error) {
+	refKind := ref.GetKind()
+	if ref.GetKind() == "" {
+		refKind = ApiV4GVR.Resource
+	}
+	kind := PluralizeKind(refKind)
+	switch kind {
+	case ApiGVR.Resource:
+		return resolveRef(ctx, ref, parentNs, ApiGVR, new(v1alpha1.ApiDefinition))
+	case ApiV4GVR.Resource:
+		return resolveRef(ctx, ref, parentNs, ApiV4GVR, new(v1alpha1.ApiV4Definition))
+	default:
+		return nil, errors.NewSevere("API definition kind is mandatory")
+	}
 }
 
 func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {

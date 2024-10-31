@@ -16,9 +16,11 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: api-v4-with-apikey
+  name: api-v4-with-api-key
 spec:
-  name: "api-v4-with-apikey"
+  contextRef:
+    name: dev-ctx
+  name: "api-v4-with-api-key"
   description: "API v4 with API KEY managed by Gravitee Kubernetes Operator"
   version: "1.0"
   type: PROXY

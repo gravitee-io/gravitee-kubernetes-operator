@@ -32,6 +32,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -162,6 +163,12 @@ func init() {
 			Watcher:  watch.New(context.Background(), Client(), &v1alpha1.ApplicationList{}),
 		}).SetupWithManager(mgr),
 	)
+
+	runtimeUtil.Must((&subscription.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must(
 		(&secrets.Reconciler{
