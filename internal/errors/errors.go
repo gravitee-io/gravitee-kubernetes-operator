@@ -30,6 +30,7 @@ type ServerError struct {
 	URL        string `json:"url"`
 	Method     string `json:"method"`
 	Message    string `json:"message"`
+	Body       string `json:"body"`
 }
 
 type ContextError struct {
@@ -76,6 +77,8 @@ func NewServerError(resp *http.Response) ServerError {
 	if err != nil {
 		return serverError
 	}
+
+	serverError.Body = string(body)
 
 	if err = json.Unmarshal(body, &serverError); err != nil {
 		return serverError

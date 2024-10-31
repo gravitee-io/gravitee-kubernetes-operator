@@ -17,12 +17,15 @@ package v4
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
 // +kubebuilder:validation:Enum=STANDARD;PUSH;
 type PlanMode string
 
 type DefinitionVersion string
+
+var _ core.PlanModel = &Plan{}
 
 const (
 	PlanDefinitionVersion DefinitionVersion = "V4"
@@ -69,6 +72,10 @@ type Plan struct {
 type GatewayDefinitionPlan struct {
 	*Plan `json:",inline"`
 	Name  string `json:"name"`
+}
+
+func (plan *Plan) GetSecurityType() string {
+	return plan.Security.Type
 }
 
 func (plan *Plan) WithSecurity(security *PlanSecurity) *Plan {

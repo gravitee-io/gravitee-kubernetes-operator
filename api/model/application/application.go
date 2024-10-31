@@ -15,7 +15,9 @@
 // +kubebuilder:object:generate=true
 package application
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+)
 
 var _ core.ApplicationModel = &Application{}
 var _ core.ApplicationSettings = &Setting{}
@@ -58,6 +60,14 @@ func (in *Setting) GetOAuthType() string {
 // IsSimple implements core.ApplicationSettings.
 func (in *Setting) IsSimple() bool {
 	return in.App != nil
+}
+
+func (in *Setting) GetClientID() string {
+	if in.App != nil {
+		clientID := in.App.ClientID
+		return *clientID
+	}
+	return ""
 }
 
 // +kubebuilder:validation:Enum=STRING;NUMERIC;BOOLEAN;DATE;MAIL;URL;

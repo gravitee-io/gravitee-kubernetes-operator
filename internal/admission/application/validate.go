@@ -54,9 +54,6 @@ func validateUpdate(
 	newObj runtime.Object,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if errs.IsSevere() {
-		return errs
-	}
 	oldApp, ook := oldObj.(core.ApplicationObject)
 	newApp, nok := newObj.(core.ApplicationObject)
 	if ook && nok {

@@ -87,6 +87,19 @@ func (api *ApiV4Definition) HasPlans() bool {
 	return api.Spec.HasPlans()
 }
 
+func (api *ApiV4Definition) GetPlan(name string) core.PlanModel {
+	return api.Spec.GetPlan(name)
+}
+
+func (api *ApiV4Definition) IsStopped() bool {
+	return api.Spec.IsStopped()
+}
+
+func (api *ApiV4Definition) IsSyncFromManagement() bool {
+	defCtx := api.Spec.DefinitionContext
+	return defCtx != nil && defCtx.SyncFrom == v4.OriginManagement
+}
+
 func (api *ApiV4Definition) PopulateIDs(context core.ContextModel) {
 	api.Spec.ID = api.pickID(context)
 	api.Spec.CrossID = api.pickCrossID()
@@ -258,6 +271,10 @@ func (spec *ApiV4DefinitionSpec) GetManagementContext() *refs.NamespacedName {
 
 func (s *ApiV4DefinitionStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
+}
+
+func (s *ApiV4DefinitionStatus) IsFailed() bool {
+	return s.ProcessingStatus == core.ProcessingStatusFailed
 }
 
 func (s *ApiV4DefinitionStatus) DeepCopyFrom(api client.Object) error {

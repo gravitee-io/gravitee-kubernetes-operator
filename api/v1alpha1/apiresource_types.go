@@ -66,6 +66,10 @@ func (s *ApiResourceStatus) DeepCopyTo(obj client.Object) error {
 func (s *ApiResourceStatus) SetProcessingStatus(status core.ProcessingStatus) {
 }
 
+func (s *ApiResourceStatus) IsFailed() bool {
+	return false
+}
+
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 

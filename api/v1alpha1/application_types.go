@@ -45,7 +45,6 @@ type ApplicationStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
 // +kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.applicationType`
 // +kubebuilder:resource:shortName=graviteeapplications
@@ -155,4 +154,8 @@ func (s *ApplicationStatus) DeepCopyTo(api client.Object) error {
 
 func (s *ApplicationStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.Status.ProcessingStatus = status
+}
+
+func (s *ApplicationStatus) IsFailed() bool {
+	return s.ProcessingStatus == core.ProcessingStatusFailed
 }

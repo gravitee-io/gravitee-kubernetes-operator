@@ -188,6 +188,33 @@ rules:
       - get
       - patch
       - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - subscriptions
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - subscriptions/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - subscriptions/status
+    verbs:
+      - get
+      - patch
+      - update
 {{- end }}
 {{- end }}
 {{- end }}

@@ -79,7 +79,7 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 		By("calling rest API expecting to find subscription API key")
 
 		keys, err := apim.Subscriptions.GetApiKeys(fixtures.API.Status.ID, subscription.ID)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred(), fixtures.API.Name)
 		Expect(keys).ToNot(BeEmpty())
 		key := keys[0].Key
 

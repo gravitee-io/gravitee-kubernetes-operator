@@ -59,6 +59,12 @@ type DefinitionContext interface {
 }
 
 // +k8s:deepcopy-gen=false
+type PlanModel interface {
+	GetSecurityType() string
+	GetID() string
+}
+
+// +k8s:deepcopy-gen=false
 type ApiDefinitionModel interface {
 	GetName() string
 	GetDefinitionVersion() ApiDefinitionVersion
@@ -68,6 +74,8 @@ type ApiDefinitionModel interface {
 	GetResources() []ObjectOrRef[ResourceModel]
 	GetState() string
 	HasPlans() bool
+	GetPlan(string) PlanModel
+	IsStopped() bool
 }
 
 // +k8s:deepcopy-gen=false
@@ -77,6 +85,7 @@ type ApiDefinitionObject interface {
 	GetDefinition() ApiDefinitionModel
 	SetDefinitionContext(DefinitionContext)
 	GetDefinitionContext() DefinitionContext
+	IsSyncFromManagement() bool
 }
 
 // +k8s:deepcopy-gen=false
@@ -84,6 +93,7 @@ type ApplicationSettings interface {
 	IsOAuth() bool
 	GetOAuthType() string
 	IsSimple() bool
+	GetClientID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -105,6 +115,7 @@ type Spec interface {
 // +k8s:deepcopy-gen=false
 type Status interface {
 	SetProcessingStatus(status ProcessingStatus)
+	IsFailed() bool
 	DeepCopyFrom(obj client.Object) error
 	DeepCopyTo(obj client.Object) error
 }
@@ -175,6 +186,7 @@ type ObjectRef interface {
 	NamespacedName() types.NamespacedName
 	GetName() string
 	GetNamespace() string
+	GetKind() string
 	HasNameSpace() bool
 	IsMissingNamespace() bool
 	SetNamespace(ns string)
@@ -191,4 +203,16 @@ type ResourceModel interface {
 	GetType() string
 	GetResourceName() string
 	GetConfig() *utils.GenericStringMap
+}
+
+type SubscriptionObject interface {
+	Object
+	SubscriptionModel
+}
+
+type SubscriptionModel interface {
+	GetAppRef() ObjectRef
+	GetApiRef() ObjectRef
+	SetApiKind(string)
+	GetPlan() string
 }

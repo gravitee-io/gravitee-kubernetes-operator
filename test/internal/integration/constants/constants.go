@@ -84,6 +84,7 @@ const (
 	ApiWithMarkdownPage                 = "apim/api_definition/v2/api-with-page-markdown.yml"
 	ApiWithSwaggerHTTPFetcher           = "apim/api_definition/v2/api-with-page-swagger-http-fetcher.yml"
 	ApiWithMembersAndGroups             = "apim/api_definition/v2/api-with-groups-members.yml"
+	ApiWithJWTPlan                      = "apim/api_definition/v2/api-with-jwt-plan.yml"
 
 	ApiResourceCacheFile              = "apim/api_resource/api-resource-cache.yml"
 	ApiResourceCacheRedisFile         = "apim/api_resource/api-resource-cache-redis.yml"
@@ -125,6 +126,7 @@ const (
 	ApiV4WithHTTPAuthProviderRefFile   = "apim/api_definition/v4/api-v4-with-http-auth-provider-ref.yml"
 	ApiV4WithMarkdownPage              = "apim/api_definition/v4/api-v4-with-page-markdown.yml"
 	ApiV4WithSwaggerHTTPFetcher        = "apim/api_definition/v4/api-v4-with-page-swagger-http-fetcher.yml"
+	ApiV4WithJWTPlanFile               = "apim/api_definition/v4/api-v4-with-jwt-plan.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"
@@ -135,7 +137,17 @@ const (
 	IngressWithTLSSecretFile   = "ingress/ingress-with-tls-secret.yml"
 	IngressResponse404CMFile   = "ingress/ingress-response-404-config-map.yaml"
 
-	Application = "apim/application/application.yml"
+	Application                 = "apim/application/application.yml"
+	ApplicationWithClientIDFile = "apim/application/application-with-client-id.yml"
+
+	SubscriptionFile = "apim/subscription/subscription.yml"
+
+	// Use cases.
+	SubscribeUseCaseContextFile      = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
+	SubscribeUseCaseAPIFile          = "usecase/subscribe-to-jwt-plan/resources/api.yml"
+	SubscribeUseCaseApplicationFile  = "usecase/subscribe-to-jwt-plan/resources/application.yml"
+	SubscribeUseCaseSubscriptionFile = "usecase/subscribe-to-jwt-plan/resources/subscription.yml"
+	SubscribeUseCasePrivateKeyFile   = "usecase/subscribe-to-jwt-plan/pki/private.key"
 )
 
 func BuildAPIEndpoint(api *v1alpha1.ApiDefinition) string {

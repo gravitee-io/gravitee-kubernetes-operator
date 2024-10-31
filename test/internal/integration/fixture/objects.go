@@ -23,14 +23,17 @@ import (
 )
 
 type Objects struct {
-	Secrets     []*coreV1.Secret
-	ConfigMaps  []*coreV1.ConfigMap
-	Context     *v1alpha1.ManagementContext
-	Resource    *v1alpha1.ApiResource
-	API         *v1alpha1.ApiDefinition
-	APIv4       *v1alpha1.ApiV4Definition
-	Application *v1alpha1.Application
-	Ingress     *netV1.Ingress
+	Secrets    []*coreV1.Secret
+	ConfigMaps []*coreV1.ConfigMap
+
+	Ingress *netV1.Ingress
+
+	Context      *v1alpha1.ManagementContext
+	Resource     *v1alpha1.ApiResource
+	API          *v1alpha1.ApiDefinition
+	APIv4        *v1alpha1.ApiV4Definition
+	Application  *v1alpha1.Application
+	Subscription *v1alpha1.Subscription
 
 	randomSuffix string
 }

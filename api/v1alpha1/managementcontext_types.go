@@ -48,10 +48,10 @@ type ManagementContextStatus struct {
 }
 
 // DeepCopyFrom implements custom.Status.
-func (st *ManagementContextStatus) DeepCopyFrom(obj client.Object) error {
+func (s *ManagementContextStatus) DeepCopyFrom(obj client.Object) error {
 	switch t := obj.(type) {
 	case *ManagementContext:
-		t.Status.DeepCopyInto(st)
+		t.Status.DeepCopyInto(s)
 		return nil
 	default:
 		return fmt.Errorf("unknown type %T", t)
@@ -59,10 +59,10 @@ func (st *ManagementContextStatus) DeepCopyFrom(obj client.Object) error {
 }
 
 // DeepCopyTo implements custom.Status.
-func (st *ManagementContextStatus) DeepCopyTo(obj client.Object) error {
+func (s *ManagementContextStatus) DeepCopyTo(obj client.Object) error {
 	switch t := obj.(type) {
 	case *ManagementContext:
-		st.DeepCopyInto(&t.Status)
+		s.DeepCopyInto(&t.Status)
 		return nil
 	default:
 		return fmt.Errorf("unknown type %T", t)
@@ -70,8 +70,12 @@ func (st *ManagementContextStatus) DeepCopyTo(obj client.Object) error {
 }
 
 // SetProcessingStatus implements custom.Status.
-func (st *ManagementContextStatus) SetProcessingStatus(status core.ProcessingStatus) {
+func (s *ManagementContextStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	// Not implemented
+}
+
+func (s *ManagementContextStatus) IsFailed() bool {
+	return false
 }
 
 // +kubebuilder:object:root=true

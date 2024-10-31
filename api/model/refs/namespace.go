@@ -26,6 +26,8 @@ type NamespacedName struct {
 	Name string `json:"name"`
 	// +kubebuilder:validation:Optional
 	Namespace string `json:"namespace,omitempty"`
+	// +kubebuilder:validation:Optional
+	Kind string `json:"kind,omitempty"`
 }
 
 // SetNamespace implements custom.ResourceRef.
@@ -46,6 +48,10 @@ func (n *NamespacedName) GetName() string {
 // GetNamespace implements custom.ResourceRef.
 func (n *NamespacedName) GetNamespace() string {
 	return n.Namespace
+}
+
+func (n *NamespacedName) GetKind() string {
+	return n.Kind
 }
 
 // HasNameSpace implements custom.ResourceRef.

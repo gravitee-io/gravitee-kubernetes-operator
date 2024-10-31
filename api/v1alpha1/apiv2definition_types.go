@@ -158,6 +158,14 @@ func (api *ApiDefinition) HasPlans() bool {
 	return api.Spec.HasPlans()
 }
 
+func (api *ApiDefinition) IsStopped() bool {
+	return api.Spec.IsStopped()
+}
+
+func (api *ApiDefinition) GetPlan(name string) core.PlanModel {
+	return api.Spec.GetPlan(name)
+}
+
 func (api *ApiDefinition) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,
@@ -172,9 +180,15 @@ func (api *ApiDefinition) PopulateIDs(_ core.ContextModel) {
 	api.generatePageIDs()
 }
 
-// GetResources implements core.ApiDefinitionModel.
 func (api *ApiDefinition) GetResources() []core.ObjectOrRef[core.ResourceModel] {
 	return api.Spec.GetResources()
+}
+
+func (api *ApiDefinition) IsSyncFromManagement() bool {
+	isNotLocal := !api.Spec.IsLocal
+	defCtx := api.Spec.DefinitionContext
+	isSyncFromManagement := defCtx != nil && defCtx.SyncFrom == v2.OriginManagement
+	return isNotLocal || isSyncFromManagement
 }
 
 // For each plan, generate a Cross id from Api id & Plan Name if not defined.
@@ -254,6 +268,10 @@ func (spec *ApiDefinitionV2Spec) Hash() string {
 
 func (s *ApiDefinitionStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
+}
+
+func (s *ApiDefinitionStatus) IsFailed() bool {
+	return s.ProcessingStatus == core.ProcessingStatusFailed
 }
 
 func (s *ApiDefinitionStatus) DeepCopyFrom(obj client.Object) error {

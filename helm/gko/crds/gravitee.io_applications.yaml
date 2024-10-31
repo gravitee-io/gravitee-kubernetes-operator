@@ -68,6 +68,8 @@ spec:
                 type: string
               contextRef:
                 properties:
+                  kind:
+                    type: string
                   name:
                     type: string
                   namespace:

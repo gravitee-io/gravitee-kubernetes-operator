@@ -67,6 +67,14 @@ func ApplicationFailed(app *v1alpha1.Application) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, app.Status.ProcessingStatus)
 }
 
+func SubscriptionCompleted(sub *v1alpha1.Subscription) error {
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, sub.Status.ProcessingStatus)
+}
+
+func SubscriptionFailed(sub *v1alpha1.Subscription) error {
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, sub.Status.ProcessingStatus)
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }

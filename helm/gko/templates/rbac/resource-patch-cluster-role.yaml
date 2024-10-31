@@ -61,6 +61,7 @@ rules:
       - apiv4definitions.gravitee.io
       - applications.gravitee.io
       - apiresources.gravitee.io
+      - subscriptions.gravitee.io
     resources:
       - customresourcedefinitions
     verbs:

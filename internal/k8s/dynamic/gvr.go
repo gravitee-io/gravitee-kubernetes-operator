@@ -21,6 +21,12 @@ import (
 
 // Gravitee.io CRDs.
 
+var ApplicationGVR = schema.GroupVersionResource{
+	Group:    core.CRDGroup,
+	Version:  core.CRDVersion,
+	Resource: core.CRDApplicationResource,
+}
+
 var ApiGVR = schema.GroupVersionResource{
 	Group:    core.CRDGroup,
 	Version:  core.CRDVersion,
