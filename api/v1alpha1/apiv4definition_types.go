@@ -148,7 +148,7 @@ func (api *ApiV4Definition) pickPageIDs() map[string]*v4.Page {
 	for name, page := range api.Spec.Pages {
 		p := page.DeepCopy()
 
-		p.API = api.Spec.ID
+		p.API = &api.Spec.ID
 		apiName := api.GetNamespacedName().String()
 		if page.ID == "" {
 			p.ID = uuid.FromStrings(api.Spec.ID, separator, name)
@@ -156,8 +156,9 @@ func (api *ApiV4Definition) pickPageIDs() map[string]*v4.Page {
 		if page.CrossID == "" {
 			p.CrossID = uuid.FromStrings(apiName, separator, name)
 		}
-		if page.Parent != "" {
-			p.ParentID = uuid.FromStrings(api.Spec.ID, separator, page.Parent)
+		if page.Parent != nil {
+			pID := uuid.FromStrings(api.Spec.ID, separator, *page.Parent)
+			p.ParentID = &pID
 		}
 
 		pages[name] = p

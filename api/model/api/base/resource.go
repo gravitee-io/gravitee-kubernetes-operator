@@ -30,21 +30,29 @@ type Resource struct {
 	Enabled bool `json:"enabled"`
 	// Resource Name
 	// +kubebuilder:validation:Optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// Resource Type
 	// +kubebuilder:validation:Optional
-	Type string `json:"type,omitempty"`
+	Type *string `json:"type,omitempty"`
 	// Resource Configuration, arbitrary map of key-values
 	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 func (r *Resource) GetType() string {
-	return r.Type
+	if r.Type != nil {
+		return *r.Type
+	}
+
+	return ""
 }
 
 func (r *Resource) GetResourceName() string {
-	return r.Name
+	if r.Name != nil {
+		return *r.Name
+	}
+
+	return ""
 }
 
 func (r *Resource) GetConfig() *utils.GenericStringMap {

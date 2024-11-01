@@ -38,7 +38,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		By("updating app domain")
 
-		fixtures.Application.Spec.Domain = "[[ configmap `missing-configmap/domain` ]]"
+		fixtures.Application.Spec.Domain = toPointer("[[ configmap `missing-configmap/domain` ]]")
 
 		By("checking that Application creation does not pass validation")
 

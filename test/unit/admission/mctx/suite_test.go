@@ -1,4 +1,4 @@
-package mctx_test
+package mctx
 
 // Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 //

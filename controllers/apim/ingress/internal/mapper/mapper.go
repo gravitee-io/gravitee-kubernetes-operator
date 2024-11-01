@@ -163,7 +163,8 @@ func (m *Mapper) buildPathFlows(rule v1.IngressRule, ruleIndex int) []v2.Flow {
 // of the incoming request.
 func (m *Mapper) buildRoutingFlow(rule v1.IngressRule, path *indexedPath) v2.Flow {
 	flow := v2.Flow{Enabled: true}
-	flow.Name = rule.Host + path.Path
+	name := fmt.Sprintf("%s%s", rule.Host, path.Path)
+	flow.Name = &name
 	flow.PathOperator = buildPathOperator(path)
 	flow.Pre = buildRouting(path)
 
@@ -180,12 +181,12 @@ func buildPathOperator(path *indexedPath) *v2.PathOperator {
 	if *path.PathType == v1.PathTypeExact {
 		return &v2.PathOperator{
 			Operator: base.EqualsOperator,
-			Path:     rootPath,
+			Path:     toPointer(rootPath),
 		}
 	}
 	return &v2.PathOperator{
 		Operator: base.StartWithOperator,
-		Path:     rootPath,
+		Path:     toPointer(rootPath),
 	}
 }
 
@@ -193,7 +194,7 @@ func buildRouting(path *indexedPath) []base.FlowStep {
 	return append([]base.FlowStep{}, buildRoutingStep(path))
 }
 
-func (m *Mapper) buildNoHostCondition(path *indexedPath) string {
+func (m *Mapper) buildNoHostCondition(path *indexedPath) *string {
 	condition := el.Empty()
 	for host := range m.hosts {
 		condition = condition.And(noHostCondition.Format(host))
@@ -203,22 +204,22 @@ func (m *Mapper) buildNoHostCondition(path *indexedPath) string {
 	return m.storeCondition(condition)
 }
 
-func (m *Mapper) buildHostCondition(rule v1.IngressRule, path *indexedPath) string {
+func (m *Mapper) buildHostCondition(rule v1.IngressRule, path *indexedPath) *string {
 	condition := hostCondition.Format(rule.Host)
 	contextPath := strings.TrimSuffix(path.Path, rootPath)
 	condition = condition.And(pathCondition.Format(contextPath))
 	return m.storeCondition(condition)
 }
 
-func (m *Mapper) storeCondition(condition el.Expression) string {
+func (m *Mapper) storeCondition(condition el.Expression) *string {
 	m.conditions = append(m.conditions, condition.Parenthesized())
-	return condition.Closed().String()
+	return toPointer(condition.Closed().String())
 }
 
 func buildRoutingStep(path *indexedPath) base.FlowStep {
 	return base.FlowStep{
-		Name:    routingStepName,
-		Policy:  routingPolicyName,
+		Name:    toPointer(routingStepName),
+		Policy:  toPointer(routingPolicyName),
 		Enabled: true,
 		Configuration: utils.NewGenericStringMap().
 			Put(routingRulesKey, buildRoutingRules(path)),
@@ -241,12 +242,12 @@ func buildRoutingTarget(path *indexedPath) string {
 // This flow is used to return a 404 HTTP response when no route is found.
 func (m *Mapper) buildNotFoundFlow() v2.Flow {
 	flow := v2.Flow{
-		Name:    mockStepName,
+		Name:    toPointer(mockStepName),
 		Pre:     []base.FlowStep{m.buildNotFoundStep()},
 		Enabled: true,
 		PathOperator: &v2.PathOperator{
 			Operator: base.StartWithOperator,
-			Path:     rootPath,
+			Path:     toPointer(rootPath),
 		},
 	}
 
@@ -256,7 +257,7 @@ func (m *Mapper) buildNotFoundFlow() v2.Flow {
 		condition = condition.Or(c)
 	}
 
-	flow.Condition = condition.Parenthesized().Negated().Closed().String()
+	flow.Condition = toPointer(condition.Parenthesized().Negated().Closed().String())
 
 	return flow
 }
@@ -265,8 +266,8 @@ func (m *Mapper) buildNotFoundStep() base.FlowStep {
 	template := m.opts.Templates[http.StatusNotFound]
 
 	return base.FlowStep{
-		Name:    mockStepName,
-		Policy:  mockPolicyName,
+		Name:    toPointer(mockStepName),
+		Policy:  toPointer(mockPolicyName),
 		Enabled: true,
 		Configuration: &utils.GenericStringMap{
 			Unstructured: unstructured.Unstructured{
@@ -290,7 +291,7 @@ func buildProxy(ingress *v1.Ingress) *v2.Proxy {
 		VirtualHosts: buildVirtualHosts(ingress),
 		Groups: []*v2.EndpointGroup{
 			{
-				Name:      proxyName,
+				Name:      toPointer(proxyName),
 				Endpoints: buildEndpoints(ingress),
 			},
 		},
@@ -312,14 +313,15 @@ func buildEndpoints(ingress *v1.Ingress) []*v2.Endpoint {
 // in order to be able to match it in the routing step when handling an incoming request for routing.
 func buildEndpoint(ingress *v1.Ingress, path *indexedPath) *v2.Endpoint {
 	return &v2.Endpoint{
-		Name:   path.String(),
+		Name:   toPointer(path.String()),
 		Target: buildEndpointTarget(ingress, path),
 	}
 }
 
-func buildEndpointTarget(ingress *v1.Ingress, path *indexedPath) string {
+func buildEndpointTarget(ingress *v1.Ingress, path *indexedPath) *string {
 	svc := path.Backend.Service
-	return fmt.Sprintf(serviceURIPattern, svc.Name, ingress.Namespace, svc.Port.Number)
+	et := fmt.Sprintf(serviceURIPattern, svc.Name, ingress.Namespace, svc.Port.Number)
+	return &et
 }
 
 // For each ingress host and path, build a virtual host.
@@ -335,4 +337,8 @@ func buildVirtualHosts(ingress *v1.Ingress) []*v2.VirtualHost {
 
 func buildVirtualHost(rule v1.IngressRule, path v1.HTTPIngressPath) *v2.VirtualHost {
 	return &v2.VirtualHost{Host: rule.Host, Path: path.Path}
+}
+
+func toPointer(s string) *string {
+	return &s
 }

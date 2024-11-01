@@ -71,7 +71,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 				"severe",
 				errors.NewSeveref(
 					"Resource [%s] configuration is not valid",
-					fixtures.APIv4.Spec.Resources[0].Name,
+					*fixtures.APIv4.Spec.Resources[0].Name,
 				).Error(),
 				err.Error(),
 			)

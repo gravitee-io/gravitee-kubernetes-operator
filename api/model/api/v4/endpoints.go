@@ -29,7 +29,7 @@ const (
 type Endpoint struct {
 	// The endpoint name (this value should be unique across endpoints)
 	// +kubebuilder:validation:Optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 
 	// +kubebuilder:validation:Required
 	// Endpoint Type
@@ -37,7 +37,7 @@ type Endpoint struct {
 
 	// Endpoint Weight
 	// +kubebuilder:validation:Optional
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 
 	// Should endpoint group configuration be inherited or not ?
 	Inherit bool `json:"inheritConfiguration"`
@@ -63,7 +63,7 @@ type Endpoint struct {
 
 func NewHttpEndpoint(name string) *Endpoint {
 	return &Endpoint{
-		Name: name,
+		Name: &name,
 		Type: string(EndpointTypeHTTP),
 	}
 }
@@ -99,7 +99,7 @@ type EndpointGroup struct {
 	Name string `json:"name"`
 	// Endpoint group type
 	// +kubebuilder:validation:Optional
-	Type string `json:"type,omitempty"`
+	Type *string `json:"type,omitempty"`
 	// Endpoint group load balancer
 	LoadBalancer *LoadBalancer `json:"loadBalancer,omitempty"`
 	// Endpoint group shared configuration, arbitrary map of key-values
@@ -120,9 +120,10 @@ type EndpointGroup struct {
 }
 
 func NewHttpEndpointGroup(name string) *EndpointGroup {
+	t := string(EndpointTypeHTTP)
 	return &EndpointGroup{
 		Name: name,
-		Type: string(EndpointTypeHTTP),
+		Type: &t,
 	}
 }
 

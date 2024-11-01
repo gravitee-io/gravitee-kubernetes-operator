@@ -28,16 +28,16 @@ const (
 type Endpoint struct {
 	// Name of the endpoint
 	// +kubebuilder:validation:Optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// The end target of this endpoint (backend)
 	// +kubebuilder:validation:Optional
-	Target string `json:"target,omitempty"`
+	Target *string `json:"target,omitempty"`
 	// Endpoint weight used for load-balancing
 	// +kubebuilder:validation:Optional
-	Weight int `json:"weight,omitempty"`
+	Weight *int `json:"weight,omitempty"`
 	// Indicate that this ia a back-end endpoint
 	// +kubebuilder:validation:Optional
-	Backup bool `json:"backup,omitempty"`
+	Backup *bool `json:"backup,omitempty"`
 	// The endpoint tenants
 	// +kubebuilder:validation:Optional
 	Tenants []string `json:"tenants"`
@@ -45,7 +45,7 @@ type Endpoint struct {
 	Type EndpointType `json:"type,omitempty"`
 	// Is endpoint inherited or not
 	// +kubebuilder:validation:Optional
-	Inherit bool `json:"inherit,omitempty"`
+	Inherit *bool `json:"inherit,omitempty"`
 	// Configure the HTTP Proxy settings to reach target if needed
 	HttpProxy *base.HttpProxy `json:"proxy,omitempty"`
 	// Custom HTTP client options used for this endpoint
@@ -62,7 +62,7 @@ type Endpoint struct {
 func NewHttpEndpoint(name string) *Endpoint {
 	return &Endpoint{
 		Type: HttpEndpointType,
-		Name: name,
+		Name: &name,
 	}
 }
 
@@ -89,7 +89,7 @@ func NewLoadBalancer(algo LoadBalancerType) *LoadBalancer {
 type EndpointGroup struct {
 	// EndpointGroup name
 	// +kubebuilder:validation:Optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// List of Endpoints belonging to this group
 	// +kubebuilder:validation:Optional
 	Endpoints []*Endpoint `json:"endpoints"`
@@ -110,7 +110,7 @@ type EndpointGroup struct {
 
 func NewHttpEndpointGroup(name string) *EndpointGroup {
 	return &EndpointGroup{
-		Name:      name,
+		Name:      &name,
 		Endpoints: []*Endpoint{},
 		Headers:   map[string]string{},
 	}
@@ -121,10 +121,10 @@ type FailoverCase string
 type Failover struct {
 	// Maximum number of attempts
 	// +kubebuilder:validation:Optional
-	MaxAttempts int `json:"maxAttempts,omitempty"`
+	MaxAttempts *int `json:"maxAttempts,omitempty"`
 	// Retry timeout
 	// +kubebuilder:validation:Optional
-	RetryTimeout int64 `json:"retryTimeout,omitempty"`
+	RetryTimeout *int64 `json:"retryTimeout,omitempty"`
 	// List of Failover cases
 	// +kubebuilder:validation:Optional
 	Cases []FailoverCase `json:"cases"`

@@ -69,7 +69,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 				return err
 			}
 			page := pages[0]
-			return assert.Equals("markdown content", markdown.Content, page.Content)
+			return assert.Equals("markdown content", markdown.Content, &page.Content)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 	})
 })
