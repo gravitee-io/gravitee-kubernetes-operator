@@ -46,10 +46,12 @@ func validateResourceOrRefs(ctx context.Context, api core.ApiDefinitionObject) *
 }
 
 func toResourceOrRef(r core.ResourceModel) core.ResourceModel {
+	rn := r.GetResourceName()
+	t := r.GetType()
 	return &base.Resource{
 		Enabled:       true,
-		Name:          r.GetResourceName(),
-		Type:          r.GetType(),
+		Name:          &rn,
+		Type:          &t,
 		Configuration: r.GetConfig(),
 	}
 }

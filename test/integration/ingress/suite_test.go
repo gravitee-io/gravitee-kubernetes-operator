@@ -46,3 +46,7 @@ var _ = SynchronizedAfterSuite(func() {
 }, func() {
 	// NOSONAR ignore this noop func
 })
+
+func toPointer(s string) *string {
+	return &s
+}

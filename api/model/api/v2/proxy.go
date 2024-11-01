@@ -14,7 +14,9 @@
 
 package v2
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+)
 
 type VirtualHost struct {
 	// Host name
@@ -50,8 +52,8 @@ type Proxy struct {
 	Logging *Logging `json:"logging,omitempty"`
 	// Strip Context Path
 	// +kubebuilder:validation:Optional
-	StripContextPath bool `json:"strip_context_path,omitempty"`
+	StripContextPath *bool `json:"strip_context_path,omitempty"`
 	// Preserve Host
 	// +kubebuilder:validation:Optional
-	PreserveHost bool `json:"preserve_host,omitempty"`
+	PreserveHost *bool `json:"preserve_host,omitempty"`
 }

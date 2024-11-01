@@ -42,7 +42,7 @@ const (
 type DLQ struct {
 	// The endpoint to use when a message should be sent to the dead letter queue.
 	// +kubebuilder:validation:Optional
-	Endpoint string `json:"endpoint,omitempty"`
+	Endpoint *string `json:"endpoint,omitempty"`
 }
 
 type EntryPointType string
@@ -184,7 +184,7 @@ type Entrypoint struct {
 func (ep *Entrypoint) ToGatewayDefinition() *Entrypoint {
 	entryPoint := ep.DeepCopy()
 	entryPoint.Qos = QosType(Enum(ep.Qos).ToGatewayDefinition())
-	if ep.Dlq != nil && ep.Dlq.Endpoint == "" {
+	if ep.Dlq != nil && ep.Dlq.Endpoint == nil {
 		entryPoint.Dlq = nil
 	}
 	return entryPoint

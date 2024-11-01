@@ -22,7 +22,7 @@ type Service struct {
 
 	// Service Type
 	// +kubebuilder:validation:Optional
-	Type string `json:"type,omitempty"`
+	Type *string `json:"type,omitempty"`
 
 	// Service Override Configuration or not?
 	OverrideConfig bool `json:"overrideConfiguration"`
@@ -35,7 +35,7 @@ type Service struct {
 func NewService(kind string, enabled bool) *Service {
 	return &Service{
 		Enabled: enabled,
-		Type:    kind,
+		Type:    &kind,
 	}
 }
 

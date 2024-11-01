@@ -24,5 +24,5 @@ type Page struct {
 	// if true, the references defined in the accessControls list will be
 	// denied access instead of being granted
 	// +kubebuilder:validation:Optional
-	ExcludedAccessControl bool `json:"excludedAccessControls"`
+	ExcludedAccessControl *bool `json:"excludedAccessControls"`
 }
