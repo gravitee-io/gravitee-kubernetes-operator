@@ -55,7 +55,7 @@ type Logging struct {
 	Content LoggingContent `json:"content,omitempty"`
 	// The logging condition (supports EL expressions)
 	// +kubebuilder:validation:Optional
-	Condition string `json:"condition,omitempty"`
+	Condition *string `json:"condition,omitempty"`
 }
 
 type Analytics struct {

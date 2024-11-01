@@ -56,10 +56,10 @@ type Cors struct {
 type HttpClientOptions struct {
 	//  Idle Timeout for the http connection
 	// +kubebuilder:validation:Optional
-	IdleTimeout uint64 `json:"idleTimeout,omitempty"`
+	IdleTimeout *uint64 `json:"idleTimeout,omitempty"`
 	// Connection timeout of the http connection
 	// +kubebuilder:validation:Optional
-	ConnectTimeout uint64 `json:"connectTimeout,omitempty"`
+	ConnectTimeout *uint64 `json:"connectTimeout,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=true
 	KeepAlive bool `json:"keepAlive"`
@@ -69,13 +69,13 @@ type HttpClientOptions struct {
 	KeepAliveTimeout uint64 `json:"keepAliveTimeout"`
 	// Read timeout
 	// +kubebuilder:validation:Optional
-	ReadTimeout uint64 `json:"readTimeout,omitempty"`
+	ReadTimeout *uint64 `json:"readTimeout,omitempty"`
 	// +kubebuilder:default:=false
 	// Should HTTP/1.1 pipelining be used for the connection or not ?
 	Pipelining bool `json:"pipelining"`
 	// HTTP max concurrent connections
 	// +kubebuilder:validation:Optional
-	MaxConcurrentConnections int `json:"maxConcurrentConnections,omitempty"`
+	MaxConcurrentConnections *int `json:"maxConcurrentConnections,omitempty"`
 	// +kubebuilder:default:=false
 	// Should compression be used or not ?
 	UseCompression bool `json:"useCompression"`
@@ -117,16 +117,16 @@ type HttpProxy struct {
 	UseSystemProxy bool `json:"useSystemProxy,omitempty"`
 	// Proxy host name
 	// +kubebuilder:validation:Optional
-	Host string `json:"host,omitempty"`
+	Host *string `json:"host,omitempty"`
 	// The HTTP proxy port
 	// +kubebuilder:validation:Optional
-	Port int `json:"port,omitempty"`
+	Port *int `json:"port,omitempty"`
 	// The HTTP proxy username (if the proxy requires authentication)
 	// +kubebuilder:validation:Optional
-	Username string `json:"username,omitempty"`
+	Username *string `json:"username,omitempty"`
 	// The HTTP proxy password (if the proxy requires authentication)
 	// +kubebuilder:validation:Optional
-	Password string `json:"password,omitempty"`
+	Password *string `json:"password,omitempty"`
 	// The HTTP proxy type (possible values Http, Socks4, Socks5)
 	HttpProxyType HttpProxyType `json:"type,omitempty"`
 }
@@ -134,8 +134,8 @@ type HttpProxy struct {
 type HttpHeader struct {
 	// The HTTP header name
 	// +kubebuilder:validation:Optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// The HTTP header value
 	// +kubebuilder:validation:Optional
-	Value string `json:"value,omitempty"`
+	Value *string `json:"value,omitempty"`
 }

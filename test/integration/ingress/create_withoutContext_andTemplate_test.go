@@ -68,8 +68,8 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		Expect(endpoints).To(Equal(
 			[]*v2.Endpoint{
 				{
-					Name:   "rule01-path01",
-					Target: "http://httpbin-1.default.svc.cluster.local:8080",
+					Name:   toPointer("rule01-path01"),
+					Target: toPointer("http://httpbin-1.default.svc.cluster.local:8080"),
 				},
 			},
 		))

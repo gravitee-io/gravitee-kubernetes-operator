@@ -27,7 +27,7 @@ type Member struct {
 	SourceID string `json:"sourceId"`
 	// Member display name
 	// +kubebuilder:validation:Optional
-	DisplayName string `json:"displayName,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
 	// The API role associated with this Member
 	// +kubebuilder:default:=USER
 	Role string `json:"role,omitempty"`
@@ -36,7 +36,7 @@ type Member struct {
 func (m *Member) String() string {
 	return fmt.Sprintf(
 		"{Source:%s,SourceID:%s,DisplayName:%s,Role:%s}",
-		m.Source, m.SourceID, m.DisplayName, m.Role,
+		m.Source, m.SourceID, *m.DisplayName, m.Role,
 	)
 }
 

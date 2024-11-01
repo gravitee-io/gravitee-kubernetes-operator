@@ -56,10 +56,10 @@ type Page struct {
 	Type string `json:"type"`
 	// +kubebuilder:validation:Optional
 	// The content of the page, if any.
-	Content string `json:"content,omitempty"`
+	Content *string `json:"content,omitempty"`
 	// +kubebuilder:validation:Optional
 	// The order used to display the page in APIM and on the portal.
-	Order uint64 `json:"order,omitempty"`
+	Order *uint64 `json:"order,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=false
 	// If true, the page will be accessible from the portal (default is false)
@@ -76,15 +76,15 @@ type Page struct {
 	// +kubebuilder:validation:Optional
 	// If your page contains a folder, setting this field to the map key associated to the
 	// folder entry will be reflected into APIM by making the page a child of this folder.
-	Parent string `json:"parent,omitempty"`
+	Parent *string `json:"parent,omitempty"`
 	// +kubebuilder:validation:Optional
 	// The parent ID of the page. This field is mostly required when you are applying
 	// an API exported from APIM to make the operator take control over it. Use `Parent`
 	// in any other case.
-	ParentID string `json:"parentId,omitempty"`
+	ParentID *string `json:"parentId,omitempty"`
 	// +kubebuilder:validation:Optional
 	// The API of the page. If empty, will be set automatically to the generated ID of the API.
-	API string `json:"api,omitempty"`
+	API *string `json:"api,omitempty"`
 	// +kubebuilder:validation:Optional
 	// Source allow you to fetch pages from various external sources, overriding page content
 	// each time the source is fetched.

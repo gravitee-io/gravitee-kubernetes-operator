@@ -39,7 +39,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 
 		By("updating app domain")
 
-		fixtures.Application.Spec.Domain = "[[ secret `missing-secret/domain` ]]"
+		fixtures.Application.Spec.Domain = toPointer("[[ secret `missing-secret/domain` ]]")
 
 		By("checking that Application update does not pass validation")
 
