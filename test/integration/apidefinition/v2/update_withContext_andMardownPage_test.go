@@ -48,8 +48,8 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("updating markdown content")
 
 		markdown := fixtures.API.Spec.Pages["markdown"]
-		updatedContent := markdown.Content + "\n" + "This is an update."
-		markdown.Content = updatedContent
+		updatedContent := *markdown.Content + "\n" + "This is an update."
+		markdown.Content = &updatedContent
 
 		Eventually(func() error {
 			return manager.UpdateSafely(ctx, fixtures.API)

@@ -38,7 +38,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		By("updating app domain")
 
-		fixtures.Application.Spec.Domain = "[[ secret `graviteeio-templating/unknown` ]]"
+		fixtures.Application.Spec.Domain = toPointer("[[ secret `graviteeio-templating/unknown` ]]")
 
 		By("checking that Application creation does not pass validation")
 

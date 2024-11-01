@@ -50,10 +50,10 @@ type Plan struct {
 	Validation PlanValidation `json:"validation,omitempty"`
 	// Indicate of comment is required for this plan or not
 	// +kubebuilder:validation:Optional
-	CommentRequired bool `json:"comment_required,omitempty"`
+	CommentRequired *bool `json:"comment_required,omitempty"`
 	// Plan order
 	// +kubebuilder:validation:Optional
-	Order int `json:"order,omitempty"`
+	Order *int `json:"order,omitempty"`
 	// +kubebuilder:default:=API
 	// Plan type
 	Type PlanType `json:"type,omitempty"`

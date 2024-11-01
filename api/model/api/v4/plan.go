@@ -37,7 +37,7 @@ type Plan struct {
 
 	// Plan Description
 	// +kubebuilder:validation:Optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 
 	// Plan definition version
 	DefinitionVersion DefinitionVersion `json:"definitionVersion,omitempty"`
@@ -53,7 +53,7 @@ type Plan struct {
 
 	// Plan selection rule
 	// +kubebuilder:validation:Optional
-	SelectionRule string `json:"selectionRule,omitempty"`
+	SelectionRule *string `json:"selectionRule,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	// List of plan flows

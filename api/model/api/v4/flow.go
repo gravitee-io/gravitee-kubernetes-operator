@@ -27,7 +27,7 @@ type Flow struct {
 
 	// Flow name
 	// +kubebuilder:validation:Optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 
 	// +kubebuilder:default:=true
 	// Is flow enabled or not?
@@ -60,7 +60,7 @@ type Flow struct {
 
 func NewFlow(name string) *Flow {
 	return &Flow{
-		Name:      name,
+		Name:      &name,
 		Enabled:   true,
 		Selectors: []*FlowSelector{},
 		Request:   []*FlowStep{},
@@ -82,7 +82,7 @@ type FlowStep struct {
 	base.FlowStep `json:",inline"`
 	// The message condition (supports EL expressions)
 	// +kubebuilder:validation:Optional
-	MessageCondition string `json:"messageCondition,omitempty"`
+	MessageCondition *string `json:"messageCondition,omitempty"`
 }
 
 func NewFlowStep(base base.FlowStep) *FlowStep {
@@ -92,7 +92,7 @@ func NewFlowStep(base base.FlowStep) *FlowStep {
 }
 
 func (step *FlowStep) WithMessageCondition(messageCondition string) *FlowStep {
-	step.MessageCondition = messageCondition
+	step.MessageCondition = &messageCondition
 	return step
 }
 

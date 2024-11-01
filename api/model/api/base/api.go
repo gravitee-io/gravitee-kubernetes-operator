@@ -104,11 +104,11 @@ const (
 
 type ResponseTemplate struct {
 	// +kubebuilder:validation:Optional
-	StatusCode int `json:"status,omitempty"`
+	StatusCode *int `json:"status,omitempty"`
 	// +kubebuilder:validation:Optional
 	Headers map[string]string `json:"headers,omitempty"`
 	// +kubebuilder:validation:Optional
-	Body string `json:"body,omitempty"`
+	Body *string `json:"body,omitempty"`
 }
 
 func (api *ApiBase) GetName() string {
