@@ -118,7 +118,7 @@ type DefinitionContext struct {
 	Origin string `json:"origin,omitempty"`
 	// +kubebuilder:default:=fully_managed
 	Mode string `json:"mode,omitempty"`
-	// +kubebuilder:default:=kubernetes
+	// +kubebuilder:default:=management
 	SyncFrom string `json:"syncFrom,omitempty"`
 }
 

@@ -49,7 +49,7 @@ type ApiDefinitionV2Spec struct {
 	// This will cause Gateways to fetch the APIs from the datastore
 	//
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
+	// +kubebuilder:default:=false
 	IsLocal bool `json:"local"`
 }
 

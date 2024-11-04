@@ -548,7 +548,7 @@ If false, the Operator will not create the ConfigMaps for the Gateway.
 Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
 This will cause Gateways to fetch the APIs from the datastore<br/>
           <br/>
-            <i>Default</i>: true<br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -746,7 +746,7 @@ is managed using a kubernetes operator
         <td>
           <br/>
           <br/>
-            <i>Default</i>: kubernetes<br/>
+            <i>Default</i>: management<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5576,7 +5576,7 @@ If the value is `KUBERNETES`, the API definition will be sourced from a config m
 This means that only gateways deployed in the same cluster will be able to sync the API definition.<br/>
           <br/>
             <i>Enum</i>: KUBERNETES, MANAGEMENT<br/>
-            <i>Default</i>: KUBERNETES<br/>
+            <i>Default</i>: MANAGEMENT<br/>
         </td>
         <td>false</td>
       </tr></tbody>
