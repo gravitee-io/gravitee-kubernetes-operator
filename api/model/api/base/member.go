@@ -35,8 +35,8 @@ type Member struct {
 
 func (m *Member) String() string {
 	return fmt.Sprintf(
-		"{Source:%s,SourceID:%s,DisplayName:%s,Role:%s}",
-		m.Source, m.SourceID, *m.DisplayName, m.Role,
+		"{Source:%s,SourceID:%s,Role:%s}",
+		m.Source, m.SourceID, m.Role,
 	)
 }
 

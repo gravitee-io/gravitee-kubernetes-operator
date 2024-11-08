@@ -105,7 +105,20 @@ func SliceEqualsSorted[S ~[]E, E any](field string, expected S, given S, comp so
 	slices.SortFunc(ecp, comp)
 	copy(gcp, given)
 	slices.SortFunc(gcp, comp)
-	return Equals(field, ecp, gcp)
+	return Equals(field, callStringerIfExists(ecp), callStringerIfExists(gcp))
+}
+
+func callStringerIfExists[E any](stringersOrNot []E) []any {
+	stringified := make([]any, len(stringersOrNot))
+	for i := range stringersOrNot {
+		stringerOrNot := stringersOrNot[i]
+		if stringer, ok := any(stringerOrNot).(fmt.Stringer); ok {
+			stringified[i] = stringer.String()
+		} else {
+			stringified[i] = stringerOrNot
+		}
+	}
+	return stringified
 }
 
 func NotEmptySlice[T any](field string, value []T) error {
