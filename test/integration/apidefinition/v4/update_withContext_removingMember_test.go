@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v2
+package v4
 
 import (
 	"context"
@@ -41,32 +41,24 @@ var _ = Describe("Update", labels.WithContext, func() {
 	It("should remove an API member", func() {
 		fixtures := fixture.
 			Builder().
-			WithAPI(constants.ApiWithMembersAndGroups).
+			WithAPIv4(constants.ApiV4).
 			WithContext(constants.ContextWithCredentialsFile).
 			Build()
 
 		By("initializing a service account in current organization")
-
 		apim := apim.NewClient(ctx)
-
 		saName := random.GetName()
-
 		Expect(apim.Org.CreateUser(model.NewServiceAccount(saName))).To(Succeed())
 
 		By("applying the API with created service account as members")
-
 		saMember := base.NewGraviteeMember(saName, "REVIEWER")
-
 		expectedMembers := []*base.Member{}
-
-		fixtures.API.Spec.Members = []*base.Member{saMember}
-
+		fixtures.APIv4.Spec.Members = []*base.Member{saMember}
 		fixtures = fixtures.Apply()
 
 		By("checking that exported API has a member")
-
 		Eventually(func() error {
-			export, err := apim.Export.V2Api(fixtures.API.Status.ID)
+			export, err := apim.Export.V4Api(fixtures.APIv4.Status.ID)
 			if err != nil {
 				return err
 			}
@@ -75,24 +67,21 @@ var _ = Describe("Update", labels.WithContext, func() {
 				[]*base.Member{saMember}, export.Spec.Members,
 				sort.MembersComparator,
 			)
-		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
+		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 
 		By("removing service account from API members")
-
-		fixtures.API.Spec.Members = expectedMembers
-
+		fixtures.APIv4.Spec.Members = expectedMembers
 		Eventually(func() error {
-			return manager.UpdateSafely(ctx, fixtures.API)
-		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
+			return manager.UpdateSafely(ctx, fixtures.APIv4)
+		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 
 		By("checking that exported API has no members anymore")
-
 		Eventually(func() error {
-			export, err := apim.Export.V2Api(fixtures.API.Status.ID)
+			export, err := apim.Export.V4Api(fixtures.APIv4.Status.ID)
 			if err != nil {
 				return err
 			}
-			return assert.Equals("members", expectedMembers, export.Spec.Members)
-		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
+			return assert.SliceEqualsSorted("members", nil, export.Spec.Members, sort.MembersComparator)
+		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 	})
 })
