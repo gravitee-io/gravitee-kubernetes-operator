@@ -684,9 +684,6 @@ spec:
                 description: List of members associated with the API
                 items:
                   properties:
-                    displayName:
-                      description: Member display name
-                      type: string
                     role:
                       default: USER
                       description: The API role associated with this Member
