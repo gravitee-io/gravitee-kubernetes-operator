@@ -40,7 +40,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		By("checking that api does not pass validation")
 
-		Consistently(func() error {
+		Eventually(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.APIv4)
 			return assert.Equals(
 				"error",

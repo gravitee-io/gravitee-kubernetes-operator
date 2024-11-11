@@ -23,7 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
-// +kubebuilder:validation:Enum=PROXY;MESSAGE;
+// +kubebuilder:validation:Enum=PROXY;MESSAGE;NATIVE;
 type ApiType string
 
 // +kubebuilder:validation:Enum=PUBLISHED;UNPUBLISHED;
@@ -64,17 +64,17 @@ type Api struct {
 	// when using a management context.
 	// +kubebuilder:validation:Optional
 	Plans *map[string]*Plan `json:"plans,omitempty"`
-	// API Flow Execution
+	// API Flow Execution (Not applicable for Native API)
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	// List of flows for the API
 	Flows []*Flow `json:"flows"`
-	// API Analytics
+	// API Analytics (Not applicable for Native API)
 	Analytics *Analytics `json:"analytics,omitempty"`
-	// API Services
+	// API Services (Not applicable for Native API)
 	Services *ApiServices `json:"services,omitempty"`
-	// A list of Response Templates for the API
+	// A list of Response Templates for the API (Not applicable for Native API)
 	// +kubebuilder:validation:Optional
 	ResponseTemplates *map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
 	// List of members associated with the API
@@ -91,6 +91,10 @@ type Api struct {
 	Pages *map[string]*Page `json:"pages"`
 	// API Failover
 	Failover *Failover `json:"failover,omitempty"`
+}
+
+func (api *Api) GetType() string {
+	return string(api.Type)
 }
 
 type GatewayDefinitionApi struct {
