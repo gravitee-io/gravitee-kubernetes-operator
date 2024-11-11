@@ -2958,9 +2958,11 @@ KeyStore type (possible values PEM, PKCS12, JKS)
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The KeyStore type to use (possible values are PEM, PKCS12, JKS)<br/>
+          <br/>
+            <i>Enum</i>: PEM, PKCS12, JKS<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3006,9 +3008,11 @@ TrustStore type (possible values PEM, PKCS12, JKS)
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The TrustStore type to use (possible values are PEM, PKCS12, JKS)<br/>
+          <br/>
+            <i>Enum</i>: PEM, PKCS12, JKS<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3742,9 +3746,11 @@ KeyStore type (possible values PEM, PKCS12, JKS)
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The KeyStore type to use (possible values are PEM, PKCS12, JKS)<br/>
+          <br/>
+            <i>Enum</i>: PEM, PKCS12, JKS<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3790,9 +3796,11 @@ TrustStore type (possible values PEM, PKCS12, JKS)
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The TrustStore type to use (possible values are PEM, PKCS12, JKS)<br/>
+          <br/>
+            <i>Enum</i>: PEM, PKCS12, JKS<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4621,7 +4629,7 @@ ApiV4DefinitionSpec defines the desired state of ApiDefinition.
         <td>
           Api Type (proxy or message)<br/>
           <br/>
-            <i>Enum</i>: PROXY, MESSAGE<br/>
+            <i>Enum</i>: PROXY, MESSAGE, NATIVE<br/>
         </td>
         <td>true</td>
       </tr><tr>
@@ -4635,7 +4643,7 @@ ApiV4DefinitionSpec defines the desired state of ApiDefinition.
         <td><b><a href="#apiv4definitionspecanalytics">analytics</a></b></td>
         <td>object</td>
         <td>
-          API Analytics<br/>
+          API Analytics (Not applicable for Native API)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4703,7 +4711,7 @@ from an API instance or from a config map created in the cluster (which is the d
         <td><b><a href="#apiv4definitionspecflowexecution">flowExecution</a></b></td>
         <td>object</td>
         <td>
-          API Flow Execution<br/>
+          API Flow Execution (Not applicable for Native API)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4824,14 +4832,14 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         <td><b><a href="#apiv4definitionspecresponsetemplateskeykey">responseTemplates</a></b></td>
         <td>map[string]map[string]object</td>
         <td>
-          A list of Response Templates for the API<br/>
+          A list of Response Templates for the API (Not applicable for Native API)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apiv4definitionspecservices">services</a></b></td>
         <td>object</td>
         <td>
-          API Services<br/>
+          API Services (Not applicable for Native API)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5518,9 +5526,11 @@ KeyStore type (possible values PEM, PKCS12, JKS)
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The KeyStore type to use (possible values are PEM, PKCS12, JKS)<br/>
+          <br/>
+            <i>Enum</i>: PEM, PKCS12, JKS<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5566,9 +5576,11 @@ TrustStore type (possible values PEM, PKCS12, JKS)
         <td>false</td>
       </tr><tr>
         <td><b>type</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           The TrustStore type to use (possible values are PEM, PKCS12, JKS)<br/>
+          <br/>
+            <i>Enum</i>: PEM, PKCS12, JKS<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5580,7 +5592,7 @@ TrustStore type (possible values PEM, PKCS12, JKS)
 
 
 
-API Analytics
+API Analytics (Not applicable for Native API)
 
 <table>
     <thead>
@@ -6011,7 +6023,7 @@ API Failover
 
 
 
-API Flow Execution
+API Flow Execution (Not applicable for Native API)
 
 <table>
     <thead>
@@ -6066,11 +6078,25 @@ API Flow Execution
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionspecflowsindexconnectindex">connect</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Connect flow steps (Only available for Native APIs)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           The ID of the flow this field is mainly used for compatibility with
 APIM exports and can be safely ignored.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecflowsindexinteractindex">interact</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Publish flow steps (Only available for Native APIs)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6085,26 +6111,20 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Publish flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apiv4definitionspecflowsindexrequestindex">request</a></b></td>
         <td>[]object</td>
         <td>
-          List of Request flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
+          List of Request flow steps (NOT available for Native APIs)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apiv4definitionspecflowsindexresponseindex">response</a></b></td>
         <td>[]object</td>
         <td>
-          List of Response flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
+          List of Response flow steps (NOT available for Native APIs)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6112,8 +6132,6 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Flow selectors<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6121,8 +6139,6 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Subscribe flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6130,8 +6146,148 @@ APIM exports and can be safely ignored.<br/>
         <td>[]string</td>
         <td>
           List of tags<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.flows[index].connect[index]
+[Go to parent definition](#apiv4definitionspecflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
           <br/>
-            <i>Default</i>: []<br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.flows[index].interact[index]
+[Go to parent definition](#apiv4definitionspecflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6748,6 +6904,8 @@ that has been promoted between different environments.<br/>
         <td>string</td>
         <td>
           Plan definition version<br/>
+          <br/>
+            <i>Default</i>: V4<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6888,11 +7046,25 @@ that has been promoted between different environments.<br/>
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindexconnectindex">connect</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Connect flow steps (Only available for Native APIs)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>id</b></td>
         <td>string</td>
         <td>
           The ID of the flow this field is mainly used for compatibility with
 APIM exports and can be safely ignored.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecplanskeyflowsindexinteractindex">interact</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of Publish flow steps (Only available for Native APIs)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6907,26 +7079,20 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Publish flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apiv4definitionspecplanskeyflowsindexrequestindex">request</a></b></td>
         <td>[]object</td>
         <td>
-          List of Request flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
+          List of Request flow steps (NOT available for Native APIs)<br/>
         </td>
         <td>false</td>
       </tr><tr>
         <td><b><a href="#apiv4definitionspecplanskeyflowsindexresponseindex">response</a></b></td>
         <td>[]object</td>
         <td>
-          List of Response flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
+          List of Response flow steps (NOT available for Native APIs)<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6934,8 +7100,6 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Flow selectors<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6943,8 +7107,6 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Subscribe flow steps<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6952,8 +7114,148 @@ APIM exports and can be safely ignored.<br/>
         <td>[]string</td>
         <td>
           List of tags<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].flows[index].connect[index]
+[Go to parent definition](#apiv4definitionspecplanskeyflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
           <br/>
-            <i>Default</i>: []<br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.plans[key].flows[index].interact[index]
+[Go to parent definition](#apiv4definitionspecplanskeyflowsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>messageCondition</b></td>
+        <td>string</td>
+        <td>
+          The message condition (supports EL expressions)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7470,7 +7772,7 @@ Reference to a resource
 
 
 
-API Services
+API Services (Not applicable for Native API)
 
 <table>
     <thead>

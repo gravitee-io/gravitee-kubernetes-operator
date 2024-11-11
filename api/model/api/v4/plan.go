@@ -43,6 +43,7 @@ type Plan struct {
 	Description *string `json:"description,omitempty"`
 
 	// Plan definition version
+	// +kubebuilder:default:=`V4`
 	DefinitionVersion DefinitionVersion `json:"definitionVersion,omitempty"`
 
 	// Plan security
@@ -66,7 +67,7 @@ type Plan struct {
 	ExcludedGroups []string `json:"excludedGroups"`
 	// The general conditions defined to use this plan
 	// +kubebuilder:validation:Optional
-	GeneralConditions string `json:"generalConditions,omitempty"`
+	GeneralConditions *string `json:"generalConditions,omitempty"`
 }
 
 type GatewayDefinitionPlan struct {

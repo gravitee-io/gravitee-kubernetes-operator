@@ -129,6 +129,8 @@ const (
 	ApiV4WithMarkdownPage              = "apim/api_definition/v4/api-v4-with-page-markdown.yml"
 	ApiV4WithSwaggerHTTPFetcher        = "apim/api_definition/v4/api-v4-with-page-swagger-http-fetcher.yml"
 	ApiV4WithJWTPlanFile               = "apim/api_definition/v4/api-v4-with-jwt-plan.yml"
+	NativeApiV4                        = "apim/api_definition/v4/api-v4-native.yml"
+	NativeApiV4WithContext             = "apim/api_definition/v4/api-v4-native-with-context.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"

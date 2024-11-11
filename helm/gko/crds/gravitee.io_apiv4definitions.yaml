@@ -69,7 +69,7 @@ spec:
             description: ApiV4DefinitionSpec defines the desired state of ApiDefinition.
             properties:
               analytics:
-                description: API Analytics
+                description: API Analytics (Not applicable for Native API)
                 properties:
                   enabled:
                     default: true
@@ -481,6 +481,10 @@ spec:
                             type:
                               description: The KeyStore type to use (possible values
                                 are PEM, PKCS12, JKS)
+                              enum:
+                              - PEM
+                              - PKCS12
+                              - JKS
                               type: string
                           type: object
                         trustAll:
@@ -504,6 +508,10 @@ spec:
                             type:
                               description: The TrustStore type to use (possible values
                                 are PEM, PKCS12, JKS)
+                              enum:
+                              - PEM
+                              - PKCS12
+                              - JKS
                               type: string
                           type: object
                       required:
@@ -549,7 +557,7 @@ spec:
                     type: integer
                 type: object
               flowExecution:
-                description: API Flow Execution
+                description: API Flow Execution (Not applicable for Native API)
                 properties:
                   matchRequired:
                     description: Is match required or not ? If set to true, a 404
@@ -566,6 +574,39 @@ spec:
                 description: List of flows for the API
                 items:
                   properties:
+                    connect:
+                      description: List of Connect flow steps (Only available for
+                        Native APIs)
+                      items:
+                        properties:
+                          condition:
+                            description: FlowStep condition
+                            type: string
+                          configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          description:
+                            description: FlowStep description
+                            type: string
+                          enabled:
+                            default: true
+                            description: Indicate if this FlowStep is enabled or not
+                            type: boolean
+                          messageCondition:
+                            description: The message condition (supports EL expressions)
+                            type: string
+                          name:
+                            description: FlowStep name
+                            type: string
+                          policy:
+                            description: FlowStep policy
+                            type: string
+                        required:
+                        - enabled
+                        type: object
+                      type: array
                     enabled:
                       default: true
                       description: Is flow enabled or not?
@@ -575,11 +616,43 @@ spec:
                         The ID of the flow this field is mainly used for compatibility with
                         APIM exports and can be safely ignored.
                       type: string
+                    interact:
+                      description: List of Publish flow steps (Only available for
+                        Native APIs)
+                      items:
+                        properties:
+                          condition:
+                            description: FlowStep condition
+                            type: string
+                          configuration:
+                            description: FlowStep configuration is a map of arbitrary
+                              key-values
+                            type: object
+                            x-kubernetes-preserve-unknown-fields: true
+                          description:
+                            description: FlowStep description
+                            type: string
+                          enabled:
+                            default: true
+                            description: Indicate if this FlowStep is enabled or not
+                            type: boolean
+                          messageCondition:
+                            description: The message condition (supports EL expressions)
+                            type: string
+                          name:
+                            description: FlowStep name
+                            type: string
+                          policy:
+                            description: FlowStep policy
+                            type: string
+                        required:
+                        - enabled
+                        type: object
+                      type: array
                     name:
                       description: Flow name
                       type: string
                     publish:
-                      default: []
                       description: List of Publish flow steps
                       items:
                         properties:
@@ -612,8 +685,8 @@ spec:
                         type: object
                       type: array
                     request:
-                      default: []
-                      description: List of Request flow steps
+                      description: List of Request flow steps (NOT available for Native
+                        APIs)
                       items:
                         properties:
                           condition:
@@ -645,8 +718,8 @@ spec:
                         type: object
                       type: array
                     response:
-                      default: []
-                      description: List of Response flow steps
+                      description: List of Response flow steps (NOT available for
+                        Native APIs)
                       items:
                         properties:
                           condition:
@@ -678,14 +751,12 @@ spec:
                         type: object
                       type: array
                     selectors:
-                      default: []
                       description: List of Flow selectors
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       type: array
                     subscribe:
-                      default: []
                       description: List of Subscribe flow steps
                       items:
                         properties:
@@ -718,7 +789,6 @@ spec:
                         type: object
                       type: array
                     tags:
-                      default: []
                       description: List of tags
                       items:
                         type: string
@@ -947,6 +1017,7 @@ spec:
                         that has been promoted between different environments.
                       type: string
                     definitionVersion:
+                      default: V4
                       description: Plan definition version
                       type: string
                     description:
@@ -962,6 +1033,41 @@ spec:
                       description: List of plan flows
                       items:
                         properties:
+                          connect:
+                            description: List of Connect flow steps (Only available
+                              for Native APIs)
+                            items:
+                              properties:
+                                condition:
+                                  description: FlowStep condition
+                                  type: string
+                                configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                description:
+                                  description: FlowStep description
+                                  type: string
+                                enabled:
+                                  default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
+                                  type: boolean
+                                messageCondition:
+                                  description: The message condition (supports EL
+                                    expressions)
+                                  type: string
+                                name:
+                                  description: FlowStep name
+                                  type: string
+                                policy:
+                                  description: FlowStep policy
+                                  type: string
+                              required:
+                              - enabled
+                              type: object
+                            type: array
                           enabled:
                             default: true
                             description: Is flow enabled or not?
@@ -971,11 +1077,45 @@ spec:
                               The ID of the flow this field is mainly used for compatibility with
                               APIM exports and can be safely ignored.
                             type: string
+                          interact:
+                            description: List of Publish flow steps (Only available
+                              for Native APIs)
+                            items:
+                              properties:
+                                condition:
+                                  description: FlowStep condition
+                                  type: string
+                                configuration:
+                                  description: FlowStep configuration is a map of
+                                    arbitrary key-values
+                                  type: object
+                                  x-kubernetes-preserve-unknown-fields: true
+                                description:
+                                  description: FlowStep description
+                                  type: string
+                                enabled:
+                                  default: true
+                                  description: Indicate if this FlowStep is enabled
+                                    or not
+                                  type: boolean
+                                messageCondition:
+                                  description: The message condition (supports EL
+                                    expressions)
+                                  type: string
+                                name:
+                                  description: FlowStep name
+                                  type: string
+                                policy:
+                                  description: FlowStep policy
+                                  type: string
+                              required:
+                              - enabled
+                              type: object
+                            type: array
                           name:
                             description: Flow name
                             type: string
                           publish:
-                            default: []
                             description: List of Publish flow steps
                             items:
                               properties:
@@ -1010,8 +1150,8 @@ spec:
                               type: object
                             type: array
                           request:
-                            default: []
-                            description: List of Request flow steps
+                            description: List of Request flow steps (NOT available
+                              for Native APIs)
                             items:
                               properties:
                                 condition:
@@ -1045,8 +1185,8 @@ spec:
                               type: object
                             type: array
                           response:
-                            default: []
-                            description: List of Response flow steps
+                            description: List of Response flow steps (NOT available
+                              for Native APIs)
                             items:
                               properties:
                                 condition:
@@ -1080,14 +1220,12 @@ spec:
                               type: object
                             type: array
                           selectors:
-                            default: []
                             description: List of Flow selectors
                             items:
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             type: array
                           subscribe:
-                            default: []
                             description: List of Subscribe flow steps
                             items:
                               properties:
@@ -1122,7 +1260,6 @@ spec:
                               type: object
                             type: array
                           tags:
-                            default: []
                             description: List of tags
                             items:
                               type: string
@@ -1275,10 +1412,11 @@ spec:
                         type: integer
                     type: object
                   type: object
-                description: A list of Response Templates for the API
+                description: A list of Response Templates for the API (Not applicable
+                  for Native API)
                 type: object
               services:
-                description: API Services
+                description: API Services (Not applicable for Native API)
                 properties:
                   dynamicProperty:
                     description: API dynamic property service
@@ -1319,6 +1457,7 @@ spec:
                 enum:
                 - PROXY
                 - MESSAGE
+                - NATIVE
                 type: string
               version:
                 description: API version
