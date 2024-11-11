@@ -110,7 +110,9 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 			return err
 		}
 		cp.PopulateIDs(apimClient.Context)
+
 		status, err := apimClient.APIs.ImportV4(&spec.Api)
+
 		if err != nil {
 			return err
 		}

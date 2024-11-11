@@ -20,7 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
-// +kubebuilder:validation:Enum=HTTP;SUBSCRIPTION;TCP;
+// +kubebuilder:validation:Enum=HTTP;SUBSCRIPTION;TCP;KAFKA;
 type ListenerType string
 
 // +kubebuilder:validation:Enum=NONE;AUTO;AT_MOST_ONCE;AT_LEAST_ONCE;
@@ -30,6 +30,7 @@ const (
 	HTTPListenerType         ListenerType = "HTTP"
 	SubscriptionListenerType ListenerType = "SUBSCRIPTION"
 	TCPListenerType          ListenerType = "TCP"
+	KafkaType                ListenerType = "KAFKA"
 )
 
 const (
@@ -72,6 +73,8 @@ func (l *GenericListener) ToListener() Listener {
 		listener = new(SubscriptionListener)
 	case TCPListenerType:
 		listener = new(TCPListener)
+	case KafkaType:
+		listener = new(KafkaListener)
 	}
 
 	_ = json.Unmarshal(body, listener)
@@ -163,6 +166,28 @@ func (l *TCPListener) ListenerType() ListenerType {
 	return l.Type
 }
 
+type KafkaListener struct {
+	*AbstractListener `json:",inline"`
+	// Kafka server hostname
+	// +kubebuilder:validation:Required
+	Host string `json:"host"`
+
+	// Kafka server port number
+	// +kubebuilder:validation:Required
+	Port int `json:"port"`
+}
+
+func (l *KafkaListener) ToGatewayDefinition() *KafkaListener {
+	listener := l.DeepCopy()
+	listener.AbstractListener = l.AbstractListener.ToGatewayDefinition()
+
+	return listener
+}
+
+func (l *KafkaListener) ListenerType() ListenerType {
+	return l.Type
+}
+
 type Path struct {
 	// +kubebuilder:validation:Optional
 	Host string `json:"host,omitempty"`
@@ -173,17 +198,17 @@ type Path struct {
 type Entrypoint struct {
 	// +kubebuilder:validation:Required
 	Type string `json:"type"`
-	// +kubebuilder:validation:Required
-	// +kubebuilder:default:=`AUTO`
-	Qos QosType `json:"qos"`
-	Dlq *DLQ    `json:"dlq,omitempty"`
+	// +kubebuilder:validation:Optional
+	Qos *QosType `json:"qos,omitempty"`
+	Dlq *DLQ     `json:"dlq,omitempty"`
 	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
 
 func (ep *Entrypoint) ToGatewayDefinition() *Entrypoint {
 	entryPoint := ep.DeepCopy()
-	entryPoint.Qos = QosType(Enum(ep.Qos).ToGatewayDefinition())
+	qosType := QosType(Enum(*ep.Qos).ToGatewayDefinition())
+	entryPoint.Qos = &qosType
 	if ep.Dlq != nil && ep.Dlq.Endpoint == nil {
 		entryPoint.Dlq = nil
 	}
@@ -199,6 +224,8 @@ func ToListenerGatewayDefinition(l Listener) *GenericListener {
 	case *SubscriptionListener:
 		return ToGenericListener(t.ToGatewayDefinition())
 	case *TCPListener:
+		return ToGenericListener(t.ToGatewayDefinition())
+	case *KafkaListener:
 		return ToGenericListener(t.ToGatewayDefinition())
 	}
 
