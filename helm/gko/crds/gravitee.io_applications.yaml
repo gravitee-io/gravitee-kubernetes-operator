@@ -95,9 +95,6 @@ spec:
                 description: Application members
                 items:
                   properties:
-                    displayName:
-                      description: Member display name
-                      type: string
                     role:
                       default: USER
                       description: The API role associated with this Member

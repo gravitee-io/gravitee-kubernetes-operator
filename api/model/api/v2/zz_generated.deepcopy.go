@@ -138,7 +138,7 @@ func (in *Api) DeepCopyInto(out *Api) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(base.Member)
-				(*in).DeepCopyInto(*out)
+				**out = **in
 			}
 		}
 	}

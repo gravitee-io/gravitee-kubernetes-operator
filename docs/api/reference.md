@@ -1068,13 +1068,6 @@ List of path operators
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>displayName</b></td>
-        <td>string</td>
-        <td>
-          Member display name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>role</b></td>
         <td>string</td>
         <td>
@@ -6020,13 +6013,6 @@ APIM exports and can be safely ignored.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>displayName</b></td>
-        <td>string</td>
-        <td>
-          Member display name<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
         <td><b>role</b></td>
         <td>string</td>
         <td>
@@ -7622,13 +7608,6 @@ Application settings
           Member source ID<br/>
         </td>
         <td>true</td>
-      </tr><tr>
-        <td><b>displayName</b></td>
-        <td>string</td>
-        <td>
-          Member display name<br/>
-        </td>
-        <td>false</td>
       </tr><tr>
         <td><b>role</b></td>
         <td>string</td>
