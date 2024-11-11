@@ -14,13 +14,8 @@
 
 package base
 
+// +kubebuilder:validation:Enum=PEM;PKCS12;JKS;
 type KeyStoreType string
-
-const (
-	PEM KeyStoreType = "PEM"
-	PKCS12
-	JKS
-)
 
 type TrustStore struct {
 	// The TrustStore type to use (possible values are PEM, PKCS12, JKS)

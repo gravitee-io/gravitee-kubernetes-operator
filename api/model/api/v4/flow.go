@@ -35,33 +35,35 @@ type Flow struct {
 
 	// List of Flow selectors
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Selectors []*FlowSelector `json:"selectors"`
+	Selectors []*FlowSelector `json:"selectors,omitempty"`
 
-	// List of Request flow steps
+	// List of Request flow steps (NOT available for Native APIs)
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Request []*FlowStep `json:"request"`
+	Request []*FlowStep `json:"request,omitempty"`
 
-	// List of Response flow steps
+	// List of Response flow steps (NOT available for Native APIs)
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Response []*FlowStep `json:"response"`
+	Response []*FlowStep `json:"response,omitempty"`
 
 	// List of Subscribe flow steps
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Subscribe []*FlowStep `json:"subscribe"`
+	Subscribe []*FlowStep `json:"subscribe,omitempty"`
 
 	// List of Publish flow steps
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Publish []*FlowStep `json:"publish"`
+	Publish []*FlowStep `json:"publish,omitempty"`
+
+	// List of Connect flow steps (Only available for Native APIs)
+	// +kubebuilder:validation:Optional
+	Connect []*FlowStep `json:"connect,omitempty"`
+
+	// List of Publish flow steps (Only available for Native APIs)
+	// +kubebuilder:validation:Optional
+	Interact []*FlowStep `json:"interact,omitempty"`
 
 	// List of tags
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Tags []string `json:"tags"`
+	Tags []string `json:"tags,omitempty"`
 }
 
 func NewFlow(name string) *Flow {
@@ -77,11 +79,11 @@ func NewFlow(name string) *Flow {
 	}
 }
 
-func (fl Flow) ToGatewayDefinition() *Flow {
+func (fl *Flow) ToGatewayDefinition() *Flow {
 	for i := range fl.Selectors {
 		fl.Selectors[i] = fl.Selectors[i].ToGatewayDefinition()
 	}
-	return &fl
+	return fl
 }
 
 type FlowStep struct {

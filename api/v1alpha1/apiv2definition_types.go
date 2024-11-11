@@ -79,6 +79,10 @@ type ApiDefinition struct {
 	Status ApiDefinitionStatus `json:"status,omitempty"`
 }
 
+func (api *ApiDefinition) GetType() string {
+	return ""
+}
+
 func (api *ApiDefinition) GetNamespacedName() *refs.NamespacedName {
 	return &refs.NamespacedName{Namespace: api.Namespace, Name: api.Name}
 }

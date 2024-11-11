@@ -66,6 +66,10 @@ type ApiV4Definition struct {
 	Status ApiV4DefinitionStatus `json:"status,omitempty"`
 }
 
+func (api *ApiV4Definition) GetType() string {
+	return string(api.Spec.Type)
+}
+
 func (api *ApiV4Definition) ToGatewayDefinition() v4.GatewayDefinitionApi {
 	cp := api.DeepCopy()
 	return cp.Spec.Api.ToGatewayDefinition()

@@ -76,6 +76,7 @@ type ApiDefinitionModel interface {
 	HasPlans() bool
 	GetPlan(string) PlanModel
 	IsStopped() bool
+	GetType() string
 }
 
 // +k8s:deepcopy-gen=false
