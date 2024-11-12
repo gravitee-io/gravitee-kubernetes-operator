@@ -51,7 +51,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			},
 		}
 
-		fixtures.API.Spec.Pages["markdown"].AccessControls = acl
+		(*fixtures.API.Spec.Pages)["markdown"].AccessControls = acl
 
 		By("initializing a group in APIM")
 
@@ -71,7 +71,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 				return xErr
 			}
 
-			page := api.Spec.Pages["hello-markdown"]
+			page := (*api.Spec.Pages)["hello-markdown"]
 
 			if err := assert.NotNil("page", page); err != nil {
 				return err

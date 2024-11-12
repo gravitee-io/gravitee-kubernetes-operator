@@ -144,18 +144,22 @@ func (in *Api) DeepCopyInto(out *Api) {
 	}
 	if in.Pages != nil {
 		in, out := &in.Pages, &out.Pages
-		*out = make(map[string]*Page, len(*in))
-		for key, val := range *in {
-			var outVal *Page
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				inVal := (*in)[key]
-				in, out := &inVal, &outVal
-				*out = new(Page)
-				(*in).DeepCopyInto(*out)
+		*out = new(map[string]*Page)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]*Page, len(*in))
+			for key, val := range *in {
+				var outVal *Page
+				if val == nil {
+					(*out)[key] = nil
+				} else {
+					inVal := (*in)[key]
+					in, out := &inVal, &outVal
+					*out = new(Page)
+					(*in).DeepCopyInto(*out)
+				}
+				(*out)[key] = outVal
 			}
-			(*out)[key] = outVal
 		}
 	}
 }
@@ -382,9 +386,13 @@ func (in *EndpointGroup) DeepCopyInto(out *EndpointGroup) {
 	}
 	if in.Headers != nil {
 		in, out := &in.Headers, &out.Headers
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
 		}
 	}
 }
@@ -741,20 +749,24 @@ func (in *Plan) DeepCopyInto(out *Plan) {
 	}
 	if in.Paths != nil {
 		in, out := &in.Paths, &out.Paths
-		*out = make(map[string][]Rule, len(*in))
-		for key, val := range *in {
-			var outVal []Rule
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				inVal := (*in)[key]
-				in, out := &inVal, &outVal
-				*out = make([]Rule, len(*in))
-				for i := range *in {
-					(*in)[i].DeepCopyInto(&(*out)[i])
+		*out = new(map[string][]Rule)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string][]Rule, len(*in))
+			for key, val := range *in {
+				var outVal []Rule
+				if val == nil {
+					(*out)[key] = nil
+				} else {
+					inVal := (*in)[key]
+					in, out := &inVal, &outVal
+					*out = make([]Rule, len(*in))
+					for i := range *in {
+						(*in)[i].DeepCopyInto(&(*out)[i])
+					}
 				}
+				(*out)[key] = outVal
 			}
-			(*out)[key] = outVal
 		}
 	}
 	if in.Api != nil {

@@ -38,7 +38,7 @@ var _ = Describe("Validate create", labels.WithoutContext, func() {
 
 		By("updating plan security")
 
-		fixtures.APIv4.Spec.Plans["KeyLess"].Security.Type = "[[ secret `missing-secret/security` ]]"
+		(*fixtures.APIv4.Spec.Plans)["KeyLess"].Security.Type = "[[ secret `missing-secret/security` ]]"
 
 		By("checking that API V4 creation does not pass validation")
 

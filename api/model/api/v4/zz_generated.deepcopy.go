@@ -122,18 +122,22 @@ func (in *Api) DeepCopyInto(out *Api) {
 	}
 	if in.Plans != nil {
 		in, out := &in.Plans, &out.Plans
-		*out = make(map[string]*Plan, len(*in))
-		for key, val := range *in {
-			var outVal *Plan
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				inVal := (*in)[key]
-				in, out := &inVal, &outVal
-				*out = new(Plan)
-				(*in).DeepCopyInto(*out)
+		*out = new(map[string]*Plan)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]*Plan, len(*in))
+			for key, val := range *in {
+				var outVal *Plan
+				if val == nil {
+					(*out)[key] = nil
+				} else {
+					inVal := (*in)[key]
+					in, out := &inVal, &outVal
+					*out = new(Plan)
+					(*in).DeepCopyInto(*out)
+				}
+				(*out)[key] = outVal
 			}
-			(*out)[key] = outVal
 		}
 	}
 	if in.FlowExecution != nil {
@@ -164,29 +168,33 @@ func (in *Api) DeepCopyInto(out *Api) {
 	}
 	if in.ResponseTemplates != nil {
 		in, out := &in.ResponseTemplates, &out.ResponseTemplates
-		*out = make(map[string]map[string]*base.ResponseTemplate, len(*in))
-		for key, val := range *in {
-			var outVal map[string]*base.ResponseTemplate
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				inVal := (*in)[key]
-				in, out := &inVal, &outVal
-				*out = make(map[string]*base.ResponseTemplate, len(*in))
-				for key, val := range *in {
-					var outVal *base.ResponseTemplate
-					if val == nil {
-						(*out)[key] = nil
-					} else {
-						inVal := (*in)[key]
-						in, out := &inVal, &outVal
-						*out = new(base.ResponseTemplate)
-						(*in).DeepCopyInto(*out)
+		*out = new(map[string]map[string]*base.ResponseTemplate)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]map[string]*base.ResponseTemplate, len(*in))
+			for key, val := range *in {
+				var outVal map[string]*base.ResponseTemplate
+				if val == nil {
+					(*out)[key] = nil
+				} else {
+					inVal := (*in)[key]
+					in, out := &inVal, &outVal
+					*out = make(map[string]*base.ResponseTemplate, len(*in))
+					for key, val := range *in {
+						var outVal *base.ResponseTemplate
+						if val == nil {
+							(*out)[key] = nil
+						} else {
+							inVal := (*in)[key]
+							in, out := &inVal, &outVal
+							*out = new(base.ResponseTemplate)
+							(*in).DeepCopyInto(*out)
+						}
+						(*out)[key] = outVal
 					}
-					(*out)[key] = outVal
 				}
+				(*out)[key] = outVal
 			}
-			(*out)[key] = outVal
 		}
 	}
 	if in.Members != nil {
@@ -202,18 +210,22 @@ func (in *Api) DeepCopyInto(out *Api) {
 	}
 	if in.Pages != nil {
 		in, out := &in.Pages, &out.Pages
-		*out = make(map[string]*Page, len(*in))
-		for key, val := range *in {
-			var outVal *Page
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				inVal := (*in)[key]
-				in, out := &inVal, &outVal
-				*out = new(Page)
-				(*in).DeepCopyInto(*out)
+		*out = new(map[string]*Page)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]*Page, len(*in))
+			for key, val := range *in {
+				var outVal *Page
+				if val == nil {
+					(*out)[key] = nil
+				} else {
+					inVal := (*in)[key]
+					in, out := &inVal, &outVal
+					*out = new(Page)
+					(*in).DeepCopyInto(*out)
+				}
+				(*out)[key] = outVal
 			}
-			(*out)[key] = outVal
 		}
 	}
 }
@@ -371,9 +383,13 @@ func (in *EndpointGroup) DeepCopyInto(out *EndpointGroup) {
 	}
 	if in.Headers != nil {
 		in, out := &in.Headers, &out.Headers
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
 		}
 	}
 }
