@@ -91,5 +91,5 @@ type Page struct {
 	Source *PageSource `json:"source,omitempty"`
 	// +kubebuilder:validation:Optional
 	// Custom page configuration (e.g. page rendering can be changed to use Redoc instead of Swagger ui)
-	Configuration map[string]string `json:"configuration,omitempty"`
+	Configuration *map[string]string `json:"configuration,omitempty"`
 }

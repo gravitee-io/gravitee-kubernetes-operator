@@ -47,7 +47,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		By("updating markdown content")
 
-		markdown := fixtures.API.Spec.Pages["markdown"]
+		markdown := (*fixtures.API.Spec.Pages)["markdown"]
 		updatedContent := *markdown.Content + "\n" + "This is an update."
 		markdown.Content = &updatedContent
 

@@ -116,7 +116,7 @@ type EndpointGroup struct {
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
 	// Endpoint group headers, arbitrary map of key-values
 	// +kubebuilder:validation:Optional
-	Headers map[string]string `json:"headers,omitempty"`
+	Headers *map[string]string `json:"headers,omitempty"`
 }
 
 func NewHttpEndpointGroup(name string) *EndpointGroup {

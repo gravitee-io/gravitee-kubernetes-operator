@@ -46,7 +46,7 @@ type Plan struct {
 	SecurityDefinition *string `json:"securityDefinition,omitempty"`
 	// A map of different paths (alongside their Rules) for this Plan
 	// +kubebuilder:validation:Optional
-	Paths map[string][]Rule `json:"paths,omitempty"`
+	Paths *map[string][]Rule `json:"paths,omitempty"`
 	// Specify the API associated with this plan
 	// +kubebuilder:validation:Optional
 	Api *string `json:"api,omitempty"`
@@ -62,10 +62,11 @@ type Plan struct {
 }
 
 func NewPlan(base *base.Plan) *Plan {
+	paths := make(map[string][]Rule)
 	return &Plan{
 		Plan:  base,
 		Flows: []Flow{},
-		Paths: make(map[string][]Rule),
+		Paths: &paths,
 	}
 }
 
