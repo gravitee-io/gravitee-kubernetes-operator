@@ -39,7 +39,7 @@ var _ = Describe("Validate update", labels.WithoutContext, func() {
 
 		By("updating plan security")
 
-		fixtures.APIv4.Spec.Plans["KeyLess"].Security.Type = "[[ configmap `graviteeio-templating/unknown` ]]"
+		(*fixtures.APIv4.Spec.Plans)["KeyLess"].Security.Type = "[[ configmap `graviteeio-templating/unknown` ]]"
 
 		By("checking that API V4 update does not pass validation")
 

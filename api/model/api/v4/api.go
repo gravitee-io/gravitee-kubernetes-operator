@@ -63,7 +63,7 @@ type Api struct {
 	// Keys uniquely identify plans and are used to keep them in sync
 	// when using a management context.
 	// +kubebuilder:validation:Optional
-	Plans map[string]*Plan `json:"plans,omitempty"`
+	Plans *map[string]*Plan `json:"plans,omitempty"`
 	// API Flow Execution
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -76,7 +76,7 @@ type Api struct {
 	Services *ApiServices `json:"services,omitempty"`
 	// A list of Response Templates for the API
 	// +kubebuilder:validation:Optional
-	ResponseTemplates map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
+	ResponseTemplates *map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
 	// List of members associated with the API
 	// +kubebuilder:validation:Optional
 	Members []*base.Member `json:"members,omitempty"`
@@ -88,7 +88,7 @@ type Api struct {
 	//
 	// Renaming a key is the equivalent of deleting the page and recreating
 	// it holding a new ID in APIM.
-	Pages map[string]*Page `json:"pages"`
+	Pages *map[string]*Page `json:"pages"`
 }
 
 type GatewayDefinitionApi struct {
@@ -184,7 +184,7 @@ func (api *Api) GetState() string {
 }
 
 func (api *Api) HasPlans() bool {
-	return len(api.Plans) > 0
+	return api.Plans != nil && len(*api.Plans) > 0
 }
 
 // Converts the API to its gateway definition equivalent.
@@ -205,9 +205,12 @@ func (api *Api) ToGatewayDefinition() GatewayDefinitionApi {
 
 func (api *Api) getGatewayDefinitionPlans() []*GatewayDefinitionPlan {
 	plans := make([]*GatewayDefinitionPlan, 0)
-	for name, plan := range api.Plans {
-		plans = append(plans, plan.ToGatewayDefinition(name))
+	if api.Plans != nil {
+		for name, plan := range *api.Plans {
+			plans = append(plans, plan.ToGatewayDefinition(name))
+		}
 	}
+
 	return plans
 }
 

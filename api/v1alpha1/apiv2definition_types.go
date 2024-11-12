@@ -193,9 +193,13 @@ func (api *ApiDefinition) generateEmptyPlanIDs() {
 }
 
 func (api *ApiDefinition) generatePageIDs() {
+	if api.Spec.Pages == nil {
+		return
+	}
+
 	spec := &api.Spec
 	pages := spec.Pages
-	for name, page := range pages {
+	for name, page := range *pages {
 		page.API = &spec.ID
 		apiName := api.GetNamespacedName().String()
 		if page.CrossID == "" {
