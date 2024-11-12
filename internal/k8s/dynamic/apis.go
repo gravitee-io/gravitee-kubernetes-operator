@@ -90,8 +90,9 @@ func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel
 }
 
 func isExcluded(item unstructured.Unstructured, opts ListOptions) bool {
-	ns := item.Object["metadata"].(map[string]interface{})["namespace"]
-	name := item.Object["metadata"].(map[string]interface{})["name"]
+	metadata, _ := item.Object["metadata"].(map[string]interface{})
+	ns := metadata["namespace"]
+	name := metadata["name"]
 	for _, excluded := range opts.Excluded {
 		if excluded.GetName() == name && excluded.GetNamespace() == ns {
 			return true
