@@ -57,7 +57,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 		By("deleting markdown page")
 
-		delete(fixtures.API.Spec.Pages, "markdown")
+		delete(*fixtures.API.Spec.Pages, "markdown")
 
 		Eventually(func() error {
 			return manager.UpdateSafely(ctx, fixtures.API)

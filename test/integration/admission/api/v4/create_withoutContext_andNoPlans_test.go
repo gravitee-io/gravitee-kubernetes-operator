@@ -38,7 +38,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		By("removing existing plans")
 
-		clear(fixtures.APIv4.Spec.Plans)
+		clear(*fixtures.APIv4.Spec.Plans)
 
 		By("checking that API validation returns errors")
 

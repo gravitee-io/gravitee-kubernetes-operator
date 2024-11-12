@@ -56,7 +56,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("checking swagger content in APIM")
 
-		swagger := fixtures.APIv4.Spec.Pages["swagger"]
+		swagger := (*fixtures.APIv4.Spec.Pages)["swagger"]
 		Expect(swagger).ToNot(BeNil())
 
 		Eventually(func() error {

@@ -56,7 +56,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("checking markdown content in APIM")
 
-		markdown := fixtures.APIv4.Spec.Pages["markdown"]
+		markdown := (*fixtures.APIv4.Spec.Pages)["markdown"]
 
 		Expect(markdown).ToNot(BeNil())
 

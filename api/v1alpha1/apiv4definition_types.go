@@ -128,9 +128,13 @@ func (api *ApiV4Definition) pickCrossID() string {
 	return uuid.FromStrings(namespacedName.String())
 }
 
-func (api *ApiV4Definition) pickPlanIDs() map[string]*v4.Plan {
-	plans := make(map[string]*v4.Plan, len(api.Spec.Plans))
-	for key, plan := range api.Spec.Plans {
+func (api *ApiV4Definition) pickPlanIDs() *map[string]*v4.Plan {
+	if !api.HasPlans() {
+		return nil
+	}
+
+	plans := make(map[string]*v4.Plan, len(*api.Spec.Plans))
+	for key, plan := range *api.Spec.Plans {
 		p := plan.DeepCopy()
 		if id, ok := api.Status.Plans[key]; ok {
 			p.ID = id
@@ -140,12 +144,16 @@ func (api *ApiV4Definition) pickPlanIDs() map[string]*v4.Plan {
 		}
 		plans[key] = p
 	}
-	return plans
+	return &plans
 }
 
-func (api *ApiV4Definition) pickPageIDs() map[string]*v4.Page {
-	pages := make(map[string]*v4.Page, len(api.Spec.Pages))
-	for name, page := range api.Spec.Pages {
+func (api *ApiV4Definition) pickPageIDs() *map[string]*v4.Page {
+	if api.Spec.Pages == nil {
+		return nil
+	}
+
+	pages := make(map[string]*v4.Page, len(*api.Spec.Pages))
+	for name, page := range *api.Spec.Pages {
 		p := page.DeepCopy()
 
 		p.API = &api.Spec.ID
@@ -163,7 +171,7 @@ func (api *ApiV4Definition) pickPageIDs() map[string]*v4.Page {
 
 		pages[name] = p
 	}
-	return pages
+	return &pages
 }
 
 // GetEnvID implements custom.ApiDefinition.

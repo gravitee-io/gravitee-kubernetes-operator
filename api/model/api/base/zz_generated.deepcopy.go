@@ -571,9 +571,13 @@ func (in *Page) DeepCopyInto(out *Page) {
 	}
 	if in.Configuration != nil {
 		in, out := &in.Configuration, &out.Configuration
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
 		}
 	}
 }
@@ -835,9 +839,13 @@ func (in *ResponseTemplate) DeepCopyInto(out *ResponseTemplate) {
 	}
 	if in.Headers != nil {
 		in, out := &in.Headers, &out.Headers
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
+		*out = new(map[string]string)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make(map[string]string, len(*in))
+			for key, val := range *in {
+				(*out)[key] = val
+			}
 		}
 	}
 	if in.Body != nil {
