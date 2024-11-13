@@ -5571,7 +5571,7 @@ If the value is `KUBERNETES`, the API definition will be sourced from a config m
 This means that only gateways deployed in the same cluster will be able to sync the API definition.<br/>
           <br/>
             <i>Enum</i>: KUBERNETES, MANAGEMENT<br/>
-            <i>Default</i>: KUBERNETES<br/>
+            <i>Default</i>: MANAGEMENT<br/>
         </td>
         <td>false</td>
       </tr></tbody>

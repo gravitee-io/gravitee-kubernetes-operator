@@ -207,7 +207,7 @@ spec:
                     - KUBERNETES
                     type: string
                   syncFrom:
-                    default: KUBERNETES
+                    default: MANAGEMENT
                     description: |-
                       The syncFrom field defines where the gateways should source the API definition from.
                       If the value is `MANAGEMENT`, the API definition will be sourced from an APIM instance.

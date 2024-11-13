@@ -123,7 +123,7 @@ type DefinitionContext struct {
 	// gateways deployed across multiple clusters / regions.
 	// If the value is `KUBERNETES`, the API definition will be sourced from a config map.
 	// This means that only gateways deployed in the same cluster will be able to sync the API definition.
-	// +kubebuilder:default:=`KUBERNETES`
+	// +kubebuilder:default:=`MANAGEMENT`
 	// +kubebuilder:validation:Enum=KUBERNETES;MANAGEMENT;
 	SyncFrom DefinitionContextOrigin `json:"syncFrom,omitempty"`
 }
