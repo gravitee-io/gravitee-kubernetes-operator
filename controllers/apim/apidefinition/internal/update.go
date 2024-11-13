@@ -80,6 +80,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	}
 
 	if spec.IsLocal {
+		retrieveMgmtPlanIds(spec, status)
 		return updateConfigMap(ctx, cp)
 	}
 
@@ -135,4 +136,15 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		}
 	}
 	return nil
+}
+
+// Retrieve the plan ids from the API CRD status.
+func retrieveMgmtPlanIds(spec *v1alpha1.ApiDefinitionV2Spec, status *base.Status) {
+	plans := spec.Plans
+	planIds := status.Plans
+
+	for _, plan := range plans {
+		plan.ID = planIds[plan.CrossID]
+		plan.Api = &status.ID
+	}
 }
