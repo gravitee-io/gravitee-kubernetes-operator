@@ -42,7 +42,7 @@ func toBasicAuth(auth core.Auth) *http.BasicAuth {
 }
 
 func toBearer(auth core.Auth) http.BearerToken {
-	if auth == nil {
+	if auth == nil || auth.GetBearerToken() == "" {
 		return ""
 	}
 
