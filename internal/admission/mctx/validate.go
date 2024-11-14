@@ -94,16 +94,23 @@ func validateSecretRef(ctx context.Context, context core.ContextObject) *errors.
 }
 
 func validateContextIsAvailable(ctx context.Context, context core.ContextObject) *errors.AdmissionError {
-	apim, err := apim.FromContext(ctx, context, context.GetNamespace())
+	var apimClient *apim.APIM
+	var err error
+	if context.HasSecretRef() || (context.HasCloud() && context.GetCloud().HasSecretRef()) {
+		apimClient, err = apim.FromContextRef(ctx, context.GetRef(), context.GetNamespace())
+	} else {
+		apimClient, err = apim.FromContext(ctx, context, context.GetNamespace())
+	}
+
 	if err != nil {
 		return errors.NewSevere(err.Error())
 	}
-	_, err = apim.Env.Get()
+	_, err = apimClient.Env.Get()
 
 	if errors.IsNetworkError(err) {
 		return errors.NewWarningf(
 			"unable to reach APIM, [%s] is not available",
-			apim.Context.GetURL(),
+			apimClient.Context.GetURL(),
 		)
 	}
 
