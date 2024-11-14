@@ -131,7 +131,7 @@ type DefinitionContext struct {
 func NewDefaultKubernetesContext() *DefinitionContext {
 	return &DefinitionContext{
 		Origin:   OriginKubernetes,
-		SyncFrom: OriginKubernetes,
+		SyncFrom: OriginManagement,
 	}
 }
 

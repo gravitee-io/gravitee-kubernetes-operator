@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"time"
 
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -35,7 +37,11 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 	DescribeTable("without a management context",
 		func(builder *fixture.FSBuilder, status int) {
-			fixtures := builder.Build().Apply()
+			fixtures := builder.Build()
+
+			fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+			fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+			fixtures.Apply()
 
 			By("expecting API status to be completed")
 

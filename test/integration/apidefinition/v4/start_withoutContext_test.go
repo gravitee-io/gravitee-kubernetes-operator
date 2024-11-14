@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"time"
 
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -40,8 +42,11 @@ var _ = Describe("Start", labels.WithoutContext, func() {
 	It("should start API V4", func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4WithStateStopped).
-			Build().
-			Apply()
+			Build()
+
+		fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+		fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+		fixtures.Apply()
 
 		endpoint := constants.BuildAPIV4Endpoint(fixtures.APIv4.Spec.Listeners[0])
 
