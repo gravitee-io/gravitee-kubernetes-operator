@@ -17,6 +17,8 @@ package dynamic
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
@@ -38,8 +40,15 @@ func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (*
 }
 
 func injectSecretIfAny(ctx context.Context, mCtx *management.Context, parentNs string) (*management.Context, error) {
-	if mCtx.HasSecretRef() {
-		secret, err := ResolveSecret(ctx, mCtx.SecretRef(), parentNs)
+	if mCtx.HasSecretRef() || (mCtx.HasCloud() && mCtx.Cloud.HasSecretRef()) { //nolint:nestif // normal complexity
+		var ref *refs.NamespacedName
+		if mCtx.HasSecretRef() {
+			ref = mCtx.SecretRef()
+		} else {
+			ref = mCtx.Cloud.SecretRef
+		}
+
+		secret, err := ResolveSecret(ctx, ref, parentNs)
 		if err != nil {
 			return nil, err
 		}

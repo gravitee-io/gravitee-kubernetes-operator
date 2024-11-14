@@ -17,6 +17,10 @@ package managementcontext
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -30,6 +34,7 @@ import (
 
 var _ = Describe("Default create", labels.WithContext, func() {
 	interval := constants.Interval
+	timeout := constants.EventualTimeout
 	ctx := context.Background()
 	admissionCtrl := mctx.AdmissionCtrl{}
 
@@ -42,6 +47,14 @@ var _ = Describe("Default create", labels.WithContext, func() {
 			WithContext(constants.ContextCloudWithSecretRefFile).
 			Build().
 			Apply()
+
+		secret := &v1.Secret{}
+		Eventually(func() error {
+			return manager.Client().Get(ctx, types.NamespacedName{
+				Name:      fixtures.Secrets[0].Name,
+				Namespace: fixtures.Context.Namespace,
+			}, secret)
+		}, timeout, interval).Should(Succeed())
 
 		By("defaulting the context")
 
