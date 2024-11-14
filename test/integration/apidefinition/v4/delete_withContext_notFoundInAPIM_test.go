@@ -18,6 +18,8 @@ import (
 	"net/http"
 	"time"
 
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -44,7 +46,11 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithSecretFile).
 			WithAPIv4(constants.ApiV4WithContextFile).
-			Build().Apply()
+			Build()
+
+		fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+		fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+		fixtures.Apply()
 
 		By("deleting the API v4 in APIM")
 

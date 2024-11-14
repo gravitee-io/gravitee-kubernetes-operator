@@ -45,8 +45,11 @@ var _ = Describe("Update", labels.WithContext, func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4).
 			WithContext(constants.ContextWithSecretFile).
-			Build().
-			Apply()
+			Build()
+
+		fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+		fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+		fixtures.Apply()
 
 		By("expecting API V4 status to be completed")
 

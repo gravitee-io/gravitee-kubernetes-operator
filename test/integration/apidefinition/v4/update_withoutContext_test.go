@@ -44,8 +44,11 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 	It("should update api definition V4", func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4).
-			Build().
-			Apply()
+			Build()
+
+		fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+		fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+		fixtures.Apply()
 
 		By("calling gateway endpoint, expecting status 200")
 

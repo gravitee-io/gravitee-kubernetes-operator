@@ -17,6 +17,8 @@ package apiresource
 import (
 	"context"
 
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -39,8 +41,11 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4).
 			WithResource(constants.ApiResourceCacheFile).
-			Build().
-			Apply()
+			Build()
+
+		fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+		fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+		fixtures.Apply()
 
 		By("deleting API V4 resource")
 

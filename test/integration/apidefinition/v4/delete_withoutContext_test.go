@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"time"
 
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -43,8 +45,11 @@ var _ = Describe("Delete", labels.WithoutContext, func() {
 	It("should delete API", func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4).
-			Build().
-			Apply()
+			Build()
+
+		fixtures.APIv4.Spec.DefinitionContext = v4.NewDefaultKubernetesContext()
+		fixtures.APIv4.Spec.DefinitionContext.SyncFrom = v4.OriginKubernetes
+		fixtures.Apply()
 
 		By("calling API V4 endpoint, expecting status 200")
 
