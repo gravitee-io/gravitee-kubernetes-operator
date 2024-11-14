@@ -40,8 +40,10 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	It("should return error if secret is missing", func() {
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithSecretFile).
-			Build().
-			Apply()
+			Build()
+
+		fixtures.Context.Spec.SecretRef().Name = "unknown-secret"
+		fixtures.Apply()
 
 		mCtx := new(v1alpha1.ManagementContext)
 		Eventually(func() error {
