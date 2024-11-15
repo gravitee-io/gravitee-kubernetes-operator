@@ -51,6 +51,10 @@ func FromContext(ctx context.Context, context core.ContextModel, parentNs string
 		return nil, err
 	}
 
+	if _, err = dynamic.InjectSecretIfAny(ctx, context, parentNs); err != nil {
+		return nil, err
+	}
+
 	client := &client.Client{
 		HTTP: http.NewClient(ctx, toHttpAuth(context)),
 		URLs: urls,

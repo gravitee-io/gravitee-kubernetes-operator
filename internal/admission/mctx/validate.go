@@ -94,13 +94,7 @@ func validateSecretRef(ctx context.Context, context core.ContextObject) *errors.
 }
 
 func validateContextIsAvailable(ctx context.Context, context core.ContextObject) *errors.AdmissionError {
-	var apimClient *apim.APIM
-	var err error
-	if context.HasSecretRef() || (context.HasCloud() && context.GetCloud().HasSecretRef()) {
-		apimClient, err = apim.FromContextRef(ctx, context.GetRef(), context.GetNamespace())
-	} else {
-		apimClient, err = apim.FromContext(ctx, context, context.GetNamespace())
-	}
+	apimClient, err := apim.FromContext(ctx, context, context.GetNamespace())
 
 	if err != nil {
 		return errors.NewSevere(err.Error())
