@@ -36,19 +36,19 @@ func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (*
 		return nil, err
 	}
 
-	return injectSecretIfAny(ctx, context, parentNs)
+	return context, err
 }
 
-func injectSecretIfAny(ctx context.Context, mCtx *management.Context, parentNs string) (*management.Context, error) {
-	if mCtx.HasSecretRef() || (mCtx.HasCloud() && mCtx.Cloud.HasSecretRef()) { //nolint:nestif // normal complexity
-		var ref *refs.NamespacedName
+func InjectSecretIfAny(ctx context.Context, mCtx core.ContextModel, parentNs string) (*core.ContextModel, error) {
+	if mCtx.HasSecretRef() || (mCtx.HasCloud() && mCtx.GetCloud().HasSecretRef()) { //nolint:nestif // normal complexity
+		var name string
 		if mCtx.HasSecretRef() {
-			ref = mCtx.SecretRef()
+			name = mCtx.GetSecretRef().GetName()
 		} else {
-			ref = mCtx.Cloud.SecretRef
+			name = mCtx.GetCloud().GetSecretRef().GetName()
 		}
 
-		secret, err := ResolveSecret(ctx, ref, parentNs)
+		secret, err := ResolveSecret(ctx, &refs.NamespacedName{Name: name, Namespace: parentNs}, parentNs)
 		if err != nil {
 			return nil, err
 		}
@@ -61,8 +61,11 @@ func injectSecretIfAny(ctx context.Context, mCtx *management.Context, parentNs s
 		username := string(secret.Data[core.UsernameSecretKey])
 		password := string(secret.Data[core.PasswordSecretKey])
 
-		mCtx.SetToken(bearerToken)
-		mCtx.SetCredentials(username, password)
+		if mCtx.GetAuth() != nil {
+			mCtx.GetAuth().SetToken(bearerToken)
+			mCtx.GetAuth().SetCredentials(username, password)
+		}
 	}
-	return mCtx, nil
+
+	return &mCtx, nil
 }

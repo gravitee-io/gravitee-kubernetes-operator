@@ -37,6 +37,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithSecretFile).
 			Build()
+		fixtures.Context.Spec.SecretRef().Name = "unknown-secret"
 
 		Consistently(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Context)
