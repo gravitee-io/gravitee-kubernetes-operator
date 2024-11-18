@@ -1480,7 +1480,7 @@ that has been promoted between different environments.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>selectionRule</b></td>
+        <td><b>selection_rule</b></td>
         <td>string</td>
         <td>
           Plan selection rule<br/>
