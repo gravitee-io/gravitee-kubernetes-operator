@@ -536,7 +536,7 @@ spec:
                     securityDefinition:
                       description: Plan Security definition
                       type: string
-                    selectionRule:
+                    selection_rule:
                       description: Plan selection rule
                       type: string
                     status:
