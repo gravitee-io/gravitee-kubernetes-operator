@@ -52,7 +52,7 @@ type Plan struct {
 	Api *string `json:"api,omitempty"`
 	// Plan selection rule
 	// +kubebuilder:validation:Optional
-	SelectionRule *string `json:"selectionRule,omitempty"`
+	SelectionRule *string `json:"selection_rule,omitempty"`
 	// List of different flows for this Plan
 	// +kubebuilder:validation:Optional
 	Flows []Flow `json:"flows"`
