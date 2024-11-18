@@ -40,7 +40,7 @@ parameters:
 executors:
   azure-cli:
     docker:
-      - image: mcr.microsoft.com/azure-cli:2.65.0
+      - image: mcr.microsoft.com/azure-cli:2.66.0
     resource_class: small
 
 commands:
