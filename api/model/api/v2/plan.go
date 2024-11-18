@@ -42,7 +42,7 @@ type Plan struct {
 	// Specify the API associated with this plan
 	Api string `json:"api,omitempty"`
 	// Plan selection rule
-	SelectionRule string `json:"selectionRule,omitempty"`
+	SelectionRule string `json:"selection_rule,omitempty"`
 	// List of different flows for this Plan
 	Flows []Flow `json:"flows,omitempty"`
 }
