@@ -161,7 +161,8 @@ func NewNoAuthClient(ctx context.Context) *Client {
 }
 
 func NewClient(ctx context.Context, auth *Auth) *Client {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	defaultTransport, _ := http.DefaultTransport.(*http.Transport)
+	transport := defaultTransport.Clone()
 	transport.TLSClientConfig = &tls.Config{
 		// #nosec G402
 		InsecureSkipVerify: env.Config.HTTPClientInsecureSkipVerify,
