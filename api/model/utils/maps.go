@@ -103,7 +103,7 @@ func (in *GenericStringMap) DeepCopyInto(out *GenericStringMap) {
 		casted := in.Unstructured
 		for k, v := range casted.Object {
 			if reflect.TypeOf(v).Kind() == reflect.Int {
-				casted.Object[k] = int64(v.(int))
+				casted.Object[k] = int64(v.(int)) //nolint:errcheck // map is expected
 			} else if reflect.TypeOf(v).Kind() == reflect.Map {
 				if innerMap, ok := v.(map[string]interface{}); ok {
 					nestedIn := GenericStringMap{Unstructured: unstructured.Unstructured{Object: innerMap}}
