@@ -1,0 +1,56 @@
+#
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: gravitee.io/v1alpha1
+kind: Application
+metadata:
+  name: application-with-client-cert
+spec:
+  contextRef:
+    name: "dev-ctx"
+  name: application-with-client-cert
+  domain: "https://example.com"
+  description: |
+    This application is configured to use a client certificate.
+    Using this app, you will be able to subscribe to a v4 MTLS plan.
+  settings:
+    app:
+      type: WEB
+      clientId: echo-client
+    tls:
+      clientCertificate: |
+        -----BEGIN CERTIFICATE-----
+        MIID6TCCAtGgAwIBAgIBATANBgkqhkiG9w0BAQsFADCBlDELMAkGA1UEBhMCRlIx
+        DzANBgNVBAgMBkZyYW5jZTEOMAwGA1UEBwwFTGlsbGUxFDASBgNVBAoMC0dyYXZp
+        dGVlLmlvMRQwEgYDVQQLDAtFbmdpbmVlcmluZzEUMBIGA1UEAwwLZWNoby1jbGll
+        bnQxIjAgBgkqhkiG9w0BCQEWE2FudG9pbmVAY29yZGllci5kZXYwIBcNMjQxMTE5
+        MTYwMzEwWhgPMjA1MjA0MDYxNjAzMTBaMIGUMQswCQYDVQQGEwJGUjEPMA0GA1UE
+        CAwGRnJhbmNlMQ4wDAYDVQQHDAVMaWxsZTEUMBIGA1UECgwLR3Jhdml0ZWUuaW8x
+        FDASBgNVBAsMC0VuZ2luZWVyaW5nMRQwEgYDVQQDDAtlY2hvLWNsaWVudDEiMCAG
+        CSqGSIb3DQEJARYTYW50b2luZUBjb3JkaWVyLmRldjCCASIwDQYJKoZIhvcNAQEB
+        BQADggEPADCCAQoCggEBANMnUi2M24SaY2cfwFO4QqXiJlSP839cZjsHDBZJPVhX
+        l61MCQaov+3+2aS5wIbYODKRMp1rT/mqRGKdM2VC524h8ZKgbhHzu0Nlqm8P7Nf5
+        LLy56hJOzaBvSJTSrPRNlsGEsuXW2sQPctqUYAqAmo5gcGS8vLm7xRwhwkaurpk7
+        omGamUtjw77VmAg9SSbZDgpgbpHXRB4l18urItJKbqzZnXNgXIB1zCqnyuw1ggz/
+        5SQuJjXo0x/iTD96r3tUtDRv24iI9JyZ5G4eWL5F1cuKw2V8btyBmV7CL6AK9dal
+        UgrDE/QhrAvRcGFWXGtGVJ+s1YFlEbtpMCsuUFNoW8cCAwEAAaNCMEAwHQYDVR0O
+        BBYEFI3OwVyJqL8/Cm4U1H6Tp85AzCfWMB8GA1UdIwQYMBaAFLl56v1tXAKhVpJG
+        wOb1PhWik1FFMA0GCSqGSIb3DQEBCwUAA4IBAQCGGefWqKSzKbtuvp2vWGAG3V0b
+        aU6sDvsMYYwH+zih+mRAAg25VsBfiFHgvqBMqVN2VWT3aDjaWOpGXelLGz6eP80i
+        yHP4YVwG7c93iJ1wH3eGRCkvqu9N84EYln9tU3038htIFbWEXWPbIKCzXQO28OO/
+        2oaze5qCxbVRB+prP6gCZZsXl1FwKRVj+fd4rLYYovQHrInNZjOKrx89HVE89KYY
+        SOhJFBztKNoc4DQOzmZHrUEmUfisv6LAI95htME7GEl2AGHxKGaTbqgDZMBxyA24
+        an1qIBXO1HsI5kTJD2GLGf30pY/zDQt3irxyFFV/t/EyJQAE0ZnMXTHXq5C7
+        -----END CERTIFICATE-----

@@ -7635,6 +7635,14 @@ Application settings
           <br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#applicationspecsettingstls">tls</a></b></td>
+        <td>object</td>
+        <td>
+          TLS settings are used to configure client side TLS in order
+to be able to subscribe to a MTLS plan.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -7710,6 +7718,34 @@ Application settings
           List of Oauth client redirect uris<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Application.spec.settings.tls
+[Go to parent definition](#applicationspecsettings)
+
+
+
+TLS settings are used to configure client side TLS in order
+to be able to subscribe to a MTLS plan.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>clientCertificate</b></td>
+        <td>string</td>
+        <td>
+          This client certificate is mandatory to subscribe to a TLS plan.<br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
 

@@ -39,9 +39,18 @@ type OAuthClientSettings struct {
 	RedirectUris []string `json:"redirectUris"`
 }
 
+// TLS settings are used to configure client side TLS in order
+// to be able to subscribe to a MTLS plan.
+type TLSSettings struct {
+	// This client certificate is mandatory to subscribe to a TLS plan.
+	// +kubebuilder:validation:Required
+	ClientCertificate string `json:"clientCertificate"`
+}
+
 type Setting struct {
 	App   *SimpleSettings      `json:"app,omitempty"`
 	Oauth *OAuthClientSettings `json:"oauth,omitempty"`
+	TLS   *TLSSettings         `json:"tls,omitempty"`
 }
 
 // IsOAuth implements core.ApplicationSettings.
