@@ -191,6 +191,18 @@ spec:
                     - applicationType
                     - grantTypes
                     type: object
+                  tls:
+                    description: |-
+                      TLS settings are used to configure client side TLS in order
+                      to be able to subscribe to a MTLS plan.
+                    properties:
+                      clientCertificate:
+                        description: This client certificate is mandatory to subscribe
+                          to a TLS plan.
+                        type: string
+                    required:
+                    - clientCertificate
+                    type: object
                 type: object
             required:
             - contextRef
