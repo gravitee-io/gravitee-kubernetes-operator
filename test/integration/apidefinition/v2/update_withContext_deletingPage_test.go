@@ -52,7 +52,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			if err != nil {
 				return err
 			}
-			return assert.SliceOfSize("pages", pages, 3)
+			return assert.SliceOfSize("pages", pages, 2)
 		}, timeout, interval).Should(Succeed(), fixtures.API.Name)
 
 		By("deleting markdown page")
