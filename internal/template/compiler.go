@@ -18,21 +18,19 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	coreerrors "errors"
+	"errors"
 	"fmt"
 	"strings"
 	"text/template"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	kErrors "k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	netv1 "k8s.io/api/networking/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -42,55 +40,65 @@ import (
 // example my-configmap/key1.
 const ksPropertyLength = 2
 
-type CustomError struct{}
-
-func (*CustomError) Error() string { return "heyo !" }
-
 func Compile(ctx context.Context, obj runtime.Object) error {
 	switch t := obj.(type) {
-	case *v1alpha1.ApiDefinition, *v1alpha1.ApiV4Definition, *v1alpha1.ManagementContext,
-		*v1alpha1.Application, *netv1.Ingress, *v1alpha1.ApiResource, *v1alpha1.Subscription:
-		return exec(ctx, obj)
+	case
+		*v1alpha1.ApiDefinition,
+		*v1alpha1.ApiV4Definition,
+		*v1alpha1.ManagementContext,
+		*v1alpha1.Application,
+		*v1alpha1.ApiResource,
+		*v1alpha1.Subscription,
+		*netv1.Ingress:
+		return doCompile(ctx, obj)
 	default:
 		return fmt.Errorf("unsupported object type %v", t)
 	}
 }
 
-func exec(ctx context.Context, obj runtime.Object) error {
-	text, err := yaml.Marshal(obj)
+func doCompile(ctx context.Context, obj runtime.Object) error {
+	c, err := traverse(ctx, obj)
 	if err != nil {
 		return err
 	}
+	objData, ok := c.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("traverse returned %T instead of map[string]interface{}", c)
+	}
 
+	return runtime.DefaultUnstructuredConverter.FromUnstructured(objData, obj)
+}
+
+func exec(ctx context.Context, text, ns string) (string, error) {
 	funcMap := map[string]interface{}{
 		"configmap": func(name string) (string, error) {
-			return resolveConfigmap(ctx, obj, name)
+			return resolveConfigmap(ctx, ns, name)
 		},
 		"secret": func(name string) (string, error) {
-			return resolveSecret(ctx, obj, name)
+			return resolveSecret(ctx, ns, name)
 		},
 	}
 
-	tmpl, err := template.New("gko").Funcs(template.FuncMap(funcMap)).Delims("[[", "]]").Parse(string(text))
+	t, err := template.New("gko").Funcs(template.FuncMap(funcMap)).Delims("[[", "]]").Parse(text)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	buf := new(bytes.Buffer)
 	writer := bufio.NewWriter(buf)
-	if err = tmpl.Execute(writer, make(map[string]string)); err != nil {
-		uErr := coreerrors.Unwrap(coreerrors.Unwrap(err))
-		return uErr
+	if err = t.Execute(writer, make(map[string]string)); err != nil {
+		uErr := errors.Unwrap(errors.Unwrap(err))
+		return "", uErr
 	}
 
 	if err = writer.Flush(); err != nil {
-		return err
+		return "", err
 	}
 
-	return yaml.Unmarshal(buf.Bytes(), obj)
+	return buf.String(), nil
 }
 
-func resolveConfigmap(ctx context.Context, obj runtime.Object, name string) (string, error) {
+func resolveConfigmap(ctx context.Context, ns, name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("empty configmap name")
 	}
@@ -100,20 +108,14 @@ func resolveConfigmap(ctx context.Context, obj runtime.Object, name string) (str
 		return "", fmt.Errorf("wrong configmap name. Example my-configmap/key1")
 	}
 
-	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
-	if err != nil {
-		return "", err
-	}
-
 	name = sp[0]
-	u := unstructured.Unstructured{Object: innerObj}
-	nn := types.NamespacedName{Namespace: u.GetNamespace(), Name: name}
+	nn := types.NamespacedName{Namespace: ns, Name: name}
 	cm := new(v1.ConfigMap)
 	cli := k8s.GetClient()
 
-	err = cli.Get(ctx, nn, cm)
-	if errors.IsNotFound(err) {
-		return "", fmt.Errorf("configmap [%s/%s] not found", u.GetNamespace(), name)
+	err := cli.Get(ctx, nn, cm)
+	if kErrors.IsNotFound(err) {
+		return "", fmt.Errorf("configmap [%s/%s] not found", ns, name)
 	}
 
 	if err != nil {
@@ -127,12 +129,12 @@ func resolveConfigmap(ctx context.Context, obj runtime.Object, name string) (str
 	key := sp[1]
 	v := cm.Data[key]
 	if v == "" {
-		return "", fmt.Errorf("key [%s] not found in configmap [%s/%s]", key, u.GetNamespace(), name)
+		return "", fmt.Errorf("key [%s] not found in configmap [%s/%s]", key, ns, name)
 	}
 	return v, nil
 }
 
-func resolveSecret(ctx context.Context, obj runtime.Object, name string) (string, error) {
+func resolveSecret(ctx context.Context, ns, name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("empty secret name")
 	}
@@ -142,20 +144,14 @@ func resolveSecret(ctx context.Context, obj runtime.Object, name string) (string
 		return "", fmt.Errorf("wrong secret name. Example my-secret/key1")
 	}
 
-	innerObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
-	if err != nil {
-		return "", err
-	}
-
 	name = sp[0]
-	u := unstructured.Unstructured{Object: innerObj}
-	nn := types.NamespacedName{Namespace: u.GetNamespace(), Name: name}
+	nn := types.NamespacedName{Namespace: ns, Name: name}
 	sec := new(v1.Secret)
 	cli := k8s.GetClient()
 
-	err = cli.Get(ctx, nn, sec)
-	if errors.IsNotFound(err) {
-		return "", fmt.Errorf("secret [%s/%s] not found", u.GetNamespace(), name)
+	err := cli.Get(ctx, nn, sec)
+	if kErrors.IsNotFound(err) {
+		return "", fmt.Errorf("secret [%s/%s] not found", ns, name)
 	}
 
 	if err != nil {
@@ -169,7 +165,7 @@ func resolveSecret(ctx context.Context, obj runtime.Object, name string) (string
 	key := sp[1]
 	v := sec.Data[key]
 	if len(v) == 0 {
-		return "", fmt.Errorf("key [%s] not found in secret [%s/%s]", key, u.GetNamespace(), name)
+		return "", fmt.Errorf("key [%s] not found in secret [%s/%s]", key, ns, name)
 	}
 	return string(v), nil
 }
