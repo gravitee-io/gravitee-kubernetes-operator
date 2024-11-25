@@ -68,25 +68,35 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	status := ingress.Status.DeepCopy()
 	events := e.NewRecorder(r.Recorder)
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, ingress, func() error {
 		util.AddFinalizer(ingress, core.IngressFinalizer)
 		k8s.AddAnnotation(ingress, core.LastSpecHashAnnotation, hash.Calculate(&ingress.Spec))
 
-		if err := template.Compile(ctx, ingress); err != nil {
+		dc := ingress.DeepCopy()
+		err := template.Compile(ctx, dc)
+		if err != nil {
 			return err
 		}
 
 		if !ingress.DeletionTimestamp.IsZero() {
-			return events.Record(e.Delete, ingress, func() error {
-				return internal.Delete(ctx, ingress)
+			err = events.Record(e.Delete, ingress, func() error {
+				return internal.Delete(ctx, dc)
+			})
+		} else {
+			err = events.Record(e.Update, ingress, func() error {
+				return internal.CreateOrUpdate(ctx, dc)
 			})
 		}
 
-		return events.Record(e.Update, ingress, func() error {
-			return internal.CreateOrUpdate(ctx, ingress)
-		})
+		dc.Status.DeepCopyInto(status)
+		ingress.SetFinalizers(dc.GetFinalizers())
+
+		return err
 	})
+
+	status.DeepCopyInto(&ingress.Status)
 
 	if reconcileErr != nil {
 		logger.Error(reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)

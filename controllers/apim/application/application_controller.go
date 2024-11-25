@@ -75,12 +75,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	dc := application.DeepCopy()
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
+	status := application.Status.DeepCopy()
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, application, func() error {
 		util.AddFinalizer(application, core.ApplicationFinalizer)
 		k8s.AddAnnotation(application, core.LastSpecHashAnnotation, hash.Calculate(&application.Spec))
 
-		if err := template.Compile(ctx, application); err != nil {
+		dc := application.DeepCopy()
+		if err := template.Compile(ctx, dc); err != nil {
 			application.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
@@ -88,27 +89,29 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		var err error
 		if application.IsBeingDeleted() {
 			err = events.Record(event.Delete, application, func() error {
-				return internal.Delete(ctx, application)
+				return internal.Delete(ctx, dc)
 			})
 		} else {
 			err = events.Record(event.Update, application, func() error {
-				return internal.CreateOrUpdate(ctx, application)
+				return internal.CreateOrUpdate(ctx, dc)
 			})
 		}
 
-		dc.SetFinalizers(application.GetFinalizers())
-		dc.SetAnnotations(application.GetAnnotations())
+		dc.Status.DeepCopyInto(status)
+		application.SetFinalizers(dc.GetFinalizers())
+
 		return err
 	})
 
-	application.Status.DeepCopyInto(&dc.Status)
+	status.DeepCopyInto(&application.Status)
+
 	if reconcileErr == nil {
 		logger.Info("Application has been reconciled")
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, dc)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, application)
 	}
 
 	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, dc); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, application); err != nil {
 		return ctrl.Result{}, err
 	}
 
