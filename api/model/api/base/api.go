@@ -41,6 +41,7 @@ type ApiBase struct {
 	// List of Tags of the API
 	Tags []string `json:"tags"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	// List of labels of the API
 	Labels []string `json:"labels"`
 	// +kubebuilder:default:=PRIVATE
@@ -48,20 +49,25 @@ type ApiBase struct {
 	Visibility ApiVisibility `json:"visibility,omitempty"`
 	// +kubebuilder:validation:Optional
 	// List of Properties for the API
+	// +kubebuilder:default:={}
 	Properties []*Property `json:"properties"`
 	// +kubebuilder:validation:Optional
 	// List of API metadata entries
+	// +kubebuilder:default:={}
 	Metadata []*MetadataEntry `json:"metadata"`
 	// +kubebuilder:validation:Optional
 	// Resources can be either inlined or reference the namespace and name
 	// of an <a href="#apiresource">existing API resource definition</a>.
+	// +kubebuilder:default:={}
 	Resources []*ResourceOrRef `json:"resources"`
 	// List of groups associated with the API
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Groups []string `json:"groups"`
 	// +kubebuilder:validation:Optional
 	// The list of categories the API belongs to.
 	// Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
+	// +kubebuilder:default:={}
 	Categories []string `json:"categories"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=true

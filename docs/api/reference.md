@@ -446,6 +446,8 @@ See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.
         <td>
           The list of categories the API belongs to.
 Categories are reflected in APIM portal so that consumers can easily find the APIs they need.<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -508,6 +510,8 @@ is managed using a kubernetes operator<br/>
         <td>[]object</td>
         <td>
           The flow of the API<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -524,6 +528,8 @@ is managed using a kubernetes operator<br/>
         <td>[]string</td>
         <td>
           List of groups associated with the API<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -539,6 +545,8 @@ field of the resource.<br/>
         <td>[]string</td>
         <td>
           List of labels of the API<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -581,6 +589,8 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         <td>[]object</td>
         <td>
           List of API metadata entries<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -620,6 +630,8 @@ it holding a new ID in APIM.<br/>
         <td>[]object</td>
         <td>
           API plans<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -627,6 +639,8 @@ it holding a new ID in APIM.<br/>
         <td>[]object</td>
         <td>
           List of Properties for the API<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -642,6 +656,8 @@ it holding a new ID in APIM.<br/>
         <td>
           Resources can be either inlined or reference the namespace and name
 of an <a href="#apiresource">existing API resource definition</a>.<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -815,6 +831,8 @@ is managed using a kubernetes operator
         <td>[]object</td>
         <td>
           List of the consumers of this Flow<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -829,6 +847,8 @@ is managed using a kubernetes operator
         <td>[]enum</td>
         <td>
           A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -850,6 +870,8 @@ is managed using a kubernetes operator
         <td>[]object</td>
         <td>
           Flow post step<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -857,6 +879,8 @@ is managed using a kubernetes operator
         <td>[]object</td>
         <td>
           Flow pre step<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1192,6 +1216,8 @@ List of path operators
         <td>[]object</td>
         <td>
           If the page is private, defines a set of user groups with access<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1460,6 +1486,8 @@ that has been promoted between different environments.<br/>
         <td>[]string</td>
         <td>
           List of excluded groups for this plan<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1467,6 +1495,8 @@ that has been promoted between different environments.<br/>
         <td>[]object</td>
         <td>
           List of different flows for this Plan<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1519,6 +1549,8 @@ that has been promoted between different environments.<br/>
         <td>[]string</td>
         <td>
           List of plan tags<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1582,6 +1614,8 @@ that has been promoted between different environments.<br/>
         <td>[]object</td>
         <td>
           List of the consumers of this Flow<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1596,6 +1630,8 @@ that has been promoted between different environments.<br/>
         <td>[]enum</td>
         <td>
           A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1617,6 +1653,8 @@ that has been promoted between different environments.<br/>
         <td>[]object</td>
         <td>
           Flow post step<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1624,6 +1662,8 @@ that has been promoted between different environments.<br/>
         <td>[]object</td>
         <td>
           Flow pre step<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1994,6 +2034,8 @@ The proxy of the API that specifies its VirtualHosts and Groups.
         <td>[]object</td>
         <td>
           List of endpoint groups of the proxy<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2070,6 +2112,8 @@ Proxy Cors
         <td>[]string</td>
         <td>
           Access Control - List of allowed headers<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2077,6 +2121,8 @@ Proxy Cors
         <td>[]string</td>
         <td>
           Access Control - List of allowed methods<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2084,6 +2130,8 @@ Proxy Cors
         <td>[]string</td>
         <td>
           Access Control -  List of Allowed origins<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2091,6 +2139,8 @@ Proxy Cors
         <td>[]string</td>
         <td>
           Access Control - List of Exposed Headers<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2253,6 +2303,8 @@ Proxy Failover
         <td>[]object</td>
         <td>
           List of headers for this endpoint<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2309,6 +2361,8 @@ Proxy Failover
         <td>[]string</td>
         <td>
           The endpoint tenants<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2414,6 +2468,8 @@ Specify EndpointHealthCheck service settings
         <td>[]object</td>
         <td>
           List of health check steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -2496,6 +2552,8 @@ Health Check Step Request
         <td>[]object</td>
         <td>
           List of HTTP headers to include in the health check request<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3213,6 +3271,8 @@ Endpoint Discovery Service
         <td>[]string</td>
         <td>
           List of tenants<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3322,6 +3382,8 @@ Health Check Service
         <td>[]object</td>
         <td>
           List of health check steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3404,6 +3466,8 @@ Health Check Step Request
         <td>[]object</td>
         <td>
           List of HTTP headers to include in the health check request<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -3928,6 +3992,8 @@ Endpoint Discovery Service
         <td>[]string</td>
         <td>
           List of tenants<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4037,6 +4103,8 @@ Health Check Service
         <td>[]object</td>
         <td>
           List of health check steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4119,6 +4187,8 @@ Health Check Step Request
         <td>[]object</td>
         <td>
           List of HTTP headers to include in the health check request<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4425,6 +4495,8 @@ ApiV4DefinitionSpec defines the desired state of ApiDefinition.
         <td>
           The list of categories the API belongs to.
 Categories are reflected in APIM portal so that consumers can easily find the APIs they need.<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4499,6 +4571,8 @@ from an API instance or from a config map created in the cluster (which is the d
         <td>[]string</td>
         <td>
           List of groups associated with the API<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4514,6 +4588,8 @@ field of the resource.<br/>
         <td>[]string</td>
         <td>
           List of labels of the API<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4538,6 +4614,8 @@ field of the resource.<br/>
         <td>[]object</td>
         <td>
           List of API metadata entries<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4579,6 +4657,8 @@ when using a management context.<br/>
         <td>[]object</td>
         <td>
           List of Properties for the API<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4587,6 +4667,8 @@ when using a management context.<br/>
         <td>
           Resources can be either inlined or reference the namespace and name
 of an <a href="#apiresource">existing API resource definition</a>.<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4662,6 +4744,8 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         <td>[]object</td>
         <td>
           List of endpoint for the group<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4780,6 +4864,8 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
         <td>[]string</td>
         <td>
           List of endpoint tenants<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5779,6 +5865,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Publish flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5786,6 +5874,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Request flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5793,6 +5883,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Response flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5800,6 +5892,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Flow selectors<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5807,6 +5901,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Subscribe flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5814,6 +5910,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]string</td>
         <td>
           List of tags<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -6516,6 +6614,8 @@ that has been promoted between different environments.<br/>
         <td>[]string</td>
         <td>
           List of plan tags<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6587,6 +6687,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Publish flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6594,6 +6696,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Request flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6601,6 +6705,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Response flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6608,6 +6714,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Flow selectors<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6615,6 +6723,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]object</td>
         <td>
           List of Subscribe flow steps<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -6622,6 +6732,8 @@ APIM exports and can be safely ignored.<br/>
         <td>[]string</td>
         <td>
           List of tags<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr></tbody>

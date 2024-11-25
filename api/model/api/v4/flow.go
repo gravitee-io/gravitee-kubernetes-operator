@@ -35,26 +35,32 @@ type Flow struct {
 
 	// List of Flow selectors
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Selectors []*FlowSelector `json:"selectors"`
 
 	// List of Request flow steps
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Request []*FlowStep `json:"request"`
 
 	// List of Response flow steps
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Response []*FlowStep `json:"response"`
 
 	// List of Subscribe flow steps
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Subscribe []*FlowStep `json:"subscribe"`
 
 	// List of Publish flow steps
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Publish []*FlowStep `json:"publish"`
 
 	// List of tags
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Tags []string `json:"tags"`
 }
 

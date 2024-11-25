@@ -37,6 +37,7 @@ type Plan struct {
 	CrossID string `json:"crossId,omitempty"`
 	// List of plan tags
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Tags []string `json:"tags"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=PUBLISHED
