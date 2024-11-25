@@ -43,39 +43,63 @@ func Reconcile(
 	apiDefinition core.ApiDefinitionObject,
 	r record.EventRecorder,
 ) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
 	events := event.NewRecorder(r)
 
 	if apiDefinition.GetAnnotations()[core.IngressTemplateAnnotation] == "true" {
-		logger.Info("syncing template", "template", apiDefinition.GetName())
-		if err := template.Compile(ctx, apiDefinition); err != nil {
-			return ctrl.Result{}, err
-		}
-		if err := internal.SyncApiDefinitionTemplate(ctx, apiDefinition, apiDefinition.GetNamespace()); err != nil {
-			logger.Error(err, "Failed to sync API definition template")
-			return ctrl.Result{RequeueAfter: requeueAfterTime}, err
-		}
-
-		logger.Info("template synced successfully.", "template:", apiDefinition.GetName())
-		return ctrl.Result{}, nil
+		return reconcileApiTemplate(ctx, apiDefinition)
 	}
 
 	return reconcileApiDefinition(ctx, apiDefinition, events)
 }
 
+func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionObject) (ctrl.Result, error) {
+	logger := log.FromContext(ctx)
+	status := apiDefinition.GetStatus()
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
+		dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
+		if err := template.Compile(ctx, dc); err != nil {
+			return err
+		}
+
+		if err := internal.SyncApiDefinitionTemplate(ctx, dc, apiDefinition.GetNamespace()); err != nil {
+			return err
+		}
+
+		apiDefinition.SetFinalizers(dc.GetFinalizers())
+		status = dc.GetStatus()
+
+		return nil
+	})
+
+	if err != nil {
+		logger.Error(err, "Failed to sync API definition template")
+		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+	}
+
+	logger.Info("template synced successfully.", "template:", apiDefinition.GetName())
+	if err := status.DeepCopyTo(apiDefinition); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if err := internal.UpdateStatusSuccess(ctx, apiDefinition); err != nil {
+		return ctrl.Result{}, err
+	}
+	return ctrl.Result{}, nil
+}
 func reconcileApiDefinition(
 	ctx context.Context,
 	apiDefinition core.ApiDefinitionObject,
 	events *event.Recorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
 	status := apiDefinition.GetStatus()
-	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), dc, func() error {
+	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
 		util.AddFinalizer(apiDefinition, core.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, core.LastSpecHashAnnotation, apiDefinition.GetSpec().Hash())
 
-		if err := template.Compile(ctx, apiDefinition); err != nil {
+		dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
+
+		if err := template.Compile(ctx, dc); err != nil {
 			status.SetProcessingStatus(core.ProcessingStatusFailed)
 			return err
 		}
@@ -83,11 +107,11 @@ func reconcileApiDefinition(
 		var err error
 		if !apiDefinition.GetDeletionTimestamp().IsZero() {
 			err = events.Record(event.Delete, apiDefinition, func() error {
-				return internal.Delete(ctx, apiDefinition)
+				return internal.Delete(ctx, dc)
 			})
 		} else {
 			err = events.Record(event.Update, apiDefinition, func() error {
-				return internal.CreateOrUpdate(ctx, apiDefinition)
+				return internal.CreateOrUpdate(ctx, dc)
 			})
 		}
 
@@ -95,21 +119,21 @@ func reconcileApiDefinition(
 			return err
 		}
 
-		dc.SetFinalizers(apiDefinition.GetFinalizers())
-		dc.SetAnnotations(apiDefinition.GetAnnotations())
+		apiDefinition.SetFinalizers(dc.GetFinalizers())
+		status = dc.GetStatus()
 		return err
 	})
 
-	if err := status.DeepCopyTo(dc); err != nil {
+	if err := status.DeepCopyTo(apiDefinition); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if reconcileErr == nil {
 		logger.Info("API definition has been reconciled")
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, dc)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, apiDefinition)
 	}
 
-	if err := internal.UpdateStatusFailure(ctx, dc); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, apiDefinition); err != nil {
 		return ctrl.Result{}, err
 	}
 

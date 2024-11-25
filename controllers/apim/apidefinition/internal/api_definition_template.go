@@ -30,9 +30,7 @@ import (
 // This function is applied to all ingresses which are using the ApiDefinition template
 // As per Kubernetes Finalizers (https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 // First return value defines if we should requeue or not.
-func SyncApiDefinitionTemplate(
-	ctx context.Context,
-	api core.ApiDefinitionObject, ns string) error {
+func SyncApiDefinitionTemplate(ctx context.Context, api core.ApiDefinitionObject, ns string) error {
 	// We are first looking if the template is in deletion phase, the Kubernetes API marks the object for
 	// deletion by populating .metadata.deletionTimestamp
 	if !api.GetDeletionTimestamp().IsZero() {
@@ -41,10 +39,9 @@ func SyncApiDefinitionTemplate(
 
 	if !util.ContainsFinalizer(api, core.ApiDefinitionTemplateFinalizer) {
 		util.AddFinalizer(api, core.ApiDefinitionTemplateFinalizer)
-		return k8s.GetClient().Update(ctx, api)
 	}
 
-	return UpdateStatusSuccess(ctx, api)
+	return nil
 }
 
 func doDelete(ctx context.Context, apiDefinition client.Object, namespace string) error {

@@ -64,12 +64,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := event.NewRecorder(r.Recorder)
 
-	dc := subscription.DeepCopy()
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
+	status := subscription.Status.DeepCopy()
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, subscription, func() error {
 		util.AddFinalizer(subscription, core.SubscriptionFinalizer)
 		k8s.AddAnnotation(subscription, core.LastSpecHashAnnotation, hash.Calculate(&subscription.Spec))
 
-		if err := template.Compile(ctx, subscription); err != nil {
+		dc := subscription.DeepCopy()
+		if err := template.Compile(ctx, dc); err != nil {
 			subscription.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
@@ -77,27 +78,29 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		var err error
 		if subscription.IsBeingDeleted() {
 			err = events.Record(event.Delete, subscription, func() error {
-				return internal.Delete(ctx, subscription)
+				return internal.Delete(ctx, dc)
 			})
 		} else {
 			err = events.Record(event.Update, subscription, func() error {
-				return internal.CreateOrUpdate(ctx, subscription)
+				return internal.CreateOrUpdate(ctx, dc)
 			})
 		}
 
-		dc.SetFinalizers(subscription.GetFinalizers())
-		dc.SetAnnotations(subscription.GetAnnotations())
+		dc.Status.DeepCopyInto(status)
+		subscription.SetFinalizers(dc.GetFinalizers())
+
 		return err
 	})
 
-	subscription.Status.DeepCopyInto(&dc.Status)
+	status.DeepCopyInto(&subscription.Status)
+
 	if reconcileErr == nil {
 		logger.Info("Subscription has been reconciled")
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, dc)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, subscription)
 	}
 
 	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, dc); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, subscription); err != nil {
 		return ctrl.Result{}, err
 	}
 

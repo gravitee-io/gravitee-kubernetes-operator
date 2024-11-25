@@ -61,10 +61,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	events := event.NewRecorder(r.Recorder)
-	dc := managementContext.DeepCopy()
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
+	status := managementContext.Status.DeepCopy()
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, managementContext, func() error {
 		util.AddFinalizer(managementContext, core.ManagementContextFinalizer)
 		k8s.AddAnnotation(managementContext, core.LastSpecHashAnnotation, hash.Calculate(&managementContext.Spec))
+
+		dc := managementContext.DeepCopy()
 
 		if err := template.Compile(ctx, managementContext); err != nil {
 			return err
@@ -73,7 +75,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		var err error
 		if managementContext.IsBeingDeleted() {
 			err = events.Record(event.Delete, managementContext, func() error {
-				return internal.Delete(ctx, managementContext)
+				return internal.Delete(ctx, dc)
 			})
 		} else {
 			err = events.Record(event.Update, managementContext, func() error {
@@ -82,9 +84,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		}
 
-		managementContext.ObjectMeta.DeepCopyInto(&dc.ObjectMeta)
+		dc.Status.DeepCopyInto(status)
+		managementContext.SetFinalizers(dc.GetFinalizers())
+
 		return err
 	})
+
+	status.DeepCopyInto(&managementContext.Status)
 
 	if reconcileErr == nil {
 		logger.Info("Management context has been reconciled")
