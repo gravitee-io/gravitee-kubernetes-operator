@@ -34,9 +34,11 @@ type Cors struct {
 	Enabled bool `json:"enabled"`
 	// Access Control -  List of Allowed origins
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	AccessControlAllowOrigin []string `json:"allowOrigin"`
 	// Access Control - List of Exposed Headers
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	AccessControlExposeHeaders []string `json:"exposeHeaders"`
 	// Access Control -  Max age
 	AccessControlMaxAge int `json:"maxAge"`
@@ -44,9 +46,11 @@ type Cors struct {
 	AccessControlAllowCredentials bool `json:"allowCredentials"`
 	// Access Control - List of allowed methods
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	AccessControlAllowMethods []string `json:"allowMethods"`
 	// Access Control - List of allowed headers
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	AccessControlAllowHeaders []string `json:"allowHeaders"`
 	// +kubebuilder:default:=false
 	// Run policies or not

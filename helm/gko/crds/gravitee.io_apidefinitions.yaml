@@ -73,6 +73,7 @@ spec:
               See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
             properties:
               categories:
+                default: []
                 description: |-
                   The list of categories the API belongs to.
                   Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
@@ -136,6 +137,7 @@ spec:
                 - BEST_MATCH
                 type: string
               flows:
+                default: []
                 description: The flow of the API
                 items:
                   properties:
@@ -143,6 +145,7 @@ spec:
                       description: Flow condition
                       type: string
                     consumers:
+                      default: []
                       description: List of the consumers of this Flow
                       items:
                         properties:
@@ -162,6 +165,7 @@ spec:
                       description: Flow ID
                       type: string
                     methods:
+                      default: []
                       description: A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
                       items:
                         enum:
@@ -195,6 +199,7 @@ spec:
                           type: string
                       type: object
                     post:
+                      default: []
                       description: Flow post step
                       items:
                         properties:
@@ -224,6 +229,7 @@ spec:
                         type: object
                       type: array
                     pre:
+                      default: []
                       description: Flow pre step
                       items:
                         properties:
@@ -262,6 +268,7 @@ spec:
                   this field should always set to `2.0.0`.
                 type: string
               groups:
+                default: []
                 description: List of groups associated with the API
                 items:
                   type: string
@@ -272,6 +279,7 @@ spec:
                   field of the resource.
                 type: string
               labels:
+                default: []
                 description: List of labels of the API
                 items:
                   type: string
@@ -323,6 +331,7 @@ spec:
                   type: object
                 type: array
               metadata:
+                default: []
                 description: List of API metadata entries
                 items:
                   properties:
@@ -367,6 +376,7 @@ spec:
                 additionalProperties:
                   properties:
                     accessControls:
+                      default: []
                       description: If the page is private, defines a set of user groups
                         with access
                       items:
@@ -498,6 +508,7 @@ spec:
                   type: string
                 type: array
               plans:
+                default: []
                 description: API plans
                 items:
                   properties:
@@ -523,11 +534,13 @@ spec:
                       description: Plan Description
                       type: string
                     excluded_groups:
+                      default: []
                       description: List of excluded groups for this plan
                       items:
                         type: string
                       type: array
                     flows:
+                      default: []
                       description: List of different flows for this Plan
                       items:
                         properties:
@@ -535,6 +548,7 @@ spec:
                             description: Flow condition
                             type: string
                           consumers:
+                            default: []
                             description: List of the consumers of this Flow
                             items:
                               properties:
@@ -554,6 +568,7 @@ spec:
                             description: Flow ID
                             type: string
                           methods:
+                            default: []
                             description: A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
                             items:
                               enum:
@@ -588,6 +603,7 @@ spec:
                                 type: string
                             type: object
                           post:
+                            default: []
                             description: Flow post step
                             items:
                               properties:
@@ -618,6 +634,7 @@ spec:
                               type: object
                             type: array
                           pre:
+                            default: []
                             description: Flow pre step
                             items:
                               properties:
@@ -719,6 +736,7 @@ spec:
                       - PUBLISHED
                       type: string
                     tags:
+                      default: []
                       description: List of plan tags
                       items:
                         type: string
@@ -744,6 +762,7 @@ spec:
                   type: object
                 type: array
               properties:
+                default: []
                 description: List of Properties for the API
                 items:
                   properties:
@@ -772,16 +791,19 @@ spec:
                         description: Access Control - Allow credentials or not
                         type: boolean
                       allowHeaders:
+                        default: []
                         description: Access Control - List of allowed headers
                         items:
                           type: string
                         type: array
                       allowMethods:
+                        default: []
                         description: Access Control - List of allowed methods
                         items:
                           type: string
                         type: array
                       allowOrigin:
+                        default: []
                         description: Access Control -  List of Allowed origins
                         items:
                           type: string
@@ -790,6 +812,7 @@ spec:
                         description: Indicate if the cors enabled or not
                         type: boolean
                       exposeHeaders:
+                        default: []
                         description: Access Control - List of Exposed Headers
                         items:
                           type: string
@@ -823,6 +846,7 @@ spec:
                         type: integer
                     type: object
                   groups:
+                    default: []
                     description: List of endpoint groups of the proxy
                     items:
                       properties:
@@ -834,6 +858,7 @@ spec:
                                 description: Indicate that this ia a back-end endpoint
                                 type: boolean
                               headers:
+                                default: []
                                 description: List of headers for this endpoint
                                 items:
                                   properties:
@@ -861,6 +886,7 @@ spec:
                                   schedule:
                                     type: string
                                   steps:
+                                    default: []
                                     description: List of health check steps
                                     items:
                                       properties:
@@ -879,6 +905,7 @@ spec:
                                                 the context path of the API.
                                               type: boolean
                                             headers:
+                                              default: []
                                               description: List of HTTP headers to
                                                 include in the health check request
                                               items:
@@ -1070,6 +1097,7 @@ spec:
                                 description: The end target of this endpoint (backend)
                                 type: string
                               tenants:
+                                default: []
                                 description: The endpoint tenants
                                 items:
                                   type: string
@@ -1220,6 +1248,7 @@ spec:
                                   description: Is it secondary or not?
                                   type: boolean
                                 tenants:
+                                  default: []
                                   description: List of tenants
                                   items:
                                     type: string
@@ -1259,6 +1288,7 @@ spec:
                                 schedule:
                                   type: string
                                 steps:
+                                  default: []
                                   description: List of health check steps
                                   items:
                                     properties:
@@ -1277,6 +1307,7 @@ spec:
                                               the context path of the API.
                                             type: boolean
                                           headers:
+                                            default: []
                                             description: List of HTTP headers to include
                                               in the health check request
                                             items:
@@ -1419,6 +1450,7 @@ spec:
                     type: array
                 type: object
               resources:
+                default: []
                 description: |-
                   Resources can be either inlined or reference the namespace and name
                   of an <a href="#apiresource">existing API resource definition</a>.
@@ -1493,6 +1525,7 @@ spec:
                         description: Is it secondary or not?
                         type: boolean
                       tenants:
+                        default: []
                         description: List of tenants
                         items:
                           type: string
@@ -1532,6 +1565,7 @@ spec:
                       schedule:
                         type: string
                       steps:
+                        default: []
                         description: List of health check steps
                         items:
                           properties:
@@ -1550,6 +1584,7 @@ spec:
                                     of the API.
                                   type: boolean
                                 headers:
+                                  default: []
                                   description: List of HTTP headers to include in
                                     the health check request
                                   items:

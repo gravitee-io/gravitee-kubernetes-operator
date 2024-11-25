@@ -58,9 +58,11 @@ type Plan struct {
 	SelectionRule *string `json:"selection_rule,omitempty"`
 	// List of different flows for this Plan
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Flows []Flow `json:"flows"`
 	// List of excluded groups for this plan
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	ExcludedGroups []string `json:"excluded_groups"`
 }
 

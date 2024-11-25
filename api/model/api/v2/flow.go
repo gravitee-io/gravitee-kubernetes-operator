@@ -53,21 +53,25 @@ type Flow struct {
 	PathOperator *PathOperator `json:"path-operator,omitempty"`
 	// Flow pre step
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Pre []base.FlowStep `json:"pre"`
 	// Flow post step
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Post []base.FlowStep `json:"post"`
 	// +kubebuilder:default:=true
 	// Indicate if this flow is enabled or disabled
 	Enabled bool `json:"enabled"`
 	// A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Methods []base.HttpMethod `json:"methods"`
 	// Flow condition
 	// +kubebuilder:validation:Optional
 	Condition *string `json:"condition,omitempty"`
 	// List of the consumers of this Flow
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Consumers []Consumer `json:"consumers"`
 }
 

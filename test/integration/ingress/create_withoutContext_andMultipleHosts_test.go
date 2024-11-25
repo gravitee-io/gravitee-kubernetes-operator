@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -101,16 +102,22 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		Expect(endpoints).To(Equal(
 			[]*v2.Endpoint{
 				{
-					Name:   toPointer("rule01-path01"),
-					Target: toPointer("http://httpbin-1.default.svc.cluster.local:8080"),
+					Name:    toPointer("rule01-path01"),
+					Target:  toPointer("http://httpbin-1.default.svc.cluster.local:8080"),
+					Tenants: []string{},
+					Headers: []base.HttpHeader{},
 				},
 				{
-					Name:   toPointer("rule02-path01"),
-					Target: toPointer("http://httpbin-2.default.svc.cluster.local:8080"),
+					Name:    toPointer("rule02-path01"),
+					Target:  toPointer("http://httpbin-2.default.svc.cluster.local:8080"),
+					Tenants: []string{},
+					Headers: []base.HttpHeader{},
 				},
 				{
-					Name:   toPointer("rule03-path01"),
-					Target: toPointer("http://httpbin-3.default.svc.cluster.local:8080"),
+					Name:    toPointer("rule03-path01"),
+					Target:  toPointer("http://httpbin-3.default.svc.cluster.local:8080"),
+					Tenants: []string{},
+					Headers: []base.HttpHeader{},
 				},
 			},
 		))

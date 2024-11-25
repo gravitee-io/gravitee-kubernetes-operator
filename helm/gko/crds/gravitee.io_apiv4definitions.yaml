@@ -169,6 +169,7 @@ spec:
                 - enabled
                 type: object
               categories:
+                default: []
                 description: |-
                   The list of categories the API belongs to.
                   Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
@@ -237,6 +238,7 @@ spec:
                 items:
                   properties:
                     endpoints:
+                      default: []
                       description: List of endpoint for the group
                       items:
                         properties:
@@ -288,6 +290,7 @@ spec:
                             type: object
                             x-kubernetes-preserve-unknown-fields: true
                           tenants:
+                            default: []
                             description: List of endpoint tenants
                             items:
                               type: string
@@ -540,6 +543,7 @@ spec:
                       description: Flow name
                       type: string
                     publish:
+                      default: []
                       description: List of Publish flow steps
                       items:
                         properties:
@@ -572,6 +576,7 @@ spec:
                         type: object
                       type: array
                     request:
+                      default: []
                       description: List of Request flow steps
                       items:
                         properties:
@@ -604,6 +609,7 @@ spec:
                         type: object
                       type: array
                     response:
+                      default: []
                       description: List of Response flow steps
                       items:
                         properties:
@@ -636,12 +642,14 @@ spec:
                         type: object
                       type: array
                     selectors:
+                      default: []
                       description: List of Flow selectors
                       items:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       type: array
                     subscribe:
+                      default: []
                       description: List of Subscribe flow steps
                       items:
                         properties:
@@ -674,6 +682,7 @@ spec:
                         type: object
                       type: array
                     tags:
+                      default: []
                       description: List of tags
                       items:
                         type: string
@@ -683,6 +692,7 @@ spec:
                   type: object
                 type: array
               groups:
+                default: []
                 description: List of groups associated with the API
                 items:
                   type: string
@@ -693,6 +703,7 @@ spec:
                   field of the resource.
                 type: string
               labels:
+                default: []
                 description: List of labels of the API
                 items:
                   type: string
@@ -734,6 +745,7 @@ spec:
                   type: object
                 type: array
               metadata:
+                default: []
                 description: List of API metadata entries
                 items:
                   properties:
@@ -927,6 +939,7 @@ spec:
                             description: Flow name
                             type: string
                           publish:
+                            default: []
                             description: List of Publish flow steps
                             items:
                               properties:
@@ -961,6 +974,7 @@ spec:
                               type: object
                             type: array
                           request:
+                            default: []
                             description: List of Request flow steps
                             items:
                               properties:
@@ -995,6 +1009,7 @@ spec:
                               type: object
                             type: array
                           response:
+                            default: []
                             description: List of Response flow steps
                             items:
                               properties:
@@ -1029,12 +1044,14 @@ spec:
                               type: object
                             type: array
                           selectors:
+                            default: []
                             description: List of Flow selectors
                             items:
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             type: array
                           subscribe:
+                            default: []
                             description: List of Subscribe flow steps
                             items:
                               properties:
@@ -1069,6 +1086,7 @@ spec:
                               type: object
                             type: array
                           tags:
+                            default: []
                             description: List of tags
                             items:
                               type: string
@@ -1126,6 +1144,7 @@ spec:
                       - PUBLISHED
                       type: string
                     tags:
+                      default: []
                       description: List of plan tags
                       items:
                         type: string
@@ -1153,6 +1172,7 @@ spec:
                   when using a management context.
                 type: object
               properties:
+                default: []
                 description: List of Properties for the API
                 items:
                   properties:
@@ -1171,6 +1191,7 @@ spec:
                   type: object
                 type: array
               resources:
+                default: []
                 description: |-
                   Resources can be either inlined or reference the namespace and name
                   of an <a href="#apiresource">existing API resource definition</a>.

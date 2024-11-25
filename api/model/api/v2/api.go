@@ -50,12 +50,14 @@ type Api struct {
 	// Contains different services for the API (EndpointDiscovery, HealthCheck ...)
 	Services *Services `json:"services,omitempty"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	// The flow of the API
 	Flows []Flow `json:"flows"`
 	// +kubebuilder:validation:Optional
 	// API Path mapping
 	PathMappings []string `json:"path_mappings"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	// API plans
 	Plans []*Plan `json:"plans"`
 	// A list of Response Templates for the API

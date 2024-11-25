@@ -40,6 +40,7 @@ type Endpoint struct {
 	Backup *bool `json:"backup,omitempty"`
 	// The endpoint tenants
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Tenants []string `json:"tenants"`
 	// The type of endpoint (HttpEndpointType or GrpcEndpointType)
 	Type EndpointType `json:"type,omitempty"`
@@ -54,6 +55,7 @@ type Endpoint struct {
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
 	// List of headers for this endpoint
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Headers []base.HttpHeader `json:"headers"`
 	// Specify EndpointHealthCheck service settings
 	HealthCheck *EndpointHealthCheckService `json:"healthcheck,omitempty"`

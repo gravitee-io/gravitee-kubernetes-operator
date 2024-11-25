@@ -48,6 +48,7 @@ type EndpointDiscoveryService struct {
 	Secondary *bool `json:"secondary,omitempty"`
 	// List of tenants
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Tenants []string `json:"tenants"`
 }
 
@@ -79,6 +80,7 @@ type HealthCheckService struct {
 	*ScheduledService `json:",inline"`
 	// List of health check steps
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Steps []*HealthCheckStep `json:"steps"`
 }
 
@@ -106,6 +108,7 @@ type HealthCheckRequest struct {
 	Method base.HttpMethod `json:"method,omitempty"`
 	// List of HTTP headers to include in the health check request
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
 	Headers []base.HttpHeader `json:"headers"`
 	// Health Check Request Body
 	// +kubebuilder:validation:Optional
