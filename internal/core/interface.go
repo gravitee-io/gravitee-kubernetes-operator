@@ -95,6 +95,7 @@ type ApplicationSettings interface {
 	IsSimple() bool
 	HasTLS() bool
 	GetClientID() string
+	GetClientCertificate() string
 }
 
 // +k8s:deepcopy-gen=false
