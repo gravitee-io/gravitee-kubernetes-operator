@@ -97,7 +97,7 @@ func (api *ApiV4Definition) IsStopped() bool {
 
 func (api *ApiV4Definition) IsSyncFromManagement() bool {
 	defCtx := api.Spec.DefinitionContext
-	return defCtx != nil && defCtx.SyncFrom == v4.OriginManagement
+	return defCtx == nil || defCtx.SyncFrom == v4.OriginManagement
 }
 
 func (api *ApiV4Definition) PopulateIDs(context core.ContextModel) {
