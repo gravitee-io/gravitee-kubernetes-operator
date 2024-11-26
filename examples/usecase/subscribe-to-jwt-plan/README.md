@@ -15,6 +15,14 @@ ssh-keygen -t rsa -b 4096 -m PEM -f pki/private.key
 openssl rsa -in jwt-demo.key -pubout -outform PEM -out pki/public.key
 ```
 
+## Storing the public key in a secret
+
+We will make use of the string templating capabilities of the operator to source the public key from a secret, so let's create the secret file first:
+
+```sh
+kubectl create secret generic jwt --from-file=pki/public.key --dry-run=client -o yaml| grep -v creationTimestamp > resources/jwt-key.yml
+```
+
 ## Configuring the JWT plan
 
 The API definition can be found [here](resources/api.yml)
@@ -30,21 +38,7 @@ plans:
         configuration:
           signature: "RSA_RS256"
           publicKeyResolver: "GIVEN_KEY"
-          resolverParameter: |
-            -----BEGIN PUBLIC KEY-----
-            MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAv8YGSPoQEl7lXnp8OHkb
-            AOPYZ81rzXkmO83d0P8G78qWzi3gPnODm6Qxi2NbgcWXqQlZXxPkDTS3Xck1V3WY
-            E9voqQE7UEwpFBolqtUHQqL4w2vr/eUtZv9t3DdtoCcIj4xLmJUw7PS7jAb9quq0
-            XiVN692d6LI62T+9LyN+kcWHTpUyMBB8oxfQ9ekkGHskTc6LgYovKK+9lKoJv6gg
-            0ge8YAFbpjJBZbVX3jV8qeszgw9Xdhs3w/S8QnvWa3Cv0+c47oxZjXwpAa8ARzfn
-            D/5oK4CWRRy+t3QUndSR0cBR+bU0YFks3mmbl514/ywOXRf/sZmXaJkNejfNHQVa
-            hJgj/Z3W3F8GKksuFF14+BK2KX30bsQL3e4SeN0Wv6DF1UloG0T396yDd/o7L3ZC
-            DBlRB44OZ8sO3h8iSW7wVX0sGj/OKc4smo5dgP0r4+Fm2EVmVFU5YvEkFcy0Xoth
-            QmLwq0lJc7BdRMpAfRZLbW5WSlb2jgvxA/VI/ScLTRWZI7DGbzHRBS6J8Rnt3Inq
-            jo7mUV1juBs3RhpxdOmg1LpGLAtQdcSSnX3IyyEVbzTVb22Px0EGAlKzMs6bnTJf
-            3TbZd/C0iqd6QOyaTh7D4Nr7ClfWAaYGZBA/FsHWA88fOsIQCtovWjp9A8i1+VQ5
-            HEy1rpaHPGHt1DFt2hu+d3MCAwEAAQ==
-            -----END PUBLIC KEY-----
+          resolverParameter: '[[ secret `jwt/public.key` ]]'
           userClaim: "sub"
           clientIdClaim: "client_id"
       status: "PUBLISHED"
@@ -87,6 +81,7 @@ Currently, only resources with a management context reference are supported. Cre
 
 ```sh
 kubectl apply -f resources/management-context.yml
+kubectl apply -f resources/jwt-key.yml
 kubectl apply -f resources/api.yml
 kubectl apply -f resources/application.yml
 kubectl apply -f resources/subscription.yml
@@ -119,5 +114,13 @@ You can now use your token to call your API
 ```sh
 GW_URL=http://localhost:30082 # replace with your gateway URL
 curl -H "Authorization: Bearer $TOKEN" "$GW_URL/jwt-demo"
+```
+
+## Closing the subscription
+
+Deleting the subscription resource results in the subscription being closed. Which means the client id associated with your token will be rejected with a 401 status on subsequent calls to the gateway.
+
+```sh
+kubectl delete -f resources/subscription.yml
 ```
 

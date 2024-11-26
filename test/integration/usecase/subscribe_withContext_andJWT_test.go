@@ -40,6 +40,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 	It("should subscribe to v4 API with JWT plan", func() {
 		fixtures := fixture.Builder().
+			AddSecret(constants.SubscribeUseCasePublicKeySecretFile).
 			WithApplication(constants.SubscribeUseCaseApplicationFile).
 			WithAPIv4(constants.SubscribeUseCaseAPIFile).
 			WithContext(constants.SubscribeUseCaseContextFile).
