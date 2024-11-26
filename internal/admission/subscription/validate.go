@@ -130,7 +130,9 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.Add(validateApplicationSettings(app))
+	plan := api.GetPlan(sub.GetPlan())
+
+	errs.MergeWith(validateApplicationSettings(plan, app))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -206,7 +208,31 @@ func validateApiSyncMode(api core.ApiDefinitionObject) *errors.AdmissionError {
 	return nil
 }
 
-func validateApplicationSettings(app core.ApplicationObject) *errors.AdmissionError {
+func validateApplicationSettings(plan core.PlanModel, app core.ApplicationObject) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if slices.Contains([]string{"JWT", "OAUTH"}, plan.GetSecurityType()) {
+		errs.Add(validateClientID(app))
+	}
+
+	if plan.GetSecurityType() == "MTLS" {
+		errs.Add(validateClientCertificate(app))
+	}
+	return errs
+}
+
+func validateClientCertificate(app core.ApplicationObject) *errors.AdmissionError {
+	settings := app.GetModel().GetSettings()
+	if !settings.HasTLS() {
+		return errors.NewSeveref(
+			"unable to subscribe to MTLS plan from application [%s] because it does not have any client certificate",
+			app.GetRef(),
+		)
+	}
+	return nil
+}
+
+func validateClientID(app core.ApplicationObject) *errors.AdmissionError {
 	settings := app.GetModel().GetSettings()
 	if settings.IsSimple() && settings.GetClientID() == "" {
 		return errors.NewSeveref(

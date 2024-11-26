@@ -93,6 +93,7 @@ type ApplicationSettings interface {
 	IsOAuth() bool
 	GetOAuthType() string
 	IsSimple() bool
+	HasTLS() bool
 	GetClientID() string
 }
 

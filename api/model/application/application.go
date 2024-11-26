@@ -53,6 +53,11 @@ type Setting struct {
 	TLS   *TLSSettings         `json:"tls,omitempty"`
 }
 
+// HasTLS implements core.ApplicationSettings.
+func (in *Setting) HasTLS() bool {
+	return in.TLS != nil
+}
+
 // IsOAuth implements core.ApplicationSettings.
 func (in *Setting) IsOAuth() bool {
 	return in.Oauth != nil
