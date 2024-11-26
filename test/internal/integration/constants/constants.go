@@ -143,11 +143,12 @@ const (
 	SubscriptionFile = "apim/subscription/subscription.yml"
 
 	// Use cases.
-	SubscribeUseCaseContextFile      = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
-	SubscribeUseCaseAPIFile          = "usecase/subscribe-to-jwt-plan/resources/api.yml"
-	SubscribeUseCaseApplicationFile  = "usecase/subscribe-to-jwt-plan/resources/application.yml"
-	SubscribeUseCaseSubscriptionFile = "usecase/subscribe-to-jwt-plan/resources/subscription.yml"
-	SubscribeUseCasePrivateKeyFile   = "usecase/subscribe-to-jwt-plan/pki/private.key"
+	SubscribeUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
+	SubscribeUseCaseAPIFile             = "usecase/subscribe-to-jwt-plan/resources/api.yml"
+	SubscribeUseCaseApplicationFile     = "usecase/subscribe-to-jwt-plan/resources/application.yml"
+	SubscribeUseCaseSubscriptionFile    = "usecase/subscribe-to-jwt-plan/resources/subscription.yml"
+	SubscribeUseCasePublicKeySecretFile = "usecase/subscribe-to-jwt-plan/resources/jwt-key.yml"
+	SubscribeUseCasePrivateKeyFile      = "usecase/subscribe-to-jwt-plan/pki/private.key"
 )
 
 func BuildAPIEndpoint(api *v1alpha1.ApiDefinition) string {
