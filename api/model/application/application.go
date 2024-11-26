@@ -58,6 +58,10 @@ func (in *Setting) HasTLS() bool {
 	return in.TLS != nil
 }
 
+func (in *Setting) GetClientCertificate() string {
+	return in.TLS.ClientCertificate
+}
+
 // IsOAuth implements core.ApplicationSettings.
 func (in *Setting) IsOAuth() bool {
 	return in.Oauth != nil

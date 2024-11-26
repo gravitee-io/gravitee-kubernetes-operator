@@ -16,6 +16,7 @@ package application
 
 import (
 	"context"
+	"encoding/pem"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 
@@ -89,7 +90,18 @@ func validateSettings(app core.ApplicationObject) *errors.AdmissionErrors {
 		errs.AddSevere("configuring both OAuth and simple settings is not allowed")
 	}
 
+	if settings.HasTLS() {
+		errs.Add(validateClientCertificate(settings.GetClientCertificate()))
+	}
+
 	return errs
+}
+
+func validateClientCertificate(cert string) *errors.AdmissionError {
+	if b, _ := pem.Decode([]byte(cert)); b == nil {
+		return errors.NewSevere("failed to parse TLS client certificate")
+	}
+	return nil
 }
 
 func validateSettingsUpdate(oldApp, newApp core.ApplicationObject) *errors.AdmissionErrors {
