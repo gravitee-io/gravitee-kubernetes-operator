@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var allowedPlanSecurities = []string{"JWT", "OAUTH2"}
+var allowedPlanSecurities = []string{"JWT", "OAUTH2", "MTLS"}
 
 func validateUpdate(
 	_ context.Context,
