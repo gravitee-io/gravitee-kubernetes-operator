@@ -479,6 +479,36 @@ spec:
                   type: object
                 minItems: 1
                 type: array
+              failover:
+                description: API Failover
+                properties:
+                  enabled:
+                    default: false
+                    description: API Failover is enabled?
+                    type: boolean
+                  maxFailures:
+                    default: 5
+                    description: API Failover max failures
+                    type: integer
+                  maxRetries:
+                    default: 2
+                    description: API Failover max retires
+                    type: integer
+                  openStateDuration:
+                    default: 10000
+                    description: API Failover  open state duration
+                    format: int64
+                    type: integer
+                  perSubscription:
+                    default: true
+                    description: API Failover  per subscription
+                    type: boolean
+                  slowCallDuration:
+                    default: 2000
+                    description: API Failover slow call duration
+                    format: int64
+                    type: integer
+                type: object
               flowExecution:
                 description: API Flow Execution
                 properties:

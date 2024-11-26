@@ -89,6 +89,8 @@ type Api struct {
 	// Renaming a key is the equivalent of deleting the page and recreating
 	// it holding a new ID in APIM.
 	Pages *map[string]*Page `json:"pages"`
+	// API Failover
+	Failover *Failover `json:"failover,omitempty"`
 }
 
 type GatewayDefinitionApi struct {
@@ -126,6 +128,27 @@ type DefinitionContext struct {
 	// +kubebuilder:default:=`MANAGEMENT`
 	// +kubebuilder:validation:Enum=KUBERNETES;MANAGEMENT;
 	SyncFrom DefinitionContextOrigin `json:"syncFrom,omitempty"`
+}
+
+type Failover struct {
+	// API Failover is enabled?
+	// +kubebuilder:default:=false
+	Enabled *bool `json:"enabled,omitempty"`
+	// API Failover max retires
+	// +kubebuilder:default:=2
+	MaxRetries *int `json:"maxRetries,omitempty"`
+	// API Failover slow call duration
+	// +kubebuilder:default:=2000
+	SlowCallDuration *int64 `json:"slowCallDuration,omitempty"`
+	// API Failover  open state duration
+	// +kubebuilder:default:=10000
+	OpenStateDuration *int64 `json:"openStateDuration,omitempty"`
+	// API Failover max failures
+	// +kubebuilder:default:=5
+	MaxFailures *int `json:"maxFailures,omitempty"`
+	// API Failover  per subscription
+	// +kubebuilder:default:=true
+	PerSubscription *bool `json:"perSubscription,omitempty"`
 }
 
 func NewDefaultKubernetesContext() *DefinitionContext {
