@@ -17,6 +17,7 @@ package manager
 import (
 	"context"
 	"io"
+	"os"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -33,6 +34,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -64,6 +66,8 @@ func Instance() ctrl.Manager {
 }
 
 func init() {
+	os.Setenv(env.HttpCLientInsecureSkipCertVerify, env.TrueString)
+
 	if _, r := GinkgoConfiguration(); r.Verbose {
 		log.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 	} else {

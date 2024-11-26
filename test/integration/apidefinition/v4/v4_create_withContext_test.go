@@ -17,8 +17,6 @@ package v4
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"time"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
@@ -31,12 +29,13 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
+	tHTTP "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
 var _ = Describe("Create", labels.WithContext, func() {
-	httpClient := http.Client{Timeout: 5 * time.Second}
+	httpClient := tHTTP.NewClient()
 
 	timeout := constants.EventualTimeout
 	interval := constants.Interval

@@ -16,7 +16,6 @@ package v2
 import (
 	"context"
 	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,12 +24,13 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
+	tHTTP "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
 var _ = Describe("Create", labels.WithContext, func() {
-	httpClient := http.Client{Timeout: 5 * time.Second}
+	httpClient := tHTTP.NewClient()
 
 	timeout := constants.EventualTimeout
 	interval := constants.Interval

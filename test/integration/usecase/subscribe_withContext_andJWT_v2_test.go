@@ -17,7 +17,6 @@ package usecase
 import (
 	"context"
 	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -26,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
+	tHTTP "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/jwt"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
@@ -64,7 +64,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("calling API endpoint without token, expecting status 401")
 
-		httpClient := http.Client{Timeout: 5 * time.Second}
+		httpClient := tHTTP.NewClient()
 
 		endpoint := constants.BuildAPIEndpoint(fixtures.API)
 		Eventually(func() error {

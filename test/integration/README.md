@@ -313,7 +313,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
         By("calling gateway endpoint, expecting status 200")
         
-        httpClient := http.Client{Timeout: 5 * time.Second}
+        httpClient :=  tHTTP.NewClient()
 		endpoint := constants.BuildAPIEndpoint(fixtures.API)
 
 		Eventually(func() error {
