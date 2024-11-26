@@ -4472,6 +4472,13 @@ from an API instance or from a config map created in the cluster (which is the d
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionspecfailover">failover</a></b></td>
+        <td>object</td>
+        <td>
+          API Failover<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apiv4definitionspecflowexecution">flowExecution</a></b></td>
         <td>object</td>
         <td>
@@ -5611,6 +5618,82 @@ This means that only gateways deployed in the same cluster will be able to sync 
           <br/>
             <i>Enum</i>: KUBERNETES, MANAGEMENT<br/>
             <i>Default</i>: MANAGEMENT<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.failover
+[Go to parent definition](#apiv4definitionspec)
+
+
+
+API Failover
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          API Failover is enabled?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxFailures</b></td>
+        <td>integer</td>
+        <td>
+          API Failover max failures<br/>
+          <br/>
+            <i>Default</i>: 5<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>maxRetries</b></td>
+        <td>integer</td>
+        <td>
+          API Failover max retires<br/>
+          <br/>
+            <i>Default</i>: 2<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>openStateDuration</b></td>
+        <td>integer</td>
+        <td>
+          API Failover  open state duration<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Default</i>: 10000<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>perSubscription</b></td>
+        <td>boolean</td>
+        <td>
+          API Failover  per subscription<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>slowCallDuration</b></td>
+        <td>integer</td>
+        <td>
+          API Failover slow call duration<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Default</i>: 2000<br/>
         </td>
         <td>false</td>
       </tr></tbody>
