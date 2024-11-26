@@ -29,6 +29,9 @@ nodes:
         # gravitee-apim-api
       - containerPort: 30082
         hostPort: 30082
-        # gravitee-apim-gateway
+        # gravitee-apim-gateway (http)
       - containerPort: 30083
         hostPort: 30083
+        # gravitee-apim-gateway (https)
+      - containerPort: 30084
+        hostPort: 30084

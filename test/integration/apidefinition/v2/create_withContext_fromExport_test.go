@@ -17,7 +17,6 @@ package v2
 import (
 	"context"
 	"net/http"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
+	tHTTP "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 )
 
@@ -36,7 +36,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	interval := constants.Interval
 
 	ctx := context.Background()
-	httpClient := http.Client{Timeout: 5 * time.Second}
+	httpClient := tHTTP.NewClient()
 
 	It("should update existing api in management API", func() {
 		fixtures := fixture.Builder().

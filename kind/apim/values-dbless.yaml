@@ -40,9 +40,25 @@ gateway:
     enabled: false
   ingressController:
     enabled: true
+  servers:
+    - type: http
+      port: 8082
+      service:
+        type: NodePort
+        nodePort: 30082
+        externalPort: 82
+    - type: http
+      port: 8084
+      service:
+        type: NodePort
+        nodePort: 30084
+        externalPort: 84
+      ssl:
+        keystore:
+          type: self-signed
+        clientAuth: request
   service:
     type: NodePort
-    nodePort: 30082
   services:
     sync:
       kubernetes:
