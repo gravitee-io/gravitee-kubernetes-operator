@@ -26,7 +26,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var allowedPlanSecurities = []string{"JWT", "OAUTH"}
+const (
+	JWT_TYPE   = "JWT"
+	OAUTH_TYPE = "OAUTH"
+	MTLS_TYPE  = "MTLS"
+)
+
+var allowedPlanSecurities = []string{JWT_TYPE, OAUTH_TYPE, MTLS_TYPE}
 
 func validateUpdate(
 	_ context.Context,
@@ -125,7 +131,8 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.Add(validateApplicationSettings(app))
+	plan := api.GetPlan(sub.GetPlan())
+	errs.Add(validateApplicationSettings(plan, app))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -196,7 +203,14 @@ func validateApiSyncMode(api core.ApiDefinitionObject) *errors.AdmissionError {
 	return nil
 }
 
-func validateApplicationSettings(app core.ApplicationObject) *errors.AdmissionError {
+func validateApplicationSettings(plan core.PlanModel, app core.ApplicationObject) *errors.AdmissionError {
+	if plan.GetSecurityType() == OAUTH_TYPE || plan.GetSecurityType() == JWT_TYPE {
+		return validateClientID(app)
+	}
+	return nil
+}
+
+func validateClientID(app core.ApplicationObject) *errors.AdmissionError {
 	settings := app.GetModel().GetSettings()
 	if settings.IsSimple() && settings.GetClientID() == "" {
 		return errors.NewSeveref(
