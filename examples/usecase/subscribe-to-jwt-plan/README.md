@@ -6,9 +6,9 @@ The guide assumes that you have an operator and an APIM instance up and running.
 
 ## Generating the key pair
 
-The plan will be configured using a hard coded public key.
+The plan will be configured using a hardcoded public key.
 
-The key pair has been generated using openssl as follow:
+The key pair has been generated using openssl as follows:
 
 ```sh
 ssh-keygen -t rsa -b 4096 -m PEM -f pki/private.key
@@ -19,7 +19,7 @@ openssl rsa -in jwt-demo.key -pubout -outform PEM -out pki/public.key
 
 The API definition can be found [here](resources/api.yml)
 
-Here is extracted the plan configuration, with the public key copied from the [pki](pki/) directory.
+Below is the extracted plan configuration, with the public key copied from the [pki](pki/) directory.
 
 ```yaml
 plans:
@@ -76,14 +76,14 @@ spec:
   plan: JWT
 ```
 
-> If you API reference point to a v2 API, this must be explicitly stated by adding the kind
-> property with the `ApiDefinition` value to your api reference.
+> If your API reference points to a v2 API, this must be explicitly stated by adding the `kind`
+> property with the `ApiDefinition` value to your API reference.
 
 ## Applying the resources
 
-Only resources holding a management context ref are supported at the moment, so let's create this first and then the rest of the resources we described in order.
+Currently, only resources with a management context reference are supported. Create this first, followed by the other resources in the described order.
 
-> The management context must be configured accordingly to your setup, using your management API URL and credentials.
+> The management context must be configured according to your setup, using your management API URL and credentials.
 
 ```sh
 kubectl apply -f resources/management-context.yml
@@ -106,7 +106,7 @@ Set the algorithm to `RS256` and sign your token with the provided keys and the 
 }
 ```
 
-If you are following this guide on macOs or linux, you can get a token by running the [get_token.sh](pki/get_token.sh) bash script located in the pki directory.
+If you are following this guide on macOS or Linux, you can get a token by running the [get_token.sh](pki/get_token.sh) bash script located in the pki directory.
 
 ```sh
 export TOKEN=$(bash pki/get_token.sh)
@@ -117,7 +117,7 @@ export TOKEN=$(bash pki/get_token.sh)
 You can now use your token to call your API
 
 ```sh
-GW_URL=http://localhost:30082 # replace by your gateway URL
+GW_URL=http://localhost:30082 # replace with your gateway URL
 curl -H "Authorization: Bearer $TOKEN" "$GW_URL/jwt-demo"
 ```
 
