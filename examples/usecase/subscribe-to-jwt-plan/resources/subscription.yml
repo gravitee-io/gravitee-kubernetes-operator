@@ -19,7 +19,6 @@ metadata:
 spec:
   api:
     name: jwt-demo
-    kind: ApiV4Definition
   application: 
     name: echo-client
   plan: JWT
