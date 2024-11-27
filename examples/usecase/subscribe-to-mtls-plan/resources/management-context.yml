@@ -11,14 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: gravitee.io/v1alpha1
-kind: Subscription
+kind: ManagementContext
 metadata:
-  name: echo-client-subscription
+  name: dev-ctx
 spec:
-  api:
-    name: jwt-demo
-  application: 
-    name: echo-client
-  plan: JWT
+  baseUrl: http://localhost:30083
+  environmentId: DEFAULT
+  organizationId: DEFAULT
+  auth:
+    credentials:
+      username: admin
+      password: admin
