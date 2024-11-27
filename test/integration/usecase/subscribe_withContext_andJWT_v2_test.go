@@ -32,7 +32,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 )
 
-var _ = Describe("Create", labels.WithContext, func() {
+var _ = Describe("Usecase", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 
 	interval := constants.Interval
@@ -74,7 +74,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		By("calling API endpoint with a token, expecting status 200")
 
-		token, err := jwt.GetToken(clientID, constants.SubscribeUseCasePrivateKeyFile)
+		token, err := jwt.GetToken(clientID, constants.SubscribeJWTUseCasePrivateKeyFile)
 		Expect(err).ToNot(HaveOccurred())
 
 		Eventually(func() error {

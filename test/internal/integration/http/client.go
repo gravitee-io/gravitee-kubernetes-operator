@@ -16,8 +16,11 @@ package http
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"net/http"
 	"time"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/examples"
 )
 
 func NewClient() *http.Client {
@@ -28,5 +31,39 @@ func NewClient() *http.Client {
 	return &http.Client{
 		Transport: tr,
 		Timeout:   5 * time.Second,
+	}
+}
+
+func NewMTLSClient(caFile, crtFile, keyFile string) *http.Client {
+	ca, err := examples.FS.ReadFile(caFile)
+	if err != nil {
+		panic("unable to load sever CA for client authentication")
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(ca)
+
+	crt, err := examples.FS.ReadFile(crtFile)
+	if err != nil {
+		panic("unable to load crt for client authentication")
+	}
+	key, err := examples.FS.ReadFile(keyFile)
+	if err != nil {
+		panic("unable to load key for client authentication")
+	}
+	keyPair, err := tls.X509KeyPair(crt, key)
+	if err != nil {
+		panic("unable to parse key pair for client authentication")
+	}
+	tr := &http.Transport{
+		// #nosec G402
+		TLSClientConfig: &tls.Config{
+			RootCAs:      caCertPool,
+			Certificates: []tls.Certificate{keyPair},
+		},
+	}
+	return &http.Client{
+		Transport: tr,
+		Timeout:   3000 * time.Second,
 	}
 }

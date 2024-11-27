@@ -29,10 +29,12 @@ const (
 	EventualTimeout   = time.Second * 30
 	Interval          = time.Millisecond * 250
 
-	GatewayHost   = "localhost"
-	GatewayPort   = "30082"
-	GatewayUrl    = "http://" + GatewayHost + ":" + GatewayPort
-	ManagementUrl = "http://localhost:30083/management"
+	GatewayHost      = "localhost"
+	GatewayPortHTTP  = "30082"
+	GatewayPortHTTPS = "30084"
+	GatewayUrlHTTP   = "http://" + GatewayHost + ":" + GatewayPortHTTP
+	GatewayUrlHTTPS  = "https://" + GatewayHost + ":" + GatewayPortHTTPS
+	ManagementUrl    = "http://localhost:30083/management"
 
 	ContextSecretFile                       = "management_context/dev/management-context-secret.yml"
 	ContextWithSecretFile                   = "management_context/dev/management-context-with-secret-ref.yml"
@@ -143,16 +145,38 @@ const (
 	SubscriptionFile = "apim/subscription/subscription.yml"
 
 	// Use cases.
-	SubscribeUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
-	SubscribeUseCaseAPIFile             = "usecase/subscribe-to-jwt-plan/resources/api.yml"
-	SubscribeUseCaseApplicationFile     = "usecase/subscribe-to-jwt-plan/resources/application.yml"
-	SubscribeUseCaseSubscriptionFile    = "usecase/subscribe-to-jwt-plan/resources/subscription.yml"
-	SubscribeUseCasePublicKeySecretFile = "usecase/subscribe-to-jwt-plan/resources/jwt-key.yml"
-	SubscribeUseCasePrivateKeyFile      = "usecase/subscribe-to-jwt-plan/pki/private.key"
+	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
+	SubscribeJWTUseCaseAPIFile             = "usecase/subscribe-to-jwt-plan/resources/api.yml"
+	SubscribeJWTUseCaseApplicationFile     = "usecase/subscribe-to-jwt-plan/resources/application.yml"
+	SubscribeJWTUseCaseSubscriptionFile    = "usecase/subscribe-to-jwt-plan/resources/subscription.yml"
+	SubscribeJWTUseCasePublicKeySecretFile = "usecase/subscribe-to-jwt-plan/resources/jwt-key.yml"
+	SubscribeJWTUseCasePrivateKeyFile      = "usecase/subscribe-to-jwt-plan/pki/private.key"
+
+	SubscribeMTLSUseCaseContextFile      = "usecase/subscribe-to-mtls-plan/resources/management-context.yml"
+	SubscribeMTLSUseCaseAPIFile          = "usecase/subscribe-to-mtls-plan/resources/api.yml"
+	SubscribeMTLSUseCaseApplicationFile  = "usecase/subscribe-to-mtls-plan/resources/application.yml"
+	SubscribeMTLSUseCaseSubscriptionFile = "usecase/subscribe-to-mtls-plan/resources/subscription.yml"
+	SubscribeMTLSUseCaseTLSSecretFile    = "usecase/subscribe-to-mtls-plan/resources/tls-client.yml"
+	SubscribeMTLSUseCaseClientKeyFile    = "usecase/subscribe-to-mtls-plan/pki/client.key"
+	SubscribeMTLSUseCaseClientCertFile   = "usecase/subscribe-to-mtls-plan/pki/client.crt"
+	SubscribeMTLSUseCaseRootCAFile       = "usecase/subscribe-to-mtls-plan/pki/ca.crt"
 )
 
 func BuildAPIEndpoint(api *v1alpha1.ApiDefinition) string {
-	return GatewayUrl + api.Spec.Proxy.VirtualHosts[0].Path
+	return GatewayUrlHTTP + api.Spec.Proxy.VirtualHosts[0].Path
+}
+
+func BuildAPIV4EndpointForTLS(l v4.Listener) string {
+	switch t := l.(type) {
+	case *v4.GenericListener:
+		return BuildAPIV4EndpointForTLS(t.ToListener())
+	case *v4.HttpListener:
+		return GatewayUrlHTTPS + t.Paths[0].Path
+	case *v4.TCPListener:
+		return t.Hosts[0]
+	}
+
+	return ""
 }
 
 func BuildAPIV4Endpoint(l v4.Listener) string {
@@ -160,7 +184,7 @@ func BuildAPIV4Endpoint(l v4.Listener) string {
 	case *v4.GenericListener:
 		return BuildAPIV4Endpoint(t.ToListener())
 	case *v4.HttpListener:
-		return GatewayUrl + t.Paths[0].Path
+		return GatewayUrlHTTP + t.Paths[0].Path
 	case *v4.TCPListener:
 		return t.Hosts[0]
 	}

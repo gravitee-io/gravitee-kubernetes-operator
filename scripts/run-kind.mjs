@@ -23,6 +23,7 @@ import {
 } from "./lib/index.mjs";
 
 const KIND_CONFIG = path.join(__dirname, "..", "kind");
+const PKI = path.join(__dirname, "..", "examples", "usecase", "subscribe-to-mtls-plan", "pki");
 
 const APIM_REGISTRY = `${process.env.APIM_IMAGE_REGISTRY || "graviteeio"}`;
 const APIM_TAG = `${process.env.APIM_IMAGE_TAG || "latest"}`;
@@ -76,6 +77,10 @@ async function loadImages() {
   setQuoteEscape();
 }
 
+async function createTLSSecret() {
+  await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key`
+}
+
 async function helmInstallAPIM() {
   await $`helm repo add graviteeio https://helm.gravitee.io`;
   await $`helm repo update graviteeio`;
@@ -101,6 +106,12 @@ LOG.blue(`
 `);
 
 await time(loadImages);
+
+LOG.blue(`
+  ☸ Creating APIM gateway TLS secret
+`);
+
+await time(createTLSSecret);
 
 LOG.blue(`
   ☸ Installing APIM

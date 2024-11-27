@@ -25,10 +25,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	tHTTP "github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/http"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/jwt"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 )
 
 var _ = Describe("Usecase", labels.WithContext, func() {
@@ -38,65 +36,51 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 
 	ctx := context.Background()
 
-	It("should subscribe to v4 API with JWT plan", func() {
+	It("should subscribe to v4 API with MTLS plan", func() {
 		fixtures := fixture.Builder().
-			AddSecret(constants.SubscribeJWTUseCasePublicKeySecretFile).
-			WithApplication(constants.SubscribeJWTUseCaseApplicationFile).
-			WithAPIv4(constants.SubscribeJWTUseCaseAPIFile).
-			WithContext(constants.SubscribeJWTUseCaseContextFile).
-			WithSubscription(constants.SubscribeJWTUseCaseSubscriptionFile).
-			Build()
-
-		clientID := random.GetName()
-		fixtures.Application.Spec.Settings.App.ClientID = &clientID
-
-		By("expecting subscription status to be completed")
-
-		fixtures.Apply()
+			AddSecret(constants.SubscribeMTLSUseCaseTLSSecretFile).
+			WithApplication(constants.SubscribeMTLSUseCaseApplicationFile).
+			WithAPIv4(constants.SubscribeMTLSUseCaseAPIFile).
+			WithContext(constants.SubscribeMTLSUseCaseContextFile).
+			WithSubscription(constants.SubscribeMTLSUseCaseSubscriptionFile).
+			Build().
+			Apply()
 
 		Eventually(func() error {
 			return assert.SubscriptionCompleted(fixtures.Subscription)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
 
-		By("calling API endpoint without token, expecting status 401")
+		By("calling API endpoint without client auth, expecting status 401")
+
+		endpoint := constants.BuildAPIV4EndpointForTLS(fixtures.APIv4.Spec.Listeners[0])
 
 		httpClient := tHTTP.NewClient()
 
-		endpoint := constants.BuildAPIV4Endpoint(fixtures.APIv4.Spec.Listeners[0])
 		Eventually(func() error {
 			res, err := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(err, res, http.StatusUnauthorized)
 		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 
-		By("calling API endpoint with a token, expecting status 200")
+		By("calling API endpoint with client auth, expecting status 200")
 
-		token, err := jwt.GetToken(clientID, constants.SubscribeJWTUseCasePrivateKeyFile)
-		Expect(err).ToNot(HaveOccurred())
+		mtlsClient := tHTTP.NewMTLSClient(
+			constants.SubscribeMTLSUseCaseRootCAFile,
+			constants.SubscribeMTLSUseCaseClientCertFile,
+			constants.SubscribeMTLSUseCaseClientKeyFile,
+		)
 
 		Eventually(func() error {
-			req, err := http.NewRequest(http.MethodGet, endpoint, nil)
-			if err != nil {
-				return err
-			}
-			bearer := "Bearer " + token
-			req.Header.Set("Authorization", bearer)
-			res, err := httpClient.Do(req)
+			res, err := mtlsClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(err, res, http.StatusOK)
 		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 
-		By("deleting subscription, expecting status 401")
+		By("deleting subscription, expecting error")
 
 		Expect(manager.Delete(ctx, fixtures.Subscription)).To(Succeed())
 
 		Eventually(func() error {
-			req, err := http.NewRequest(http.MethodGet, endpoint, nil)
-			if err != nil {
-				return err
-			}
-			bearer := "Bearer " + token
-			req.Header.Set("Authorization", bearer)
-			res, err := httpClient.Do(req)
-			return assert.NoErrorAndHTTPStatus(err, res, http.StatusUnauthorized)
+			_, err := mtlsClient.Get(endpoint)
+			return assert.NotNil("error", err)
 		}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 	})
 })
