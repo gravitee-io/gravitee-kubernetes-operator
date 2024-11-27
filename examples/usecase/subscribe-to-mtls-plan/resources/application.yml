@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,14 +12,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 apiVersion: gravitee.io/v1alpha1
-kind: Subscription
+kind: Application
 metadata:
-  name: echo-client-subscription
+  name: echo-client
 spec:
-  api:
-    name: jwt-demo
-  application: 
-    name: echo-client
-  plan: JWT
+  contextRef:
+    name: "dev-ctx"
+  name: "echo-client"
+  description: "echo API client"
+  settings:
+    app:
+      type: WEB
+    tls: 
+      clientCertificate: '[[ secret `client-auth/tls.crt` ]]'

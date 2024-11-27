@@ -18,7 +18,7 @@ metadata:
   name: echo-client-subscription
 spec:
   api:
-    name: jwt-demo
+    name: mtls-demo
   application: 
     name: echo-client
-  plan: JWT
+  plan: MTLS
