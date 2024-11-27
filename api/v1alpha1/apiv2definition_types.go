@@ -188,6 +188,8 @@ func (api *ApiDefinition) generateEmptyPlanIDs() {
 
 		if id, ok := api.Status.Plans[plan.CrossID]; ok {
 			plan.ID = id
+		} else {
+			plan.ID = uuid.FromStrings(plan.CrossID, separator, plan.Name)
 		}
 	}
 }
