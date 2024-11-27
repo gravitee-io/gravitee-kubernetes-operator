@@ -125,7 +125,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		By("checking routing to httpbin-1")
 
 		host := new(Host)
-		url := fmt.Sprintf("%s/ingress/foo%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix())
+		url := fmt.Sprintf("%s/ingress/foo%s/hostname", constants.GatewayUrlHTTP, fixtures.GetGeneratedSuffix())
 
 		Eventually(func() error {
 			return httpCli.Get(url, host, xhttp.WithHost("foo.example.com"))
@@ -136,7 +136,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		By("checking routing to httpbin-2")
 
 		host = new(Host)
-		url = fmt.Sprintf("%s/ingress/bar%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix())
+		url = fmt.Sprintf("%s/ingress/bar%s/hostname", constants.GatewayUrlHTTP, fixtures.GetGeneratedSuffix())
 
 		Eventually(func() error {
 			return httpCli.Get(url, host, xhttp.WithHost("bar.example.com"))
@@ -147,7 +147,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 		By("checking routing to httpbin-3")
 
 		host = new(Host)
-		url = fmt.Sprintf("%s/ingress/baz%s/hostname", constants.GatewayUrl, fixtures.GetGeneratedSuffix())
+		url = fmt.Sprintf("%s/ingress/baz%s/hostname", constants.GatewayUrlHTTP, fixtures.GetGeneratedSuffix())
 
 		Eventually(func() error {
 			return httpCli.Get(url, host)

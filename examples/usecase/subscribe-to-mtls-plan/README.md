@@ -11,37 +11,52 @@ You can read more about MTLS plans in APIM [documentation](https://documentation
 To be able to use MTLS subscriptions, your APIM instance has to be configured to enable TLS and client authentication.
 
 Here are, for example, the Helm values we used to write this guide:
-
+x
 ```yaml
 servers:
-  - type: http
-    port: 8082
-    service:
-      type: NodePort
-      nodePort: 30082
-      externalPort: 82
-  - type: http
-    port: 8084
-    service:
-      type: NodePort
-      nodePort: 30084
-      externalPort: 84
-    ssl:
-      keystore:
-        type: self-signed
-      clientAuth: request
+    - type: http
+      port: 8082
+      service:
+        type: NodePort
+        nodePort: 30082
+        externalPort: 82
+    - type: http
+      port: 8084
+      service:
+        type: NodePort
+        nodePort: 30084
+        externalPort: 84
+      ssl:
+        keystore:
+          type: pem
+          secret: secret://kubernetes/tls-server
+        clientAuth: request
   service:
     type: NodePort
 ```
 
 Here, both HTTP and HTTPS are enabled respectively on node ports 30082 and 30084 and TLS is enabled with a self signed keystore and on demand client authentication.
 
+Server keystore is sourced from a kubernetes secret that you can create like that:
+
+```sh
+kubectl create secret tls tls-server --cert=pki//server.crt --key=pki/server.key
+```
+
+Note that for this to work you need to enabled kubernetes secrets at the root of your values file:
+
+```yaml
+secrets:
+  kubernetes:
+    enabled: true
+```
+
 ## Creating a TLS secret
 
 The client key and certificate we will use can be found in the [pki](pki/) directory. Let's create a secret to store them so that we can configure our application later on using the client certificate:
 
 ```sh
-kubectl create secret tls client-auth --cert=pki/client.crt --key=pki/client.key --dry-run=client -o yaml>resources/client-auth.yml
+kubectl create secret tls tls-client --cert=pki/client.crt --key=pki/client.key --dry-run=client -o yaml>resources/tls-client.yml
 ```
 
 ## Configuring a MTLS plan
@@ -95,7 +110,7 @@ Only resources holding a management context ref are supported at the moment, so 
 
 ```sh
 kubectl apply -f resources/management-context.yml
-kubectl apply -f resources/client-auth.yml
+kubectl apply -f resources/tls-client.yml
 kubectl apply -f resources/api.yml
 kubectl apply -f resources/application.yml
 kubectl apply -f resources/subscription.yml
