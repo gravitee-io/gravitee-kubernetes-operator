@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -70,7 +71,12 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return err
 	}
 
-	subscription.Status.StartedAt = status.StartingAt
+	startedAt, err := time.Parse(time.RFC3339, status.StartingAt)
+	if err != nil {
+		return err
+	}
+
+	subscription.Status.StartedAt = startedAt.Format("2024-12-25T09:12:28Z")
 	subscription.Status.EndingAt = status.EndingAt
 	subscription.Status.ID = status.ID
 
