@@ -215,4 +215,5 @@ type SubscriptionModel interface {
 	GetApiRef() ObjectRef
 	SetApiKind(string)
 	GetPlan() string
+	GetEndingAt() *string
 }

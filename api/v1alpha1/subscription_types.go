@@ -123,6 +123,10 @@ func (s *Subscription) SetApiKind(kind string) {
 	s.Spec.SetApiKind(kind)
 }
 
+func (s *Subscription) GetEndingAt() *string {
+	return s.Spec.EndingAt
+}
+
 // +kubebuilder:object:root=true
 type SubscriptionList struct {
 	metav1.TypeMeta `json:",inline"`

@@ -58,3 +58,7 @@ func (t *Type) GetPlan() string {
 func (t *Type) SetApiKind(kind string) {
 	t.API.Kind = kind
 }
+
+func (t *Type) GetEndingAt() *string {
+	return t.EndingAt
+}
