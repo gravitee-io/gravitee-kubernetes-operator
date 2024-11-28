@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -38,6 +39,10 @@ func validateUpdate(
 	newSub, nok := newObj.(core.SubscriptionObject)
 	if ook && nok {
 		errs.MergeWith(validateImmutableProperties(oldSub, newSub))
+		if errs.IsSevere() {
+			return errs
+		}
+		errs.Add(validateEndingAt(newSub.GetEndingAt()))
 	}
 	return errs
 }
@@ -131,6 +136,11 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	}
 
 	errs.Add(validateContextRefs(api, app))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(validateEndingAt(sub.GetEndingAt()))
 
 	return errs
 }
@@ -235,6 +245,26 @@ func validateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObjec
 			app.ContextRef(),
 			api.ContextRef(),
 		)
+	}
+	return nil
+}
+
+func validateEndingAt(endingAt *string) *errors.AdmissionError {
+	if endingAt != nil {
+		t, err := time.Parse(time.RFC3339, *endingAt)
+		if err != nil {
+			return errors.NewSeveref(
+				"ending date [%s] is not in RFC3339 format",
+				*endingAt,
+			)
+		}
+		tx := time.Now().Add(1 * time.Minute)
+		if t.Local().Before(tx) {
+			return errors.NewSeveref(
+				"ending date [%s] should be at least one minute from now",
+				*endingAt,
+			)
+		}
 	}
 	return nil
 }
