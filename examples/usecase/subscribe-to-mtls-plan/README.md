@@ -1,17 +1,17 @@
-# Subscribing to a MTLS plan
+# Subscribing to an MTLS plan
 
-This guide shows how to configure and create a MTLS plan for a v4 API using the operator, then how to subscribe an application to that plan using the subscription resource.
+This guide shows how to configure and create an MTLS plan for a v4 API using the operator, then how to subscribe an application to that plan using the subscription resource.
 
 The guide assumes that you have an operator and an APIM instance up and running.
 
-You can read more about MTLS plans in APIM [documentation](https://documentation.gravitee.io/apim/using-the-product/managing-your-apis/preparing-apis-for-subscribers/plans/mtls).
+You can read more about MTLS plans in the APIM [documentation](https://documentation.gravitee.io/apim/using-the-product/managing-your-apis/preparing-apis-for-subscribers/plans/mtls).
 
 ## Important consideration regarding APIM configuration
 
 To be able to use MTLS subscriptions, your APIM instance has to be configured to enable TLS and client authentication.
 
 Here are, for example, the Helm values we used to write this guide:
-x
+
 ```yaml
 servers:
     - type: http
@@ -99,14 +99,14 @@ spec:
   plan: MTLS
 ```
 
-> If you API reference point to a v2 API, this must be explicitly stated by adding the kind
+> If the `api` property points to a v2 API, this must be explicitly stated by adding a kind
 > property with the `ApiDefinition` value to your api reference.
 
 ## Applying the resources
 
 Only resources holding a management context ref are supported at the moment, so let's create this first and then the rest of the resources we described in order.
 
-> The management context must be configured accordingly to your setup, using your management API URL and credentials.
+> The management context must be configured according to your setup, using your management API URL and credentials.
 
 ```sh
 kubectl apply -f resources/management-context.yml
@@ -129,7 +129,7 @@ Now that all the resources are created, calling the API on the HTTPS endpoint of
 HTTP/1.1 401 Unauthorized
 ```
 
-Let's now use the key and certificate we used to configured the echo-client application:
+Let's now use the key and certificate we used to configure the echo-client application:
 
 ```sh
 ❯ curl -ksi --cert pki/client.crt --key pki/client.key $GW_URL/mtls-demo| head -1    
