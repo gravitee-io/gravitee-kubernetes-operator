@@ -50,7 +50,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 	It("should fail if the ending at date is in the past", func() {
 
-		endingAt := "2024-11-28T12:20:16.945Z"
+		endingAt := "2024-11-28T12:20:00Z"
 
 		newObj := fixtures.Subscription.DeepCopy()
 		newObj.Spec.EndingAt = &endingAt
