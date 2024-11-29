@@ -61,8 +61,8 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 				"error",
 				errors.NewSeveref(
 					"unable to subscribe to API [%s] because its definition is not synced from the management API (%s)",
-					"sourcing subscriptions from a Kubernetes cluster is not supported at the moment",
 					fixtures.APIv4.GetRef(),
+					"sourcing subscriptions from a Kubernetes cluster is not supported at the moment",
 				),
 				err,
 			)

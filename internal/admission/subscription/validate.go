@@ -201,8 +201,8 @@ func validateApiSyncMode(api core.ApiDefinitionObject) *errors.AdmissionError {
 	if !api.IsSyncFromManagement() {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because its definition is not synced from the management API (%s)",
-			"sourcing subscriptions from a Kubernetes cluster is not supported at the moment",
 			api.GetRef(),
+			"sourcing subscriptions from a Kubernetes cluster is not supported at the moment",
 		)
 	}
 	return nil
