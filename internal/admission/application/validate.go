@@ -156,3 +156,27 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 	}
 	return errs
 }
+
+func validateDelete(_ context.Context, obj runtime.Object) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	if app, ok := obj.(core.ApplicationObject); ok {
+		errs.Add(validateSubscriptionCount(app))
+	}
+	return errs
+}
+
+func validateSubscriptionCount(app core.ApplicationObject) *errors.AdmissionError {
+	st, _ := app.GetStatus().(core.SubscribableStatus)
+	sc := st.GetSubscriptionCount()
+	if sc > 0 {
+		return errors.NewSeveref(
+			"cannot delete [%s] because it is referenced in %d subscriptions. "+
+				"Subscriptions must be deleted before the application. "+
+				"You can review the subscriptions using the following command: "+
+				"kubectl get subscriptions.gravitee.io -A "+
+				"-o jsonpath='{.items[?(@.spec.application.name==\"%s\")].metadata.name}'",
+			app.GetRef(), sc, app.GetName(),
+		)
+	}
+	return nil
+}

@@ -27,7 +27,7 @@ spec:
   version: "1"
   description: "jwt-v2"
   plans:
-  - name: "jwt"
+  - name: "JWT"
     description: "jwt plan"
     security: "JWT"
     securityDefinition: "{\n  \"signature\" : \"RSA_RS256\",\n  \"publicKeyResolver\"\

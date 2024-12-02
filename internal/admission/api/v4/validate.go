@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -79,5 +80,24 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 	for _, warning := range status.Errors.Warning {
 		errs.AddWarning(warning)
 	}
+	return errs
+}
+
+func validateUpdate(
+	ctx context.Context,
+	oldObj runtime.Object,
+	newObj runtime.Object,
+) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	oldApi, ook := oldObj.(core.ApiDefinitionObject)
+	newApi, nok := newObj.(core.ApiDefinitionObject)
+	if !ook || !nok {
+		return errs
+	}
+	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, indexer.ApiV4SubsField))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateCreate(ctx, newApi))
 	return errs
 }

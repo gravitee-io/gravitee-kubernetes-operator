@@ -29,7 +29,9 @@ type Status struct {
 	// The processing status of the Application.
 	// The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
-	// When API has been created regardless of errors, this field is
+	// The number of subscriptions that reference the application
+	SubscriptionCount uint `json:"subscriptions,omitempty"`
+	// When application has been created regardless of errors, this field is
 	// used to persist the error message encountered during admission
 	Errors status.Errors `json:"errors,omitempty"`
 }

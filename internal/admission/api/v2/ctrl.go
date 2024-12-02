@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -57,7 +58,7 @@ func (a AdmissionCtrl) ValidateUpdate(
 	oldObj runtime.Object,
 	newObj runtime.Object,
 ) (admission.Warnings, error) {
-	return a.ValidateCreate(ctx, newObj)
+	return validateUpdate(ctx, oldObj, newObj).Map()
 }
 
 // ValidateDelete implements admission.CustomValidator.
@@ -65,5 +66,5 @@ func (a AdmissionCtrl) ValidateDelete(
 	ctx context.Context,
 	obj runtime.Object,
 ) (admission.Warnings, error) {
-	return admission.Warnings{}, nil
+	return base.ValidateDelete(ctx, obj).Map()
 }

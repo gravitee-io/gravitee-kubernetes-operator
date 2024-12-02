@@ -22,6 +22,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
@@ -79,6 +81,20 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	subscription.Status.StartedAt = startedAt.Format(time.RFC3339)
 	subscription.Status.EndingAt = status.EndingAt
 	subscription.Status.ID = status.ID
+
+	appStatus, _ := app.GetStatus().(core.SubscribableStatus)
+	apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
+
+	appStatus.AddSubscription()
+	apiStatus.AddSubscription()
+
+	if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
+		return err
+	}
+
+	if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
+		return err
+	}
 
 	return nil
 }

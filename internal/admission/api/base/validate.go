@@ -16,8 +16,13 @@ package base
 
 import (
 	"context"
+	"reflect"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -48,4 +53,68 @@ func ValidateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 
 func ValidateUpdate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	return ValidateCreate(ctx, obj)
+}
+
+func ValidateDelete(_ context.Context, obj runtime.Object) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	if api, ok := obj.(core.ApiDefinitionObject); ok {
+		errs.Add(validateSubscriptionCount(api))
+	}
+	return errs
+}
+
+func validateSubscriptionCount(api core.ApiDefinitionObject) *errors.AdmissionError {
+	st, _ := api.GetStatus().(core.SubscribableStatus)
+	sc := st.GetSubscriptionCount()
+	if sc > 0 {
+		return errors.NewSeveref(
+			"cannot delete [%s] because it is referenced in %d subscriptions. "+
+				"Subscriptions must be deleted before the API definition. "+
+				"You can review the subscriptions using the following command: "+
+				"kubectl get subscriptions.gravitee.io -A "+
+				"-o jsonpath='{.items[?(@.spec.api.name==\"%s\")].metadata.name}'",
+			api.GetRef(), sc, api.GetName(),
+		)
+	}
+	return nil
+}
+
+func ValidateSubscribedPlans(
+	ctx context.Context,
+	oldApi core.ApiDefinitionObject,
+	newApi core.ApiDefinitionObject,
+	searchIndexField indexer.IndexField,
+) *errors.AdmissionError {
+	st, _ := oldApi.GetStatus().(core.SubscribableStatus)
+	if st.GetSubscriptionCount() == 0 {
+		return nil
+	}
+
+	subs := &v1alpha1.SubscriptionList{}
+	if err := search.FindByFieldReferencing(
+		ctx,
+		searchIndexField,
+		refs.NamespacedName{
+			Name:      oldApi.GetName(),
+			Namespace: oldApi.GetNamespace(),
+		},
+		subs,
+	); err != nil {
+		return errors.NewSevere(err.Error())
+	}
+
+	for _, sub := range subs.Items {
+		plan := newApi.GetPlan(sub.Spec.Plan)
+		if plan == nil || reflect.ValueOf(plan).IsNil() {
+			return errors.NewSeveref(
+				"Plan [%s] could not be found in API [%s] "+
+					"but there is a subscription referencing it. "+
+					"You can review the depending subscriptions using the following command: "+
+					"kubectl get subscriptions.gravitee.io -A "+
+					"-o jsonpath='{.items[?(@.spec.api.name==\"%s\")].metadata.name}'",
+				sub.Spec.Plan, newApi.GetRef(), newApi.GetName(),
+			)
+		}
+	}
+	return nil
 }

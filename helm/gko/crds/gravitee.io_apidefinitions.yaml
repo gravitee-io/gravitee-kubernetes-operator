@@ -1718,6 +1718,9 @@ spec:
                 - STARTED
                 - STOPPED
                 type: string
+              subscriptions:
+                description: The number of subscriptions that reference the API
+                type: integer
             type: object
         type: object
     served: true

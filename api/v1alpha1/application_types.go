@@ -29,6 +29,7 @@ import (
 
 var _ core.ApplicationObject = &Application{}
 var _ core.Spec = &ApplicationSpec{}
+var _ core.SubscribableStatus = &ApplicationStatus{}
 
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
@@ -41,6 +42,20 @@ type ApplicationSpec struct {
 // ApplicationStatus defines the observed state of Application.
 type ApplicationStatus struct {
 	application.Status `json:",inline"`
+}
+
+// AddSubscription implements core.SubscribableStatus.
+func (s *ApplicationStatus) AddSubscription() {
+	s.SubscriptionCount += 1
+}
+
+func (s *ApplicationStatus) RemoveSubscription() {
+	s.SubscriptionCount -= 1
+}
+
+// GetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApplicationStatus) GetSubscriptionCount() uint {
+	return s.SubscriptionCount
 }
 
 // +kubebuilder:object:root=true
