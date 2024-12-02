@@ -155,7 +155,7 @@ func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *erro
 	}
 
 	plan := api.GetPlan(sub.GetPlan())
-	if reflect.ValueOf(plan).IsNil() {
+	if plan == nil || reflect.ValueOf(plan).IsNil() {
 		return errors.NewSeveref(
 			"unable to subscribe to API [%s] because plan [%s] cannot be found",
 			sub.GetApiRef(), sub.GetPlan(),
