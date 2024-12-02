@@ -122,6 +122,13 @@ type Status interface {
 	DeepCopyTo(obj client.Object) error
 }
 
+type SubscribableStatus interface {
+	Status
+	GetSubscriptionCount() uint
+	AddSubscription()
+	RemoveSubscription()
+}
+
 // +k8s:deepcopy-gen=false
 type ContextAwareObject interface {
 	Object

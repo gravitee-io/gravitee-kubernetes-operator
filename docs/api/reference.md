@@ -4349,6 +4349,13 @@ to sync the API with an APIM instance<br/>
             <i>Enum</i>: STARTED, STOPPED<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>subscriptions</b></td>
+        <td>integer</td>
+        <td>
+          The number of subscriptions that reference the API<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -7397,6 +7404,13 @@ to sync the API with an APIM instance<br/>
             <i>Enum</i>: STARTED, STOPPED<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>subscriptions</b></td>
+        <td>integer</td>
+        <td>
+          The number of subscriptions that reference the API<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -7989,7 +8003,7 @@ ApplicationStatus defines the observed state of Application.
         <td><b><a href="#applicationstatuserrors">errors</a></b></td>
         <td>object</td>
         <td>
-          When API has been created regardless of errors, this field is
+          When application has been created regardless of errors, this field is
 used to persist the error message encountered during admission<br/>
         </td>
         <td>false</td>
@@ -8015,6 +8029,13 @@ used to persist the error message encountered during admission<br/>
 The value is `Completed` if the sync with APIM succeeded, Failed otherwise.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>subscriptions</b></td>
+        <td>integer</td>
+        <td>
+          The number of subscriptions that reference the application<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -8024,7 +8045,7 @@ The value is `Completed` if the sync with APIM succeeded, Failed otherwise.<br/>
 
 
 
-When API has been created regardless of errors, this field is
+When application has been created regardless of errors, this field is
 used to persist the error message encountered during admission
 
 <table>

@@ -15,7 +15,7 @@
 apiVersion: gravitee.io/v1alpha1
 kind: Subscription
 metadata:
-  name: api-key-subscription
+  name: echo-subscription
 spec:
   api:
     name: api-v4-with-jwt-plan

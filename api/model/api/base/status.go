@@ -40,6 +40,8 @@ type Status struct {
 	// to sync the API with an APIM instance
 	// +kubebuilder:validation:Optional
 	Plans map[string]string `json:"plans,omitempty"`
+	// The number of subscriptions that reference the API
+	SubscriptionCount uint `json:"subscriptions,omitempty"`
 	// When API has been created regardless of errors, this field is
 	// used to persist the error message encountered during admission
 	Errors status.Errors `json:"errors,omitempty"`

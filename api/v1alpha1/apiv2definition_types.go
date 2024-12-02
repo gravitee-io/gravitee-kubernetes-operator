@@ -59,7 +59,7 @@ type ApiDefinitionStatus struct {
 }
 
 var _ core.ApiDefinitionObject = &ApiDefinition{}
-var _ core.Status = &ApiDefinitionStatus{}
+var _ core.SubscribableStatus = &ApiDefinitionStatus{}
 var _ core.Spec = &ApiDefinitionV2Spec{}
 
 // ApiDefinition is the Schema for the apidefinitions API.
@@ -296,6 +296,18 @@ func (s *ApiDefinitionStatus) DeepCopyTo(obj client.Object) error {
 	}
 
 	return nil
+}
+
+func (s *ApiDefinitionStatus) AddSubscription() {
+	s.SubscriptionCount += 1
+}
+
+func (s *ApiDefinitionStatus) RemoveSubscription() {
+	s.SubscriptionCount -= 1
+}
+
+func (s *ApiDefinitionStatus) GetSubscriptionCount() uint {
+	return s.SubscriptionCount
 }
 
 // ApiDefinitionList contains a list of ApiDefinition.

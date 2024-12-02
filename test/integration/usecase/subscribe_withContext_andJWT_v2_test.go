@@ -52,7 +52,6 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 		fixtures.Subscription.Spec.API.Name = fixtures.API.Name
 		fixtures.Subscription.Spec.API.Kind = core.CRDApiDefinitionResource
 		fixtures.Subscription.Spec.App.Name = fixtures.Application.Name
-		fixtures.Subscription.Spec.Plan = "jwt"
 
 		By("expecting subscription status to be completed")
 

@@ -46,7 +46,7 @@ type ApiV4DefinitionStatus struct {
 }
 
 var _ core.ApiDefinitionObject = &ApiV4Definition{}
-var _ core.Status = &ApiDefinitionStatus{}
+var _ core.SubscribableStatus = &ApiV4DefinitionStatus{}
 var _ core.Spec = &ApiDefinitionV2Spec{}
 
 // ApiV4Definition is the Schema for the v4 apidefinitions API.
@@ -297,6 +297,20 @@ func (s *ApiV4DefinitionStatus) DeepCopyTo(api client.Object) error {
 	}
 
 	return nil
+}
+
+func (s *ApiV4DefinitionStatus) AddSubscription() {
+	s.SubscriptionCount += 1
+}
+
+// GetSubscriptionCount implements core.SubscribableStatus.
+func (s *ApiV4DefinitionStatus) GetSubscriptionCount() uint {
+	return s.SubscriptionCount
+}
+
+// RemoveSubscription implements core.SubscribableStatus.
+func (s *ApiV4DefinitionStatus) RemoveSubscription() {
+	s.SubscriptionCount -= 1
 }
 
 // ApiV4DefinitionList contains a list of ApiV4Definition.

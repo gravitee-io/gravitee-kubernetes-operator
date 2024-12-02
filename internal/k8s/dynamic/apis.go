@@ -66,7 +66,7 @@ func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, 
 }
 
 func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
-	resource := getResource(ApiGVR, opts.Namespace)
+	resource := getAPIsResource(ApiGVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
 	apis := make([]core.ApiDefinitionModel, 0)
 	if err != nil {
@@ -87,7 +87,7 @@ func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel
 }
 
 func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
-	resource := getResource(ApiV4GVR, opts.Namespace)
+	resource := getAPIsResource(ApiV4GVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -119,8 +119,15 @@ func isExcluded(item unstructured.Unstructured, opts ListOptions) bool {
 	return false
 }
 
-func getResource(gvr schema.GroupVersionResource, ns string) dynamic.ResourceInterface {
+func getAPIsResource(gvr schema.GroupVersionResource, ns string) dynamic.ResourceInterface {
 	if env.Config.CheckApiContextPathConflictInCluster {
+		return getResource(gvr, "")
+	}
+	return getResource(gvr, ns)
+}
+
+func getResource(gvr schema.GroupVersionResource, ns string) dynamic.ResourceInterface {
+	if ns == "" {
 		return GetClient().Resource(gvr)
 	}
 	return GetClient().Resource(gvr).Namespace(ns)

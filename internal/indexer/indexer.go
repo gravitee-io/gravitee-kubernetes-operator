@@ -17,9 +17,11 @@ package indexer
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -37,6 +39,8 @@ const (
 	ApiTemplateField   IndexField = "api-template"
 	TLSSecretField     IndexField = "tls-secret"
 	AppContextField    IndexField = "app-context"
+	ApiV2SubsField     IndexField = "api-v2-subscription"
+	ApiV4SubsField     IndexField = "api-v4-subscription"
 )
 
 func (f IndexField) String() string {
@@ -97,6 +101,26 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 
 	appContextIndexer := newIndexer(AppContextField, indexApplicationManagementContexts)
 	if err := cache.IndexField(ctx, &v1alpha1.Application{}, appContextIndexer.Field, appContextIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	apiV2SubscriptionIndexer := newIndexer(ApiV2SubsField, indexAPIv2Subscriptions)
+	if err := cache.IndexField(
+		ctx,
+		&v1alpha1.Subscription{},
+		apiV2SubscriptionIndexer.Field,
+		apiV2SubscriptionIndexer.Func,
+	); err != nil {
+		errs = append(errs, err)
+	}
+
+	apiV4SubscriptionIndexer := newIndexer(ApiV4SubsField, indexAPIv4Subscriptions)
+	if err := cache.IndexField(
+		ctx,
+		&v1alpha1.Subscription{},
+		apiV4SubscriptionIndexer.Field,
+		apiV4SubscriptionIndexer.Func,
+	); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -199,4 +223,42 @@ func indexApplicationManagementContexts(application *v1alpha1.Application, field
 	}
 
 	*fields = append(*fields, application.Spec.Context.String())
+}
+
+func indexAPIv4Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
+	kind := sub.Spec.API.Kind
+	ns := sub.Spec.API.Namespace
+	if kind == "" {
+		kind = core.CRDApiV4DefinitionResource
+	}
+	kind = dynamic.PluralizeKind(kind)
+	if ns == "" {
+		ns = sub.GetNamespace()
+	}
+	nsn := refs.NamespacedName{
+		Name:      sub.Spec.API.Name,
+		Namespace: ns,
+	}
+	if kind == core.CRDApiV4DefinitionResource {
+		*fields = append(*fields, nsn.String())
+	}
+}
+
+func indexAPIv2Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
+	kind := sub.Spec.API.Kind
+	ns := sub.Spec.API.Namespace
+	if kind == "" {
+		kind = core.CRDApiV4DefinitionResource
+	}
+	kind = dynamic.PluralizeKind(kind)
+	if ns == "" {
+		ns = sub.GetNamespace()
+	}
+	nsn := refs.NamespacedName{
+		Name:      sub.Spec.API.Name,
+		Namespace: ns,
+	}
+	if kind == core.CRDApiDefinitionResource {
+		*fields = append(*fields, nsn.String())
+	}
 }

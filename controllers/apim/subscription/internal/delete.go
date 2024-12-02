@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -34,8 +35,14 @@ func Delete(
 	}
 
 	ns := subscription.Namespace
+	spec := subscription.Spec
 
-	api, err := dynamic.ResolveAPI(ctx, &subscription.Spec.API, ns)
+	api, err := dynamic.ResolveAPI(ctx, &spec.API, ns)
+	if err != nil {
+		return err
+	}
+
+	app, err := dynamic.ResolveApplication(ctx, &spec.App, ns)
 	if err != nil {
 		return err
 	}
@@ -53,6 +60,20 @@ func Delete(
 	})
 
 	if err != nil {
+		return err
+	}
+
+	apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
+	appStatus, _ := app.GetStatus().(core.SubscribableStatus)
+
+	apiStatus.RemoveSubscription()
+	appStatus.RemoveSubscription()
+
+	if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
+		return err
+	}
+
+	if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
 		return err
 	}
 

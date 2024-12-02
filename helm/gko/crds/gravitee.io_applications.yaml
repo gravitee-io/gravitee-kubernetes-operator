@@ -219,7 +219,7 @@ spec:
                 type: string
               errors:
                 description: |-
-                  When API has been created regardless of errors, this field is
+                  When application has been created regardless of errors, this field is
                   used to persist the error message encountered during admission
                 properties:
                   severe:
@@ -252,6 +252,9 @@ spec:
                   The processing status of the Application.
                   The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
                 type: string
+              subscriptions:
+                description: The number of subscriptions that reference the application
+                type: integer
             type: object
         type: object
     served: true
