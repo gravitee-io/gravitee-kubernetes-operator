@@ -296,7 +296,7 @@ spec:
                 - ARCHIVED
                 type: string
               local:
-                default: true
+                default: false
                 description: |-
                   local defines if the api is local or not.
 
