@@ -76,7 +76,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return err
 	}
 
-	subscription.Status.StartedAt = startedAt.Format("2024-12-25T09:12:28Z")
+	subscription.Status.StartedAt = startedAt.Format(time.RFC3339)
 	subscription.Status.EndingAt = status.EndingAt
 	subscription.Status.ID = status.ID
 
