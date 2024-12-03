@@ -556,7 +556,7 @@ If false, the Operator will not create the ConfigMaps for the Gateway.
 Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
 This will cause Gateways to fetch the APIs from the datastore<br/>
           <br/>
-            <i>Default</i>: true<br/>
+            <i>Default</i>: false<br/>
         </td>
         <td>false</td>
       </tr><tr>
