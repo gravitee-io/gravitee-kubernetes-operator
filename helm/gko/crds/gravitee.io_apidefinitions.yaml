@@ -1071,6 +1071,32 @@ spec:
                                     description: KeyStore type (possible values PEM,
                                       PKCS12, JKS)
                                     properties:
+                                      certContent:
+                                        description: KeyStore cert content (Only applicable
+                                          for PEM KeyStore)
+                                        type: string
+                                      certPath:
+                                        description: KeyStore cert path (Only applicable
+                                          for PEM KeyStore)
+                                        type: string
+                                      content:
+                                        description: The base64 encoded trustStore
+                                          content, if not relying on a path to a file
+                                        type: string
+                                      keyContent:
+                                        description: |-
+                                          The base64 encoded trustStore content, if not relying on a path to a file
+                                          (Only applicable for PEM KeyStore)
+                                        type: string
+                                      keyPath:
+                                        description: KeyStore key path (Only applicable
+                                          for PEM KeyStore)
+                                        type: string
+                                      password:
+                                        type: string
+                                      path:
+                                        description: KeyStore path
+                                        type: string
                                       type:
                                         description: The KeyStore type to use (possible
                                           values are PEM, PKCS12, JKS)
@@ -1084,6 +1110,16 @@ spec:
                                     description: TrustStore type (possible values
                                       PEM, PKCS12, JKS)
                                     properties:
+                                      content:
+                                        description: The base64 encoded trustStore
+                                          content, if not relying on a path to a file
+                                        type: string
+                                      password:
+                                        description: TrustStore password (Not applicable
+                                          for PEM TrustStore)
+                                        type: string
+                                      path:
+                                        type: string
                                       type:
                                         description: The TrustStore type to use (possible
                                           values are PEM, PKCS12, JKS)
@@ -1366,6 +1402,32 @@ spec:
                               description: KeyStore type (possible values PEM, PKCS12,
                                 JKS)
                               properties:
+                                certContent:
+                                  description: KeyStore cert content (Only applicable
+                                    for PEM KeyStore)
+                                  type: string
+                                certPath:
+                                  description: KeyStore cert path (Only applicable
+                                    for PEM KeyStore)
+                                  type: string
+                                content:
+                                  description: The base64 encoded trustStore content,
+                                    if not relying on a path to a file
+                                  type: string
+                                keyContent:
+                                  description: |-
+                                    The base64 encoded trustStore content, if not relying on a path to a file
+                                    (Only applicable for PEM KeyStore)
+                                  type: string
+                                keyPath:
+                                  description: KeyStore key path (Only applicable
+                                    for PEM KeyStore)
+                                  type: string
+                                password:
+                                  type: string
+                                path:
+                                  description: KeyStore path
+                                  type: string
                                 type:
                                   description: The KeyStore type to use (possible
                                     values are PEM, PKCS12, JKS)
@@ -1379,6 +1441,16 @@ spec:
                               description: TrustStore type (possible values PEM, PKCS12,
                                 JKS)
                               properties:
+                                content:
+                                  description: The base64 encoded trustStore content,
+                                    if not relying on a path to a file
+                                  type: string
+                                password:
+                                  description: TrustStore password (Not applicable
+                                    for PEM TrustStore)
+                                  type: string
+                                path:
+                                  type: string
                                 type:
                                   description: The TrustStore type to use (possible
                                     values are PEM, PKCS12, JKS)
