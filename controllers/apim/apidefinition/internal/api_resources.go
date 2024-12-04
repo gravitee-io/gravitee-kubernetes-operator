@@ -17,6 +17,7 @@ package internal
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env/template"
 )
 
 func (d *Delegate) resolveResources(spec *v1alpha1.ApiDefinitionSpec) error {
@@ -47,7 +48,15 @@ func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
 		return err
 	}
 
+	if err := d.resolveResourceTemplate(resource); err != nil {
+		return err
+	}
+
 	resourceOrRef.Resource = resource.Spec.Resource
 
 	return nil
+}
+
+func (d *Delegate) resolveResourceTemplate(resource *v1alpha1.ApiResource) error {
+	return template.NewResolver(d.ctx, d.k8s, d.log, resource).Resolve()
 }
