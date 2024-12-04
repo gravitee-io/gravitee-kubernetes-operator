@@ -177,10 +177,21 @@ spec:
                     properties:
                       applicationType:
                         description: Oauth client application type
+                        enum:
+                        - BACKEND_TO_BACKEND
+                        - NATIVE
+                        - BROWSER
+                        - WEB
                         type: string
                       grantTypes:
                         description: List of Oauth client grant types
                         items:
+                          enum:
+                          - authorization_code
+                          - client_credentials
+                          - refresh_token
+                          - password
+                          - implicit
                           type: string
                         type: array
                       redirectUris:
