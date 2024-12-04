@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -54,6 +55,10 @@ func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error 
 	)
 
 	if err := k8s.GetClient().Get(ctx, namespacedName, resource); err != nil {
+		return err
+	}
+
+	if err := template.Compile(ctx, resource); err != nil {
 		return err
 	}
 
