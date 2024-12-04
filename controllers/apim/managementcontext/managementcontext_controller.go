@@ -68,7 +68,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 		dc := managementContext.DeepCopy()
 
-		if err := template.Compile(ctx, managementContext); err != nil {
+		if err := template.Compile(ctx, dc); err != nil {
 			return err
 		}
 

@@ -71,7 +71,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 		dc := apiResource.DeepCopy()
 
-		if err := template.Compile(ctx, apiResource); err != nil {
+		if err := template.Compile(ctx, dc); err != nil {
 			return err
 		}
 
