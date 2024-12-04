@@ -47,7 +47,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		newApp := fixtures.Application.DeepCopy()
 
 		newApp.Spec.Settings.Oauth = &application.OAuthClientSettings{
-			ApplicationType: "WEB",
+			ApplicationType: "NATIVE",
 		}
 		newApp.Spec.Settings.App = nil
 

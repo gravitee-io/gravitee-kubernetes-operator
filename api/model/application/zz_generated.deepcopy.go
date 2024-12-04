@@ -147,7 +147,7 @@ func (in *OAuthClientSettings) DeepCopyInto(out *OAuthClientSettings) {
 	*out = *in
 	if in.GrantTypes != nil {
 		in, out := &in.GrantTypes, &out.GrantTypes
-		*out = make([]string, len(*in))
+		*out = make([]GrantType, len(*in))
 		copy(*out, *in)
 	}
 	if in.RedirectUris != nil {

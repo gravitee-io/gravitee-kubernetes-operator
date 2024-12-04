@@ -29,11 +29,26 @@ type SimpleSettings struct {
 	ClientID *string `json:"clientId,omitempty"`
 }
 
+// +kubebuilder:validation:Enum=authorization_code;client_credentials;refresh_token;password;implicit
+type GrantType string
+
+// +kubebuilder:validation:Enum=BACKEND_TO_BACKEND;NATIVE;BROWSER;WEB
+type OauthType string
+
+const (
+	GrantTypeClientCredentials GrantType = "client_credentials"
+	GrantTypeAuthorizationCode GrantType = "authorization_code"
+	GrantTypeRefreshToken      GrantType = "refresh_token"
+	GrantTypePassword          GrantType = "password"
+	GrantTypeImplicit          GrantType = "implicit"
+)
+
 type OAuthClientSettings struct {
 	// Oauth client application type
-	ApplicationType string `json:"applicationType"`
+	// +kubebuilder:validation:Required
+	ApplicationType OauthType `json:"applicationType"`
 	// List of Oauth client grant types
-	GrantTypes []string `json:"grantTypes"`
+	GrantTypes []GrantType `json:"grantTypes"`
 	// List of Oauth client redirect uris
 	// +kubebuilder:validation:Optional
 	RedirectUris []string `json:"redirectUris"`
@@ -72,7 +87,7 @@ func (in *Setting) GetOAuthType() string {
 	if !in.IsOAuth() {
 		return ""
 	}
-	return in.Oauth.ApplicationType
+	return string(in.Oauth.ApplicationType)
 }
 
 // IsSimple implements core.ApplicationSettings.

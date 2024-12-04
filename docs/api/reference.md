@@ -8038,14 +8038,16 @@ to be able to subscribe to a MTLS plan.<br/>
     </thead>
     <tbody><tr>
         <td><b>applicationType</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           Oauth client application type<br/>
+          <br/>
+            <i>Enum</i>: BACKEND_TO_BACKEND, NATIVE, BROWSER, WEB<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>grantTypes</b></td>
-        <td>[]string</td>
+        <td>[]enum</td>
         <td>
           List of Oauth client grant types<br/>
         </td>
