@@ -66,6 +66,10 @@ func (d *Delegate) ResolveContext(api *v1alpha1.ApiDefinition) error {
 		return err
 	}
 
+	if err := d.resolveContextTemplate(managementContext); err != nil {
+		return err
+	}
+
 	apim, err := apim.FromContext(d.ctx, managementContext.Spec.Context)
 	if err != nil {
 		return err
@@ -77,6 +81,10 @@ func (d *Delegate) ResolveContext(api *v1alpha1.ApiDefinition) error {
 
 func (d *Delegate) HasContext() bool {
 	return d.apim != nil
+}
+
+func (d *Delegate) resolveContextTemplate(context *v1alpha1.ManagementContext) error {
+	return template.NewResolver(d.ctx, d.k8s, d.log, context).Resolve()
 }
 
 func (d *Delegate) resolveContextSecrets(context *v1alpha1.ManagementContext) error {
