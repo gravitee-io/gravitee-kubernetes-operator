@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/types/k8s/custom"
 
 	coreV1 "k8s.io/api/core/v1"
@@ -92,6 +93,10 @@ func resolveManagementContext(
 	log.FromContext(ctx).Info("Resolving management context", "namespace", nsm.Namespace, "name", nsm.Name)
 
 	if err := k8s.GetClient().Get(ctx, nsm, managementContext); err != nil {
+		return nil, err
+	}
+
+	if err := template.Compile(ctx, managementContext); err != nil {
 		return nil, err
 	}
 
