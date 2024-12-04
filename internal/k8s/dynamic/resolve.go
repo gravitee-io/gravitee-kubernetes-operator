@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -46,6 +47,9 @@ func resolveRef[T any](
 ) (T, error) {
 	dynamic, err := resolveDynamic(ctx, ref, parentNs, gvr)
 	if err != nil {
+		return target, err
+	}
+	if err := template.Compile(ctx, dynamic); err != nil {
 		return target, err
 	}
 	return convert(dynamic.Object, target)

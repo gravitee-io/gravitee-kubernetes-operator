@@ -25,10 +25,8 @@ import (
 
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	netv1 "k8s.io/api/networking/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	v1 "k8s.io/api/core/v1"
@@ -41,19 +39,7 @@ import (
 const ksPropertyLength = 2
 
 func Compile(ctx context.Context, obj runtime.Object) error {
-	switch t := obj.(type) {
-	case
-		*v1alpha1.ApiDefinition,
-		*v1alpha1.ApiV4Definition,
-		*v1alpha1.ManagementContext,
-		*v1alpha1.Application,
-		*v1alpha1.ApiResource,
-		*v1alpha1.Subscription,
-		*netv1.Ingress:
-		return doCompile(ctx, obj)
-	default:
-		return fmt.Errorf("unsupported object type %v", t)
-	}
+	return doCompile(ctx, obj)
 }
 
 func doCompile(ctx context.Context, obj runtime.Object) error {
