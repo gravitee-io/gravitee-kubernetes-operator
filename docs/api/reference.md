@@ -2795,6 +2795,56 @@ KeyStore type (possible values PEM, PKCS12, JKS)
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>certContent</b></td>
+        <td>string</td>
+        <td>
+          KeyStore cert content (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>certPath</b></td>
+        <td>string</td>
+        <td>
+          KeyStore cert path (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>content</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keyContent</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file
+(Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keyPath</b></td>
+        <td>string</td>
+        <td>
+          KeyStore key path (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>path</b></td>
+        <td>string</td>
+        <td>
+          KeyStore path<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
@@ -2822,6 +2872,27 @@ TrustStore type (possible values PEM, PKCS12, JKS)
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>content</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          TrustStore password (Not applicable for PEM TrustStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>path</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
@@ -3502,6 +3573,56 @@ KeyStore type (possible values PEM, PKCS12, JKS)
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>certContent</b></td>
+        <td>string</td>
+        <td>
+          KeyStore cert content (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>certPath</b></td>
+        <td>string</td>
+        <td>
+          KeyStore cert path (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>content</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keyContent</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file
+(Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keyPath</b></td>
+        <td>string</td>
+        <td>
+          KeyStore key path (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>path</b></td>
+        <td>string</td>
+        <td>
+          KeyStore path<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
@@ -3529,6 +3650,27 @@ TrustStore type (possible values PEM, PKCS12, JKS)
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>content</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          TrustStore password (Not applicable for PEM TrustStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>path</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
@@ -5140,6 +5282,56 @@ KeyStore type (possible values PEM, PKCS12, JKS)
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>certContent</b></td>
+        <td>string</td>
+        <td>
+          KeyStore cert content (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>certPath</b></td>
+        <td>string</td>
+        <td>
+          KeyStore cert path (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>content</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keyContent</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file
+(Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>keyPath</b></td>
+        <td>string</td>
+        <td>
+          KeyStore key path (Only applicable for PEM KeyStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>path</b></td>
+        <td>string</td>
+        <td>
+          KeyStore path<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
@@ -5167,6 +5359,27 @@ TrustStore type (possible values PEM, PKCS12, JKS)
         </tr>
     </thead>
     <tbody><tr>
+        <td><b>content</b></td>
+        <td>string</td>
+        <td>
+          The base64 encoded trustStore content, if not relying on a path to a file<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>password</b></td>
+        <td>string</td>
+        <td>
+          TrustStore password (Not applicable for PEM TrustStore)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>path</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>type</b></td>
         <td>string</td>
         <td>
