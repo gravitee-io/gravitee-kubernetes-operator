@@ -45,8 +45,8 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 
 		fixtures.Application.Spec.Settings.App = nil
 		fixtures.Application.Spec.Settings.Oauth = &application.OAuthClientSettings{
-			ApplicationType: "WEB",
-			GrantTypes:      []string{"client_credentials"},
+			ApplicationType: "BACKEND_TO_BACKEND",
+			GrantTypes:      []application.GrantType{application.GrantTypeClientCredentials},
 		}
 
 		fixtures.Apply()
