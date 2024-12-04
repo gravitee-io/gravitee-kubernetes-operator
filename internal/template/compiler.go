@@ -25,10 +25,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	netv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -42,18 +40,8 @@ import (
 // example my-configmap/key1.
 const ksPropertyLength = 2
 
-type CustomError struct{}
-
-func (*CustomError) Error() string { return "heyo !" }
-
 func Compile(ctx context.Context, obj runtime.Object) error {
-	switch t := obj.(type) {
-	case *v1alpha1.ApiDefinition, *v1alpha1.ApiV4Definition, *v1alpha1.ManagementContext,
-		*v1alpha1.Application, *netv1.Ingress, *v1alpha1.ApiResource:
-		return exec(ctx, obj)
-	default:
-		return fmt.Errorf("unsupported object type %v", t)
-	}
+	return exec(ctx, obj)
 }
 
 func exec(ctx context.Context, obj runtime.Object) error {
