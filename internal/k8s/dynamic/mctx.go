@@ -18,8 +18,8 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
@@ -30,8 +30,8 @@ func ExpectResolvedContext(ctx context.Context, ref core.ObjectRef, parentNs str
 	return nil
 }
 
-func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (*management.Context, error) {
-	context, err := resolveRefSpec(ctx, ref, parentNs, ManagementContextGVR, new(management.Context))
+func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (core.ContextObject, error) {
+	context, err := resolveRef(ctx, ref, parentNs, ManagementContextGVR, new(v1alpha1.ManagementContext))
 	if err != nil {
 		return nil, err
 	}
