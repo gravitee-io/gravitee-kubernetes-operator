@@ -280,7 +280,9 @@ func (s *ApiV4DefinitionStatus) IsFailed() bool {
 func (s *ApiV4DefinitionStatus) DeepCopyFrom(api client.Object) error {
 	switch t := api.(type) {
 	case *ApiV4Definition:
+		subscriptionCount := s.Status.SubscriptionCount
 		t.Status.DeepCopyInto(s)
+		s.Status.SubscriptionCount = subscriptionCount
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
@@ -291,7 +293,9 @@ func (s *ApiV4DefinitionStatus) DeepCopyFrom(api client.Object) error {
 func (s *ApiV4DefinitionStatus) DeepCopyTo(api client.Object) error {
 	switch t := api.(type) {
 	case *ApiV4Definition:
+		subscriptionCount := t.Status.SubscriptionCount
 		s.DeepCopyInto(&t.Status)
+		t.Status.SubscriptionCount = subscriptionCount
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
@@ -310,7 +314,9 @@ func (s *ApiV4DefinitionStatus) GetSubscriptionCount() uint {
 
 // RemoveSubscription implements core.SubscribableStatus.
 func (s *ApiV4DefinitionStatus) RemoveSubscription() {
-	s.SubscriptionCount -= 1
+	if s.SubscriptionCount > 0 {
+		s.SubscriptionCount -= 1
+	}
 }
 
 // ApiV4DefinitionList contains a list of ApiV4Definition.

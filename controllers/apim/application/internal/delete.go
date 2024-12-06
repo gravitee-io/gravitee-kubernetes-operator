@@ -41,7 +41,5 @@ func Delete(
 		return err
 	}
 
-	util.RemoveFinalizer(application, core.ApplicationFinalizer)
-
 	return nil
 }

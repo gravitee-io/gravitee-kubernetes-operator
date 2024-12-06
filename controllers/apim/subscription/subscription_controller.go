@@ -78,7 +78,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		var err error
 		if subscription.IsBeingDeleted() {
 			err = events.Record(event.Delete, subscription, func() error {
-				return internal.Delete(ctx, dc)
+				if err := internal.Delete(ctx, dc); err != nil {
+					return err
+				}
+				util.RemoveFinalizer(subscription, core.SubscriptionFinalizer)
+				return nil
 			})
 		} else {
 			err = events.Record(event.Update, subscription, func() error {

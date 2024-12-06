@@ -35,8 +35,6 @@ func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 		}
 	}
 
-	util.RemoveFinalizer(api, core.ApiDefinitionFinalizer)
-
 	return nil
 }
 

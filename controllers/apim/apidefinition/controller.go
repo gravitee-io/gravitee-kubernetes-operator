@@ -54,7 +54,6 @@ func Reconcile(
 
 func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionObject) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	status := apiDefinition.GetStatus()
 	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
 		dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
 		if err := template.Compile(ctx, dc); err != nil {
@@ -66,9 +65,8 @@ func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionO
 		}
 
 		apiDefinition.SetFinalizers(dc.GetFinalizers())
-		status = dc.GetStatus()
 
-		return nil
+		return dc.GetStatus().DeepCopyTo(apiDefinition)
 	})
 
 	if err != nil {
@@ -77,9 +75,6 @@ func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionO
 	}
 
 	logger.Info("template synced successfully.", "template:", apiDefinition.GetName())
-	if err := status.DeepCopyTo(apiDefinition); err != nil {
-		return ctrl.Result{}, err
-	}
 
 	if err := internal.UpdateStatusSuccess(ctx, apiDefinition); err != nil {
 		return ctrl.Result{}, err
@@ -92,22 +87,25 @@ func reconcileApiDefinition(
 	events *event.Recorder,
 ) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	status := apiDefinition.GetStatus()
+	dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
+
 	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
 		util.AddFinalizer(apiDefinition, core.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, core.LastSpecHashAnnotation, apiDefinition.GetSpec().Hash())
 
-		dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
-
 		if err := template.Compile(ctx, dc); err != nil {
-			status.SetProcessingStatus(core.ProcessingStatusFailed)
+			apiDefinition.GetStatus().SetProcessingStatus(core.ProcessingStatusFailed)
 			return err
 		}
 
 		var err error
 		if !apiDefinition.GetDeletionTimestamp().IsZero() {
 			err = events.Record(event.Delete, apiDefinition, func() error {
-				return internal.Delete(ctx, dc)
+				if err := internal.Delete(ctx, dc); err != nil {
+					return err
+				}
+				util.RemoveFinalizer(apiDefinition, core.ApiDefinitionFinalizer)
+				return nil
 			})
 		} else {
 			err = events.Record(event.Update, apiDefinition, func() error {
@@ -115,16 +113,10 @@ func reconcileApiDefinition(
 			})
 		}
 
-		if err != nil {
-			return err
-		}
-
-		apiDefinition.SetFinalizers(dc.GetFinalizers())
-		status = dc.GetStatus()
 		return err
 	})
 
-	if err := status.DeepCopyTo(apiDefinition); err != nil {
+	if err := dc.GetStatus().DeepCopyTo(apiDefinition); err != nil {
 		return ctrl.Result{}, err
 	}
 

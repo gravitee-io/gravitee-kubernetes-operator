@@ -77,7 +77,5 @@ func Delete(
 		return err
 	}
 
-	util.RemoveFinalizer(subscription, core.SubscriptionFinalizer)
-
 	return nil
 }
