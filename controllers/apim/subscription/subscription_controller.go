@@ -64,12 +64,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := event.NewRecorder(r.Recorder)
 
-	status := subscription.Status.DeepCopy()
+	dc := subscription.DeepCopy()
+
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, subscription, func() error {
 		util.AddFinalizer(subscription, core.SubscriptionFinalizer)
 		k8s.AddAnnotation(subscription, core.LastSpecHashAnnotation, hash.Calculate(&subscription.Spec))
 
-		dc := subscription.DeepCopy()
 		if err := template.Compile(ctx, dc); err != nil {
 			subscription.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
@@ -90,13 +90,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		}
 
-		dc.Status.DeepCopyInto(status)
-		subscription.SetFinalizers(dc.GetFinalizers())
-
 		return err
 	})
 
-	status.DeepCopyInto(&subscription.Status)
+	if err := dc.GetStatus().DeepCopyTo(subscription); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if reconcileErr == nil {
 		logger.Info("Subscription has been reconciled")
