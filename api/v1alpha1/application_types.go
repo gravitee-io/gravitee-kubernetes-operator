@@ -50,7 +50,9 @@ func (s *ApplicationStatus) AddSubscription() {
 }
 
 func (s *ApplicationStatus) RemoveSubscription() {
-	s.SubscriptionCount -= 1
+	if s.SubscriptionCount > 0 {
+		s.SubscriptionCount -= 1
+	}
 }
 
 // GetSubscriptionCount implements core.SubscribableStatus.
@@ -148,7 +150,9 @@ func (spec *ApplicationSpec) Hash() string {
 func (s *ApplicationStatus) DeepCopyFrom(obj client.Object) error {
 	switch t := obj.(type) {
 	case *Application:
+		subscriptionCount := s.Status.SubscriptionCount
 		t.Status.DeepCopyInto(s)
+		s.Status.SubscriptionCount = subscriptionCount
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
@@ -156,10 +160,12 @@ func (s *ApplicationStatus) DeepCopyFrom(obj client.Object) error {
 	return nil
 }
 
-func (s *ApplicationStatus) DeepCopyTo(api client.Object) error {
-	switch t := api.(type) {
+func (s *ApplicationStatus) DeepCopyTo(obj client.Object) error {
+	switch t := obj.(type) {
 	case *Application:
+		subscriptionCount := t.Status.SubscriptionCount
 		s.DeepCopyInto(&t.Status)
+		t.Status.SubscriptionCount = subscriptionCount
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
