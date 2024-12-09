@@ -28,23 +28,55 @@ import (
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
-	if api, ok := obj.(core.ApiDefinitionObject); ok {
-		errs.MergeWith(base.ValidateCreate(ctx, obj))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		if errs.IsSevere() {
-			return errs
-		}
-
-		if errs.IsSevere() {
-			return errs
-		}
-		if api.HasContext() {
-			errs.MergeWith(validateDryRun(ctx, api))
-		}
+	api, ok := obj.(core.ApiDefinitionObject)
+	if !ok {
+		return errs
 	}
+
+	errs = validateFlowsAndEndpoints(api, errs)
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(base.ValidateCreate(ctx, obj))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	if api.HasContext() {
+		errs.MergeWith(validateDryRun(ctx, api))
+	}
+
+	return errs
+}
+
+func validateFlowsAndEndpoints(api core.ApiDefinitionObject, errs *errors.AdmissionErrors) *errors.AdmissionErrors {
+	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
+	impl, ok := cp.GetDefinition().(*v4.Api)
+	if !ok {
+		errs.AddSevere("unable to API type because api is not a v4 API")
+	}
+
+	errs.MergeWith(validateApiFlows(impl))
+
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateApiEndpointGroups(impl))
+
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateApiFlowExecution(impl))
+
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateApiResponseTemplates(impl))
+
 	return errs
 }
 
@@ -94,10 +126,17 @@ func validateUpdate(
 	if !ook || !nok {
 		return errs
 	}
+
+	errs.Add(validateApiType(oldApi, newApi))
+	if errs.IsSevere() {
+		return errs
+	}
+
 	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, indexer.ApiV4SubsField))
 	if errs.IsSevere() {
 		return errs
 	}
+
 	errs.MergeWith(validateCreate(ctx, newApi))
 	return errs
 }

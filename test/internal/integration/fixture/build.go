@@ -15,6 +15,8 @@
 package fixture
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -205,6 +207,9 @@ func setPath(l v4.Listener, suffix string) *v4.GenericListener {
 		return v4.ToGenericListener(t)
 	case *v4.TCPListener:
 		t.Hosts[0] = constants.GatewayHost
+		return v4.ToGenericListener(t)
+	case *v4.KafkaListener:
+		t.Host = fmt.Sprintf("%s%s", t.Host, suffix)
 		return v4.ToGenericListener(t)
 	}
 	return nil
