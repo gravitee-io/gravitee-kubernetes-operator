@@ -64,12 +64,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := event.NewRecorder(r.Recorder)
 
-	status := apiResource.Status.DeepCopy()
+	dc := apiResource.DeepCopy()
+
 	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, apiResource, func() error {
 		util.AddFinalizer(apiResource, core.ApiResourceFinalizer)
 		k8s.AddAnnotation(apiResource, core.LastSpecHashAnnotation, hash.Calculate(&apiResource.Spec))
-
-		dc := apiResource.DeepCopy()
 
 		if err := template.Compile(ctx, dc); err != nil {
 			return err
@@ -78,7 +77,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		var err error
 		if apiResource.IsBeingDeleted() {
 			err = events.Record(event.Delete, apiResource, func() error {
-				return internal.Delete(ctx, dc)
+				if err := internal.Delete(ctx, dc); err != nil {
+					return err
+				}
+				util.RemoveFinalizer(apiResource, core.ApiResourceFinalizer)
+				return nil
 			})
 		} else {
 			err = events.Record(event.Update, apiResource, func() error {
@@ -87,13 +90,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		}
 
-		dc.Status.DeepCopyInto(status)
-		apiResource.SetFinalizers(dc.GetFinalizers())
-
 		return err
 	})
 
-	status.DeepCopyInto(&apiResource.Status)
+	if err := dc.GetStatus().DeepCopyTo(apiResource); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if reconcileErr == nil {
 		logger.Info("API Resource has been reconciled")

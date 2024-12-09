@@ -17,9 +17,7 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	v1 "k8s.io/api/networking/v1"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -30,8 +28,6 @@ func Delete(
 		log.FromContext(ctx).Error(err, "An error occurred while updating the TLS secrets")
 		return err
 	}
-
-	util.RemoveFinalizer(ingress, core.IngressFinalizer)
 
 	return nil
 }

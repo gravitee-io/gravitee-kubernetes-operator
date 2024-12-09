@@ -64,7 +64,5 @@ func Delete(
 		return fmt.Errorf("resource is referenced and will remain")
 	}
 
-	util.RemoveFinalizer(resource, core.ApiResourceFinalizer)
-
 	return nil
 }
