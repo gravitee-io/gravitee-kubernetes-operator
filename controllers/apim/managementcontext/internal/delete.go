@@ -82,7 +82,5 @@ func Delete(
 			instance.Name, len(apps.Items))
 	}
 
-	util.RemoveFinalizer(instance, core.ManagementContextFinalizer)
-
 	return nil
 }
