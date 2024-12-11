@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -27,6 +28,20 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/runtime"
 )
+
+func validateDelete(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	mCtx, ok := obj.(core.ContextObject)
+	if !ok {
+		return errs
+	}
+
+	if err := search.AssertNoContextRef(ctx, mCtx); err != nil {
+		errs.AddSevere(err.Error())
+	}
+
+	return errs
+}
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
