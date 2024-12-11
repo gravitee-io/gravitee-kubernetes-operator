@@ -59,7 +59,6 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 				_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Subscription, newSub)
 				return assert.Equals("error", expected, err)
 			}, constants.EventualTimeout, constants.Interval).Should(Succeed())
-
 		},
 		Entry(
 			"API ref",
