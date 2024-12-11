@@ -154,7 +154,12 @@ func indexManagementContexts(api *v1alpha1.ApiDefinition, fields *[]string) {
 		return
 	}
 
-	*fields = append(*fields, api.Spec.Context.String())
+	ctxRef := api.Spec.Context.DeepCopy()
+	if ctxRef.Namespace == "" {
+		ctxRef.Namespace = api.Namespace
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(api, api.Spec.Context))
 }
 
 func indexApiV4ManagementContexts(api *v1alpha1.ApiV4Definition, fields *[]string) {
@@ -162,12 +167,12 @@ func indexApiV4ManagementContexts(api *v1alpha1.ApiV4Definition, fields *[]strin
 		return
 	}
 
-	*fields = append(*fields, api.Spec.Context.String())
+	*fields = append(*fields, ensureNamespacedRef(api, api.Spec.Context))
 }
 
 func indexManagementContextSecrets(context *v1alpha1.ManagementContext, fields *[]string) {
 	if context.Spec.HasSecretRef() {
-		*fields = append(*fields, context.Spec.SecretRef().String())
+		*fields = append(*fields, ensureNamespacedRef(context, context.Spec.SecretRef()))
 	}
 }
 
@@ -178,7 +183,7 @@ func indexApiResourceRefs(api *v1alpha1.ApiDefinition, fields *[]string) {
 
 	for _, resource := range api.Spec.Resources {
 		if resource.IsRef() {
-			*fields = append(*fields, resource.Ref.String())
+			*fields = append(*fields, ensureNamespacedRef(api, resource.Ref))
 		}
 	}
 }
@@ -190,7 +195,7 @@ func indexIApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 
 	for _, resource := range api.Spec.Resources {
 		if resource.IsRef() {
-			*fields = append(*fields, resource.Ref.String())
+			*fields = append(*fields, ensureNamespacedRef(api, resource.Ref))
 		}
 	}
 }
@@ -222,7 +227,7 @@ func indexApplicationManagementContexts(application *v1alpha1.Application, field
 		return
 	}
 
-	*fields = append(*fields, application.Spec.Context.String())
+	*fields = append(*fields, ensureNamespacedRef(application, application.Spec.Context))
 }
 
 func indexAPIv4Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
@@ -261,4 +266,12 @@ func indexAPIv2Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
 	if kind == core.CRDApiDefinitionResource {
 		*fields = append(*fields, nsn.String())
 	}
+}
+
+func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
+	cp := refs.NewNamespacedName(ref.GetNamespace(), ref.GetName())
+	if cp.Namespace == "" {
+		cp.Namespace = obj.GetNamespace()
+	}
+	return cp.String()
 }
