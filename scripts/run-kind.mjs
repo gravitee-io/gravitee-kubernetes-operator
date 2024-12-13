@@ -132,6 +132,7 @@ LOG.magenta(`
 
     Available endpoints are:
         Gateway             http://localhost:30082
+        Gateway with mTLS   https://localhost:30084
         Management API      http://localhost:30083/management/organizations/DEFAULT
         Console             http://localhost:30080
 `);
