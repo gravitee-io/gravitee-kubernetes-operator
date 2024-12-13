@@ -377,12 +377,12 @@ spec:
                       description: Endpoint group load balancer
                       properties:
                         type:
-                          default: ROUND_ROBIN
+                          default: round-robin
                           enum:
-                          - ROUND_ROBIN
-                          - RANDOM
-                          - WEIGHTED_ROUND_ROBIN
-                          - WEIGHTED_RANDOM
+                          - round-robin
+                          - random
+                          - weighted-round-robin
+                          - weighted-random
                           type: string
                       required:
                       - type

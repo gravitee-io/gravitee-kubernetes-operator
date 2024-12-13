@@ -78,7 +78,7 @@ const (
 )
 
 type LoadBalancer struct {
-	// Type of the LoadBalancer (RoundRobin, Random, WeightedRoundRobin, WeightedRandom)
+	// Type of the LoadBalancer (ROUND_ROBIN, RANDOM, WEIGHTED_ROUND_ROBIN, WEIGHTED_RANDOM)
 	Type LoadBalancerType `json:"type,omitempty"`
 }
 

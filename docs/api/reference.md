@@ -3167,7 +3167,7 @@ The LoadBalancer Type
         <td><b>type</b></td>
         <td>string</td>
         <td>
-          Type of the LoadBalancer (RoundRobin, Random, WeightedRoundRobin, WeightedRandom)<br/>
+          Type of the LoadBalancer (ROUND_ROBIN, RANDOM, WEIGHTED_ROUND_ROBIN, WEIGHTED_RANDOM)<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -5268,8 +5268,8 @@ Endpoint group load balancer
         <td>
           <br/>
           <br/>
-            <i>Enum</i>: ROUND_ROBIN, RANDOM, WEIGHTED_ROUND_ROBIN, WEIGHTED_RANDOM<br/>
-            <i>Default</i>: ROUND_ROBIN<br/>
+            <i>Enum</i>: round-robin, random, weighted-round-robin, weighted-random<br/>
+            <i>Default</i>: round-robin<br/>
         </td>
         <td>true</td>
       </tr></tbody>

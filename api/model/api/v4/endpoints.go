@@ -69,22 +69,15 @@ func NewHttpEndpoint(name string) *Endpoint {
 	}
 }
 
-// +kubebuilder:validation:Enum=ROUND_ROBIN;RANDOM;WEIGHTED_ROUND_ROBIN;WEIGHTED_RANDOM;
+// +kubebuilder:validation:Enum=round-robin;random;weighted-round-robin;weighted-random;
 type LoadBalancerType string
 
 func (lt LoadBalancerType) toGatewayDefinition() LoadBalancerType {
 	return LoadBalancerType(Enum(lt).ToGatewayDefinition())
 }
 
-const (
-	RoundRobin         LoadBalancerType = "ROUND_ROBIN"
-	Random             LoadBalancerType = "RANDOM"
-	WeightedRoundRobin LoadBalancerType = "WEIGHTED_ROUND_ROBIN"
-	WeightedRandom     LoadBalancerType = "WEIGHTED_RANDOM"
-)
-
 type LoadBalancer struct {
-	// +kubebuilder:default:=`ROUND_ROBIN`
+	// +kubebuilder:default:=`round-robin`
 	Type LoadBalancerType `json:"type"`
 }
 

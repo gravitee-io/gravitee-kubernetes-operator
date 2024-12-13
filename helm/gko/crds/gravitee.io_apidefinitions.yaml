@@ -1228,8 +1228,8 @@ spec:
                           description: The LoadBalancer Type
                           properties:
                             type:
-                              description: Type of the LoadBalancer (RoundRobin, Random,
-                                WeightedRoundRobin, WeightedRandom)
+                              description: Type of the LoadBalancer (ROUND_ROBIN,
+                                RANDOM, WEIGHTED_ROUND_ROBIN, WEIGHTED_RANDOM)
                               type: string
                           type: object
                         name:
