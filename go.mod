@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/moby/moby v27.3.1+incompatible
+	github.com/moby/moby v27.4.0+incompatible
 	github.com/onsi/ginkgo/v2 v2.22.0
 	github.com/onsi/gomega v1.34.2
 	github.com/zeebo/xxh3 v1.0.2
