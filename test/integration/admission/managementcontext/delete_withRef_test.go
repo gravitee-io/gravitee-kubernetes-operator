@@ -61,11 +61,11 @@ var _ = Describe("Validate delete", labels.WithContext, func() {
 			fixtures.Context,
 			fixtures.API,
 			errors.NewSeveref(
-				"[%s] cannot be deleted because %d APIs are relying on this context"+
+				"[%s] cannot be deleted because %d APIs are relying on this context. "+
 					"You can and review this APIs using the following command: "+
 					"kubectl get apidefinitions.gravitee.io -A "+
 					"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
-				fixtures.Context.Name, 1, fixtures.Context.GetRef(),
+				fixtures.Context.Name, 1, fixtures.Context.Name,
 			),
 		),
 		Entry(
@@ -73,11 +73,11 @@ var _ = Describe("Validate delete", labels.WithContext, func() {
 			fixtures.Context,
 			fixtures.APIv4,
 			errors.NewSeveref(
-				"[%s] cannot be deleted because %d APIs are relying on this context"+
+				"[%s] cannot be deleted because %d APIs are relying on this context. "+
 					"You can and review this APIs using the following command: "+
 					"kubectl get apiv4definitions.gravitee.io -A "+
 					"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
-				fixtures.Context.Name, 1, fixtures.Context.GetRef(),
+				fixtures.Context.Name, 1, fixtures.Context.Name,
 			),
 		),
 		Entry(
@@ -85,11 +85,11 @@ var _ = Describe("Validate delete", labels.WithContext, func() {
 			fixtures.Context,
 			fixtures.Application,
 			errors.NewSeveref(
-				"[%s] cannot be deleted because %d applications are relying on this context"+
+				"[%s] cannot be deleted because %d applications are relying on this context. "+
 					"You can and review this applications using the following command: "+
 					"kubectl get applications.gravitee.io -A "+
 					"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
-				fixtures.Context.Name, 1, fixtures.Context.GetRef(),
+				fixtures.Context.Name, 1, fixtures.Context.Name,
 			),
 		),
 	)
