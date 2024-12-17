@@ -38,11 +38,11 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	}
 	if len(apis.Items) > 0 {
 		return fmt.Errorf(
-			"[%s] cannot be deleted because %d APIs are relying on this context"+
+			"[%s] cannot be deleted because %d APIs are relying on this context. "+
 				"You can and review this APIs using the following command: "+
 				"kubectl get apidefinitions.gravitee.io -A "+
 				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
-			mCtx.GetName(), len(apis.Items), mCtx.GetRef(),
+			mCtx.GetName(), len(apis.Items), mCtx.GetName(),
 		)
 	}
 
@@ -58,11 +58,11 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 
 	if len(apisV4.Items) > 0 {
 		return fmt.Errorf(
-			"[%s] cannot be deleted because %d APIs are relying on this context"+
+			"[%s] cannot be deleted because %d APIs are relying on this context. "+
 				"You can and review this APIs using the following command: "+
 				"kubectl get apiv4definitions.gravitee.io -A "+
 				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
-			mCtx.GetName(), len(apisV4.Items), mCtx.GetRef(),
+			mCtx.GetName(), len(apisV4.Items), mCtx.GetName(),
 		)
 	}
 
@@ -78,11 +78,11 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 
 	if len(apps.Items) > 0 {
 		return fmt.Errorf(
-			"[%s] cannot be deleted because %d applications are relying on this context"+
+			"[%s] cannot be deleted because %d applications are relying on this context. "+
 				"You can and review this applications using the following command: "+
 				"kubectl get applications.gravitee.io -A "+
 				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
-			mCtx.GetName(), len(apps.Items), mCtx.GetRef(),
+			mCtx.GetName(), len(apps.Items), mCtx.GetName(),
 		)
 	}
 
