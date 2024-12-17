@@ -31,17 +31,17 @@ Below is the extracted plan configuration, with the public key copied from the [
 
 ```yaml
 plans:
-    JWT:
-      name: "jwt"
-      security:
-        type: "JWT"
-        configuration:
-          signature: "RSA_RS256"
-          publicKeyResolver: "GIVEN_KEY"
-          resolverParameter: '[[ secret `jwt/public.key` ]]'
-          userClaim: "sub"
-          clientIdClaim: "client_id"
-      status: "PUBLISHED"
+  JWT:
+    name: "jwt"
+    security:
+      type: "JWT"
+      configuration:
+        signature: "RSA_RS256"
+        publicKeyResolver: "GIVEN_KEY"
+        resolverParameter: "[[ secret `jwt/public.key` ]]"
+        userClaim: "sub"
+        clientIdClaim: "client_id"
+    status: "PUBLISHED"
 ```
 
 ## The application resource
@@ -53,9 +53,10 @@ The application resource can be found [here](resources/application.yml)
 ## The subscription resource
 
 A valid subscription must:
-  - reference a valid API by its name and an optional namespace
-  - reference a valid plan key defined in the API
-  - reference a valid application by its name and an optional namespace
+
+- reference a valid API by its name and an optional namespace
+- reference a valid plan key defined in the API
+- reference a valid application by its name and an optional namespace
 
 ```yaml
 apiVersion: gravitee.io/v1alpha1
@@ -65,7 +66,7 @@ metadata:
 spec:
   api:
     name: jwt-demo
-  application: 
+  application:
     name: echo-client
   plan: JWT
 ```
@@ -123,4 +124,3 @@ Deleting the subscription resource results in the subscription being closed. Whi
 ```sh
 kubectl delete -f resources/subscription.yml
 ```
-

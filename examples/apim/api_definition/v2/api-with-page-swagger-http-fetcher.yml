@@ -20,7 +20,6 @@ metadata:
 spec:
   contextRef:
     name: dev-ctx
-    namespace: default
   name: "api-with-swagger-http-fetcher"
   version: "1.0"
   description: "An API with a swagger page fetched from HTTP"
@@ -35,17 +34,20 @@ spec:
       - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
+  lifecycle_state: PUBLISHED
   pages:
     docs-folder:
       name: specifications
-      type: FOLDER  
+      type: FOLDER
+      published: true
     swagger:
       name: "pet-store"
       type: SWAGGER
-      parent:  docs-folder
+      parent: docs-folder
       source:
-        type: 'http-fetcher'
+        type: "http-fetcher"
         configuration:
           url: https://petstore.swagger.io/v2/swagger.json
           autoFetch: true
-          fetchCron: '*/10 * * * * *'
+          fetchCron: "*/10 * * * * *"
+      published: true

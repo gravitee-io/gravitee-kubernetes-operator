@@ -19,6 +19,6 @@ metadata:
 spec:
   api:
     name: mtls-demo
-  application: 
+  application:
     name: echo-client
   plan: MTLS

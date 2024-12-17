@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: with-http-auth-provider-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-http-auth-provider"
   description: "API v4 With HTTP Auth Provider"
   version: "1.0"
@@ -67,6 +69,6 @@ spec:
                 authenticationProviders:
                   - "http-auth"
                 realm: "gravitee.io"
-          response: [ ]
-          subscribe: [ ]
-          publish: [ ]
+          response: []
+          subscribe: []
+          publish: []

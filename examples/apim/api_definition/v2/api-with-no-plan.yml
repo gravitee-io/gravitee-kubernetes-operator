@@ -17,12 +17,10 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: api-with-context-no-plan
-  namespace: "default"
 spec:
-  name: "K8s No Plan Example"
   contextRef:
-    name: "ctx-dev"
-    namespace: "default"
+    name: "dev-ctx"
+  name: "K8s No Plan Example"
   version: "1.0"
   description: "Api managed by Gravitee Kubernetes Operator with no plan"
   proxy:

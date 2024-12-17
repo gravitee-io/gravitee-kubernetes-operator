@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: api-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4"
   description: "API v4 managed by Gravitee Kubernetes Operator"
   version: "1.0"

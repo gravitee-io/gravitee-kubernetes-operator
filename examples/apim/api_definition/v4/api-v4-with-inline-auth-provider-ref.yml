@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: with-inline-auth-provider-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-inline-auth-provider"
   description: "API v4 With Inline Auth Provider"
   version: "1.0"
@@ -67,6 +69,6 @@ spec:
                 authenticationProviders:
                   - "inline-auth"
                 realm: "gravitee.io"
-          response: [ ]
-          subscribe: [ ]
-          publish: [ ]
+          response: []
+          subscribe: []
+          publish: []

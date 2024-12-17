@@ -19,7 +19,7 @@ metadata:
 spec:
   api:
     name: api-v4-with-jwt-plan
-  application: 
+  application:
     name: simple-application-with-client-id
   plan: JWT
-  endingAt: '2024-12-25T09:12:28Z'
+  endingAt: "2024-12-25T09:12:28Z"

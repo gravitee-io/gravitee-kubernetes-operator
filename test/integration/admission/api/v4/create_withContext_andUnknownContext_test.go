@@ -17,15 +17,13 @@ package v4
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Validate create", labels.WithContext, func() {
@@ -37,21 +35,14 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4WithContextFile).
-			Build().
-			Apply()
+			Build()
 
 		By("checking that validation fails")
 
 		Consistently(func() error {
-			api := new(v1alpha1.ApiV4Definition)
-			if err := manager.Client().Get(ctx, types.NamespacedName{
-				Name:      fixtures.APIv4.Name,
-				Namespace: fixtures.APIv4.Namespace,
-			}, api); err != nil {
-				return err
-			}
-
-			_, err := admissionCtrl.ValidateUpdate(ctx, api, api)
+			unknownContext := refs.NewNamespacedName("", "unknown")
+			fixtures.APIv4.Spec.Context = &unknownContext
+			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.APIv4)
 			return err
 		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
 	})

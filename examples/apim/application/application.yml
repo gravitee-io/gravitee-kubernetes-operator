@@ -29,7 +29,7 @@ spec:
     app:
       type: WEB
   metadata:
-  - name: "test metadata 1"
-    format: "STRING"
-  - name: "test metadata 2"
-    format: "STRING"
+    - name: "test metadata 1"
+      format: "STRING"
+    - name: "test metadata 2"
+      format: "STRING"

@@ -17,46 +17,44 @@ apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
   name: "jwt-v2"
-  annotations: {}
-  labels: {}
-spec: 
-  local: false
+spec:
   contextRef:
     name: dev-ctx
   name: "jwt-v2"
   version: "1"
   description: "jwt-v2"
   plans:
-  - name: "JWT"
-    description: "jwt plan"
-    security: "JWT"
-    securityDefinition: "{\n  \"signature\" : \"RSA_RS256\",\n  \"publicKeyResolver\"\
-      \ : \"GIVEN_KEY\",\n  \"resolverParameter\" : \"-----BEGIN PUBLIC KEY-----\\\
-      nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAv8YGSPoQEl7lXnp8OHkb\\nAOPYZ81rzXkmO83d0P8G78qWzi3gPnODm6Qxi2NbgcWXqQlZXxPkDTS3Xck1V3WY\\\
-      nE9voqQE7UEwpFBolqtUHQqL4w2vr/eUtZv9t3DdtoCcIj4xLmJUw7PS7jAb9quq0\\nXiVN692d6LI62T+9LyN+kcWHTpUyMBB8oxfQ9ekkGHskTc6LgYovKK+9lKoJv6gg\\\
-      n0ge8YAFbpjJBZbVX3jV8qeszgw9Xdhs3w/S8QnvWa3Cv0+c47oxZjXwpAa8ARzfn\\nD/5oK4CWRRy+t3QUndSR0cBR+bU0YFks3mmbl514/ywOXRf/sZmXaJkNejfNHQVa\\\
-      nhJgj/Z3W3F8GKksuFF14+BK2KX30bsQL3e4SeN0Wv6DF1UloG0T396yDd/o7L3ZC\\nDBlRB44OZ8sO3h8iSW7wVX0sGj/OKc4smo5dgP0r4+Fm2EVmVFU5YvEkFcy0Xoth\\\
-      nQmLwq0lJc7BdRMpAfRZLbW5WSlb2jgvxA/VI/ScLTRWZI7DGbzHRBS6J8Rnt3Inq\\njo7mUV1juBs3RhpxdOmg1LpGLAtQdcSSnX3IyyEVbzTVb22Px0EGAlKzMs6bnTJf\\\
-      n3TbZd/C0iqd6QOyaTh7D4Nr7ClfWAaYGZBA/FsHWA88fOsIQCtovWjp9A8i1+VQ5\\nHEy1rpaHPGHt1DFt2hu+d3MCAwEAAQ==\\\
-      n-----END PUBLIC KEY-----\",\n  \"connectTimeout\" : 2000,\n  \"requestTimeout\"\
-      \ : 2000,\n  \"useSystemProxy\" : false,\n  \"extractClaims\" : false,\n  \"\
-      propagateAuthHeader\" : true,\n  \"userClaim\" : \"sub\",\n  \"confirmationMethodValidation\"\
-      \ : {\n    \"ignoreMissing\" : false,\n    \"certificateBoundThumbprint\" :\
-      \ {\n      \"enabled\" : false,\n      \"extractCertificateFromHeader\" : false,\n\
-      \      \"headerName\" : \"ssl-client-cert\"\n    }\n  },\n  \"tokenTypValidation\"\
-      \ : {\n    \"enabled\" : false,\n    \"ignoreMissing\" : false,\n    \"expectedValues\"\
-      \ : [ \"JWT\" ],\n    \"ignoreCase\" : false\n  }\n}"
+    - name: "JWT"
+      description: "jwt plan"
+      security: "JWT"
+      securityDefinition:
+        "{\n  \"signature\" : \"RSA_RS256\",\n  \"publicKeyResolver\"\
+        \ : \"GIVEN_KEY\",\n  \"resolverParameter\" : \"-----BEGIN PUBLIC KEY-----\\\
+        nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAv8YGSPoQEl7lXnp8OHkb\\nAOPYZ81rzXkmO83d0P8G78qWzi3gPnODm6Qxi2NbgcWXqQlZXxPkDTS3Xck1V3WY\\\
+        nE9voqQE7UEwpFBolqtUHQqL4w2vr/eUtZv9t3DdtoCcIj4xLmJUw7PS7jAb9quq0\\nXiVN692d6LI62T+9LyN+kcWHTpUyMBB8oxfQ9ekkGHskTc6LgYovKK+9lKoJv6gg\\\
+        n0ge8YAFbpjJBZbVX3jV8qeszgw9Xdhs3w/S8QnvWa3Cv0+c47oxZjXwpAa8ARzfn\\nD/5oK4CWRRy+t3QUndSR0cBR+bU0YFks3mmbl514/ywOXRf/sZmXaJkNejfNHQVa\\\
+        nhJgj/Z3W3F8GKksuFF14+BK2KX30bsQL3e4SeN0Wv6DF1UloG0T396yDd/o7L3ZC\\nDBlRB44OZ8sO3h8iSW7wVX0sGj/OKc4smo5dgP0r4+Fm2EVmVFU5YvEkFcy0Xoth\\\
+        nQmLwq0lJc7BdRMpAfRZLbW5WSlb2jgvxA/VI/ScLTRWZI7DGbzHRBS6J8Rnt3Inq\\njo7mUV1juBs3RhpxdOmg1LpGLAtQdcSSnX3IyyEVbzTVb22Px0EGAlKzMs6bnTJf\\\
+        n3TbZd/C0iqd6QOyaTh7D4Nr7ClfWAaYGZBA/FsHWA88fOsIQCtovWjp9A8i1+VQ5\\nHEy1rpaHPGHt1DFt2hu+d3MCAwEAAQ==\\\
+        n-----END PUBLIC KEY-----\",\n  \"connectTimeout\" : 2000,\n  \"requestTimeout\"\
+        \ : 2000,\n  \"useSystemProxy\" : false,\n  \"extractClaims\" : false,\n  \"\
+        propagateAuthHeader\" : true,\n  \"userClaim\" : \"sub\",\n  \"confirmationMethodValidation\"\
+        \ : {\n    \"ignoreMissing\" : false,\n    \"certificateBoundThumbprint\" :\
+        \ {\n      \"enabled\" : false,\n      \"extractCertificateFromHeader\" : false,\n\
+        \      \"headerName\" : \"ssl-client-cert\"\n    }\n  },\n  \"tokenTypValidation\"\
+        \ : {\n    \"enabled\" : false,\n    \"ignoreMissing\" : false,\n    \"expectedValues\"\
+        \ : [ \"JWT\" ],\n    \"ignoreCase\" : false\n  }\n}"
   proxy:
     virtual_hosts:
-    - path: "/jwt-v2/"
+      - path: "/jwt-v2/"
     strip_context_path: false
     preserve_host: false
     groups:
-    - name: "default-group"
-      endpoints:
-      - name: "default"
-        target: "https://api.gravitee.io/echo"
-        inherit: true
-        weight: 1
-        backup: false
-        type: "http"
+      - name: "default-group"
+        endpoints:
+          - name: "default"
+            target: "https://api.gravitee.io/echo"
+            inherit: true
+            weight: 1
+            backup: false
+            type: "http"

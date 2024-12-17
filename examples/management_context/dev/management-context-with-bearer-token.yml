@@ -21,4 +21,4 @@ spec:
   organizationId: DEFAULT
   auth:
     # WARNING: replace with your generate bearer token
-    bearerToken: xxxx-yyyy-zzzz 
+    bearerToken: xxxx-yyyy-zzzz

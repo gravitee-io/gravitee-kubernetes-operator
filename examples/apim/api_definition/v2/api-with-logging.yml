@@ -18,6 +18,8 @@ kind: ApiDefinition
 metadata:
   name: api-with-logging
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "With logging"
   version: "1.0"
   description: "API with logging"

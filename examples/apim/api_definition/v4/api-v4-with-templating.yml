@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: basic-api-v4-example-templating
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "K8s Basic Example Templating - V4"
   version: "1.0"
   description: "Basic api v4 managed by Gravitee Kubernetes Operator with templating"

@@ -67,24 +67,25 @@ Here is extracted the plan configuration.
 
 ```yaml
 plans:
-    MTLS:
-      name: "mtls"
-      security:
-        type: "MTLS"
+  MTLS:
+    name: "mtls"
+    security:
+      type: "MTLS"
 ```
 
 ## The application resource
 
 The application resource can be found [here](resources/application.yml)
 
-The application makes use of string templating to inject the certificate we previously stored in a secret. The certificate *must* be in a valid PEM format.
+The application makes use of string templating to inject the certificate we previously stored in a secret. The certificate _must_ be in a valid PEM format.
 
 ## The subscription resource
 
 A valid subscription must:
-  - reference a valid API by its name and an optional namespace
-  - reference a valid plan key defined in the API
-  - reference a valid application by its name and an optional namespace
+
+- reference a valid API by its name and an optional namespace
+- reference a valid plan key defined in the API
+- reference a valid application by its name and an optional namespace
 
 ```yaml
 apiVersion: gravitee.io/v1alpha1
@@ -94,7 +95,7 @@ metadata:
 spec:
   api:
     name: mtls-demo
-  application: 
+  application:
     name: echo-client
   plan: MTLS
 ```
@@ -125,15 +126,13 @@ Now that all the resources are created, calling the API on the HTTPS endpoint of
 ```
 
 ```sh
-❯ curl -ksi $GW_URL/mtls-demo| head -1                                               
+❯ curl -ksi $GW_URL/mtls-demo| head -1
 HTTP/1.1 401 Unauthorized
 ```
 
 Let's now use the key and certificate we used to configure the echo-client application:
 
 ```sh
-❯ curl -ksi --cert pki/client.crt --key pki/client.key $GW_URL/mtls-demo| head -1    
+❯ curl -ksi --cert pki/client.crt --key pki/client.key $GW_URL/mtls-demo| head -1
 HTTP/1.1 200 OK
 ```
-
-

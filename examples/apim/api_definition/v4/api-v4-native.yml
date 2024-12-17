@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: api-v4-native
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-native"
   description: "V4 Native API managed by Gravitee Kubernetes Operator"
   version: "1.0"
@@ -34,8 +36,8 @@ spec:
     - name: Default Native endpoint group
       type: native-kafka
       sharedConfiguration:
-          security:
-            protocol: PLAINTEXT
+        security:
+          protocol: PLAINTEXT
       endpoints:
         - name: Default Native proxy
           type: native-kafka

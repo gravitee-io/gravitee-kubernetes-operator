@@ -17,15 +17,13 @@ package v4
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Validate update", labels.WithContext, func() {
@@ -33,7 +31,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 	ctx := context.Background()
 	admissionCtrl := v4.AdmissionCtrl{}
 
-	It("should return error on API update with missing management context", func() {
+	It("should fail on API update with unknown management context", func() {
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4WithContextFile).
@@ -43,16 +41,11 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		By("checking that API update does not pass validation")
 
 		Consistently(func() error {
-			api := new(v1alpha1.ApiV4Definition)
+			newApi := fixtures.APIv4.DeepCopy()
+			unknownContext := refs.NewNamespacedName("", "unknown")
+			newApi.Spec.Context = &unknownContext
 
-			if err := manager.Client().Get(ctx, types.NamespacedName{
-				Name:      fixtures.APIv4.Name,
-				Namespace: fixtures.APIv4.Namespace,
-			}, api); err != nil {
-				return err
-			}
-
-			_, err := admissionCtrl.ValidateUpdate(ctx, api, api)
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.APIv4, newApi)
 			return err
 		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
 	})

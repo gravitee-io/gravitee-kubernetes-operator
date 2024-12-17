@@ -29,22 +29,22 @@ spec:
     virtual_hosts:
       - path: "/with-service-discovery"
     groups:
-    - name: "default"
-      endpoints:
-      - backup: false
-        name: "Default"
-        weight: 1
-        type: "http"
-        target: "https://api.gravitee.io/echo"
-      load_balancing:
-        type: "ROUND_ROBIN"
-      services:
-        discovery:
-          enabled: true
-          provider: "consul-service-discovery"
-          configuration:
-            url: "http://localhost:8500"
-            trustStoreType: "NONE"
-            keyStoreType: "NONE"
-            service: "test"
+      - name: "default"
+        endpoints:
+          - backup: false
+            name: "Default"
+            weight: 1
+            type: "http"
+            target: "https://api.gravitee.io/echo"
+        load_balancing:
+          type: "ROUND_ROBIN"
+        services:
+          discovery:
+            enabled: true
+            provider: "consul-service-discovery"
+            configuration:
+              url: "http://localhost:8500"
+              trustStoreType: "NONE"
+              keyStoreType: "NONE"
+              service: "test"
   local: true

@@ -19,7 +19,7 @@ metadata:
   name: api-with-context
 spec:
   name: "Echo API"
-  contextRef: 
+  contextRef:
     name: "dev-ctx"
   version: "1.1"
   description: "Gravitee Kubernetes Operator sample"

@@ -18,6 +18,8 @@ kind: ApiDefinition
 metadata:
   name: with-endpoint-groups
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "With endpoint groups"
   version: "1.0"
   description: "API with endpoint groups and failover"
@@ -27,63 +29,63 @@ spec:
       security: "KEY_LESS"
   proxy:
     virtual_hosts:
-    - path: "/with-endpoint-groups"
+      - path: "/with-endpoint-groups"
     strip_context_path: false
     preserve_host: false
     groups:
-    - name: "default-group"
-      endpoints:
-      - backup: false
-        inherit: true
-        name: "default-primary"
-        weight: 1
-        type: "http"
-        target: "https://api.gravitee.io/echo"
-      - backup: true
-        inherit: true
-        name: "default-secondary"
-        weight: 1
-        type: "http"
-        target: "https://api.gravitee.io/echo"
-      load_balancing:
-        type: "ROUND_ROBIN"
-      http:
-        connectTimeout: 5000
-        idleTimeout: 60000
-        keepAlive: true
-        readTimeout: 10000
-        pipelining: false
-        maxConcurrentConnections: 100
-        useCompression: true
-        followRedirects: false
-    - name: "backup-group"
-      endpoints:
-      - backup: false
-        inherit: true
-        name: "backup-primary"
-        weight: 1
-        type: "http"
-        target: "https://api.gravitee.io/echo"
-      - backup: true
-        inherit: true
-        name: "backup-secondary"
-        weight: 1
-        type: "http"
-        target: "https://api.gravitee.io/echo"
-      load_balancing:
-        type: "ROUND_ROBIN"
-      http:
-        connectTimeout: 5000
-        idleTimeout: 60000
-        keepAlive: true
-        readTimeout: 10000
-        pipelining: false
-        maxConcurrentConnections: 100
-        useCompression: true
-        followRedirects: false
+      - name: "default-group"
+        endpoints:
+          - backup: false
+            inherit: true
+            name: "default-primary"
+            weight: 1
+            type: "http"
+            target: "https://api.gravitee.io/echo"
+          - backup: true
+            inherit: true
+            name: "default-secondary"
+            weight: 1
+            type: "http"
+            target: "https://api.gravitee.io/echo"
+        load_balancing:
+          type: "ROUND_ROBIN"
+        http:
+          connectTimeout: 5000
+          idleTimeout: 60000
+          keepAlive: true
+          readTimeout: 10000
+          pipelining: false
+          maxConcurrentConnections: 100
+          useCompression: true
+          followRedirects: false
+      - name: "backup-group"
+        endpoints:
+          - backup: false
+            inherit: true
+            name: "backup-primary"
+            weight: 1
+            type: "http"
+            target: "https://api.gravitee.io/echo"
+          - backup: true
+            inherit: true
+            name: "backup-secondary"
+            weight: 1
+            type: "http"
+            target: "https://api.gravitee.io/echo"
+        load_balancing:
+          type: "ROUND_ROBIN"
+        http:
+          connectTimeout: 5000
+          idleTimeout: 60000
+          keepAlive: true
+          readTimeout: 10000
+          pipelining: false
+          maxConcurrentConnections: 100
+          useCompression: true
+          followRedirects: false
     failover:
       maxAttempts: 3
       retryTimeout: 10000
       cases:
-      - "TIMEOUT"
+        - "TIMEOUT"
   local: true
