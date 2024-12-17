@@ -65,37 +65,39 @@ func (b *FSBuilder) Build() *Objects {
 	obj.randomSuffix = suffix
 
 	if api := decodeIfDefined(f.API, &v1alpha1.ApiDefinition{}, apiKind); api != nil {
-		b.setupAPI(obj, api, suffix)
+		setupAPI(obj, api, suffix)
 	}
 
 	if apiV4 := decodeIfDefined(f.APIv4, &v1alpha1.ApiV4Definition{}, apiV4Kind); apiV4 != nil {
-		b.setupAPIv4(obj, apiV4, suffix)
+		setupAPIv4(obj, apiV4, suffix)
 	}
 
 	if app := decodeIfDefined(f.Application, &v1alpha1.Application{}, appKind); app != nil {
-		b.setupApplication(obj, app, suffix)
+		setupApplication(obj, app, suffix)
 	}
 
 	if sub := decodeIfDefined(f.Subscription, &v1alpha1.Subscription{}, subscriptionKind); sub != nil {
-		b.setupSubscription(obj, sub, suffix)
+		setupSubscription(obj, sub, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
-		b.setupMgmtContext(obj, ctx, suffix)
+		setupMgmtContext(obj, ctx, suffix)
+	} else {
+		ensureNilContexts(obj)
 	}
 
 	if rsc := decodeIfDefined(f.Resource, &v1alpha1.ApiResource{}, rscKind); rsc != nil {
-		b.setupAPIResource(obj, rsc, suffix)
+		setupAPIResource(obj, rsc, suffix)
 	}
 
 	if ing := decodeIfDefined(f.Ingress, &netV1.Ingress{}, ingKind); ing != nil {
-		b.setupIngress(obj, ing, suffix)
+		setupIngress(obj, ing, suffix)
 	}
 
 	return obj
 }
 
-func (b *FSBuilder) setupIngress(obj *Objects, ing **netV1.Ingress, suffix string) {
+func setupIngress(obj *Objects, ing **netV1.Ingress, suffix string) {
 	obj.Ingress = *ing
 	obj.Ingress.Name += suffix
 	obj.Ingress.Namespace = constants.Namespace
@@ -109,7 +111,7 @@ func (b *FSBuilder) setupIngress(obj *Objects, ing **netV1.Ingress, suffix strin
 	randomizeIngressRules(obj.Ingress, suffix)
 }
 
-func (b *FSBuilder) setupAPIResource(obj *Objects, rsc **v1alpha1.ApiResource, suffix string) {
+func setupAPIResource(obj *Objects, rsc **v1alpha1.ApiResource, suffix string) {
 	obj.Resource = *rsc
 	obj.Resource.Name += suffix
 	obj.Resource.Namespace = constants.Namespace
@@ -135,7 +137,7 @@ func (b *FSBuilder) setupAPIResource(obj *Objects, rsc **v1alpha1.ApiResource, s
 	}
 }
 
-func (b *FSBuilder) setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix string) {
+func setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix string) {
 	obj.Context = *ctx
 	obj.Context.Name += suffix
 	obj.Context.Namespace = constants.Namespace
@@ -150,13 +152,25 @@ func (b *FSBuilder) setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementCont
 	}
 }
 
-func (b *FSBuilder) setupApplication(obj *Objects, app **v1alpha1.Application, suffix string) {
+func ensureNilContexts(obj *Objects) {
+	if obj.API != nil {
+		obj.API.Spec.Context = nil
+	}
+	if obj.APIv4 != nil {
+		obj.APIv4.Spec.Context = nil
+	}
+	if obj.Application != nil {
+		obj.Application.Spec.Context = nil
+	}
+}
+
+func setupApplication(obj *Objects, app **v1alpha1.Application, suffix string) {
 	obj.Application = *app
 	obj.Application.Name += suffix
 	obj.Application.Namespace = constants.Namespace
 }
 
-func (b *FSBuilder) setupAPIv4(obj *Objects, apiV4 **v1alpha1.ApiV4Definition, suffix string) {
+func setupAPIv4(obj *Objects, apiV4 **v1alpha1.ApiV4Definition, suffix string) {
 	obj.APIv4 = *apiV4
 	obj.APIv4.Name += suffix
 	obj.APIv4.Namespace = constants.Namespace
@@ -165,7 +179,7 @@ func (b *FSBuilder) setupAPIv4(obj *Objects, apiV4 **v1alpha1.ApiV4Definition, s
 	randomizeAPIv4Paths(obj.APIv4, suffix)
 }
 
-func (b *FSBuilder) setupAPI(obj *Objects, api **v1alpha1.ApiDefinition, suffix string) {
+func setupAPI(obj *Objects, api **v1alpha1.ApiDefinition, suffix string) {
 	obj.API = *api
 	obj.API.Name += suffix
 	obj.API.Namespace = constants.Namespace
@@ -174,7 +188,7 @@ func (b *FSBuilder) setupAPI(obj *Objects, api **v1alpha1.ApiDefinition, suffix 
 	randomizeAPIPaths(obj.API, suffix)
 }
 
-func (b *FSBuilder) setupSubscription(obj *Objects, sub **v1alpha1.Subscription, suffix string) {
+func setupSubscription(obj *Objects, sub **v1alpha1.Subscription, suffix string) {
 	obj.Subscription = *sub
 	obj.Subscription.Name += suffix
 	obj.Subscription.Namespace = constants.Namespace
