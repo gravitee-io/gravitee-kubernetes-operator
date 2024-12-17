@@ -18,12 +18,11 @@ kind: ApiV4Definition
 metadata:
   name: api-v4-with-with-groups-members
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-groups-members"
   description: "V4 API  with groups and members managed by Gravitee Kubernetes Operator"
   version: "1.0"
-  contextRef:
-    name: "dev-ctx"
-    namespace: "default"
   type: PROXY
   state: STARTED
   definitionContext:

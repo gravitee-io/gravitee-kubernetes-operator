@@ -18,6 +18,8 @@ kind: ApiDefinition
 metadata:
   name: with-disabled-hc
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "With disabled health check"
   version: "1.0"
   description: "API with disabled health check"

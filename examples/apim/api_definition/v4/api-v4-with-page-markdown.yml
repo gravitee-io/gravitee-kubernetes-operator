@@ -18,14 +18,13 @@ kind: ApiV4Definition
 metadata:
   name: api-v4-with-markdown-page
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-markdown-page"
   version: "1.0"
   description: "An API V4 with a simple markdown page"
   type: PROXY
   state: STARTED
-  contextRef:
-    name: dev-ctx
-    namespace: default
   listeners:
     - type: HTTP
       paths:
@@ -52,10 +51,12 @@ spec:
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
+  lifecycleState: PUBLISHED
   pages:
     markdowns-folder:
       name: markdowns
       type: FOLDER
+      published: true
     markdown:
       name: "hello-markdown"
       type: MARKDOWN
@@ -64,4 +65,5 @@ spec:
         Hello world!
         --
         This is markdown.
-      visibility: PRIVATE
+      visibility: PUBLIC
+      published: true

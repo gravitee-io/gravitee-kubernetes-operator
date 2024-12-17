@@ -22,6 +22,6 @@ spec:
   type: "auth-provider-inline-resource"
   enabled: true
   configuration:
-      users:
-          - username: "user"
-            password: "password"
+    users:
+      - username: "user"
+        password: "password"

@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: with-ldap-auth-provider-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-ldap-auth-provider"
   description: "API v4 With LDAP Auth Provider"
   version: "1.0"
@@ -80,6 +82,6 @@ spec:
                 authenticationProviders:
                   - ldap-auth
                 realm: gravitee.io
-          response: [ ]
-          subscribe: [ ]
-          publish: [ ]
+          response: []
+          subscribe: []
+          publish: []

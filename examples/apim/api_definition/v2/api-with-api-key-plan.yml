@@ -17,17 +17,15 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: api-with-api-key
-  namespace: "default"
 spec:
-  name: "api-with-api-key"
   contextRef:
     name: "dev-ctx"
-    namespace: "default"
+  name: "api-with-api-key"
   version: "1.0"
   description: "Api managed by Gravitee Kubernetes Operator with Key plan"
   plans:
-    - name: 'API_KEY'
-      description: 'Api key plan'
+    - name: "API_KEY"
+      description: "Api key plan"
       security: API_KEY
   proxy:
     virtual_hosts:

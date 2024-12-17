@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -36,12 +37,14 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		fixtures := fixture.
 			Builder().
 			WithApplication(constants.Application).
-			Build().
-			Apply()
+			Build()
 
 		By("checking that application does not pass validation")
 
 		Consistently(func() error {
+			unknownContext := refs.NewNamespacedName("", "unknown")
+			fixtures.Application.Spec.Context = &unknownContext
+
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Application)
 			return assert.Equals(
 				"error",

@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: api-disabled-hc-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "API V4 With disabled health check"
   description: "API v4 with disabled health check managed by Gravitee Kubernetes Operator"
   version: "1.0"
@@ -38,13 +40,13 @@ spec:
           inheritConfiguration: false
           configuration:
             target: https://api.gravitee.io/echo
-          sharedConfigurationOverride: { }
+          sharedConfigurationOverride: {}
           services:
             healthCheck:
               overrideConfiguration: true
               configuration:
                 schedule: "*/1 * * * * *"
-                headers: [ ]
+                headers: []
                 overrideEndpointPath: true
                 method: GET
                 failureThreshold: 2

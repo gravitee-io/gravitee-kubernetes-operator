@@ -18,12 +18,11 @@ kind: ApiV4Definition
 metadata:
   name: api-v4-with-context-sync-management
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-context-sync-management"
   description: "Updated V4 API managed by Gravitee Kubernetes Operator"
   version: "1.0"
-  contextRef:
-    name: "dev-ctx"
-    namespace: "default"
   definitionContext:
     origin: KUBERNETES
     syncFrom: MANAGEMENT

@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: with-am-oauth2-resource-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-am-oauth2-resource"
   description: "API v4 With AM Oauth2 Resource"
   version: "1.0"
@@ -65,13 +67,13 @@ spec:
           oauthResource: oauth2-am-resource
           extractPayload: false
           checkRequiredScopes: false
-          requiredScopes: [ ]
+          requiredScopes: []
           modeStrict: true
           propagateAuthHeader: true
-      characteristics: [ ]
+      characteristics: []
       comment_required: false
       status: PUBLISHED
-      tags: [ ]
+      tags: []
       type: API
       flows:
         - enabled: true
@@ -79,10 +81,10 @@ spec:
             - type: HTTP
               path: "/"
               pathOperator: STARTS_WITH
-          request: [ ]
-          response: [ ]
-          subscribe: [ ]
-          publish: [ ]
+          request: []
+          response: []
+          subscribe: []
+          publish: []
     KeyLess:
       name: "Free plan"
       description: "This plan does not require any authentication"
@@ -94,7 +96,7 @@ spec:
             - type: HTTP
               path: "/"
               pathOperator: STARTS_WITH
-          request: [ ]
-          response: [ ]
-          subscribe: [ ]
-          publish: [ ]
+          request: []
+          response: []
+          subscribe: []
+          publish: []

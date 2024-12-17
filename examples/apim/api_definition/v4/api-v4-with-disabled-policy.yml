@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: basic-api-v4-disabled-policy
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "K8s Basic V4 Example With Disabled Policy"
   version: "1.0"
   description: "Basic api V4 with disabled policy managed by Gravitee Kubernetes Operator"
@@ -54,7 +56,7 @@ spec:
         - type: HTTP
           path: "/"
           pathOperator: EQUALS
-          methods: [ ]
+          methods: []
       request:
         - name: Validate Request
           description: K8S Validate Request
@@ -70,10 +72,10 @@ spec:
                   message: api key
                   parameters:
                     - "^{#api.properties['my_api_key']}$"
-            status: '401'
-      response: [ ]
-      subscribe: [ ]
-      publish: [ ]
+            status: "401"
+      response: []
+      subscribe: []
+      publish: []
   plans:
     KeyLess:
       name: "Free plan"

@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: api-v4-with-state-stopped
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-state-stopped"
   description: "This API is stopped and will not be available for HTTP calls"
   version: "1.0"

@@ -25,5 +25,5 @@ spec:
   settings:
     app:
       type: WEB
-    tls: 
-      clientCertificate: '[[ secret `tls-client/tls.crt` ]]'
+    tls:
+      clientCertificate: "[[ secret `tls-client/tls.crt` ]]"

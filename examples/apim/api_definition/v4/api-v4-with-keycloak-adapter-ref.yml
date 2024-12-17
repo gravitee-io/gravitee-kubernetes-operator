@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: with-keycloak-adapter-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-keycloak-adapter"
   description: "API v4 With Keycloak Adapter"
   version: "1.0"
@@ -60,10 +62,10 @@ spec:
           requiredScopes: []
           modeStrict: true
           propagateAuthHeader: true
-      characteristics: [ ]
+      characteristics: []
       comment_required: false
       status: PUBLISHED
-      tags: [ ]
+      tags: []
       type: API
       flows:
         - enabled: true
@@ -71,10 +73,10 @@ spec:
             - type: HTTP
               path: "/"
               pathOperator: STARTS_WITH
-          request: [ ]
-          response: [ ]
-          subscribe: [ ]
-          publish: [ ]
+          request: []
+          response: []
+          subscribe: []
+          publish: []
     KeyLess:
       name: "Free plan"
       description: "This plan does not require any authentication"
@@ -86,7 +88,7 @@ spec:
             - type: HTTP
               path: "/"
               pathOperator: STARTS_WITH
-          request: [ ]
-          response: [ ]
-          subscribe: [ ]
-          publish: [ ]
+          request: []
+          response: []
+          subscribe: []
+          publish: []

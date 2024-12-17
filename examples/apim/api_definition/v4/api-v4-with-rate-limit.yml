@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: basic-api-v4-rate-limit
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "K8s Basic V4 Example With Rate-Limit"
   version: "1.0"
   description: "Basic api V4 with Rate-Limit managed by Gravitee Kubernetes Operator"
@@ -49,7 +51,7 @@ spec:
         - type: HTTP
           path: "/"
           pathOperator: EQUALS
-          methods: [ ]
+          methods: []
       request:
         - name: Rate Limit
           description: k8s rate limit
@@ -63,10 +65,10 @@ spec:
               periodTime: 100
               limit: 10000
               periodTimeUnit: MINUTES
-              key: ''
-      response: [ ]
-      subscribe: [ ]
-      publish: [ ]
+              key: ""
+      response: []
+      subscribe: []
+      publish: []
   plans:
     KeyLess:
       name: "Free plan"

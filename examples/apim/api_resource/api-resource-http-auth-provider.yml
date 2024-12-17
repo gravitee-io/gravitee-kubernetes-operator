@@ -22,6 +22,6 @@ spec:
   type: "auth-provider-http-resource"
   enabled: true
   configuration:
-      method: "POST"
-      condition: "{#authResponse.status == 200}"
-      url: "https://authorization-server.com/basic"
+    method: "POST"
+    condition: "{#authResponse.status == 200}"
+    url: "https://authorization-server.com/basic"

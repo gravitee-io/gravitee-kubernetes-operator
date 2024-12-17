@@ -18,6 +18,8 @@ kind: ApiDefinition
 metadata:
   name: with-hc
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "With health check"
   version: "1.0"
   description: "API with health check"
@@ -26,14 +28,14 @@ spec:
       enabled: true
       schedule: "*/1 * * * * *"
       steps:
-      - name: "default-step"
-        request:
-          path: "/"
-          method: "GET"
-          fromRoot: false
-        response:
-          assertions:
-          - "#response.status == 200"
+        - name: "default-step"
+          request:
+            path: "/"
+            method: "GET"
+            fromRoot: false
+          response:
+            assertions:
+              - "#response.status == 200"
   plans:
     - name: "KEY_LESS"
       description: "FREE"

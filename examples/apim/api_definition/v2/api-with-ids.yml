@@ -18,6 +18,8 @@ kind: "ApiDefinition"
 metadata:
   name: "api-with-ids"
 spec:
+  contextRef:
+    name: "dev-ctx"
   gravitee: "2.0.0"
   name: "api-with-ids"
   crossId: "ebf472b5-7cbf-4765-1f74-3cb2fb289238"
@@ -27,21 +29,21 @@ spec:
     origin: kubernetes
     mode: fully_managed
   plans:
-  - id: "a77db522-e3b5-4cae-bdb5-22e3b55cae5c"
-    crossId: "f3ef9c67-4900-a440-3a5b-5b00b05949d3"
-    name: "KEY_LESS"
-    description: "FREE"
-    validation: "AUTO"
-    security: "KEY_LESS"
-    type: "API"
-    status: "PUBLISHED"
-    api: "60aea640-d313-4ed5-9087-75d979d4afe3"
+    - id: "a77db522-e3b5-4cae-bdb5-22e3b55cae5c"
+      crossId: "f3ef9c67-4900-a440-3a5b-5b00b05949d3"
+      name: "KEY_LESS"
+      description: "FREE"
+      validation: "AUTO"
+      security: "KEY_LESS"
+      type: "API"
+      status: "PUBLISHED"
+      api: "60aea640-d313-4ed5-9087-75d979d4afe3"
   id: "60aea640-d313-4ed5-9087-75d979d4afe3"
   proxy:
     virtual_hosts:
-    - path: "/api-with-ids"
+      - path: "/api-with-ids"
     groups:
-        - endpoints:
-            - name: "Default"
-              target: "https://api.gravitee.io/echo"
+      - endpoints:
+          - name: "Default"
+            target: "https://api.gravitee.io/echo"
   properties: []

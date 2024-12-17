@@ -18,6 +18,8 @@ kind: ApiDefinition
 metadata:
   name: with-metadata
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "With metadata"
   version: "1.0"
   description: "API with metadata"
@@ -33,8 +35,8 @@ spec:
       description: "FREE"
       security: "KEY_LESS"
   metadata:
-  - key: "build-version"
-    name: "build-version"
-    format: "STRING"
-    value: "0.0.1"
+    - key: "build-version"
+      name: "build-version"
+      format: "STRING"
+      value: "0.0.1"
   local: true

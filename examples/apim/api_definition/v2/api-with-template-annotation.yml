@@ -17,16 +17,17 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
   name: api-template-with-api-key-plan
-  namespace: "default"
   annotations:
     gravitee.io/template: "true"
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "K8s ApiKey Example"
   version: "1.0"
   description: "Api managed by Gravitee Kubernetes Operator with Key plan"
   plans:
-    - name: 'Apikey'
-      description: 'Api key plan'
+    - name: "Apikey"
+      description: "Api key plan"
       security: API_KEY
       status: "PUBLISHED"
   local: true

@@ -20,7 +20,6 @@ metadata:
 spec:
   contextRef:
     name: dev-ctx
-    namespace: default
   name: "api-with-markdown-page"
   version: "1.0"
   description: "An API with a simple markdown page"
@@ -38,14 +37,17 @@ spec:
       - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
+  lifecycle_state: PUBLISHED
   pages:
     markdowns-folder:
       name: markdowns
-      type: FOLDER  
+      type: FOLDER
+      published: true
     markdown:
       name: "hello-markdown"
       type: MARKDOWN
       parent: markdowns-folder
+      published: true
       content: |
         Hello world!
         --

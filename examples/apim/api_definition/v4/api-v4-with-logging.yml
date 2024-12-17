@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: api-v4-with-logging
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "API v4 With logging"
   version: "1.0"
   description: "API v4 with logging"

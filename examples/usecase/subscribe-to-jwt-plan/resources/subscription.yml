@@ -19,6 +19,6 @@ metadata:
 spec:
   api:
     name: jwt-demo
-  application: 
+  application:
     name: echo-client
   plan: JWT

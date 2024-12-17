@@ -34,8 +34,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		fixtures := fixture.
 			Builder().
 			WithApplication(constants.Application).
-			Build().
-			Apply()
+			Build()
 
 		By("updating app domain")
 

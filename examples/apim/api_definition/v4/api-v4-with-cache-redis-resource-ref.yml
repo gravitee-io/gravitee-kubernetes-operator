@@ -18,6 +18,8 @@ kind: ApiV4Definition
 metadata:
   name: with-cache-redis-resource-v4
 spec:
+  contextRef:
+    name: "dev-ctx"
   name: "api-v4-with-cache-redis-resource"
   description: "API v4 With Cache Redis managed by Gravitee Kubernetes Operator"
   version: "1.0"
