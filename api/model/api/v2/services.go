@@ -86,7 +86,8 @@ type HealthCheckService struct {
 
 type EndpointHealthCheckService struct {
 	*HealthCheckService `json:",inline"`
-	// Is service inherited or not?
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=false
 	Inherit bool `json:"inherit"`
 }
 
