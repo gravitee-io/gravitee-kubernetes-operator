@@ -734,6 +734,8 @@ spec:
                       description: The plan status
                       enum:
                       - PUBLISHED
+                      - DEPRECATED
+                      - STAGING
                       type: string
                     tags:
                       default: []
@@ -878,7 +880,7 @@ spec:
                                     description: Is service enabled or not?
                                     type: boolean
                                   inherit:
-                                    description: Is service inherited or not?
+                                    default: false
                                     type: boolean
                                   name:
                                     description: Service name
@@ -950,8 +952,6 @@ spec:
                                           type: object
                                       type: object
                                     type: array
-                                required:
-                                - inherit
                                 type: object
                               http:
                                 description: Custom HTTP client options used for this

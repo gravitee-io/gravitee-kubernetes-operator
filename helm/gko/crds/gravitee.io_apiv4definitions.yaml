@@ -1315,6 +1315,8 @@ spec:
                       description: The plan status
                       enum:
                       - PUBLISHED
+                      - DEPRECATED
+                      - STAGING
                       type: string
                     tags:
                       default: []
