@@ -1408,7 +1408,7 @@ that has been promoted between different environments.<br/>
         <td>
           The plan status<br/>
           <br/>
-            <i>Enum</i>: PUBLISHED<br/>
+            <i>Enum</i>: PUBLISHED, DEPRECATED, STAGING<br/>
             <i>Default</i>: PUBLISHED<br/>
         </td>
         <td>false</td>
@@ -2326,17 +2326,19 @@ Specify EndpointHealthCheck service settings
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>inherit</b></td>
-        <td>boolean</td>
-        <td>
-          Is service inherited or not?<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
           Is service enabled or not?<br/>
+          <br/>
+            <i>Default</i>: false<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>inherit</b></td>
+        <td>boolean</td>
+        <td>
+          <br/>
           <br/>
             <i>Default</i>: false<br/>
         </td>
@@ -5519,7 +5521,7 @@ that has been promoted between different environments.<br/>
         <td>
           The plan status<br/>
           <br/>
-            <i>Enum</i>: PUBLISHED<br/>
+            <i>Enum</i>: PUBLISHED, DEPRECATED, STAGING<br/>
             <i>Default</i>: PUBLISHED<br/>
         </td>
         <td>false</td>

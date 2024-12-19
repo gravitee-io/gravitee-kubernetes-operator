@@ -17,12 +17,14 @@ package base
 // +kubebuilder:validation:Enum=API;CATALOG;
 type PlanType string
 
-// in APIM there are different state (STAGING;PUBLISHED;CLOSED;DEPRECATED;) but in GKO we only have a single state
-// +kubebuilder:validation:Enum=PUBLISHED;
+// The status of the plan.
+// +kubebuilder:validation:Enum=PUBLISHED;DEPRECATED;STAGING;
 type PlanStatus string
 
 const (
-	PublishedPlanStatus = PlanStatus("PUBLISHED")
+	PublishedPlanStatus  = PlanStatus("PUBLISHED")
+	DeprecatedPlanStatus = PlanStatus("DEPRECATED")
+	StagingPlanStatus    = PlanStatus("STAGING")
 )
 
 // +kubebuilder:validation:Enum=AUTO;MANUAL;
