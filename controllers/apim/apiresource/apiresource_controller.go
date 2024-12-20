@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
@@ -33,7 +34,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource/internal"
@@ -56,7 +56,6 @@ type Reconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.2/pkg/reconcile
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
 	apiResource := &v1alpha1.ApiResource{}
 	if err := r.Get(ctx, req.NamespacedName, apiResource); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -66,7 +65,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := apiResource.DeepCopy()
 
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, apiResource, func() error {
+	_, err := util.CreateOrUpdate(ctx, r.Client, apiResource, func() error {
 		util.AddFinalizer(apiResource, core.ApiResourceFinalizer)
 		k8s.AddAnnotation(apiResource, core.LastSpecHashAnnotation, hash.Calculate(&apiResource.Spec))
 
@@ -97,13 +96,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if reconcileErr == nil {
-		logger.Info("API Resource has been reconciled")
+	if err == nil {
+		log.InfoEndReconcile(ctx, apiResource)
 		return ctrl.Result{}, nil
 	}
 
 	// There was an error reconciling the Management Context
-	return ctrl.Result{}, reconcileErr
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.

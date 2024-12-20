@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func resolveResources(ctx context.Context, resources []*base.ResourceOrRef) error {
@@ -45,14 +44,6 @@ func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error 
 
 	namespacedName := resourceOrRef.Ref.NamespacedName()
 	resource := new(v1alpha1.ApiResource)
-
-	log.FromContext(ctx).Info(
-		"Looking for api resource from",
-		"namespace",
-		namespacedName.Namespace,
-		"name",
-		namespacedName.Name,
-	)
 
 	if err := k8s.GetClient().Get(ctx, namespacedName, resource); err != nil {
 		return err

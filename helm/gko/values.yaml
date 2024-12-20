@@ -62,7 +62,20 @@ manager:
     pullSecret: {}
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
+    ## 👎 This value is deprecated in benefit of manager.logs.format
     json: true
+    ## @param manager.logs.format Specifies log output format. Can be either json or console.
+    format: json
+    ## @param manager.logs.level Specifies log level. Can be either debug, info, warn, or error. Wrong values are converted to `info`.
+    level: info
+    ## @param manager.logs.levelCase Specifies the case of the level value. Can be either lower or upper. Wrong values are converted to `upper`.
+    levelCase: upper
+    timestamp:
+      ## @param manager.logs.timestamp.field Specifies the name of the field to use for the timestamp.
+      field: timestamp
+      ## @param manager.logs.timestamp.format Specifies the format to use for the timestamp. Can be either iso-8601, epoch-second, epoch-millis or epoch-nano.
+      ## Wrong values are converted to `iso-8601`.
+      format: epoch-second
   configMap:
     ## @param manager.configMap.name The name of the config map used to set the manager config from this values.
     name: gko-config
