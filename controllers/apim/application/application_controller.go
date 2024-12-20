@@ -26,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -40,7 +41,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -61,8 +61,6 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=applications/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
 	application := &v1alpha1.Application{}
 	if err := r.Get(ctx, req.NamespacedName, application); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -71,13 +69,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 
 	if application.Spec.Context == nil {
-		logger.Error(fmt.Errorf("no context is provided, no attempt will be made to sync with APIM"), "Aborting reconcile")
+		log.ErrorAbortingReconcile(
+			ctx,
+			fmt.Errorf("no context is provided, no attempt will be made to sync with APIM"),
+			application,
+		)
 		return ctrl.Result{}, nil
 	}
 
 	dc := application.DeepCopy()
 
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, application, func() error {
+	_, err := util.CreateOrUpdate(ctx, r.Client, application, func() error {
 		util.AddFinalizer(application, core.ApplicationFinalizer)
 		k8s.AddAnnotation(application, core.LastSpecHashAnnotation, hash.Calculate(&application.Spec))
 
@@ -110,8 +112,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	application.SetFinalizers(dc.GetFinalizers())
 
-	if reconcileErr == nil {
-		logger.Info("Application has been reconciled")
+	if err == nil {
+		log.InfoEndReconcile(ctx, application)
 		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, application)
 	}
 
@@ -120,12 +122,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if errors.IsRecoverable(reconcileErr) {
-		logger.Error(reconcileErr, "Requeuing reconcile")
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
+	if errors.IsRecoverable(err) {
+		log.ErrorRequeuingReconcile(ctx, err, application)
+		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 	}
 
-	logger.Error(reconcileErr, "Aborting reconcile")
+	log.ErrorAbortingReconcile(ctx, err, application)
 	return ctrl.Result{}, nil
 }
 

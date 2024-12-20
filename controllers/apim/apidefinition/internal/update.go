@@ -22,11 +22,11 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
 func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
@@ -63,7 +63,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return nil
 	}
 
-	log.FromContext(ctx).Info("Syncing API with APIM")
+	log.Debug(ctx, "Syncing API definition with control plane", log.KeyValues(apiDefinition)...)
 
 	apimClient, apimErr := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
 	if apimErr != nil {
@@ -88,6 +88,8 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return err
 	}
 
+	log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
+
 	return nil
 }
 
@@ -97,14 +99,14 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 	spec := &cp.Spec
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
-		log.FromContext(ctx).Error(err, "Unable to resolve API resources from references")
+		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
 		return err
 	}
 
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
 	if spec.Context != nil {
-		log.FromContext(ctx).Info("Syncing API with APIM")
+		log.Debug(ctx, "Syncing API definition with control plane", log.KeyValues(apiDefinition)...)
 		apimClient, err := apim.FromContextRef(ctx, spec.Context, apiDefinition.GetNamespace())
 		if err != nil {
 			return err
@@ -117,22 +119,22 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 			return err
 		}
 		apiDefinition.Status.Status = *status
-		log.FromContext(ctx).WithValues("id", spec.ID).Info("API successfully synced with APIM")
+		log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
 	} else {
 		cp.PopulateIDs(nil)
 	}
 
 	if spec.DefinitionContext.SyncFrom == v4.OriginManagement || spec.State == base.StateStopped {
-		log.FromContext(ctx).Info(
-			"Deleting config map as API is not managed by operator or is stopped",
-			"syncFrom", spec.DefinitionContext.SyncFrom,
-			"state", spec.State,
+		log.Debug(
+			ctx,
+			"Deleting config map as API definition is not synced from the cluster or API is stopped",
+			log.KeyValues(apiDefinition, "state", spec.State, "synced-from", spec.DefinitionContext.SyncFrom)...,
 		)
 		if err := deleteConfigMap(ctx, cp); err != nil {
 			return err
 		}
 	} else {
-		log.FromContext(ctx).Info("Saving config map")
+		log.Debug(ctx, "Saving config map for API definition", log.KeyValues(apiDefinition)...)
 		if err := saveConfigMap(ctx, cp); err != nil {
 			return err
 		}

@@ -16,12 +16,13 @@ package watch
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"reflect"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/types/list"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -30,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -158,27 +158,38 @@ func (w *Type) queueByFieldReferencing(
 	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
 	objectList, err := list.OfType(w.objectList)
+	queueKind := w.objectList.GetObjectKind().GroupVersionKind().Kind
 
 	if err != nil {
-		log.FromContext(w.ctx).Error(err, "unable to create list of type", "type", w.objectList)
+		log.Error(w.ctx, err, fmt.Sprintf("Unable to create list from kind [%s]", queueKind))
 		return
 	}
 
-	if sErr := search.FindByFieldReferencing(w.ctx, field, ref, objectList); sErr != nil {
-		log.FromContext(w.ctx).Error(sErr, "error while searching for items referencing", "reference", ref.String())
+	if err := search.FindByFieldReferencing(w.ctx, field, ref, objectList); err != nil {
+		log.Error(
+			w.ctx,
+			err,
+			fmt.Sprintf("Error while searching for items referencing [%s]", ref),
+		)
 		return
 	}
 
 	items, err := meta.ExtractList(objectList)
 	if err != nil {
-		log.FromContext(w.ctx).Error(err, "error while extracting list items of type", "type", w.objectList)
+		log.Error(
+			w.ctx,
+			err,
+			fmt.Sprintf("Error while extracting list items of kind [%s]", queueKind),
+		)
 	}
 
 	for i := range items {
 		if item, ok := items[i].(client.Object); !ok {
-			log.FromContext(w.ctx).Error(
-				fmt.Errorf("unable to convert the item to client.Object type"),
-				"type", reflect.TypeOf(items[i]))
+			log.Error(
+				w.ctx,
+				errors.New("unsupported type"),
+				"List item is not a client object and cannot be added to the queue",
+			)
 		} else {
 			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 				Name:      item.GetName(),

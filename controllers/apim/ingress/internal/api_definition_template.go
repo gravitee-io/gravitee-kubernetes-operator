@@ -23,8 +23,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
@@ -51,16 +51,16 @@ func resolveApiDefinitionTemplate(
 		apiDefinition = defaultApiDefinitionTemplate()
 	}
 
-	return mapper.New(getMapperOpts(ctx)).Map(apiDefinition, ingress), nil
+	return mapper.New(getMapperOpts(ctx, ingress)).Map(apiDefinition, ingress), nil
 }
 
-func getMapperOpts(ctx context.Context) mapper.Opts {
+func getMapperOpts(ctx context.Context, ingress *netV1.Ingress) mapper.Opts {
 	opts := mapper.NewOpts()
-	setNotFoundTemplate(ctx, &opts)
+	setNotFoundTemplate(ctx, ingress, &opts)
 	return opts
 }
 
-func setNotFoundTemplate(ctx context.Context, opts *mapper.Opts) {
+func setNotFoundTemplate(ctx context.Context, ingress *netV1.Ingress, opts *mapper.Opts) {
 	ns, name := env.Config.CMTemplate404NS, env.Config.CMTemplate404Name
 
 	if name == "" {
@@ -70,12 +70,22 @@ func setNotFoundTemplate(ctx context.Context, opts *mapper.Opts) {
 	cm := coreV1.ConfigMap{}
 	cli := k8s.GetClient()
 	if err := cli.Get(ctx, types.NamespacedName{Namespace: ns, Name: name}, &cm); err != nil {
-		log.FromContext(ctx).Error(err, "unable to access config map, using default HTTP not found template")
+		log.Error(
+			ctx,
+			err,
+			"unable to access config map, using default HTTP not found template",
+			log.KeyValues(ingress)...,
+		)
 		return
 	}
 
 	if err := checkData(cm.Data); err != nil {
-		log.FromContext(ctx).Error(err, "missing key in config map, using default HTTP not found template")
+		log.Error(
+			ctx,
+			err,
+			"missing key in config map, using default HTTP not found template",
+			log.KeyValues(ingress)...,
+		)
 		return
 	}
 

@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
@@ -33,7 +34,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -54,7 +54,6 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
 	managementContext := &v1alpha1.ManagementContext{}
 	if err := r.Get(ctx, req.NamespacedName, managementContext); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -64,7 +63,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := managementContext.DeepCopy()
 
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, managementContext, func() error {
+	_, err := util.CreateOrUpdate(ctx, r.Client, managementContext, func() error {
 		util.AddFinalizer(managementContext, core.ManagementContextFinalizer)
 		k8s.AddAnnotation(managementContext, core.LastSpecHashAnnotation, hash.Calculate(&managementContext.Spec))
 
@@ -95,13 +94,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if reconcileErr == nil {
-		logger.Info("Management context has been reconciled")
+	if err == nil {
+		log.InfoEndReconcile(ctx, managementContext)
 		return ctrl.Result{}, nil
 	}
 
-	// There was an error reconciling the Management Context
-	return ctrl.Result{}, reconcileErr
+	log.ErrorAbortingReconcile(ctx, err, managementContext)
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.
