@@ -17,15 +17,15 @@ package internal
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	v1 "k8s.io/api/networking/v1"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func Delete(
 	ctx context.Context,
 	ingress *v1.Ingress) error {
 	if err := deleteIngressTLSReference(ctx, ingress); err != nil {
-		log.FromContext(ctx).Error(err, "An error occurred while updating the TLS secrets")
+		log.Error(ctx, err, "An error occurred while updating the TLS secrets", log.KeyValues(ingress)...)
 		return err
 	}
 

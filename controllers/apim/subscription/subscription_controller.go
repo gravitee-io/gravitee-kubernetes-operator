@@ -25,11 +25,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
@@ -53,8 +53,6 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=subscriptions/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
 	subscription := &v1alpha1.Subscription{}
 	if err := r.Get(ctx, req.NamespacedName, subscription); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -66,7 +64,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := subscription.DeepCopy()
 
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, subscription, func() error {
+	_, err := util.CreateOrUpdate(ctx, r.Client, subscription, func() error {
 		util.AddFinalizer(subscription, core.SubscriptionFinalizer)
 		k8s.AddAnnotation(subscription, core.LastSpecHashAnnotation, hash.Calculate(&subscription.Spec))
 
@@ -97,8 +95,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if reconcileErr == nil {
-		logger.Info("Subscription has been reconciled")
+	if err == nil {
+		log.InfoEndReconcile(ctx, subscription)
 		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, subscription)
 	}
 
@@ -107,12 +105,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if errors.IsRecoverable(reconcileErr) {
-		logger.Error(reconcileErr, "Requeuing reconcile")
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
+	if errors.IsRecoverable(err) {
+		log.ErrorRequeuingReconcile(ctx, err, subscription)
+		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 	}
 
-	logger.Error(reconcileErr, "Aborting reconcile")
+	log.ErrorAbortingReconcile(ctx, err, subscription)
 	return ctrl.Result{}, nil
 }
 
