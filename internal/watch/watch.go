@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/types/list"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -30,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -160,25 +160,27 @@ func (w *Type) queueByFieldReferencing(
 	objectList, err := list.OfType(w.objectList)
 
 	if err != nil {
-		log.FromContext(w.ctx).Error(err, "unable to create list of type", "type", w.objectList)
+		log.Error(w.ctx, err, "unable to create list of type", "type", w.objectList)
 		return
 	}
 
 	if sErr := search.FindByFieldReferencing(w.ctx, field, ref, objectList); sErr != nil {
-		log.FromContext(w.ctx).Error(sErr, "error while searching for items referencing", "reference", ref.String())
+		log.Error(w.ctx, sErr, "error while searching for items referencing", "reference", ref.String())
 		return
 	}
 
 	items, err := meta.ExtractList(objectList)
 	if err != nil {
-		log.FromContext(w.ctx).Error(err, "error while extracting list items of type", "type", w.objectList)
+		log.Error(w.ctx, err, "error while extracting list items of type", "type", w.objectList)
 	}
 
 	for i := range items {
 		if item, ok := items[i].(client.Object); !ok {
-			log.FromContext(w.ctx).Error(
+			log.Error(
+				w.ctx,
 				fmt.Errorf("unable to convert the item to client.Object type"),
-				"type", reflect.TypeOf(items[i]))
+				"type", reflect.TypeOf(items[i]),
+			)
 		} else {
 			q.Add(reconcile.Request{NamespacedName: types.NamespacedName{
 				Name:      item.GetName(),

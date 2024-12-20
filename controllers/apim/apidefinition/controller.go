@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -33,7 +34,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition/internal"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -53,7 +53,6 @@ func Reconcile(
 }
 
 func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionObject) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
 	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
 		dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
 		if err := template.Compile(ctx, dc); err != nil {
@@ -70,11 +69,11 @@ func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionO
 	})
 
 	if err != nil {
-		logger.Error(err, "Failed to sync API definition template")
+		log.Error(ctx, err, "Failed to sync API definition template")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
 	}
 
-	logger.Info("template synced successfully.", "template:", apiDefinition.GetName())
+	log.Info(ctx, "template synced successfully.", "template:", apiDefinition.GetName())
 
 	if err := internal.UpdateStatusSuccess(ctx, apiDefinition); err != nil {
 		return ctrl.Result{}, err
@@ -86,7 +85,6 @@ func reconcileApiDefinition(
 	apiDefinition core.ApiDefinitionObject,
 	events *event.Recorder,
 ) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
 	dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
 
 	_, reconcileErr := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
@@ -121,7 +119,7 @@ func reconcileApiDefinition(
 	}
 
 	if reconcileErr == nil {
-		logger.Info("API definition has been reconciled")
+		log.Info(ctx, "API definition has been reconciled")
 		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, apiDefinition)
 	}
 
@@ -130,10 +128,10 @@ func reconcileApiDefinition(
 	}
 
 	if errors.IsRecoverable(reconcileErr) {
-		logger.Error(reconcileErr, "Requeuing reconcile")
+		log.Error(ctx, reconcileErr, "Requeuing reconcile")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}
 
-	logger.Error(reconcileErr, "Aborting reconcile")
+	log.Error(ctx, reconcileErr, "Aborting reconcile")
 	return ctrl.Result{}, nil
 }

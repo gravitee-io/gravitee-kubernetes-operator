@@ -25,11 +25,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
@@ -53,8 +53,6 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=subscriptions/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
 	subscription := &v1alpha1.Subscription{}
 	if err := r.Get(ctx, req.NamespacedName, subscription); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -98,7 +96,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if reconcileErr == nil {
-		logger.Info("Subscription has been reconciled")
+		log.Info(ctx, "Subscription has been reconciled")
 		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, subscription)
 	}
 
@@ -108,11 +106,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if errors.IsRecoverable(reconcileErr) {
-		logger.Error(reconcileErr, "Requeuing reconcile")
+		log.Error(ctx, reconcileErr, "Requeuing reconcile")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}
 
-	logger.Error(reconcileErr, "Aborting reconcile")
+	log.Error(ctx, reconcileErr, "Aborting reconcile")
 	return ctrl.Result{}, nil
 }
 

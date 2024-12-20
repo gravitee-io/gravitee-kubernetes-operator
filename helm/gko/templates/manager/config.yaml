@@ -35,6 +35,11 @@ data:
   {{- if not .Values.manager.logs.json }}
   DEV_MODE: "true"
   {{- end }}
+  LOGS_FORMAT: {{ .Values.manager.logs.format }}
+  LOGS_LEVEL: {{ .Values.manager.logs.level }}
+  LOGS_LEVEL_CASE: {{ .Values.manager.logs.levelCase }}
+  LOGS_TIMESTAMP_FIELD: {{ .Values.manager.logs.timestamp.field }}
+  LOGS_TIMESTAMP_FORMAT: {{ .Values.manager.logs.timestamp.format }}
   {{- if not .Values.manager.metrics.enabled }}
   ENABLE_METRICS: "false"
   {{- end }}

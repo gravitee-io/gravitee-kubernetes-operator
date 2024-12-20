@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
@@ -36,14 +37,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func updateIngressTLSReference(
 	ctx context.Context,
 	ingress *netV1.Ingress) error {
 	if len(ingress.Spec.TLS) == 0 {
-		log.FromContext(ctx).Info("no TLS will be configured")
+		log.Debug(ctx, "no TLS will be configured")
 		return nil
 	}
 
@@ -66,7 +66,7 @@ func updateIngressTLSReference(
 
 		// If finalizer not present, add it;
 		if !util.ContainsFinalizer(secret, core1.KeyPairFinalizer) {
-			log.FromContext(ctx).Info("adding finalizer to the tls secret")
+			log.Debug(ctx, "adding finalizer to the tls secret")
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, core1.KeyPairFinalizer)
 			k8s.AddAnnotation(secret, core1.LastSpecHashAnnotation, hash.Calculate(&secret.Data))
@@ -94,7 +94,7 @@ func updateIngressTLSReference(
 		values = append(values, fmt.Sprintf("%s/%s", secret.Namespace, secret.Name))
 	}
 
-	log.FromContext(ctx).Info("Update GW PEM registry with the secret names")
+	log.Debug(ctx, "Update GW PEM registry with the secret names")
 	return updatePemRegistry(ctx, ingress, key, values)
 }
 
@@ -124,11 +124,12 @@ func deleteIngressTLSReference(
 		}
 
 		if hasReferenceToOtherIngress {
-			log.FromContext(ctx).Error(
+			log.Error(
+				ctx,
 				errors.New("secret has reference"),
 				"secret is used by another ingress, it will not be deleted from the keystore")
 		} else {
-			log.FromContext(ctx).Info("removing finalizer from secret", "secret", secret.Name)
+			log.Debug(ctx, "removing finalizer from secret", "secret", secret.Name)
 			util.RemoveFinalizer(secret, core1.KeyPairFinalizer)
 
 			if err = cli.Update(ctx, secret); err != nil {
@@ -143,7 +144,7 @@ func deleteIngressTLSReference(
 		return err
 	}
 
-	log.FromContext(ctx).Info("gateway pem registry has been successfully updated.")
+	log.Info(ctx, "gateway pem registry has been successfully updated.")
 	return nil
 }
 
@@ -156,7 +157,7 @@ func secretHasReference(ctx context.Context, ing *netV1.Ingress, secret *core.Se
 	for i := range il.Items {
 		for _, tls := range il.Items[i].Spec.TLS {
 			if tls.SecretName == secret.Name && il.Items[i].DeletionTimestamp.IsZero() {
-				log.FromContext(ctx).Info("the secret is already used inside an ingress resource", "resource", il.Items[i].Name)
+				log.Debug("the secret is already used inside an ingress resource", "resource", il.Items[i].Name)
 				return true, nil
 			}
 		}

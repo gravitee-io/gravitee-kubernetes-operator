@@ -27,12 +27,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const (
@@ -51,7 +51,6 @@ func NewWebhookPatcher() *Patcher {
 	conf := ctrl.GetConfigOrDie()
 	cli, err := kubernetes.NewForConfig(conf)
 	if err != nil {
-		log.FromContext(context.Background()).Error(err, "unable to create Kubernetes client")
 		panic(err)
 	}
 
@@ -63,11 +62,11 @@ func NewWebhookPatcher() *Patcher {
 func (p *Patcher) CreateSecret(ctx context.Context, secretName, namespace, host string) error {
 	ca := p.getCaFromSecret(ctx, secretName, namespace)
 	if ca == nil {
-		log.FromContext(ctx).Info("creating new CA secret for GKO webhook")
+		log.Info(ctx, "creating new CA secret for GKO webhook")
 		newCa, newCert, newKey := GenerateCerts(ctx, host)
 		return p.saveCertsToSecret(ctx, secretName, namespace, CertName, KeyName, newCa, newCert, newKey)
 	} else {
-		log.FromContext(ctx).Info("Webhook secret already exists, no change will be applied")
+		log.Info(ctx, "Webhook secret already exists, no change will be applied")
 	}
 
 	return nil
@@ -78,10 +77,10 @@ func (p *Patcher) UpdateValidationCaBundle(ctx context.Context, webhookName, sec
 		ValidatingWebhookConfigurations().Get(ctx, webhookName, metav1.GetOptions{})
 
 	if errors.IsNotFound(err) {
-		log.FromContext(ctx).Error(err, "GKO validating webhook configuration doesn't exit.")
+		log.Error(ctx, err, "GKO validating webhook configuration doesn't exit.")
 		return err
 	} else if err != nil {
-		log.FromContext(ctx).Error(err, "unable to get validating webhook")
+		log.Error(ctx, err, "unable to get validating webhook")
 		return err
 	}
 
@@ -92,7 +91,7 @@ func (p *Patcher) UpdateValidationCaBundle(ctx context.Context, webhookName, sec
 	_, err = p.client.AdmissionregistrationV1().
 		ValidatingWebhookConfigurations().Update(ctx, webhookConfig, metav1.UpdateOptions{})
 	if err != nil {
-		log.FromContext(ctx).Error(err, "can't update GKO validating webhook configuration")
+		log.Error(ctx, err, "can't update GKO validating webhook configuration")
 		return err
 	}
 
@@ -104,10 +103,10 @@ func (p *Patcher) UpdateMutationCaBundle(ctx context.Context, webhookName, secre
 		MutatingWebhookConfigurations().Get(ctx, webhookName, metav1.GetOptions{})
 
 	if errors.IsNotFound(err) {
-		log.FromContext(ctx).Error(err, "GKO mutating webhook configuration doesn't exit.")
+		log.Error(ctx, err, "GKO mutating webhook configuration doesn't exit.")
 		return err
 	} else if err != nil {
-		log.FromContext(ctx).Error(err, "unable to get mutating webhook")
+		log.Error(ctx, err, "unable to get mutating webhook")
 		return err
 	}
 
@@ -118,7 +117,7 @@ func (p *Patcher) UpdateMutationCaBundle(ctx context.Context, webhookName, secre
 	_, err = p.client.AdmissionregistrationV1().
 		MutatingWebhookConfigurations().Update(ctx, webhookConfig, metav1.UpdateOptions{})
 	if err != nil {
-		log.FromContext(ctx).Error(err, "can't update GKO mutating webhook configuration")
+		log.Error(ctx, err, "can't update GKO mutating webhook configuration")
 		return err
 	}
 
@@ -128,11 +127,11 @@ func (p *Patcher) UpdateMutationCaBundle(ctx context.Context, webhookName, secre
 // getCaFromSecret will check for the presence of a secret. If it exists, will return the content of the
 // "ca" from the secret, otherwise will return nil.
 func (p *Patcher) getCaFromSecret(ctx context.Context, secretName string, namespace string) []byte {
-	log.FromContext(ctx).Info(fmt.Sprintf("getting secret '%s' in namespace '%s'", secretName, namespace))
+	log.Info(fmt.Sprintf(ctx, "getting secret '%s' in namespace '%s'", secretName, namespace))
 
 	secret, err := p.client.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
 	if err != nil {
-		log.FromContext(ctx).Error(err, "error getting GKO webhook CA secret")
+		log.Error(ctx, err, "error getting GKO webhook CA secret")
 		panic(err)
 	}
 
@@ -142,7 +141,7 @@ func (p *Patcher) getCaFromSecret(ctx context.Context, secretName string, namesp
 // SaveCertsToSecret saves the provided ca, cert and key into a secret in the specified namespace.
 func (p *Patcher) saveCertsToSecret(ctx context.Context,
 	secretName, namespace, certName, keyName string, ca, cert, key []byte) error {
-	log.FromContext(ctx).Info("saving to webhook secret '%s' in namespace '%s'", secretName, namespace)
+	log.Info(ctx, "saving to webhook secret '%s' in namespace '%s'", secretName, namespace)
 
 	secret, err := p.client.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
 	if err != nil {
@@ -166,11 +165,11 @@ func GenerateCerts(ctx context.Context, host string) ([]byte, []byte, []byte) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd // LSH number
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "failed to generate serial number")
+		log.Error(ctx, err, "failed to generate serial number")
 	}
 	rootKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "failed scdsa.GenerateKey")
+		log.Error(ctx, err, "failed scdsa.GenerateKey")
 	}
 
 	rootTemplate := x509.Certificate{
@@ -186,21 +185,21 @@ func GenerateCerts(ctx context.Context, host string) ([]byte, []byte, []byte) {
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &rootTemplate, &rootTemplate, &rootKey.PublicKey, rootKey)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "failed createCertificate for Ca")
+		log.Error(ctx, err, "failed createCertificate for Ca")
 	}
 
 	ca := encodeCert(derBytes)
 
 	leafKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "failed createLeafKey for certificate")
+		log.Error(ctx, err, "failed createLeafKey for certificate")
 	}
 
 	key := encodeKey(ctx, leafKey)
 
 	serialNumber, err = rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "failed to generate serial number")
+		log.Error(ctx, err, "failed to generate serial number")
 	}
 	leafTemplate := x509.Certificate{
 		SerialNumber:          serialNumber,
@@ -223,7 +222,7 @@ func GenerateCerts(ctx context.Context, host string) ([]byte, []byte, []byte) {
 
 	derBytes, err = x509.CreateCertificate(rand.Reader, &leafTemplate, &rootTemplate, &leafKey.PublicKey, rootKey)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "failed createLeaf certificate")
+		log.Error(ctx, err, "failed createLeaf certificate")
 	}
 
 	cert := encodeCert(derBytes)
@@ -233,7 +232,7 @@ func GenerateCerts(ctx context.Context, host string) ([]byte, []byte, []byte) {
 func encodeKey(ctx context.Context, key *ecdsa.PrivateKey) []byte {
 	b, err := x509.MarshalECPrivateKey(key)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "unable to marshal ECDSA private key")
+		log.Error(ctx, err, "unable to marshal ECDSA private key")
 	}
 	return pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: b})
 }

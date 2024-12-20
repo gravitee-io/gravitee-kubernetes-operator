@@ -17,21 +17,22 @@ package internal
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	v1 "k8s.io/api/networking/v1"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func CreateOrUpdate(
 	ctx context.Context,
 	desired *v1.Ingress) error {
 	if err := updateIngressTLSReference(ctx, desired); err != nil {
-		log.FromContext(ctx).Error(err, "An error occurred while updating the PEM registry")
+		log.Error(ctx, err, "An error occurred while updating the PEM registry")
 		return err
 	}
 
 	operation, apiDefinitionError := createOrUpdateApiDefinition(ctx, desired)
 	if apiDefinitionError != nil {
-		log.FromContext(ctx).Error(
+		log.Error(
+			ctx,
 			apiDefinitionError,
 			"An error occurs while creating or updating the ApiDefinition",
 			"Operation", operation,
