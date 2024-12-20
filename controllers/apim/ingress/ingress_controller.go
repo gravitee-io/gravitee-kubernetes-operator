@@ -22,6 +22,7 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
@@ -43,7 +44,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // Reconciler watches and reconciles Ingress objects.
@@ -61,8 +61,6 @@ type Reconciler struct {
 // Reconcile perform reconciliation logic for Ingress resource that is managed
 // by the operator.
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
 	ingress := &netV1.Ingress{}
 	if err := r.Get(ctx, req.NamespacedName, ingress); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -101,11 +99,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	dc.Status.DeepCopyInto(&ingress.Status)
 
 	if reconcileErr != nil {
-		logger.Error(reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)
+		log.Error(ctx, reconcileErr, "An error occurs while reconciling the Ingress", "Ingress", ingress)
 		return ctrl.Result{}, reconcileErr
 	}
 
-	logger.Info("Sync ingress DONE")
+	log.Info(ctx, "Sync ingress DONE")
 	return ctrl.Result{}, nil
 }
 

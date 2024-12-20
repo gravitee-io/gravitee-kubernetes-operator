@@ -19,19 +19,19 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func createOrUpdateApiDefinition(ctx context.Context, ingress *v1.Ingress) (util.OperationResult, error) {
 	apiDefinition, err := resolveApiDefinitionTemplate(ctx, ingress)
 	if err != nil {
-		log.FromContext(ctx).Error(err, "ResolveApiDefinition error")
+		log.Error(ctx, err, "ResolveApiDefinition error")
 		return util.OperationResultNone, err
 	}
 
@@ -43,7 +43,7 @@ func createOrUpdateApiDefinition(ctx context.Context, ingress *v1.Ingress) (util
 	}
 
 	if err != nil {
-		log.FromContext(ctx).Error(err, "unable to create api definition from template")
+		log.Error(ctx, err, "unable to create api definition from template")
 		return util.OperationResultNone, err
 	}
 
@@ -52,7 +52,8 @@ func createOrUpdateApiDefinition(ctx context.Context, ingress *v1.Ingress) (util
 		return updateApiDefinition(ctx, ingress, existingApiDefinition)
 	}
 
-	log.FromContext(ctx).Info(
+	log.Info(
+		ctx,
 		"No change detected on ApiDefinition. Skipped.",
 		"name", apiDefinition.Name,
 		"namespace", apiDefinition.Namespace,
@@ -64,7 +65,7 @@ func createApiDefinition(
 	ctx context.Context,
 	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
 ) (util.OperationResult, error) {
-	log.FromContext(ctx).Info("Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+	log.Info(ctx, "Creating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
 
 	cli := k8s.GetClient()
 	if err := util.SetOwnerReference(ingress, apiDefinition, cli.Scheme()); err != nil {
@@ -78,7 +79,7 @@ func updateApiDefinition(
 	ctx context.Context,
 	ingress *v1.Ingress, apiDefinition *v1alpha1.ApiDefinition,
 ) (util.OperationResult, error) {
-	log.FromContext(ctx).Info("Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
+	log.Info(ctx, "Updating ApiDefinition", "name", apiDefinition.Name, "namespace", apiDefinition.Namespace)
 	cli := k8s.GetClient()
 	err := util.SetOwnerReference(ingress, apiDefinition, cli.Scheme())
 	if err != nil {

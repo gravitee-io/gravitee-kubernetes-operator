@@ -26,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -40,7 +41,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const requeueAfterTime = time.Second * 5
@@ -61,8 +61,6 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=applications/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
-
 	application := &v1alpha1.Application{}
 	if err := r.Get(ctx, req.NamespacedName, application); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -71,7 +69,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 
 	if application.Spec.Context == nil {
-		logger.Error(fmt.Errorf("no context is provided, no attempt will be made to sync with APIM"), "Aborting reconcile")
+		log.Error(ctx, fmt.Errorf("no context is provided, no attempt will be made to sync with APIM"), "Aborting reconcile")
 		return ctrl.Result{}, nil
 	}
 
@@ -111,7 +109,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	application.SetFinalizers(dc.GetFinalizers())
 
 	if reconcileErr == nil {
-		logger.Info("Application has been reconciled")
+		log.Info(ctx, "Application has been reconciled")
 		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, application)
 	}
 
@@ -121,11 +119,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if errors.IsRecoverable(reconcileErr) {
-		logger.Error(reconcileErr, "Requeuing reconcile")
+		log.Error(ctx, reconcileErr, "Requeuing reconcile")
 		return ctrl.Result{RequeueAfter: requeueAfterTime}, reconcileErr
 	}
 
-	logger.Error(reconcileErr, "Aborting reconcile")
+	log.Error(ctx, reconcileErr, "Aborting reconcile")
 	return ctrl.Result{}, nil
 }
 

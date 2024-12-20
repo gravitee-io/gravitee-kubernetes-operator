@@ -39,6 +39,11 @@ const (
 	TrueString                           = "true"
 	IngressClasses                       = "INGRESS_CLASSES"
 	CheckApiContextPathConflictInCluster = "CHECK_API_CONTEXT_PATH_CONFLICT_IN_CLUSTER"
+	LogsFormat                           = "LOG_FORMAT"
+	LogsLevel                            = "LOG_LEVEL"
+	LogsTimestampCase                    = "LOGS_LEVEL_CASE"
+	LogsTimestampField                   = "LOGS_TIMESTAMP_FIELD"
+	LogsTimestampFormat                  = "LOGS_TIMESTAMP_FORMAT"
 
 	// This default are applied when running the app locally.
 	defaultWebhookPort       = 9443
@@ -61,6 +66,11 @@ var Config = struct {
 	HTTPClientTimeoutSeconds             int
 	IngressClasses                       []string
 	CheckApiContextPathConflictInCluster bool
+	LogsFormat                           string
+	LogsLevel                            string
+	LogsLevelCase                        string
+	LogsTimestampField                   string
+	LogsTimestampFormat                  string
 }{}
 
 func init() {
@@ -83,6 +93,10 @@ func init() {
 		ingressClass = os.Getenv(IngressClasses)
 	}
 	Config.IngressClasses = strings.Split(ingressClass, ",")
+	Config.LogsFormat = os.Getenv(LogsFormat)
+	Config.LogsLevel = os.Getenv(LogsLevel)
+	Config.LogsTimestampField = os.Getenv(LogsTimestampField)
+	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
 }
 
 func parseInt(key string, defaultValue int) int {
