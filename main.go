@@ -32,6 +32,7 @@ import (
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	wk "github.com/gravitee-io/gravitee-kubernetes-operator/internal/webhook"
@@ -50,7 +51,6 @@ import (
 	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/logging"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -69,14 +69,12 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 
 	//go:embed helm
 	helm embed.FS
@@ -113,23 +111,14 @@ func main() {
 		})
 	}
 
-	opts := zap.Options{
-		Development:          env.Config.Development,
-		EncoderConfigOptions: logging.NewEncoderConfigOption(),
-	}
-
-	opts.BindFlags(flag.CommandLine)
-
 	flag.Parse()
-
-	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	if !env.Config.EnableMetrics {
 		metricsAddr = "0" // disables metrics
 	}
 
 	if env.Config.HTTPClientInsecureSkipVerify {
-		setupLog.Info("TLS verification is skipped for APIM HTTP client")
+		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
 	metrics := metricServer.Options{BindAddress: metricsAddr}
@@ -147,19 +136,19 @@ func main() {
 	k8s.RegisterClient(mgr.GetClient())
 
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		log.Global.Error(err, "Unable to start manager")
 		os.Exit(1)
 	}
 
 	if env.Config.ApplyCRDs {
 		if err = applyCRDs(); err != nil {
-			setupLog.Error(err, "unable to apply custom resource definitions")
+			log.Global.Error(err, "Unable to apply custom resource definitions")
 			os.Exit(1)
 		}
 	}
 
 	if err = indexer.InitCache(context.Background(), mgr.GetCache()); err != nil {
-		setupLog.Error(err, "unable to start manager")
+		log.Global.Error(err, "Unable to start manager")
 		os.Exit(1)
 	}
 
@@ -168,7 +157,7 @@ func main() {
 	if env.Config.EnableWebhook {
 		err = setupAdmissionWebhooks(mgr)
 		if err != nil {
-			setupLog.Error(err, "unable to start manager")
+			log.Global.Error(err, "Unable to start manager")
 			os.Exit(1)
 		}
 	}
@@ -176,18 +165,18 @@ func main() {
 	//+kubebuilder:scaffold:builder
 
 	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
-		setupLog.Error(healthCheckErr, "unable to set up health check")
+		log.Global.Error(healthCheckErr, "Unable to set up health check")
 		os.Exit(1)
 	}
 
 	if readyCheckErr := mgr.AddReadyzCheck("readyz", healthz.Ping); readyCheckErr != nil {
-		setupLog.Error(readyCheckErr, "unable to set up ready check")
+		log.Global.Error(readyCheckErr, "Unable to set up ready check")
 		os.Exit(1)
 	}
 
-	setupLog.Info("starting manager")
-	if startErr := mgr.Start(ctrl.SetupSignalHandler()); startErr != nil {
-		setupLog.Error(startErr, "problem running manager")
+	log.Global.Info("Starting manager")
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+		log.Global.Error(err, "Unable to start manager")
 		os.Exit(1)
 	}
 }
@@ -204,15 +193,13 @@ func buildCacheOptions(ns string) cache.Options {
 }
 
 func registerControllers(mgr manager.Manager) {
-	const msg = "unable to create controller"
-	const controller = "controller"
 	if err := (&apidefinition.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiDefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "ApiDefinition")
+		log.Global.Error(err, "Unable to create controller for API definitions")
 		os.Exit(1)
 	}
 
@@ -222,7 +209,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "ApiV4Definition")
+		log.Global.Error(err, "Unable to create controller for API v4 definitions")
 		os.Exit(1)
 	}
 
@@ -232,7 +219,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("managementcontext-controller"),
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "ManagementContext")
+		log.Global.Error(err, "Unable to create controller for management contexts")
 		os.Exit(1)
 	}
 	if err := (&ingress.Reconciler{
@@ -241,7 +228,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1.IngressList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "Ingress")
+		log.Global.Error(err, "Unable to create controller for ingresses")
 		os.Exit(1)
 	}
 	if err := (&apiresource.Reconciler{
@@ -249,7 +236,7 @@ func registerControllers(mgr manager.Manager) {
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("apiresource-controller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "ApiResource")
+		log.Global.Error(err, "Unable to create controller for API resources")
 		os.Exit(1)
 	}
 	if err := (&application.Reconciler{
@@ -258,7 +245,7 @@ func registerControllers(mgr manager.Manager) {
 		Recorder: mgr.GetEventRecorderFor("application-controller"),
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "Application")
+		log.Global.Error(err, "Unable to create controller for applications")
 		os.Exit(1)
 	}
 
@@ -267,7 +254,7 @@ func registerControllers(mgr manager.Manager) {
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "Subscription")
+		log.Global.Error(err, "Unable to create controller for subscriptions")
 		os.Exit(1)
 	}
 
@@ -275,7 +262,7 @@ func registerControllers(mgr manager.Manager) {
 		Client: k8s.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "Secret")
+		log.Global.Error(err, "Unable to create controller for secrets")
 		os.Exit(1)
 	}
 }
@@ -313,7 +300,7 @@ func applyCRDs() error {
 		crd := &unstructured.Unstructured{Object: obj}
 
 		if crd, err = client.Resource(version).Apply(ctx, crd.GetName(), crd, opts); err == nil {
-			setupLog.Info("applied resource definition", "name", crd.GetName())
+			log.Global.Infof("Applied resource definition [%s]", crd)
 		}
 
 		return err
@@ -321,7 +308,7 @@ func applyCRDs() error {
 }
 
 func patchAdmissionWebhook() {
-	setupLog.Info("setting up Admission Webhook Server")
+	log.Global.Debug("Setting up Admission Webhook Server")
 	webhookPatcher := wk.NewWebhookPatcher()
 	svc := env.Config.WebhookService
 	ns := env.Config.WebhookNS
@@ -345,7 +332,7 @@ func patchAdmissionWebhook() {
 		env.Config.WebhookCertSecret,
 		ns)
 	if err != nil {
-		setupLog.Error(err, "Can not update CA bundle for GKO validation webhook. GKO can not start")
+		log.Global.Error(err, "Can not update CA bundle for GKO validation webhook. GKO can not start")
 		panic(err)
 	}
 
@@ -355,7 +342,7 @@ func patchAdmissionWebhook() {
 		env.Config.WebhookCertSecret,
 		ns)
 	if err != nil {
-		setupLog.Error(err, "Can not update CA bundle for GKO mutation webhook. GKO can not start")
+		log.Global.Error(err, "Can not update CA bundle for GKO mutation webhook. GKO can not start")
 		panic(err)
 	}
 }
