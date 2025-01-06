@@ -22,4 +22,4 @@ spec:
   application:
     name: simple-application-with-client-id
   plan: JWT
-  endingAt: "2024-12-25T09:12:28Z"
+  endingAt: "2040-12-25T09:12:28Z"
