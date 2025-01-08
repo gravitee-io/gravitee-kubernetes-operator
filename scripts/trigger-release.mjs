@@ -29,7 +29,7 @@ toggleVerbosity(VERBOSE);
 
 if (isEmptyString(VERSION)) {
   LOG.red("You must specify a version using the --version flag");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 LOG.blue(`Triggering release pipeline for version ${VERSION}`);

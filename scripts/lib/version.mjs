@@ -18,12 +18,13 @@ export class Version {
   majorDigit;
   minorDigit;
   patchDigit;
+  suffix;
 
   constructor(version) {
-    const [majorDigit, minorDigit, patchDigit] = [
+    const [majorDigit, minorDigit, patchDigit, suffix] = [
       ...version.split(".").map(Number),
     ];
-    Object.assign(this, { majorDigit, minorDigit, patchDigit });
+    Object.assign(this, { majorDigit, minorDigit, patchDigit, suffix });
   }
 
   branch() {
@@ -36,5 +37,9 @@ export class Version {
 
   isNoPatch() {
     return this.patchDigit === 0;
+  }
+
+  isPreRelease() {
+    return !!this.suffix;
   }
 }
