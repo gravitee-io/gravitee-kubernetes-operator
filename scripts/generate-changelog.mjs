@@ -21,6 +21,7 @@ import {
   isNonEmptyString,
   toggleVerbosity,
 } from "./lib/index.mjs";
+import { Version } from "./lib/version.mjs";
 
 const VERSION = argv.version;
 const VERBOSE = argv.verbose;
@@ -47,12 +48,20 @@ const LOG_TYPES = new Map([
 
 if (isEmptyString(VERSION)) {
   LOG.red("You must specify a version using the --version flag");
-  await $`exit 1`;
+  process.exit(1);
+}
+
+const version = new Version(VERSION);
+if (version.isPreRelease()) {
+  LOG.yellow(
+    `No changelog to generate (version ${VERSION} is a pre-release version)`
+  );
+  process.exit(0);
 }
 
 if (isEmptyString(JIRA_TOKEN)) {
   LOG.red("JIRA_TOKEN must be defined as an environment variable");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 async function getJiraVersion(versionName) {
@@ -118,11 +127,15 @@ There is nothing new in version ${VERSION}.
 
 `;
 
+const noChangelogMessage = `
+${VERSION} was not created in Jira. Assuming no changelog should be generated.
+`;
+
 const jiraVersion = await getJiraVersion(VERSION);
 
 if (!jiraVersion) {
-  echo(noChangeMessage);
-  await $`exit 0`;
+  echo(noChangelogMessage);
+  process.exit(0);
 }
 
 const jiraIssues = await getJiraIssues(jiraVersion.id);
