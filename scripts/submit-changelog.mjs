@@ -36,27 +36,27 @@ toggleVerbosity(VERBOSE);
 
 if (isEmptyString(VERSION)) {
   LOG.red("You must specify a version using the --version flag");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 if (isEmptyString(RELEASE_CHANGELOG_FILE)) {
   LOG.red("You must specify a file using the --file flag");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 if (!fs.pathExistsSync(RELEASE_CHANGELOG_FILE)) {
   LOG.red(`File ${RELEASE_CHANGELOG_FILE} could not be found`);
-  await $`exit 1`;
+  process.exit(1);
 }
 
 if (isEmptyString(OUTPUT_FILE)) {
   LOG.red("You must specify an output file using the --output flag");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 if (isEmptyString(GITHUB_TOKEN)) {
   LOG.red("A github token is required to submit your pull request");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 const version = new Version(VERSION);
@@ -65,7 +65,14 @@ if (version.isNoPatch()) {
   LOG.yellow(
     `No changelog to generate (version ${VERSION} is a new minor version)`
   );
-  await $`exit 0`;
+  process.exit(0);
+}
+
+if (version.isPreRelease()) {
+  LOG.yellow(
+    `No changelog to generate (version ${VERSION} is a pre-release version)`
+  );
+  process.exit(0);
 }
 
 const changelogFile = `${Docs.baseFolder}/${version.minor()}/${

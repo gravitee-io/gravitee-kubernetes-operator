@@ -22,7 +22,7 @@ const VERSION = argv.version;
 
 if (isEmptyString(VERSION)) {
   LOG.red("You must specify a version using the --version flag");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 LOG.log(new Version(VERSION).branch());
