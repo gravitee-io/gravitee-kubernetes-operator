@@ -19,9 +19,8 @@ import (
 )
 
 const (
-	basePath = "/management"
-	envPath  = "/environments"
-	orgPath  = "/organizations"
+	envPath = "/environments"
+	orgPath = "/organizations"
 )
 
 // Client is the client for a given instance of the Gravitee.io Management API
@@ -58,7 +57,7 @@ func (client *Client) OrgTarget(path string) *http.URL {
 
 // NewURLs returns a new URLs instance for the given base URL
 // with Org path initialized from the given orgID and Env path initialized from the given envID.
-func NewURLs(baseUrl string, orgID, envID string) (*URLs, error) {
+func NewURLs(baseUrl, basePath string, orgID, envID string) (*URLs, error) {
 	base, err := http.NewURL(baseUrl)
 	if err != nil {
 		return nil, err

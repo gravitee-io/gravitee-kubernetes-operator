@@ -24,6 +24,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
+const (
+	defaultBasePath = "/management"
+	cloudBasePath   = "/apim/rest"
+)
+
 // APIM wraps services needed to sync resources with a given environment on a Gravitee.io APIM instance.
 type APIM struct {
 	APIs         *service.APIs
@@ -46,8 +51,10 @@ func (apim *APIM) OrgID() string {
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
 func FromContext(ctx context.Context, context core.ContextModel, parentNs string) (*APIM, error) {
+	path := getBasePath(context)
 	orgID, envID := context.GetOrgID(), context.GetEnvID()
-	urls, err := client.NewURLs(context.GetURL(), orgID, envID)
+
+	urls, err := client.NewURLs(context.GetURL(), path, orgID, envID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +75,16 @@ func FromContext(ctx context.Context, context core.ContextModel, parentNs string
 		Env:          service.NewEnv(client),
 		Context:      context,
 	}, nil
+}
+
+func getBasePath(context core.ContextModel) string {
+	if context.GetPath() != nil {
+		return *context.GetPath()
+	}
+	if context.HasCloud() {
+		return cloudBasePath
+	}
+	return defaultBasePath
 }
 
 func FromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string) (*APIM, error) {

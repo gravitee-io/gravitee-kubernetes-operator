@@ -151,6 +151,7 @@ type SecretAware interface {
 type ContextModel interface {
 	SecretAware
 	GetURL() string
+	GetPath() *string
 	GetEnvID() string
 	GetOrgID() string
 	HasAuthentication() bool
