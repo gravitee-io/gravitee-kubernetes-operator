@@ -132,6 +132,11 @@ spec:
                   An existing organization id targeted by the context on the management API instance.
                   This is optional when this context targets Gravitee Cloud otherwise it is required.
                 type: string
+              path:
+                description: |-
+                  Allows to override the context path that will be appended to the baseURL.
+                  This can be used when reverse proxying APIM with URL rewrite
+                type: string
             type: object
           status:
             description: ManagementContextStatus defines the observed state of an

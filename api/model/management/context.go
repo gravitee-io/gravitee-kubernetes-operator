@@ -29,6 +29,10 @@ type Context struct {
 	// This is optional when this context targets Gravitee Cloud otherwise it is required.
 	// +kubebuilder:validation:Optional
 	BaseUrl string `json:"baseUrl,omitempty"`
+	// Allows to override the context path that will be appended to the baseURL.
+	// This can be used when reverse proxying APIM with URL rewrite
+	// +kubebuilder:validation:Optional
+	Path *string `json:"path,omitempty"`
 	// An existing organization id targeted by the context on the management API instance.
 	// This is optional when this context targets Gravitee Cloud otherwise it is required.
 	// +kubebuilder:validation:Optional
@@ -74,6 +78,11 @@ func (c *Context) GetSecretRef() core.ObjectRef {
 // GetURL implements custom.Context.
 func (c *Context) GetURL() string {
 	return c.BaseUrl
+}
+
+// GetPath implements custom.Context.
+func (c *Context) GetPath() *string {
+	return c.Path
 }
 
 // HasCloud implements custom.Context.
