@@ -138,6 +138,11 @@ func (ctx *ManagementContext) GetURL() string {
 	return ctx.Spec.BaseUrl
 }
 
+// GetURL implements custom.Context.
+func (ctx *ManagementContext) GetPath() *string {
+	return ctx.Spec.Path
+}
+
 // HasAuthentication implements custom.Context.
 func (ctx *ManagementContext) HasAuthentication() bool {
 	return ctx.Spec.Auth != nil
