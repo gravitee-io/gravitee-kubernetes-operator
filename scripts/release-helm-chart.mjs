@@ -43,14 +43,14 @@ await checkRequirements();
 async function checkRequirements() {
   if (isEmptyString(VERSION)) {
     LOG.red("You must specify a version to release using the --version flag");
-    await $`exit 1`;
+    process.exit(1);
   }
 
   if (isEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
     LOG.red(
       "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable."
     );
-    await $`exit 1`;
+    process.exit(1);
   }
 
   if (!$.env.CIRCLECI) {
@@ -60,7 +60,7 @@ async function checkRequirements() {
   If you are sure you want to continue, please set the CIRCLECI environment variable to true.
 
 `);
-    await $`exit 1`;
+    process.exit(1);
   }
 }
 

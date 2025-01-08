@@ -25,7 +25,7 @@ const CIRCLECI_TOKEN = process.env.CIRCLECI_TOKEN;
 
 if (isEmptyString(CIRCLECI_TOKEN)) {
   LOG.red("CIRCLECI_TOKEN cannot be found");
-  await $`exit 1`;
+  process.exit(1);
 }
 
 export async function triggerPipeline(parameters, branch = "master") {
