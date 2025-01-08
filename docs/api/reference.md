@@ -151,6 +151,14 @@ and your cloud token contains only one environment ID, otherwise it is required.
 This is optional when this context targets Gravitee Cloud otherwise it is required.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>path</b></td>
+        <td>string</td>
+        <td>
+          Allows to override the context path that will be appended to the baseURL.
+This can be used when reverse proxying APIM with URL rewrite<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
