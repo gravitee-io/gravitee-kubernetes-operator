@@ -27,7 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const usCloudGateURL = "https://us.cloudgate.gravitee.io/apim/rest"
+const usCloudGateURL = "https://us.cloudgate.gravitee.io"
 
 var _ = Describe("cloud token defaults", func() {
 	It("without cloud token", func() {
