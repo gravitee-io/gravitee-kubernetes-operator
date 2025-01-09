@@ -16,6 +16,7 @@ package v4
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
@@ -88,6 +89,9 @@ func (fl *Flow) ToGatewayDefinition() *Flow {
 
 type FlowStep struct {
 	base.FlowStep `json:",inline"`
+	// Reference to an existing Shared Policy Group
+	// +kubebuilder:validation:Optional
+	SharedPolicyGroup *refs.NamespacedName `json:"sharedPolicyGroupRef,omitempty"`
 	// The message condition (supports EL expressions)
 	// +kubebuilder:validation:Optional
 	MessageCondition *string `json:"messageCondition,omitempty"`

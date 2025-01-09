@@ -31,16 +31,18 @@ import (
 type IndexField string
 
 const (
-	ApiContextField    IndexField = "context"
-	ApiV4ContextField  IndexField = "api-v4-context"
-	SecretRefField     IndexField = "secretRef"
-	ApiResourceField   IndexField = "resource"
-	ApiV4ResourceField IndexField = "api-v4-resource"
-	ApiTemplateField   IndexField = "api-template"
-	TLSSecretField     IndexField = "tls-secret"
-	AppContextField    IndexField = "app-context"
-	ApiV2SubsField     IndexField = "api-v2-subscription"
-	ApiV4SubsField     IndexField = "api-v4-subscription"
+	ApiContextField              IndexField = "context"
+	ApiV4ContextField            IndexField = "api-v4-context"
+	SecretRefField               IndexField = "secretRef"
+	ApiResourceField             IndexField = "resource"
+	ApiV4ResourceField           IndexField = "api-v4-resource"
+	ApiV4SharedPolicyGroupsField IndexField = "api-v4-spg"
+	ApiTemplateField             IndexField = "api-template"
+	TLSSecretField               IndexField = "tls-secret"
+	AppContextField              IndexField = "app-context"
+	ApiV2SubsField               IndexField = "api-v2-subscription"
+	ApiV4SubsField               IndexField = "api-v4-subscription"
+	SPGContextField              IndexField = "spg-context"
 )
 
 func (f IndexField) String() string {
@@ -76,6 +78,12 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	apiV4ResourceIndexer := newIndexer(ApiV4ResourceField, indexIApiV4ResourceRefs)
 	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4ResourceIndexer.Field,
 		apiV4ResourceIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	apiV4SharedPolicyGroupsIndexer := newIndexer(ApiV4SharedPolicyGroupsField, indexApiV4FlowsSharedPolicyGroupsRefs)
+	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4SharedPolicyGroupsIndexer.Field,
+		apiV4SharedPolicyGroupsIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -121,6 +129,12 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		apiV4SubscriptionIndexer.Field,
 		apiV4SubscriptionIndexer.Func,
 	); err != nil {
+		errs = append(errs, err)
+	}
+
+	spgContextIndexer := newIndexer(SPGContextField, indexSharedPolicyGroupManagementContexts)
+	if err := cache.IndexField(ctx, &v1alpha1.SharedPolicyGroup{}, spgContextIndexer.Field,
+		spgContextIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -200,6 +214,12 @@ func indexIApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 	}
 }
 
+func indexApiV4FlowsSharedPolicyGroupsRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
+	for _, sharedPolicyGroup := range api.GetAllSharedPolicyGroups() {
+		*fields = append(*fields, ensureNamespacedRef(api, sharedPolicyGroup))
+	}
+}
+
 func indexApiTemplate(ing *v1.Ingress, fields *[]string) {
 	if ing.Annotations[core.IngressTemplateAnnotation] == "" {
 		return
@@ -266,6 +286,14 @@ func indexAPIv2Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
 	if kind == core.CRDApiDefinitionResource {
 		*fields = append(*fields, nsn.String())
 	}
+}
+
+func indexSharedPolicyGroupManagementContexts(spg *v1alpha1.SharedPolicyGroup, fields *[]string) {
+	if spg.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(spg, spg.Spec.Context))
 }
 
 func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {

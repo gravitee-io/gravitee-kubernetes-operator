@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//nolint:dupl // a single controller is needed for any single resource
 package apidefinition
 
 import (
@@ -61,6 +60,7 @@ func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&v1alpha1.ApiV4Definition{}).
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ApiV4ContextField)).
 		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(indexer.ApiV4ResourceField)).
+		Watches(&v1alpha1.SharedPolicyGroup{}, r.Watcher.WatchSharedPolicyGroups(indexer.ApiV4SharedPolicyGroupsField)).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

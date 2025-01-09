@@ -29,6 +29,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
+type apiNamespaceKey string
+
+const nsKey = apiNamespaceKey("api-namespace")
+
 func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:
@@ -95,10 +99,16 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
 	cp := apiDefinition.DeepCopy()
+	nsCtx := context.WithValue(ctx, nsKey, apiDefinition.Namespace)
 
 	spec := &cp.Spec
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
+		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
+		return err
+	}
+
+	if err := resolveSharedPolicyGroups(nsCtx, spec); err != nil {
 		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
 		return err
 	}

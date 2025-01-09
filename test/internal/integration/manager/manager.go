@@ -19,6 +19,8 @@ import (
 	"io"
 	"os"
 
+	policygroups "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -172,6 +174,13 @@ func init() {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&policygroups.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.SharedPolicyGroupList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must(

@@ -34,3 +34,11 @@ var _ = Describe("FromStrings", func() {
 		Expect(secondRun).To(Equal(firstRun))
 	})
 })
+
+var _ = Describe("JavaUUIDFromBytes", func() {
+	It("generates a predictable UUID same as Java", func() {
+		firstRun := uuid.JavaUUIDFromBytes("foo")
+		secondRun := uuid.JavaUUIDFromBytes("foo")
+		Expect(secondRun).To(Equal(firstRun))
+	})
+})

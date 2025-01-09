@@ -99,7 +99,7 @@ func InfoInitReconcile(ctx context.Context, obj client.Object) {
 func InfoEndReconcile(ctx context.Context, obj client.Object) {
 	log.FromContext(ctx).Info(
 		fmt.Sprintf(
-			"Resource [%s] as been successfully reconciled",
+			"Resource [%s] has been successfully reconciled",
 			obj.GetObjectKind().GroupVersionKind().GroupKind(),
 		),
 		KeyValues(obj)...,

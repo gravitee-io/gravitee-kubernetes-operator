@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//nolint:dupl // a single controller is needed for any single resource
 package apidefinition
 
 import (

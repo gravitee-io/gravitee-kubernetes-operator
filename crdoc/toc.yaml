@@ -26,3 +26,4 @@ groups:
       - name: ApiResource
       - name: Application
       - name: Subscription
+      - name: SharedPolicyGroup

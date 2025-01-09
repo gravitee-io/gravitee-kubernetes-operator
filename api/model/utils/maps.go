@@ -33,12 +33,7 @@ func NewGenericStringMap() *GenericStringMap {
 	}
 }
 
-func ToGenericStringMap(impl interface{}) *GenericStringMap {
-	obj, ok := impl.(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
+func ToGenericStringMap(obj map[string]interface{}) *GenericStringMap {
 	return &GenericStringMap{
 		Unstructured: unstructured.Unstructured{
 			Object: obj,
