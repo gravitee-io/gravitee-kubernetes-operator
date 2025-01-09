@@ -603,6 +603,18 @@ spec:
                           policy:
                             description: FlowStep policy
                             type: string
+                          sharedPolicyGroupRef:
+                            description: Reference to an existing Shared Policy Group
+                            properties:
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            required:
+                            - name
+                            type: object
                         required:
                         - enabled
                         type: object
@@ -645,6 +657,18 @@ spec:
                           policy:
                             description: FlowStep policy
                             type: string
+                          sharedPolicyGroupRef:
+                            description: Reference to an existing Shared Policy Group
+                            properties:
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            required:
+                            - name
+                            type: object
                         required:
                         - enabled
                         type: object
@@ -680,6 +704,18 @@ spec:
                           policy:
                             description: FlowStep policy
                             type: string
+                          sharedPolicyGroupRef:
+                            description: Reference to an existing Shared Policy Group
+                            properties:
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            required:
+                            - name
+                            type: object
                         required:
                         - enabled
                         type: object
@@ -713,6 +749,18 @@ spec:
                           policy:
                             description: FlowStep policy
                             type: string
+                          sharedPolicyGroupRef:
+                            description: Reference to an existing Shared Policy Group
+                            properties:
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            required:
+                            - name
+                            type: object
                         required:
                         - enabled
                         type: object
@@ -746,6 +794,18 @@ spec:
                           policy:
                             description: FlowStep policy
                             type: string
+                          sharedPolicyGroupRef:
+                            description: Reference to an existing Shared Policy Group
+                            properties:
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            required:
+                            - name
+                            type: object
                         required:
                         - enabled
                         type: object
@@ -784,6 +844,18 @@ spec:
                           policy:
                             description: FlowStep policy
                             type: string
+                          sharedPolicyGroupRef:
+                            description: Reference to an existing Shared Policy Group
+                            properties:
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                              namespace:
+                                type: string
+                            required:
+                            - name
+                            type: object
                         required:
                         - enabled
                         type: object
@@ -1064,6 +1136,19 @@ spec:
                                 policy:
                                   description: FlowStep policy
                                   type: string
+                                sharedPolicyGroupRef:
+                                  description: Reference to an existing Shared Policy
+                                    Group
+                                  properties:
+                                    kind:
+                                      type: string
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
                               required:
                               - enabled
                               type: object
@@ -1108,6 +1193,19 @@ spec:
                                 policy:
                                   description: FlowStep policy
                                   type: string
+                                sharedPolicyGroupRef:
+                                  description: Reference to an existing Shared Policy
+                                    Group
+                                  properties:
+                                    kind:
+                                      type: string
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
                               required:
                               - enabled
                               type: object
@@ -1145,6 +1243,19 @@ spec:
                                 policy:
                                   description: FlowStep policy
                                   type: string
+                                sharedPolicyGroupRef:
+                                  description: Reference to an existing Shared Policy
+                                    Group
+                                  properties:
+                                    kind:
+                                      type: string
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
                               required:
                               - enabled
                               type: object
@@ -1180,6 +1291,19 @@ spec:
                                 policy:
                                   description: FlowStep policy
                                   type: string
+                                sharedPolicyGroupRef:
+                                  description: Reference to an existing Shared Policy
+                                    Group
+                                  properties:
+                                    kind:
+                                      type: string
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
                               required:
                               - enabled
                               type: object
@@ -1215,6 +1339,19 @@ spec:
                                 policy:
                                   description: FlowStep policy
                                   type: string
+                                sharedPolicyGroupRef:
+                                  description: Reference to an existing Shared Policy
+                                    Group
+                                  properties:
+                                    kind:
+                                      type: string
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
                               required:
                               - enabled
                               type: object
@@ -1255,6 +1392,19 @@ spec:
                                 policy:
                                   description: FlowStep policy
                                   type: string
+                                sharedPolicyGroupRef:
+                                  description: Reference to an existing Shared Policy
+                                    Group
+                                  properties:
+                                    kind:
+                                      type: string
+                                    name:
+                                      type: string
+                                    namespace:
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
                               required:
                               - enabled
                               type: object

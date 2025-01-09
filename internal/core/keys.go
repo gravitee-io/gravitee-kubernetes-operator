@@ -46,6 +46,7 @@ const (
 	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
 	SubscriptionFinalizer            = "finalizers.gravitee.io/subscriptions"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
+	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 
 	CloudTokenSecretKey  = "cloudToken"
 	BearerTokenSecretKey = "bearerToken"

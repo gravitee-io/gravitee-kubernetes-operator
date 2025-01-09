@@ -39,6 +39,7 @@ type Interface interface {
 	WatchResources(index indexer.IndexField) *handler.Funcs
 	WatchApiTemplate() *handler.Funcs
 	WatchTLSSecret() *handler.Funcs
+	WatchSharedPolicyGroups(index indexer.IndexField) *handler.Funcs
 }
 
 type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
@@ -125,6 +126,15 @@ func (w *Type) WatchTLSSecret() *handler.Funcs {
 	return &handler.Funcs{
 		UpdateFunc: w.UpdateFromLookup(indexer.TLSSecretField),
 		CreateFunc: w.CreateFromLookup(indexer.TLSSecretField),
+	}
+}
+
+// WatchSharedPolicyGroups can be used to trigger a reconciliation when a SPG is updated
+// on resources that should be synced with this SOG.
+func (w *Type) WatchSharedPolicyGroups(index indexer.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
 	}
 }
 

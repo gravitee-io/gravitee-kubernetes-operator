@@ -28,12 +28,13 @@ type Objects struct {
 
 	Ingress *netV1.Ingress
 
-	Context      *v1alpha1.ManagementContext
-	Resource     *v1alpha1.ApiResource
-	API          *v1alpha1.ApiDefinition
-	APIv4        *v1alpha1.ApiV4Definition
-	Application  *v1alpha1.Application
-	Subscription *v1alpha1.Subscription
+	Context           *v1alpha1.ManagementContext
+	Resource          *v1alpha1.ApiResource
+	API               *v1alpha1.ApiDefinition
+	APIv4             *v1alpha1.ApiV4Definition
+	Application       *v1alpha1.Application
+	Subscription      *v1alpha1.Subscription
+	SharedPolicyGroup *v1alpha1.SharedPolicyGroup
 
 	randomSuffix string
 }

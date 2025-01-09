@@ -265,6 +265,64 @@ func (api *ApiV4Definition) GetDefinition() core.ApiDefinitionModel {
 	return &api.Spec.Api
 }
 
+func (api *ApiV4Definition) GetAllSharedPolicyGroups() []*refs.NamespacedName {
+	var results []*refs.NamespacedName
+
+	if api.Spec.Flows != nil {
+		results = append(results, getFLowSharedPolicyGroupsReferences(api.Spec.Flows)...)
+	}
+
+	if api.Spec.Plans != nil {
+		for _, plan := range *api.Spec.Plans {
+			if plan.Flows != nil {
+				results = append(results, getFLowSharedPolicyGroupsReferences(plan.Flows)...)
+			}
+		}
+	}
+
+	return results
+}
+
+//nolint:gocognit // acceptable complexity
+func getFLowSharedPolicyGroupsReferences(flows []*v4.Flow) []*refs.NamespacedName {
+	var results []*refs.NamespacedName
+
+	for _, flow := range flows {
+		for _, flowStep := range flow.Request {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Response {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Connect {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Interact {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Publish {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Subscribe {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+	}
+
+	return results
+}
+
 func (spec *ApiV4DefinitionSpec) Hash() string {
 	return hash.Calculate(spec)
 }

@@ -37,6 +37,8 @@ func OfType(obj interface{}) (client.ObjectList, error) {
 		return &v1.SecretList{}, nil
 	case *v1alpha1.ApplicationList:
 		return &v1alpha1.ApplicationList{}, nil
+	case *v1alpha1.SharedPolicyGroupList:
+		return &v1alpha1.SharedPolicyGroupList{}, nil
 	default:
 		return nil, fmt.Errorf("unknown type %T", obj)
 	}

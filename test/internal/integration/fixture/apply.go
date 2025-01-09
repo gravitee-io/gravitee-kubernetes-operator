@@ -63,6 +63,10 @@ func (o *Objects) Apply() *Objects {
 		o.applySubscription(cli, ctx)
 	}
 
+	if o.SharedPolicyGroup != nil {
+		o.applySharedPolicyGroup(cli, ctx)
+	}
+
 	if o.Ingress != nil {
 		o.applyIngress(cli, ctx)
 	}
@@ -163,4 +167,18 @@ func (o *Objects) applySubscription(cli client.Client, ctx context.Context) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Subscription.Name)
+}
+
+func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {
+	Expect(cli.Create(ctx, o.SharedPolicyGroup)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.SharedPolicyGroup)
+		if err != nil {
+			return err
+		}
+		if err = assert.SharedPolicyGroupCompleted(o.SharedPolicyGroup); err != nil {
+			return assert.SharedPolicyGroupFailed(o.SharedPolicyGroup)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.SharedPolicyGroup.Name)
 }

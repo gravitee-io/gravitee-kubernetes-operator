@@ -26,10 +26,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
+	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
@@ -258,6 +261,16 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 
+	if err := (&policygroups.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.SharedPolicyGroupList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for shared policy groups")
+		os.Exit(1)
+	}
+
 	if err := (&secrets.Reconciler{
 		Client: k8s.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -364,6 +377,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (subAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (spgAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil
