@@ -33,12 +33,7 @@ func NewGenericStringMap() *GenericStringMap {
 	}
 }
 
-func ToGenericStringMap(impl interface{}) *GenericStringMap {
-	obj, ok := impl.(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
+func ToGenericStringMap(obj map[string]interface{}) *GenericStringMap {
 	return &GenericStringMap{
 		Unstructured: unstructured.Unstructured{
 			Object: obj,
@@ -153,4 +148,8 @@ func (in *GenericStringMap) UnmarshalJSON(data []byte) error {
 
 func (in *GenericStringMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(in.Object)
+}
+
+func ToReference[T any](t T) *T {
+	return &t
 }

@@ -75,6 +75,14 @@ func SubscriptionFailed(sub *v1alpha1.Subscription) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, sub.Status.ProcessingStatus)
 }
 
+func SharedPolicyGroupCompleted(sub *v1alpha1.SharedPolicyGroup) error {
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, sub.Status.ProcessingStatus)
+}
+
+func SharedPolicyGroupFailed(sub *v1alpha1.SharedPolicyGroup) error {
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, sub.Status.ProcessingStatus)
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }

@@ -86,5 +86,25 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		)
 	}
 
+	spg := &v1alpha1.SharedPolicyGroupList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		indexer.SPGContextField,
+		ctxRef,
+		spg,
+	); err != nil {
+		return err
+	}
+
+	if len(spg.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d SharedPolicyGroups are relying on this context. "+
+				"You can review these SharedPolicyGroups by running the following command: "+
+				"kubectl get sharedpolicygroups.gravitee.io -A "+
+				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
+			mCtx.GetName(), len(spg.Items), mCtx.GetName(),
+		)
+	}
+
 	return nil
 }

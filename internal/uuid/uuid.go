@@ -15,6 +15,8 @@
 package uuid
 
 import (
+	"crypto/md5" //nolint:gosec // it is expected in this context
+	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
@@ -29,6 +31,31 @@ func FromStrings(seeds ...string) string {
 		panic(err)
 	}
 	return guid.String()
+}
+
+// JavaUUIDFromBytes generates a version 3 UUID based on the MD5 hash of the provided name, same as java.util.UUID.
+func JavaUUIDFromBytes(data string) string {
+	// Calculate the MD5 hash of the input name
+	h := md5.New() //nolint:gosec // it is expected in this context
+	h.Reset()
+	h.Write([]byte(data))
+	md5Bytes := h.Sum(nil)
+
+	// Set version to 3 in the 7th byte (6th byte in zero-index).
+	md5Bytes[6] &= 0x0f // clear the version bits
+	md5Bytes[6] |= 0x30 // set to version 3
+
+	// Set variant to IETF (RFC 4122) in the 9th byte (8th byte in zero-index).
+	md5Bytes[8] &= 0x3f // clear the variant bits
+	md5Bytes[8] |= 0x80 // set to IETF variant
+
+	// Convert the byte array to a UUID string representation
+	return fmt.Sprintf("%x-%x-%x-%x-%x",
+		md5Bytes[0:4],
+		md5Bytes[4:6],
+		md5Bytes[6:8],
+		md5Bytes[8:10],
+		md5Bytes[10:])
 }
 
 func NewV4String() string {

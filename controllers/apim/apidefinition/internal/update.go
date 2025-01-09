@@ -103,6 +103,11 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		return err
 	}
 
+	if err := resolveSharedPolicyGroups(ctx, apiDefinition.Spec); err != nil {
+		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
+		return err
+	}
+
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
 	if spec.Context != nil {

@@ -30,15 +30,16 @@ import (
 )
 
 type Files struct {
-	Secrets      []string
-	ConfigMaps   []string
-	Context      string
-	Resource     string
-	API          string
-	APIv4        string
-	Application  string
-	Ingress      string
-	Subscription string
+	Secrets            []string
+	ConfigMaps         []string
+	Context            string
+	Resource           string
+	API                string
+	APIv4              string
+	Application        string
+	Ingress            string
+	Subscription       string
+	SharedPolicyGroups string
 }
 
 type FSBuilder struct {
@@ -78,6 +79,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if sub := decodeIfDefined(f.Subscription, &v1alpha1.Subscription{}, subscriptionKind); sub != nil {
 		setupSubscription(obj, sub, suffix)
+	}
+
+	if sub := decodeIfDefined(f.SharedPolicyGroups, &v1alpha1.SharedPolicyGroup{}, sharedPolicyGroupsKind); sub != nil {
+		setupSharedPolicyGroup(obj, sub, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -150,6 +155,9 @@ func setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix str
 	if obj.Application != nil {
 		obj.Application.Spec.Context = obj.Context.GetNamespacedName()
 	}
+	if obj.SharedPolicyGroup != nil {
+		obj.SharedPolicyGroup.Spec.Context = obj.Context.GetNamespacedName()
+	}
 }
 
 func ensureNilContexts(obj *Objects) {
@@ -194,6 +202,13 @@ func setupSubscription(obj *Objects, sub **v1alpha1.Subscription, suffix string)
 	obj.Subscription.Namespace = constants.Namespace
 	obj.Subscription.Spec.API.Name += suffix
 	obj.Subscription.Spec.App.Name += suffix
+}
+
+func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
+	obj.SharedPolicyGroup = *sub
+	obj.SharedPolicyGroup.Name += suffix
+	obj.SharedPolicyGroup.Spec.Name += suffix
+	obj.SharedPolicyGroup.Namespace = constants.Namespace
 }
 
 func randomizeAPIPaths(api *v1alpha1.ApiDefinition, suffix string) {
@@ -278,6 +293,11 @@ func (b *FSBuilder) WithAPIv4(file string) *FSBuilder {
 
 func (b *FSBuilder) WithApplication(file string) *FSBuilder {
 	b.files.Application = file
+	return b
+}
+
+func (b *FSBuilder) WithSharedPolicyGroups(file string) *FSBuilder {
+	b.files.SharedPolicyGroups = file
 	return b
 }
 

@@ -50,6 +50,10 @@ Resources
         <tr>
             <td><a href="#subscription">Subscription</a></td>
             <td></td>
+        </tr>
+        <tr>
+            <td><a href="#sharedpolicygroup">SharedPolicyGroup</a></td>
+            <td>SharedPolicyGroup</td>
         </tr></tbody>
 </table>
 
@@ -8817,6 +8821,331 @@ when the API gets synced with APIM<br/>
         <td>string</td>
         <td>
           When the subscription was started and made available<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## SharedPolicyGroup
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
+
+
+
+
+
+
+SharedPolicyGroup
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#sharedpolicygroupspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          SharedPolicyGroupSpec<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sharedpolicygroupstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          SharedPolicyGroupSpecStatus defines the observed state of an API Context.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SharedPolicyGroup.spec
+[Go to parent definition](#sharedpolicygroup)
+
+
+
+SharedPolicyGroupSpec
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>apiType</b></td>
+        <td>enum</td>
+        <td>
+          Specify the SharedPolicyGroup ApiType<br/>
+          <br/>
+            <i>Enum</i>: MESSAGE, PROXY, NATIVE<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#sharedpolicygroupspeccontextref">contextRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          SharedPolicyGroup name<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>phase</b></td>
+        <td>enum</td>
+        <td>
+          SharedPolicyGroup phase (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE)<br/>
+          <br/>
+            <i>Enum</i>: REQUEST, RESPONSE, INTERACT, CONNECT, PUBLISH, SUBSCRIBE<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          CrossID to export SharedPolicyGroup into different environments<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          SharedPolicyGroup description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>prerequisiteMessage</b></td>
+        <td>string</td>
+        <td>
+          SharedPolicyGroup prerequisite Message<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sharedpolicygroupspecstepsindex">steps</a></b></td>
+        <td>[]object</td>
+        <td>
+          SharedPolicyGroup Steps<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SharedPolicyGroup.spec.contextRef
+[Go to parent definition](#sharedpolicygroupspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SharedPolicyGroup.spec.steps[index]
+[Go to parent definition](#sharedpolicygroupspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Indicate if this FlowStep is enabled or not<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>condition</b></td>
+        <td>string</td>
+        <td>
+          FlowStep condition<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>configuration</b></td>
+        <td>object</td>
+        <td>
+          FlowStep configuration is a map of arbitrary key-values<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>description</b></td>
+        <td>string</td>
+        <td>
+          FlowStep description<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          FlowStep name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>policy</b></td>
+        <td>string</td>
+        <td>
+          FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SharedPolicyGroup.status
+[Go to parent definition](#sharedpolicygroup)
+
+
+
+SharedPolicyGroupSpecStatus defines the observed state of an API Context.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>crossId</b></td>
+        <td>string</td>
+        <td>
+          The Cross ID is used to identify an SharedPolicyGroup that has been promoted from one environment to another.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>environmentId</b></td>
+        <td>string</td>
+        <td>
+          The environment ID, if a management context has been defined to sync with an APIM instance<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#sharedpolicygroupstatuserrors">errors</a></b></td>
+        <td>object</td>
+        <td>
+          When SharedPolicyGroup has been created regardless of errors, this field is
+used to persist the error message encountered during admission<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          The ID is used to identify an SharedPolicyGroup which is unique in any environment.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>organizationId</b></td>
+        <td>string</td>
+        <td>
+          The organization ID, if a management context has been defined to sync with an APIM instance<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>processingStatus</b></td>
+        <td>string</td>
+        <td>
+          The processing status of the SharedPolicyGroup.
+The value is `Completed` if the sync with APIM succeeded, Failed otherwise.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### SharedPolicyGroup.status.errors
+[Go to parent definition](#sharedpolicygroupstatus)
+
+
+
+When SharedPolicyGroup has been created regardless of errors, this field is
+used to persist the error message encountered during admission
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>severe</b></td>
+        <td>[]string</td>
+        <td>
+          severe errors do not pass admission and will block reconcile
+hence, this field should always be during the admission phase
+and is very unlikely to be persisted in the status<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>warning</b></td>
+        <td>[]string</td>
+        <td>
+          warning errors do not block object reconciliation,
+most of the time because the value is ignored or defaulted
+when the API gets synced with APIM<br/>
         </td>
         <td>false</td>
       </tr></tbody>
