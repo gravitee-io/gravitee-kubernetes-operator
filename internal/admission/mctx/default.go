@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-const cloudGateUrlTemplate = "https://%s.cloudgate.gravitee.io/apim/rest"
+const cloudGateUrlTemplate = "https://%s.cloudgate.gravitee.io"
 
 // SetDefaults when cloud mode is enabled.
 func SetDefaults(ctx context.Context, obj runtime.Object) error {
