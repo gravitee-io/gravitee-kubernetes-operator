@@ -62,7 +62,7 @@ var _ = Describe("Default create", labels.WithContext, func() {
 			err := admissionCtrl.Default(ctx, fixtures.Context)
 			// check the token was read
 			if err := assert.Equals("baseUrl",
-				"https://eu.cloudgate.gravitee.io/apim/rest",
+				"https://eu.cloudgate.gravitee.io",
 				fixtures.Context.Spec.BaseUrl); err != nil {
 				return err
 			}
