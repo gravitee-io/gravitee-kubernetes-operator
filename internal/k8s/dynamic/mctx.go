@@ -42,13 +42,16 @@ func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (c
 func InjectSecretIfAny(ctx context.Context, mCtx core.ContextModel, parentNs string) (*core.ContextModel, error) {
 	if mCtx.HasSecretRef() || (mCtx.HasCloud() && mCtx.GetCloud().HasSecretRef()) { //nolint:nestif // normal complexity
 		var name string
+		var namespace string
 		if mCtx.HasSecretRef() {
 			name = mCtx.GetSecretRef().GetName()
+			namespace = mCtx.GetSecretRef().GetNamespace()
 		} else {
 			name = mCtx.GetCloud().GetSecretRef().GetName()
+			namespace = mCtx.GetCloud().GetSecretRef().GetNamespace()
 		}
 
-		secret, err := ResolveSecret(ctx, &refs.NamespacedName{Name: name, Namespace: parentNs}, parentNs)
+		secret, err := ResolveSecret(ctx, &refs.NamespacedName{Name: name, Namespace: namespace}, parentNs)
 		if err != nil {
 			return nil, err
 		}
