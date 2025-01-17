@@ -17,6 +17,9 @@ package log
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	stdLog "log"
 
 	"github.com/go-logr/zapr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -35,33 +38,39 @@ type raw struct {
 	sink *zap.Logger
 }
 
+func (w *raw) Write(p []byte) (int, error) {
+	message := strings.TrimSpace(string(p))
+	w.sink.Info(message)
+	return len(p), nil
+}
+
 var Global raw
 
-func (w raw) Debug(message string) {
+func (w *raw) Debug(message string) {
 	w.sink.Debug(message)
 }
 
-func (w raw) Info(message string) {
+func (w *raw) Info(message string) {
 	w.sink.Info(message)
 }
 
-func (w raw) Infof(message string, args ...any) {
+func (w *raw) Infof(message string, args ...any) {
 	w.sink.Info(fmt.Sprintf(message, args...))
 }
 
-func (w raw) Debugf(message string, args ...any) {
+func (w *raw) Debugf(message string, args ...any) {
 	w.sink.Debug(fmt.Sprintf(message, args...))
 }
 
-func (w raw) Warn(message string) {
+func (w *raw) Warn(message string) {
 	w.sink.Warn(message)
 }
 
-func (w raw) Error(err error, message string) {
+func (w *raw) Error(err error, message string) {
 	w.sink.Error(message, zap.Error(err))
 }
 
-func (w raw) Errorf(err error, message string, args ...any) {
+func (w *raw) Errorf(err error, message string, args ...any) {
 	w.sink.Error(fmt.Sprintf(message, args...), zap.Error(err))
 }
 
@@ -152,6 +161,7 @@ func init() {
 	log.SetLogger(logger)
 	kLog.SetLogger(logger)
 	Global = raw{sink: sink}
+	stdLog.SetOutput(&Global)
 }
 
 func getEncoding() string {
