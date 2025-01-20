@@ -47,6 +47,7 @@ func ValidateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		errs.Add(validatePlans(api))
 		errs.Add(validateNoConflictingPath(ctx, api))
 		errs.MergeWith(validateResourceOrRefs(ctx, api))
+		errs.MergeWith(validatePages(api))
 	}
 
 	return errs
