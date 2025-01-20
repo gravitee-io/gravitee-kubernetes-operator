@@ -89,6 +89,7 @@ const (
 	ApiResourceOauth2AMFile           = SamplesPath + "/apim/api_resource/api-resource-oauth2-am.yml"
 	ApiResourceOauth2GenericFile      = SamplesPath + "/apim/api_resource/api-resource-oauth2-generic.yml"
 
+<<<<<<< HEAD
 	ApiWithTemplateAnnotation = SamplesPath + "/apim/api_definition/v2/api-with-template-annotation.yml"
 
 	// V4 APIS.
@@ -120,6 +121,44 @@ const (
 	ApiV4WithHTTPAuthProviderRefFile   = SamplesPath + "/apim/api_definition/v4/api-v4-with-http-auth-provider-ref.yml"
 	ApiV4WithMarkdownPage              = SamplesPath + "/apim/api_definition/v4/api-v4-with-page-markdown.yml"
 	ApiV4WithSwaggerHTTPFetcher        = SamplesPath + "/apim/api_definition/v4/api-v4-with-page-swagger-http-fetcher.yml"
+=======
+	ApiWithTemplateAnnotation = "apim/api_definition/v2/api-with-template-annotation.yml"
+	ApiWithPagesFile          = "apim/api_definition/v2/api-with-page-markdown.yml"
+
+	// V4 APIS.
+	ApiV4                              = "apim/api_definition/v4/api-v4.yml"
+	ApiV4WithSyncFromAPIM              = "apim/api_definition/v4/api-v4-with-sync-from-apim.yml"
+	ApiV4WithTemplatingFile            = "apim/api_definition/v4/api-v4-with-templating.yml"
+	ApiV4WithRateLimit                 = "apim/api_definition/v4/api-v4-with-rate-limit.yml"
+	ApiV4WithDisabledPolicy            = "apim/api_definition/v4/api-v4-with-disabled-policy.yml"
+	ApiV4WithContextFile               = "apim/api_definition/v4/api-v4-with-context.yml"
+	ApiV4WithHCFile                    = "apim/api_definition/v4/api-v4-with-health-check.yml"
+	ApiV4WithDisabledHCFile            = "apim/api_definition/v4/api-v4-with-health-check-disabled.yml"
+	ApiV4WithLoggingFile               = "apim/api_definition/v4/api-v4-with-logging.yml"
+	ApiV4WithMetadataFile              = "apim/api_definition/v4/api-v4-with-metadata.yml"
+	ApiV4WithCacheRedisResourceFile    = "apim/api_definition/v4/api-v4-with-cache-redis-resource.yml"
+	ApiV4WithOAuth2GenericResourceFile = "apim/api_definition/v4/api-v4-with-oauth2-generic-resource.yml"
+	ApiV4WithOauth2AmResourceFile      = "apim/api_definition/v4/api-v4-with-oauth2-am-resource.yml"
+	ApiV4WithKeycloakAdapterFile       = "apim/api_definition/v4/api-v4-with-keycloak-adapter.yml"
+	ApiV4WithLDAPAuthProviderFile      = "apim/api_definition/v4/api-v4-with-ldap-auth-provider.yml"
+	ApiV4WithInlineAuthProviderFile    = "apim/api_definition/v4/api-v4-with-inline-auth-provider.yml"
+	ApiV4WithHTTPAuthProviderFile      = "apim/api_definition/v4/api-v4-with-http-auth-provider.yml"
+	ApiV4WithStateStopped              = "apim/api_definition/v4/api-v4-with-state-stopped.yml"
+	ApiV4WithApiKeyPlanFile            = "apim/api_definition/v4/api-v4-with-api-key-plan.yml"
+	ApiV4WithCacheRedisResourceRef     = "apim/api_definition/v4/api-v4-with-cache-redis-resource-ref.yml"
+	ApiV4WithOAuth2GenericResRef       = "apim/api_definition/v4/api-v4-with-oauth2-generic-res-ref.yml"
+	ApiV4WithOauth2AmResourceRefFile   = "apim/api_definition/v4/api-v4-with-oauth2-am-resource-ref.yml"
+	ApiV4WithKeycloakAdapterRefFile    = "apim/api_definition/v4/api-v4-with-keycloak-adapter-ref.yml"
+	ApiV4WithLDAPAuthProviderRefFile   = "apim/api_definition/v4/api-v4-with-ldap-auth-provider-ref.yml"
+	ApiV4WithInlineAuthProviderRef     = "apim/api_definition/v4/api-v4-with-inline-auth-provider-ref.yml"
+	ApiV4WithHTTPAuthProviderRefFile   = "apim/api_definition/v4/api-v4-with-http-auth-provider-ref.yml"
+	ApiV4WithMarkdownPage              = "apim/api_definition/v4/api-v4-with-page-markdown.yml"
+	ApiV4WithSwaggerHTTPFetcher        = "apim/api_definition/v4/api-v4-with-page-swagger-http-fetcher.yml"
+	ApiV4WithJWTPlanFile               = "apim/api_definition/v4/api-v4-with-jwt-plan.yml"
+	NativeApiV4                        = "apim/api_definition/v4/api-v4-native.yml"
+	NativeApiV4WithContext             = "apim/api_definition/v4/api-v4-native-with-context.yml"
+	ApiV4WithPagesFile                 = "apim/api_definition/v4/api-v4-with-page-markdown.yml"
+>>>>>>> c38c46e (fix: do not apply APIs when parent page is missing)
 
 	IngressPEMRegistry         = SamplesPath + "/ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = SamplesPath + "/ingress/ingress-response-404-config-map.yml"
