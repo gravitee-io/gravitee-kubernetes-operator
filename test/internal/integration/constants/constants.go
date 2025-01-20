@@ -98,6 +98,7 @@ const (
 	ApiResourceOauth2GenericFile      = "apim/api_resource/api-resource-oauth2-generic.yml"
 
 	ApiWithTemplateAnnotation = "apim/api_definition/v2/api-with-template-annotation.yml"
+	ApiWithPagesFile          = "apim/api_definition/v2/api-with-page-markdown.yml"
 
 	// V4 APIS.
 	ApiV4                              = "apim/api_definition/v4/api-v4.yml"
@@ -131,6 +132,7 @@ const (
 	ApiV4WithJWTPlanFile               = "apim/api_definition/v4/api-v4-with-jwt-plan.yml"
 	NativeApiV4                        = "apim/api_definition/v4/api-v4-native.yml"
 	NativeApiV4WithContext             = "apim/api_definition/v4/api-v4-native-with-context.yml"
+	ApiV4WithPagesFile                 = "apim/api_definition/v4/api-v4-with-page-markdown.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"
