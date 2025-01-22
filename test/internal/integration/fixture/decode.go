@@ -39,6 +39,7 @@ var (
 	apiKind                = v1alpha1.GroupVersion.WithKind("ApiDefinition")
 	apiV4Kind              = v1alpha1.GroupVersion.WithKind("ApiV4Definition")
 	subscriptionKind       = v1alpha1.GroupVersion.WithKind("Subscription")
+	groupKind              = v1alpha1.GroupVersion.WithKind("Group")
 	sharedPolicyGroupsKind = v1alpha1.GroupVersion.WithKind("SharedPolicyGroup")
 )
 

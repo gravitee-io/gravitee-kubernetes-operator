@@ -869,9 +869,28 @@ spec:
                   - enabled
                   type: object
                 type: array
+              groupRefs:
+                default: []
+                description: |-
+                  List of group references associated with the API
+                  This groups are references to Group custom resources created on the cluster.
+                items:
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               groups:
                 default: []
-                description: List of groups associated with the API
+                description: |-
+                  List of groups associated with the API.
+                  This groups are id or name references to existing groups in APIM.
                 items:
                   type: string
                 type: array

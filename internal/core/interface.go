@@ -42,6 +42,7 @@ type Object interface {
 	GetSpec() Spec
 	GetStatus() Status
 	GetRef() ObjectRef
+	IsBeingDeleted() bool
 }
 
 // +k8s:deepcopy-gen=false
@@ -77,6 +78,9 @@ type ApiDefinitionModel interface {
 	GetPlan(string) PlanModel
 	IsStopped() bool
 	GetType() string
+	GetGroups() []string
+	SetGroups([]string)
+	GetGroupRefs() []ObjectRef
 }
 
 // +k8s:deepcopy-gen=false

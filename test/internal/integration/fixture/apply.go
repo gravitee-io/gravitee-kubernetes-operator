@@ -43,6 +43,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyContext(cli, ctx)
 	}
 
+	if o.Group != nil {
+		o.applyGroup(ctx, cli)
+	}
+
 	if o.Resource != nil {
 		o.applyResource(cli, ctx)
 	}
@@ -167,6 +171,20 @@ func (o *Objects) applySubscription(cli client.Client, ctx context.Context) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Subscription.Name)
+}
+
+func (o *Objects) applyGroup(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.Group)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Group)
+		if err != nil {
+			return err
+		}
+		if err = assert.GroupCompleted(o.Group); err != nil {
+			return assert.GroupFailed(o.Group)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Group.Name)
 }
 
 func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {

@@ -323,6 +323,18 @@ func getFLowSharedPolicyGroupsReferences(flows []*v4.Flow) []*refs.NamespacedNam
 	return results
 }
 
+func (api *ApiV4Definition) GetGroupRefs() []core.ObjectRef {
+	return api.Spec.GetGroupRefs()
+}
+
+func (api *ApiV4Definition) GetGroups() []string {
+	return api.Spec.Groups
+}
+
+func (api *ApiV4Definition) SetGroups(groups []string) {
+	api.Spec.Groups = groups
+}
+
 func (spec *ApiV4DefinitionSpec) Hash() string {
 	return hash.Calculate(spec)
 }

@@ -83,6 +83,14 @@ func SharedPolicyGroupFailed(sub *v1alpha1.SharedPolicyGroup) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, sub.Status.ProcessingStatus)
 }
 
+func GroupCompleted(group *v1alpha1.Group) error {
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, group.Status.ProcessingStatus)
+}
+
+func GroupFailed(group *v1alpha1.Group) error {
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, group.Status.ProcessingStatus)
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }

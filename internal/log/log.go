@@ -17,6 +17,8 @@ package log
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	stdLog "log"
@@ -30,6 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	kZap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var sink *zap.Logger
@@ -156,12 +159,21 @@ func init() {
 		OutputPaths:   []string{"stdout"},
 	}
 	sink = zap.Must(config.Build())
-	logger := zapr.NewLogger(sink)
-	ctrl.SetLogger(logger)
-	log.SetLogger(logger)
-	kLog.SetLogger(logger)
-	Global = raw{sink: sink}
-	stdLog.SetOutput(&Global)
+	if isSilent() {
+		logger := kZap.New(kZap.WriteTo(io.Discard), kZap.UseDevMode(true))
+		ctrl.SetLogger(logger)
+		log.SetLogger(logger)
+		kLog.SetLogger(logger)
+		stdLog.SetOutput(io.Discard)
+		Global = raw{sink: sink}
+	} else {
+		logger := zapr.NewLogger(sink)
+		ctrl.SetLogger(logger)
+		log.SetLogger(logger)
+		kLog.SetLogger(logger)
+		Global = raw{sink: sink}
+		stdLog.SetOutput(&Global)
+	}
 }
 
 func getEncoding() string {
@@ -213,4 +225,9 @@ func getTimeEncoder() zapcore.TimeEncoder {
 	default:
 		return zapcore.ISO8601TimeEncoder
 	}
+}
+
+func isSilent() bool {
+	silent := os.Getenv("GKO_MANAGER_SILENT_LOG")
+	return silent == env.TrueString
 }

@@ -45,6 +45,7 @@ rules:
       - apiresources.gravitee.io
       - subscriptions.gravitee.io
       - sharedpolicygroups.gravitee.io
+      - groups.gravitee.io
     resources:
       - customresourcedefinitions
     verbs:

@@ -34,6 +34,7 @@ type Objects struct {
 	APIv4             *v1alpha1.ApiV4Definition
 	Application       *v1alpha1.Application
 	Subscription      *v1alpha1.Subscription
+	Group             *v1alpha1.Group
 	SharedPolicyGroup *v1alpha1.SharedPolicyGroup
 
 	randomSuffix string

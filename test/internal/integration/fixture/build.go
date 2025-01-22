@@ -40,6 +40,7 @@ type Files struct {
 	Ingress            string
 	Subscription       string
 	SharedPolicyGroups string
+	Group              string
 }
 
 type FSBuilder struct {
@@ -83,6 +84,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if sub := decodeIfDefined(f.SharedPolicyGroups, &v1alpha1.SharedPolicyGroup{}, sharedPolicyGroupsKind); sub != nil {
 		setupSharedPolicyGroup(obj, sub, suffix)
+	}
+
+	if group := decodeIfDefined(f.Group, &v1alpha1.Group{}, groupKind); group != nil {
+		setUpGroup(obj, group, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -155,6 +160,9 @@ func setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix str
 	if obj.Application != nil {
 		obj.Application.Spec.Context = obj.Context.GetNamespacedName()
 	}
+	if obj.Group != nil {
+		obj.Group.Spec.Context = obj.Context.GetNamespacedName()
+	}
 	if obj.SharedPolicyGroup != nil {
 		obj.SharedPolicyGroup.Spec.Context = obj.Context.GetNamespacedName()
 	}
@@ -202,6 +210,13 @@ func setupSubscription(obj *Objects, sub **v1alpha1.Subscription, suffix string)
 	obj.Subscription.Namespace = constants.Namespace
 	obj.Subscription.Spec.API.Name += suffix
 	obj.Subscription.Spec.App.Name += suffix
+}
+
+func setUpGroup(obj *Objects, group **v1alpha1.Group, suffix string) {
+	obj.Group = *group
+	obj.Group.Name += suffix
+	obj.Group.Spec.Name += suffix
+	obj.Group.Namespace = constants.Namespace
 }
 
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
@@ -298,6 +313,11 @@ func (b *FSBuilder) WithApplication(file string) *FSBuilder {
 
 func (b *FSBuilder) WithSharedPolicyGroups(file string) *FSBuilder {
 	b.files.SharedPolicyGroups = file
+	return b
+}
+
+func (b *FSBuilder) WithGroup(file string) *FSBuilder {
+	b.files.Group = file
 	return b
 }
 

@@ -16,22 +16,19 @@ package manager
 
 import (
 	"context"
-	"io"
 	"os"
 
 	policygroups "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
@@ -40,8 +37,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
-
-	. "github.com/onsi/ginkgo/v2"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -69,12 +64,6 @@ func Instance() ctrl.Manager {
 
 func init() {
 	os.Setenv(env.HttpCLientInsecureSkipCertVerify, env.TrueString)
-
-	if _, r := GinkgoConfiguration(); r.Verbose {
-		log.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
-	} else {
-		log.SetLogger(zap.New(zap.WriteTo(io.Discard), zap.UseDevMode(true)))
-	}
 
 	ctx := context.Background()
 
@@ -174,6 +163,11 @@ func init() {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&group.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("group-controller"),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&policygroups.Reconciler{

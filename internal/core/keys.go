@@ -45,6 +45,7 @@ const (
 	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
 	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
 	SubscriptionFinalizer            = "finalizers.gravitee.io/subscriptions"
+	GroupFinalizer                   = "finalizers.gravitee.io/groups"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 
