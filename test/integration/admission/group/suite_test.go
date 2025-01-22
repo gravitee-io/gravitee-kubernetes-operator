@@ -12,23 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package group
 
-type Env struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+import (
+	"testing"
+	"time"
+
+	"github.com/onsi/gomega/gexec"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	//+kubebuilder:scaffold:imports
+)
+
+func TestResources(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Group Admission Suite")
 }
 
-type Group struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+var _ = SynchronizedBeforeSuite(func() {
+	// NOSONAR mandatory noop
+}, func() {
+})
 
-type GroupStatus struct {
-	Members uint `json:"members"`
-}
-
-type Category struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+var _ = SynchronizedAfterSuite(func() {
+	By("Tearing down the test environment")
+	gexec.KillAndWait(5 * time.Second)
+}, func() {
+	// NOSONAR ignore this noop func
+})

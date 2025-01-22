@@ -12,23 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package internal
 
-type Env struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
+import (
+	"context"
 
-type Group struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+)
 
-type GroupStatus struct {
-	Members uint `json:"members"`
-}
+func Delete(ctx context.Context, group *v1alpha1.Group) error {
+	if !util.ContainsFinalizer(group, core.GroupFinalizer) {
+		return nil
+	}
 
-type Category struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
+	ns := group.Namespace
+
+	apim, err := apim.FromContextRef(ctx, group.ContextRef(), ns)
+	if err != nil {
+		return err
+	}
+
+	return apim.Env.DeleteGroup(group.Status.ID)
 }

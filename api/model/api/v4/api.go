@@ -97,6 +97,22 @@ func (api *Api) GetType() string {
 	return string(api.Type)
 }
 
+func (api *Api) GetGroupRefs() []core.ObjectRef {
+	refs := make([]core.ObjectRef, 0)
+	for i := range api.GroupRefs {
+		refs = append(refs, &api.GroupRefs[i])
+	}
+	return refs
+}
+
+func (api *Api) GetGroups() []string {
+	return api.Groups
+}
+
+func (api *Api) SetGroups(groups []string) {
+	api.Groups = groups
+}
+
 type GatewayDefinitionApi struct {
 	*Api    `json:",inline"`
 	Version string                   `json:"apiVersion"`

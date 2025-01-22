@@ -170,11 +170,27 @@ func (api *ApiDefinition) GetPlan(name string) core.PlanModel {
 	return api.Spec.GetPlan(name)
 }
 
+func (api *ApiDefinition) GetGroupRefs() []core.ObjectRef {
+	return api.Spec.GetGroupRefs()
+}
+
+func (api *ApiDefinition) GetGroups() []string {
+	return api.Spec.Groups
+}
+
+func (api *ApiDefinition) SetGroups(groups []string) {
+	api.Spec.Groups = groups
+}
+
 func (api *ApiDefinition) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,
 		Namespace: api.Namespace,
 	}
+}
+
+func (api *ApiDefinition) IsBeingDeleted() bool {
+	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
 func (api *ApiDefinition) PopulateIDs(_ core.ContextModel) {

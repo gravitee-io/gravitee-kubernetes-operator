@@ -81,4 +81,31 @@ webhooks:
   timeoutSeconds: 10
   admissionReviewVersions:
     - v1
+- name: v1alpha1.gravitee.io.group
+  clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /mutate-gravitee-io-v1alpha1-group
+        port: 443
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  objectSelector: {}
+  reinvocationPolicy: Never
+  rules:
+  - apiGroups:
+    - gravitee.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groups
+    scope: '*'
+  namespaceSelector: {}
+  sideEffects: None
+  timeoutSeconds: 10
+  admissionReviewVersions:
+    - v1
 {{- end }}
