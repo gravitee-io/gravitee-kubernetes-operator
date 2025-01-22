@@ -29,6 +29,7 @@ import (
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
+	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
@@ -45,6 +46,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -258,6 +260,14 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 
+	if err := (&group.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("group-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for groups")
+		os.Exit(1)
+	}
+
 	if err := (&secrets.Reconciler{
 		Client: k8s.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -300,7 +310,7 @@ func applyCRDs() error {
 		crd := &unstructured.Unstructured{Object: obj}
 
 		if crd, err = client.Resource(version).Apply(ctx, crd.GetName(), crd, opts); err == nil {
-			log.Global.Infof("Applied resource definition [%s]", crd)
+			log.Global.Infof("Applied resource definition [%s]", crd.GetName())
 		}
 
 		return err
@@ -364,6 +374,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (subAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (groupAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

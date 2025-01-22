@@ -51,6 +51,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 			t.Status.ProcessingStatus != core.ProcessingStatusCompleted
 	case *v1alpha1.Subscription:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.Group:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *netV1.Ingress:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *corev1.Secret:

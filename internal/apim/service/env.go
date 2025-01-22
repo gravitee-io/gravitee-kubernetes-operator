@@ -15,6 +15,9 @@
 package service
 
 import (
+	"strconv"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
@@ -37,6 +40,30 @@ func (svc *Env) CreateGroup(group *model.Group) error {
 func (svc *Env) CreateCategory(category *model.Category) error {
 	url := svc.EnvV1Target("configuration").WithPath("categories")
 	return svc.HTTP.Post(url.String(), category, category)
+}
+
+func (svc *Env) DryRunImportGroup(spec *group.Type) (*group.Status, error) {
+	return svc.importGroup(spec, true)
+}
+
+func (svc *Env) ImportGroup(spec *group.Type) (*group.Status, error) {
+	return svc.importGroup(spec, false)
+}
+
+func (svc *Env) importGroup(spec *group.Type, dryRun bool) (*group.Status, error) {
+	url := svc.EnvV2Target("groups").
+		WithPath("_import").WithPath("crd").
+		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
+	status := new(group.Status)
+	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+		return nil, err
+	}
+	return status, nil
+}
+
+func (svc *Env) DeleteGroup(id string) error {
+	url := svc.EnvV1Target("configuration").WithPath("groups").WithPath(id)
+	return svc.HTTP.Delete(url.String(), nil)
 }
 
 func (svc *Env) Get() (*model.Env, error) {

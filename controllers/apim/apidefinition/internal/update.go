@@ -49,6 +49,10 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return err
 	}
 
+	if err := ResolveGroupRefs(ctx, apiDefinition); err != nil {
+		return err
+	}
+
 	cp.PopulateIDs(nil)
 
 	if !apiDefinition.HasContext() {
@@ -100,6 +104,10 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
 		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
+		return err
+	}
+
+	if err := ResolveGroupRefs(ctx, apiDefinition); err != nil {
 		return err
 	}
 
