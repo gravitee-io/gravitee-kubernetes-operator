@@ -14,11 +14,12 @@
 
 {{- if .Values.rbac.create }}
 {{- if .Values.manager.webhook.enabled }}
+{{- if not .Values.rbac.skipClusterRoles }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRoleBinding
 metadata:
-  name: {{ template "rbac.AdmissionWebhookRoleName" . }}
+  name: {{ template "rbac.AdmissionWebhookRoleBindingName" . }}
   namespace: '{{ .Release.Namespace }}'
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -28,14 +29,14 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-rules:
-  - apiGroups:
-      - admissionregistration.k8s.io
-    resources:
-      - validatingwebhookconfigurations
-      - mutatingwebhookconfigurations
-    verbs:
-      - get
-      - update
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ template "rbac.AdmissionWebhookRoleName" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "rbac.serviceAccountName" . }}
+    namespace: '{{ .Release.Namespace }}'
+{{- end }}
 {{- end }}
 {{- end }}
