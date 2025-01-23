@@ -12,26 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-suite: validation webhook role binding
+suite: validation webhook role
 templates:
-  - "rbac/admission-webhook-role-binding.yaml"
+  - "rbac/admission-webhook-cluster-role.yaml"
 tests:
-  - it: Should have role binding
+  - it: Should have role
     asserts:
       - hasDocuments:
           count: 1
       - isKind:
-          of: RoleBinding
+          of: ClusterRole
       - isAPIVersion:
           of: rbac.authorization.k8s.io/v1
       - equal:
           path: metadata.name
-          value: gko-controller-manager-validation-webhook-role-binding
+          value: gko-controller-manager-validation-webhook-cluster-role
       - equal:
           path: metadata.namespace
           value: NAMESPACE
 
-  - it: Should not have role binding with rbac disabled
+  - it: Should not have role with rbac disabled
     set:
       rbac:
         create: false
@@ -39,7 +39,7 @@ tests:
       - hasDocuments:
           count: 0
 
-  - it: Should not have role binding with validation webhook is disabled
+  - it: Should not have role with webhook disabled
     set:
       manager:
         webhook:

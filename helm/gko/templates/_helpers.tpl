@@ -124,7 +124,7 @@ Create the name of the service account to use
  Create the name of the manager role for Validation Webhook patch
  */}}
 {{- define "rbac.AdmissionWebhookRoleName" -}}
-   {{ template "rbac.serviceAccountName" . }}-validation-webhook-role
+   {{ template "rbac.serviceAccountName" . }}-validation-webhook-cluster-role
 {{- end }}
 
 {{/*
