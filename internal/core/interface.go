@@ -131,6 +131,11 @@ type SubscribableStatus interface {
 }
 
 // +k8s:deepcopy-gen=false
+type SharedPolicyGroupObject interface {
+	ContextAwareObject
+}
+
+// +k8s:deepcopy-gen=false
 type ContextAwareObject interface {
 	Object
 	ContextRef() ObjectRef

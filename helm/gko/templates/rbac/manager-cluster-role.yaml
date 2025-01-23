@@ -215,6 +215,33 @@ rules:
       - get
       - patch
       - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - sharedpolicygroups
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - sharedpolicygroups/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - sharedpolicygroups/status
+    verbs:
+      - get
+      - patch
+      - update
 {{- end }}
 {{- end }}
 {{- end }}
