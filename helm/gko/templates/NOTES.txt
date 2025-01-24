@@ -7,4 +7,4 @@ To learn more about your release, try:
 
 Please visit our documentation to learn about custom resources managed by the operator:
 
-https://docs.gravitee.io/apim/3.x/apim_kubernetes_operator_overview.html
+https://documentation.gravitee.io/gravitee-kubernetes-operator-gko
