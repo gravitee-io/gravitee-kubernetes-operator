@@ -39,6 +39,7 @@ type Files struct {
 	Application  string
 	Ingress      string
 	Subscription string
+	Group        string
 }
 
 type FSBuilder struct {
@@ -78,6 +79,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if sub := decodeIfDefined(f.Subscription, &v1alpha1.Subscription{}, subscriptionKind); sub != nil {
 		setupSubscription(obj, sub, suffix)
+	}
+
+	if group := decodeIfDefined(f.Group, &v1alpha1.Group{}, groupKind); group != nil {
+		setUpGroup(obj, group, suffix)
 	}
 
 	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
@@ -150,6 +155,9 @@ func setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix str
 	if obj.Application != nil {
 		obj.Application.Spec.Context = obj.Context.GetNamespacedName()
 	}
+	if obj.Group != nil {
+		obj.Group.Spec.Context = obj.Context.GetNamespacedName()
+	}
 }
 
 func ensureNilContexts(obj *Objects) {
@@ -194,6 +202,13 @@ func setupSubscription(obj *Objects, sub **v1alpha1.Subscription, suffix string)
 	obj.Subscription.Namespace = constants.Namespace
 	obj.Subscription.Spec.API.Name += suffix
 	obj.Subscription.Spec.App.Name += suffix
+}
+
+func setUpGroup(obj *Objects, group **v1alpha1.Group, suffix string) {
+	obj.Group = *group
+	obj.Group.Name += suffix
+	obj.Group.Spec.Name += suffix
+	obj.Group.Namespace = constants.Namespace
 }
 
 func randomizeAPIPaths(api *v1alpha1.ApiDefinition, suffix string) {
@@ -278,6 +293,11 @@ func (b *FSBuilder) WithAPIv4(file string) *FSBuilder {
 
 func (b *FSBuilder) WithApplication(file string) *FSBuilder {
 	b.files.Application = file
+	return b
+}
+
+func (b *FSBuilder) WithGroup(file string) *FSBuilder {
+	b.files.Group = file
 	return b
 }
 

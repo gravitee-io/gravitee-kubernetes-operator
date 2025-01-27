@@ -148,6 +148,8 @@ const (
 
 	SubscriptionFile = "apim/subscription/subscription.yml"
 
+	GroupFile = "apim/group/group.yml"
+
 	// Use cases.
 	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"
 	SubscribeJWTUseCaseAPIFile             = "usecase/subscribe-to-jwt-plan/resources/api.yml"

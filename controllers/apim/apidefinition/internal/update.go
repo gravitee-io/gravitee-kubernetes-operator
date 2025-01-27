@@ -49,7 +49,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return err
 	}
 
-	if err := ResolveGroupRefs(ctx, apiDefinition); err != nil {
+	if err := ResolveGroupRefs(ctx, cp); err != nil {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		return err
 	}
 
-	if err := ResolveGroupRefs(ctx, apiDefinition); err != nil {
+	if err := ResolveGroupRefs(ctx, cp); err != nil {
 		return err
 	}
 

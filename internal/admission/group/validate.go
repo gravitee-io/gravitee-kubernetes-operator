@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -26,6 +27,10 @@ import (
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 	if group, ok := obj.(*v1alpha1.Group); ok {
+		errs.Add(ctxref.Validate(ctx, group))
+		if errs.IsSevere() {
+			return errs
+		}
 		errs.MergeWith(validateDryRun(ctx, group))
 	}
 	return errs

@@ -26,6 +26,6 @@ spec:
   - source: memory
     sourceId: api1
     roles:
-      API: OSNER
+      API: OWNER
       APPLICATION: OWNER
       INTEGRATION: USER

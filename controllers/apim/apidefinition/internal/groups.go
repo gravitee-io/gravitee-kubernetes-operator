@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 	"reflect"
+	"slices"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -34,15 +35,17 @@ func ResolveGroupRefs(ctx context.Context, api core.ApiDefinitionObject) error {
 
 	groups := api.GetGroups()
 	for _, ref := range groupRefs {
-		group := new(v1alpha1.ApiDefinition)
+		group := new(v1alpha1.Group)
 		err := k8s.GetClient().Get(ctx, ref.NamespacedName(), group)
 		if client.IgnoreNotFound(err) != nil {
 			return err
 		} else if err != nil {
-			log.Info(ctx, "Group reference "+ref.String()+" as it does not exist")
+			log.Debug(ctx, "Skipping group reference "+ref.String()+" as it does not exist")
 			continue
 		}
-		groups = append(groups, group.Spec.Name)
+		if !slices.Contains(groups, group.Spec.Name) {
+			groups = append(groups, group.Spec.Name)
+		}
 	}
 	api.SetGroups(groups)
 	return nil
