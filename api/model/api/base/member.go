@@ -14,7 +14,11 @@
 
 package base
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
+)
 
 type Member struct {
 	// Member source
@@ -50,5 +54,17 @@ func NewMemoryMember(username, role string) *Member {
 		Source:   "memory",
 		SourceID: username,
 		Role:     role,
+	}
+}
+
+func NewGraviteeGroupMember(username, role string) group.Member {
+	return group.Member{
+		Source:   "gravitee",
+		SourceID: username,
+		Roles: map[group.RoleScope]string{
+			group.APIRoleScope:         role,
+			group.ApplicationRoleScope: role,
+			group.IntegrationRoleScope: role,
+		},
 	}
 }

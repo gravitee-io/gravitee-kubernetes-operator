@@ -16,6 +16,7 @@
 package base
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
@@ -60,10 +61,16 @@ type ApiBase struct {
 	// of an <a href="#apiresource">existing API resource definition</a>.
 	// +kubebuilder:default:={}
 	Resources []*ResourceOrRef `json:"resources"`
-	// List of groups associated with the API
+	// List of groups associated with the API.
+	// This groups are id or name references to existing groups in APIM.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	Groups []string `json:"groups"`
+	// List of group references associated with the API
+	// This groups are references to Group custom resources created on the cluster.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
+	GroupRefs []refs.NamespacedName `json:"groupRefs"`
 	// +kubebuilder:validation:Optional
 	// The list of categories the API belongs to.
 	// Categories are reflected in APIM portal so that consumers can easily find the APIs they need.

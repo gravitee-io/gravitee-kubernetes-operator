@@ -12,40 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fixture
+package internal
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	coreV1 "k8s.io/api/core/v1"
-	netV1 "k8s.io/api/networking/v1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-type Objects struct {
-	Secrets    []*coreV1.Secret
-	ConfigMaps []*coreV1.ConfigMap
-
-	Ingress *netV1.Ingress
-
-	Context      *v1alpha1.ManagementContext
-	Resource     *v1alpha1.ApiResource
-	API          *v1alpha1.ApiDefinition
-	APIv4        *v1alpha1.ApiV4Definition
-	Application  *v1alpha1.Application
-	Subscription *v1alpha1.Subscription
-	Group        *v1alpha1.Group
-
-	randomSuffix string
-}
-
-func (o *Objects) GetGeneratedSuffix() string {
-	return o.randomSuffix
-}
-
-func (o *Objects) GetIngressPEMRegistryKey() string {
-	if o.Ingress == nil {
-		return ""
+func UpdateStatusSuccess(ctx context.Context, group *v1alpha1.Group) error {
+	if group.IsBeingDeleted() {
+		return nil
 	}
-	return fmt.Sprintf("%s-%s", o.Ingress.Namespace, o.Ingress.Name)
+
+	group.Status.ProcessingStatus = core.ProcessingStatusCompleted
+	return k8s.GetClient().Status().Update(ctx, group)
+}
+
+func UpdateStatusFailure(ctx context.Context, group *v1alpha1.Group) error {
+	group.Status.ProcessingStatus = core.ProcessingStatusFailed
+	return k8s.GetClient().Status().Update(ctx, group)
 }

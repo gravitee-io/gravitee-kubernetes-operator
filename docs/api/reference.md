@@ -532,10 +532,21 @@ is managed using a kubernetes operator<br/>
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionspecgrouprefsindex">groupRefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of group references associated with the API
+This groups are references to Group custom resources created on the cluster.<br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>groups</b></td>
         <td>[]string</td>
         <td>
-          List of groups associated with the API<br/>
+          List of groups associated with the API.
+This groups are id or name references to existing groups in APIM.<br/>
           <br/>
             <i>Default</i>: []<br/>
         </td>
@@ -1088,6 +1099,47 @@ List of path operators
         <td>string</td>
         <td>
           FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.groupRefs[index]
+[Go to parent definition](#apidefinitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4734,10 +4786,21 @@ from an API instance or from a config map created in the cluster (which is the d
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionspecgrouprefsindex">groupRefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of group references associated with the API
+This groups are references to Group custom resources created on the cluster.<br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>groups</b></td>
         <td>[]string</td>
         <td>
-          List of groups associated with the API<br/>
+          List of groups associated with the API.
+This groups are id or name references to existing groups in APIM.<br/>
           <br/>
             <i>Default</i>: []<br/>
         </td>
@@ -6582,6 +6645,47 @@ APIM exports and can be safely ignored.<br/>
         <td>string</td>
         <td>
           FlowStep policy<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.groupRefs[index]
+[Go to parent definition](#apiv4definitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>

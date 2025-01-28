@@ -12,40 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fixture
+package internal
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	coreV1 "k8s.io/api/core/v1"
-	netV1 "k8s.io/api/networking/v1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 )
 
-type Objects struct {
-	Secrets    []*coreV1.Secret
-	ConfigMaps []*coreV1.ConfigMap
+func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
+	ns := group.Namespace
+	spec := group.Spec
 
-	Ingress *netV1.Ingress
-
-	Context      *v1alpha1.ManagementContext
-	Resource     *v1alpha1.ApiResource
-	API          *v1alpha1.ApiDefinition
-	APIv4        *v1alpha1.ApiV4Definition
-	Application  *v1alpha1.Application
-	Subscription *v1alpha1.Subscription
-	Group        *v1alpha1.Group
-
-	randomSuffix string
-}
-
-func (o *Objects) GetGeneratedSuffix() string {
-	return o.randomSuffix
-}
-
-func (o *Objects) GetIngressPEMRegistryKey() string {
-	if o.Ingress == nil {
-		return ""
+	apim, err := apim.FromContextRef(ctx, group.ContextRef(), ns)
+	if err != nil {
+		return err
 	}
-	return fmt.Sprintf("%s-%s", o.Ingress.Namespace, o.Ingress.Name)
+
+	group.PopulateIDs(apim.Context)
+
+	status, err := apim.Env.ImportGroup(spec.Type)
+	if err != nil {
+		return err
+	}
+
+	group.Status.ID = status.ID
+	group.Status.OrgID = apim.Context.GetOrgID()
+	group.Status.EnvID = apim.Context.GetEnvID()
+	group.Status.Members = status.Members
+
+	return nil
 }

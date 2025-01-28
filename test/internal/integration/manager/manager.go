@@ -30,6 +30,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
@@ -172,6 +173,11 @@ func init() {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&group.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("group-controller"),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must(
