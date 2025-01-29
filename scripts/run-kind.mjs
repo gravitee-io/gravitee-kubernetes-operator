@@ -84,6 +84,10 @@ async function loadImages() {
   setQuoteEscape();
 }
 
+async function createGraviteeNamespace() {
+  await $`kubectl create ns gravitee`;
+}
+
 async function createTLSSecret() {
   await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key`;
 }
@@ -113,6 +117,12 @@ LOG.blue(`
 `);
 
 await time(loadImages);
+
+LOG.blue(`
+  ☸ Creating gravitee namespace
+`);
+
+await time(createGraviteeNamespace);
 
 LOG.blue(`
   ☸ Creating APIM gateway TLS secret
