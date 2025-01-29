@@ -27,7 +27,6 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-    meta.helm.sh/releasedAt: {{ dateInZone "2006-01-02 15:04:05Z" (now) "UTC"| quote }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
