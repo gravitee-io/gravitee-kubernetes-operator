@@ -31,19 +31,18 @@ spec:
             path: "/"
             operator: "STARTS_WITH"
           pre:
-            - name: "spike-arrest"
-              description: "spike-arrest"
+            - name: "Rate Limit"
+              description: "Rate limiting for KEYLESS Plan"
               enabled: true
-              policy: "spike-arrest"
+              policy: "rate-limit"
               configuration:
                 async: false
-                addHeaders: false
-                spike:
-                  dynamicLimit: 20
+                addHeaders: true
+                rate:
+                  useKeyOnly: false
                   periodTime: 1
-                  limit: 10
-                  periodTimeUnit: "SECONDS"
-                  key: "test"
+                  limit: 5
+                  periodTimeUnit: MINUTES
           post: []
           enabled: true
       comment_required: false
