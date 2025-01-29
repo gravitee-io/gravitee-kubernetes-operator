@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	Namespace = "default"
+	Namespace         = "default"
+	GraviteeNamespace = "gravitee"
 
 	ConsistentTimeout = time.Second * 2
 	EventualTimeout   = time.Second * 30

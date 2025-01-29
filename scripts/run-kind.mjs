@@ -76,6 +76,10 @@ async function loadImages() {
   setQuoteEscape();
 }
 
+async function createGraviteeNamespace() {
+  await $`kubectl create ns gravitee`;
+}
+
 async function helmInstallAPIM() {
   await $`helm repo add graviteeio https://helm.gravitee.io`;
   await $`helm repo update graviteeio`;
@@ -101,6 +105,12 @@ LOG.blue(`
 `);
 
 await time(loadImages);
+
+LOG.blue(`
+  ☸ Creating gravitee namespace
+`);
+
+await time(createGraviteeNamespace);
 
 LOG.blue(`
   ☸ Installing APIM

@@ -49,7 +49,7 @@ func (apim *APIM) OrgID() string {
 }
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
-func FromContext(ctx context.Context, context core.ContextModel, parentNs string) (*APIM, error) {
+func FromContext(ctx context.Context, context core.ContextObject, parentNs string) (*APIM, error) {
 	path := getBasePath(context)
 	orgID, envID := context.GetOrgID(), context.GetEnvID()
 
@@ -58,7 +58,7 @@ func FromContext(ctx context.Context, context core.ContextModel, parentNs string
 		return nil, err
 	}
 
-	if _, err = dynamic.InjectSecretIfAny(ctx, context, parentNs); err != nil {
+	if _, err = dynamic.InjectSecretIfAny(ctx, context); err != nil {
 		return nil, err
 	}
 
