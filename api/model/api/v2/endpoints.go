@@ -53,7 +53,7 @@ type Endpoint struct {
 	HttpClientOptions *base.HttpClientOptions `json:"http,omitempty"`
 	// Custom HTTP SSL client options used for this endpoint
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
-	// List of headers for this endpoint
+	// List of headers for the endpoint group
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	Headers []base.HttpHeader `json:"headers"`
@@ -105,16 +105,17 @@ type EndpointGroup struct {
 	HttpClientOptions *base.HttpClientOptions `json:"http,omitempty"`
 	// Custom HTTP SSL client options used for this EndpointGroup
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
-	// List of headers needed for this EndpointGroup
+	// List of headers for the endpoint group
 	// +kubebuilder:validation:Optional
-	Headers *map[string]string `json:"headers,omitempty"`
+	// +kubebuilder:default:={}
+	Headers []base.HttpHeader `json:"headers"`
 }
 
 func NewHttpEndpointGroup(name string) *EndpointGroup {
 	return &EndpointGroup{
 		Name:      &name,
 		Endpoints: []*Endpoint{},
-		Headers:   &map[string]string{},
+		Headers:   []base.HttpHeader{},
 	}
 }
 

@@ -2231,10 +2231,12 @@ Proxy Failover
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>headers</b></td>
-        <td>map[string]string</td>
+        <td><b><a href="#apidefinitionspecproxygroupsindexheadersindex">headers</a></b></td>
+        <td>[]object</td>
         <td>
-          List of headers needed for this EndpointGroup<br/>
+          List of headers for the endpoint group<br/>
+          <br/>
+            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -2310,7 +2312,7 @@ Proxy Failover
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexheadersindex">headers</a></b></td>
         <td>[]object</td>
         <td>
-          List of headers for this endpoint<br/>
+          List of headers for the endpoint group<br/>
           <br/>
             <i>Default</i>: []<br/>
         </td>
@@ -3023,6 +3025,40 @@ TrustStore type (possible values PEM, PKCS12, JKS)
           The TrustStore type to use (possible values are PEM, PKCS12, JKS)<br/>
           <br/>
             <i>Enum</i>: PEM, PKCS12, JKS<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.proxy.groups[index].headers[index]
+[Go to parent definition](#apidefinitionspecproxygroupsindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>

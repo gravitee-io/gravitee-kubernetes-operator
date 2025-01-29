@@ -861,7 +861,7 @@ spec:
                                 type: boolean
                               headers:
                                 default: []
-                                description: List of headers for this endpoint
+                                description: List of headers for the endpoint group
                                 items:
                                   properties:
                                     name:
@@ -1156,10 +1156,18 @@ spec:
                             type: object
                           type: array
                         headers:
-                          additionalProperties:
-                            type: string
-                          description: List of headers needed for this EndpointGroup
-                          type: object
+                          default: []
+                          description: List of headers for the endpoint group
+                          items:
+                            properties:
+                              name:
+                                description: The HTTP header name
+                                type: string
+                              value:
+                                description: The HTTP header value
+                                type: string
+                            type: object
+                          type: array
                         http:
                           description: Custom HTTP SSL client options used for this
                             EndpointGroup
