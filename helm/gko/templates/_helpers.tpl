@@ -160,4 +160,12 @@ Create the name of the service account to use
  */}}
 {{- define "ingress.Classes" -}}
 {{- join "," .Values.ingress.ingressClasses }}
+<<<<<<< HEAD
 {{- end -}}
+=======
+{{- end -}}
+
+{{- define "manager.Namespaces" -}}
+{{- if .Values.manager.scope.namespaces }}{{- join "," .Values.manager.scope.namespaces }}{{- else }}""{{- end -}}
+{{- end -}}
+>>>>>>> ed2daed (feat: allow to listen on list of ns in cluster mode)
