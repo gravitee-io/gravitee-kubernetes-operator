@@ -190,10 +190,13 @@ func buildCacheOptions(ns string) cache.Options {
 	if ns == "" {
 		return cache.Options{}
 	}
+	defaultNamespaces := map[string]cache.Config{}
+	configNamespaces := strings.Split(env.Config.NS, ",")
+	for _, ns := range configNamespaces {
+		defaultNamespaces[ns] = cache.Config{}
+	}
 	return cache.Options{
-		DefaultNamespaces: map[string]cache.Config{
-			ns: {},
-		},
+		DefaultNamespaces: defaultNamespaces,
 	}
 }
 
