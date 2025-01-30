@@ -103,6 +103,8 @@ api:
   env:
     - name: ANALYTICS_TYPE
       value: none
+    - name: MANAGEMENT_MONGODB_TRANSACTIONAL
+      value: "false"
 
 installation:
   api:
