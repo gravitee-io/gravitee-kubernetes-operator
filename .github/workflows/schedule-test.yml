@@ -30,6 +30,7 @@ jobs:
           - 4.3.x
           - 4.4.x
           - 4.5.x
+          - 4.6.x
           - master
     steps:
       - uses: actions/checkout@v4
