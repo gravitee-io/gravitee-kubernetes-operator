@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint:cyclop // package can't be split more than this
 package predicate
 
 import (
@@ -23,6 +22,8 @@ import (
 	netV1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type LastSpecHashPredicate struct {
@@ -98,4 +99,26 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	default:
 		return false
 	}
+}
+
+type SecretPredicate struct {
+	predicate.Funcs
+}
+
+func (SecretPredicate) Create(e event.CreateEvent) bool {
+	return util.ContainsFinalizer(e.Object, core.ManagementContextSecretFinalizer) ||
+		util.ContainsFinalizer(e.Object, core.KeyPairFinalizer)
+}
+
+func (SecretPredicate) Update(e event.UpdateEvent) bool {
+	if e.ObjectOld == nil || e.ObjectNew == nil {
+		return false
+	}
+
+	if e.ObjectNew.GetDeletionTimestamp() != nil {
+		return true
+	}
+
+	return util.ContainsFinalizer(e.ObjectNew, core.ManagementContextSecretFinalizer) ||
+		util.ContainsFinalizer(e.ObjectNew, core.KeyPairFinalizer)
 }
