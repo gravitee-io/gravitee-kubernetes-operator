@@ -71,21 +71,19 @@ manager:
       ## @param manager.resources.limits.cpu The CPU resources limits for the GKO Manager container
       cpu: 500m
       ## @param manager.resources.limits.memory The memory resources limits for the GKO Manager container
-      memory: 128Mi
+      memory: 256Mi
     requests:
       ## @param manager.resources.requests.cpu The requested CPU for the GKO Manager container
-      cpu: 5m
+      cpu: 500m
       ## @param manager.resources.requests.memory The requested memory for the GKO Manager container
-      memory: 64Mi
+      memory: 128Mi
   ## @param manager.tolerations Set pods tolerations. Please see https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ about this topic. 
   tolerations: []
   scope:
     ## @param manager.scope.cluster Use false to listen only in the release namespace.
     cluster: true
     ## @param manager.scope.namespaces Setting this list of namespaces will result in the operator listening only in this namespaces.
-    namespaces:
-    - gko
-    - gravitee
+    namespaces: []
   ## @param manager.applyCRDs 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup.
   ## Please be aware that this will apply to Custom Resource Definitions 
   ## (which are the Open API model for Custom Resources such as API Definitions), 
