@@ -812,6 +812,8 @@ is managed using a kubernetes operator
         <td>[]enum</td>
         <td>
           A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
+          <br/>
+            <i>Enum</i>: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE, OTHER<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1586,6 +1588,8 @@ that has been promoted between different environments.<br/>
         <td>[]enum</td>
         <td>
           A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
+          <br/>
+            <i>Enum</i>: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE, OTHER<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -1854,6 +1858,8 @@ List of path operators
         <td>[]enum</td>
         <td>
           List of http methods for this Rule (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)<br/>
+          <br/>
+            <i>Enum</i>: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD, CONNECT, TRACE, OTHER<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -7804,6 +7810,8 @@ Application settings
         <td>[]enum</td>
         <td>
           List of Oauth client grant types<br/>
+          <br/>
+            <i>Enum</i>: authorization_code, client_credentials, refresh_token, password, implicit<br/>
         </td>
         <td>true</td>
       </tr><tr>

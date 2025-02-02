@@ -16,36 +16,30 @@ package internal
 
 import (
 	"context"
-	"fmt"
-
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func Delete(ctx context.Context, secret *v1.Secret) error {
-	return checkContextFinalizer(ctx, secret)
-}
+func CreateOrUpdate(
+	ctx context.Context,
+	instance *v1alpha1.ManagementContext,
+) error {
+	if instance.HasSecretRef() {
+		secret := &v1.Secret{}
 
-func checkContextFinalizer(ctx context.Context, secret *v1.Secret) error {
-	contextRefs, err := getReferences(ctx, secret, new(v1alpha1.ManagementContextList))
+		nsn := getSecretRef(instance)
+		if err := k8s.GetClient().Get(ctx, nsn, secret); err != nil {
+			return err
+		}
 
-	if err != nil {
-		return err
-	}
-
-	refCount := len(contextRefs)
-
-	if refCount >= 1 {
-		return fmt.Errorf("secret is used by %d management context, cannot be deleted", refCount)
-	}
-
-	if util.ContainsFinalizer(secret, core.ManagementContextSecretFinalizer) {
-		log.FromContext(ctx).Info("secret is not used by any management context, removing finalizer")
-		util.RemoveFinalizer(secret, core.ManagementContextSecretFinalizer)
+		if !util.ContainsFinalizer(secret, core.ManagementContextSecretFinalizer) {
+			util.AddFinalizer(secret, core.ManagementContextSecretFinalizer)
+			return k8s.GetClient().Update(ctx, secret)
+		}
 	}
 
 	return nil
