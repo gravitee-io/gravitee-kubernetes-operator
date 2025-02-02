@@ -21,8 +21,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"golang.org/x/net/context"
+	v1 "k8s.io/api/core/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -82,7 +84,27 @@ func Delete(
 			instance.Name, len(apps.Items))
 	}
 
-	util.RemoveFinalizer(instance, core.ManagementContextFinalizer)
+	if instance.HasSecretRef() {
+		secret := &v1.Secret{}
+
+		nsn := getSecretRef(instance)
+		if err := k8s.GetClient().Get(ctx, nsn, secret); err != nil {
+			return err
+		}
+
+		isRef, err := hasMoreReferences(ctx, *instance.Spec.Auth.SecretRef)
+		if err != nil {
+			return err
+		}
+
+		if !isRef {
+			util.RemoveFinalizer(secret, core.ManagementContextSecretFinalizer)
+		}
+
+		if err := k8s.GetClient().Update(ctx, secret); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

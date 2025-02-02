@@ -43,7 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	coreV1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/networking/v1"
@@ -67,7 +66,6 @@ import (
 	runtimeUtil "k8s.io/apimachinery/pkg/util/runtime"
 	cliScheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	ctrlClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -89,6 +87,7 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
+//nolint:funlen // refactored in 4.6
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
@@ -142,8 +141,8 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
-		Client: ctrlClient.Options{
-			Cache: &ctrlClient.CacheOptions{
+		Client: client.Options{
+			Cache: &client.CacheOptions{
 				DisableFor: []client.Object{
 					&coreV1.Secret{},
 				},
@@ -269,14 +268,6 @@ func registerControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApplicationList{}),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, msg, controller, "Application")
-		os.Exit(1)
-	}
-
-	if err := (&secrets.Reconciler{
-		Client: k8s.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "Secret")
 		os.Exit(1)
 	}
 }

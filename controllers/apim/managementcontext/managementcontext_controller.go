@@ -33,7 +33,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -54,44 +53,49 @@ type Reconciler struct {
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=gravitee.io,resources=managementcontexts/finalizers,verbs=update
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
 	managementContext := &v1alpha1.ManagementContext{}
 	if err := r.Get(ctx, req.NamespacedName, managementContext); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	events := event.NewRecorder(r.Recorder)
+
 	dc := managementContext.DeepCopy()
-	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, dc, func() error {
+
+	_, reconcileErr := util.CreateOrUpdate(ctx, r.Client, managementContext, func() error {
 		util.AddFinalizer(managementContext, core.ManagementContextFinalizer)
 		k8s.AddAnnotation(managementContext, core.LastSpecHashAnnotation, hash.Calculate(&managementContext.Spec))
 
-		if err := template.Compile(ctx, managementContext); err != nil {
+		if err := template.Compile(ctx, dc); err != nil {
 			return err
 		}
 
 		var err error
 		if managementContext.IsBeingDeleted() {
 			err = events.Record(event.Delete, managementContext, func() error {
-				return internal.Delete(ctx, managementContext)
+				if err := internal.Delete(ctx, dc); err != nil {
+					return err
+				}
+				util.RemoveFinalizer(managementContext, core.ManagementContextFinalizer)
+				return nil
 			})
 		} else {
 			err = events.Record(event.Update, managementContext, func() error {
-				// We don't do anything directly when there is an update on ManagementContext
-				return nil
+				return internal.CreateOrUpdate(ctx, dc)
 			})
 		}
 
-		managementContext.ObjectMeta.DeepCopyInto(&dc.ObjectMeta)
 		return err
 	})
 
+	if err := dc.GetStatus().DeepCopyTo(managementContext); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	if reconcileErr == nil {
-		logger.Info("Management context has been reconciled")
 		return ctrl.Result{}, nil
 	}
 
-	// There was an error reconciling the Management Context
 	return ctrl.Result{}, reconcileErr
 }
 
