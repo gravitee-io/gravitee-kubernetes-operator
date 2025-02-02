@@ -19,10 +19,16 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+<<<<<<< HEAD
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+=======
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+>>>>>>> 539e666 (fix: remove secret controller)
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
 	"golang.org/x/net/context"
+	v1 "k8s.io/api/core/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -34,6 +40,7 @@ func Delete(
 		return nil
 	}
 
+<<<<<<< HEAD
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := search.FindByFieldReferencing(
 		ctx,
@@ -85,4 +92,29 @@ func Delete(
 	util.RemoveFinalizer(instance, keys.ManagementContextFinalizer)
 
 	return nil
+=======
+	if instance.HasSecretRef() {
+		secret := &v1.Secret{}
+
+		nsn := getSecretRef(instance)
+		if err := k8s.GetClient().Get(ctx, nsn, secret); err != nil {
+			return err
+		}
+
+		isRef, err := isReferenced(ctx, *instance.Spec.Auth.SecretRef)
+		if err != nil {
+			return err
+		}
+
+		if !isRef {
+			util.RemoveFinalizer(secret, core.ManagementContextSecretFinalizer)
+		}
+
+		if err := k8s.GetClient().Update(ctx, secret); err != nil {
+			return err
+		}
+	}
+
+	return search.AssertNoContextRef(ctx, instance)
+>>>>>>> 539e666 (fix: remove secret controller)
 }

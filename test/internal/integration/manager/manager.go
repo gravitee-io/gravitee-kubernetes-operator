@@ -31,7 +31,12 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+<<<<<<< HEAD
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
+=======
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+>>>>>>> 539e666 (fix: remove secret controller)
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -165,12 +170,32 @@ func init() {
 		}).SetupWithManager(mgr),
 	)
 
+<<<<<<< HEAD
 	runtimeUtil.Must(
 		(&secrets.Reconciler{
 			Client: mgr.GetClient(),
 			Scheme: mgr.GetScheme(),
 		}).SetupWithManager(mgr),
 	)
+=======
+	runtimeUtil.Must((&subscription.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&group.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("group-controller"),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&policygroups.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.SharedPolicyGroupList{}),
+	}).SetupWithManager(mgr))
+>>>>>>> 539e666 (fix: remove secret controller)
 
 	go func() {
 		runtimeUtil.Must(Instance().Start(ctrl.SetupSignalHandler()))

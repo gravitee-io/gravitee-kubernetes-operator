@@ -30,10 +30,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+<<<<<<< HEAD
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 <<<<<<< HEAD
 
 =======
+=======
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
+>>>>>>> 539e666 (fix: remove secret controller)
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	coreV1 "k8s.io/api/core/v1"
@@ -70,7 +74,6 @@ import (
 	cliScheme "k8s.io/client-go/kubernetes/scheme"
 >>>>>>> dc2fb8b (fix: disable client cache for secrets)
 	ctrl "sigs.k8s.io/controller-runtime"
-	ctrlClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -135,8 +138,8 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
-		Client: ctrlClient.Options{
-			Cache: &ctrlClient.CacheOptions{
+		Client: client.Options{
+			Cache: &client.CacheOptions{
 				DisableFor: []client.Object{
 					&coreV1.Secret{},
 				},
@@ -256,6 +259,7 @@ func registerControllers(mgr manager.Manager) {
 		setupLog.Error(err, msg, controller, "Application")
 		os.Exit(1)
 	}
+<<<<<<< HEAD
 
 	if err := (&secrets.Reconciler{
 		Client: mgr.GetClient(),
@@ -264,6 +268,8 @@ func registerControllers(mgr manager.Manager) {
 		setupLog.Error(err, msg, controller, "Secret")
 		os.Exit(1)
 	}
+=======
+>>>>>>> 539e666 (fix: remove secret controller)
 }
 
 func applyCRDs() error {

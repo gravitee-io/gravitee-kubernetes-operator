@@ -16,8 +16,14 @@ package apidefinition
 
 import (
 	"context"
+<<<<<<< HEAD:test/integration/apidefinition/create_withContext_andLocalFalse_test.go
 	"net/http"
 	"time"
+=======
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
+>>>>>>> 539e666 (fix: remove secret controller):test/integration/admission/managementcontext/update_withMissingSecret_test.go
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,7 +34,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
 var _ = Describe("Create", labels.WithContext, func() {
@@ -45,6 +50,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
+<<<<<<< HEAD:test/integration/apidefinition/create_withContext_andLocalFalse_test.go
 
 		By("expecting API status to be completed")
 
@@ -67,5 +73,14 @@ var _ = Describe("Create", labels.WithContext, func() {
 			res, callErr := httpClient.Get(endpoint)
 			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
 		}, timeout, interval).Should(Succeed())
+=======
+
+		Consistently(func() error {
+			newMctx := fixtures.Context.DeepCopy()
+			newMctx.Spec.SecretRef().Name = "unknown-secret"
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Context, newMctx)
+			return err
+		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
+>>>>>>> 539e666 (fix: remove secret controller):test/integration/admission/managementcontext/update_withMissingSecret_test.go
 	})
 })

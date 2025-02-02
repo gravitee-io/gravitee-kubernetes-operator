@@ -17,27 +17,41 @@ package internal
 import (
 	"context"
 
+<<<<<<< HEAD:controllers/apim/secrets/internal/update.go
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/pkg/keys"
+=======
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+>>>>>>> 539e666 (fix: remove secret controller):controllers/apim/managementcontext/internal/update.go
 	v1 "k8s.io/api/core/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-func Update(ctx context.Context, secret *v1.Secret) error {
-	return ensureContextFinalizerAndHash(ctx, secret)
-}
+func CreateOrUpdate(
+	ctx context.Context,
+	instance *v1alpha1.ManagementContext,
+) error {
+	if instance.HasSecretRef() {
+		secret := &v1.Secret{}
 
-func ensureContextFinalizerAndHash(ctx context.Context, secret *v1.Secret) error {
-	contextRefs, err := getReferences(ctx, secret, new(v1alpha1.ManagementContextList))
+		nsn := getSecretRef(instance)
+		if err := k8s.GetClient().Get(ctx, nsn, secret); err != nil {
+			return err
+		}
 
-	if err != nil {
-		return err
+		if !util.ContainsFinalizer(secret, core.ManagementContextSecretFinalizer) {
+			util.AddFinalizer(secret, core.ManagementContextSecretFinalizer)
+			return k8s.GetClient().Update(ctx, secret)
+		}
 	}
 
+<<<<<<< HEAD:controllers/apim/secrets/internal/update.go
 	if len(contextRefs) == 0 {
 		return nil
 	}
@@ -48,5 +62,7 @@ func ensureContextFinalizerAndHash(ctx context.Context, secret *v1.Secret) error
 	}
 	k8s.AddAnnotation(secret, keys.LastSpecHash, hash.Calculate(&secret.Data))
 
+=======
+>>>>>>> 539e666 (fix: remove secret controller):controllers/apim/managementcontext/internal/update.go
 	return nil
 }

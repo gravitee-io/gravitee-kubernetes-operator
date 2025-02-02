@@ -18,32 +18,37 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/apimachinery/pkg/types"
 )
 
-func getReferences(ctx context.Context, secret *v1.Secret, referenceType client.ObjectList) ([]runtime.Object, error) {
-	ref := refs.NamespacedName{
-		Namespace: secret.Namespace,
-		Name:      secret.Name,
+func getSecretRef(instance *v1alpha1.ManagementContext) types.NamespacedName {
+	nsn := instance.GetSecretRef().NamespacedName()
+
+	if nsn.Namespace == "" {
+		nsn.Namespace = instance.Namespace
 	}
 
+	return nsn
+}
+
+func isReferenced(ctx context.Context, ref refs.NamespacedName) (bool, error) {
+	list := new(v1alpha1.ManagementContextList)
 	if err := search.FindByFieldReferencing(
 		ctx,
 		indexer.SecretRefField,
 		ref,
-		referenceType,
+		list,
 	); err != nil {
-		return nil, err
+		return false, err
 	}
 
-	items, err := meta.ExtractList(referenceType)
+	items, err := meta.ExtractList(list)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	ref.Namespace = ""
@@ -52,17 +57,17 @@ func getReferences(ctx context.Context, secret *v1.Secret, referenceType client.
 		ctx,
 		indexer.SecretRefField,
 		ref,
-		referenceType,
+		list,
 	); err != nil {
-		return nil, err
+		return false, err
 	}
 
-	currentNSItems, err := meta.ExtractList(referenceType)
+	currentNSItems, err := meta.ExtractList(list)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	items = append(items, currentNSItems...)
 
-	return items, nil
+	return len(items) > 0, nil
 }
