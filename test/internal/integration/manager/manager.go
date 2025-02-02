@@ -31,7 +31,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
@@ -176,13 +175,6 @@ func init() {
 		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
 		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.SharedPolicyGroupList{}),
 	}).SetupWithManager(mgr))
-
-	runtimeUtil.Must(
-		(&secrets.Reconciler{
-			Client: Client(),
-			Scheme: mgr.GetScheme(),
-		}).SetupWithManager(mgr),
-	)
 
 	go func() {
 		runtimeUtil.Must(Instance().Start(ctrl.SetupSignalHandler()))

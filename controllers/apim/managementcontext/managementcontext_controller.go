@@ -82,8 +82,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		} else {
 			err = events.Record(event.Update, managementContext, func() error {
-				// We don't do anything directly when there is an update on ManagementContext
-				return nil
+				return internal.CreateOrUpdate(ctx, dc)
 			})
 		}
 
