@@ -51,7 +51,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/secrets"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	coreV1 "k8s.io/api/core/v1"
@@ -75,7 +74,6 @@ import (
 	runtimeUtil "k8s.io/apimachinery/pkg/util/runtime"
 	cliScheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	ctrlClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	metricServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
@@ -139,8 +137,8 @@ func main() {
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
-		Client: ctrlClient.Options{
-			Cache: &ctrlClient.CacheOptions{
+		Client: client.Options{
+			Cache: &client.CacheOptions{
 				DisableFor: []client.Object{
 					&coreV1.Secret{},
 				},
@@ -291,14 +289,6 @@ func registerControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.SharedPolicyGroupList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for shared policy groups")
-		os.Exit(1)
-	}
-
-	if err := (&secrets.Reconciler{
-		Client: k8s.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for secrets")
 		os.Exit(1)
 	}
 }
