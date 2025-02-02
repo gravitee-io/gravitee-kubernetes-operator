@@ -20,41 +20,28 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/types"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
 var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	admissionCtrl := mctx.AdmissionCtrl{}
 	ctx := context.Background()
-	cli := manager.Client()
 
 	It("should return error if secret is missing", func() {
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithSecretFile).
-			Build()
-
-		fixtures.Context.Spec.SecretRef().Name = "unknown-secret"
-		fixtures.Apply()
-
-		mCtx := new(v1alpha1.ManagementContext)
-		Eventually(func() error {
-			return cli.Get(context.Background(), types.NamespacedName{
-				Namespace: fixtures.Context.Namespace,
-				Name:      fixtures.Context.Name,
-			}, mCtx)
-		}, constants.EventualTimeout, interval).Should(Succeed())
+			Build().
+			Apply()
 
 		Consistently(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, mCtx)
+			newMctx := fixtures.Context.DeepCopy()
+			newMctx.Spec.SecretRef().Name = "unknown-secret"
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Context, newMctx)
 			return err
 		}, constants.ConsistentTimeout, interval).ShouldNot(Succeed())
 	})
