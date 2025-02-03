@@ -4,10 +4,11 @@ go 1.23.1
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/moby/moby v27.4.1+incompatible
+	github.com/moby/moby v27.5.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
 	github.com/zeebo/xxh3 v1.0.2
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	k8s.io/apimachinery v0.32.1
 	k8s.io/client-go v0.32.1
 	sigs.k8s.io/controller-runtime v0.20.1
@@ -29,7 +30,6 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
