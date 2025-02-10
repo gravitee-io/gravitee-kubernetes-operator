@@ -244,15 +244,19 @@ func registerControllers(mgr manager.Manager) {
 		setupLog.Error(err, msg, controller, "ManagementContext")
 		os.Exit(1)
 	}
-	if err := (&ingress.Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1.IngressList{}),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, msg, controller, "Ingress")
-		os.Exit(1)
+
+	if env.Config.EnableIngress {
+		if err := (&ingress.Reconciler{
+			Client:   k8s.GetClient(),
+			Scheme:   mgr.GetScheme(),
+			Recorder: mgr.GetEventRecorderFor("ingress-controller"),
+			Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1.IngressList{}),
+		}).SetupWithManager(mgr); err != nil {
+			setupLog.Error(err, msg, controller, "Ingress")
+			os.Exit(1)
+		}
 	}
+
 	if err := (&apiresource.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
@@ -261,6 +265,7 @@ func registerControllers(mgr manager.Manager) {
 		setupLog.Error(err, msg, controller, "ApiResource")
 		os.Exit(1)
 	}
+
 	if err := (&application.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),

@@ -13,29 +13,46 @@
 # limitations under the License.
 
 {{- if .Values.rbac.create }}
-{{- if not .Values.manager.scope.cluster }}
+# if not clusterScope or if clusterScope but with Namespaces
+{{- if or (not .Values.manager.scope.cluster) (and .Values.manager.scope.cluster .Values.manager.scope.namespaces) }}
+{{- $name := include "helm.name" . -}}
+{{- $roleName := include "rbac.RoleName" . -}}
+{{- $clusterRoleName := include "rbac.ClusterRoleName" . -}}
+{{- $serviceAccountName := include "rbac.serviceAccountName" . -}}
+{{- $namespaces := include "manager.Namespaces" . -}}
+{{range $i, $namespace := splitList "," $namespaces }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ template "rbac.RoleBindingName" . }}
-  namespace: '{{ .Release.Namespace }}'
+  name: {{ printf "%s-binding" $roleName }}
+  {{ if (eq $namespaces "\"\"") }}
+  namespace: {{ $.Release.Namespace }}
+  {{ else }}
+  namespace: {{ $namespace }}
+  {{ end }}
   labels:
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/name: {{ template "helm.name" . }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion }}
   annotations:
-    meta.helm.sh/release-name: {{ .Release.Name }}
-    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    meta.helm.sh/release-name: {{ $.Release.Name }}
+    meta.helm.sh/release-namespace: {{ $.Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
+  {{- if or ($.Values.manager.scope.cluster) (gt (len $.Values.manager.scope.namespaces) 1) }}
+  kind: ClusterRole
+  name: {{ $clusterRoleName }}
+  {{ else }}
   kind: Role
-  name: {{ template "rbac.RoleName" . }}
+  name: {{ $roleName }}
+  {{ end }}
 subjects:
   - kind: ServiceAccount
-    name: {{ template "rbac.serviceAccountName" . }}
-    namespace: '{{ .Release.Namespace }}'
+    name: {{ $serviceAccountName }}
+    namespace: '{{ $.Release.Namespace }}'
+{{- end }}
 {{- end }}
 {{- end }}
 

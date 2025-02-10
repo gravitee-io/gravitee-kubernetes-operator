@@ -21,6 +21,7 @@ serviceAccount:
   create: true
   ## @param serviceAccount.name Specifies the service account name to use.
   name: gko-controller-manager
+
 rbac:
   ## @param rbac.create Specifies if RBAC resources should be created.
   create: true
@@ -129,6 +130,9 @@ manager:
 ## ```
 ## @descriptionEnd
 ingress:
+  controller:
+    ## @param ingress.controller.enabled indicates if GKO ingress controller is enabled or not
+    enabled: true
   ## @param ingress.ingressClasses list of ingress classes that the gateway will handle.
   ingressClasses:
     - graviteeio
