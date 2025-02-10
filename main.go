@@ -238,15 +238,19 @@ func registerControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for management contexts")
 		os.Exit(1)
 	}
-	if err := (&ingress.Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("ingress-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1.IngressList{}),
-	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for ingresses")
-		os.Exit(1)
+
+	if env.Config.EnableIngress {
+		if err := (&ingress.Reconciler{
+			Client:   k8s.GetClient(),
+			Scheme:   mgr.GetScheme(),
+			Recorder: mgr.GetEventRecorderFor("ingress-controller"),
+			Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1.IngressList{}),
+		}).SetupWithManager(mgr); err != nil {
+			log.Global.Error(err, "Unable to create controller for ingresses")
+			os.Exit(1)
+		}
 	}
+
 	if err := (&apiresource.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),

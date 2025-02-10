@@ -90,14 +90,6 @@ Create the name of the service account to use
    {{ template "rbac.serviceAccountName" . }}-role
 {{- end }}
 
-
-{{/*
- Create the name of the manager role binding
- */}}
-{{- define "rbac.RoleBindingName" -}}
-   {{ template "rbac.RoleName" . }}-binding
-{{- end }}
-
 {{/*
  Create the name of the manager role for leader election
  */}}

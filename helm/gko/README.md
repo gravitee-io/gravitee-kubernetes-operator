@@ -98,6 +98,7 @@ contentType: application/json
 
 | Name                              | Description                                                                      | Value            |
 | --------------------------------- | -------------------------------------------------------------------------------- | ---------------- |
+| `ingress.controller.enabled`      | indicates if GKO ingress controller is enabled or not                            | `true`           |
 | `ingress.ingressClasses`          | list of ingress classes that the gateway will handle.                            | `["graviteeio"]` |
 | `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`             |
 | `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`             |

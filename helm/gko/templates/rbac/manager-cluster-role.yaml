@@ -33,14 +33,22 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - configmaps
       - secrets
+    verbs:
+      - create
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
     verbs:
       - create
       - delete
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -48,12 +56,8 @@ rules:
     resources:
       - apidefinitions
     verbs:
-      - create
-      - delete
-      - deletecollection
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -68,19 +72,14 @@ rules:
       - apidefinitions/status
     verbs:
       - get
-      - patch
       - update
   - apiGroups:
       - gravitee.io
     resources:
       - apiv4definitions
     verbs:
-      - create
-      - delete
-      - deletecollection
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -95,18 +94,14 @@ rules:
       - apiv4definitions/status
     verbs:
       - get
-      - patch
       - update
   - apiGroups:
       - gravitee.io
     resources:
       - apiresources
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -121,18 +116,14 @@ rules:
       - apiresources/status
     verbs:
       - get
-      - patch
       - update
   - apiGroups:
       - gravitee.io
     resources:
       - managementcontexts
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -147,18 +138,14 @@ rules:
       - managementcontexts/status
     verbs:
       - get
-      - patch
       - update
   - apiGroups:
       - networking.k8s.io
     resources:
       - ingresses
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -166,12 +153,8 @@ rules:
     resources:
       - applications
     verbs:
-      - create
-      - delete
-      - deletecollection
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -186,19 +169,14 @@ rules:
       - applications/status
     verbs:
       - get
-      - patch
       - update
   - apiGroups:
       - gravitee.io
     resources:
       - subscriptions
     verbs:
-      - create
-      - delete
-      - deletecollection
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -220,12 +198,8 @@ rules:
     resources:
       - groups
     verbs:
-      - create
-      - delete
-      - deletecollection
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -240,19 +214,14 @@ rules:
       - groups/status
     verbs:
       - get
-      - patch
       - update
   - apiGroups:
       - gravitee.io
     resources:
       - sharedpolicygroups
     verbs:
-      - create
-      - delete
-      - deletecollection
       - get
       - list
-      - patch
       - update
       - watch
   - apiGroups:
@@ -267,7 +236,6 @@ rules:
       - sharedpolicygroups/status
     verbs:
       - get
-      - patch
       - update
 {{- end }}
 {{- end }}
