@@ -29,6 +29,7 @@ const (
 	NS                                   = "NAMESPACE"
 	ApplyCRDs                            = "APPLY_CRDS"
 	EnableMetrics                        = "ENABLE_METRICS"
+	EnableIngress                        = "ENABLE_INGRESS"
 	EnableWebhook                        = "ENABLE_WEBHOOK"
 	WebhookNS                            = "WEBHOOK_NAMESPACE"
 	WebhookServiceName                   = "WEBHOOK_SERVICE_NAME"
@@ -49,6 +50,7 @@ var Config = struct {
 	NS                                   string
 	ApplyCRDs                            bool
 	EnableMetrics                        bool
+	EnableIngress                        bool
 	EnableWebhook                        bool
 	WebhookNS                            string
 	WebhookService                       string
@@ -72,6 +74,7 @@ func init() {
 	Config.HTTPClientInsecureSkipVerify = os.Getenv(HttpCLientInsecureSkipCertVerify) == TrueString
 	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
+	Config.EnableIngress = os.Getenv(EnableIngress) == TrueString
 	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
 	Config.WebhookNS = os.Getenv(WebhookNS)
 	Config.WebhookService = os.Getenv(WebhookServiceName)
