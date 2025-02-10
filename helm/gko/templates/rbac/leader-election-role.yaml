@@ -29,18 +29,6 @@ metadata:
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
       - coordination.k8s.io
     resources:
       - leases
