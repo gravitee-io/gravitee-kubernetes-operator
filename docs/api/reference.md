@@ -5707,6 +5707,13 @@ API Analytics (Not applicable for Native API)
           Analytics Sampling<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecanalyticstracing">tracing</a></b></td>
+        <td>object</td>
+        <td>
+          Analytics Tracing<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -5929,6 +5936,40 @@ Analytics Sampling
           Sampling Value<br/>
         </td>
         <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.analytics.tracing
+[Go to parent definition](#apiv4definitionspecanalytics)
+
+
+
+Analytics Tracing
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
+        <td>boolean</td>
+        <td>
+          Specify if Tracing is Enabled or not<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>verbose</b></td>
+        <td>boolean</td>
+        <td>
+          Specify if Tracing is Verbose or not<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
