@@ -85,7 +85,6 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
-//nolint:funlen // refactored in 4.6
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
@@ -191,11 +190,13 @@ func main() {
 
 func buildCacheOptions(ns string) cache.Options {
 	if ns == "" {
+		setupLog.Info("Listening to all namespaces")
 		return cache.Options{}
 	}
 	defaultNamespaces := map[string]cache.Config{}
 	configNamespaces := strings.Split(env.Config.NS, ",")
 	for _, ns := range configNamespaces {
+		setupLog.Info("Listening to namespace " + ns)
 		defaultNamespaces[ns] = cache.Config{}
 	}
 	return cache.Options{
