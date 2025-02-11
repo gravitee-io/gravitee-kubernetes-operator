@@ -32,6 +32,10 @@ func Delete(
 		return nil
 	}
 
+	if err := search.AssertNoContextRef(ctx, instance); err != nil {
+		return err
+	}
+
 	if instance.HasSecretRef() {
 		secret := &v1.Secret{}
 
@@ -40,7 +44,7 @@ func Delete(
 			return err
 		}
 
-		isRef, err := isReferenced(ctx, *instance.Spec.Auth.SecretRef)
+		isRef, err := hasMoreReferences(ctx, *instance.Spec.Auth.SecretRef)
 		if err != nil {
 			return err
 		}
@@ -54,5 +58,5 @@ func Delete(
 		}
 	}
 
-	return search.AssertNoContextRef(ctx, instance)
+	return nil
 }
