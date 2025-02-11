@@ -107,6 +107,9 @@ type Analytics struct {
 
 	// Analytics Logging
 	Logging *Logging `json:"logging,omitempty"`
+
+	// Analytics Tracing
+	Tracing *Tracing `json:"tracing,omitempty"`
 }
 
 func NewAnalytics() *Analytics {
@@ -130,4 +133,12 @@ type Sampling struct {
 
 	// Sampling Value
 	Value string `json:"value"`
+}
+
+type Tracing struct {
+	// Specify if Tracing is Enabled or not
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// Specify if Tracing is Verbose or not
+	Verbose *bool `json:"verbose,omitempty"`
 }
