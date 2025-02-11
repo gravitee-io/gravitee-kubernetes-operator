@@ -21,7 +21,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -35,7 +34,10 @@ func getSecretRef(instance *v1alpha1.ManagementContext) types.NamespacedName {
 	return nsn
 }
 
-func isReferenced(ctx context.Context, ref refs.NamespacedName) (bool, error) {
+func hasMoreReferences(
+	ctx context.Context,
+	ref refs.NamespacedName,
+) (bool, error) {
 	list := new(v1alpha1.ManagementContextList)
 	if err := search.FindByFieldReferencing(
 		ctx,
@@ -46,14 +48,15 @@ func isReferenced(ctx context.Context, ref refs.NamespacedName) (bool, error) {
 		return false, err
 	}
 
-	items, err := meta.ExtractList(list)
-	if err != nil {
-		return false, err
+	refs := make(map[string]struct{})
+
+	for _, item := range list.Items {
+		refs[item.GetNamespacedName().String()] = struct{}{}
 	}
 
 	ref.Namespace = ""
 
-	if err = search.FindByFieldReferencing(
+	if err := search.FindByFieldReferencing(
 		ctx,
 		indexer.SecretRefField,
 		ref,
@@ -62,12 +65,9 @@ func isReferenced(ctx context.Context, ref refs.NamespacedName) (bool, error) {
 		return false, err
 	}
 
-	currentNSItems, err := meta.ExtractList(list)
-	if err != nil {
-		return false, err
+	for _, item := range list.Items {
+		refs[item.GetNamespacedName().String()] = struct{}{}
 	}
 
-	items = append(items, currentNSItems...)
-
-	return len(items) > 0, nil
+	return len(refs) > 1, nil
 }
