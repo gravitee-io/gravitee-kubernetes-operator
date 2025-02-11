@@ -187,11 +187,13 @@ func main() {
 
 func buildCacheOptions(ns string) cache.Options {
 	if ns == "" {
+		log.Global.Info("Listening to all namespaces")
 		return cache.Options{}
 	}
 	defaultNamespaces := map[string]cache.Config{}
 	configNamespaces := strings.Split(env.Config.NS, ",")
 	for _, ns := range configNamespaces {
+		log.Global.Infof("Listening to namespace %s", ns)
 		defaultNamespaces[ns] = cache.Config{}
 	}
 	return cache.Options{
