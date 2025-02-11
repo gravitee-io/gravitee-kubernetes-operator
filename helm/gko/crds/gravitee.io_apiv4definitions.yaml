@@ -165,6 +165,16 @@ spec:
                     - type
                     - value
                     type: object
+                  tracing:
+                    description: Analytics Tracing
+                    properties:
+                      enabled:
+                        description: Specify if Tracing is Enabled or not
+                        type: boolean
+                      verbose:
+                        description: Specify if Tracing is Verbose or not
+                        type: boolean
+                    type: object
                 required:
                 - enabled
                 type: object
