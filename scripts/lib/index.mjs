@@ -99,11 +99,14 @@ const chartsRepo = "gravitee-io/helm-charts";
 // The release branch for gravitee.io official helm charts repository
 const releaseBranch = "gh-pages";
 
+const releaseVersionAnnotation = "gravitee.io/operator.version";
+
 export const HELM = {
   chartDir,
   crdDir,
   chartsRepo,
   releaseBranch,
+  releaseVersionAnnotation,
 };
 
 const docsRepo = "gravitee-io/gravitee-platform-docs";
