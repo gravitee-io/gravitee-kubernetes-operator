@@ -6,7 +6,7 @@ build: generate ## Build manager binary.
 
 .PHONY: manifests
 manifests: controller-gen ## Generate CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=helm/gko/crds
+	$(CONTROLLER_GEN) crd:allowDangerousTypes=true paths="./api/..." output:crd:artifacts:config=helm/gko/crds/gravitee.io
 	@npx zx scripts/annotate-crds.mjs
 	$(MAKE) add-license
 
