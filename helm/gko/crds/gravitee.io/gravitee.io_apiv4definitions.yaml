@@ -16,7 +16,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
     gravitee.io/operator.version: 0.13.1
   name: apiv4definitions.gravitee.io
 spec:
@@ -343,6 +343,7 @@ spec:
                           required:
                             - inheritConfiguration
                             - secondary
+                            - type
                           type: object
                         type: array
                       headers:
@@ -1133,18 +1134,17 @@ spec:
                           - PRIVATE
                         type: string
                     required:
+                      - name
                       - type
                     type: object
                   description: >-
                     A map of pages objects.
 
 
-
                     Keys uniquely identify pages and are used to keep them in
                     sync
 
                     with APIM when using a management context.
-
 
 
                     Renaming a key is the equivalent of deleting the page and
