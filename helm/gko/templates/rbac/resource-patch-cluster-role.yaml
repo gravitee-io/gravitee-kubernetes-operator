@@ -46,7 +46,15 @@ rules:
       - subscriptions.gravitee.io
       - sharedpolicygroups.gravitee.io
       - groups.gravitee.io
+<<<<<<< HEAD
       - notification.gravitee.io
+=======
+      - gateways.gateway.networking.k8s.io
+      - gatewayclasses.gateway.networking.k8s.io
+      - grpcroutes.gateway.networking.k8s.io
+      - httproutes.gateway.networking.k8s.io
+      - referencegrants.gateway.networking.k8s.io
+>>>>>>> bf14f36e (feat: add controller for gravitee gateways)
     resources:
       - customresourcedefinitions
     verbs:

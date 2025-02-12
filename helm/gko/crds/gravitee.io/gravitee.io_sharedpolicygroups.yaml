@@ -16,7 +16,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
     gravitee.io/operator.version: 0.13.1
   name: sharedpolicygroups.gravitee.io
 spec:
@@ -46,19 +46,12 @@ spec:
           description: SharedPolicyGroup
           properties:
             apiVersion:
-              description: |-
-                APIVersion defines the versioned schema of this representation of an object.
-                Servers should convert recognized schemas to the latest internal value, and
-                may reject unrecognized values.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              description: APIVersion defines the versioned schema of this representation of
+                an object.
               type: string
             kind:
-              description: |-
-                Kind is a string value representing the REST resource this object represents.
-                Servers may infer this from the endpoint the client submits requests to.
-                Cannot be updated.
-                In CamelCase.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              description: Kind is a string value representing the REST resource this object
+                represents.
               type: string
             metadata:
               type: object
@@ -146,7 +139,7 @@ spec:
               properties:
                 crossId:
                   description: The Cross ID is used to identify an SharedPolicyGroup that has been
-                    promoted from one environment to another.
+                    promoted from one environment...
                   type: string
                 environmentId:
                   description: The environment ID, if a management context has been defined to
@@ -157,29 +150,21 @@ spec:
                     When SharedPolicyGroup has been created regardless of
                     errors, this field is
 
-                    used to persist the error message encountered during
-                    admission
+                    used to persist the...
                   properties:
                     severe:
                       description: >-
                         severe errors do not pass admission and will block
                         reconcile
 
-                        hence, this field should always be during the admission
-                        phase
-
-                        and is very unlikely to be persisted in the status
+                        hence, this field should always be...
                       items:
                         type: string
                       type: array
                     warning:
-                      description: >-
+                      description: |-
                         warning errors do not block object reconciliation,
-
-                        most of the time because the value is ignored or
-                        defaulted
-
-                        when the API gets synced with APIM
+                        most of the time because the value is ignored or...
                       items:
                         type: string
                       type: array
@@ -193,11 +178,7 @@ spec:
                     sync with an APIM instance
                   type: string
                 processingStatus:
-                  description: >-
-                    The processing status of the SharedPolicyGroup.
-
-                    The value is `Completed` if the sync with APIM succeeded,
-                    Failed otherwise.
+                  description: The processing status of the SharedPolicyGroup.
                   type: string
               type: object
           type: object
