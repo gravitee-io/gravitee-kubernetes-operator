@@ -135,6 +135,26 @@ async function setChartVersion() {
   await fs.writeFile(`${HELM.chartDir}/Chart.yaml`, YAML.stringify(chartYaml));
 }
 
+LOG.blue(`
+  ⎈ Annotation CRDs with ${HELM.releaseVersionAnnotation}: ${VERSION} ...
+`);
+
+await time(annotateCRDs);
+
+async function annotateCRDs() {
+  const crdFiles = await fs.readdir(HELM.crdDir);
+  for (const file of crdFiles) {
+    await annotateCRD(file);
+  }
+}
+
+async function annotateCRD(fileName) {
+  const crdFile = await fs.readFile(`${HELM.crdDir}/${fileName}`, "utf8");
+  const crdYaml = await YAML.parse(crdFile);
+  crdYaml.metadata.annotations[HELM.releaseVersionAnnotation] = VERSION;
+  await fs.writeFile(`${HELM.crdDir}/${fileName}`, YAML.stringify(crdYaml));
+}
+
 if (!DRY_RUN) {
   LOG.magenta(`
 🎉 version ${VERSION} has been released !`);
