@@ -402,6 +402,7 @@ jobs:
           command: |
             make add-license > /dev/null
             git add helm/gko/Chart.yaml
+            git add helm/gko/crds
             git commit -m "ci: release version << pipeline.parameters.release-version >> [skip ci]"
             git tag << pipeline.parameters.release-version >>
             echo
