@@ -27,3 +27,4 @@ groups:
       - name: Application
       - name: Subscription
       - name: SharedPolicyGroup
+      - name: Group
