@@ -19,6 +19,7 @@ import (
 	"os"
 
 	policygroups "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/graviteegw"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -138,6 +139,13 @@ func init() {
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("ingress-controller"),
 			Watcher:  watch.New(context.Background(), Client(), &netV1.IngressList{}),
+		}).SetupWithManager(mgr),
+	)
+
+	runtimeUtil.Must(
+		(&graviteegw.Reconciler{
+			Scheme:   mgr.GetScheme(),
+			Recorder: mgr.GetEventRecorderFor("gravitee-gateway-controller"),
 		}).SetupWithManager(mgr),
 	)
 
