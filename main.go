@@ -29,6 +29,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/graviteegw"
 
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
@@ -302,6 +303,16 @@ func registerControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for notification")
 		os.Exit(1)
 	}
+
+	if env.Config.EnableGatewayAPI {
+		if err := (&graviteegw.Reconciler{
+			Scheme:   mgr.GetScheme(),
+			Recorder: mgr.GetEventRecorderFor("gravitee-gateway-controller"),
+		}).SetupWithManager(mgr); err != nil {
+			log.Global.Error(err, "Unable to create controller for gravitee gateway")
+			os.Exit(1)
+		}
+	}
 }
 
 func applyCRDs() error {
@@ -320,6 +331,10 @@ func applyCRDs() error {
 		}
 
 		if d.IsDir() {
+			return nil
+		}
+
+		if strings.Contains(path, "gateway-api") && !env.Config.EnableGatewayAPI {
 			return nil
 		}
 

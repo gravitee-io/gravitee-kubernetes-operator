@@ -16,7 +16,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
     gravitee.io/operator.version: 4.9.0-rc
   name: applications.gravitee.io
 spec:
@@ -42,19 +42,12 @@ spec:
         openAPIV3Schema:
           properties:
             apiVersion:
-              description: |-
-                APIVersion defines the versioned schema of this representation of an object.
-                Servers should convert recognized schemas to the latest internal value, and
-                may reject unrecognized values.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              description: APIVersion defines the versioned schema of this representation of
+                an object.
               type: string
             kind:
-              description: |-
-                Kind is a string value representing the REST resource this object represents.
-                Servers may infer this from the endpoint the client submits requests to.
-                Cannot be updated.
-                In CamelCase.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              description: Kind is a string value representing the REST resource this object
+                represents.
               type: string
             metadata:
               type: object
@@ -151,7 +144,7 @@ spec:
                   type: boolean
                 picture:
                   description: The base64 encoded picture to use for this application when
-                    displaying it on the portal (if not relying on an URL)
+                    displaying it on the portal (if not...
                   type: string
                 pictureUrl:
                   description: A URL pointing to the picture to use when displaying the
@@ -233,29 +226,21 @@ spec:
                     When application has been created regardless of errors, this
                     field is
 
-                    used to persist the error message encountered during
-                    admission
+                    used to persist the error...
                   properties:
                     severe:
                       description: >-
                         severe errors do not pass admission and will block
                         reconcile
 
-                        hence, this field should always be during the admission
-                        phase
-
-                        and is very unlikely to be persisted in the status
+                        hence, this field should always be...
                       items:
                         type: string
                       type: array
                     warning:
-                      description: >-
+                      description: |-
                         warning errors do not block object reconciliation,
-
-                        most of the time because the value is ignored or
-                        defaulted
-
-                        when the API gets synced with APIM
+                        most of the time because the value is ignored or...
                       items:
                         type: string
                       type: array
@@ -269,11 +254,7 @@ spec:
                     sync with an APIM instance
                   type: string
                 processingStatus:
-                  description: >-
-                    The processing status of the Application.
-
-                    The value is `Completed` if the sync with APIM succeeded,
-                    Failed otherwise.
+                  description: The processing status of the Application.
                   type: string
                 subscriptions:
                   description: The number of subscriptions that reference the application

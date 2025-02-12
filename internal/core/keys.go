@@ -52,6 +52,7 @@ const (
 	GroupFinalizer                   = "finalizers.gravitee.io/groups"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
+	GraviteeGatewayFinalizer         = "finalizers.gravitee.io/graviteegateway"
 
 	CloudTokenSecretKey  = "cloudToken"
 	BearerTokenSecretKey = "bearerToken"
