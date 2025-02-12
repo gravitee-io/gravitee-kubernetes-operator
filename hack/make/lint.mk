@@ -23,8 +23,9 @@ lint-licenses: ## Run addlicense linter and fail on error
 	@$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt \
 		-ignore ".circleci/**" \
 		-ignore ".mergify.yml" \
-		-ignore "config/**" \
-		-ignore ".idea/**" .
+		-ignore ".idea/**" \
+		-ignore "helm/gko/crds/kubernetes.io/**" \
+		. 
 
 .PHONY: add-license
 add-license: ## Add license headers to files
@@ -32,8 +33,9 @@ add-license: ## Add license headers to files
 	@$(ADDLICENSE) -f LICENSE_TEMPLATE.txt \
 		-ignore ".circleci/**" \
 		-ignore ".mergify.yml" \
-		-ignore "config/**" \
-		-ignore ".idea/**" .
+		-ignore ".idea/**" \
+		-ignore "helm/gko/crds/kubernetes.io/**" \
+		. 
 
 .PHONY: clean-tools ## Run all linters
 lint: $(ALL_LINT)

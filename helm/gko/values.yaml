@@ -174,6 +174,11 @@ ingress:
       ## @param ingress.templates.404.namespace Namespace of the config map storing the HTTP 404 ingress response template.     
       namespace: ""
 
+gatewayAPI:
+  controller:
+    ## @param gatewayAPI.controller.enabled Set to true to enable experimental gateway api support.
+    enabled: false
+
 ## @section HTTP Client
 ## @descriptionStart
 ## 👎 This section is deprecated and will be removed in version 1.0.0 The httpClient property

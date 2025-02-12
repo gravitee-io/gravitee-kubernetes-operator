@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+apiVersion: gravitee.io/v1alpha1
+kind: GraviteeGateway
 metadata:
-  title: "Gravitee Kubernetes Operator"
-  weight: 1
-  description: "API Reference"
-groups:
-  - group: gravitee.io
-    version: v1alpha1
-    kinds:
-      - name: ManagementContext
-      - name: ApiDefinition
-      - name: ApiV4Definition
-      - name: ApiResource
-      - name: Application
-      - name: Subscription
-      - name: SharedPolicyGroup
-      - name: Notification
-      - name: Group
-      - name: GraviteeGateway
+  name: gravitee-gateway
+spec:
+  listeners:
+    - name: http
+      port: 8083
+      protocol: HTTP
+  gravitee:
+    dbLess: true
+  kubernetes:
+    deployment:
+      replicas: 2
+    service:
+      type: NodePort
