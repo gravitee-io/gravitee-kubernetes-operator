@@ -54,6 +54,10 @@ Resources
         <tr>
             <td><a href="#sharedpolicygroup">SharedPolicyGroup</a></td>
             <td>SharedPolicyGroup</td>
+        </tr>
+        <tr>
+            <td><a href="#group">Group</a></td>
+            <td></td>
         </tr></tbody>
 </table>
 
@@ -9846,6 +9850,287 @@ The value is `Completed` if the sync with APIM succeeded, Failed otherwise.<br/>
 
 
 When SharedPolicyGroup has been created regardless of errors, this field is
+used to persist the error message encountered during admission
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>severe</b></td>
+        <td>[]string</td>
+        <td>
+          severe errors do not pass admission and will block reconcile
+hence, this field should always be during the admission phase
+and is very unlikely to be persisted in the status<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>warning</b></td>
+        <td>[]string</td>
+        <td>
+          warning errors do not block object reconciliation,
+most of the time because the value is ignored or defaulted
+when the API gets synced with APIM<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Group
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#groupspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#groupstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Group.spec
+[Go to parent definition](#group)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#groupspecmembersindex">members</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#groupspeccontextref">contextRef</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>notifyMembers</b></td>
+        <td>boolean</td>
+        <td>
+          If true, new members added to the API spec will
+be notified when the API is synced with APIM.<br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Group.spec.members[index]
+[Go to parent definition](#groupspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>source</b></td>
+        <td>string</td>
+        <td>
+          Member source<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>sourceId</b></td>
+        <td>string</td>
+        <td>
+          Member source ID<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>roles</b></td>
+        <td>map[string]string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: map[]<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Group.spec.contextRef
+[Go to parent definition](#groupspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Group.status
+[Go to parent definition](#group)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>members</b></td>
+        <td>integer</td>
+        <td>
+          The number of members added to this group<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>environmentId</b></td>
+        <td>string</td>
+        <td>
+          The environment ID defined in the management context<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#groupstatuserrors">errors</a></b></td>
+        <td>object</td>
+        <td>
+          When group has been created regardless of errors, this field is
+used to persist the error message encountered during admission<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>id</b></td>
+        <td>string</td>
+        <td>
+          The ID of the Group in the Gravitee API Management instance<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>organizationId</b></td>
+        <td>string</td>
+        <td>
+          The organization ID defined in the management context<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>processingStatus</b></td>
+        <td>string</td>
+        <td>
+          The processing status of the Group.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Group.status.errors
+[Go to parent definition](#groupstatus)
+
+
+
+When group has been created regardless of errors, this field is
 used to persist the error message encountered during admission
 
 <table>
