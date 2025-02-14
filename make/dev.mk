@@ -24,6 +24,10 @@ endif
 install: ## Install CRDss into the current cluster
 	@kubectl apply -f helm/gko/crds/gravitee.io
 
+.PHONY: install-std-gateway-api
+install-gateway-api: ## Install CRDss into the current cluster
+	@kubectl apply -f helm/gko/crds/kubernetes.io/gateway-api/standard
+
 .PHONY: uninstall
 uninstall: ## Uninstall CRDs from the current cluster
 	@kubectl delete -f helm/gko/crds/gravitee.io
