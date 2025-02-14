@@ -309,6 +309,10 @@ func applyCRDs() error {
 			return nil
 		}
 
+		if strings.Contains(path, "gateway-api") && !env.Config.EnableGatewayAPI {
+			return nil
+		}
+
 		b, err := fs.ReadFile(helm, path)
 		if err != nil {
 			return err
