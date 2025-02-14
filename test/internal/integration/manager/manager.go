@@ -19,7 +19,6 @@ import (
 	"io"
 	"os"
 
-	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -49,6 +48,7 @@ import (
 	runtimeUtil "k8s.io/apimachinery/pkg/util/runtime"
 	clientScheme "k8s.io/client-go/kubernetes/scheme"
 
+	coreV1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
 )
 
@@ -90,6 +90,13 @@ func init() {
 		Metrics:                metrics.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress: probeAddr,
 		Cache:                  cache.Options{},
+		Client: client.Options{
+			Cache: &client.CacheOptions{
+				DisableFor: []client.Object{
+					&coreV1.Secret{},
+				},
+			},
+		},
 	})
 
 	runtimeUtil.Must(err)
@@ -105,10 +112,10 @@ func init() {
 	runtimeUtil.Must(
 		mgr.GetFieldIndexer().IndexField(
 			ctx,
-			&v1.Event{},
+			&coreV1.Event{},
 			"involvedObject.name",
 			func(rawObj client.Object) []string {
-				event, _ := rawObj.(*v1.Event)
+				event, _ := rawObj.(*coreV1.Event)
 				return []string{event.InvolvedObject.Name}
 			},
 		),
