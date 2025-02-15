@@ -15,6 +15,11 @@
 package k8s
 
 import (
+	"context"
+	"fmt"
+
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -26,4 +31,48 @@ func RegisterClient(c client.Client) {
 
 func GetClient() client.Client {
 	return cli
+}
+
+func GetLatest[T client.Object](ctx context.Context, obj T) error {
+	key := types.NamespacedName{
+		Namespace: obj.GetNamespace(),
+		Name:      obj.GetName(),
+	}
+
+	if err := GetClient().Get(ctx, key, obj); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Delete[T client.Object](ctx context.Context, obj T) error {
+	err := GetLatest(ctx, obj)
+	if err != nil {
+		return err
+	}
+	return GetClient().Delete(ctx, obj)
+}
+
+func UpdateSafely[T client.Object](ctx context.Context, objNew T) error {
+	key := types.NamespacedName{
+		Namespace: objNew.GetNamespace(),
+		Name:      objNew.GetName(),
+	}
+
+	objLast, ok := objNew.DeepCopyObject().(T)
+	if !ok {
+		return fmt.Errorf("failed to copy object %v", objNew)
+	}
+
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		if err := GetClient().Get(ctx, key, objLast); err != nil {
+			return err
+		}
+
+		objNew.SetResourceVersion(objLast.GetResourceVersion())
+		objNew.SetGeneration(objLast.GetGeneration())
+
+		return GetClient().Update(ctx, objNew)
+	})
 }

@@ -174,7 +174,7 @@ func addFinalizer(ctx context.Context, obj client.Object) error {
 
 		util.AddFinalizer(object, core.TemplatingFinalizer)
 
-		return cli.Update(ctx, object)
+		return k8s.UpdateSafely(ctx, object)
 	}
 
 	return nil
