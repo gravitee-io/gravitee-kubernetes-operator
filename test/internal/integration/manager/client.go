@@ -16,11 +16,8 @@ package manager
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,45 +26,13 @@ func Client() client.Client {
 }
 
 func GetLatest[T client.Object](ctx context.Context, obj T) error {
-	key := types.NamespacedName{
-		Namespace: obj.GetNamespace(),
-		Name:      obj.GetName(),
-	}
-
-	if err := Client().Get(ctx, key, obj); err != nil {
-		return err
-	}
-
-	return nil
+	return k8s.GetLatest(ctx, obj)
 }
 
 func Delete[T client.Object](ctx context.Context, obj T) error {
-	err := GetLatest(ctx, obj)
-	if err != nil {
-		return err
-	}
-	return Client().Delete(ctx, obj)
+	return k8s.Delete(ctx, obj)
 }
 
 func UpdateSafely[T client.Object](ctx context.Context, objNew T) error {
-	key := types.NamespacedName{
-		Namespace: objNew.GetNamespace(),
-		Name:      objNew.GetName(),
-	}
-
-	objLast, ok := objNew.DeepCopyObject().(T)
-	if !ok {
-		return fmt.Errorf("failed to copy object %v", objNew)
-	}
-
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		if err := Client().Get(ctx, key, objLast); err != nil {
-			return err
-		}
-
-		objNew.SetResourceVersion(objLast.GetResourceVersion())
-		objNew.SetGeneration(objLast.GetGeneration())
-
-		return Client().Update(ctx, objNew)
-	})
+	return k8s.UpdateSafely(ctx, objNew)
 }
