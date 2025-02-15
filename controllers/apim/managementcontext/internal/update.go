@@ -38,7 +38,7 @@ func CreateOrUpdate(
 
 		if !util.ContainsFinalizer(secret, core.ManagementContextSecretFinalizer) {
 			util.AddFinalizer(secret, core.ManagementContextSecretFinalizer)
-			return k8s.GetClient().Update(ctx, secret)
+			return k8s.UpdateSafely(ctx, secret)
 		}
 	}
 
