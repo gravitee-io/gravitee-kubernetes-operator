@@ -215,7 +215,7 @@ func indexIApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 }
 
 func indexApiV4FlowsSharedPolicyGroupsRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
-	for _, sharedPolicyGroup := range api.GetAllSharedPolicyGroups() {
+	for _, sharedPolicyGroup := range api.Spec.GetAllSharedPolicyGroups() {
 		*fields = append(*fields, ensureNamespacedRef(api, sharedPolicyGroup))
 	}
 }
