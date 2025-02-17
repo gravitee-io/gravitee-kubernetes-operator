@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
@@ -330,4 +332,62 @@ func parseListener(l Listener) []string {
 	}
 
 	return []string{}
+}
+
+func (api *Api) GetAllSharedPolicyGroups() []*refs.NamespacedName {
+	var results []*refs.NamespacedName
+
+	if api.Flows != nil {
+		results = append(results, getFLowSharedPolicyGroupsReferences(api.Flows)...)
+	}
+
+	if api.Plans != nil {
+		for _, plan := range *api.Plans {
+			if plan.Flows != nil {
+				results = append(results, getFLowSharedPolicyGroupsReferences(plan.Flows)...)
+			}
+		}
+	}
+
+	return results
+}
+
+//nolint:gocognit // acceptable complexity
+func getFLowSharedPolicyGroupsReferences(flows []*Flow) []*refs.NamespacedName {
+	var results []*refs.NamespacedName
+
+	for _, flow := range flows {
+		for _, flowStep := range flow.Request {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Response {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Connect {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Interact {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Publish {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+		for _, flowStep := range flow.Subscribe {
+			if flowStep.SharedPolicyGroup != nil {
+				results = append(results, flowStep.SharedPolicyGroup)
+			}
+		}
+	}
+
+	return results
 }

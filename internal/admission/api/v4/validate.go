@@ -33,7 +33,12 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs = validateFlowsAndEndpoints(api, errs)
+	errs = validateFlowsAndEndpoints(ctx, api, errs)
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs = validateSharedPolicyGroups(ctx, api)
 	if errs.IsSevere() {
 		return errs
 	}
@@ -50,7 +55,8 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	return errs
 }
 
-func validateFlowsAndEndpoints(api core.ApiDefinitionObject, errs *errors.AdmissionErrors) *errors.AdmissionErrors {
+func validateFlowsAndEndpoints(_ context.Context, api core.ApiDefinitionObject,
+	errs *errors.AdmissionErrors) *errors.AdmissionErrors {
 	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
 	impl, ok := cp.GetDefinition().(*v4.Api)
 	if !ok {
