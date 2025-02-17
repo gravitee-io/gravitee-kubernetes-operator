@@ -7,8 +7,8 @@ build: generate ## Build manager binary.
 .PHONY: manifests
 manifests: controller-gen ## Generate CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=helm/gko/crds
-	$(MAKE) add-license
 	@npx zx scripts/annotate-crds.mjs
+	$(MAKE) add-license
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
