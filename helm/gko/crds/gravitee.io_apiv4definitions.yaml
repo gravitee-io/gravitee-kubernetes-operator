@@ -1,17 +1,3 @@
-# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -49,18 +35,27 @@ spec:
           description: ApiV4Definition is the Schema for the v4 apidefinitions API.
           properties:
             apiVersion:
-              description: |-
-                APIVersion defines the versioned schema of this representation of an object.
+              description: >-
+                APIVersion defines the versioned schema of this representation of
+                an object.
+
                 Servers should convert recognized schemas to the latest internal value, and
+
                 may reject unrecognized values.
+
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
               type: string
             kind:
-              description: |-
-                Kind is a string value representing the REST resource this object represents.
+              description: >-
+                Kind is a string value representing the REST resource this object
+                represents.
+
                 Servers may infer this from the endpoint the client submits requests to.
+
                 Cannot be updated.
+
                 In CamelCase.
+
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
               type: string
             metadata:
@@ -114,16 +109,13 @@ spec:
                           type: string
                         mode:
                           description: >-
-                            The logging mode defines which "hop" of the request
-                            roundtrip
+                            The logging mode defines which "hop" of the request roundtrip
 
                             should be included in the log payload.
 
-                            This can be either the inbound request to the
-                            gateway,
+                            This can be either the inbound request to the gateway,
 
-                            the request issued by the gateway to the upstream
-                            service, or both.
+                            the request issued by the gateway to the upstream service, or both.
                           properties:
                             endpoint:
                               description: If true, the request to the upstream service will be included in
@@ -143,8 +135,7 @@ spec:
 
                             should be included in the log payload.
 
-                            This can be either the request phase, the response
-                            phase, or both.
+                            This can be either the request phase, the response phase, or both.
                           properties:
                             request:
                               description: Should the request phase of the request roundtrip be included in
@@ -189,8 +180,7 @@ spec:
                   description: >-
                     The list of categories the API belongs to.
 
-                    Categories are reflected in APIM portal so that consumers
-                    can easily find the APIs they need.
+                    Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
                   items:
                     type: string
                   type: array
@@ -207,60 +197,49 @@ spec:
                   description: >-
                     When promoting an API from one environment to the other,
 
-                    this ID identifies the API across those different
-                    environments.
+                    this ID identifies the API across those different environments.
 
-                    Setting this ID also allows to take control over an existing
-                    API on an APIM instance
+                    Setting this ID also allows to take control over an existing API on an APIM instance
 
                     (by setting the same value as defined in APIM).
 
-                    If empty, a UUID will be generated based on the namespace
-                    and name of the resource.
+                    If empty, a UUID will be generated based on the namespace and name of the resource.
                   type: string
                 definitionContext:
                   description: >-
-                    The API Definition context is used to identify the
-                    Kubernetes origin of the API,
+                    The API Definition context is used to identify the Kubernetes
+                    origin of the API,
 
                     and define whether the API definition should be synchronized
 
-                    from an API instance or from a config map created in the
-                    cluster (which is the default)
+                    from an API instance or from a config map created in the cluster (which is the default)
                   properties:
                     origin:
                       default: KUBERNETES
                       description: >-
-                        The definition context origin where the API definition
-                        is managed.
+                        The definition context origin where the API definition is managed.
 
-                        The value is always `KUBERNETES` for an API managed by
-                        the operator.
+                        The value is always `KUBERNETES` for an API managed by the operator.
                       enum:
                         - KUBERNETES
                       type: string
                     syncFrom:
                       default: KUBERNETES
                       description: >-
-                        The syncFrom field defines where the gateways should
-                        source the API definition from.
+                        The syncFrom field defines where the gateways should source the API
+                        definition from.
 
-                        If the value is `MANAGEMENT`, the API definition will be
-                        sourced from an APIM instance.
+                        If the value is `MANAGEMENT`, the API definition will be sourced from an APIM instance.
 
-                        This means that the API definition *must* hold a context
-                        reference in that case.
+                        This means that the API definition *must* hold a context reference in that case.
 
-                        Setting the value to `MANAGEMENT` allows to make an API
-                        definition available on
+                        Setting the value to `MANAGEMENT` allows to make an API definition available on
 
                         gateways deployed across multiple clusters / regions.
 
-                        If the value is `KUBERNETES`, the API definition will be
-                        sourced from a config map.
+                        If the value is `KUBERNETES`, the API definition will be sourced from a config map.
 
-                        This means that only gateways deployed in the same
-                        cluster will be able to sync the API definition.
+                        This means that only gateways deployed in the same cluster will be able to sync the API definition.
                       enum:
                         - KUBERNETES
                         - MANAGEMENT
@@ -490,8 +469,8 @@ spec:
                                 type: string
                               keyContent:
                                 description: >-
-                                  The base64 encoded trustStore content, if not
-                                  relying on a path to a file
+                                  The base64 encoded trustStore content, if not relying on a path to
+                                  a file
 
                                   (Only applicable for PEM KeyStore)
                                 type: string
@@ -563,8 +542,7 @@ spec:
                         type: boolean
                       id:
                         description: >-
-                          The ID of the flow this field is mainly used for
-                          compatibility with
+                          The ID of the flow this field is mainly used for compatibility with
 
                           APIM exports and can be safely ignored.
                         type: string
@@ -825,11 +803,9 @@ spec:
                         type: string
                       crossId:
                         description: >-
-                          CrossID is designed to identified a page across
-                          environments.
+                          CrossID is designed to identified a page across environments.
 
-                          If not set, this ID will be generated in a predictable
-                          manner based on
+                          If not set, this ID will be generated in a predictable manner based on
 
                           the map key associated to this entry in the API.
                         type: string
@@ -840,24 +816,20 @@ spec:
                         type: boolean
                       id:
                         description: >-
-                          The ID of the page. This field is mostly required when
-                          you are applying
+                          The ID of the page. This field is mostly required when you are
+                          applying
 
-                          an API exported from APIM to make the operator take
-                          control over it.
+                          an API exported from APIM to make the operator take control over it.
 
-                          If not set, this ID will be generated in a predictable
-                          manner based on
+                          If not set, this ID will be generated in a predictable manner based on
 
                           the map key associated to this entry in the API.
                         type: string
                       name:
                         description: >-
-                          This is the display name of the page in APIM and on
-                          the portal.
+                          This is the display name of the page in APIM and on the portal.
 
-                          This field can be edited safely if you want to rename
-                          a page.
+                          This field can be edited safely if you want to rename a page.
                         type: string
                       order:
                         description: The order used to display the page in APIM and on the portal.
@@ -865,19 +837,17 @@ spec:
                         type: integer
                       parent:
                         description: >-
-                          If your page contains a folder, setting this field to
-                          the map key associated to the
+                          If your page contains a folder, setting this field to the map key
+                          associated to the
 
-                          folder entry will be reflected into APIM by making the
-                          page a child of this folder.
+                          folder entry will be reflected into APIM by making the page a child of this folder.
                         type: string
                       parentId:
                         description: >-
-                          The parent ID of the page. This field is mostly
-                          required when you are applying
+                          The parent ID of the page. This field is mostly required when you
+                          are applying
 
-                          an API exported from APIM to make the operator take
-                          control over it. Use `Parent`
+                          an API exported from APIM to make the operator take control over it. Use `Parent`
 
                           in any other case.
                         type: string
@@ -888,8 +858,8 @@ spec:
                         type: boolean
                       source:
                         description: >-
-                          Source allow you to fetch pages from various external
-                          sources, overriding page content
+                          Source allow you to fetch pages from various external sources,
+                          overriding page content
 
                           each time the source is fetched.
                         properties:
@@ -928,15 +898,13 @@ spec:
 
 
 
-                    Keys uniquely identify pages and are used to keep them in
-                    sync
+                    Keys uniquely identify pages and are used to keep them in sync
 
                     with APIM when using a management context.
 
 
 
-                    Renaming a key is the equivalent of deleting the page and
-                    recreating
+                    Renaming a key is the equivalent of deleting the page and recreating
 
                     it holding a new ID in APIM.
                   type: object
@@ -955,8 +923,7 @@ spec:
                         description: >-
                           The plan Cross ID.
 
-                          This field is used to identify plans defined for an
-                          API
+                          This field is used to identify plans defined for an API
 
                           that has been promoted between different environments.
                         type: string
@@ -982,8 +949,7 @@ spec:
                               type: boolean
                             id:
                               description: >-
-                                The ID of the flow this field is mainly used for
-                                compatibility with
+                                The ID of the flow this field is mainly used for compatibility with
 
                                 APIM exports and can be safely ignored.
                               type: string
@@ -1148,11 +1114,9 @@ spec:
                         type: string
                       name:
                         description: >-
-                          Plan display name, this will be the name displayed in
-                          the UI
+                          Plan display name, this will be the name displayed in the UI
 
-                          if a management context is used to sync the API with
-                          APIM
+                          if a management context is used to sync the API with APIM
                         type: string
                       order:
                         description: Plan order
@@ -1206,8 +1170,7 @@ spec:
                   description: >-
                     A map of plan identifiers to plan
 
-                    Keys uniquely identify plans and are used to keep them in
-                    sync
+                    Keys uniquely identify plans and are used to keep them in sync
 
                     when using a management context.
                   type: object
@@ -1231,11 +1194,9 @@ spec:
                   type: array
                 resources:
                   description: >-
-                    Resources can be either inlined or reference the namespace
-                    and name
+                    Resources can be either inlined or reference the namespace and name
 
-                    of an <a href="#apiresource">existing API resource
-                    definition</a>.
+                    of an <a href="#apiresource">existing API resource definition</a>.
                   items:
                     properties:
                       configuration:
@@ -1353,19 +1314,15 @@ spec:
                   type: string
                 errors:
                   description: >-
-                    When API has been created regardless of errors, this field
-                    is
+                    When API has been created regardless of errors, this field is
 
-                    used to persist the error message encountered during
-                    admission
+                    used to persist the error message encountered during admission
                   properties:
                     severe:
                       description: >-
-                        severe errors do not pass admission and will block
-                        reconcile
+                        severe errors do not pass admission and will block reconcile
 
-                        hence, this field should always be during the admission
-                        phase
+                        hence, this field should always be during the admission phase
 
                         and is very unlikely to be persisted in the status
                       items:
@@ -1375,8 +1332,7 @@ spec:
                       description: >-
                         warning errors do not block object reconciliation,
 
-                        most of the time because the value is ignored or
-                        defaulted
+                        most of the time because the value is ignored or defaulted
 
                         when the API gets synced with APIM
                       items:
@@ -1398,8 +1354,7 @@ spec:
                     This field is used to store the list of plans that have been
                     created
 
-                    for the API definition if a management context has been
-                    defined
+                    for the API definition if a management context has been defined
 
                     to sync the API with an APIM instance
                   type: object
