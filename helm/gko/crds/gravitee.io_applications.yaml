@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
+    gravitee.io/operator.version: 4.3.24
   name: applications.gravitee.io
 spec:
   group: gravitee.io
@@ -26,228 +26,226 @@ spec:
     listKind: ApplicationList
     plural: applications
     shortNames:
-    - graviteeapplications
+      - graviteeapplications
     singular: application
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .spec.name
-      name: Name
-      type: string
-    - jsonPath: .spec.applicationType
-      name: Type
-      type: string
-    name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        properties:
-          apiVersion:
-            description: |-
-              APIVersion defines the versioned schema of this representation of an object.
-              Servers should convert recognized schemas to the latest internal value, and
-              may reject unrecognized values.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-            type: string
-          kind:
-            description: |-
-              Kind is a string value representing the REST resource this object represents.
-              Servers may infer this from the endpoint the client submits requests to.
-              Cannot be updated.
-              In CamelCase.
-              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: Application is the main resource handled by the Kubernetes
-              Operator
-            properties:
-              app_key_mode:
-                description: The API key mode to use. If shared, the application will
-                  reuse the same API key across various subscriptions.
-                enum:
-                - SHARED
-                - EXCLUSIVE
-                - UNSPECIFIED
-                type: string
-              applicationMetaData:
-                description: Application meta data
-                items:
+    - additionalPrinterColumns:
+        - jsonPath: .spec.name
+          name: Name
+          type: string
+        - jsonPath: .spec.applicationType
+          name: Type
+          type: string
+      name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: Application is the main resource handled by the Kubernetes Operator
+              properties:
+                app_key_mode:
+                  description: The API key mode to use. If shared, the application will reuse the
+                    same API key across various subscriptions.
+                  enum:
+                    - SHARED
+                    - EXCLUSIVE
+                    - UNSPECIFIED
+                  type: string
+                applicationMetaData:
+                  description: Application meta data
+                  items:
+                    properties:
+                      applicationId:
+                        description: Meta data ApplicationId
+                        type: string
+                      defaultValue:
+                        description: Meta data DefaultValue
+                        type: string
+                      format:
+                        description: Meta data Format
+                        enum:
+                          - STRING
+                          - NUMERIC
+                          - BOOLEAN
+                          - DATE
+                          - MAIL
+                          - URL
+                        type: string
+                      hidden:
+                        description: Meta data is hidden or not?
+                        type: boolean
+                      key:
+                        description: Meta data Key
+                        type: string
+                      name:
+                        description: Meta data Name
+                        type: string
+                      value:
+                        description: Meta data Value
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  type: array
+                background:
+                  description: The base64 encoded background to use for this application when
+                    displaying it on the portal
+                  type: string
+                clientId:
+                  description: The ClientId identifying the application. This field is required
+                    when subscribing to an OAUTH2 / JWT plan.
+                  type: string
+                contextRef:
                   properties:
-                    applicationId:
-                      description: Meta data ApplicationId
-                      type: string
-                    defaultValue:
-                      description: Meta data DefaultValue
-                      type: string
-                    format:
-                      description: Meta data Format
-                      enum:
-                      - STRING
-                      - NUMERIC
-                      - BOOLEAN
-                      - DATE
-                      - MAIL
-                      - URL
-                      type: string
-                    hidden:
-                      description: Meta data is hidden or not?
-                      type: boolean
-                    key:
-                      description: Meta data Key
-                      type: string
                     name:
-                      description: Meta data Name
                       type: string
-                    value:
-                      description: Meta data Value
+                    namespace:
                       type: string
                   required:
-                  - name
+                    - name
                   type: object
-                type: array
-              background:
-                description: The base64 encoded background to use for this application
-                  when displaying it on the portal
-                type: string
-              clientId:
-                description: The ClientId identifying the application. This field
-                  is required when subscribing to an OAUTH2 / JWT plan.
-                type: string
-              contextRef:
-                properties:
-                  name:
+                description:
+                  description: Application Description
+                  type: string
+                disable_membership_notifications:
+                  description: Should members get notified when they are added to the application
+                    ?
+                  type: boolean
+                domain:
+                  description: Application domain
+                  type: string
+                groups:
+                  description: Application groups
+                  items:
                     type: string
-                  namespace:
+                  type: array
+                id:
+                  description: |-
+                    io.gravitee.definition.model.Application
+                    Application ID
+                  type: string
+                metadata:
+                  description: Application Metadata, a map of arbitrary key-values
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                name:
+                  description: Application name
+                  type: string
+                origin:
+                  description: The origin which is used to create this Application
+                  enum:
+                    - kubernetes
+                  type: string
+                picture:
+                  description: The base64 encoded picture to use for this application when
+                    displaying it on the portal (if not relying on an URL)
+                  type: string
+                picture_url:
+                  description: An URL pointing to the picture to use when displaying the
+                    application on the portal
+                  type: string
+                redirectUris:
+                  description: List of application Redirect Uris
+                  items:
                     type: string
-                required:
+                  type: array
+                settings:
+                  description: Application settings
+                  properties:
+                    app:
+                      properties:
+                        client_id:
+                          description: ClientId is the client id of the application
+                          type: string
+                        type:
+                          description: Application Type
+                          type: string
+                      type: object
+                    oauth:
+                      properties:
+                        application_type:
+                          description: Oauth client application type
+                          type: string
+                        client_id:
+                          description: Oauth client id
+                          type: string
+                        client_secret:
+                          description: Oauth client secret
+                          type: string
+                        client_uri:
+                          description: Oauth client uri
+                          type: string
+                        grant_types:
+                          description: List of Oauth client grant types
+                          items:
+                            type: string
+                          type: array
+                        logo_uri:
+                          description: Oauth client logo uri
+                          type: string
+                        redirect_uris:
+                          description: List of Oauth client redirect uris
+                          items:
+                            type: string
+                          type: array
+                        renew_client_secret_supported:
+                          description: Whether client secret renewing is supported or not
+                          type: boolean
+                        response_types:
+                          description: List of Oauth client response types
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                  type: object
+                type:
+                  description: Application Type
+                  type: string
+              required:
+                - description
                 - name
-                type: object
-              description:
-                description: Application Description
-                type: string
-              disable_membership_notifications:
-                description: Should members get notified when they are added to the
-                  application ?
-                type: boolean
-              domain:
-                description: Application domain
-                type: string
-              groups:
-                description: Application groups
-                items:
+              type: object
+            status:
+              description: ApplicationStatus defines the observed state of Application.
+              properties:
+                environmentId:
                   type: string
-                type: array
-              id:
-                description: |-
-                  io.gravitee.definition.model.Application
-                  Application ID
-                type: string
-              metadata:
-                description: Application Metadata, a map of arbitrary key-values
-                type: object
-                x-kubernetes-preserve-unknown-fields: true
-              name:
-                description: Application name
-                type: string
-              origin:
-                description: The origin which is used to create this Application
-                enum:
-                - kubernetes
-                type: string
-              picture:
-                description: The base64 encoded picture to use for this application
-                  when displaying it on the portal (if not relying on an URL)
-                type: string
-              picture_url:
-                description: An URL pointing to the picture to use when displaying
-                  the application on the portal
-                type: string
-              redirectUris:
-                description: List of application Redirect Uris
-                items:
+                id:
+                  description: The ID of the Application in the Gravitee API Management instance
+                    (if an API context has been configured).
                   type: string
-                type: array
-              settings:
-                description: Application settings
-                properties:
-                  app:
-                    properties:
-                      client_id:
-                        description: ClientId is the client id of the application
-                        type: string
-                      type:
-                        description: Application Type
-                        type: string
-                    type: object
-                  oauth:
-                    properties:
-                      application_type:
-                        description: Oauth client application type
-                        type: string
-                      client_id:
-                        description: Oauth client id
-                        type: string
-                      client_secret:
-                        description: Oauth client secret
-                        type: string
-                      client_uri:
-                        description: Oauth client uri
-                        type: string
-                      grant_types:
-                        description: List of Oauth client grant types
-                        items:
-                          type: string
-                        type: array
-                      logo_uri:
-                        description: Oauth client logo uri
-                        type: string
-                      redirect_uris:
-                        description: List of Oauth client redirect uris
-                        items:
-                          type: string
-                        type: array
-                      renew_client_secret_supported:
-                        description: Whether client secret renewing is supported or
-                          not
-                        type: boolean
-                      response_types:
-                        description: List of Oauth client response types
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                type: object
-              type:
-                description: Application Type
-                type: string
-            required:
-            - description
-            - name
-            type: object
-          status:
-            description: ApplicationStatus defines the observed state of Application.
-            properties:
-              environmentId:
-                type: string
-              id:
-                description: The ID of the Application in the Gravitee API Management
-                  instance (if an API context has been configured).
-                type: string
-              observedGeneration:
-                format: int64
-                type: integer
-              organizationId:
-                type: string
-              processingStatus:
-                description: The processing status of the Application.
-                enum:
-                - Completed
-                - Failed
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
+                observedGeneration:
+                  format: int64
+                  type: integer
+                organizationId:
+                  type: string
+                processingStatus:
+                  description: The processing status of the Application.
+                  enum:
+                    - Completed
+                    - Failed
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
