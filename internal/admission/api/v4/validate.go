@@ -43,6 +43,11 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
+	errs = validateSharedPolicyGroups(ctx, api)
+	if errs.IsSevere() {
+		return errs
+	}
+
 	errs.MergeWith(base.ValidateCreate(ctx, obj))
 	if errs.IsSevere() {
 		return errs
