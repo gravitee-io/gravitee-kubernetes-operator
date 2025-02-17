@@ -107,6 +107,8 @@ export const HELM = {
   chartsRepo,
   releaseBranch,
   releaseVersionAnnotation,
+  getChartVersion,
+  annotateCRDs,
 };
 
 const docsRepo = "gravitee-io/gravitee-platform-docs";
@@ -118,3 +120,23 @@ export const Docs = {
   baseFolder: "docs/gko",
   changelogFolder: "releases-and-changelog/changelog",
 };
+
+async function getChartVersion() {
+  const chartFile = await fs.readFile(`${chartDir}/Chart.yaml`, "utf8");
+  const chartYaml = await YAML.parse(chartFile);
+  return chartYaml.version;
+}
+
+async function annotateCRDs(version) {
+  const fileNames = await fs.readdir(crdDir);
+  for (const fileName of fileNames) {
+    await annotateCRD(fileName, version);
+  }
+}
+
+async function annotateCRD(fileName, version) {
+  const crdFile = await fs.readFile(`${crdDir}/${fileName}`, "utf8");
+  const crdYaml = await YAML.parse(crdFile);
+  crdYaml.metadata.annotations[releaseVersionAnnotation] = version;
+  await fs.writeFile(`${crdDir}/${fileName}`, YAML.stringify(crdYaml));
+}
