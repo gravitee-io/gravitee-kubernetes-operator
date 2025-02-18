@@ -42,27 +42,18 @@ spec:
         openAPIV3Schema:
           properties:
             apiVersion:
-              description: >-
-                APIVersion defines the versioned schema of this representation of
-                an object.
-
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
                 Servers should convert recognized schemas to the latest internal value, and
-
                 may reject unrecognized values.
-
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
               type: string
             kind:
-              description: >-
-                Kind is a string value representing the REST resource this object
-                represents.
-
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
                 Servers may infer this from the endpoint the client submits requests to.
-
                 Cannot be updated.
-
                 In CamelCase.
-
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
               type: string
             metadata:
@@ -212,7 +203,8 @@ spec:
                       type: object
                     tls:
                       description: >-
-                        TLS settings are used to configure client side TLS in order
+                        TLS settings are used to configure client side TLS in
+                        order
 
                         to be able to subscribe to a MTLS plan.
                       properties:
@@ -238,16 +230,19 @@ spec:
                   type: string
                 errors:
                   description: >-
-                    When application has been created regardless of errors, this field
-                    is
+                    When application has been created regardless of errors, this
+                    field is
 
-                    used to persist the error message encountered during admission
+                    used to persist the error message encountered during
+                    admission
                   properties:
                     severe:
                       description: >-
-                        severe errors do not pass admission and will block reconcile
+                        severe errors do not pass admission and will block
+                        reconcile
 
-                        hence, this field should always be during the admission phase
+                        hence, this field should always be during the admission
+                        phase
 
                         and is very unlikely to be persisted in the status
                       items:
@@ -257,7 +252,8 @@ spec:
                       description: >-
                         warning errors do not block object reconciliation,
 
-                        most of the time because the value is ignored or defaulted
+                        most of the time because the value is ignored or
+                        defaulted
 
                         when the API gets synced with APIM
                       items:
@@ -276,7 +272,8 @@ spec:
                   description: >-
                     The processing status of the Application.
 
-                    The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
+                    The value is `Completed` if the sync with APIM succeeded,
+                    Failed otherwise.
                   type: string
                 subscriptions:
                   description: The number of subscriptions that reference the application
