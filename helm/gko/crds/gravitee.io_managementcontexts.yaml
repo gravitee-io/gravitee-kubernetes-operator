@@ -39,27 +39,18 @@ spec:
         openAPIV3Schema:
           properties:
             apiVersion:
-              description: >-
-                APIVersion defines the versioned schema of this representation of
-                an object.
-
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
                 Servers should convert recognized schemas to the latest internal value, and
-
                 may reject unrecognized values.
-
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
               type: string
             kind:
-              description: >-
-                Kind is a string value representing the REST resource this object
-                represents.
-
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
                 Servers may infer this from the endpoint the client submits requests to.
-
                 Cannot be updated.
-
                 In CamelCase.
-
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
               type: string
             metadata:
@@ -70,19 +61,21 @@ spec:
               properties:
                 auth:
                   description: >-
-                    Auth defines the authentication method used to connect to the API
-                    Management.
+                    Auth defines the authentication method used to connect to
+                    the API Management.
 
-                    Can be either basic authentication credentials, a bearer token
+                    Can be either basic authentication credentials, a bearer
+                    token
 
-                    or a reference to a kubernetes secret holding one of these two configurations.
+                    or a reference to a kubernetes secret holding one of these
+                    two configurations.
 
                     This is optional when this context targets Gravitee Cloud.
                   properties:
                     bearerToken:
                       description: >-
-                        The bearer token used to authenticate against the API Management
-                        instance
+                        The bearer token used to authenticate against the API
+                        Management instance
 
                         (must be generated from an admin account)
                       type: string
@@ -97,10 +90,11 @@ spec:
                       type: object
                     secretRef:
                       description: >-
-                        A secret reference holding either a "bearerToken" key for bearer
-                        token authentication
+                        A secret reference holding either a "bearerToken" key
+                        for bearer token authentication
 
-                        or "username" and "password" keys for basic authentication
+                        or "username" and "password" keys for basic
+                        authentication
                       properties:
                         name:
                           type: string
@@ -114,7 +108,8 @@ spec:
                   description: >-
                     The URL of a management API instance.
 
-                    This is optional when this context targets Gravitee Cloud otherwise it is required.
+                    This is optional when this context targets Gravitee Cloud
+                    otherwise it is required.
                   type: string
                 cloud:
                   description: >-
@@ -127,7 +122,8 @@ spec:
 
                     OrgID is extracted from the token,
 
-                    EnvID is defaulted when the token contains exactly one environment.
+                    EnvID is defaulted when the token contains exactly one
+                    environment.
                   properties:
                     secretRef:
                       description: SecretRef secret reference holding the Gravitee cloud token in the
@@ -146,24 +142,26 @@ spec:
                   type: object
                 environmentId:
                   description: >-
-                    An existing environment id targeted by the context within the
-                    organization.
+                    An existing environment id targeted by the context within
+                    the organization.
 
                     This is optional when this context targets Gravitee Cloud
 
-                    and your cloud token contains only one environment ID, otherwise it is required.
+                    and your cloud token contains only one environment ID,
+                    otherwise it is required.
                   type: string
                 organizationId:
                   description: >-
                     An existing organization id targeted by the context on the
                     management API instance.
 
-                    This is optional when this context targets Gravitee Cloud otherwise it is required.
+                    This is optional when this context targets Gravitee Cloud
+                    otherwise it is required.
                   type: string
                 path:
                   description: >-
-                    Allows to override the context path that will be appended to the
-                    baseURL.
+                    Allows to override the context path that will be appended to
+                    the baseURL.
 
                     This can be used when reverse proxying APIM with URL rewrite
                   type: string
