@@ -49,40 +49,27 @@ spec:
           description: ApiDefinition is the Schema for the apidefinitions API.
           properties:
             apiVersion:
-              description: >-
-                APIVersion defines the versioned schema of this representation of
-                an object.
-
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
                 Servers should convert recognized schemas to the latest internal value, and
-
                 may reject unrecognized values.
-
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
               type: string
             kind:
-              description: >-
-                Kind is a string value representing the REST resource this object
-                represents.
-
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
                 Servers may infer this from the endpoint the client submits requests to.
-
                 Cannot be updated.
-
                 In CamelCase.
-
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
               type: string
             metadata:
               type: object
             spec:
-              description: >-
-                The API definition is the main resource handled by the Kubernetes
-                Operator
-
+              description: |-
+                The API definition is the main resource handled by the Kubernetes Operator
                 Most of the configuration properties defined here are already documented
-
                 in the APIM Console API Reference.
-
                 See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
               properties:
                 categories:
@@ -90,7 +77,8 @@ spec:
                   description: >-
                     The list of categories the API belongs to.
 
-                    Categories are reflected in APIM portal so that consumers can easily find the APIs they need.
+                    Categories are reflected in APIM portal so that consumers
+                    can easily find the APIs they need.
                   items:
                     type: string
                   type: array
@@ -109,18 +97,21 @@ spec:
                   description: >-
                     When promoting an API from one environment to the other,
 
-                    this ID identifies the API across those different environments.
+                    this ID identifies the API across those different
+                    environments.
 
-                    Setting this ID also allows to take control over an existing API on an APIM instance
+                    Setting this ID also allows to take control over an existing
+                    API on an APIM instance
 
                     (by setting the same value as defined in APIM).
 
-                    If empty, a UUID will be generated based on the namespace and name of the resource.
+                    If empty, a UUID will be generated based on the namespace
+                    and name of the resource.
                   type: string
                 definition_context:
                   description: >-
-                    The definition context is used to inform a management API instance
-                    that this API definition
+                    The definition context is used to inform a management API
+                    instance that this API definition
 
                     is managed using a kubernetes operator
                   properties:
@@ -291,7 +282,8 @@ spec:
                   description: >-
                     List of group references associated with the API
 
-                    This groups are references to Group custom resources created on the cluster.
+                    This groups are references to Group custom resources created
+                    on the cluster.
                   items:
                     properties:
                       kind:
@@ -309,7 +301,8 @@ spec:
                   description: >-
                     List of groups associated with the API.
 
-                    This groups are id or name references to existing groups in APIM.
+                    This groups are id or name references to existing groups in
+                    APIM.
                   items:
                     type: string
                   type: array
@@ -344,17 +337,21 @@ spec:
 
 
 
-                    If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API
+                    If true, the Operator will create the ConfigMaps for the
+                    Gateway and pushes the API to the Management API
 
                     but without setting the update flag in the datastore.
 
 
 
-                    If false, the Operator will not create the ConfigMaps for the Gateway.
+                    If false, the Operator will not create the ConfigMaps for
+                    the Gateway.
 
-                    Instead, it pushes the API to the Management API and forces it to update the event in the datastore.
+                    Instead, it pushes the API to the Management API and forces
+                    it to update the event in the datastore.
 
-                    This will cause Gateways to fetch the APIs from the datastore
+                    This will cause Gateways to fetch the APIs from the
+                    datastore
                   type: boolean
                 members:
                   description: List of members associated with the API
@@ -433,7 +430,8 @@ spec:
                               type: string
                             referenceType:
                               description: >-
-                                The type of reference denied or granted by the access control
+                                The type of reference denied or granted by the
+                                access control
 
                                 Currently only GROUP is supported
                               enum:
@@ -456,15 +454,18 @@ spec:
                         type: string
                       crossId:
                         description: >-
-                          CrossID is designed to identified a page across environments.
+                          CrossID is designed to identified a page across
+                          environments.
 
-                          If not set, this ID will be generated in a predictable manner based on
+                          If not set, this ID will be generated in a predictable
+                          manner based on
 
                           the map key associated to this entry in the API.
                         type: string
                       excludedAccessControls:
                         description: >-
-                          if true, the references defined in the accessControls list will be
+                          if true, the references defined in the accessControls
+                          list will be
 
                           denied access instead of being granted
                         type: boolean
@@ -475,20 +476,24 @@ spec:
                         type: boolean
                       id:
                         description: >-
-                          The ID of the page. This field is mostly required when you are
-                          applying
+                          The ID of the page. This field is mostly required when
+                          you are applying
 
-                          an API exported from APIM to make the operator take control over it.
+                          an API exported from APIM to make the operator take
+                          control over it.
 
-                          If not set, this ID will be generated in a predictable manner based on
+                          If not set, this ID will be generated in a predictable
+                          manner based on
 
                           the map key associated to this entry in the API.
                         type: string
                       name:
                         description: >-
-                          This is the display name of the page in APIM and on the portal.
+                          This is the display name of the page in APIM and on
+                          the portal.
 
-                          This field can be edited safely if you want to rename a page.
+                          This field can be edited safely if you want to rename
+                          a page.
                         type: string
                       order:
                         description: The order used to display the page in APIM and on the portal.
@@ -496,17 +501,19 @@ spec:
                         type: integer
                       parent:
                         description: >-
-                          If your page contains a folder, setting this field to the map key
-                          associated to the
+                          If your page contains a folder, setting this field to
+                          the map key associated to the
 
-                          folder entry will be reflected into APIM by making the page a child of this folder.
+                          folder entry will be reflected into APIM by making the
+                          page a child of this folder.
                         type: string
                       parentId:
                         description: >-
-                          The parent ID of the page. This field is mostly required when you
-                          are applying
+                          The parent ID of the page. This field is mostly
+                          required when you are applying
 
-                          an API exported from APIM to make the operator take control over it. Use `Parent`
+                          an API exported from APIM to make the operator take
+                          control over it. Use `Parent`
 
                           in any other case.
                         type: string
@@ -517,8 +524,8 @@ spec:
                         type: boolean
                       source:
                         description: >-
-                          Source allow you to fetch pages from various external sources,
-                          overriding page content
+                          Source allow you to fetch pages from various external
+                          sources, overriding page content
 
                           each time the source is fetched.
                         properties:
@@ -557,13 +564,15 @@ spec:
 
 
 
-                    Keys uniquely identify pages and are used to keep them in sync
+                    Keys uniquely identify pages and are used to keep them in
+                    sync
 
                     with APIM when using a management context.
 
 
 
-                    Renaming a key is the equivalent of deleting the page and recreating
+                    Renaming a key is the equivalent of deleting the page and
+                    recreating
 
                     it holding a new ID in APIM.
                   type: object
@@ -592,7 +601,8 @@ spec:
                         description: >-
                           The plan Cross ID.
 
-                          This field is used to identify plans defined for an API
+                          This field is used to identify plans defined for an
+                          API
 
                           that has been promoted between different environments.
                         type: string
@@ -1123,7 +1133,8 @@ spec:
                                           type: string
                                         keyContent:
                                           description: >-
-                                            The base64 encoded trustStore content, if not relying on a path to
+                                            The base64 encoded trustStore
+                                            content, if not relying on a path to
                                             a file
 
                                             (Only applicable for PEM KeyStore)
@@ -1439,8 +1450,8 @@ spec:
                                     type: string
                                   keyContent:
                                     description: >-
-                                      The base64 encoded trustStore content, if not relying on a path to
-                                      a file
+                                      The base64 encoded trustStore content, if
+                                      not relying on a path to a file
 
                                       (Only applicable for PEM KeyStore)
                                     type: string
@@ -1508,9 +1519,11 @@ spec:
                           description: >-
                             The logging mode.
 
-                            CLIENT identifies the inbound request issued to the gateway,
+                            CLIENT identifies the inbound request issued to the
+                            gateway,
 
-                            while PROXY identifies the request issued to the upstream service.
+                            while PROXY identifies the request issued to the
+                            upstream service.
                           enum:
                             - NONE
                             - CLIENT
@@ -1552,9 +1565,11 @@ spec:
                 resources:
                   default: []
                   description: >-
-                    Resources can be either inlined or reference the namespace and name
+                    Resources can be either inlined or reference the namespace
+                    and name
 
-                    of an <a href="#apiresource">existing API resource definition</a>.
+                    of an <a href="#apiresource">existing API resource
+                    definition</a>.
                   items:
                     properties:
                       configuration:
@@ -1769,15 +1784,19 @@ spec:
                   type: string
                 errors:
                   description: >-
-                    When API has been created regardless of errors, this field is
+                    When API has been created regardless of errors, this field
+                    is
 
-                    used to persist the error message encountered during admission
+                    used to persist the error message encountered during
+                    admission
                   properties:
                     severe:
                       description: >-
-                        severe errors do not pass admission and will block reconcile
+                        severe errors do not pass admission and will block
+                        reconcile
 
-                        hence, this field should always be during the admission phase
+                        hence, this field should always be during the admission
+                        phase
 
                         and is very unlikely to be persisted in the status
                       items:
@@ -1787,7 +1806,8 @@ spec:
                       description: >-
                         warning errors do not block object reconciliation,
 
-                        most of the time because the value is ignored or defaulted
+                        most of the time because the value is ignored or
+                        defaulted
 
                         when the API gets synced with APIM
                       items:
@@ -1809,7 +1829,8 @@ spec:
                     This field is used to store the list of plans that have been
                     created
 
-                    for the API definition if a management context has been defined
+                    for the API definition if a management context has been
+                    defined
 
                     to sync the API with an APIM instance
                   type: object
