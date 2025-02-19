@@ -35,7 +35,6 @@ const (
 	GatewayPortHTTPS = "30084"
 	GatewayUrlHTTP   = "http://" + GatewayHost + ":" + GatewayPortHTTP
 	GatewayUrlHTTPS  = "https://" + GatewayHost + ":" + GatewayPortHTTPS
-	ManagementUrl    = "http://localhost:30083/management"
 
 	ContextSecretFile                       = "management_context/dev/management-context-secret.yml"
 	ContextWithSecretFile                   = "management_context/dev/management-context-with-secret-ref.yml"
