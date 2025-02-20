@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,26 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-apiVersion: gravitee.io/v1alpha1
-kind: ApiDefinition
+
+kind: GatewayClass
+apiVersion: gateway.networking.k8s.io/v1
 metadata:
-  name: api-with-context
+  name: gravitee-gateway
 spec:
-  name: "Echo API"
-  contextRef:
-    name: "dev-ctx"
-  version: "1.1"
-  description: "Gravitee Kubernetes Operator sample"
-  plans:
-    - name: "KEY_LESS"
-      description: "FREE"
-      security: "KEY_LESS"
-  proxy:
-    virtual_hosts:
-      - path: "/echo"
-    groups:
-      - endpoints:
-          - name: "Default"
-            target: "https://api.gravitee.io/echo"
-  local: false
+  controllerName: apim.gravitee.io/gateway
+  parametersRef:
+    kind: GatewayClassParameters
+    group: gravitee.io
+    name: gravitee-gateway
+    namespace: default

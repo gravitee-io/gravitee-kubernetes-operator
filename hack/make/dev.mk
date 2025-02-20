@@ -21,11 +21,11 @@ ifndef ignore-not-found
 endif
 
 .PHONY: install
-install: ## Install CRDss into the current cluster
+install: ## Install CRDs into the current cluster
 	@kubectl apply -f helm/gko/crds/gravitee.io
 
 .PHONY: install-std-gateway-api
-install-gateway-api: ## Install CRDss into the current cluster
+install-gateway-api: ## Install gateway-api CRDs into the current cluster
 	@kubectl apply -f helm/gko/crds/kubernetes.io/gateway-api/standard
 
 .PHONY: uninstall
