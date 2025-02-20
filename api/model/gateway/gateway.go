@@ -21,7 +21,7 @@ import (
 	gAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-type GraviteeGateway struct {
+type GatewayClassParameters struct {
 	// +kubebuilder:validation:MaxItems:=64
 	Listeners  []GraviteeListener `json:"listeners"`
 	Gravitee   *GraviteeConfig    `json:"gravitee"` // extended with listener extension
@@ -42,8 +42,9 @@ type GraviteeListener struct {
 }
 
 type GraviteeListenerConfig struct {
-	IdleTimeout  uint `json:"idleTimeout"`
-	TCPKeepAlive bool `json:"tcpKeepAlive"`
+	// +kubebuilder:validation:Optional
+	IdleTimeout  *uint `json:"idleTimeout,omitempty"`
+	TCPKeepAlive bool  `json:"tcpKeepAlive"`
 }
 
 type GraviteeListenerTLSConfig struct {
