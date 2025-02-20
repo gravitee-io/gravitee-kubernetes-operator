@@ -49,36 +49,25 @@ spec:
           description: ApiDefinition is the Schema for the apidefinitions API.
           properties:
             apiVersion:
-              description: |-
-                APIVersion defines the versioned schema of this representation of an object.
-                Servers should convert recognized schemas to the latest internal value, and
-                may reject unrecognized values.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              description: APIVersion defines the versioned schema of this representation of
+                an object.
               type: string
             kind:
-              description: |-
-                Kind is a string value representing the REST resource this object represents.
-                Servers may infer this from the endpoint the client submits requests to.
-                Cannot be updated.
-                In CamelCase.
-                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              description: Kind is a string value representing the REST resource this object
+                represents.
               type: string
             metadata:
               type: object
             spec:
-              description: |-
-                The API definition is the main resource handled by the Kubernetes Operator
-                Most of the configuration properties defined here are already documented
-                in the APIM Console API Reference.
-                See https://docs.gravitee.io/apim/3.x/apim_installguide_rest_apis_documentation.html
+              description: >-
+                The API definition is the main resource handled by the
+                Kubernetes Operator
+
+                Most of the...
               properties:
                 categories:
                   default: []
-                  description: >-
-                    The list of categories the API belongs to.
-
-                    Categories are reflected in APIM portal so that consumers
-                    can easily find the APIs they need.
+                  description: The list of categories the API belongs to.
                   items:
                     type: string
                   type: array
@@ -94,26 +83,16 @@ spec:
                     - name
                   type: object
                 crossId:
-                  description: >-
+                  description: |-
                     When promoting an API from one environment to the other,
-
-                    this ID identifies the API across those different
-                    environments.
-
-                    Setting this ID also allows to take control over an existing
-                    API on an APIM instance
-
-                    (by setting the same value as defined in APIM).
-
-                    If empty, a UUID will be generated based on the namespace
-                    and name of the resource.
+                    this ID identifies the API across those...
                   type: string
                 definition_context:
                   description: >-
                     The definition context is used to inform a management API
                     instance that this API definition
 
-                    is managed using a kubernetes operator
+                    is...
                   properties:
                     mode:
                       default: fully_managed
@@ -279,11 +258,9 @@ spec:
                   type: string
                 groupRefs:
                   default: []
-                  description: >-
+                  description: |-
                     List of group references associated with the API
-
-                    This groups are references to Group custom resources created
-                    on the cluster.
+                    This groups are references to Group custom...
                   items:
                     properties:
                       kind:
@@ -298,11 +275,7 @@ spec:
                   type: array
                 groups:
                   default: []
-                  description: >-
-                    List of groups associated with the API.
-
-                    This groups are id or name references to existing groups in
-                    APIM.
+                  description: List of groups associated with the API.
                   items:
                     type: string
                   type: array
@@ -332,24 +305,7 @@ spec:
                   type: string
                 local:
                   default: false
-                  description: >-
-                    local defines if the api is local or not.
-
-
-                    If true, the Operator will create the ConfigMaps for the
-                    Gateway and pushes the API to the Management API
-
-                    but without setting the update flag in the datastore.
-
-
-                    If false, the Operator will not create the ConfigMaps for
-                    the Gateway.
-
-                    Instead, it pushes the API to the Management API and forces
-                    it to update the event in the datastore.
-
-                    This will cause Gateways to fetch the APIs from the
-                    datastore
+                  description: local defines if the api is local or not.
                   type: boolean
                 members:
                   description: List of members associated with the API
@@ -454,21 +410,14 @@ spec:
                         description: The content of the page, if any.
                         type: string
                       crossId:
-                        description: >-
-                          CrossID is designed to identified a page across
-                          environments.
-
-                          If not set, this ID will be generated in a predictable
-                          manner based on
-
-                          the map key associated to this entry in the API.
+                        description: CrossID is designed to identified a page across environments.
                         type: string
                       excludedAccessControls:
                         description: >-
                           if true, the references defined in the accessControls
                           list will be
 
-                          denied access instead of being granted
+                          denied access instead of being...
                         type: boolean
                       homepage:
                         default: false
@@ -476,25 +425,10 @@ spec:
                           documentation.
                         type: boolean
                       id:
-                        description: >-
-                          The ID of the page. This field is mostly required when
-                          you are applying
-
-                          an API exported from APIM to make the operator take
-                          control over it.
-
-                          If not set, this ID will be generated in a predictable
-                          manner based on
-
-                          the map key associated to this entry in the API.
+                        description: The ID of the page.
                         type: string
                       name:
-                        description: >-
-                          This is the display name of the page in APIM and on
-                          the portal.
-
-                          This field can be edited safely if you want to rename
-                          a page.
+                        description: This is the display name of the page in APIM and on the portal.
                         type: string
                       order:
                         description: The order used to display the page in APIM and on the portal.
@@ -505,18 +439,10 @@ spec:
                           If your page contains a folder, setting this field to
                           the map key associated to the
 
-                          folder entry will be reflected into APIM by making the
-                          page a child of this folder.
+                          folder entry...
                         type: string
                       parentId:
-                        description: >-
-                          The parent ID of the page. This field is mostly
-                          required when you are applying
-
-                          an API exported from APIM to make the operator take
-                          control over it. Use `Parent`
-
-                          in any other case.
+                        description: The parent ID of the page.
                         type: string
                       published:
                         default: false
@@ -528,7 +454,7 @@ spec:
                           Source allow you to fetch pages from various external
                           sources, overriding page content
 
-                          each time the source is fetched.
+                          each time...
                         properties:
                           configuration:
                             type: object
@@ -561,20 +487,7 @@ spec:
                       - name
                       - type
                     type: object
-                  description: >-
-                    A map of pages objects.
-
-
-                    Keys uniquely identify pages and are used to keep them in
-                    sync
-
-                    with APIM when using a management context.
-
-
-                    Renaming a key is the equivalent of deleting the page and
-                    recreating
-
-                    it holding a new ID in APIM.
+                  description: A map of pages objects.
                   type: object
                 path_mappings:
                   description: API Path mapping
@@ -598,13 +511,7 @@ spec:
                         description: Indicate of comment is required for this plan or not
                         type: boolean
                       crossId:
-                        description: >-
-                          The plan Cross ID.
-
-                          This field is used to identify plans defined for an
-                          API
-
-                          that has been promoted between different environments.
+                        description: The plan Cross ID.
                         type: string
                       description:
                         description: Plan Description
@@ -1149,7 +1056,7 @@ spec:
                                             content, if not relying on a path to
                                             a file
 
-                                            (Only applicable for PEM KeyStore)
+                                            (Only applicable for PEM...
                                           type: string
                                         keyPath:
                                           description: KeyStore key path (Only applicable for PEM KeyStore)
@@ -1477,7 +1384,7 @@ spec:
                                       The base64 encoded trustStore content, if
                                       not relying on a path to a file
 
-                                      (Only applicable for PEM KeyStore)
+                                      (Only applicable for PEM...
                                     type: string
                                   keyPath:
                                     description: KeyStore key path (Only applicable for PEM KeyStore)
@@ -1540,14 +1447,7 @@ spec:
                             - HEADERS_PAYLOADS
                           type: string
                         mode:
-                          description: >-
-                            The logging mode.
-
-                            CLIENT identifies the inbound request issued to the
-                            gateway,
-
-                            while PROXY identifies the request issued to the
-                            upstream service.
+                          description: The logging mode.
                           enum:
                             - NONE
                             - CLIENT
@@ -1592,8 +1492,7 @@ spec:
                     Resources can be either inlined or reference the namespace
                     and name
 
-                    of an <a href="#apiresource">existing API resource
-                    definition</a>.
+                    of an <a...
                   items:
                     properties:
                       configuration:
@@ -1815,36 +1714,28 @@ spec:
                     When API has been created regardless of errors, this field
                     is
 
-                    used to persist the error message encountered during
-                    admission
+                    used to persist the error message...
                   properties:
                     severe:
                       description: >-
                         severe errors do not pass admission and will block
                         reconcile
 
-                        hence, this field should always be during the admission
-                        phase
-
-                        and is very unlikely to be persisted in the status
+                        hence, this field should always be...
                       items:
                         type: string
                       type: array
                     warning:
-                      description: >-
+                      description: |-
                         warning errors do not block object reconciliation,
-
-                        most of the time because the value is ignored or
-                        defaulted
-
-                        when the API gets synced with APIM
+                        most of the time because the value is ignored or...
                       items:
                         type: string
                       type: array
                   type: object
                 id:
                   description: The ID of the API definition in the Gravitee API Management
-                    instance (if an API context has been configured).
+                    instance (if an API context has been...
                   type: string
                 organizationId:
                   description: The organization ID, if a management context has been defined to
@@ -1857,10 +1748,7 @@ spec:
                     This field is used to store the list of plans that have been
                     created
 
-                    for the API definition if a management context has been
-                    defined
-
-                    to sync the API with an APIM instance
+                    for the API definition if a...
                   type: object
                 processingStatus:
                   description: The processing status of the API definition.

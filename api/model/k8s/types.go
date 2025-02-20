@@ -25,7 +25,8 @@ type Deployment struct {
 	Annotations map[string]string         `json:"annotations,omitempty"`
 	Replicas    *int32                    `json:"replicas,omitempty"`
 	Strategy    *appV1.DeploymentStrategy `json:"strategy,omitempty"`
-	Template    *coreV1.PodTemplateSpec   `json:"template,omitempty"`
+	// +kubebuilder:validation:Optional
+	Template *coreV1.PodTemplateSpec `json:"template,omitempty"`
 }
 
 type Service struct {

@@ -60,7 +60,7 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Group:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
-	case *v1alpha1.GraviteeGateway:
+	case *v1alpha1.GatewayClassParameters:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *netV1.Ingress:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
@@ -106,8 +106,8 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	case *v1alpha1.Group:
 		oo, _ := e.ObjectOld.(*v1alpha1.Group)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
-	case *v1alpha1.GraviteeGateway:
-		oo, _ := e.ObjectOld.(*v1alpha1.GraviteeGateway)
+	case *v1alpha1.GatewayClassParameters:
+		oo, _ := e.ObjectOld.(*v1alpha1.GatewayClassParameters)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *netV1.Ingress:
 		oo, _ := e.ObjectOld.(*netV1.Ingress)

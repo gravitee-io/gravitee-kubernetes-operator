@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package graviteegw
+package gatewayclass
 
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 type Reconciler struct {
@@ -38,42 +40,59 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	gw := &v1alpha1.GatewayClassParameters{}
+	gwc := gateway.NewGatewayClass(&gwAPIv1.GatewayClass{})
 
-	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gw); err != nil {
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gwc.Object); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	controllerName := gwc.Object.Spec.ControllerName
+	if controllerName != core.GraviteeGatewayClassController {
+		log.Debug(ctx, "unknown controller name", log.KeyValues(gwc.Object, "controllerName", controllerName)...)
+		return ctrl.Result{}, nil
 	}
 
 	events := event.NewRecorder(r.Recorder)
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), gw, func() error {
-		util.AddFinalizer(gw, core.GraviteeGatewayFinalizer)
-		k8s.AddAnnotation(gw, core.LastSpecHashAnnotation, hash.Calculate(&gw.Spec))
+	dc := gwc.DeepCopy()
 
-		if !gw.DeletionTimestamp.IsZero() {
-			return events.Record(event.Delete, gw, func() error {
-				util.RemoveFinalizer(gw, core.GraviteeGatewayFinalizer)
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), gwc.Object, func() error {
+		util.AddFinalizer(gwc.Object, core.GatewayClassFinalizer)
+
+		if !gwc.Object.DeletionTimestamp.IsZero() {
+			return events.Record(event.Delete, gwc.Object, func() error {
+				util.RemoveFinalizer(gwc.Object, core.GatewayClassFinalizer)
 				return nil
 			})
 		}
 
-		return events.Record(event.Update, gw, func() error {
-			return nil
+		return events.Record(event.Update, gwc.Object, func() error {
+			if accepted, err := internal.Accept(ctx, gwc.Object); err != nil {
+				return err
+			} else {
+				k8s.SetCondition(dc, accepted)
+				return nil
+			}
 		})
 	})
 
 	if err != nil {
-		log.ErrorAbortingReconcile(ctx, err, gw)
-		return ctrl.Result{}, err
+		log.ErrorRequeuingReconcile(ctx, err, gwc.Object)
+		return k8s.RequeueError(err)
 	}
 
-	log.InfoEndReconcile(ctx, gw)
-	return ctrl.Result{}, nil
+	dc.Object.Status.DeepCopyInto(&gwc.Object.Status)
+	if err := k8s.GetClient().Status().Update(ctx, gwc.Object); err != nil {
+		log.ErrorRequeuingReconcile(ctx, err, gwc.Object)
+		return k8s.RequeueError(err)
+	}
+
+	log.InfoEndReconcile(ctx, gwc.Object)
+	return ctrl.Result{}, err
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.GatewayClassParameters{}).
-		WithEventFilter(predicate.LastSpecHashPredicate{}).
+		For(&gwAPIv1.GatewayClass{}).
 		Complete(r)
 }
