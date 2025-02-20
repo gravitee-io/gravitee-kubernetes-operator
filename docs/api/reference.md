@@ -23601,6 +23601,7 @@ Maps a string key to a path within a volume.
         <td>string</td>
         <td>
           
+
 path is the relative path of the file to map the key to.
 May not be an absolute path.<br/>
         </td>
@@ -23680,6 +23681,7 @@ DownwardAPIVolumeFile represents information to create the file containing the p
         <td>integer</td>
         <td>
           
+
 Optional: mode bits used to set permissions on this file, must be an octal value
 between 0000 and...<br/>
           <br/>
@@ -23691,6 +23693,7 @@ between 0000 and...<br/>
         <td>object</td>
         <td>
           
+
 Selects a resource of the container: only resources limits and requests
 (limits.cpu, limits.<br/>
         </td>
@@ -23735,6 +23738,7 @@ Required: Selects a field of the pod: only annotations, labels, name, namespace 
 
 ### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI.items[index].resourceFieldRef
 [Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindex)
+
 
 
 
@@ -23848,6 +23852,7 @@ Maps a string key to a path within a volume.
         <td>string</td>
         <td>
           
+
 path is the relative path of the file to map the key to.
 May not be an absolute path.<br/>
         </td>

@@ -237,11 +237,17 @@ jobs:
               && kind load docker-image gko:latest --name gravitee \
               && helm upgrade --install gko helm/gko \
                 --set manager.image.repository=gko \
-                --set manager.image.tag=latest
+                --set manager.image.tag=latest \
+                --set gatewayAPI.controller.enabled=true
+      - run:
+          name: Apply resources
+          command: |
+            kubectl apply -f ./examples/gateway-api/gravitee-gateway.yaml
+            kubectl apply -f ./examples/gateway-api/gateway-class.yaml
       - run:
           name: Run Gateway API Conformance Test
           command: |
-            go test -v ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee.io --debug=true
+            go test -v ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway --debug=true
       - go/save-cache
 
   job-integration-test:

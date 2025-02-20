@@ -47,14 +47,23 @@ rules:
       - sharedpolicygroups.gravitee.io
       - groups.gravitee.io
 <<<<<<< HEAD
+<<<<<<< HEAD
       - notification.gravitee.io
 =======
+=======
+      - gatewayclassparams.gravitee.io
+{{- if .Values.gatewayAPI.controller.enabled }}
+>>>>>>> 09204fe9 (feat: add controller for gateway class)
       - gateways.gateway.networking.k8s.io
       - gatewayclasses.gateway.networking.k8s.io
       - grpcroutes.gateway.networking.k8s.io
       - httproutes.gateway.networking.k8s.io
       - referencegrants.gateway.networking.k8s.io
+<<<<<<< HEAD
 >>>>>>> bf14f36e (feat: add controller for gravitee gateways)
+=======
+{{- end }}
+>>>>>>> 09204fe9 (feat: add controller for gateway class)
     resources:
       - customresourcedefinitions
     verbs:
