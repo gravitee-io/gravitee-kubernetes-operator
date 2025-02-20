@@ -16,26 +16,34 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.1
     gravitee.io/operator.version: 0.13.1
-  name: groups.gravitee.io
+  name: sharedpolicygroups.gravitee.io
 spec:
   group: gravitee.io
   names:
-    kind: Group
-    listKind: GroupList
-    plural: groups
-    singular: group
+    kind: SharedPolicyGroup
+    listKind: SharedPolicyGroupList
+    plural: sharedpolicygroups
+    shortNames:
+      - sharedpolicygroups
+    singular: sharedpolicygroup
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
-        - description: The number of members added to the group
-          jsonPath: .status.members
-          name: Members at
+        - jsonPath: .spec.name
+          name: name
+          type: string
+        - jsonPath: .spec.description
+          name: description
+          type: string
+        - jsonPath: .spec.apiType
+          name: apiType
           type: string
       name: v1alpha1
       schema:
         openAPIV3Schema:
+          description: SharedPolicyGroup
           properties:
             apiVersion:
               description: |-
@@ -55,7 +63,15 @@ spec:
             metadata:
               type: object
             spec:
+              description: SharedPolicyGroupSpec
               properties:
+                apiType:
+                  description: Specify the SharedPolicyGroup ApiType
+                  enum:
+                    - MESSAGE
+                    - PROXY
+                    - NATIVE
+                  type: string
                 contextRef:
                   properties:
                     kind:
@@ -67,50 +83,79 @@ spec:
                   required:
                     - name
                   type: object
-                id:
+                crossId:
+                  description: CrossID to export SharedPolicyGroup into different environments
                   type: string
-                members:
+                description:
+                  description: SharedPolicyGroup description
+                  type: string
+                name:
+                  description: SharedPolicyGroup name
+                  type: string
+                phase:
+                  description: SharedPolicyGroup phase
+                    (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE)
+                  enum:
+                    - REQUEST
+                    - RESPONSE
+                    - INTERACT
+                    - CONNECT
+                    - PUBLISH
+                    - SUBSCRIBE
+                  type: string
+                prerequisiteMessage:
+                  description: SharedPolicyGroup prerequisite Message
+                  type: string
+                steps:
+                  description: SharedPolicyGroup Steps
                   items:
                     properties:
-                      roles:
-                        additionalProperties:
-                          type: string
-                        default: {}
-                        type: object
-                      source:
-                        description: Member source
-                        example: gravitee
+                      condition:
+                        description: FlowStep condition
                         type: string
-                      sourceId:
-                        description: Member source ID
-                        example: user@email.com
+                      configuration:
+                        description: FlowStep configuration is a map of arbitrary key-values
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      description:
+                        description: FlowStep description
+                        type: string
+                      enabled:
+                        default: true
+                        description: Indicate if this FlowStep is enabled or not
+                        type: boolean
+                      name:
+                        description: FlowStep name
+                        type: string
+                      policy:
+                        description: FlowStep policy
                         type: string
                     required:
-                      - source
-                      - sourceId
+                      - enabled
                     type: object
                   type: array
-                name:
-                  type: string
-                notifyMembers:
-                  default: true
-                  description: |-
-                    If true, new members added to the API spec will
-                    be notified when the API is synced with APIM.
-                  type: boolean
               required:
-                - members
+                - apiType
+                - contextRef
                 - name
+                - phase
               type: object
             status:
+              description: SharedPolicyGroupSpecStatus defines the observed state of an API
+                Context.
               properties:
+                crossId:
+                  description: The Cross ID is used to identify an SharedPolicyGroup that has been
+                    promoted from one environment to another.
+                  type: string
                 environmentId:
-                  description: The environment ID defined in the management context
+                  description: The environment ID, if a management context has been defined to
+                    sync with an APIM instance
                   type: string
                 errors:
                   description: >-
-                    When group has been created regardless of errors, this field
-                    is
+                    When SharedPolicyGroup has been created regardless of
+                    errors, this field is
 
                     used to persist the error message encountered during
                     admission
@@ -140,19 +185,20 @@ spec:
                       type: array
                   type: object
                 id:
-                  description: The ID of the Group in the Gravitee API Management instance
+                  description: The ID is used to identify an SharedPolicyGroup which is unique in
+                    any environment.
                   type: string
-                members:
-                  description: The number of members added to this group
-                  type: integer
                 organizationId:
-                  description: The organization ID defined in the management context
+                  description: The organization ID, if a management context has been defined to
+                    sync with an APIM instance
                   type: string
                 processingStatus:
-                  description: The processing status of the Group.
+                  description: >-
+                    The processing status of the SharedPolicyGroup.
+
+                    The value is `Completed` if the sync with APIM succeeded,
+                    Failed otherwise.
                   type: string
-              required:
-                - members
               type: object
           type: object
       served: true
