@@ -22,7 +22,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
-type GraviteeGateway struct {
+type GatewayClassParameters struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -31,20 +31,20 @@ type GraviteeGateway struct {
 }
 
 // +kubebuilder:object:root=true
-type GraviteeGatewayList struct {
+type GatewayClassParametersList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []GraviteeGateway `json:"items"`
+	Items           []GatewayClassParameters `json:"items"`
 }
 
 // +kubebuilder:object:generate=true
 type GraviteeGatewaySpec struct {
-	*gateway.GraviteeGateway `json:",inline"`
+	*gateway.GatewayClassParameters `json:",inline"`
 }
 
 type GraviteeGatewayStatus struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&GraviteeGateway{}, &GraviteeGatewayList{})
+	SchemeBuilder.Register(&GatewayClassParameters{}, &GatewayClassParametersList{})
 }
