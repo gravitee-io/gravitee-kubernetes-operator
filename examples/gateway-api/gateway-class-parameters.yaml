@@ -14,7 +14,7 @@
 
 
 apiVersion: gravitee.io/v1alpha1
-kind: GraviteeGateway
+kind: GatewayClassParameters
 metadata:
   name: gravitee-gateway
 spec:
@@ -24,8 +24,16 @@ spec:
       protocol: HTTP
   gravitee:
     dbLess: true
+    yaml: {}
   kubernetes:
     deployment:
       replicas: 2
+      template:
+        spec:
+          containers:
+          - name: gateway
+            image: gravitee.io/apim-gateway:4.7.0
+          securityContext:
+            runAsNonRoot: true
     service:
       type: NodePort

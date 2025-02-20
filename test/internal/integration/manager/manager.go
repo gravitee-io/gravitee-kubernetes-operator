@@ -19,6 +19,7 @@ import (
 	"os"
 
 	policygroups "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/graviteegw"
 
 	v1 "k8s.io/api/core/v1"
@@ -146,6 +147,13 @@ func init() {
 		(&graviteegw.Reconciler{
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("gravitee-gateway-controller"),
+		}).SetupWithManager(mgr),
+	)
+
+	runtimeUtil.Must(
+		(&gatewayclass.Reconciler{
+			Scheme:   mgr.GetScheme(),
+			Recorder: mgr.GetEventRecorderFor("gateway-class-controller"),
 		}).SetupWithManager(mgr),
 	)
 
