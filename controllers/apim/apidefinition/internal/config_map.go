@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -43,9 +42,9 @@ const (
 
 func updateConfigMap(
 	ctx context.Context,
-	api *v1alpha1.ApiDefinition,
+	api core.ApiDefinitionObject,
 ) error {
-	if api.Spec.State == base.StateStopped {
+	if api.IsStopped() {
 		if err := deleteConfigMap(ctx, api); err != nil {
 			log.Error(ctx, err, "Unable to delete config map for API definition", log.KeyValues(api)...)
 			return err
