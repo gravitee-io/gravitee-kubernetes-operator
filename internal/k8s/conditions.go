@@ -20,16 +20,56 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	gAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+)
+
+const (
+	ConditionAccepted     = "Accepted"
+	ConditionProgrammed   = "Programmed"
+	ConditionConflicted   = "Conflicted"
+	ConditionPending      = "Pending"
+	ConditionResolvedRefs = "ResolvedRefs"
+
+	ConditionStatusTrue  = "True"
+	ConditionStatusFalse = "False"
 )
 
 type ConditionBuilder struct {
 	condition *metav1.Condition
 }
 
+func NewResolvedRefsConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionResolvedRefs).
+		ObservedGeneration(generation).
+		Status(ConditionStatusTrue).
+		Reason(ConditionResolvedRefs)
+}
+
 func NewAcceptedConditionBuilder(generation int64) *ConditionBuilder {
-	return NewConditionBuilder(string(gAPIv1.GatewayClassConditionStatusAccepted)).
-		ObservedGeneration(generation)
+	return NewConditionBuilder(ConditionAccepted).
+		ObservedGeneration(generation).
+		Status(ConditionStatusFalse)
+}
+
+func NewGatewayProgrammedConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionProgrammed).
+		ObservedGeneration(generation).
+		Status(ConditionStatusFalse).
+		Reason(string(gwAPIv1.GatewayReasonPending))
+}
+
+func NewListenerProgrammedConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionProgrammed).
+		ObservedGeneration(generation).
+		Status(ConditionStatusFalse).
+		Reason(string(gwAPIv1.ListenerReasonPending))
+}
+
+func NewListenerConflictedConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionConflicted).
+		ObservedGeneration(generation).
+		Status(ConditionStatusFalse).
+		Reason(string(gwAPIv1.ListenerReasonNoConflicts))
 }
 
 func NewConditionBuilder(cType string) *ConditionBuilder {
@@ -42,14 +82,56 @@ func NewConditionBuilder(cType string) *ConditionBuilder {
 
 func (b *ConditionBuilder) Accept(msg string) *ConditionBuilder {
 	return b.
-		Reason("Accepted").
+		Reason(ConditionAccepted).
 		Status(metav1.ConditionTrue).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) Program(msg string) *ConditionBuilder {
+	return b.
+		Reason(ConditionProgrammed).
+		Status(metav1.ConditionTrue).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) ResolveRefs(msg string) *ConditionBuilder {
+	return b.
+		Reason(ConditionResolvedRefs).
+		Status(metav1.ConditionTrue).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectInvalidRouteKinds(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.ListenerReasonInvalidRouteKinds)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectInvalidCertificateRef(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.ListenerReasonInvalidCertificateRef)).
+		Status(metav1.ConditionFalse).
 		Message(msg)
 }
 
 func (b *ConditionBuilder) RejectInvalidParameters(msg string) *ConditionBuilder {
 	return b.
-		Reason(string(gAPIv1.GatewayClassReasonInvalidParameters)).
+		Reason(string(gwAPIv1.GatewayClassReasonInvalidParameters)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectUnsupportedProtocol(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.ListenerReasonUnsupportedProtocol)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectListenersNotValid(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.GatewayReasonListenersNotValid)).
 		Status(metav1.ConditionFalse).
 		Message(msg)
 }
@@ -85,4 +167,28 @@ func SetCondition(obj core.ConditionAware, condition *metav1.Condition) {
 		conditions[condition.Type] = *condition
 		obj.SetConditions(slices.Collect(maps.Values(conditions)))
 	}
+}
+
+func GetCondition(obj core.ConditionAware, conditionType string) *metav1.Condition {
+	conditions := obj.GetConditions()
+	condition, ok := conditions[conditionType]
+	if !ok {
+		return nil
+	}
+	return &condition
+}
+
+func IsConflicted(obj core.ConditionAware) bool {
+	conflicted := GetCondition(obj, ConditionConflicted)
+	return conflicted != nil && conflicted.Status == ConditionStatusTrue
+}
+
+func IsAccepted(obj core.ConditionAware) bool {
+	accepted := GetCondition(obj, ConditionAccepted)
+	return accepted != nil && accepted.Status == ConditionStatusTrue
+}
+
+func HasUnresolvedRefs(obj core.ConditionAware) bool {
+	resolvedRefs := GetCondition(obj, ConditionResolvedRefs)
+	return resolvedRefs != nil && resolvedRefs.Status == ConditionStatusFalse
 }
