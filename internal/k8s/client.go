@@ -54,7 +54,30 @@ func Delete[T client.Object](ctx context.Context, obj T) error {
 	return GetClient().Delete(ctx, obj)
 }
 
-func UpdateSafely[T client.Object](ctx context.Context, objNew T) error {
+func UpdateStatus[T client.Object](ctx context.Context, objNew T) error {
+	key := types.NamespacedName{
+		Namespace: objNew.GetNamespace(),
+		Name:      objNew.GetName(),
+	}
+
+	objLast, ok := objNew.DeepCopyObject().(T)
+	if !ok {
+		return fmt.Errorf("failed to copy object %v", objNew)
+	}
+
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		if err := GetClient().Get(ctx, key, objLast); err != nil {
+			return err
+		}
+
+		objNew.SetResourceVersion(objLast.GetResourceVersion())
+		objNew.SetGeneration(objLast.GetGeneration())
+
+		return GetClient().Status().Update(ctx, objNew)
+	})
+}
+
+func Update[T client.Object](ctx context.Context, objNew T) error {
 	key := types.NamespacedName{
 		Namespace: objNew.GetNamespace(),
 		Name:      objNew.GetName(),

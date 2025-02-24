@@ -12,29 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gateway
+package errors
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	gAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-)
+type GWCNotAcceptedError struct{}
 
-type GatewayClass struct {
-	Object *gAPIv1.GatewayClass
-}
-
-func NewGatewayClass(gwc *gAPIv1.GatewayClass) *GatewayClass {
-	return &GatewayClass{Object: gwc}
-}
-
-func (d *GatewayClass) GetConditions() map[string]metav1.Condition {
-	conditions := make(map[string]metav1.Condition)
-	for _, condition := range d.Object.Status.Conditions {
-		conditions[condition.Type] = condition
-	}
-	return conditions
-}
-
-func (d *GatewayClass) SetConditions(conditions []metav1.Condition) {
-	d.Object.Status.Conditions = conditions
+func (GWCNotAcceptedError) Error() string {
+	return "Gateway class is not accepted"
 }
