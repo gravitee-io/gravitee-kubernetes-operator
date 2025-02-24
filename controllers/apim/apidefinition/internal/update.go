@@ -84,9 +84,13 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return updateConfigMap(ctx, cp)
 	}
 
+<<<<<<< HEAD
 	if err := deleteConfigMap(ctx, apiDefinition); err != nil {
 		return err
 	}
+=======
+	log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
+>>>>>>> 4c79949 (fix: do not allways delete configmaps on updates)
 
 	return nil
 }
@@ -120,6 +124,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		cp.PopulateIDs(nil)
 	}
 
+<<<<<<< HEAD
 	if spec.DefinitionContext.SyncFrom == v4.OriginManagement || spec.State == base.StateStopped {
 		log.FromContext(ctx).Info(
 			"Deleting config map as API is not managed by operator or is stopped",
@@ -134,7 +139,12 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		if err := saveConfigMap(ctx, cp); err != nil {
 			return err
 		}
+=======
+	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
+		return updateConfigMap(ctx, apiDefinition)
+>>>>>>> 4c79949 (fix: do not allways delete configmaps on updates)
 	}
+
 	return nil
 }
 
