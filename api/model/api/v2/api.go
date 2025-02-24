@@ -28,7 +28,7 @@ type Api struct {
 	*base.ApiBase `json:",inline"`
 	// API description
 	Description string `json:"description"`
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// The definition context is used to inform a management API instance that this API definition
 	// is managed using a kubernetes operator
 	DefinitionContext *DefinitionContext `json:"definition_context,omitempty"`

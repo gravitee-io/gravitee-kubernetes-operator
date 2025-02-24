@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // +kubebuilder:object:generate=true
-package k8s
+package gateway
 
 import (
 	appV1 "k8s.io/api/apps/v1"
