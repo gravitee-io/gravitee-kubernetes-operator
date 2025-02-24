@@ -21,9 +21,14 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	coreV1 "k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -90,6 +95,19 @@ func validateUpdate(
 	newApi, nok := newObj.(core.ApiDefinitionObject)
 	if !ook || !nok {
 		return errs
+	}
+	if oldApi.IsSyncFromManagement() && !newApi.IsSyncFromManagement() {
+		log.Debug(ctx, "deleting configmap following switch in sync mode")
+		configMap := &coreV1.ConfigMap{
+			ObjectMeta: metaV1.ObjectMeta{
+				Name:      oldApi.GetName(),
+				Namespace: oldApi.GetNamespace(),
+			},
+		}
+		err := client.IgnoreNotFound(k8s.GetClient().Delete(ctx, configMap))
+		if err != nil {
+			log.Debug(ctx, err.Error())
+		}
 	}
 	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, indexer.ApiV2SubsField))
 	if errs.IsSevere() {

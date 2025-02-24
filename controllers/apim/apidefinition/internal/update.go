@@ -84,10 +84,6 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return updateConfigMap(ctx, cp)
 	}
 
-	if err := deleteConfigMap(ctx, apiDefinition); err != nil {
-		return err
-	}
-
 	log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
 
 	return nil
@@ -124,21 +120,10 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		cp.PopulateIDs(nil)
 	}
 
-	if spec.DefinitionContext.SyncFrom == v4.OriginManagement || spec.State == base.StateStopped {
-		log.Debug(
-			ctx,
-			"Deleting config map as API definition is not synced from the cluster or API is stopped",
-			log.KeyValues(apiDefinition, "state", spec.State, "synced-from", spec.DefinitionContext.SyncFrom)...,
-		)
-		if err := deleteConfigMap(ctx, cp); err != nil {
-			return err
-		}
-	} else {
-		log.Debug(ctx, "Saving config map for API definition", log.KeyValues(apiDefinition)...)
-		if err := saveConfigMap(ctx, cp); err != nil {
-			return err
-		}
+	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
+		return updateConfigMap(ctx, apiDefinition)
 	}
+
 	return nil
 }
 
