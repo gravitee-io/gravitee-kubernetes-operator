@@ -64,7 +64,7 @@ Resources
             <td></td>
         </tr>
         <tr>
-            <td><a href="#graviteegateway">GraviteeGateway</a></td>
+            <td><a href="#gatewayclassparameters">GatewayClassParameters</a></td>
             <td></td>
         </tr></tbody>
 </table>
@@ -421,14 +421,6 @@ Most of the...
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#apidefinitionspecdefinition_context">definition_context</a></b></td>
-        <td>object</td>
-        <td>
-          The definition context is used to inform a management API instance that this API definition
-is...<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>description</b></td>
         <td>string</td>
         <td>
@@ -478,6 +470,14 @@ is...<br/>
         <td>
           When promoting an API from one environment to the other,
 this ID identifies the API across those...<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecdefinition_context">definition_context</a></b></td>
+        <td>object</td>
+        <td>
+          The definition context is used to inform a management API instance that this API definition
+is...<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -711,54 +711,6 @@ of an <a...<br/>
 </table>
 
 
-### ApiDefinition.spec.definition_context
-[Go to parent definition](#apidefinitionspec)
-
-
-
-The definition context is used to inform a management API instance that this API definition
-is...
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>mode</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: fully_managed<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>origin</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: kubernetes<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>syncFrom</b></td>
-        <td>string</td>
-        <td>
-          <br/>
-          <br/>
-            <i>Default</i>: kubernetes<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
 ### ApiDefinition.spec.consoleNotificationConfiguration
 [Go to parent definition](#apidefinitionspec)
 
@@ -863,6 +815,54 @@ ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
         <td>string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.definition_context
+[Go to parent definition](#apidefinitionspec)
+
+
+
+The definition context is used to inform a management API instance that this API definition
+is...
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>mode</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: fully_managed<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>origin</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: kubernetes<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>syncFrom</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: kubernetes<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10734,7 +10734,7 @@ most of the time because the value is ignored or...<br/>
       </tr></tbody>
 </table>
 
-## GraviteeGateway
+## GatewayClassParameters
 
 [gravitee.io/v1alpha1](#graviteeiov1alpha1)
 
@@ -10755,7 +10755,7 @@ most of the time because the value is ignored or...<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspec">spec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspec">spec</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -10772,8 +10772,8 @@ most of the time because the value is ignored or...<br/>
 </table>
 
 
-### GraviteeGateway.spec
-[Go to parent definition](#graviteegateway)
+### GatewayClassParameters.spec
+[Go to parent definition](#gatewayclassparameters)
 
 
 
@@ -10789,21 +10789,21 @@ most of the time because the value is ignored or...<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspecgravitee">gravitee</a></b></td>
+        <td><b><a href="#gatewayclassparametersspecgravitee">gravitee</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetes">kubernetes</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetes">kubernetes</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindex">listeners</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindex">listeners</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
@@ -10813,8 +10813,8 @@ most of the time because the value is ignored or...<br/>
 </table>
 
 
-### GraviteeGateway.spec.gravitee
-[Go to parent definition](#graviteegatewayspec)
+### GatewayClassParameters.spec.gravitee
+[Go to parent definition](#gatewayclassparametersspec)
 
 
 
@@ -10836,19 +10836,12 @@ most of the time because the value is ignored or...<br/>
           <br/>
         </td>
         <td>true</td>
-      </tr><tr>
-        <td><b>yaml</b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
       </tr></tbody>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes
-[Go to parent definition](#graviteegatewayspec)
+### GatewayClassParameters.spec.kubernetes
+[Go to parent definition](#gatewayclassparametersspec)
 
 
 
@@ -10864,14 +10857,14 @@ most of the time because the value is ignored or...<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeployment">deployment</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeployment">deployment</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesservice">service</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesservice">service</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -10881,8 +10874,8 @@ most of the time because the value is ignored or...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment
-[Go to parent definition](#graviteegatewayspeckubernetes)
+### GatewayClassParameters.spec.kubernetes.deployment
+[Go to parent definition](#gatewayclassparametersspeckubernetes)
 
 
 
@@ -10921,14 +10914,14 @@ most of the time because the value is ignored or...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymentstrategy">strategy</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymentstrategy">strategy</a></b></td>
         <td>object</td>
         <td>
           DeploymentStrategy describes how to replace existing pods with new ones.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplate">template</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplate">template</a></b></td>
         <td>object</td>
         <td>
           PodTemplateSpec describes the data a pod should have when created from a template<br/>
@@ -10938,8 +10931,8 @@ most of the time because the value is ignored or...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.strategy
-[Go to parent definition](#graviteegatewayspeckubernetesdeployment)
+### GatewayClassParameters.spec.kubernetes.deployment.strategy
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeployment)
 
 
 
@@ -10955,7 +10948,7 @@ DeploymentStrategy describes how to replace existing pods with new ones.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymentstrategyrollingupdate">rollingUpdate</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymentstrategyrollingupdate">rollingUpdate</a></b></td>
         <td>object</td>
         <td>
           Rolling update config params. Present only if DeploymentStrategyType =
@@ -10973,8 +10966,8 @@ RollingUpdate.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.strategy.rollingUpdate
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymentstrategy)
+### GatewayClassParameters.spec.kubernetes.deployment.strategy.rollingUpdate
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymentstrategy)
 
 
 
@@ -11009,8 +11002,8 @@ pods.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template
-[Go to parent definition](#graviteegatewayspeckubernetesdeployment)
+### GatewayClassParameters.spec.kubernetes.deployment.template
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeployment)
 
 
 
@@ -11034,7 +11027,7 @@ More info: https://git.k8s.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespec">spec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespec">spec</a></b></td>
         <td>object</td>
         <td>
           Specification of the desired behavior of the pod.
@@ -11045,8 +11038,8 @@ More info: https://git.k8s.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplate)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplate)
 
 
 
@@ -11063,7 +11056,7 @@ More info: https://git.k8s.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex">containers</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex">containers</a></b></td>
         <td>[]object</td>
         <td>
           List of containers belonging to the pod.
@@ -11081,7 +11074,7 @@ StartTime before the...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinity">affinity</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinity">affinity</a></b></td>
         <td>object</td>
         <td>
           If specified, the pod's scheduling constraints<br/>
@@ -11095,7 +11088,7 @@ StartTime before the...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecdnsconfig">dnsConfig</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecdnsconfig">dnsConfig</a></b></td>
         <td>object</td>
         <td>
           Specifies the DNS parameters of a pod.<br/>
@@ -11117,14 +11110,14 @@ Defaults to "ClusterFirst".<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex">ephemeralContainers</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex">ephemeralContainers</a></b></td>
         <td>[]object</td>
         <td>
           List of ephemeral containers run in this pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespechostaliasesindex">hostAliases</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespechostaliasesindex">hostAliases</a></b></td>
         <td>[]object</td>
         <td>
           HostAliases is an optional list of hosts and IPs that will be injected into the pod's hosts
@@ -11171,14 +11164,14 @@ If not specified, the pod's hostname will be set to a...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecimagepullsecretsindex">imagePullSecrets</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecimagepullsecretsindex">imagePullSecrets</a></b></td>
         <td>[]object</td>
         <td>
           ImagePullSecrets is an optional list of references to secrets in the same namespace to use for...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex">initContainers</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex">initContainers</a></b></td>
         <td>[]object</td>
         <td>
           List of initialization containers belonging to the pod.<br/>
@@ -11199,7 +11192,7 @@ If not specified, the pod's hostname will be set to a...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecos">os</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecos">os</a></b></td>
         <td>object</td>
         <td>
           Specifies the OS of the containers in the pod.<br/>
@@ -11237,14 +11230,14 @@ priority of the pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecreadinessgatesindex">readinessGates</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecreadinessgatesindex">readinessGates</a></b></td>
         <td>[]object</td>
         <td>
           If specified, all readiness gates will be evaluated for pod readiness.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecresourceclaimsindex">resourceClaims</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecresourceclaimsindex">resourceClaims</a></b></td>
         <td>[]object</td>
         <td>
           ResourceClaims defines which ResourceClaims must be allocated
@@ -11252,7 +11245,7 @@ and reserved before the Pod is...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecresources">resources</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecresources">resources</a></b></td>
         <td>object</td>
         <td>
           Resources is the total amount of CPU and Memory resources required by all
@@ -11282,14 +11275,14 @@ One of Always, OnFailure, Never.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecschedulinggatesindex">schedulingGates</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecschedulinggatesindex">schedulingGates</a></b></td>
         <td>[]object</td>
         <td>
           SchedulingGates is an opaque list of values that if specified will block scheduling the pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontext">securityContext</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontext">securityContext</a></b></td>
         <td>object</td>
         <td>
           SecurityContext holds pod-level security attributes and common container settings.<br/>
@@ -11340,14 +11333,14 @@ One of Always, OnFailure, Never.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespectolerationsindex">tolerations</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespectolerationsindex">tolerations</a></b></td>
         <td>[]object</td>
         <td>
           If specified, the pod's tolerations.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindex">topologySpreadConstraints</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindex">topologySpreadConstraints</a></b></td>
         <td>[]object</td>
         <td>
           TopologySpreadConstraints describes how a group of pods ought to spread across topology
@@ -11355,7 +11348,7 @@ domains.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex">volumes</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex">volumes</a></b></td>
         <td>[]object</td>
         <td>
           List of volumes that can be mounted by containers belonging to the pod.<br/>
@@ -11365,8 +11358,8 @@ domains.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -11404,7 +11397,7 @@ The container image's CMD is used if this is not provided.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindex">env</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindex">env</a></b></td>
         <td>[]object</td>
         <td>
           List of environment variables to set in the container.
@@ -11412,7 +11405,7 @@ Cannot be updated.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvfromindex">envFrom</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvfromindex">envFrom</a></b></td>
         <td>[]object</td>
         <td>
           List of sources to populate environment variables in the container.<br/>
@@ -11435,14 +11428,14 @@ One of Always, Never, IfNotPresent.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycle">lifecycle</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycle">lifecycle</a></b></td>
         <td>object</td>
         <td>
           Actions that the management system should take in response to container lifecycle events.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe">livenessProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe">livenessProbe</a></b></td>
         <td>object</td>
         <td>
           Periodic probe of container liveness.
@@ -11450,28 +11443,28 @@ Container will be restarted if the probe fails.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexportsindex">ports</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexportsindex">ports</a></b></td>
         <td>[]object</td>
         <td>
           List of ports to expose from the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe">readinessProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe">readinessProbe</a></b></td>
         <td>object</td>
         <td>
           Periodic probe of container service readiness.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexresizepolicyindex">resizePolicy</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexresizepolicyindex">resizePolicy</a></b></td>
         <td>[]object</td>
         <td>
           Resources resize policy for the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexresources">resources</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexresources">resources</a></b></td>
         <td>object</td>
         <td>
           Compute Resources required by this container.
@@ -11487,14 +11480,14 @@ More info: https://kubernetes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext">securityContext</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext">securityContext</a></b></td>
         <td>object</td>
         <td>
           SecurityContext defines the security options the container should be run with.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe">startupProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe">startupProbe</a></b></td>
         <td>object</td>
         <td>
           StartupProbe indicates that the Pod has successfully initialized.<br/>
@@ -11538,14 +11531,14 @@ will be written is...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexvolumedevicesindex">volumeDevices</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexvolumedevicesindex">volumeDevices</a></b></td>
         <td>[]object</td>
         <td>
           volumeDevices is the list of block devices to be used by the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexvolumemountsindex">volumeMounts</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexvolumemountsindex">volumeMounts</a></b></td>
         <td>[]object</td>
         <td>
           Pod volumes to mount into the container's filesystem.
@@ -11563,8 +11556,8 @@ Cannot be updated.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].env[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].env[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -11595,7 +11588,7 @@ using the previously defined environment variables in...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom">valueFrom</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom">valueFrom</a></b></td>
         <td>object</td>
         <td>
           Source for the environment variable's value. Cannot be used if value is not empty.<br/>
@@ -11605,8 +11598,8 @@ using the previously defined environment variables in...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindex)
 
 
 
@@ -11622,21 +11615,21 @@ Source for the environment variable's value. Cannot be used if value is not empt
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
         <td>object</td>
         <td>
           Selects a key of a ConfigMap.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromfieldref">fieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromfieldref">fieldRef</a></b></td>
         <td>object</td>
         <td>
           Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
         <td>object</td>
         <td>
           Selects a resource of the container: only resources limits and requests
@@ -11644,7 +11637,7 @@ Source for the environment variable's value. Cannot be used if value is not empt
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
         <td>object</td>
         <td>
           Selects a key of a secret in the pod's namespace<br/>
@@ -11654,8 +11647,8 @@ Source for the environment variable's value. Cannot be used if value is not empt
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.configMapKeyRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.configMapKeyRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
 
 
 
@@ -11697,8 +11690,8 @@ Selects a key of a ConfigMap.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.fieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.fieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
 
 
 
@@ -11731,8 +11724,8 @@ Selects a field of the pod: supports metadata.name, metadata.namespace, `metadat
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.resourceFieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.resourceFieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
 
 
 
@@ -11773,8 +11766,8 @@ Selects a resource of the container: only resources limits and requests
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.secretKeyRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].env[index].valueFrom.secretKeyRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvindexvaluefrom)
 
 
 
@@ -11816,8 +11809,8 @@ Selects a key of a secret in the pod's namespace
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].envFrom[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].envFrom[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -11833,7 +11826,7 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvfromindexconfigmapref">configMapRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvfromindexconfigmapref">configMapRef</a></b></td>
         <td>object</td>
         <td>
           The ConfigMap to select from<br/>
@@ -11847,7 +11840,7 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvfromindexsecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvfromindexsecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           The Secret to select from<br/>
@@ -11857,8 +11850,8 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].envFrom[index].configMapRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvfromindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].envFrom[index].configMapRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvfromindex)
 
 
 
@@ -11893,8 +11886,8 @@ The ConfigMap to select from
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].envFrom[index].secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexenvfromindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].envFrom[index].secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexenvfromindex)
 
 
 
@@ -11929,8 +11922,8 @@ The Secret to select from
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -11946,14 +11939,14 @@ Actions that the management system should take in response to container lifecycl
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart">postStart</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart">postStart</a></b></td>
         <td>object</td>
         <td>
           PostStart is called immediately after a container is created.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop">preStop</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop">preStop</a></b></td>
         <td>object</td>
         <td>
           PreStop is called immediately before a container is terminated due to an
@@ -11971,8 +11964,8 @@ API request or management...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycle)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycle)
 
 
 
@@ -11988,28 +11981,28 @@ PostStart is called immediately after a container is created.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststartexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststartexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarthttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarthttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststartsleep">sleep</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststartsleep">sleep</a></b></td>
         <td>object</td>
         <td>
           Sleep represents a duration that the container should sleep.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarttcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarttcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
@@ -12020,8 +12013,8 @@ for backward compatibility.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
 
 
 
@@ -12048,8 +12041,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
 
 
 
@@ -12080,7 +12073,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarthttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarthttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -12105,8 +12098,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarthttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststarthttpget)
 
 
 
@@ -12139,8 +12132,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.sleep
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.sleep
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
 
 
 
@@ -12168,8 +12161,8 @@ Sleep represents a duration that the container should sleep.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.postStart.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecyclepoststart)
 
 
 
@@ -12204,8 +12197,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycle)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycle)
 
 
 
@@ -12222,28 +12215,28 @@ API request or management...
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestopexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestopexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestophttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestophttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestopsleep">sleep</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestopsleep">sleep</a></b></td>
         <td>object</td>
         <td>
           Sleep represents a duration that the container should sleep.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestoptcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestoptcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
@@ -12254,8 +12247,8 @@ for backward compatibility.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
 
 
 
@@ -12282,8 +12275,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
 
 
 
@@ -12314,7 +12307,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestophttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestophttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -12339,8 +12332,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestophttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestophttpget)
 
 
 
@@ -12373,8 +12366,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.sleep
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.sleep
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
 
 
 
@@ -12402,8 +12395,8 @@ Sleep represents a duration that the container should sleep.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].lifecycle.preStop.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlifecycleprestop)
 
 
 
@@ -12438,8 +12431,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -12456,7 +12449,7 @@ Container will be restarted if the probe fails.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -12472,14 +12465,14 @@ Container will be restarted if the probe fails.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -12514,7 +12507,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -12543,8 +12536,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
 
 
 
@@ -12571,8 +12564,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
 
 
 
@@ -12610,8 +12603,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
 
 
 
@@ -12642,7 +12635,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -12667,8 +12660,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobehttpget)
 
 
 
@@ -12701,8 +12694,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].livenessProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexlivenessprobe)
 
 
 
@@ -12736,8 +12729,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].ports[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].ports[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -12800,8 +12793,8 @@ Defaults to "TCP".<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -12817,7 +12810,7 @@ Periodic probe of container service readiness.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -12833,14 +12826,14 @@ Periodic probe of container service readiness.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -12875,7 +12868,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -12904,8 +12897,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
 
 
 
@@ -12932,8 +12925,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
 
 
 
@@ -12971,8 +12964,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
 
 
 
@@ -13003,7 +12996,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -13028,8 +13021,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobehttpget)
 
 
 
@@ -13062,8 +13055,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].readinessProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexreadinessprobe)
 
 
 
@@ -13097,8 +13090,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].resizePolicy[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].resizePolicy[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -13132,8 +13125,8 @@ Supported values: cpu, memory.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].resources
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].resources
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -13151,7 +13144,7 @@ More info: https://kubernetes.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexresourcesclaimsindex">claims</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexresourcesclaimsindex">claims</a></b></td>
         <td>[]object</td>
         <td>
           Claims lists the names of resources, defined in spec.<br/>
@@ -13176,8 +13169,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].resources.claims[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexresources)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].resources.claims[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexresources)
 
 
 
@@ -13210,8 +13203,8 @@ ResourceClaim references one entry in PodSpec.ResourceClaims.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].securityContext
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].securityContext
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -13235,14 +13228,14 @@ privileges than its parent...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
         <td>object</td>
         <td>
           appArmorProfile is the AppArmor options to use by this container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextcapabilities">capabilities</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextcapabilities">capabilities</a></b></td>
         <td>object</td>
         <td>
           The capabilities to add/drop when running containers.<br/>
@@ -13297,21 +13290,21 @@ Uses runtime default if unset.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
         <td>object</td>
         <td>
           The SELinux context to be applied to the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextseccompprofile">seccompProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextseccompprofile">seccompProfile</a></b></td>
         <td>object</td>
         <td>
           The seccomp options to use by this container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextwindowsoptions">windowsOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontextwindowsoptions">windowsOptions</a></b></td>
         <td>object</td>
         <td>
           The Windows specific settings applied to all containers.<br/>
@@ -13321,8 +13314,8 @@ Uses runtime default if unset.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].securityContext.appArmorProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].securityContext.appArmorProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
 
 
 
@@ -13355,8 +13348,8 @@ appArmorProfile is the AppArmor options to use by this container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].securityContext.capabilities
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].securityContext.capabilities
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
 
 
 
@@ -13389,8 +13382,8 @@ The capabilities to add/drop when running containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].securityContext.seLinuxOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].securityContext.seLinuxOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
 
 
 
@@ -13437,8 +13430,8 @@ The SELinux context to be applied to the container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].securityContext.seccompProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].securityContext.seccompProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
 
 
 
@@ -13471,8 +13464,8 @@ The seccomp options to use by this container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].securityContext.windowsOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].securityContext.windowsOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexsecuritycontext)
 
 
 
@@ -13520,8 +13513,8 @@ The Windows specific settings applied to all containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].startupProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].startupProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -13537,7 +13530,7 @@ StartupProbe indicates that the Pod has successfully initialized.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -13553,14 +13546,14 @@ StartupProbe indicates that the Pod has successfully initialized.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -13595,7 +13588,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -13624,8 +13617,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
 
 
 
@@ -13652,8 +13645,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
 
 
 
@@ -13691,8 +13684,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
 
 
 
@@ -13723,7 +13716,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -13748,8 +13741,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobehttpget)
 
 
 
@@ -13782,8 +13775,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].startupProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindexstartupprobe)
 
 
 
@@ -13817,8 +13810,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].volumeDevices[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].volumeDevices[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -13851,8 +13844,8 @@ volumeDevice describes a mapping of a raw block device within a container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.containers[index].volumeMounts[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespeccontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.containers[index].volumeMounts[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespeccontainersindex)
 
 
 
@@ -13924,8 +13917,8 @@ recursively.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -13941,21 +13934,21 @@ If specified, the pod's scheduling constraints
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinity">nodeAffinity</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinity">nodeAffinity</a></b></td>
         <td>object</td>
         <td>
           Describes node affinity scheduling rules for the pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinity">podAffinity</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinity">podAffinity</a></b></td>
         <td>object</td>
         <td>
           Describes pod affinity scheduling rules (e.g. co-locate this pod in the same node, zone, etc.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinity">podAntiAffinity</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinity">podAntiAffinity</a></b></td>
         <td>object</td>
         <td>
           Describes pod anti-affinity scheduling rules (e.g.<br/>
@@ -13965,8 +13958,8 @@ If specified, the pod's scheduling constraints
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinity)
 
 
 
@@ -13982,7 +13975,7 @@ Describes node affinity scheduling rules for the pod.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindex">preferredDuringSchedulingIgnoredDuringExecution</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindex">preferredDuringSchedulingIgnoredDuringExecution</a></b></td>
         <td>[]object</td>
         <td>
           The scheduler will prefer to schedule pods to nodes that satisfy
@@ -13990,7 +13983,7 @@ the affinity expressions specified...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecution">requiredDuringSchedulingIgnoredDuringExecution</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecution">requiredDuringSchedulingIgnoredDuringExecution</a></b></td>
         <td>object</td>
         <td>
           If the affinity requirements specified by this field are not met at
@@ -14001,8 +13994,8 @@ scheduling time, the pod will...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinity)
 
 
 
@@ -14019,7 +14012,7 @@ An empty preferred scheduling term matches all objects with implicit weight 0
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreference">preference</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreference">preference</a></b></td>
         <td>object</td>
         <td>
           A node selector term, associated with the corresponding weight.<br/>
@@ -14038,8 +14031,8 @@ An empty preferred scheduling term matches all objects with implicit weight 0
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].preference
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].preference
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindex)
 
 
 
@@ -14055,14 +14048,14 @@ A node selector term, associated with the corresponding weight.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreferencematchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreferencematchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           A list of node selector requirements by node's labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreferencematchfieldsindex">matchFields</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreferencematchfieldsindex">matchFields</a></b></td>
         <td>[]object</td>
         <td>
           A list of node selector requirements by node's fields.<br/>
@@ -14072,8 +14065,8 @@ A node selector term, associated with the corresponding weight.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].preference.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreference)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].preference.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreference)
 
 
 
@@ -14115,8 +14108,8 @@ the values array must be non-empty.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].preference.matchFields[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreference)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].preference.matchFields[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinitypreferredduringschedulingignoredduringexecutionindexpreference)
 
 
 
@@ -14158,8 +14151,8 @@ the values array must be non-empty.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinity)
 
 
 
@@ -14176,7 +14169,7 @@ scheduling time, the pod will...
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindex">nodeSelectorTerms</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindex">nodeSelectorTerms</a></b></td>
         <td>[]object</td>
         <td>
           Required. A list of node selector terms. The terms are ORed.<br/>
@@ -14186,8 +14179,8 @@ scheduling time, the pod will...
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecution)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecution)
 
 
 
@@ -14204,14 +14197,14 @@ them are ANDed.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindexmatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindexmatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           A list of node selector requirements by node's labels.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindexmatchfieldsindex">matchFields</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindexmatchfieldsindex">matchFields</a></b></td>
         <td>[]object</td>
         <td>
           A list of node selector requirements by node's fields.<br/>
@@ -14221,8 +14214,8 @@ them are ANDed.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[index].matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[index].matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindex)
 
 
 
@@ -14264,8 +14257,8 @@ the values array must be non-empty.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[index].matchFields[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[index].matchFields[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitynodeaffinityrequiredduringschedulingignoredduringexecutionnodeselectortermsindex)
 
 
 
@@ -14307,8 +14300,8 @@ the values array must be non-empty.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinity)
 
 
 
@@ -14324,7 +14317,7 @@ Describes pod affinity scheduling rules (e.g. co-locate this pod in the same nod
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindex">preferredDuringSchedulingIgnoredDuringExecution</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindex">preferredDuringSchedulingIgnoredDuringExecution</a></b></td>
         <td>[]object</td>
         <td>
           The scheduler will prefer to schedule pods to nodes that satisfy
@@ -14332,7 +14325,7 @@ the affinity expressions specified...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindex">requiredDuringSchedulingIgnoredDuringExecution</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindex">requiredDuringSchedulingIgnoredDuringExecution</a></b></td>
         <td>[]object</td>
         <td>
           If the affinity requirements specified by this field are not met at
@@ -14343,8 +14336,8 @@ scheduling time, the pod will...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinity)
 
 
 
@@ -14360,7 +14353,7 @@ The weights of all of the matched WeightedPodAffinityTerm fields are added per-n
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm">podAffinityTerm</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm">podAffinityTerm</a></b></td>
         <td>object</td>
         <td>
           Required. A pod affinity term, associated with the corresponding weight.<br/>
@@ -14380,8 +14373,8 @@ in the range 1-100.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindex)
 
 
 
@@ -14404,7 +14397,7 @@ Required. A pod affinity term, associated with the corresponding weight.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector">labelSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector">labelSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over a set of resources, in this case pods.<br/>
@@ -14427,7 +14420,7 @@ be taken into consideration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector">namespaceSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector">namespaceSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over the set of namespaces that the term applies to.<br/>
@@ -14444,8 +14437,8 @@ be taken into consideration.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
 
 
 
@@ -14461,7 +14454,7 @@ A label query over a set of resources, in this case pods.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -14478,8 +14471,8 @@ A label query over a set of resources, in this case pods.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector)
 
 
 
@@ -14519,8 +14512,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
 
 
 
@@ -14536,7 +14529,7 @@ A label query over the set of namespaces that the term applies to.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -14553,8 +14546,8 @@ A label query over the set of namespaces that the term applies to.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector)
 
 
 
@@ -14594,8 +14587,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinity)
 
 
 
@@ -14619,7 +14612,7 @@ relative to the given namespace(s))...
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector">labelSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector">labelSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over a set of resources, in this case pods.<br/>
@@ -14642,7 +14635,7 @@ be taken into consideration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector">namespaceSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector">namespaceSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over the set of namespaces that the term applies to.<br/>
@@ -14659,8 +14652,8 @@ be taken into consideration.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindex)
 
 
 
@@ -14676,7 +14669,7 @@ A label query over a set of resources, in this case pods.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -14693,8 +14686,8 @@ A label query over a set of resources, in this case pods.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector)
 
 
 
@@ -14734,8 +14727,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindex)
 
 
 
@@ -14751,7 +14744,7 @@ A label query over the set of namespaces that the term applies to.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -14768,8 +14761,8 @@ A label query over the set of namespaces that the term applies to.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector)
 
 
 
@@ -14809,8 +14802,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinity)
 
 
 
@@ -14826,7 +14819,7 @@ Describes pod anti-affinity scheduling rules (e.g.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindex">preferredDuringSchedulingIgnoredDuringExecution</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindex">preferredDuringSchedulingIgnoredDuringExecution</a></b></td>
         <td>[]object</td>
         <td>
           The scheduler will prefer to schedule pods to nodes that satisfy
@@ -14834,7 +14827,7 @@ the anti-affinity expressions...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindex">requiredDuringSchedulingIgnoredDuringExecution</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindex">requiredDuringSchedulingIgnoredDuringExecution</a></b></td>
         <td>[]object</td>
         <td>
           If the anti-affinity requirements specified by this field are not met at
@@ -14845,8 +14838,8 @@ scheduling time, the pod...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinity)
 
 
 
@@ -14862,7 +14855,7 @@ The weights of all of the matched WeightedPodAffinityTerm fields are added per-n
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm">podAffinityTerm</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm">podAffinityTerm</a></b></td>
         <td>object</td>
         <td>
           Required. A pod affinity term, associated with the corresponding weight.<br/>
@@ -14882,8 +14875,8 @@ in the range 1-100.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindex)
 
 
 
@@ -14906,7 +14899,7 @@ Required. A pod affinity term, associated with the corresponding weight.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector">labelSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector">labelSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over a set of resources, in this case pods.<br/>
@@ -14929,7 +14922,7 @@ be taken into consideration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector">namespaceSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector">namespaceSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over the set of namespaces that the term applies to.<br/>
@@ -14946,8 +14939,8 @@ be taken into consideration.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
 
 
 
@@ -14963,7 +14956,7 @@ A label query over a set of resources, in this case pods.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -14980,8 +14973,8 @@ A label query over a set of resources, in this case pods.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.labelSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermlabelselector)
 
 
 
@@ -15021,8 +15014,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinityterm)
 
 
 
@@ -15038,7 +15031,7 @@ A label query over the set of namespaces that the term applies to.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -15055,8 +15048,8 @@ A label query over the set of namespaces that the term applies to.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution[index].podAffinityTerm.namespaceSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinitypreferredduringschedulingignoredduringexecutionindexpodaffinitytermnamespaceselector)
 
 
 
@@ -15096,8 +15089,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinity)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinity)
 
 
 
@@ -15121,7 +15114,7 @@ relative to the given namespace(s))...
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector">labelSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector">labelSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over a set of resources, in this case pods.<br/>
@@ -15144,7 +15137,7 @@ be taken into consideration.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector">namespaceSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector">namespaceSelector</a></b></td>
         <td>object</td>
         <td>
           A label query over the set of namespaces that the term applies to.<br/>
@@ -15161,8 +15154,8 @@ be taken into consideration.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindex)
 
 
 
@@ -15178,7 +15171,7 @@ A label query over a set of resources, in this case pods.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -15195,8 +15188,8 @@ A label query over a set of resources, in this case pods.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].labelSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexlabelselector)
 
 
 
@@ -15236,8 +15229,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindex)
 
 
 
@@ -15253,7 +15246,7 @@ A label query over the set of namespaces that the term applies to.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -15270,8 +15263,8 @@ A label query over the set of namespaces that the term applies to.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution[index].namespaceSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecaffinitypodantiaffinityrequiredduringschedulingignoredduringexecutionindexnamespaceselector)
 
 
 
@@ -15311,8 +15304,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.dnsConfig
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.dnsConfig
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -15335,7 +15328,7 @@ Specifies the DNS parameters of a pod.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecdnsconfigoptionsindex">options</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecdnsconfigoptionsindex">options</a></b></td>
         <td>[]object</td>
         <td>
           A list of DNS resolver options.
@@ -15353,8 +15346,8 @@ This will be merged with the base options generated from DNSPolicy.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.dnsConfig.options[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecdnsconfig)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.dnsConfig.options[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecdnsconfig)
 
 
 
@@ -15388,8 +15381,8 @@ Required.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -15427,7 +15420,7 @@ The image's CMD is used if this is not provided.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindex">env</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindex">env</a></b></td>
         <td>[]object</td>
         <td>
           List of environment variables to set in the container.
@@ -15435,7 +15428,7 @@ Cannot be updated.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindex">envFrom</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindex">envFrom</a></b></td>
         <td>[]object</td>
         <td>
           List of sources to populate environment variables in the container.<br/>
@@ -15458,42 +15451,42 @@ One of Always, Never, IfNotPresent.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycle">lifecycle</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycle">lifecycle</a></b></td>
         <td>object</td>
         <td>
           Lifecycle is not allowed for ephemeral containers.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe">livenessProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe">livenessProbe</a></b></td>
         <td>object</td>
         <td>
           Probes are not allowed for ephemeral containers.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexportsindex">ports</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexportsindex">ports</a></b></td>
         <td>[]object</td>
         <td>
           Ports are not allowed for ephemeral containers.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe">readinessProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe">readinessProbe</a></b></td>
         <td>object</td>
         <td>
           Probes are not allowed for ephemeral containers.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexresizepolicyindex">resizePolicy</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexresizepolicyindex">resizePolicy</a></b></td>
         <td>[]object</td>
         <td>
           Resources resize policy for the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexresources">resources</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexresources">resources</a></b></td>
         <td>object</td>
         <td>
           Resources are not allowed for ephemeral containers.<br/>
@@ -15508,14 +15501,14 @@ container within a pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext">securityContext</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext">securityContext</a></b></td>
         <td>object</td>
         <td>
           Optional: SecurityContext defines the security options the ephemeral container should be run with.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe">startupProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe">startupProbe</a></b></td>
         <td>object</td>
         <td>
           Probes are not allowed for ephemeral containers.<br/>
@@ -15566,14 +15559,14 @@ will be written is...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexvolumedevicesindex">volumeDevices</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexvolumedevicesindex">volumeDevices</a></b></td>
         <td>[]object</td>
         <td>
           volumeDevices is the list of block devices to be used by the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexvolumemountsindex">volumeMounts</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexvolumemountsindex">volumeMounts</a></b></td>
         <td>[]object</td>
         <td>
           Pod volumes to mount into the container's filesystem.<br/>
@@ -15590,8 +15583,8 @@ will be written is...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -15622,7 +15615,7 @@ using the previously defined environment variables in...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom">valueFrom</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom">valueFrom</a></b></td>
         <td>object</td>
         <td>
           Source for the environment variable's value. Cannot be used if value is not empty.<br/>
@@ -15632,8 +15625,8 @@ using the previously defined environment variables in...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindex)
 
 
 
@@ -15649,21 +15642,21 @@ Source for the environment variable's value. Cannot be used if value is not empt
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
         <td>object</td>
         <td>
           Selects a key of a ConfigMap.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromfieldref">fieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromfieldref">fieldRef</a></b></td>
         <td>object</td>
         <td>
           Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
         <td>object</td>
         <td>
           Selects a resource of the container: only resources limits and requests
@@ -15671,7 +15664,7 @@ Source for the environment variable's value. Cannot be used if value is not empt
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
         <td>object</td>
         <td>
           Selects a key of a secret in the pod's namespace<br/>
@@ -15681,8 +15674,8 @@ Source for the environment variable's value. Cannot be used if value is not empt
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.configMapKeyRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.configMapKeyRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
 
 
 
@@ -15724,8 +15717,8 @@ Selects a key of a ConfigMap.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.fieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.fieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
 
 
 
@@ -15758,8 +15751,8 @@ Selects a field of the pod: supports metadata.name, metadata.namespace, `metadat
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.resourceFieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.resourceFieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
 
 
 
@@ -15800,8 +15793,8 @@ Selects a resource of the container: only resources limits and requests
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.secretKeyRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].env[index].valueFrom.secretKeyRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvindexvaluefrom)
 
 
 
@@ -15843,8 +15836,8 @@ Selects a key of a secret in the pod's namespace
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].envFrom[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].envFrom[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -15860,7 +15853,7 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindexconfigmapref">configMapRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindexconfigmapref">configMapRef</a></b></td>
         <td>object</td>
         <td>
           The ConfigMap to select from<br/>
@@ -15874,7 +15867,7 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindexsecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindexsecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           The Secret to select from<br/>
@@ -15884,8 +15877,8 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].envFrom[index].configMapRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].envFrom[index].configMapRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindex)
 
 
 
@@ -15920,8 +15913,8 @@ The ConfigMap to select from
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].envFrom[index].secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].envFrom[index].secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexenvfromindex)
 
 
 
@@ -15956,8 +15949,8 @@ The Secret to select from
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -15973,14 +15966,14 @@ Lifecycle is not allowed for ephemeral containers.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart">postStart</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart">postStart</a></b></td>
         <td>object</td>
         <td>
           PostStart is called immediately after a container is created.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop">preStop</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop">preStop</a></b></td>
         <td>object</td>
         <td>
           PreStop is called immediately before a container is terminated due to an
@@ -15998,8 +15991,8 @@ API request or management...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycle)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycle)
 
 
 
@@ -16015,28 +16008,28 @@ PostStart is called immediately after a container is created.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststartexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststartexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarthttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarthttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststartsleep">sleep</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststartsleep">sleep</a></b></td>
         <td>object</td>
         <td>
           Sleep represents a duration that the container should sleep.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarttcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarttcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
@@ -16047,8 +16040,8 @@ for backward compatibility.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
 
 
 
@@ -16075,8 +16068,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
 
 
 
@@ -16107,7 +16100,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarthttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarthttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -16132,8 +16125,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarthttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststarthttpget)
 
 
 
@@ -16166,8 +16159,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.sleep
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.sleep
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
 
 
 
@@ -16195,8 +16188,8 @@ Sleep represents a duration that the container should sleep.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.postStart.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecyclepoststart)
 
 
 
@@ -16231,8 +16224,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycle)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycle)
 
 
 
@@ -16249,28 +16242,28 @@ API request or management...
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestopexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestopexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestophttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestophttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestopsleep">sleep</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestopsleep">sleep</a></b></td>
         <td>object</td>
         <td>
           Sleep represents a duration that the container should sleep.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestoptcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestoptcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
@@ -16281,8 +16274,8 @@ for backward compatibility.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
 
 
 
@@ -16309,8 +16302,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
 
 
 
@@ -16341,7 +16334,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestophttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestophttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -16366,8 +16359,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestophttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestophttpget)
 
 
 
@@ -16400,8 +16393,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.sleep
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.sleep
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
 
 
 
@@ -16429,8 +16422,8 @@ Sleep represents a duration that the container should sleep.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].lifecycle.preStop.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlifecycleprestop)
 
 
 
@@ -16465,8 +16458,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -16482,7 +16475,7 @@ Probes are not allowed for ephemeral containers.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -16498,14 +16491,14 @@ Probes are not allowed for ephemeral containers.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -16540,7 +16533,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -16569,8 +16562,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
 
 
 
@@ -16597,8 +16590,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
 
 
 
@@ -16636,8 +16629,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
 
 
 
@@ -16668,7 +16661,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -16693,8 +16686,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobehttpget)
 
 
 
@@ -16727,8 +16720,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].livenessProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexlivenessprobe)
 
 
 
@@ -16762,8 +16755,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].ports[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].ports[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -16826,8 +16819,8 @@ Defaults to "TCP".<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -16843,7 +16836,7 @@ Probes are not allowed for ephemeral containers.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -16859,14 +16852,14 @@ Probes are not allowed for ephemeral containers.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -16901,7 +16894,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -16930,8 +16923,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
 
 
 
@@ -16958,8 +16951,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
 
 
 
@@ -16997,8 +16990,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
 
 
 
@@ -17029,7 +17022,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -17054,8 +17047,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobehttpget)
 
 
 
@@ -17088,8 +17081,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].readinessProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexreadinessprobe)
 
 
 
@@ -17123,8 +17116,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].resizePolicy[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].resizePolicy[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -17158,8 +17151,8 @@ Supported values: cpu, memory.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].resources
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].resources
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -17175,7 +17168,7 @@ Resources are not allowed for ephemeral containers.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexresourcesclaimsindex">claims</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexresourcesclaimsindex">claims</a></b></td>
         <td>[]object</td>
         <td>
           Claims lists the names of resources, defined in spec.<br/>
@@ -17200,8 +17193,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].resources.claims[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexresources)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].resources.claims[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexresources)
 
 
 
@@ -17234,8 +17227,8 @@ ResourceClaim references one entry in PodSpec.ResourceClaims.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -17259,14 +17252,14 @@ privileges than its parent...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
         <td>object</td>
         <td>
           appArmorProfile is the AppArmor options to use by this container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextcapabilities">capabilities</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextcapabilities">capabilities</a></b></td>
         <td>object</td>
         <td>
           The capabilities to add/drop when running containers.<br/>
@@ -17321,21 +17314,21 @@ Uses runtime default if unset.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
         <td>object</td>
         <td>
           The SELinux context to be applied to the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextseccompprofile">seccompProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextseccompprofile">seccompProfile</a></b></td>
         <td>object</td>
         <td>
           The seccomp options to use by this container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextwindowsoptions">windowsOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontextwindowsoptions">windowsOptions</a></b></td>
         <td>object</td>
         <td>
           The Windows specific settings applied to all containers.<br/>
@@ -17345,8 +17338,8 @@ Uses runtime default if unset.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.appArmorProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.appArmorProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
 
 
 
@@ -17379,8 +17372,8 @@ appArmorProfile is the AppArmor options to use by this container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.capabilities
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.capabilities
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
 
 
 
@@ -17413,8 +17406,8 @@ The capabilities to add/drop when running containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.seLinuxOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.seLinuxOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
 
 
 
@@ -17461,8 +17454,8 @@ The SELinux context to be applied to the container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.seccompProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.seccompProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
 
 
 
@@ -17495,8 +17488,8 @@ The seccomp options to use by this container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.windowsOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].securityContext.windowsOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexsecuritycontext)
 
 
 
@@ -17544,8 +17537,8 @@ The Windows specific settings applied to all containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -17561,7 +17554,7 @@ Probes are not allowed for ephemeral containers.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -17577,14 +17570,14 @@ Probes are not allowed for ephemeral containers.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -17619,7 +17612,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -17648,8 +17641,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
 
 
 
@@ -17676,8 +17669,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
 
 
 
@@ -17715,8 +17708,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
 
 
 
@@ -17747,7 +17740,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -17772,8 +17765,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobehttpget)
 
 
 
@@ -17806,8 +17799,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].startupProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindexstartupprobe)
 
 
 
@@ -17841,8 +17834,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].volumeDevices[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].volumeDevices[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -17875,8 +17868,8 @@ volumeDevice describes a mapping of a raw block device within a container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].volumeMounts[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.ephemeralContainers[index].volumeMounts[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecephemeralcontainersindex)
 
 
 
@@ -17948,8 +17941,8 @@ recursively.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.hostAliases[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.hostAliases[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -17983,8 +17976,8 @@ pod's...
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.imagePullSecrets[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.imagePullSecrets[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -18013,8 +18006,8 @@ referenced object inside the...
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -18052,7 +18045,7 @@ The container image's CMD is used if this is not provided.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindex">env</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindex">env</a></b></td>
         <td>[]object</td>
         <td>
           List of environment variables to set in the container.
@@ -18060,7 +18053,7 @@ Cannot be updated.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindex">envFrom</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindex">envFrom</a></b></td>
         <td>[]object</td>
         <td>
           List of sources to populate environment variables in the container.<br/>
@@ -18083,14 +18076,14 @@ One of Always, Never, IfNotPresent.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycle">lifecycle</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycle">lifecycle</a></b></td>
         <td>object</td>
         <td>
           Actions that the management system should take in response to container lifecycle events.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe">livenessProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe">livenessProbe</a></b></td>
         <td>object</td>
         <td>
           Periodic probe of container liveness.
@@ -18098,28 +18091,28 @@ Container will be restarted if the probe fails.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexportsindex">ports</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexportsindex">ports</a></b></td>
         <td>[]object</td>
         <td>
           List of ports to expose from the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe">readinessProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe">readinessProbe</a></b></td>
         <td>object</td>
         <td>
           Periodic probe of container service readiness.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexresizepolicyindex">resizePolicy</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexresizepolicyindex">resizePolicy</a></b></td>
         <td>[]object</td>
         <td>
           Resources resize policy for the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexresources">resources</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexresources">resources</a></b></td>
         <td>object</td>
         <td>
           Compute Resources required by this container.
@@ -18135,14 +18128,14 @@ More info: https://kubernetes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext">securityContext</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext">securityContext</a></b></td>
         <td>object</td>
         <td>
           SecurityContext defines the security options the container should be run with.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe">startupProbe</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe">startupProbe</a></b></td>
         <td>object</td>
         <td>
           StartupProbe indicates that the Pod has successfully initialized.<br/>
@@ -18186,14 +18179,14 @@ will be written is...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexvolumedevicesindex">volumeDevices</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexvolumedevicesindex">volumeDevices</a></b></td>
         <td>[]object</td>
         <td>
           volumeDevices is the list of block devices to be used by the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexvolumemountsindex">volumeMounts</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexvolumemountsindex">volumeMounts</a></b></td>
         <td>[]object</td>
         <td>
           Pod volumes to mount into the container's filesystem.
@@ -18211,8 +18204,8 @@ Cannot be updated.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].env[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].env[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -18243,7 +18236,7 @@ using the previously defined environment variables in...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom">valueFrom</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom">valueFrom</a></b></td>
         <td>object</td>
         <td>
           Source for the environment variable's value. Cannot be used if value is not empty.<br/>
@@ -18253,8 +18246,8 @@ using the previously defined environment variables in...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindex)
 
 
 
@@ -18270,21 +18263,21 @@ Source for the environment variable's value. Cannot be used if value is not empt
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromconfigmapkeyref">configMapKeyRef</a></b></td>
         <td>object</td>
         <td>
           Selects a key of a ConfigMap.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromfieldref">fieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromfieldref">fieldRef</a></b></td>
         <td>object</td>
         <td>
           Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromresourcefieldref">resourceFieldRef</a></b></td>
         <td>object</td>
         <td>
           Selects a resource of the container: only resources limits and requests
@@ -18292,7 +18285,7 @@ Source for the environment variable's value. Cannot be used if value is not empt
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefromsecretkeyref">secretKeyRef</a></b></td>
         <td>object</td>
         <td>
           Selects a key of a secret in the pod's namespace<br/>
@@ -18302,8 +18295,8 @@ Source for the environment variable's value. Cannot be used if value is not empt
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.configMapKeyRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.configMapKeyRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
 
 
 
@@ -18345,8 +18338,8 @@ Selects a key of a ConfigMap.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.fieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.fieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
 
 
 
@@ -18379,8 +18372,8 @@ Selects a field of the pod: supports metadata.name, metadata.namespace, `metadat
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.resourceFieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.resourceFieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
 
 
 
@@ -18421,8 +18414,8 @@ Selects a resource of the container: only resources limits and requests
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.secretKeyRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].env[index].valueFrom.secretKeyRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvindexvaluefrom)
 
 
 
@@ -18464,8 +18457,8 @@ Selects a key of a secret in the pod's namespace
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].envFrom[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].envFrom[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -18481,7 +18474,7 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindexconfigmapref">configMapRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindexconfigmapref">configMapRef</a></b></td>
         <td>object</td>
         <td>
           The ConfigMap to select from<br/>
@@ -18495,7 +18488,7 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindexsecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindexsecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           The Secret to select from<br/>
@@ -18505,8 +18498,8 @@ EnvFromSource represents the source of a set of ConfigMaps or Secrets
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].envFrom[index].configMapRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].envFrom[index].configMapRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindex)
 
 
 
@@ -18541,8 +18534,8 @@ The ConfigMap to select from
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].envFrom[index].secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].envFrom[index].secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexenvfromindex)
 
 
 
@@ -18577,8 +18570,8 @@ The Secret to select from
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -18594,14 +18587,14 @@ Actions that the management system should take in response to container lifecycl
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart">postStart</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart">postStart</a></b></td>
         <td>object</td>
         <td>
           PostStart is called immediately after a container is created.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop">preStop</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop">preStop</a></b></td>
         <td>object</td>
         <td>
           PreStop is called immediately before a container is terminated due to an
@@ -18619,8 +18612,8 @@ API request or management...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycle)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycle)
 
 
 
@@ -18636,28 +18629,28 @@ PostStart is called immediately after a container is created.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststartexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststartexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarthttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarthttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststartsleep">sleep</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststartsleep">sleep</a></b></td>
         <td>object</td>
         <td>
           Sleep represents a duration that the container should sleep.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarttcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarttcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
@@ -18668,8 +18661,8 @@ for backward compatibility.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
 
 
 
@@ -18696,8 +18689,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
 
 
 
@@ -18728,7 +18721,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarthttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarthttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -18753,8 +18746,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarthttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststarthttpget)
 
 
 
@@ -18787,8 +18780,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.sleep
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.sleep
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
 
 
 
@@ -18816,8 +18809,8 @@ Sleep represents a duration that the container should sleep.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.postStart.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecyclepoststart)
 
 
 
@@ -18852,8 +18845,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycle)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycle)
 
 
 
@@ -18870,28 +18863,28 @@ API request or management...
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestopexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestopexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestophttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestophttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestopsleep">sleep</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestopsleep">sleep</a></b></td>
         <td>object</td>
         <td>
           Sleep represents a duration that the container should sleep.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestoptcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestoptcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           Deprecated. TCPSocket is NOT supported as a LifecycleHandler and kept
@@ -18902,8 +18895,8 @@ for backward compatibility.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
 
 
 
@@ -18930,8 +18923,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
 
 
 
@@ -18962,7 +18955,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestophttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestophttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -18987,8 +18980,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestophttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestophttpget)
 
 
 
@@ -19021,8 +19014,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.sleep
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.sleep
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
 
 
 
@@ -19050,8 +19043,8 @@ Sleep represents a duration that the container should sleep.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].lifecycle.preStop.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlifecycleprestop)
 
 
 
@@ -19086,8 +19079,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -19104,7 +19097,7 @@ Container will be restarted if the probe fails.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -19120,14 +19113,14 @@ Container will be restarted if the probe fails.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -19162,7 +19155,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -19191,8 +19184,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
 
 
 
@@ -19219,8 +19212,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
 
 
 
@@ -19258,8 +19251,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
 
 
 
@@ -19290,7 +19283,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -19315,8 +19308,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobehttpget)
 
 
 
@@ -19349,8 +19342,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].livenessProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexlivenessprobe)
 
 
 
@@ -19384,8 +19377,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].ports[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].ports[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -19448,8 +19441,8 @@ Defaults to "TCP".<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -19465,7 +19458,7 @@ Periodic probe of container service readiness.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -19481,14 +19474,14 @@ Periodic probe of container service readiness.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -19523,7 +19516,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -19552,8 +19545,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
 
 
 
@@ -19580,8 +19573,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
 
 
 
@@ -19619,8 +19612,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
 
 
 
@@ -19651,7 +19644,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -19676,8 +19669,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobehttpget)
 
 
 
@@ -19710,8 +19703,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].readinessProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexreadinessprobe)
 
 
 
@@ -19745,8 +19738,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].resizePolicy[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].resizePolicy[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -19780,8 +19773,8 @@ Supported values: cpu, memory.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].resources
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].resources
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -19799,7 +19792,7 @@ More info: https://kubernetes.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexresourcesclaimsindex">claims</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexresourcesclaimsindex">claims</a></b></td>
         <td>[]object</td>
         <td>
           Claims lists the names of resources, defined in spec.<br/>
@@ -19824,8 +19817,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].resources.claims[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexresources)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].resources.claims[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexresources)
 
 
 
@@ -19858,8 +19851,8 @@ ResourceClaim references one entry in PodSpec.ResourceClaims.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -19883,14 +19876,14 @@ privileges than its parent...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
         <td>object</td>
         <td>
           appArmorProfile is the AppArmor options to use by this container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextcapabilities">capabilities</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextcapabilities">capabilities</a></b></td>
         <td>object</td>
         <td>
           The capabilities to add/drop when running containers.<br/>
@@ -19945,21 +19938,21 @@ Uses runtime default if unset.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
         <td>object</td>
         <td>
           The SELinux context to be applied to the container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextseccompprofile">seccompProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextseccompprofile">seccompProfile</a></b></td>
         <td>object</td>
         <td>
           The seccomp options to use by this container.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextwindowsoptions">windowsOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontextwindowsoptions">windowsOptions</a></b></td>
         <td>object</td>
         <td>
           The Windows specific settings applied to all containers.<br/>
@@ -19969,8 +19962,8 @@ Uses runtime default if unset.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.appArmorProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.appArmorProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
 
 
 
@@ -20003,8 +19996,8 @@ appArmorProfile is the AppArmor options to use by this container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.capabilities
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.capabilities
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
 
 
 
@@ -20037,8 +20030,8 @@ The capabilities to add/drop when running containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.seLinuxOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.seLinuxOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
 
 
 
@@ -20085,8 +20078,8 @@ The SELinux context to be applied to the container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.seccompProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.seccompProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
 
 
 
@@ -20119,8 +20112,8 @@ The seccomp options to use by this container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.windowsOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].securityContext.windowsOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexsecuritycontext)
 
 
 
@@ -20168,8 +20161,8 @@ The Windows specific settings applied to all containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -20185,7 +20178,7 @@ StartupProbe indicates that the Pod has successfully initialized.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobeexec">exec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobeexec">exec</a></b></td>
         <td>object</td>
         <td>
           Exec specifies a command to execute in the container.<br/>
@@ -20201,14 +20194,14 @@ StartupProbe indicates that the Pod has successfully initialized.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobegrpc">grpc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobegrpc">grpc</a></b></td>
         <td>object</td>
         <td>
           GRPC specifies a GRPC HealthCheckRequest.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobehttpget">httpGet</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobehttpget">httpGet</a></b></td>
         <td>object</td>
         <td>
           HTTPGet specifies an HTTP GET request to perform.<br/>
@@ -20243,7 +20236,7 @@ Default to 10 seconds. Minimum value is 1.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobetcpsocket">tcpSocket</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobetcpsocket">tcpSocket</a></b></td>
         <td>object</td>
         <td>
           TCPSocket specifies a connection to a TCP port.<br/>
@@ -20272,8 +20265,8 @@ Defaults to 1 second. Minimum value is 1.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.exec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.exec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
 
 
 
@@ -20300,8 +20293,8 @@ command ...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.grpc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.grpc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
 
 
 
@@ -20339,8 +20332,8 @@ GRPC specifies a GRPC HealthCheckRequest.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.httpGet
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.httpGet
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
 
 
 
@@ -20371,7 +20364,7 @@ Number must be in the range 1 to 65535.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobehttpgethttpheadersindex">httpHeaders</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobehttpgethttpheadersindex">httpHeaders</a></b></td>
         <td>[]object</td>
         <td>
           Custom headers to set in the request. HTTP allows repeated headers.<br/>
@@ -20396,8 +20389,8 @@ Defaults to HTTP.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.httpGet.httpHeaders[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobehttpget)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.httpGet.httpHeaders[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobehttpget)
 
 
 
@@ -20430,8 +20423,8 @@ HTTPHeader describes a custom header to be used in HTTP probes
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.tcpSocket
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].startupProbe.tcpSocket
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindexstartupprobe)
 
 
 
@@ -20465,8 +20458,8 @@ Number must be in the range 1 to 65535.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].volumeDevices[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].volumeDevices[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -20499,8 +20492,8 @@ volumeDevice describes a mapping of a raw block device within a container.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.initContainers[index].volumeMounts[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecinitcontainersindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.initContainers[index].volumeMounts[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecinitcontainersindex)
 
 
 
@@ -20572,8 +20565,8 @@ recursively.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.os
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.os
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -20599,8 +20592,8 @@ Specifies the OS of the containers in the pod.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.readinessGates[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.readinessGates[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -20626,8 +20619,8 @@ PodReadinessGate contains the reference to a pod condition
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.resourceClaims[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.resourceClaims[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -20671,8 +20664,8 @@ object in the same namespace as...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.resources
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.resources
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -20689,7 +20682,7 @@ containers in the pod.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecresourcesclaimsindex">claims</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecresourcesclaimsindex">claims</a></b></td>
         <td>[]object</td>
         <td>
           Claims lists the names of resources, defined in spec.<br/>
@@ -20714,8 +20707,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.resources.claims[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecresources)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.resources.claims[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecresources)
 
 
 
@@ -20748,8 +20741,8 @@ ResourceClaim references one entry in PodSpec.ResourceClaims.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.schedulingGates[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.schedulingGates[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -20776,8 +20769,8 @@ Each scheduling gate must have a unique name field.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.securityContext
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.securityContext
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -20793,7 +20786,7 @@ SecurityContext holds pod-level security attributes and common container setting
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontextapparmorprofile">appArmorProfile</a></b></td>
         <td>object</td>
         <td>
           appArmorProfile is the AppArmor options to use by the containers in this pod.<br/>
@@ -20850,14 +20843,14 @@ Uses runtime default if unset.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontextselinuxoptions">seLinuxOptions</a></b></td>
         <td>object</td>
         <td>
           The SELinux context to be applied to all containers.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontextseccompprofile">seccompProfile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontextseccompprofile">seccompProfile</a></b></td>
         <td>object</td>
         <td>
           The seccomp options to use by the containers in this pod.<br/>
@@ -20879,14 +20872,14 @@ addition to the container's...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontextsysctlsindex">sysctls</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontextsysctlsindex">sysctls</a></b></td>
         <td>[]object</td>
         <td>
           Sysctls hold a list of namespaced sysctls used for the pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontextwindowsoptions">windowsOptions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontextwindowsoptions">windowsOptions</a></b></td>
         <td>object</td>
         <td>
           The Windows specific settings applied to all containers.<br/>
@@ -20896,8 +20889,8 @@ addition to the container's...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.securityContext.appArmorProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.securityContext.appArmorProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontext)
 
 
 
@@ -20930,8 +20923,8 @@ appArmorProfile is the AppArmor options to use by the containers in this pod.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.securityContext.seLinuxOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.securityContext.seLinuxOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontext)
 
 
 
@@ -20978,8 +20971,8 @@ The SELinux context to be applied to all containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.securityContext.seccompProfile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.securityContext.seccompProfile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontext)
 
 
 
@@ -21012,8 +21005,8 @@ The seccomp options to use by the containers in this pod.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.securityContext.sysctls[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.securityContext.sysctls[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontext)
 
 
 
@@ -21046,8 +21039,8 @@ Sysctl defines a kernel parameter to be set
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.securityContext.windowsOptions
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecsecuritycontext)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.securityContext.windowsOptions
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecsecuritycontext)
 
 
 
@@ -21095,8 +21088,8 @@ The Windows specific settings applied to all containers.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.tolerations[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.tolerations[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -21155,8 +21148,8 @@ of effect NoExecute,...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.topologySpreadConstraints[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.topologySpreadConstraints[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -21196,7 +21189,7 @@ the spread constraint.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindexlabelselector">labelSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindexlabelselector">labelSelector</a></b></td>
         <td>object</td>
         <td>
           LabelSelector is used to find matching pods.<br/>
@@ -21239,8 +21232,8 @@ pod topology spread skew.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.topologySpreadConstraints[index].labelSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.topologySpreadConstraints[index].labelSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindex)
 
 
 
@@ -21256,7 +21249,7 @@ LabelSelector is used to find matching pods.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindexlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindexlabelselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -21273,8 +21266,8 @@ LabelSelector is used to find matching pods.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.topologySpreadConstraints[index].labelSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindexlabelselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.topologySpreadConstraints[index].labelSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespectopologyspreadconstraintsindexlabelselector)
 
 
 
@@ -21314,8 +21307,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespec)
 
 
 
@@ -21340,7 +21333,7 @@ More info: https://kubernetes.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexawselasticblockstore">awsElasticBlockStore</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexawselasticblockstore">awsElasticBlockStore</a></b></td>
         <td>object</td>
         <td>
           awsElasticBlockStore represents an AWS Disk resource that is attached to a
@@ -21348,77 +21341,77 @@ kubelet's host machine...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexazuredisk">azureDisk</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexazuredisk">azureDisk</a></b></td>
         <td>object</td>
         <td>
           azureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexazurefile">azureFile</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexazurefile">azureFile</a></b></td>
         <td>object</td>
         <td>
           azureFile represents an Azure File Service mount on the host and bind mount to the pod.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcephfs">cephfs</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcephfs">cephfs</a></b></td>
         <td>object</td>
         <td>
           cephFS represents a Ceph FS mount on the host that shares a pod's lifetime.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcinder">cinder</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcinder">cinder</a></b></td>
         <td>object</td>
         <td>
           cinder represents a cinder volume attached and mounted on kubelets host machine.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexconfigmap">configMap</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexconfigmap">configMap</a></b></td>
         <td>object</td>
         <td>
           configMap represents a configMap that should populate this volume<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcsi">csi</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcsi">csi</a></b></td>
         <td>object</td>
         <td>
           csi (Container Storage Interface) represents ephemeral storage that is handled by certain external...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexdownwardapi">downwardAPI</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexdownwardapi">downwardAPI</a></b></td>
         <td>object</td>
         <td>
           downwardAPI represents downward API about the pod that should populate this volume<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexemptydir">emptyDir</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexemptydir">emptyDir</a></b></td>
         <td>object</td>
         <td>
           emptyDir represents a temporary directory that shares a pod's lifetime.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeral">ephemeral</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeral">ephemeral</a></b></td>
         <td>object</td>
         <td>
           ephemeral represents a volume that is handled by a cluster storage driver.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexfc">fc</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexfc">fc</a></b></td>
         <td>object</td>
         <td>
           fc represents a Fibre Channel resource that is attached to a kubelet's host machine and then...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexflexvolume">flexVolume</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexflexvolume">flexVolume</a></b></td>
         <td>object</td>
         <td>
           flexVolume represents a generic volume resource that is
@@ -21426,14 +21419,14 @@ provisioned/attached using an exec based...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexflocker">flocker</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexflocker">flocker</a></b></td>
         <td>object</td>
         <td>
           flocker represents a Flocker volume attached to a kubelet's host machine.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexgcepersistentdisk">gcePersistentDisk</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexgcepersistentdisk">gcePersistentDisk</a></b></td>
         <td>object</td>
         <td>
           gcePersistentDisk represents a GCE Disk resource that is attached to a
@@ -21441,7 +21434,7 @@ kubelet's host machine and...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexgitrepo">gitRepo</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexgitrepo">gitRepo</a></b></td>
         <td>object</td>
         <td>
           gitRepo represents a git repository at a particular revision.
@@ -21449,14 +21442,14 @@ Deprecated: GitRepo is deprecated.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexglusterfs">glusterfs</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexglusterfs">glusterfs</a></b></td>
         <td>object</td>
         <td>
           glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexhostpath">hostPath</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexhostpath">hostPath</a></b></td>
         <td>object</td>
         <td>
           hostPath represents a pre-existing file or directory on the host
@@ -21464,14 +21457,14 @@ machine that is directly exposed...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindeximage">image</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindeximage">image</a></b></td>
         <td>object</td>
         <td>
           image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexiscsi">iscsi</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexiscsi">iscsi</a></b></td>
         <td>object</td>
         <td>
           iscsi represents an ISCSI Disk resource that is attached to a
@@ -21479,7 +21472,7 @@ kubelet's host machine and then...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexnfs">nfs</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexnfs">nfs</a></b></td>
         <td>object</td>
         <td>
           nfs represents an NFS mount on the host that shares a pod's lifetime
@@ -21487,7 +21480,7 @@ More info: https://kubernetes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexpersistentvolumeclaim">persistentVolumeClaim</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexpersistentvolumeclaim">persistentVolumeClaim</a></b></td>
         <td>object</td>
         <td>
           persistentVolumeClaimVolumeSource represents a reference to a
@@ -21495,49 +21488,49 @@ PersistentVolumeClaim in the same...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexphotonpersistentdisk">photonPersistentDisk</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexphotonpersistentdisk">photonPersistentDisk</a></b></td>
         <td>object</td>
         <td>
           photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexportworxvolume">portworxVolume</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexportworxvolume">portworxVolume</a></b></td>
         <td>object</td>
         <td>
           portworxVolume represents a portworx volume attached and mounted on kubelets host machine.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojected">projected</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojected">projected</a></b></td>
         <td>object</td>
         <td>
           projected items for all in one resources secrets, configmaps, and downward API<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexquobyte">quobyte</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexquobyte">quobyte</a></b></td>
         <td>object</td>
         <td>
           quobyte represents a Quobyte mount on the host that shares a pod's lifetime.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexrbd">rbd</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexrbd">rbd</a></b></td>
         <td>object</td>
         <td>
           rbd represents a Rados Block Device mount on the host that shares a pod's lifetime.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexscaleio">scaleIO</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexscaleio">scaleIO</a></b></td>
         <td>object</td>
         <td>
           scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexsecret">secret</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexsecret">secret</a></b></td>
         <td>object</td>
         <td>
           secret represents a secret that should populate this volume.
@@ -21545,14 +21538,14 @@ More info: https://kubernetes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexstorageos">storageos</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexstorageos">storageos</a></b></td>
         <td>object</td>
         <td>
           storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexvspherevolume">vsphereVolume</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexvspherevolume">vsphereVolume</a></b></td>
         <td>object</td>
         <td>
           vsphereVolume represents a vSphere volume attached and mounted on kubelets host machine.<br/>
@@ -21562,8 +21555,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].awsElasticBlockStore
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].awsElasticBlockStore
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -21614,8 +21607,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].azureDisk
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].azureDisk
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -21680,8 +21673,8 @@ azureDisk represents an Azure Data Disk mount on the host and bind mount to the 
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].azureFile
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].azureFile
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -21721,8 +21714,8 @@ azureFile represents an Azure File Service mount on the host and bind mount to t
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].cephfs
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].cephfs
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -21767,7 +21760,7 @@ More info: https://examples.k8s.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcephfssecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcephfssecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           secretRef is Optional: SecretRef is reference to the authentication secret for User, default is...<br/>
@@ -21785,8 +21778,8 @@ More info: https://examples.k8s.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].cephfs.secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcephfs)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].cephfs.secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcephfs)
 
 
 
@@ -21814,8 +21807,8 @@ secretRef is Optional: SecretRef is reference to the authentication secret for U
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].cinder
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].cinder
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -21853,7 +21846,7 @@ More info: https://examples.k8s.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcindersecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcindersecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           secretRef is optional: points to a secret object containing parameters used to connect
@@ -21864,8 +21857,8 @@ to OpenStack.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].cinder.secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcinder)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].cinder.secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcinder)
 
 
 
@@ -21894,8 +21887,8 @@ to OpenStack.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].configMap
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].configMap
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -21920,7 +21913,7 @@ configMap represents a configMap that should populate this volume
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexconfigmapitemsindex">items</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexconfigmapitemsindex">items</a></b></td>
         <td>[]object</td>
         <td>
           items if unspecified, each key-value pair in the Data field of the referenced
@@ -21947,8 +21940,8 @@ ConfigMap will be...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].configMap.items[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexconfigmap)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].configMap.items[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexconfigmap)
 
 
 
@@ -21991,8 +21984,8 @@ May not be an absolute path.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].csi
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].csi
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22022,7 +22015,7 @@ csi (Container Storage Interface) represents ephemeral storage that is handled b
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcsinodepublishsecretref">nodePublishSecretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcsinodepublishsecretref">nodePublishSecretRef</a></b></td>
         <td>object</td>
         <td>
           nodePublishSecretRef is a reference to the secret object containing
@@ -22049,8 +22042,8 @@ driver.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].csi.nodePublishSecretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexcsi)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].csi.nodePublishSecretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexcsi)
 
 
 
@@ -22079,8 +22072,8 @@ sensitive information to pass...
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22105,7 +22098,7 @@ downwardAPI represents downward API about the pod that should populate this volu
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindex">items</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindex">items</a></b></td>
         <td>[]object</td>
         <td>
           Items is a list of downward API volume file<br/>
@@ -22115,8 +22108,8 @@ downwardAPI represents downward API about the pod that should populate this volu
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI.items[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexdownwardapi)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI.items[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexdownwardapi)
 
 
 
@@ -22139,7 +22132,7 @@ DownwardAPIVolumeFile represents information to create the file containing the p
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindexfieldref">fieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindexfieldref">fieldRef</a></b></td>
         <td>object</td>
         <td>
           Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are...<br/>
@@ -22156,7 +22149,7 @@ between 0000 and...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindexresourcefieldref">resourceFieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindexresourcefieldref">resourceFieldRef</a></b></td>
         <td>object</td>
         <td>
           Selects a resource of the container: only resources limits and requests
@@ -22167,8 +22160,8 @@ between 0000 and...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI.items[index].fieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI.items[index].fieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindex)
 
 
 
@@ -22201,8 +22194,8 @@ Required: Selects a field of the pod: only annotations, labels, name, namespace 
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI.items[index].resourceFieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].downwardAPI.items[index].resourceFieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexdownwardapiitemsindex)
 
 
 
@@ -22243,8 +22236,8 @@ Selects a resource of the container: only resources limits and requests
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].emptyDir
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].emptyDir
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22277,8 +22270,8 @@ emptyDir represents a temporary directory that shares a pod's lifetime.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22294,7 +22287,7 @@ ephemeral represents a volume that is handled by a cluster storage driver.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplate">volumeClaimTemplate</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplate">volumeClaimTemplate</a></b></td>
         <td>object</td>
         <td>
           Will be used to create a stand-alone PVC to provision the volume.<br/>
@@ -22304,8 +22297,8 @@ ephemeral represents a volume that is handled by a cluster storage driver.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeral)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeral)
 
 
 
@@ -22321,7 +22314,7 @@ Will be used to create a stand-alone PVC to provision the volume.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec">spec</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec">spec</a></b></td>
         <td>object</td>
         <td>
           The specification for the PersistentVolumeClaim.<br/>
@@ -22339,8 +22332,8 @@ when creating it.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplate)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplate)
 
 
 
@@ -22364,7 +22357,7 @@ More info: https://kubernetes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecdatasource">dataSource</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecdatasource">dataSource</a></b></td>
         <td>object</td>
         <td>
           dataSource field can be used to specify either:
@@ -22372,21 +22365,21 @@ More info: https://kubernetes.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecdatasourceref">dataSourceRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecdatasourceref">dataSourceRef</a></b></td>
         <td>object</td>
         <td>
           dataSourceRef specifies the object from which to populate the volume with data, if a non-empty...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecresources">resources</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecresources">resources</a></b></td>
         <td>object</td>
         <td>
           resources represents the minimum resources the volume should have.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecselector">selector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecselector">selector</a></b></td>
         <td>object</td>
         <td>
           selector is a label query over volumes to consider for binding.<br/>
@@ -22424,8 +22417,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.dataSource
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.dataSource
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
 
 
 
@@ -22466,8 +22459,8 @@ dataSource field can be used to specify either:
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.dataSourceRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.dataSourceRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
 
 
 
@@ -22515,8 +22508,8 @@ Note that when a namespace is specified, a...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.resources
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.resources
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
 
 
 
@@ -22550,8 +22543,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.selector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.selector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespec)
 
 
 
@@ -22567,7 +22560,7 @@ selector is a label query over volumes to consider for binding.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -22584,8 +22577,8 @@ selector is a label query over volumes to consider for binding.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.selector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].ephemeral.volumeClaimTemplate.spec.selector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexephemeralvolumeclaimtemplatespecselector)
 
 
 
@@ -22625,8 +22618,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].fc
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].fc
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22683,8 +22676,8 @@ Either wwids or combination of targetWWNs...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].flexVolume
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].flexVolume
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22729,7 +22722,7 @@ provisioned/attached using an exec based...
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexflexvolumesecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexflexvolumesecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           secretRef is Optional: secretRef is reference to the secret object containing
@@ -22740,8 +22733,8 @@ sensitive information...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].flexVolume.secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexflexvolume)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].flexVolume.secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexflexvolume)
 
 
 
@@ -22770,8 +22763,8 @@ sensitive information...
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].flocker
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].flocker
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22805,8 +22798,8 @@ should be...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].gcePersistentDisk
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].gcePersistentDisk
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22857,8 +22850,8 @@ Defaults to false.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].gitRepo
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].gitRepo
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22900,8 +22893,8 @@ Must not contain or start with '..'.  If '.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].glusterfs
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].glusterfs
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22943,8 +22936,8 @@ More info: https://examples.k8s.io/volumes/glusterfs/README.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].hostPath
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].hostPath
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -22980,8 +22973,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].image
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].image
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23015,8 +23008,8 @@ Behaves in the same way as pod.spec.containers[*].<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].iscsi
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].iscsi
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23109,7 +23102,7 @@ Defaults to false.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexiscsisecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexiscsisecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           secretRef is the CHAP Secret for iSCSI target and initiator authentication<br/>
@@ -23119,8 +23112,8 @@ Defaults to false.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].iscsi.secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexiscsi)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].iscsi.secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexiscsi)
 
 
 
@@ -23148,8 +23141,8 @@ secretRef is the CHAP Secret for iSCSI target and initiator authentication
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].nfs
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].nfs
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23193,8 +23186,8 @@ Defaults to false.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].persistentVolumeClaim
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].persistentVolumeClaim
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23229,8 +23222,8 @@ Default false.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].photonPersistentDisk
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].photonPersistentDisk
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23263,8 +23256,8 @@ photonPersistentDisk represents a PhotonController persistent disk attached and 
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].portworxVolume
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].portworxVolume
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23305,8 +23298,8 @@ Must be a filesystem type supported by the host...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23331,7 +23324,7 @@ projected items for all in one resources secrets, configmaps, and downward API
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex">sources</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex">sources</a></b></td>
         <td>[]object</td>
         <td>
           sources is the list of volume projections. Each entry in this list
@@ -23342,8 +23335,8 @@ handles one source.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojected)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojected)
 
 
 
@@ -23359,35 +23352,35 @@ Projection that may be projected along with other supported volume types.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundle">clusterTrustBundle</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundle">clusterTrustBundle</a></b></td>
         <td>object</td>
         <td>
           ClusterTrustBundle allows a pod to access the `.spec.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexconfigmap">configMap</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexconfigmap">configMap</a></b></td>
         <td>object</td>
         <td>
           configMap information about the configMap data to project<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapi">downwardAPI</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapi">downwardAPI</a></b></td>
         <td>object</td>
         <td>
           downwardAPI information about the downwardAPI data to project<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexsecret">secret</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexsecret">secret</a></b></td>
         <td>object</td>
         <td>
           secret information about the secret data to project<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexserviceaccounttoken">serviceAccountToken</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexserviceaccounttoken">serviceAccountToken</a></b></td>
         <td>object</td>
         <td>
           serviceAccountToken is information about the serviceAccountToken data to project<br/>
@@ -23397,8 +23390,8 @@ Projection that may be projected along with other supported volume types.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].clusterTrustBundle
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].clusterTrustBundle
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
 
 
 
@@ -23421,7 +23414,7 @@ ClusterTrustBundle allows a pod to access the `.spec.
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundlelabelselector">labelSelector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundlelabelselector">labelSelector</a></b></td>
         <td>object</td>
         <td>
           Select all ClusterTrustBundles that match this label selector.<br/>
@@ -23454,8 +23447,8 @@ Mutually-exclusive with name.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].clusterTrustBundle.labelSelector
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundle)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].clusterTrustBundle.labelSelector
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundle)
 
 
 
@@ -23471,7 +23464,7 @@ Select all ClusterTrustBundles that match this label selector.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundlelabelselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundlelabelselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -23488,8 +23481,8 @@ Select all ClusterTrustBundles that match this label selector.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].clusterTrustBundle.labelSelector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundlelabelselector)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].clusterTrustBundle.labelSelector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexclustertrustbundlelabelselector)
 
 
 
@@ -23529,8 +23522,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].configMap
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].configMap
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
 
 
 
@@ -23546,7 +23539,7 @@ configMap information about the configMap data to project
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexconfigmapitemsindex">items</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexconfigmapitemsindex">items</a></b></td>
         <td>[]object</td>
         <td>
           items if unspecified, each key-value pair in the Data field of the referenced
@@ -23573,8 +23566,8 @@ ConfigMap will be...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].configMap.items[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexconfigmap)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].configMap.items[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexconfigmap)
 
 
 
@@ -23601,7 +23594,6 @@ Maps a string key to a path within a volume.
         <td>string</td>
         <td>
           
-
 path is the relative path of the file to map the key to.
 May not be an absolute path.<br/>
         </td>
@@ -23619,8 +23611,8 @@ May not be an absolute path.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
 
 
 
@@ -23636,7 +23628,7 @@ downwardAPI information about the downwardAPI data to project
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindex">items</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindex">items</a></b></td>
         <td>[]object</td>
         <td>
           Items is a list of DownwardAPIVolume file<br/>
@@ -23646,8 +23638,8 @@ downwardAPI information about the downwardAPI data to project
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI.items[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapi)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI.items[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapi)
 
 
 
@@ -23670,7 +23662,7 @@ DownwardAPIVolumeFile represents information to create the file containing the p
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindexfieldref">fieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindexfieldref">fieldRef</a></b></td>
         <td>object</td>
         <td>
           Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are...<br/>
@@ -23681,7 +23673,6 @@ DownwardAPIVolumeFile represents information to create the file containing the p
         <td>integer</td>
         <td>
           
-
 Optional: mode bits used to set permissions on this file, must be an octal value
 between 0000 and...<br/>
           <br/>
@@ -23689,11 +23680,10 @@ between 0000 and...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindexresourcefieldref">resourceFieldRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindexresourcefieldref">resourceFieldRef</a></b></td>
         <td>object</td>
         <td>
           
-
 Selects a resource of the container: only resources limits and requests
 (limits.cpu, limits.<br/>
         </td>
@@ -23702,8 +23692,8 @@ Selects a resource of the container: only resources limits and requests
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI.items[index].fieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI.items[index].fieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindex)
 
 
 
@@ -23736,9 +23726,8 @@ Required: Selects a field of the pod: only annotations, labels, name, namespace 
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI.items[index].resourceFieldRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindex)
-
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].downwardAPI.items[index].resourceFieldRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexdownwardapiitemsindex)
 
 
 
@@ -23780,8 +23769,8 @@ Selects a resource of the container: only resources limits and requests
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].secret
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].secret
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
 
 
 
@@ -23797,7 +23786,7 @@ secret information about the secret data to project
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexsecretitemsindex">items</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexsecretitemsindex">items</a></b></td>
         <td>[]object</td>
         <td>
           items if unspecified, each key-value pair in the Data field of the referenced
@@ -23824,8 +23813,8 @@ Secret will be...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].secret.items[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexsecret)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].secret.items[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindexsecret)
 
 
 
@@ -23852,7 +23841,6 @@ Maps a string key to a path within a volume.
         <td>string</td>
         <td>
           
-
 path is the relative path of the file to map the key to.
 May not be an absolute path.<br/>
         </td>
@@ -23870,8 +23858,8 @@ May not be an absolute path.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].serviceAccountToken
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].projected.sources[index].serviceAccountToken
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexprojectedsourcesindex)
 
 
 
@@ -23915,8 +23903,8 @@ account token.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].quobyte
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].quobyte
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -23981,8 +23969,8 @@ Defaults to serivceaccount user<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].rbd
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].rbd
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -24050,7 +24038,7 @@ Defaults to false.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexrbdsecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexrbdsecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           secretRef is name of the authentication secret for RBDUser. If provided
@@ -24072,8 +24060,8 @@ More info: https://examples.k8s.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].rbd.secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexrbd)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].rbd.secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexrbd)
 
 
 
@@ -24102,8 +24090,8 @@ overrides keyring.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].scaleIO
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].scaleIO
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -24126,7 +24114,7 @@ scaleIO represents a ScaleIO persistent volume attached and mounted on Kubernete
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexscaleiosecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexscaleiosecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           secretRef references to the secret for ScaleIO user and other
@@ -24198,8 +24186,8 @@ that is associated with...<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].scaleIO.secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexscaleio)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].scaleIO.secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexscaleio)
 
 
 
@@ -24228,8 +24216,8 @@ sensitive information.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].secret
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].secret
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -24255,7 +24243,7 @@ More info: https://kubernetes.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexsecretitemsindex">items</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexsecretitemsindex">items</a></b></td>
         <td>[]object</td>
         <td>
           items If unspecified, each key-value pair in the Data field of the referenced
@@ -24281,8 +24269,8 @@ More info: https://kubernetes.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].secret.items[index]
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexsecret)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].secret.items[index]
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexsecret)
 
 
 
@@ -24325,8 +24313,8 @@ May not be an absolute path.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].storageos
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].storageos
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -24356,7 +24344,7 @@ storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexstorageossecretref">secretRef</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexstorageossecretref">secretRef</a></b></td>
         <td>object</td>
         <td>
           secretRef specifies the secret to use for obtaining the StorageOS API
@@ -24381,8 +24369,8 @@ credentials.<br/>
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].storageos.secretRef
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindexstorageos)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].storageos.secretRef
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindexstorageos)
 
 
 
@@ -24411,8 +24399,8 @@ credentials.
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.deployment.template.spec.volumes[index].vsphereVolume
-[Go to parent definition](#graviteegatewayspeckubernetesdeploymenttemplatespecvolumesindex)
+### GatewayClassParameters.spec.kubernetes.deployment.template.spec.volumes[index].vsphereVolume
+[Go to parent definition](#gatewayclassparametersspeckubernetesdeploymenttemplatespecvolumesindex)
 
 
 
@@ -24459,8 +24447,8 @@ vsphereVolume represents a vSphere volume attached and mounted on kubelets host 
 </table>
 
 
-### GraviteeGateway.spec.kubernetes.service
-[Go to parent definition](#graviteegatewayspeckubernetes)
+### GatewayClassParameters.spec.kubernetes.service
+[Go to parent definition](#gatewayclassparametersspeckubernetes)
 
 
 
@@ -24515,8 +24503,8 @@ receive on one of...<br/>
 </table>
 
 
-### GraviteeGateway.spec.listeners[index]
-[Go to parent definition](#graviteegatewayspec)
+### GatewayClassParameters.spec.listeners[index]
+[Go to parent definition](#gatewayclassparametersspec)
 
 
 
@@ -24562,7 +24550,7 @@ Support: Core<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindexallowedroutes">allowedRoutes</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutes">allowedRoutes</a></b></td>
         <td>object</td>
         <td>
           AllowedRoutes defines the types of routes that MAY be attached to a
@@ -24572,7 +24560,7 @@ Listener and the trusted...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindexconfig">config</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindexconfig">config</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -24587,7 +24575,7 @@ define this concept.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindextls">tls</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindextls">tls</a></b></td>
         <td>object</td>
         <td>
           TLS is the TLS configuration for the Listener.<br/>
@@ -24599,8 +24587,8 @@ define this concept.<br/>
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].allowedRoutes
-[Go to parent definition](#graviteegatewayspeclistenersindex)
+### GatewayClassParameters.spec.listeners[index].allowedRoutes
+[Go to parent definition](#gatewayclassparametersspeclistenersindex)
 
 
 
@@ -24617,7 +24605,7 @@ Listener and the trusted...
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindexallowedrouteskindsindex">kinds</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedrouteskindsindex">kinds</a></b></td>
         <td>[]object</td>
         <td>
           Kinds specifies the groups and kinds of Routes that are allowed to bind
@@ -24625,7 +24613,7 @@ to this Gateway Listener.<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindexallowedroutesnamespaces">namespaces</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutesnamespaces">namespaces</a></b></td>
         <td>object</td>
         <td>
           Namespaces indicates namespaces from which Routes may be attached to this
@@ -24638,8 +24626,8 @@ Listener.<br/>
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].allowedRoutes.kinds[index]
-[Go to parent definition](#graviteegatewayspeclistenersindexallowedroutes)
+### GatewayClassParameters.spec.listeners[index].allowedRoutes.kinds[index]
+[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutes)
 
 
 
@@ -24674,8 +24662,8 @@ RouteGroupKind indicates the group and kind of a Route resource.
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].allowedRoutes.namespaces
-[Go to parent definition](#graviteegatewayspeclistenersindexallowedroutes)
+### GatewayClassParameters.spec.listeners[index].allowedRoutes.namespaces
+[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutes)
 
 
 
@@ -24702,7 +24690,7 @@ Listener.
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindexallowedroutesnamespacesselector">selector</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutesnamespacesselector">selector</a></b></td>
         <td>object</td>
         <td>
           Selector must be specified when From is set to "Selector".<br/>
@@ -24712,8 +24700,8 @@ Listener.
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].allowedRoutes.namespaces.selector
-[Go to parent definition](#graviteegatewayspeclistenersindexallowedroutesnamespaces)
+### GatewayClassParameters.spec.listeners[index].allowedRoutes.namespaces.selector
+[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutesnamespaces)
 
 
 
@@ -24729,7 +24717,7 @@ Selector must be specified when From is set to "Selector".
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindexallowedroutesnamespacesselectormatchexpressionsindex">matchExpressions</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutesnamespacesselectormatchexpressionsindex">matchExpressions</a></b></td>
         <td>[]object</td>
         <td>
           matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
@@ -24746,8 +24734,8 @@ Selector must be specified when From is set to "Selector".
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].allowedRoutes.namespaces.selector.matchExpressions[index]
-[Go to parent definition](#graviteegatewayspeclistenersindexallowedroutesnamespacesselector)
+### GatewayClassParameters.spec.listeners[index].allowedRoutes.namespaces.selector.matchExpressions[index]
+[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutesnamespacesselector)
 
 
 
@@ -24787,8 +24775,8 @@ A label selector requirement is a selector that contains values, a key, and an o
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].config
-[Go to parent definition](#graviteegatewayspeclistenersindex)
+### GatewayClassParameters.spec.listeners[index].config
+[Go to parent definition](#gatewayclassparametersspeclistenersindex)
 
 
 
@@ -24804,25 +24792,25 @@ A label selector requirement is a selector that contains values, a key, and an o
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>idleTimeout</b></td>
-        <td>integer</td>
-        <td>
-          <br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
         <td><b>tcpKeepAlive</b></td>
         <td>boolean</td>
         <td>
           <br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>idleTimeout</b></td>
+        <td>integer</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].tls
-[Go to parent definition](#graviteegatewayspeclistenersindex)
+### GatewayClassParameters.spec.listeners[index].tls
+[Go to parent definition](#gatewayclassparametersspeclistenersindex)
 
 
 
@@ -24838,7 +24826,7 @@ TLS is the TLS configuration for the Listener.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindextlscertificaterefsindex">certificateRefs</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindextlscertificaterefsindex">certificateRefs</a></b></td>
         <td>[]object</td>
         <td>
           CertificateRefs contains a series of references to Kubernetes objects that
@@ -24846,7 +24834,7 @@ contains TLS...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindextlsfrontendvalidation">frontendValidation</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindextlsfrontendvalidation">frontendValidation</a></b></td>
         <td>object</td>
         <td>
           FrontendValidation holds configuration information for validating the frontend (client).<br/>
@@ -24874,8 +24862,8 @@ configuration for each implementation.<br/>
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].tls.certificateRefs[index]
-[Go to parent definition](#graviteegatewayspeclistenersindextls)
+### GatewayClassParameters.spec.listeners[index].tls.certificateRefs[index]
+[Go to parent definition](#gatewayclassparametersspeclistenersindextls)
 
 
 
@@ -24927,8 +24915,8 @@ defaulting to Secret.
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].tls.frontendValidation
-[Go to parent definition](#graviteegatewayspeclistenersindextls)
+### GatewayClassParameters.spec.listeners[index].tls.frontendValidation
+[Go to parent definition](#gatewayclassparametersspeclistenersindextls)
 
 
 
@@ -24944,7 +24932,7 @@ FrontendValidation holds configuration information for validating the frontend (
         </tr>
     </thead>
     <tbody><tr>
-        <td><b><a href="#graviteegatewayspeclistenersindextlsfrontendvalidationcacertificaterefsindex">caCertificateRefs</a></b></td>
+        <td><b><a href="#gatewayclassparametersspeclistenersindextlsfrontendvalidationcacertificaterefsindex">caCertificateRefs</a></b></td>
         <td>[]object</td>
         <td>
           CACertificateRefs contains one or more references to
@@ -24955,8 +24943,8 @@ Kubernetes objects that contain TLS...<br/>
 </table>
 
 
-### GraviteeGateway.spec.listeners[index].tls.frontendValidation.caCertificateRefs[index]
-[Go to parent definition](#graviteegatewayspeclistenersindextlsfrontendvalidation)
+### GatewayClassParameters.spec.listeners[index].tls.frontendValidation.caCertificateRefs[index]
+[Go to parent definition](#gatewayclassparametersspeclistenersindextlsfrontendvalidation)
 
 
 

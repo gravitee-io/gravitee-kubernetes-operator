@@ -69,12 +69,12 @@ func updateIngressTLSReference(
 
 			secret.ObjectMeta.Finalizers = append(secret.ObjectMeta.Finalizers, core1.KeyPairFinalizer)
 			k8s.AddAnnotation(secret, core1.LastSpecHashAnnotation, hash.Calculate(&secret.Data))
-			if err := k8s.UpdateSafely(ctx, secret); err != nil {
+			if err := k8s.Update(ctx, secret); err != nil {
 				return client.IgnoreNotFound(err)
 			}
 		} else {
 			secret.Annotations[core1.LastSpecHashAnnotation] = hash.Calculate(&secret.Data)
-			if err := k8s.UpdateSafely(ctx, secret); err != nil {
+			if err := k8s.Update(ctx, secret); err != nil {
 				return err
 			}
 		}
@@ -137,7 +137,7 @@ func deleteIngressTLSReference(
 
 			util.RemoveFinalizer(secret, core1.KeyPairFinalizer)
 
-			if err = k8s.UpdateSafely(ctx, secret); err != nil {
+			if err = k8s.Update(ctx, secret); err != nil {
 				return err
 			}
 		}
@@ -295,7 +295,7 @@ func updatePemRegistryEntry(
 
 		configmap.Data[key] = string(bytes)
 
-		err = k8s.UpdateSafely(ctx, configmap)
+		err = k8s.Update(ctx, configmap)
 
 		if err != nil {
 			return err
@@ -314,7 +314,7 @@ func deletePemRegistryEntry(
 		updateTimestamp(configmap)
 
 		delete(configmap.Data, key)
-		if err := k8s.UpdateSafely(ctx, configmap); err != nil {
+		if err := k8s.Update(ctx, configmap); err != nil {
 			return err
 		}
 	}

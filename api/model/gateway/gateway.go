@@ -16,8 +16,6 @@
 package gateway
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/k8s"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	gAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -29,9 +27,7 @@ type GatewayClassParameters struct {
 }
 
 type GraviteeConfig struct {
-	// +kubebuilder:validation:Optional
-	YAML   *utils.GenericStringMap `json:"yaml"`
-	DBLess bool                    `json:"dbLess"`
+	DBLess bool `json:"dbLess"`
 }
 
 type GraviteeListener struct {
@@ -53,6 +49,6 @@ type GraviteeListenerTLSConfig struct {
 }
 
 type KubernetesConfig struct {
-	Deployment k8s.Deployment `json:"deployment"`
-	Service    k8s.Service    `json:"service"`
+	Deployment *Deployment `json:"deployment"`
+	Service    *Service    `json:"service"`
 }
