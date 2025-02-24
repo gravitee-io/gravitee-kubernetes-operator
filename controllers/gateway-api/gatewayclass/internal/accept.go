@@ -40,8 +40,8 @@ func Accept(ctx context.Context, gwc *gAPIv1.GatewayClass) (*metav1.Condition, e
 		return condition.Build(), nil
 	}
 
-	if paramRef.Kind != "GraviteeGateway" {
-		condition.RejectInvalidParameters("parameters reference kind must be GraviteeGateway")
+	if paramRef.Kind != "GatewayClassParameters" {
+		condition.RejectInvalidParameters("parameters reference kind must be GatewayClassParameters")
 		return condition.Build(), nil
 	}
 

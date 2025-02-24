@@ -12,20 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
 metadata:
-  title: "Gravitee Kubernetes Operator"
-  weight: 1
-  description: "API Reference"
-groups:
-  - group: gravitee.io
-    version: v1alpha1
-    kinds:
-      - name: ManagementContext
-      - name: ApiDefinition
-      - name: ApiV4Definition
-      - name: ApiResource
-      - name: Application
-      - name: Subscription
-      - name: SharedPolicyGroup
-      - name: Group
-      - name: GatewayClassParameters
+  name: gravitee-gateway
+spec:
+  gatewayClassName: gravitee-gateway
+  listeners:
+    - allowedRoutes:
+        namespaces:
+          from: Same
+      name: http
+      port: 30082
+      protocol: HTTP

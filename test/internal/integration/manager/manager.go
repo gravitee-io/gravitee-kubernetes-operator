@@ -19,8 +19,9 @@ import (
 	"os"
 
 	policygroups "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/graviteegw"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/parameters"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -49,6 +50,8 @@ import (
 	clientScheme "k8s.io/client-go/kubernetes/scheme"
 
 	netV1 "k8s.io/api/networking/v1"
+
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 const (
@@ -144,16 +147,25 @@ func init() {
 	)
 
 	runtimeUtil.Must(
-		(&graviteegw.Reconciler{
+		(&parameters.Reconciler{
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("gravitee-gateway-controller"),
 		}).SetupWithManager(mgr),
 	)
 
+	runtimeUtil.Must(gwAPIv1.SchemeBuilder.AddToScheme(scheme))
+
 	runtimeUtil.Must(
 		(&gatewayclass.Reconciler{
 			Scheme:   mgr.GetScheme(),
 			Recorder: mgr.GetEventRecorderFor("gateway-class-controller"),
+		}).SetupWithManager(mgr),
+	)
+
+	runtimeUtil.Must(
+		(&gateway.Reconciler{
+			Scheme:   mgr.GetScheme(),
+			Recorder: mgr.GetEventRecorderFor("gateway-controller"),
 		}).SetupWithManager(mgr),
 	)
 
