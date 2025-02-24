@@ -20,11 +20,10 @@ metadata:
 spec:
   listeners:
     - name: http
-      port: 8083
+      port: 8082
       protocol: HTTP
   gravitee:
-    dbLess: true
-    yaml: {}
+    dbLess: false
   kubernetes:
     deployment:
       replicas: 2
@@ -32,8 +31,9 @@ spec:
         spec:
           containers:
           - name: gateway
-            image: gravitee.io/apim-gateway:4.7.0
+            image: graviteeio/apim-gateway
           securityContext:
             runAsNonRoot: true
+            runAsUser: 1001
     service:
       type: NodePort

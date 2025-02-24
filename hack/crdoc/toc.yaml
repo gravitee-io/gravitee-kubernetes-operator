@@ -28,4 +28,4 @@ groups:
       - name: Subscription
       - name: SharedPolicyGroup
       - name: Group
-      - name: GraviteeGateway
+      - name: GatewayClassParameters
