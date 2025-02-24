@@ -29,8 +29,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/graviteegw"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/parameters"
 
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
@@ -314,7 +315,8 @@ func registerControllers(mgr manager.Manager) {
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
 	runtimeUtil.Must(gwAPIv1.SchemeBuilder.AddToScheme(scheme))
-	if err := (&graviteegw.Reconciler{
+
+	if err := (&parameters.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("gravitee-gateway-controller"),
 	}).SetupWithManager(mgr); err != nil {
@@ -327,6 +329,14 @@ func registerGatewayAPIsControllers(mgr ctrl.Manager) {
 		Recorder: mgr.GetEventRecorderFor("gateway-class-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for gateway class")
+		os.Exit(1)
+	}
+
+	if err := (&gateway.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("gateway-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for gateway")
 		os.Exit(1)
 	}
 }
