@@ -1739,7 +1739,6 @@ spec:
                     - PRIVATE
                   type: string
               required:
-                - definition_context
                 - description
                 - name
                 - version

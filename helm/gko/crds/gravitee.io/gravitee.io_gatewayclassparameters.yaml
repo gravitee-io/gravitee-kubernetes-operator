@@ -48,9 +48,6 @@ spec:
                   properties:
                     dbLess:
                       type: boolean
-                    yaml:
-                      type: object
-                      x-kubernetes-preserve-unknown-fields: true
                   required:
                     - dbLess
                   type: object

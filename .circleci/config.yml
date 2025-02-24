@@ -235,9 +235,7 @@ jobs:
       - run:
           name: Start cluster
           command: |
-            export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=master-latest
-            make start-cluster
+            kind create cluster --config kind/kind.yaml
       - run:
           name: Helm Install the Operator
           command: |
@@ -250,12 +248,12 @@ jobs:
       - run:
           name: Apply resources
           command: |
-            kubectl apply -f ./examples/gateway-api/gravitee-gateway.yaml
+            kubectl apply -f ./examples/gateway-api/gateway-class-parameters.yaml
             kubectl apply -f ./examples/gateway-api/gateway-class.yaml
       - run:
           name: Run Gateway API Conformance Test
           command: |
-            go test -v ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway --debug=true
+            go test ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
       - go/save-cache
 
   job-integration-test:

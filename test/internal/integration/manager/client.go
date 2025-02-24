@@ -34,5 +34,5 @@ func Delete[T client.Object](ctx context.Context, obj T) error {
 }
 
 func UpdateSafely[T client.Object](ctx context.Context, objNew T) error {
-	return k8s.UpdateSafely(ctx, objNew)
+	return k8s.Update(ctx, objNew)
 }
