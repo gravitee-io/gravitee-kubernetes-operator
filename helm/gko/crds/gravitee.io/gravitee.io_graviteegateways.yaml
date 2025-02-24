@@ -6104,6 +6104,8 @@ spec:
                                                             description: >-
                                                               
                                                               
+
+
                                                               path is the relative
                                                               path of the file to
                                                               map the key to.
@@ -6156,6 +6158,8 @@ spec:
                                                             description: >-
                                                               
                                                               
+
+
                                                               Optional: mode bits
                                                               used to set
                                                               permissions on this
@@ -6173,6 +6177,8 @@ spec:
                                                             description: >-
                                                               
                                                               
+
+
                                                               Selects a resource
                                                               of the container:
                                                               only resources
@@ -6229,6 +6235,8 @@ spec:
                                                             description: >-
                                                               
                                                               
+
+
                                                               path is the relative
                                                               path of the file to
                                                               map the key to.
