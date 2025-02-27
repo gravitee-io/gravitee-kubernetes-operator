@@ -51,13 +51,6 @@ spec:
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
-  flows:
-    - name: "default"
-      enabled: true
-      interact:
-        - name: "Debug Log policy"
-          enabled: true
-          policy: "debug-log"
   pages:
     markdowns-folder:
       name: markdowns
