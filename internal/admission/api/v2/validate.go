@@ -96,7 +96,7 @@ func validateUpdate(
 	if !ook || !nok {
 		return errs
 	}
-	if oldApi.IsSyncFromManagement() && !newApi.IsSyncFromManagement() {
+	if !oldApi.IsSyncFromManagement() && newApi.IsSyncFromManagement() {
 		log.Debug(ctx, "deleting configmap following switch in sync mode")
 		configMap := &coreV1.ConfigMap{
 			ObjectMeta: metaV1.ObjectMeta{

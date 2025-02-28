@@ -99,8 +99,6 @@ func saveConfigMap(
 		cm.Data[envKey] = defaultEnvID
 	}
 
-	apiDefinition.PopulateIDs(nil)
-
 	var payload any
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:

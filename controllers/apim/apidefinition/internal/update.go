@@ -139,7 +139,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 	}
 
 	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
-		return updateConfigMap(ctx, apiDefinition)
+		return updateConfigMap(ctx, cp)
 	}
 
 	return nil
