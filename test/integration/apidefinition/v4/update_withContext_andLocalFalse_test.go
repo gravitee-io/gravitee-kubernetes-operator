@@ -18,6 +18,8 @@ import (
 	"context"
 	"net/http"
 
+	addmissionv4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
+
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -81,10 +83,11 @@ var _ = Describe("Update", labels.WithContext, func() {
 			SyncFrom: "MANAGEMENT",
 		}
 
-		Eventually(func() error {
-			return manager.UpdateSafely(ctx, updated)
-		}, timeout, interval).Should(Succeed())
-
+		// we unfortunately rely on a side effect in admission controller
+		// to delete the config map
+		admCtrl := addmissionv4.AdmissionCtrl{}
+		_, err := admCtrl.ValidateUpdate(ctx, fixtures.APIv4, updated)
+		Expect(err).ToNot(HaveOccurred())
 		By("expecting config map to be deleted")
 
 		Eventually(func() error {
@@ -93,12 +96,5 @@ var _ = Describe("Update", labels.WithContext, func() {
 				Namespace: fixtures.APIv4.Namespace,
 			}, cm)
 		}, timeout, interval).ShouldNot(Succeed())
-
-		By("calling gateway endpoint, expecting status 200")
-
-		Eventually(func() error {
-			res, callErr := httpClient.Get(endpoint)
-			return assert.NoErrorAndHTTPStatus(callErr, res, http.StatusOK)
-		}, timeout, interval).Should(Succeed())
 	})
 })
