@@ -207,6 +207,7 @@ jobs:
             kubectl apply -f ./examples/gateway-api/gateway-class.yaml
       - run:
           name: Run Gateway API Conformance Test
+          no_output_timeout: 30m
           command: |
             go test ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
       - go/save-cache
