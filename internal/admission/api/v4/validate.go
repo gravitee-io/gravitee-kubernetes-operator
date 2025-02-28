@@ -17,6 +17,12 @@ package v4
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	coreV1 "k8s.io/api/core/v1"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -81,3 +87,46 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 	}
 	return errs
 }
+<<<<<<< HEAD
+=======
+
+func validateUpdate(
+	ctx context.Context,
+	oldObj runtime.Object,
+	newObj runtime.Object,
+) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+	oldApi, ook := oldObj.(core.ApiDefinitionObject)
+	newApi, nok := newObj.(core.ApiDefinitionObject)
+	if !ook || !nok {
+		return errs
+	}
+
+	if !oldApi.IsSyncFromManagement() && newApi.IsSyncFromManagement() {
+		log.Debug(ctx, "deleting configmap following switch in sync mode")
+		configMap := &coreV1.ConfigMap{
+			ObjectMeta: metaV1.ObjectMeta{
+				Name:      oldApi.GetName(),
+				Namespace: oldApi.GetNamespace(),
+			},
+		}
+		err := client.IgnoreNotFound(k8s.GetClient().Delete(ctx, configMap))
+		if err != nil {
+			log.Debug(ctx, err.Error())
+		}
+	}
+
+	errs.Add(validateApiType(oldApi, newApi))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, indexer.ApiV4SubsField))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateCreate(ctx, newApi))
+	return errs
+}
+>>>>>>> 7e1572e (fix: sync v4 APIs with resources and no context)

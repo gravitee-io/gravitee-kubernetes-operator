@@ -141,8 +141,12 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		}
 =======
 	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
+<<<<<<< HEAD
 		return updateConfigMap(ctx, apiDefinition)
 >>>>>>> 4c79949 (fix: do not allways delete configmaps on updates)
+=======
+		return updateConfigMap(ctx, cp)
+>>>>>>> 7e1572e (fix: sync v4 APIs with resources and no context)
 	}
 
 	return nil
