@@ -54,6 +54,7 @@ func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error 
 	}
 
 	resourceOrRef.Resource = resource.Spec.Resource
+	resourceOrRef.Ref = nil
 
 	return nil
 }
