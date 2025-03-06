@@ -173,10 +173,17 @@ type Path struct {
 type Entrypoint struct {
 	// +kubebuilder:validation:Required
 	Type string `json:"type"`
+<<<<<<< HEAD
 	// +kubebuilder:validation:Required
 	// +kubebuilder:default:=`AUTO`
 	Qos QosType `json:"qos"`
 	Dlq *DLQ    `json:"dlq,omitempty"`
+=======
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=`AUTO`
+	Qos *QosType `json:"qos,omitempty"`
+	Dlq *DLQ     `json:"dlq,omitempty"`
+>>>>>>> 285903e (fix: make endpoint qos optional for V4 APIs)
 	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
 }
