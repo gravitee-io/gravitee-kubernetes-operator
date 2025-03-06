@@ -173,9 +173,9 @@ type Path struct {
 type Entrypoint struct {
 	// +kubebuilder:validation:Required
 	Type string `json:"type"`
-	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=`AUTO`
-	Qos QosType `json:"qos"`
+	Qos QosType `json:"qos,omitempty"`
 	Dlq *DLQ    `json:"dlq,omitempty"`
 	// +kubebuilder:validation:Optional
 	Configuration *utils.GenericStringMap `json:"configuration,omitempty"`
