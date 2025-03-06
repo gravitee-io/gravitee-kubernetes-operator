@@ -199,6 +199,7 @@ type Entrypoint struct {
 	// +kubebuilder:validation:Required
 	Type string `json:"type"`
 	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=`AUTO`
 	Qos *QosType `json:"qos,omitempty"`
 	Dlq *DLQ     `json:"dlq,omitempty"`
 	// +kubebuilder:validation:Optional
