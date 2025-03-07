@@ -17,6 +17,7 @@ package utils
 import (
 	"encoding/json"
 
+	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -131,6 +132,21 @@ func normalizeObject(x interface{}) interface{} {
 	}
 }
 
+func (in *GenericStringMap) UnmarshalYAML(data []byte) error {
+	if in == nil {
+		return nil
+	}
+
+	m := make(map[string]interface{})
+	if err := yaml.Unmarshal(data, &m); err != nil {
+		return err
+	}
+
+	in.Object = m
+
+	return nil
+}
+
 func (in *GenericStringMap) UnmarshalJSON(data []byte) error {
 	if in == nil {
 		return nil
@@ -148,4 +164,8 @@ func (in *GenericStringMap) UnmarshalJSON(data []byte) error {
 
 func (in *GenericStringMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(in.Object)
+}
+
+func (in *GenericStringMap) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(in.Object)
 }

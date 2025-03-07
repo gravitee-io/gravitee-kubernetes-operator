@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -231,4 +232,9 @@ type SubscriptionModel interface {
 	SetApiKind(string)
 	GetPlan() string
 	GetEndingAt() *string
+}
+
+type ConditionAware interface {
+	GetConditions() map[string]metav1.Condition
+	SetConditions([]metav1.Condition)
 }

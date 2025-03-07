@@ -9,7 +9,7 @@ IT_ARGS ?= ""
 TIMEOUT ?= 1200s 
 
 .PHONY: test
-it: use-cluster install ginkgo ## Run intgration tests
+it: use-cluster install install-gateway-api ginkgo ## Run intgration tests
 	$(GINKGO) $(IT_ARGS) --timeout $(TIMEOUT)  test/integration/...
 
 UT_ARGS ?= ""
