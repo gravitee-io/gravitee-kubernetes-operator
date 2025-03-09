@@ -26,33 +26,23 @@ security:
   - BearerAuth: []
   - BasicAuth: []
 servers:
-  - url: "{protocol}://{managementAPIHost}/management/v2/organizations/{orgId}"
-    description: APIM Management API v2 - Base URL to target specific organizations
-    variables:
-      protocol:
-        description: The protocol you want to use to communicate with the mAPI
-        default: https
-        enum:
-          - https
-          - http
-      managementAPIHost:
-        description: The domain of the server hosting your Management API
-        default: localhost:8083
-      orgId:
-        description: The unique ID of your organization
-        default: DEFAULT
+  - url: "htto://localhost:8083/management/v2"
+  - url: "https://localhost:8083/management/v2"
 tags:
   - name: APIs
     description: Everything about APIs
   - name: Shared Policy Group
     description: Everything about shared policy group
 paths:
-  /environments/{envId}/apis/_search:
+  /organizations/{orgId}/environments/{envId}/apis/_search:
     post:
+      operationId: searchV4Apis
       tags:
         - APIs
       summary: Search for APIs of a given type
       parameters:
+        - $ref: "#/components/parameters/orgIdParam"
+        - $ref: "#/components/parameters/envIdParam"
         - $ref: "#/components/parameters/pageParam"
         - $ref: "#/components/parameters/perPageParam"
       requestBody:
@@ -75,10 +65,13 @@ paths:
           description: Wrong credentials
         "500":
           description: Internal server error
-  /environments/{envId}/apis/{apiId}:
+  /organizations/{orgId}/environments/{envId}/apis/{apiId}:
     parameters:
+      - $ref: "#/components/parameters/orgIdParam"
+      - $ref: "#/components/parameters/envIdParam"    
       - $ref: "#/components/parameters/apiIdParam"
     get:
+      operationId: getApi
       tags:
         - APIs
       summary: Get one API
@@ -96,6 +89,7 @@ paths:
         "500":
           description: Internal server error
     delete:
+      operationId: deleteApi
       tags:
         - APIs
       summary: Deletes one API, and close plan by default
@@ -106,21 +100,22 @@ paths:
           schema:
             type: string
             enum:
-              - true
+              - "true"
       responses:
         "204":
           description: API successfully deleted
         default:
           $ref: "#/components/responses/Error"
-  /environments/{envId}/apis/_import/crd:
+  /organizations/{orgId}/environments/{envId}/apis/_import/crd:
     put:
+      operationId: createOrUpdateApiFromCRD
       tags:
         - APIs
       summary: Import API from CRD Spec
       description: Create or update a V4 API from V4 CRD Spec
-      operationId: updateWithDefinition
       parameters:
-        - $ref: "#/components/parameters/envIdParam"
+        - $ref: "#/components/parameters/orgIdParam"
+        - $ref: "#/components/parameters/envIdParam"   
         - $ref: "#/components/parameters/dryRunQueryParam"
       requestBody:
         content:
@@ -143,12 +138,15 @@ paths:
           description: Wrong credentials
         "500":
           description: Internal server error
-  /environments/{envId}/shared-policy-groups:
+  /organizations/{orgId}/environments/{envId}/shared-policy-groups:
     get:
+      operationId: getAllPolicyGroups
       tags:
         - Shared Policy Group
       summary: Get policy groups
       parameters:
+        - $ref: "#/components/parameters/orgIdParam"
+        - $ref: "#/components/parameters/envIdParam"   
         - $ref: "#/components/parameters/pageParam"
         - $ref: "#/components/parameters/perPageParam"
       responses:
@@ -162,10 +160,13 @@ paths:
           description: Wrong credentials
         "500":
           description: Internal server error
-  /environments/{envId}/shared-policy-groups/{spgId}:
+  /organizations/{orgId}/environments/{envId}/shared-policy-groups/{spgId}:
     parameters:
+      - $ref: "#/components/parameters/orgIdParam"
+      - $ref: "#/components/parameters/envIdParam"   
       - $ref: "#/components/parameters/spgIdParam"
     get:
+      operationId: getPolicyGroup
       tags:
         - Shared Policy Group
       summary: Get one policy group
@@ -183,6 +184,7 @@ paths:
         "500":
           description: Internal server error
     delete:
+      operationId: deletePolicyGroup
       tags:
         - Shared Policy Group
       summary: Delete one policy group
@@ -191,13 +193,15 @@ paths:
           description: Shared Policy Group successfully deleted
         default:
           $ref: "#/components/responses/Error"
-  /environments/{envId}/shared-policy-groups/_import/crd:
+  /organizations/{orgId}/environments/{envId}/shared-policy-groups/_import/crd:
     put:
+      operationId: createOrUpdatePolicyGroupFromCRD
       tags:
         - Shared Policy Group
       summary: Create or update Shared Policy Group from CRD Spec
       parameters:
-        - $ref: "#/components/parameters/envIdParam"
+        - $ref: "#/components/parameters/orgIdParam"
+        - $ref: "#/components/parameters/envIdParam"   
         - $ref: "#/components/parameters/dryRunQueryParam"
       requestBody:
         content:
@@ -255,6 +259,7 @@ components:
             and name of the resource.
           type: string
         definitionContext:
+          type: object
           description: >-
             The API Definition context is used to identify the
             Kubernetes origin of the API,
@@ -301,7 +306,6 @@ components:
                 - KUBERNETES
                 - MANAGEMENT
               type: string
-          type: object
         definitionVersion:
           $ref: "#/components/schemas/ApiV4DefinitionVersion"
         endpointGroups:
@@ -355,6 +359,7 @@ components:
         members:
           description: List of members associated with the API
           items:
+            type: object
             properties:
               role:
                 default: USER
@@ -362,16 +367,18 @@ components:
                 type: string
               source:
                 description: Member source
-                example: gravitee
+                examples: 
+                  - gravitee
                 type: string
               sourceId:
                 description: Member source ID
-                example: user@email.com
+                examples: 
+                  - "user@email.com"
                 type: string
             required:
               - source
               - sourceId
-            type: object
+
           type: array
         metadata:
           default: []
@@ -808,17 +815,19 @@ components:
         - type
         - version
     ApiV4:
+      type: object
       properties:
         apiVersion:
           type: string
           description: API's version. It's a simple string only used in the portal.
-          example: v1.0
+          examples: 
+            - v1.0
         analytics:
           $ref: "#/components/schemas/Analytics"
         categories:
           type: array
           description: The list of category keys associated with this API.
-          example:
+          examples:
             - health
             - media
           items:
@@ -827,29 +836,32 @@ components:
           type: string
           format: date-time
           description: The date (as timestamp) when the API was created.
-          example: 1581256457163
+          examples:
+            - "1581256457163"
         crossId:
           type: string
           description: API's crossId. Identifies API across environments.
-          example: df83b2a4-cc3e-3f80-9f0d-c138c106c076
+          examples: 
+            - df83b2a4-cc3e-3f80-9f0d-c138c106c076
         definitionVersion:
-          $ref: "#/components/schemas/ApiV4DefinitionVersion"
+          $ref: '#/components/schemas/ApiV4DefinitionVersion'
         deployedAt:
           type: string
           format: date-time
           description: The last date (as timestamp) when the API was deployed.
-          example: 1581256457163
+          examples: 
+            - "1581256457163"
         deploymentState:
           type: string
           description: The deployment state of the API regarding the gateway(s).
-          example: DEPLOYED
           enum:
             - NEED_REDEPLOY
             - DEPLOYED
         description:
           type: string
           description: API's description. A short description of your API.
-          example: I can use many characters to describe this API.
+          examples:
+            - I can use many characters to describe this API.
         disableMembershipNotifications:
           type: boolean
           description: Disable membership notifications.
@@ -870,11 +882,12 @@ components:
           type: string
           format: date-time
           description: The last date (as timestamp) when the API was updated.
-          example: 1581256457163
+          examples: 
+            - "1581256457163"
         groups:
           type: array
           description: API's groups. Used to add team in your API.
-          example:
+          examples:
             - MY_GROUP1
             - MY_GROUP2
           items:
@@ -882,11 +895,12 @@ components:
         id:
           type: string
           description: API's uuid.
-          example: 00f8c9e7-78fc-4907-b8c9-e778fc790750
+          examples:
+            - "00f8c9e7-78fc-4907-b8c9-e778fc790750"
         labels:
           type: array
           description: The free list of labels associated with this API.
-          example:
+          examples:
             - json
             - read_only
             - awesome
@@ -897,14 +911,14 @@ components:
         listeners:
           description: List of listeners for this API
           items:
-            type: object
-            x-kubernetes-preserve-unknown-fields: true
+            $ref: '#/components/schemas/Listener'
           minItems: 1
           type: array
         name:
           type: string
           description: API's name. Duplicate names can exists.
-          example: My Api
+          examples: 
+            - My Api
         primaryOwner:
           $ref: "#/components/schemas/PrimaryOwner"
         properties:
@@ -926,7 +940,6 @@ components:
         state:
           type: string
           description: The state of the API regarding the gateway(s).
-          example: STARTED
           enum:
             - CLOSED
             - INITIALIZED
@@ -936,7 +949,7 @@ components:
         tags:
           type: array
           description: The list of sharding tags associated with this API.
-          example:
+          examples:
             - public
             - private
           items:
@@ -968,27 +981,32 @@ components:
       type: string
     SharedPolicyGroupCRDSpec:
       description: Shared Policy Group Spec
+      type: object
       properties:
         apiType:
           $ref: "#/components/schemas/ApiType"
         crossId:
           type: string
           description: The unique ID of the shared policy group
-          example: 5e2b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b
+          examples: 
+            - "5e2b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b"
         description:
           type: string
           description: The description of the shared policy group
-          example: This is a shared policy group
+          examples: 
+            - This is a shared policy group
           maxLength: 1024
         prerequisiteMessage:
           type: string
           description: The prerequisite message of the shared policy group. This message is displayed to the user to help understand the prerequisite to use the shared policy group.
-          example: The resource cache "my-cache" is required
+          examples: 
+            - The resource cache "my-cache" is required
           maxLength: 1024
         name:
           type: string
           description: The name of the shared policy group
-          example: My Shared Policy Group
+          examples: 
+            - My Shared Policy Group
           maxLength: 512
         phase:
           $ref: "#/components/schemas/FlowPhase"
@@ -1014,30 +1032,33 @@ components:
             version:
               type: number
               description: The version of the shared policy group
-              example: 1
+              examples: 
+                - 1
             originContext:
               $ref: "#/components/schemas/BaseOriginContext"
             deployedAt:
               type: string
               format: date-time
               description: The date at which the shared policy group was deployed
-              example: 2020-01-01T00:00:00Z
+              examples: 
+                - "2020-01-01T00:00:00Z"
             createdAt:
               type: string
               format: date-time
               description: The date at which the shared policy group was created
-              example: 2020-01-01T00:00:00Z
+              examples: 
+                - "2020-01-01T00:00:00Z"
             updatedAt:
               type: string
               format: date-time
               description: The date at which the shared policy group was last updated
-              example: 2020-01-01T00:00:00Z
+              examples: 
+                - "2020-01-01T00:00:00Z"
             lifecycleState:
               $ref: "#/components/schemas/SharedPolicyGroupLifecycleState"
     SharedPolicyGroupLifecycleState:
       type: string
       description: The lifecycle state of a shared policy group
-      example: DEPLOYED
       enum:
         - DEPLOYED
         - UNDEPLOYED
@@ -1130,7 +1151,6 @@ components:
     FlowPhase:
       type: string
       description: The execution phase of a policy.
-      example: REQUEST
       enum:
         - REQUEST
         - RESPONSE
@@ -1729,7 +1749,6 @@ components:
     ListenerType:
       type: string
       description: Listener type.
-      example: HTTP
       enum:
         - HTTP
         - SUBSCRIPTION
@@ -1743,8 +1762,9 @@ components:
         type:
           type: string
           description: The type of the entrypoint
-          example: http-get
-          nullable: false
+          examples: 
+            - http-get
+            - http-proxy
         qos:
           $ref: "#/components/schemas/Qos"
         dlq:
@@ -1754,7 +1774,6 @@ components:
     Qos:
       type: string
       description: Type of the quality of service.
-      example: NONE
       default: AUTO
       enum:
         - NONE
@@ -1770,8 +1789,6 @@ components:
     HttpListener:
       type: object
       title: "HttpListener"
-      required:
-        - type
       allOf:
         - $ref: "#/components/schemas/BaseListener"
         - type: object
@@ -1833,14 +1850,10 @@ components:
           type: boolean
     SubscriptionListener:
       title: "SubscriptionListener"
-      required:
-        - type
       allOf:
         - $ref: "#/components/schemas/BaseListener"
     TcpListener:
       title: "TcpListener"
-      required:
-        - type
       allOf:
         - $ref: "#/components/schemas/BaseListener"
         - type: object
@@ -1858,8 +1871,6 @@ components:
             - "hosts"
     KafkaListener:
       title: "KafkaListener"
-      required:
-        - type
       allOf:
         - $ref: "#/components/schemas/BaseListener"
         - type: object
@@ -1871,7 +1882,8 @@ components:
               type: integer
               minimum: 0
               description: The port of the listener
-              example: 8080
+              examples: 
+                - "8080"
           required:
             - "host"
     PrimaryOwner:
@@ -1880,14 +1892,16 @@ components:
         id:
           type: string
           description: Owner's uuid.
-          example: 00f8c9e7-78fc-4907-b8c9-e778fc790750
+          examples: 
+            - "00f8c9e7-78fc-4907-b8c9-e778fc790750"
         email:
           type: string
           description: Owner's email. Can be null if owner is a group.
         displayName:
           type: string
           description: Owner's name.
-          example: John Doe
+          examples: 
+            - John Doe
           minLength: 1
         type:
           $ref: "#/components/schemas/MembershipMemberType"
@@ -1945,7 +1959,6 @@ components:
     ApiType:
       type: string
       description: API's type.
-      example: MESSAGE
       enum:
         - MESSAGE
         - PROXY
@@ -1953,14 +1966,12 @@ components:
     Visibility:
       type: string
       description: The visibility of the resource regarding the portal.
-      example: PUBLIC
       enum:
         - PUBLIC
         - PRIVATE
     ApiWorkflowState:
       type: string
       description: The status of the API regarding the review feature.
-      example: DRAFT
       enum:
         - DRAFT
         - IN_REVIEW
@@ -1973,7 +1984,6 @@ components:
         origin:
           type: string
           description: The origin of the API.
-          example: MANAGEMENT
           enum:
             - MANAGEMENT
             - KUBERNETES
@@ -1996,13 +2006,13 @@ components:
       description: Indicates the API has been created by the Gravitee Kubernetes Operator
       allOf:
         - $ref: "#/components/schemas/BaseOriginContext"
-        - properties:
+        - type: object
+          properties:
             mode:
               type: string
               description: |-
                 The mode of the API.
                 fully_managed: Mode indicating the api is fully managed by the origin and so, only the origin should be able to manage the api.
-              example: FULLY_MANAGED
               enum:
                 - FULLY_MANAGED
             syncFrom:
@@ -2014,7 +2024,6 @@ components:
                 the definition using the same datastore as APIM. 
                 Defining MANAGEMENT as source for sync is useful e.g. when a single operator should operate
                 on gateways deployed on multiple kubernetes clusters.
-              example: MANAGEMENT
               enum:
                 - MANAGEMENT
                 - KUBERNETES
@@ -2024,31 +2033,37 @@ components:
       description: Indicates the API has been created through an Integration
       allOf:
         - $ref: "#/components/schemas/BaseOriginContext"
-        - properties:
+        - type: object
+          properties:
             integrationId:
               type: string
               description: |-
                 The id of the integration that created the API.
-              example: b300b445-8bbb-4034-865c-d2113ba5b768
+              examples: 
+                - "b300b445-8bbb-4034-865c-d2113ba5b768"
             provider:
               type: string
               description: Provider of this Federated API.
-              example: solace
+              examples: 
+                - solace
             integrationName:
               type: string
               description: Name of integration of this Federated API.
-              example: My Solace env
+              examples: 
+                - My Solace env
     ApiLinks:
       type: object
       properties:
         pictureUrl:
           type: string
           description: The URL to the API's picture.
-          example: https://gravitee.example.com/management/v2/environments/00f8c9e7-78fc-4907-b8c9-e778fc790750/apis/6c530064-0b2c-4004-9300-640b2ce0047b/picture
+          examples: 
+            - "https://gravitee.example.com/management/v2/environments/00f8c9e7-78fc-4907-b8c9-e778fc790750/apis/6c530064-0b2c-4004-9300-640b2ce0047b/picture"
         backgroundUrl:
           type: string
           description: The URL to the API's background.
-          example: https://gravitee.example.com/management/v2/environments/00f8c9e7-78fc-4907-b8c9-e778fc790750/apis/6c530064-0b2c-4004-9300-640b2ce0047b/background
+          examples:
+            - "https://gravitee.example.com/management/v2/environments/00f8c9e7-78fc-4907-b8c9-e778fc790750/apis/6c530064-0b2c-4004-9300-640b2ce0047b/background"
     Links:
       description: List of links for pagination
       properties:
@@ -2094,6 +2109,7 @@ components:
         application/json:
           schema:
             title: "ApisResponse"
+            type: object
             properties:
               data:
                 description: List of Apis.
@@ -2132,15 +2148,18 @@ components:
                 type: integer
                 format: int32
                 description: The error code
-                example: 400
+                examples: 
+                  - "400"
               message:
                 type: string
                 description: The error message
-                example: Bad request
+                examples: 
+                  - Bad request
               technicalCode:
                 type: string
                 description: A technical code to identify the error
-                example: invalid.import.definition
+                examples: 
+                  - invalid.import.definition
               parameters:
                 type: object
                 description: A map of parameters to be used in the error message
@@ -2155,12 +2174,15 @@ components:
                     message:
                       type: string
                       description: The error message
-                      example: Bad request
+                      examples: 
+                        - Bad request
                     location:
                       type: string
                       description: The json path of the field in error.
-                      example: updateApi.properties[0].key
+                      examples: 
+                        - updateApi.properties[0].key
                     invalidValue:
+                      type: string
                       description: The invalid value.
   parameters:
     envIdParam:
@@ -2168,6 +2190,14 @@ components:
       in: path
       required: true
       description: Id or Hrid (Human readable Id) of an environment.
+      schema:
+        type: string
+        default: DEFAULT
+    orgIdParam:  
+      name: orgId
+      in: path
+      required: true
+      description: Id or Hrid (Human readable Id) of an organization.
       schema:
         type: string
         default: DEFAULT
