@@ -40,6 +40,7 @@ paths:
       tags:
         - APIs
       summary: Search for APIs of a given type
+      description: Search for APIs of a given type
       parameters:
         - $ref: "#/components/parameters/orgIdParam"
         - $ref: "#/components/parameters/envIdParam"
@@ -75,6 +76,7 @@ paths:
       tags:
         - APIs
       summary: Get one API
+      description: Get one API using it's ID
       responses:
         "200":
           description: Successful retrieval
@@ -93,6 +95,7 @@ paths:
       tags:
         - APIs
       summary: Deletes one API, and close plan by default
+      description: Deletes one API, and close plan by default
       parameters:
         - name: closePlans
           required: true
@@ -111,7 +114,7 @@ paths:
       operationId: createOrUpdateApiFromCRD
       tags:
         - APIs
-      summary: Import API from CRD Spec
+      summary:  Create or update a V4 API from V4 CRD Spec
       description: Create or update a V4 API from V4 CRD Spec
       parameters:
         - $ref: "#/components/parameters/orgIdParam"
@@ -143,7 +146,8 @@ paths:
       operationId: getAllPolicyGroups
       tags:
         - Shared Policy Group
-      summary: Get policy groups
+      summary: Get pagineted policy groups
+      description: Get pagineted policy groups
       parameters:
         - $ref: "#/components/parameters/orgIdParam"
         - $ref: "#/components/parameters/envIdParam"   
@@ -170,6 +174,7 @@ paths:
       tags:
         - Shared Policy Group
       summary: Get one policy group
+      description: Get one policy group
       responses:
         "200":
           description: Successful retrieval
@@ -188,6 +193,7 @@ paths:
       tags:
         - Shared Policy Group
       summary: Delete one policy group
+      description: Delete one policy group
       responses:
         "204":
           description: Shared Policy Group successfully deleted
@@ -199,6 +205,7 @@ paths:
       tags:
         - Shared Policy Group
       summary: Create or update Shared Policy Group from CRD Spec
+      description: Create or update Shared Policy Group from CRD Spec
       parameters:
         - $ref: "#/components/parameters/orgIdParam"
         - $ref: "#/components/parameters/envIdParam"   
@@ -1988,6 +1995,8 @@ components:
             - MANAGEMENT
             - KUBERNETES
             - INTEGRATION
+      required:
+        - origin
       discriminator:
         propertyName: origin
         mapping:
