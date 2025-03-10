@@ -12,22 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-apiVersion: gravitee.io/v1alpha1
-kind: GatewayClassParameters
-metadata:
-  name: gravitee-gateway
-spec:
-  gravitee:
-    dbLess: true
-  kubernetes:
-    deployment:
-      replicas: 2
-      template:
-        spec:
-          containers:
-          - name: gateway
-            image: graviteeio/apim-gateway
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1001
+services:
+  cloud-provider:
+    image: registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0
+    network_mode: "${NET_MODE-host}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

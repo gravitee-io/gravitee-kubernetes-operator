@@ -336,6 +336,29 @@ rules:
       - get
       - list
       - update
+      - 
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - role
+      - rolebinding
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
       - watch
   - apiGroups:
       - gateway.networking.k8s.io

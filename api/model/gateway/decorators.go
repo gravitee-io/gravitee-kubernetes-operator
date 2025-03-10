@@ -15,15 +15,16 @@
 package gateway
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	gAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 type GatewayClass struct {
-	Object *gAPIv1.GatewayClass
+	Object *gwAPIv1.GatewayClass
 }
 
-func NewGatewayClass(gwc *gAPIv1.GatewayClass) *GatewayClass {
+func WrapGatewayClass(gwc *gwAPIv1.GatewayClass) *GatewayClass {
 	return &GatewayClass{Object: gwc}
 }
 
@@ -36,10 +37,10 @@ func (gwc *GatewayClass) SetConditions(conditions []metav1.Condition) {
 }
 
 type Gateway struct {
-	Object *gAPIv1.Gateway
+	Object *gwAPIv1.Gateway
 }
 
-func NewGateway(gateway *gAPIv1.Gateway) *Gateway {
+func WrapGateway(gateway *gwAPIv1.Gateway) *Gateway {
 	return &Gateway{Object: gateway}
 }
 
@@ -52,10 +53,10 @@ func (gw *Gateway) SetConditions(conditions []metav1.Condition) {
 }
 
 type ListenerStatus struct {
-	Object *gAPIv1.ListenerStatus
+	Object *gwAPIv1.ListenerStatus
 }
 
-func NewListenerStatus(lst *gAPIv1.ListenerStatus) *ListenerStatus {
+func WrapListenerStatus(lst *gwAPIv1.ListenerStatus) *ListenerStatus {
 	return &ListenerStatus{Object: lst}
 }
 
@@ -65,6 +66,34 @@ func (lst *ListenerStatus) GetConditions() map[string]metav1.Condition {
 
 func (lst *ListenerStatus) SetConditions(conditions []metav1.Condition) {
 	lst.Object.Conditions = conditions
+}
+
+type RouteParentStatus struct {
+	Object *gwAPIv1.RouteParentStatus
+}
+
+func InitRouteParentStatus(ref gwAPIv1.ParentReference) *RouteParentStatus {
+	return &RouteParentStatus{
+		Object: &gwAPIv1.RouteParentStatus{
+			ParentRef:      ref,
+			ControllerName: core.GraviteeGatewayClassController,
+			Conditions:     []metav1.Condition{},
+		},
+	}
+}
+
+func WrapRouteParentStatus(status *gwAPIv1.RouteParentStatus) *RouteParentStatus {
+	return &RouteParentStatus{
+		Object: status,
+	}
+}
+
+func (st *RouteParentStatus) GetConditions() map[string]metav1.Condition {
+	return mapConditions(st.Object.Conditions)
+}
+
+func (st *RouteParentStatus) SetConditions(conditions []metav1.Condition) {
+	st.Object.Conditions = conditions
 }
 
 func mapConditions(conditionsSlice []metav1.Condition) map[string]metav1.Condition {
