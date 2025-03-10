@@ -29,16 +29,35 @@ func traverse(ctx context.Context, obj runtime.Object) (interface{}, error) {
 		return obj, err
 	}
 
+	cp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj.DeepCopyObject())
+	if err != nil {
+		return obj, err
+	}
+
 	wrapper := unstructured.Unstructured{Object: inner}
 	ns := wrapper.GetNamespace()
 
-	return doTraverse(inner, func(val interface{}) (interface{}, error) {
+	// remove everything we don't want to compile from the object
+	cp["status"] = nil
+	cp["metadata"] = nil
+
+	result, err := doTraverse(cp, func(val interface{}) (interface{}, error) {
 		if v, ok := val.(string); ok {
 			return exec(ctx, v, ns)
 		}
 
 		return val, nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	resultMap, _ := result.(map[string]interface{})
+
+	inner["spec"] = resultMap["spec"]
+
+	return inner, nil
 }
 
 func doTraverse(obj interface{}, mapper valMapper) (interface{}, error) {
