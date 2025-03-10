@@ -79,6 +79,12 @@ func (plan *Plan) GetSecurityType() string {
 	return plan.Security.Type
 }
 
+func NewPlan() *Plan {
+	return &Plan{
+		Plan: base.NewPlan(),
+	}
+}
+
 func (plan *Plan) WithSecurity(security *PlanSecurity) *Plan {
 	plan.Security = security
 	return plan

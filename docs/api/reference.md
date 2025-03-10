@@ -10794,21 +10794,21 @@ most of the time because the value is ignored or...<br/>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b><a href="#gatewayclassparametersspeckubernetes">kubernetes</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b><a href="#gatewayclassparametersspeclistenersindex">listeners</a></b></td>
         <td>[]object</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -10862,14 +10862,14 @@ most of the time because the value is ignored or...<br/>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
         <td><b><a href="#gatewayclassparametersspeckubernetesservice">service</a></b></td>
         <td>object</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -24792,15 +24792,15 @@ A label selector requirement is a selector that contains values, a key, and an o
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>tcpKeepAlive</b></td>
-        <td>boolean</td>
+        <td><b>idleTimeout</b></td>
+        <td>integer</td>
         <td>
           <br/>
         </td>
-        <td>true</td>
+        <td>false</td>
       </tr><tr>
-        <td><b>idleTimeout</b></td>
-        <td>integer</td>
+        <td><b>tcpKeepAlive</b></td>
+        <td>boolean</td>
         <td>
           <br/>
         </td>

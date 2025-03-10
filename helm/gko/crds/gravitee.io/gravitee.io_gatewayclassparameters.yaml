@@ -6589,9 +6589,6 @@ spec:
                           description: Service Type string describes ingress methods for a service
                           type: string
                       type: object
-                  required:
-                    - deployment
-                    - service
                   type: object
                 listeners:
                   items:
@@ -6692,8 +6689,6 @@ spec:
                             type: integer
                           tcpKeepAlive:
                             type: boolean
-                        required:
-                          - tcpKeepAlive
                         type: object
                       hostname:
                         description: >-
@@ -6859,10 +6854,6 @@ spec:
                     type: object
                   maxItems: 64
                   type: array
-              required:
-                - gravitee
-                - kubernetes
-                - listeners
               type: object
             status:
               type: object
