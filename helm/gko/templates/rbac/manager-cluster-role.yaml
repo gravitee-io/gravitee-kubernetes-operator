@@ -78,6 +78,9 @@ rules:
     resources:
       - apiv4definitions
     verbs:
+{{- if .Values.gatewayAPI.controller.enabled }}
+      - create
+{{- end }}
       - get
       - list
       - update
@@ -319,6 +322,29 @@ rules:
       - ""
     resources:
       - services
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - roles
+      - rolebindings
     verbs:
       - create
       - delete

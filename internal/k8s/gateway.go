@@ -26,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/yaml"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	rbacV1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -36,6 +37,9 @@ import (
 
 const (
 	GwAPIv1HTTPRouteKind = "HTTPRoute"
+	GwAPIv1GatewayKind   = "Gateway"
+	CoreV1ServiceKind    = "Service"
+	GwAPIv1APIVersion    = "gateway.networking.k8s.io/v1"
 )
 
 var GwAPIv1Group = gwAPIv1.Group(gwAPIv1.GroupVersion.Group)
@@ -92,6 +96,45 @@ func IsListenerRef(
 	return *ref.Port == listener.Port
 }
 
+func HasHTTPRouteOwner(ownerRefs []metaV1.OwnerReference) bool {
+	for _, ref := range ownerRefs {
+		if ref.APIVersion == GwAPIv1APIVersion && ref.Kind == GwAPIv1HTTPRouteKind {
+			return true
+		}
+	}
+	return false
+}
+
+func IsGatewayKind(ref gwAPIv1.ParentReference) bool {
+	switch {
+	case ref.Group == nil:
+		return false
+	case *ref.Group != gwAPIv1.GroupName:
+		return false
+	case ref.Kind == nil:
+		return false
+	case *ref.Kind != gwAPIv1.Kind(GwAPIv1GatewayKind):
+		return false
+	default:
+		return true
+	}
+}
+
+func IsServiceKind(ref gwAPIv1.HTTPBackendRef) bool {
+	switch {
+	case ref.Group == nil:
+		return false
+	case *ref.Group != coreV1.GroupName:
+		return false
+	case ref.Kind == nil:
+		return false
+	case *ref.Kind != CoreV1ServiceKind:
+		return false
+	default:
+		return true
+	}
+}
+
 func IsGatewayRef(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
 	if ref.Group != nil && *ref.Group != GwAPIv1Group {
 		return false
@@ -123,33 +166,112 @@ func DeployGateway(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 ) error {
-	if configMap, err := getConfigMap(gw); err != nil {
+	if err := CreateOrUpdate(ctx, getServiceAccount(gw)); err != nil {
 		return err
-	} else if err = CreateOrUpdate(ctx, configMap); err != nil {
+	}
+	if err := CreateOrUpdate(ctx, getRole(gw)); err != nil {
+		return err
+	}
+	if err := CreateOrUpdate(ctx, getRoleBinding(gw)); err != nil {
+		return err
+	}
+
+	if pemRegistry, err := getPEMRegistryConfigMap(gw); err != nil {
+		return err
+	} else if err := CreateOrUpdate(ctx, pemRegistry, func() error {
+		return buildPEMRegistryData(gw, pemRegistry)
+	}); err != nil {
+		return err
+	}
+
+	if gatewayConfig, err := getGatewayConfigMap(gw); err != nil {
+		return err
+	} else if err := CreateOrUpdate(ctx, gatewayConfig, func() error {
+		return buildGatewayConfigData(gw, gatewayConfig)
+	}); err != nil {
 		return err
 	}
 
 	if deployment, err := getDeployment(gw, params); err != nil {
 		return err
-	} else if err := CreateOrUpdate(ctx, deployment); err != nil {
+	} else if err := CreateOrUpdate(ctx, deployment, func() error {
+		return buildDeploymentSpec(gw, params, deployment)
+	}); err != nil {
 		return err
 	}
 
-	service := getService(gw, params)
-	return CreateOrUpdate(ctx, service)
+	svc := getService(gw, params)
+	return CreateOrUpdate(ctx, svc, func() error {
+		buildServiceSpec(gw, params, svc)
+		return nil
+	})
 }
 
-func getConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
-	labels := DefaultLabels(gw.Object.Name)
+func getPEMRegistryConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
+	configMap := DefaultPEMRegistryConfigMap.DeepCopy()
+	configMap.Name = getPEMRegistryConfigMapName(gw.Object.Name)
+	configMap.Namespace = gw.Object.Namespace
+	configMap.Labels = GIOPemRegistryLabels(gw.Object.Name)
+	if err := buildPEMRegistryData(gw, configMap); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}
+
+func buildPEMRegistryData(gw *gateway.Gateway, configMap *coreV1.ConfigMap) error {
+	data := make(map[string]string)
+	for i := range gw.Object.Spec.Listeners {
+		l := gw.Object.Spec.Listeners[i]
+		if l.TLS != nil {
+			ns := gw.Object.Namespace
+			secretName := string(l.TLS.CertificateRefs[0].Name)
+			v, err := buildPEMRegistryValue(ns, secretName)
+			if err != nil {
+				return err
+			}
+			k := string(l.Name)
+			data[k] = v
+		}
+	}
+	configMap.Data = data
+	return nil
+}
+
+func buildPEMRegistryValue(ns, refName string) (string, error) {
+	registry := []string{ns + "/" + refName}
+	b, err := json.Marshal(registry)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+func getGatewayConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
+	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	configMap := DefaultGatewayConfigMap.DeepCopy()
 
+	configMap.Name = getGatewayConfigMapName(gw.Object.Name)
+	configMap.Namespace = gw.Object.Namespace
+	configMap.Labels = labels
+
+	setOwnerReference(gw.Object, configMap)
+
+	if err := buildGatewayConfigData(gw, configMap); err != nil {
+		return nil, err
+	}
+
+	return configMap, nil
+}
+
+func buildGatewayConfigData(gw *gateway.Gateway, configMap *coreV1.ConfigMap) error {
 	servers, err := getYAMLServers(gw.Object.Spec.Listeners)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	yaml := yaml.DBLess.DeepCopy()
 	yaml.Put("servers", servers)
+	yaml.Put("tags", BuildGatewayTag(gw))
 
 	if httpPort := getHTTPPort(gw.Object.Spec.Listeners); httpPort != nil {
 		yaml.Put("http", map[string]int32{"port": *httpPort})
@@ -157,51 +279,67 @@ func getConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
 
 	yamlData, err := yaml.MarshalYAML()
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	configMap.Name = gw.Object.Name
-	configMap.Namespace = gw.Object.Namespace
 	configMap.Data[DefaultConfigFileEntry] = string(yamlData)
-	configMap.Labels = labels
+	return nil
+}
 
-	setOwnerReference(gw.Object, configMap)
+func BuildGatewayTag(gw *gateway.Gateway) string {
+	return BuildTag(gw.Object.Namespace, gw.Object.Name)
+}
 
-	return configMap, nil
+func BuildTag(namespace, name string) string {
+	return fmt.Sprintf("%s/%s", namespace, name)
 }
 
 func getDeployment(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) (*appV1.Deployment, error) {
-	labels := DefaultLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
 
 	deployment.Name = gw.Object.Name
 	deployment.Namespace = gw.Object.Namespace
 	deployment.Labels = labels
-	deployment.Spec.Template.Labels = labels
-	deployment.Spec.Selector.MatchLabels = labels
-
-	template, err := getPodTemplateSpec(params)
-	if err != nil {
-		return nil, err
-	}
-
-	volume := DefaultGatewayVolume.DeepCopy()
-	volume.ConfigMap.LocalObjectReference.Name = gw.Object.Name
-
-	template.Labels = labels
-	template.Spec.Volumes = []coreV1.Volume{*volume}
-
-	prepareContainer(template, gw.Object)
-
-	deployment.Spec.Template = *template
 
 	setOwnerReference(gw.Object, deployment)
+
+	if err := buildDeploymentSpec(gw, params, deployment); err != nil {
+		return nil, err
+	}
 
 	return deployment, nil
 }
 
+func buildDeploymentSpec(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+	deployment *appV1.Deployment,
+) error {
+	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+
+	deployment.Spec.Selector.MatchLabels = labels
+	deployment.Spec.Template.Labels = labels
+
+	template, err := getPodTemplateSpec(gw, params)
+	if err != nil {
+		return err
+	}
+
+	volume := DefaultGatewayVolume.DeepCopy()
+	volume.ConfigMap.LocalObjectReference.Name = getGatewayConfigMapName(gw.Object.Name)
+
+	prepareContainer(template, gw.Object)
+
+	template.Labels = labels
+	template.Spec.Volumes = []coreV1.Volume{*volume}
+
+	deployment.Spec.Template = *template
+
+	return nil
+}
+
 func getService(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) *coreV1.Service {
-	labels := DefaultLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	svc := DefaultService.DeepCopy()
 
 	svc.Name = gw.Object.Name
@@ -209,24 +347,90 @@ func getService(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) *c
 	svc.Labels = labels
 	svc.Spec.Selector = labels
 
-	if params.Spec.Kubernetes == nil {
-		return svc
-	}
-	if params.Spec.Kubernetes.Service == nil {
-		return svc
-	}
-
-	svc.Spec.Type = *params.Spec.Kubernetes.Service.Type
-
-	setServicePorts(svc, gw.Object.Spec.Listeners)
-
-	setOwnerReference(gw.Object, svc)
+	buildServiceSpec(gw, params, svc)
 
 	return svc
 }
 
-func getPodTemplateSpec(parameters *v1alpha1.GatewayClassParameters) (*coreV1.PodTemplateSpec, error) {
+func buildServiceSpec(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+	svc *coreV1.Service,
+) {
+	setServicePorts(svc, gw.Object.Spec.Listeners)
+
+	setOwnerReference(gw.Object, svc)
+
+	if params.Spec.Kubernetes == nil {
+		return
+	}
+
+	if params.Spec.Kubernetes.Service == nil {
+		return
+	}
+
+	svc.Spec.Type = *params.Spec.Kubernetes.Service.Type
+}
+
+func getServiceAccount(gw *gateway.Gateway) *coreV1.ServiceAccount {
+	sa := &coreV1.ServiceAccount{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+	}
+	setOwnerReference(gw.Object, sa)
+	return sa
+}
+
+func getRoleBinding(gw *gateway.Gateway) *rbacV1.RoleBinding {
+	binding := &rbacV1.RoleBinding{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+		Subjects: []rbacV1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      gw.Object.Name,
+				Namespace: gw.Object.Namespace,
+			},
+		},
+		RoleRef: rbacV1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     gw.Object.Name,
+		},
+	}
+	setOwnerReference(gw.Object, binding)
+	return binding
+}
+
+func getRole(gw *gateway.Gateway) *rbacV1.Role {
+	role := &rbacV1.Role{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+		Rules: []rbacV1.PolicyRule{
+			{
+				APIGroups: []string{""},
+				Verbs:     []string{"get", "list", "watch"},
+				Resources: []string{"configmaps", "secrets"},
+			},
+		},
+	}
+	setOwnerReference(gw.Object, role)
+	return role
+}
+
+func getPodTemplateSpec(
+	gw *gateway.Gateway,
+	parameters *v1alpha1.GatewayClassParameters,
+) (*coreV1.PodTemplateSpec, error) {
 	base := DefaultGatewayPodTemplate.DeepCopy()
+	base.Spec.ServiceAccountName = gw.Object.Name
+
 	if parameters.Spec.Kubernetes == nil {
 		return base, nil
 	}
@@ -337,13 +541,15 @@ func setServicePorts(svc *coreV1.Service, listeners []gwAPIv1.Listener) {
 func setOwnerReference(gw *gwAPIv1.Gateway, obj client.Object) {
 	kind := gw.GetObjectKind().GroupVersionKind().Kind
 	version := gw.GetObjectKind().GroupVersionKind().GroupVersion().String()
+	blockOwnerDeletion := true
 	obj.SetOwnerReferences(
 		[]metaV1.OwnerReference{
 			{
-				Kind:       kind,
-				APIVersion: version,
-				Name:       gw.GetName(),
-				UID:        gw.GetUID(),
+				Kind:               kind,
+				APIVersion:         version,
+				Name:               gw.GetName(),
+				UID:                gw.GetUID(),
+				BlockOwnerDeletion: &blockOwnerDeletion,
 			},
 		},
 	)
@@ -365,23 +571,39 @@ func getHTTPPort(listeners []gwAPIv1.Listener) *int32 {
 	return nil
 }
 
-func getYAMLServers(listeners []gwAPIv1.Listener) ([]map[string]interface{}, error) {
-	servers := make([]map[string]interface{}, len(listeners))
+func getYAMLServers(listeners []gwAPIv1.Listener) ([]map[string]any, error) {
+	servers := make([]map[string]any, len(listeners))
 	for i, listener := range listeners {
-		server := make(map[string]interface{})
+		server := make(map[string]any)
 		serverType, ok := ProtocolToServerType[listener.Protocol]
 		if !ok {
 			return nil, fmt.Errorf("unknown server protocol")
 		}
 		server["type"] = serverType
 		server["port"] = listener.Port
-		server["hostname"] = "0.0.0.0"
 		if listener.Hostname != nil {
-			server["hostname"] = listener.Hostname
+			server["hostname"] = *listener.Hostname
+		} else {
+			server["hostname"] = "0.0.0.0"
+		}
+		if listener.TLS != nil {
+			tls := listener.TLS
+			ssl := make(map[string]any)
+			keystore := make(map[string]any)
+			keystore["type"] = "pem"
+			keystore["secret"] = buildKeystoreSecret(tls.CertificateRefs)
+			ssl["keystore"] = keystore
+			server["secured"] = true
+			server["ssl"] = ssl
 		}
 		servers[i] = server
 	}
 	return servers, nil
+}
+
+func buildKeystoreSecret(certificateRefs []gwAPIv1.SecretObjectReference) string {
+	ref := certificateRefs[0]
+	return "secret://kubernetes/" + string(ref.Name)
 }
 
 func mergePodTemplates(base, patch *coreV1.PodTemplateSpec) (*coreV1.PodTemplateSpec, error) {
@@ -410,4 +632,33 @@ func mergePodTemplates(base, patch *coreV1.PodTemplateSpec) (*coreV1.PodTemplate
 	}
 
 	return patchResult, nil
+}
+
+func getGatewayConfigMapName(gwName string) string {
+	return GatewayConfigMapPrefix + gwName
+}
+
+func getPEMRegistryConfigMapName(gwName string) string {
+	return PEMRegistryConfigMapPrefix + gwName
+}
+
+func IsGatewayComponent(obj client.Object) bool {
+	return obj.GetLabels()[ComponentLabelKey] == GatewayComponentLabelValue
+}
+
+func GetMatchingGatewayLabels(obj client.Object) map[string]string {
+	gwName, ok := obj.GetLabels()[InstanceLabelKey]
+	if !ok {
+		return map[string]string{}
+	}
+	return GwAPIv1GatewayLabels(gwName)
+}
+
+func IsGatewayDependent(gw *gateway.Gateway, obj client.Object) bool {
+	for _, ref := range obj.GetOwnerReferences() {
+		if ref.UID == gw.Object.UID {
+			return true
+		}
+	}
+	return false
 }

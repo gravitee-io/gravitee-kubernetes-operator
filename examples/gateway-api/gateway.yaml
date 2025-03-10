@@ -23,5 +23,16 @@ spec:
         namespaces:
           from: Same
       name: http
-      port: 30082
+      port: 80
       protocol: HTTP
+    - allowedRoutes:
+        namespaces:
+          from: Same
+      name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: "tls-server"

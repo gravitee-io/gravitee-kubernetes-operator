@@ -20,17 +20,16 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	coreV1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func Init(gw *gateway.Gateway) {
-	k8s.SetCondition(
-		gw,
-		k8s.NewGatewayProgrammedConditionBuilder(gw.Object.Generation).
-			Build(),
-	)
-	initListeners(gw)
-}
+var (
+	IPAddressType       = gwAPIv1.IPAddressType
+	HostnameAddressType = gwAPIv1.HostnameAddressType
+)
 
 func Program(
 	ctx context.Context,
@@ -50,13 +49,13 @@ func Program(
 
 	programListeners(gw)
 
-	return nil
+	return setGatewayAddresses(ctx, gw)
 }
 
 func programListeners(gw *gateway.Gateway) {
 	listeners := gw.Object.Status.Listeners
 	for i := range listeners {
-		status := gateway.NewListenerStatus(&listeners[i])
+		status := gateway.WrapListenerStatus(&listeners[i])
 		k8s.SetCondition(
 			status,
 			k8s.NewGatewayProgrammedConditionBuilder(gw.Object.Generation).
@@ -66,20 +65,63 @@ func programListeners(gw *gateway.Gateway) {
 	}
 }
 
-func initListeners(gw *gateway.Gateway) {
-	statuses := make([]gwAPIv1.ListenerStatus, len(gw.Object.Spec.Listeners))
-	for i, l := range gw.Object.Spec.Listeners {
-		status := gateway.NewListenerStatus(
-			&gwAPIv1.ListenerStatus{
-				Name:           l.Name,
-				SupportedKinds: k8s.GetSupportedRouteKinds(l),
-			},
-		)
-		k8s.SetCondition(status,
-			k8s.NewListenerProgrammedConditionBuilder(gw.Object.Generation).
-				Build(),
-		)
-		statuses[i] = *status.Object
+func setGatewayAddresses(ctx context.Context, gw *gateway.Gateway) error {
+	svcList := &coreV1.ServiceList{}
+	if err := k8s.GetClient().List(
+		ctx,
+		svcList,
+		&client.ListOptions{
+			Namespace:     gw.Object.Namespace,
+			LabelSelector: labels.SelectorFromSet(k8s.GwAPIv1GatewayLabels(gw.Object.Name)),
+		},
+	); err != nil {
+		return err
 	}
-	gw.Object.Status.Listeners = statuses
+
+	gw.Object.Status.Addresses = getGatewayServiceAddresses(gw, svcList.Items)
+
+	return nil
+}
+
+func getGatewayServiceAddresses(gw *gateway.Gateway, svcList []coreV1.Service) []gwAPIv1.GatewayStatusAddress {
+	for i := range svcList {
+		if k8s.IsGatewayDependent(gw, &svcList[i]) {
+			return getIngressAddresses(svcList[i])
+		}
+	}
+	return []gwAPIv1.GatewayStatusAddress{}
+}
+
+func getIngressAddresses(svc coreV1.Service) []gwAPIv1.GatewayStatusAddress {
+	if svc.Spec.Type == coreV1.ServiceTypeLoadBalancer {
+		return getLBAddresses(svc.Status.LoadBalancer)
+	}
+	return []gwAPIv1.GatewayStatusAddress{newIPAddress(svc.Spec.ClusterIP)}
+}
+
+func getLBAddresses(lb coreV1.LoadBalancerStatus) []gwAPIv1.GatewayStatusAddress {
+	addrs := make([]gwAPIv1.GatewayStatusAddress, 0)
+	for _, addr := range lb.Ingress {
+		if addr.IP != "" {
+			addrs = append(addrs, newIPAddress(addr.IP))
+		}
+		if addr.Hostname != "" {
+			addrs = append(addrs, newHostnameAddress(addr.Hostname))
+		}
+	}
+	return addrs
+}
+
+func newIPAddress(ip string) gwAPIv1.GatewayStatusAddress {
+	return gwAPIv1.GatewayStatusAddress{
+		Value: ip,
+		Type:  &IPAddressType,
+	}
+}
+
+func newHostnameAddress(hostname string) gwAPIv1.GatewayStatusAddress {
+	return gwAPIv1.GatewayStatusAddress{
+		Value: hostname,
+		Type:  &HostnameAddressType,
+	}
 }
