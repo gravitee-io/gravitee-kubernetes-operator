@@ -33,6 +33,7 @@ import (
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	coreV1 "k8s.io/api/core/v1"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -43,7 +44,7 @@ type Reconciler struct {
 
 //nolint:gocognit,funlen // keep
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	gw := gateway.NewGateway(&gwAPIv1.Gateway{})
+	gw := gateway.WrapGateway(&gwAPIv1.Gateway{})
 
 	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gw.Object); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -58,7 +59,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	gwcKey := client.ObjectKey{Name: gwcName}
-	gwc := gateway.NewGatewayClass(&gwAPIv1.GatewayClass{})
+	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
 
 	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
 		return k8s.RequeueError(err)
@@ -144,7 +145,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	dc.Object.Status.DeepCopyInto(&gw.Object.Status)
-	if err := k8s.UpdateStatus(ctx, gw.Object); err != nil {
+	if err := k8s.UpdateStatus(ctx, gw.Object); client.IgnoreNotFound(err) != nil {
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
 		return k8s.RequeueError(err)
 	}
@@ -156,5 +157,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwAPIv1.Gateway{}).
+		Watches(&gwAPIv1.HTTPRoute{}, internal.WatchAttachedRoutes()).
+		Watches(&coreV1.Service{}, internal.WatchServices()).
 		Complete(r)
 }

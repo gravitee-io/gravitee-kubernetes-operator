@@ -21,9 +21,12 @@ import (
 
 type GatewayClassParameters struct {
 	// +kubebuilder:validation:MaxItems:=64
-	Listeners  []GraviteeListener `json:"listeners"`
-	Gravitee   *GraviteeConfig    `json:"gravitee"` // extended with listener extension
-	Kubernetes *KubernetesConfig  `json:"kubernetes"`
+	// +kubebuilder:validation:Optional
+	Listeners []GraviteeListener `json:"listeners"`
+	// +kubebuilder:validation:Optional
+	Gravitee *GraviteeConfig `json:"gravitee"`
+	// +kubebuilder:validation:Optional
+	Kubernetes *KubernetesConfig `json:"kubernetes"`
 }
 
 type GraviteeConfig struct {
@@ -39,8 +42,9 @@ type GraviteeListener struct {
 
 type GraviteeListenerConfig struct {
 	// +kubebuilder:validation:Optional
-	IdleTimeout  *uint `json:"idleTimeout,omitempty"`
-	TCPKeepAlive bool  `json:"tcpKeepAlive"`
+	IdleTimeout *uint `json:"idleTimeout,omitempty"`
+	// +kubebuilder:validation:Optional
+	TCPKeepAlive bool `json:"tcpKeepAlive"`
 }
 
 type GraviteeListenerTLSConfig struct {
@@ -49,6 +53,8 @@ type GraviteeListenerTLSConfig struct {
 }
 
 type KubernetesConfig struct {
+	// +kubebuilder:validation:Optional
 	Deployment *Deployment `json:"deployment"`
-	Service    *Service    `json:"service"`
+	// +kubebuilder:validation:Optional
+	Service *Service `json:"service"`
 }

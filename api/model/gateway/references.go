@@ -12,10 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package errors
+package gateway
 
-type GWCNotAcceptedError struct{}
+// TODO move this file to the internal gateway package
+import (
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+)
 
-func (GWCNotAcceptedError) Error() string {
-	return "Gateway class is not accepted"
+type RefSet struct {
+	HTTPRoutes []gwAPIv1.HTTPRoute
+}
+
+func NewRefSet() *RefSet {
+	return &RefSet{
+		HTTPRoutes: []gwAPIv1.HTTPRoute{},
+	}
 }
