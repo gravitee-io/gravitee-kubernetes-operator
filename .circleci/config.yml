@@ -183,6 +183,14 @@ jobs:
             curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
             chmod +x /tmp/kind
             sudo mv /tmp/kind /usr/local/bin/
+      - run:
+          name: Install cloud-provider-kind
+          command: |
+            make cloud-provider-kind
+      - run:
+          name: Run cloud-provider-kind
+          command: |
+            sudo bin/cloud-provider-kind &
       - gravitee/docker-login:
           registry: graviteeio.azurecr.io
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
@@ -190,7 +198,7 @@ jobs:
       - run:
           name: Start cluster
           command: |
-            kind create cluster --config kind/kind.yaml
+            kind create cluster --config kind/kind.conformance.yaml
       - run:
           name: Helm Install the Operator
           command: |

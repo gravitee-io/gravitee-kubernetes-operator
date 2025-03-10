@@ -39,7 +39,7 @@ func ResolveRefs(
 			return err
 		}
 
-		status := gateway.NewListenerStatus(&gw.Object.Status.Listeners[i])
+		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
 
 		resolveRouteKinds(listener, status.Object, conditionBuilder)
 

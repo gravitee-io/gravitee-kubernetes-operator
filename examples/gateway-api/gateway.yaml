@@ -23,5 +23,5 @@ spec:
         namespaces:
           from: Same
       name: http
-      port: 30082
+      port: 80
       protocol: HTTP

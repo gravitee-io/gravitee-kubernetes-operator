@@ -43,7 +43,7 @@ type Reconciler struct {
 
 //nolint:gocognit,funlen // keep
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	gw := gateway.NewGateway(&gwAPIv1.Gateway{})
+	gw := gateway.WrapGateway(&gwAPIv1.Gateway{})
 
 	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gw.Object); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -58,7 +58,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	gwcKey := client.ObjectKey{Name: gwcName}
-	gwc := gateway.NewGatewayClass(&gwAPIv1.GatewayClass{})
+	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
 
 	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
 		return k8s.RequeueError(err)
@@ -156,5 +156,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwAPIv1.Gateway{}).
+		Watches(&gwAPIv1.HTTPRoute{}, internal.WatchAttachedRoutes()).
 		Complete(r)
 }

@@ -108,6 +108,34 @@ func (b *ConditionBuilder) RejectInvalidRouteKinds(msg string) *ConditionBuilder
 		Message(msg)
 }
 
+func (b *ConditionBuilder) RejectInvalidGatewayKind(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.RouteReasonInvalidKind)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectNoMatchingParent(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.RouteReasonNoMatchingParent)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectInvalidBackendKind(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.RouteReasonInvalidKind)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectBackendNotFound(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.RouteReasonBackendNotFound)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
 func (b *ConditionBuilder) RejectInvalidCertificateRef(msg string) *ConditionBuilder {
 	return b.
 		Reason(string(gwAPIv1.ListenerReasonInvalidCertificateRef)).
@@ -181,6 +209,11 @@ func GetCondition(obj core.ConditionAware, conditionType string) *metav1.Conditi
 func IsConflicted(obj core.ConditionAware) bool {
 	conflicted := GetCondition(obj, ConditionConflicted)
 	return conflicted != nil && conflicted.Status == ConditionStatusTrue
+}
+
+func IsResolved(obj core.ConditionAware) bool {
+	resolved := GetCondition(obj, ConditionResolvedRefs)
+	return resolved != nil && resolved.Status == ConditionStatusTrue
 }
 
 func IsAccepted(obj core.ConditionAware) bool {

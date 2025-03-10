@@ -33,7 +33,7 @@ const (
 	KafkaType                ListenerType = "KAFKA"
 )
 
-const (
+var (
 	AutoQOS        QosType = "AUTO"
 	NoQOS          QosType = "NONE"
 	AtMostOnceQOS  QosType = "AT_MOST_ONCE"
@@ -109,6 +109,23 @@ type HttpListener struct {
 	Paths []*Path `json:"paths"`
 	// +kubebuilder:validation:Optional
 	PathMappings []string `json:"pathMappings"`
+}
+
+func NewHTTPListener() *HttpListener {
+	return &HttpListener{
+		AbstractListener: &AbstractListener{
+			Type: "HTTP",
+			Entrypoints: []*Entrypoint{
+				{
+					Type: string(EndpointTypeHTTP),
+					Qos:  &AutoQOS,
+				},
+			},
+			Servers: []string{},
+		},
+		Paths:        []*Path{},
+		PathMappings: []string{},
+	}
 }
 
 func (l *AbstractListener) ToGatewayDefinition() *AbstractListener {
@@ -193,6 +210,10 @@ type Path struct {
 	Host string `json:"host,omitempty"`
 	// +kubebuilder:validation:Required
 	Path string `json:"path"`
+}
+
+func NewPath(host, path string) *Path {
+	return &Path{Host: host, Path: path}
 }
 
 type Entrypoint struct {

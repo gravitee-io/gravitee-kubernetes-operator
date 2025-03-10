@@ -26,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/yaml"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	rbacV1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -36,6 +37,9 @@ import (
 
 const (
 	GwAPIv1HTTPRouteKind = "HTTPRoute"
+	GwAPIv1GatewayKind   = "Gateway"
+	CoreV1ServiceKind    = "Service"
+	GwAPIv1APIVersion    = "gateway.networking.k8s.io/v1"
 )
 
 var GwAPIv1Group = gwAPIv1.Group(gwAPIv1.GroupVersion.Group)
@@ -92,6 +96,45 @@ func IsListenerRef(
 	return *ref.Port == listener.Port
 }
 
+func HasHTTPRouteOwner(ownerRefs []metaV1.OwnerReference) bool {
+	for _, ref := range ownerRefs {
+		if ref.APIVersion == GwAPIv1APIVersion && ref.Kind == GwAPIv1HTTPRouteKind {
+			return true
+		}
+	}
+	return false
+}
+
+func IsGatewayKind(ref gwAPIv1.ParentReference) bool {
+	switch {
+	case ref.Group == nil:
+		return false
+	case *ref.Group != gwAPIv1.GroupName:
+		return false
+	case ref.Kind == nil:
+		return false
+	case *ref.Kind != gwAPIv1.Kind(GwAPIv1GatewayKind):
+		return false
+	default:
+		return true
+	}
+}
+
+func IsServiceKind(ref gwAPIv1.HTTPBackendRef) bool {
+	switch {
+	case ref.Group == nil:
+		return false
+	case *ref.Group != coreV1.GroupName:
+		return false
+	case ref.Kind == nil:
+		return false
+	case *ref.Kind != CoreV1ServiceKind:
+		return false
+	default:
+		return true
+	}
+}
+
 func IsGatewayRef(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
 	if ref.Group != nil && *ref.Group != GwAPIv1Group {
 		return false
@@ -123,6 +166,15 @@ func DeployGateway(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 ) error {
+	if err := CreateOrUpdate(ctx, getServiceAccount(gw)); err != nil {
+		return err
+	}
+	if err := CreateOrUpdate(ctx, getRole(gw)); err != nil {
+		return err
+	}
+	if err := CreateOrUpdate(ctx, getRoleBinding(gw)); err != nil {
+		return err
+	}
 	if configMap, err := getConfigMap(gw); err != nil {
 		return err
 	} else if err = CreateOrUpdate(ctx, configMap); err != nil {
@@ -150,6 +202,7 @@ func getConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
 
 	yaml := yaml.DBLess.DeepCopy()
 	yaml.Put("servers", servers)
+	yaml.Put("tags", BuildGatewayTag(gw))
 
 	if httpPort := getHTTPPort(gw.Object.Spec.Listeners); httpPort != nil {
 		yaml.Put("http", map[string]int32{"port": *httpPort})
@@ -170,6 +223,14 @@ func getConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
 	return configMap, nil
 }
 
+func BuildGatewayTag(gw *gateway.Gateway) string {
+	return BuildTag(gw.Object.Namespace, gw.Object.Name)
+}
+
+func BuildTag(namespace, name string) string {
+	return fmt.Sprintf("%s/%s", namespace, name)
+}
+
 func getDeployment(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) (*appV1.Deployment, error) {
 	labels := DefaultLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
@@ -180,7 +241,7 @@ func getDeployment(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters)
 	deployment.Spec.Template.Labels = labels
 	deployment.Spec.Selector.MatchLabels = labels
 
-	template, err := getPodTemplateSpec(params)
+	template, err := getPodTemplateSpec(gw, params)
 	if err != nil {
 		return nil, err
 	}
@@ -209,6 +270,10 @@ func getService(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) *c
 	svc.Labels = labels
 	svc.Spec.Selector = labels
 
+	setServicePorts(svc, gw.Object.Spec.Listeners)
+
+	setOwnerReference(gw.Object, svc)
+
 	if params.Spec.Kubernetes == nil {
 		return svc
 	}
@@ -218,15 +283,68 @@ func getService(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) *c
 
 	svc.Spec.Type = *params.Spec.Kubernetes.Service.Type
 
-	setServicePorts(svc, gw.Object.Spec.Listeners)
-
-	setOwnerReference(gw.Object, svc)
-
 	return svc
 }
 
-func getPodTemplateSpec(parameters *v1alpha1.GatewayClassParameters) (*coreV1.PodTemplateSpec, error) {
+func getServiceAccount(gw *gateway.Gateway) *coreV1.ServiceAccount {
+	sa := &coreV1.ServiceAccount{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+	}
+	setOwnerReference(gw.Object, sa)
+	return sa
+}
+
+func getRoleBinding(gw *gateway.Gateway) *rbacV1.RoleBinding {
+	binding := &rbacV1.RoleBinding{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+		Subjects: []rbacV1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      gw.Object.Name,
+				Namespace: gw.Object.Namespace,
+			},
+		},
+		RoleRef: rbacV1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "Role",
+			Name:     gw.Object.Name,
+		},
+	}
+	setOwnerReference(gw.Object, binding)
+	return binding
+}
+
+func getRole(gw *gateway.Gateway) *rbacV1.Role {
+	role := &rbacV1.Role{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+		Rules: []rbacV1.PolicyRule{
+			{
+				APIGroups: []string{""},
+				Verbs:     []string{"get", "list", "watch"},
+				Resources: []string{"configmaps", "secrets"},
+			},
+		},
+	}
+	setOwnerReference(gw.Object, role)
+	return role
+}
+
+func getPodTemplateSpec(
+	gw *gateway.Gateway,
+	parameters *v1alpha1.GatewayClassParameters,
+) (*coreV1.PodTemplateSpec, error) {
 	base := DefaultGatewayPodTemplate.DeepCopy()
+	base.Spec.ServiceAccountName = gw.Object.Name
+
 	if parameters.Spec.Kubernetes == nil {
 		return base, nil
 	}

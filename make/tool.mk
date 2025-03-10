@@ -12,6 +12,7 @@ GINKGO ?= $(LOCALBIN)/ginkgo
 CRDOC ?= $(LOCALBIN)/crdoc
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
+CLOUDPROVIDERKIND ?= $(LOCALBIN)/cloud-provider-kind
 
 ALL_TOOLS = controller-gen ginkgo crdoc golangci-lint addlicense helm-unittest
 
@@ -47,6 +48,12 @@ addlicense: $(ADDLICENSE) ## Download addlicense cli locally if necessary.
 $(ADDLICENSE): $(LOCALBIN)
 	@echo "Installing addlicense ..."
 	@GOBIN=$(LOCALBIN) go install github.com/google/addlicense@latest
+
+.PHONY: cloud-provider-kind
+cloud-provider-kind: $(CLOUDPROVIDERKIND) ## Download cloud-provider-king cli locally if necessary.
+$(CLOUDPROVIDERKIND): $(LOCALBIN)
+	@echo "Installing cloud-provider-kind ..."
+	@GOBIN=$(LOCALBIN) go install sigs.k8s.io/cloud-provider-kind@latest
 
 .PHONY: helm-unittest
 helm-unittest: ## Install helm-unittest plugin if necessary.

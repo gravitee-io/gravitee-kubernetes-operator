@@ -26,7 +26,7 @@ func Accept(gw *gateway.Gateway) {
 
 	accepted := k8s.NewAcceptedConditionBuilder(gw.Object.Generation).Accept("gateway is accepted")
 	for i := range gw.Object.Status.Listeners {
-		status := gateway.NewListenerStatus(&gw.Object.Status.Listeners[i])
+		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
 		if !k8s.IsAccepted(status) {
 			accepted.RejectListenersNotValid(fmt.Sprintf("listener [%d] is not valid", i))
 		}
@@ -43,7 +43,7 @@ func Accept(gw *gateway.Gateway) {
 
 func acceptListeners(gw *gateway.Gateway) {
 	for i, l := range gw.Object.Spec.Listeners {
-		listenerStatus := gateway.NewListenerStatus(&gw.Object.Status.Listeners[i])
+		listenerStatus := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
 		condition := k8s.NewAcceptedConditionBuilder(gw.Object.Generation)
 		switch {
 		case !k8s.SupportedGwAPIProtocols.Has(l.Protocol):
