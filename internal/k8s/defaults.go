@@ -15,6 +15,8 @@
 package k8s
 
 import (
+	"maps"
+
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -31,6 +33,9 @@ const (
 	DefaultConfigFileEntry  = "gravitee.yml"
 	DefaultProbePort        = 18082
 
+	GatewayConfigMapPrefix     = "gio-gw-config-"
+	PEMRegistryConfigMapPrefix = "gio-pem-registry-"
+
 	GatewayContainerName     = "gateway"
 	DefaultGatewayImage      = "graviteeio/apim-gateway"
 	DefaultGatewayConfigFile = "/opt/graviteeio-gateway/config/gravitee.yml"
@@ -42,9 +47,11 @@ const (
 	PartOfLabelKey    = "app.kubernetes.io/part-of"
 	ManagedByLabelKey = "app.kubernetes.io/managed-by"
 
-	ManagedByLabelValue        = "gko.gravitee.io"
-	PartOfLabelValue           = "apim.gravitee.io"
-	GatewayComponentLabelValue = "gateway"
+	ManagedByLabelValue            = "gko.gravitee.io"
+	PartOfLabelValue               = "apim.gravitee.io"
+	GatewayComponentLabelValue     = "gateway"
+	HTTPRouteComponentlabelValue   = "http-route"
+	PEMRegistryComponentLabelValue = "kubernetes-pem-registry"
 )
 
 var DefaultReplicas int32 = 1
@@ -146,6 +153,11 @@ var DefaultGatewayConfigMap = &coreV1.ConfigMap{
 	Data:       map[string]string{},
 }
 
+var DefaultPEMRegistryConfigMap = &coreV1.ConfigMap{
+	ObjectMeta: metaV1.ObjectMeta{},
+	Data:       map[string]string{},
+}
+
 var DefaultGatewayPodSpec = &coreV1.PodSpec{
 	Containers: []coreV1.Container{
 		DefaultGatewayContainer,
@@ -182,12 +194,37 @@ var DefaultService = &coreV1.Service{
 	Spec:       *DefaultServiceSpec,
 }
 
-func DefaultLabels(appName string) map[string]string {
-	return map[string]string{
-		ComponentLabelKey: GatewayComponentLabelValue,
-		InstanceLabelKey:  GatewayComponentLabelValue,
-		PartOfLabelKey:    PartOfLabelValue,
-		ManagedByLabelKey: ManagedByLabelValue,
-		NameLabelKey:      appName,
+var CommonLabels = map[string]string{
+	PartOfLabelKey:    PartOfLabelValue,
+	ManagedByLabelKey: ManagedByLabelValue,
+}
+
+func GIOPemRegistryLabels(gwName string) map[string]string {
+	labels := map[string]string{
+		ComponentLabelKey: PEMRegistryComponentLabelValue,
+		InstanceLabelKey:  gwName,
+		NameLabelKey:      gwName,
 	}
+	maps.Copy(labels, CommonLabels)
+	return labels
+}
+
+func GwAPIv1GatewayLabels(gwName string) map[string]string {
+	labels := map[string]string{
+		ComponentLabelKey: GatewayComponentLabelValue,
+		InstanceLabelKey:  gwName,
+		NameLabelKey:      gwName,
+	}
+	maps.Copy(labels, CommonLabels)
+	return labels
+}
+
+func GwAPIv1HTTPRouteLabels(routeNAme string) map[string]string {
+	labels := map[string]string{
+		ComponentLabelKey: HTTPRouteComponentlabelValue,
+		InstanceLabelKey:  routeNAme,
+		NameLabelKey:      routeNAme,
+	}
+	maps.Copy(labels, CommonLabels)
+	return labels
 }
