@@ -39,19 +39,11 @@ func ResolveRefs(
 			return err
 		}
 
-		status := gateway.NewListenerStatus(&gw.Object.Status.Listeners[i])
+		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
 
 		resolveRouteKinds(listener, status.Object, conditionBuilder)
 
-		condition := conditionBuilder.Build()
-
-		if condition.Status == k8s.ConditionStatusFalse {
-			k8s.SetCondition(status, conditionBuilder.Build())
-		}
-
-		if k8s.GetCondition(status, k8s.ConditionResolvedRefs) == nil {
-			k8s.SetCondition(status, conditionBuilder.Build())
-		}
+		k8s.SetCondition(status, conditionBuilder.Build())
 
 		if httpRoutesCount, err := countAttachedHTTPRoutes(ctx, gw.Object, listener); err != nil {
 			return err
@@ -69,6 +61,11 @@ func resolveTLS(
 	listener gwAPIv1.Listener,
 ) error {
 	if listener.TLS == nil {
+		return nil
+	}
+
+	if len(listener.TLS.CertificateRefs) != 1 {
+		builder.RejectTooManyCertificateRefs("listener should have exacty one certificate reference")
 		return nil
 	}
 

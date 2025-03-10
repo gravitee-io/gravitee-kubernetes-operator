@@ -51,8 +51,8 @@ const (
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 	GraviteeGatewayFinalizer         = "finalizers.gravitee.io/graviteegateway"
 	GatewayClassFinalizer            = "finalizers.gravitee.io/gatewayclass"
-
-	GraviteeGatewayClassController = "apim.gravitee.io/gateway"
+	HTTPRouteFinalizer               = "finalizers.gravitee.io/httproute"
+	GraviteeGatewayClassController   = "apim.gravitee.io/gateway"
 
 	CloudTokenSecretKey  = "cloudToken"
 	BearerTokenSecretKey = "bearerToken"
