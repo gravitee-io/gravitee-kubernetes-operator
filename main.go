@@ -31,6 +31,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/parameters"
 
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
@@ -337,6 +338,14 @@ func registerGatewayAPIsControllers(mgr ctrl.Manager) {
 		Recorder: mgr.GetEventRecorderFor("gateway-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for gateway")
+		os.Exit(1)
+	}
+
+	if err := (&httproute.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("http-route"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for HTTP route")
 		os.Exit(1)
 	}
 }

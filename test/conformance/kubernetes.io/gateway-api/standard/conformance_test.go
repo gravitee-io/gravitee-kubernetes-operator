@@ -29,10 +29,10 @@ func TestGatewayAPIConformance(t *testing.T) {
 	flag.Parse()
 
 	opts := conformance.DefaultOptions(t)
-	opts.SupportedFeatures = sets.New[features.FeatureName](
+	opts.SupportedFeatures = sets.New(
 		features.GatewayFeature.Name,
+		features.HTTPRouteFeature.Name,
 		// features.GRPCRouteFeature.Name,
-		// features.HTTPRouteFeature.Name,
 		// features.ReferenceGrantFeature.Name,
 	)
 	cSuite, err := suite.NewConformanceTestSuite(opts)
