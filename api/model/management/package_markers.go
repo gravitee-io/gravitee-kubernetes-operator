@@ -12,15 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+// +kubebuilder:object:generate=true
 
-type Errors struct {
-	// warning errors do not block object reconciliation,
-	// most of the time because the value is ignored or defaulted
-	// when the API gets synced with APIM
-	Warning []string `json:"warning,omitempty"`
-	// severe errors do not pass admission and will block reconcile
-	// hence, this field should always be during the admission phase
-	// and is very unlikely to be persisted in the status
-	Severe []string `json:"severe,omitempty"`
-}
+package management
+
+// placeholder files for package level markers
