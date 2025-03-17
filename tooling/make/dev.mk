@@ -2,7 +2,7 @@
 
 .PHONY: start-cluster
 start-cluster: ## Init and start a local cluster
-	@npx zx ./scripts/run-kind.mjs
+	@npx zx ./tooling/scripts/run-kind.mjs
 
 .PHONY: delete-cluster
 delete-cluster: ## Delete local cluster
@@ -15,7 +15,7 @@ use-cluster: ## Switch current kubectl context to local cluster
 .PHONY: cluster-admin
 cluster-admin: ## Gain a kubernetes context with admin role on the local cluster
 	@kubectl config use-context kind-gravitee
-	@npx zx ./scripts/create-cluster-admin-sa.mjs
+	@npx zx ./tooling/scripts/create-cluster-admin-sa.mjs
 ifndef ignore-not-found
   ignore-not-found = false
 endif

@@ -54,7 +54,7 @@ if (isEmptyString(VERSION)) {
 const version = new Version(VERSION);
 if (version.isPreRelease()) {
   LOG.yellow(
-    `No changelog to generate (version ${VERSION} is a pre-release version)`
+    `No changelog to generate (version ${VERSION} is a pre-release version)`,
   );
   process.exit(0);
 }
@@ -96,7 +96,7 @@ async function getJiraIssues(versionId) {
 function groupByType(issues) {
   const groups = [...groupBy(issues, (issue) => issue.type).entries()];
   return groups.sort(
-    ([t1], [t2]) => LOG_TYPES.get(t1).order - LOG_TYPES.get(t2).order
+    ([t1], [t2]) => LOG_TYPES.get(t1).order - LOG_TYPES.get(t2).order,
   );
 }
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package indexer
+package search
 
 import (
 	"context"
@@ -51,10 +51,8 @@ func (f IndexField) String() string {
 
 type Indexer struct {
 	Field string
-	Func  Func
+	Func  client.IndexerFunc
 }
-
-type Func = func(obj client.Object) []string
 
 func InitCache(ctx context.Context, cache cache.Cache) error {
 	errs := make([]error, 0)
@@ -141,7 +139,7 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	return errors.NewAggregate(errs)
 }
 
-func createIndexerFunc[T client.Object](doIndex func(T, *[]string)) Func {
+func createIndexerFunc[T client.Object](doIndex func(T, *[]string)) client.IndexerFunc {
 	return func(obj client.Object) []string {
 		fields := []string{}
 		o, ok := obj.(T)

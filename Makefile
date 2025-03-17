@@ -11,14 +11,14 @@ endif
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-include make/tool.mk
-include make/build.mk
-include make/docker.mk
-include make/helm.mk
-include make/dev.mk
-include make/lint.mk
-include make/test.mk
-include make/doc.mk
+include tooling/make/tool.mk
+include tooling/make/build.mk
+include tooling/make/docker.mk
+include tooling/make/helm.mk
+include tooling/make/dev.mk
+include tooling/make/lint.mk
+include tooling/make/test.mk
+include tooling/make/doc.mk
 
 .PHONY: all
 all: build
