@@ -18,11 +18,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -37,7 +37,7 @@ func Delete(
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := search.FindByFieldReferencing(
 		ctx,
-		indexer.ApiResourceField,
+		search.ApiResourceField,
 		refs.NewNamespacedName(resource.Namespace, resource.Name),
 		apis,
 	); err != nil {
@@ -52,7 +52,7 @@ func Delete(
 	apisV4 := &v1alpha1.ApiV4DefinitionList{}
 	if err := search.FindByFieldReferencing(
 		ctx,
-		indexer.ApiV4ResourceField,
+		search.ApiV4ResourceField,
 		refs.NewNamespacedName(resource.Namespace, resource.Name),
 		apisV4,
 	); err != nil {

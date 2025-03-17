@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups/internal"
 
@@ -121,7 +121,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.SharedPolicyGroup{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.SPGContextField)).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.SPGContextField)).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

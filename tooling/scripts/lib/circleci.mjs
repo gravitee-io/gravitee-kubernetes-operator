@@ -39,7 +39,7 @@ export async function triggerPipeline(parameters, branch = "master") {
         Accept: "application/json",
       },
       body: JSON.stringify({ parameters, branch }),
-    }
+    },
   );
 
   if (response.status === 201) {

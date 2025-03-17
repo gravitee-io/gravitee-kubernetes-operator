@@ -76,33 +76,52 @@ commands:
           secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
           var-name: AZURE_SP_PASSWORD
 jobs:
-  job-lint-sources:
+  job-install-go-tools:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - golangci-lint-{{ checksum ".golangci.yml" }}
-      - run:
-          name: Lint sources
-          command: make lint-sources
-      - save_cache:
-          key: golangci-lint-{{ checksum ".golangci.yml" }}
-          paths:
-            - /home/circleci/.cache
-            - /home/circleci/go/pkg/mod
-
-  job-lint-licenses:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
       - go/load-cache
       - run:
+          name: Install GO tools
+          command: make install-go-tools
+      - go/save-cache
+      - save_cache:
+          key: gotools-{{ checksum "go.sum" }}
+          paths:
+            - /home/circleci/project/bin
+  job-lint-sources:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
+      - restore_cache:
+          keys:
+            - golangci-{{ checksum ".golangci.yml" }}
+      - run:
+          name: Lint sources
+          command: make lint-sources
+      - save_cache:
+          key: golangci-{{ checksum ".golangci.yml" }}
+          paths:
+            - /home/circleci/.cache
+
+  job-lint-licenses:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
+      - run:
           name: Lint licenses
           command: make lint-licenses
-      - go/save-cache
 
   job-lint-commits:
     docker:
@@ -125,7 +144,10 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - go/mod-download-cached
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - run:
           name: Check that `make generate` has been executed
           command: |
@@ -149,10 +171,13 @@ jobs:
 
   job-unit-test:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
-      - go/mod-download-cached
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - run:
           name: Run unit tests
           command: |
@@ -182,6 +207,9 @@ jobs:
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - kubernetes/install-kubectl
       - helm/install_helm_client
       - run:
@@ -197,9 +225,6 @@ jobs:
       - run:
           name: Create junit reports directory
           command: mkdir -p "/tmp/junit/reports"
-      - run:
-          name: Install ginkgo
-          command: make ginkgo
       - when:
           condition:
             equal:
@@ -339,9 +364,12 @@ jobs:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
       - run:
+          name: Install GO tools
+          command: make install-go-tools
+      - run:
           name: Switch to release branch
           command: |
-            export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+            export RELEASE_BRANCH=$(npx zx tooling/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
             echo "Switching to branch $RELEASE_BRANCH"
             git fetch
             git switch $RELEASE_BRANCH 2>/dev/null || git switch -c $RELEASE_BRANCH
@@ -389,7 +417,7 @@ jobs:
             - run:
                 name: Dry run release Helm chart
                 command: |
-                  npx zx scripts/release-helm-chart.mjs --dry-run --version << pipeline.parameters.release-version >>
+                  npx zx tooling/scripts/release-helm-chart.mjs --dry-run --version << pipeline.parameters.release-version >>
       - when:
           condition:
             not: << pipeline.parameters.dry-run >>
@@ -397,7 +425,7 @@ jobs:
             - run:
                 name: Release Helm chart
                 command: |
-                  npx zx scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
+                  npx zx tooling/scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
       - run:
           name: Commit and tag release
           command: |
@@ -415,12 +443,12 @@ jobs:
             - run:
                 name: Push release tag and commit
                 command: |
-                  export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+                  export RELEASE_BRANCH=$(npx zx tooling/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
                   git push -u origin $RELEASE_BRANCH
                   git push --tags origin $RELEASE_BRANCH
       - run:
           name: Generate Changelog
-          command: npx zx scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
+          command: npx zx tooling/scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
       - when:
           condition: << pipeline.parameters.dry-run >>
           steps:
@@ -468,7 +496,7 @@ jobs:
             - run:
                 name: Submit Release Changelog for << pipeline.parameters.release-version >>
                 command: |
-                  npx zx scripts/submit-changelog.mjs \
+                  npx zx tooling/scripts/submit-changelog.mjs \
                     --version << pipeline.parameters.release-version >> \
                     --file /tmp/CHANGELOG.md --output /tmp/pr.txt
 
@@ -519,7 +547,7 @@ jobs:
           helm_plugin_url: https://github.com/quintush/helm-unittest
       - run:
           name: Run Helm unit tests
-          command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
+          command: make helm-test
       - go/save-cache
 
   job-sonarcloud-analysis:
@@ -554,16 +582,26 @@ workflows:
         - none
         - << pipeline.parameters.trigger >>
     jobs:
+      - job-install-go-tools:
+          name: Install GO tools
       - job-lint-sources:
           name: Lint sources
+          requires:
+            - Install GO tools
       - job-lint-licenses:
           name: Lint licenses
+          requires:
+            - Install GO tools
       - job-lint-commits:
           name: Lint commits
       - job-lint-resources:
           name: Lint resources
+          requires:
+            - Install GO tools
       - job-unit-test:
           name: Run unit tests
+          requires:
+            - Install GO tools
       - job-integration-test:
           name: Run IT with context
           context: cicd-orchestrator
