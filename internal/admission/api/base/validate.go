@@ -18,13 +18,12 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -85,7 +84,7 @@ func ValidateSubscribedPlans(
 	ctx context.Context,
 	oldApi core.ApiDefinitionObject,
 	newApi core.ApiDefinitionObject,
-	searchIndexField indexer.IndexField,
+	searchIndexField search.IndexField,
 ) *errors.AdmissionError {
 	st, _ := oldApi.GetStatus().(core.SubscribableStatus)
 	if st.GetSubscriptionCount() == 0 {

@@ -17,10 +17,10 @@ package internal
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -41,7 +41,7 @@ func hasMoreReferences(
 	list := new(v1alpha1.ManagementContextList)
 	if err := search.FindByFieldReferencing(
 		ctx,
-		indexer.SecretRefField,
+		search.SecretRefField,
 		ref,
 		list,
 	); err != nil {
@@ -58,7 +58,7 @@ func hasMoreReferences(
 
 	if err := search.FindByFieldReferencing(
 		ctx,
-		indexer.SecretRefField,
+		search.SecretRefField,
 		ref,
 		list,
 	); err != nil {

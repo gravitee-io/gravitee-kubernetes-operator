@@ -24,7 +24,7 @@ const CLUSTER_ROLE_BINDING_NAME = "add-on-cluster-admin";
 const KUBE_CONTEXT = await $`kubectl config current-context`;
 
 LOG.yellow(
-  `⚠️ You are about to create a service account with 'cluster-admin' in kube context ${KUBE_CONTEXT}`
+  `⚠️ You are about to create a service account with 'cluster-admin' in kube context ${KUBE_CONTEXT}`,
 );
 
 const CONTINUE = await question("Do you want to proceed? (yes/no)");

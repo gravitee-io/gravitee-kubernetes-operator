@@ -12,12 +12,13 @@ lint-commits:  ## Run commitlint and fail on error
 	@commitlint -x @commitlint/config-conventional --edit
 
 .PHONY: lint-sources
-lint-sources: golangci-lint ## Run golangci-lint and fail on error
+lint-sources: ## Run golangci-lint and fail on error
 	@echo "Linting go sources ..."
 	@$(GOLANGCILINT) --concurrency 2 run ./...
+	@npx --yes prettier --check tooling/scripts
 
 .PHONY: lint-licenses
-lint-licenses: addlicense ## Run addlicense linter and fail on error
+lint-licenses: ## Run addlicense linter and fail on error
 	@echo "Checking license headers ..."
 	@$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt \
 		-ignore ".circleci/**" \
@@ -26,7 +27,7 @@ lint-licenses: addlicense ## Run addlicense linter and fail on error
 		-ignore ".idea/**" .
 
 .PHONY: add-license
-add-license: addlicense ## Add license headers to files
+add-license: ## Add license headers to files
 	@echo "Adding license headers ..."
 	@$(ADDLICENSE) -f LICENSE_TEMPLATE.txt \
 		-ignore ".circleci/**" \
@@ -38,6 +39,7 @@ add-license: addlicense ## Add license headers to files
 lint: $(ALL_LINT)
 
 .PHONY: lint-fix
-lint-fix: golangci-lint addlicense ## Fix whatever golangci-lint can fix and add licenses headers
+lint-fix: ## Fix whatever golangci-lint can fix and add licenses headers
 	@$(GOLANGCILINT) run ./... --fix
 	@$(MAKE) add-license
+	@npx --yes prettier --write tooling/scripts

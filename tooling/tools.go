@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package status
+//go:build tools
+// +build tools
 
-type Errors struct {
-	// warning errors do not block object reconciliation,
-	// most of the time because the value is ignored or defaulted
-	// when the API gets synced with APIM
-	Warning []string `json:"warning,omitempty"`
-	// severe errors do not pass admission and will block reconcile
-	// hence, this field should always be during the admission phase
-	// and is very unlikely to be persisted in the status
-	Severe []string `json:"severe,omitempty"`
-}
+package tooling
+
+import (
+	_ "fybrik.io/crdoc"
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "github.com/google/addlicense"
+	_ "github.com/onsi/ginkgo/v2/ginkgo"
+	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
+)

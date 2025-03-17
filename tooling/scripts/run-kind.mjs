@@ -16,20 +16,20 @@
 
 import {
   LOG,
+  PROJECT_DIR,
   setNoQuoteEscape,
   setQuoteEscape,
   time,
   toggleVerbosity,
 } from "./lib/index.mjs";
 
-const KIND_CONFIG = path.join(__dirname, "..", "kind");
+const KIND_CONFIG = path.join(PROJECT_DIR, "tooling", "kind");
 const PKI = path.join(
-  __dirname,
-  "..",
+  PROJECT_DIR,
   "examples",
   "usecase",
   "subscribe-to-mtls-plan",
-  "pki"
+  "pki",
 );
 
 const APIM_REGISTRY = `${process.env.APIM_IMAGE_REGISTRY || "graviteeio"}`;
@@ -65,20 +65,20 @@ async function loadImages() {
 
   await Promise.all(
     Array.from(IMAGES.keys()).map(
-      (image) => $`docker pull ${image} ${REDIRECT}`
-    )
+      (image) => $`docker pull ${image} ${REDIRECT}`,
+    ),
   );
 
   await Promise.all(
     Array.from(IMAGES.entries()).map(
-      ([image, tag]) => $`docker tag ${image} ${tag} ${REDIRECT}`
-    )
+      ([image, tag]) => $`docker tag ${image} ${tag} ${REDIRECT}`,
+    ),
   );
 
   await Promise.all(
     Array.from(IMAGES.values()).map(
-      (tag) => $`kind load docker-image ${tag} --name gravitee ${REDIRECT}`
-    )
+      (tag) => $`kind load docker-image ${tag} --name gravitee ${REDIRECT}`,
+    ),
   );
 
   setQuoteEscape();

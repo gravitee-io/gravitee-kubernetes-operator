@@ -19,11 +19,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/types/list"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/types"
@@ -35,11 +35,11 @@ import (
 )
 
 type Interface interface {
-	WatchContexts(index indexer.IndexField) *handler.Funcs
-	WatchResources(index indexer.IndexField) *handler.Funcs
+	WatchContexts(index search.IndexField) *handler.Funcs
+	WatchResources(index search.IndexField) *handler.Funcs
 	WatchApiTemplate() *handler.Funcs
 	WatchTLSSecret() *handler.Funcs
-	WatchSharedPolicyGroups(index indexer.IndexField) *handler.Funcs
+	WatchSharedPolicyGroups(index search.IndexField) *handler.Funcs
 }
 
 type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
@@ -64,7 +64,7 @@ func New(ctx context.Context, k8s client.Client, objectList client.ObjectList) *
 
 // WatchContexts can be used to trigger a reconciliation when a management context is updated
 // on resources that should be synced with this context.
-func (w *Type) WatchContexts(index indexer.IndexField) *handler.Funcs {
+func (w *Type) WatchContexts(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),
@@ -104,7 +104,7 @@ func ContextSecrets() *handler.Funcs {
 
 // WatchResources can be used to trigger a reconciliation when an API resource is updated
 // on resources that are depending on it. Right now this is only used for API definitions.
-func (w *Type) WatchResources(index indexer.IndexField) *handler.Funcs {
+func (w *Type) WatchResources(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),
@@ -115,8 +115,8 @@ func (w *Type) WatchResources(index indexer.IndexField) *handler.Funcs {
 // on resources that are depending on it. Right now this is only used for Ingress resources.
 func (w *Type) WatchApiTemplate() *handler.Funcs {
 	return &handler.Funcs{
-		UpdateFunc: w.UpdateFromLookup(indexer.ApiTemplateField),
-		CreateFunc: w.CreateFromLookup(indexer.ApiTemplateField),
+		UpdateFunc: w.UpdateFromLookup(search.ApiTemplateField),
+		CreateFunc: w.CreateFromLookup(search.ApiTemplateField),
 	}
 }
 
@@ -124,14 +124,14 @@ func (w *Type) WatchApiTemplate() *handler.Funcs {
 // on resources that are depending on it. Right now this is only used for Ingress resources.
 func (w *Type) WatchTLSSecret() *handler.Funcs {
 	return &handler.Funcs{
-		UpdateFunc: w.UpdateFromLookup(indexer.TLSSecretField),
-		CreateFunc: w.CreateFromLookup(indexer.TLSSecretField),
+		UpdateFunc: w.UpdateFromLookup(search.TLSSecretField),
+		CreateFunc: w.CreateFromLookup(search.TLSSecretField),
 	}
 }
 
 // WatchSharedPolicyGroups can be used to trigger a reconciliation when a SPG is updated
 // on resources that should be synced with this SOG.
-func (w *Type) WatchSharedPolicyGroups(index indexer.IndexField) *handler.Funcs {
+func (w *Type) WatchSharedPolicyGroups(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),
@@ -142,7 +142,7 @@ func (w *Type) WatchSharedPolicyGroups(index indexer.IndexField) *handler.Funcs 
 // on all resources that are referencing the updated object.
 // The lookupField is the field that is used to lookup the resources.
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
-func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
+func (w *Type) UpdateFromLookup(field search.IndexField) UpdateFunc {
 	return func(_ context.Context, e event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		ref := refs.NewNamespacedName(e.ObjectNew.GetNamespace(), e.ObjectNew.GetName())
 		w.queueByFieldReferencing(field, ref, q)
@@ -155,7 +155,7 @@ func (w *Type) UpdateFromLookup(field indexer.IndexField) UpdateFunc {
 // Note that this field *must* have been registered as a cache index in our main func (see main.go).
 // This can be used to reconcile resources when have been created before their dependencies.
 // For example, when an API is created before the management context it references.
-func (w *Type) CreateFromLookup(field indexer.IndexField) CreateFunc {
+func (w *Type) CreateFromLookup(field search.IndexField) CreateFunc {
 	return func(_ context.Context, e event.CreateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 		ref := refs.NewNamespacedName(e.Object.GetNamespace(), e.Object.GetName())
 		w.queueByFieldReferencing(field, ref, q)
@@ -163,7 +163,7 @@ func (w *Type) CreateFromLookup(field indexer.IndexField) CreateFunc {
 }
 
 func (w *Type) queueByFieldReferencing(
-	field indexer.IndexField,
+	field search.IndexField,
 	ref refs.NamespacedName,
 	q workqueue.TypedRateLimitingInterface[reconcile.Request],
 ) {
