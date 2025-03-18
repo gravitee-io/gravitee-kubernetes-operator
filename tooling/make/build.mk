@@ -7,10 +7,10 @@ build: generate ## Build manager binary.
 .PHONY: manifests
 manifests: controller-gen ## Generate CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=helm/gko/crds
-	@npx zx scripts/annotate-crds.mjs
+	@npx zx tooling/scripts/annotate-crds.mjs
 	$(MAKE) add-license
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="tooling/license.go.txt" paths="./..."
 

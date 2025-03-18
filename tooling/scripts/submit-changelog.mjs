@@ -16,6 +16,7 @@
 
 import {
   LOG,
+  PROJECT_DIR,
   isEmptyString,
   Docs,
   toggleVerbosity,
@@ -30,7 +31,6 @@ const OUTPUT_FILE = argv.output;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const EOL = "\n";
 const WORKING_DIR = path.join(os.tmpdir(), "changelog");
-const PROJECT_DIR = path.join(__dirname, "..");
 
 toggleVerbosity(VERBOSE);
 

@@ -341,7 +341,7 @@ jobs:
       - run:
           name: Switch to release branch
           command: |
-            export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+            export RELEASE_BRANCH=$(npx zx tooling/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
             echo "Switching to branch $RELEASE_BRANCH"
             git fetch
             git switch $RELEASE_BRANCH 2>/dev/null || git switch -c $RELEASE_BRANCH
@@ -389,7 +389,7 @@ jobs:
             - run:
                 name: Dry run release Helm chart
                 command: |
-                  npx zx scripts/release-helm-chart.mjs --dry-run --version << pipeline.parameters.release-version >>
+                  npx zx tooling/scripts/release-helm-chart.mjs --dry-run --version << pipeline.parameters.release-version >>
       - when:
           condition:
             not: << pipeline.parameters.dry-run >>
@@ -397,7 +397,7 @@ jobs:
             - run:
                 name: Release Helm chart
                 command: |
-                  npx zx scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
+                  npx zx tooling/scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
       - run:
           name: Commit and tag release
           command: |
@@ -415,12 +415,12 @@ jobs:
             - run:
                 name: Push release tag and commit
                 command: |
-                  export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+                  export RELEASE_BRANCH=$(npx zx tooling/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
                   git push -u origin $RELEASE_BRANCH
                   git push --tags origin $RELEASE_BRANCH
       - run:
           name: Generate Changelog
-          command: npx zx scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
+          command: npx zx tooling/scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
       - when:
           condition: << pipeline.parameters.dry-run >>
           steps:
@@ -468,7 +468,7 @@ jobs:
             - run:
                 name: Submit Release Changelog for << pipeline.parameters.release-version >>
                 command: |
-                  npx zx scripts/submit-changelog.mjs \
+                  npx zx tooling/scripts/submit-changelog.mjs \
                     --version << pipeline.parameters.release-version >> \
                     --file /tmp/CHANGELOG.md --output /tmp/pr.txt
 

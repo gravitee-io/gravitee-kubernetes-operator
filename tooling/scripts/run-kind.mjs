@@ -15,17 +15,15 @@
  */
 
 import {
-  LOG,
+  LOG, PROJECT_DIR,
   setNoQuoteEscape,
   setQuoteEscape,
   time,
   toggleVerbosity,
 } from "./lib/index.mjs";
 
-const KIND_CONFIG = path.join(__dirname, "..", "kind");
-const PKI = path.join(
-  __dirname,
-  "..",
+const KIND_CONFIG = path.join(PROJECT_DIR, "tooling", "kind");
+const PKI = path.join(PROJECT_DIR,
   "examples",
   "usecase",
   "subscribe-to-mtls-plan",

@@ -2,7 +2,7 @@
 
 .PHONY: reference
 reference: crdoc ## Generate the CRDs reference documentation
-	$(CRDOC) --resources helm/gko/crds --output docs/api/reference.md --template crdoc/markdown.tmpl -c crdoc/toc.yaml
+	$(CRDOC) --resources helm/gko/crds --output docs/api/reference.md --template tooling/crdoc/markdown.tmpl -c tooling/crdoc/toc.yaml
 
 .PHONY:
 helm-reference: ## Generates helm chart documentation
