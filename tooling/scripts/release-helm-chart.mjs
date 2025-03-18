@@ -41,27 +41,27 @@ LOG.magenta(`
 await checkRequirements();
 
 async function checkRequirements() {
-    if (isEmptyString(VERSION)) {
-        LOG.red("You must specify a version to release using the --version flag");
-        process.exit(1);
-    }
+  if (isEmptyString(VERSION)) {
+    LOG.red("You must specify a version to release using the --version flag");
+    process.exit(1);
+  }
 
-    if (isEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
-        LOG.red(
-            "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable."
-        );
-        process.exit(1);
-    }
+  if (isEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
+    LOG.red(
+      "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable.",
+    );
+    process.exit(1);
+  }
 
-    if (!$.env.CIRCLECI) {
-        LOG.yellow(`
+  if (!$.env.CIRCLECI) {
+    LOG.yellow(`
   ⚠️ it looks like you are trying to run this script locally, while it is meant to be ran in a CI environment.
 
   If you are sure you want to continue, please set the CIRCLECI environment variable to true.
 
 `);
-        process.exit(1);
-    }
+    process.exit(1);
+  }
 }
 
 LOG.blue(`
@@ -71,7 +71,7 @@ LOG.blue(`
 await time(checkoutHelmCharts);
 
 async function checkoutHelmCharts() {
-    await $`git clone git@github.com:${HELM.chartsRepo}.git \
+  await $`git clone git@github.com:${HELM.chartsRepo}.git \
     --branch ${HELM.releaseBranch} \
     --single-branch \
     --depth 1 ${WORKING_DIR}`;
@@ -84,7 +84,7 @@ LOG.blue(`
 await time(packageChart);
 
 async function packageChart() {
-    await $`helm package -d ${WORKING_DIR}/helm/gko ${HELM.chartDir} --app-version ${VERSION} --version ${VERSION}`;
+  await $`helm package -d ${WORKING_DIR}/helm/gko ${HELM.chartDir} --app-version ${VERSION} --version ${VERSION}`;
 }
 
 LOG.blue(`
@@ -94,11 +94,11 @@ LOG.blue(`
 await time(indexRepo);
 
 async function indexRepo() {
-    await $`helm repo index \
+  await $`helm repo index \
       --url https://helm.gravitee.io/helm/gko \
       --merge ${WORKING_DIR}/index.yaml ${WORKING_DIR}/helm/gko`;
 
-    await $`mv ${WORKING_DIR}/helm/gko/index.yaml ${WORKING_DIR}/index.yaml`;
+  await $`mv ${WORKING_DIR}/helm/gko/index.yaml ${WORKING_DIR}/index.yaml`;
 }
 
 LOG.blue(`
@@ -106,19 +106,19 @@ LOG.blue(`
 `);
 
 if (!DRY_RUN) {
-    await time(publishRelease);
+  await time(publishRelease);
 } else {
-    LOG.yellow(`  ⚠️ This is a dry run, release will not be committed ..
+  LOG.yellow(`  ⚠️ This is a dry run, release will not be committed ..
   `);
 }
 
 async function publishRelease() {
-    cd(WORKING_DIR);
-    await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${HELM.chartsRepo}.git"`;
-    await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
-    await $`git commit -m "chore(gko): release version ${VERSION}"`;
-    await $`git push origin ${HELM.releaseBranch}`;
-    cd(PROJECT_DIR);
+  cd(WORKING_DIR);
+  await $`git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${HELM.chartsRepo}.git"`;
+  await $`git add helm/gko/gko-${VERSION}.tgz index.yaml`;
+  await $`git commit -m "chore(gko): release version ${VERSION}"`;
+  await $`git push origin ${HELM.releaseBranch}`;
+  cd(PROJECT_DIR);
 }
 
 LOG.blue(`
@@ -128,11 +128,11 @@ LOG.blue(`
 await time(setChartVersion);
 
 async function setChartVersion() {
-    const chartFile = await fs.readFile(`${HELM.chartDir}/Chart.yaml`, "utf8");
-    const chartYaml = await YAML.parse(chartFile);
-    chartYaml.version = VERSION;
-    chartYaml.appVersion = VERSION;
-    await fs.writeFile(`${HELM.chartDir}/Chart.yaml`, YAML.stringify(chartYaml));
+  const chartFile = await fs.readFile(`${HELM.chartDir}/Chart.yaml`, "utf8");
+  const chartYaml = await YAML.parse(chartFile);
+  chartYaml.version = VERSION;
+  chartYaml.appVersion = VERSION;
+  await fs.writeFile(`${HELM.chartDir}/Chart.yaml`, YAML.stringify(chartYaml));
 }
 
 LOG.blue(`
@@ -142,13 +142,13 @@ LOG.blue(`
 await time(annotateCRDs);
 
 async function annotateCRDs() {
-    await HELM.annotateCRDs(VERSION);
+  await HELM.annotateCRDs(VERSION);
 }
 
 if (!DRY_RUN) {
-    LOG.magenta(`
+  LOG.magenta(`
 🎉 version ${VERSION} has been released !`);
 } else {
-    LOG.magenta(`
+  LOG.magenta(`
 🎉 dry run done for version ${VERSION}`);
 }

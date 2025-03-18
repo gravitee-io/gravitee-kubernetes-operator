@@ -63,14 +63,14 @@ const version = new Version(VERSION);
 
 if (version.isNoPatch()) {
   LOG.yellow(
-    `No changelog to generate (version ${VERSION} is a new minor version)`
+    `No changelog to generate (version ${VERSION} is a new minor version)`,
   );
   process.exit(0);
 }
 
 if (version.isPreRelease()) {
   LOG.yellow(
-    `No changelog to generate (version ${VERSION} is a pre-release version)`
+    `No changelog to generate (version ${VERSION} is a pre-release version)`,
   );
   process.exit(0);
 }
@@ -135,7 +135,7 @@ function appendChangelog() {
   const changelog = fs.readFileSync(changelogFile, "utf8");
   return changelog.replace(
     changelogHeader,
-    `$&${EOL}${EOL}${releaseChangelog}${EOL}`
+    `$&${EOL}${EOL}${releaseChangelog}${EOL}`,
   );
 }
 
