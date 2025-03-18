@@ -61,7 +61,7 @@ if (isEmptyString(GITHUB_TOKEN)) {
 
 const version = new Version(VERSION);
 
-if (version.isNoPatch()) {
+if (version.isNotPatch()) {
   LOG.yellow(
     `No changelog to generate (version ${VERSION} is a new minor version)`,
   );

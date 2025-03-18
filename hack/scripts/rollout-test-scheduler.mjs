@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-import { HELM, LOG, isEmptyString } from "./lib/index.mjs";
+import { GH } from "./lib/github.mjs";
 
-import { Version } from "./lib/version.mjs";
-
-const VERSION = argv.version || (await HELM.getChartVersion());
-
-if (isEmptyString(VERSION)) {
-  LOG.red("You must specify a version using the --version flag");
-  process.exit(1);
+export async function rolloutTestScheduller(version) {
+  GH.rolloutMatrix("schedule-test.yml", "trigger-test-suite", version);
 }
-
-LOG.log(new Version(VERSION).branch());
