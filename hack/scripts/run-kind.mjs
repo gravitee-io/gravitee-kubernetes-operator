@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { APIM } from "./lib/apim.mjs";
 import {
   LOG,
   PROJECT_DIR,
@@ -32,18 +33,24 @@ const PKI = path.join(
   "pki",
 );
 
-const APIM_REGISTRY = `${process.env.APIM_IMAGE_REGISTRY || "graviteeio"}`;
-const APIM_TAG = `${process.env.APIM_IMAGE_TAG || "latest"}`;
-const APIM_VALUES = `${process.env.APIM_VALUES || "values.yaml"}`;
+const APIM_IMAGE_REGISTRY = await getAPIMImageRegistry();
+const APIM_IMAGE_TAG = await getAPIMImageTag();
+const APIM_CHART_REGISTRY = await getAPIMChartRegistry();
+const APIM_CHART_VERSION = await getAPIMChartVersion();
+
+const APIM_VALUES = `${$.env.APIM_VALUES || "values.yaml"}`;
 
 const IMAGES = new Map([
-  [`${APIM_REGISTRY}/apim-gateway:${APIM_TAG}`, `gravitee-apim-gateway:dev`],
   [
-    `${APIM_REGISTRY}/apim-management-api:${APIM_TAG}`,
+    `${APIM_IMAGE_REGISTRY}/apim-gateway:${APIM_IMAGE_TAG}`,
+    `gravitee-apim-gateway:dev`,
+  ],
+  [
+    `${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}`,
     `gravitee-apim-management-api:dev`,
   ],
   [
-    `${APIM_REGISTRY}/apim-management-ui:${APIM_TAG}`,
+    `${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`,
     `gravitee-apim-management-ui:dev`,
   ],
   [`mongo:6.0.15-jammy`, `mongo:6.0.15-jammy`],
@@ -53,6 +60,33 @@ const IMAGES = new Map([
 const REDIRECT = argv.verbose ? "" : "> /dev/null";
 
 toggleVerbosity(argv.verbose);
+
+async function getAPIMImageRegistry() {
+  if ($.env.APIM_IMAGE_REGISTRY) {
+    return $.env.APIM_IMAGE_REGISTRY;
+  }
+  return await APIM.getImageRegistry();
+}
+async function getAPIMImageTag() {
+  if ($.env.APIM_IMAGE_TAG) {
+    return $.env.APIM_IMAGE_TAG;
+  }
+  return await APIM.getImageTag();
+}
+
+async function getAPIMChartRegistry() {
+  if ($.env.APIM_CHART_REGISTRY) {
+    return $.env.APIM_CHART_REGISTRY;
+  }
+  return await APIM.getChartRegistry();
+}
+
+async function getAPIMChartVersion() {
+  if ($.env.APIM_CHART_VERSION) {
+    return $.env.APIM_CHART_VERSION;
+  }
+  return await APIM.getChartVersion();
+}
 
 async function createKindCluster() {
   setNoQuoteEscape();
@@ -95,7 +129,7 @@ async function createTLSSecret() {
 async function helmInstallAPIM() {
   await $`helm repo add graviteeio https://helm.gravitee.io`;
   await $`helm repo update graviteeio`;
-  await $`helm install apim graviteeio/apim3 -f ${KIND_CONFIG}/apim/${APIM_VALUES}`;
+  await $`helm install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --version ${APIM_CHART_VERSION}`;
 }
 
 async function deployHTTPBin() {
@@ -145,7 +179,7 @@ await time(deployHTTPBin);
 LOG.magenta(`
     APIM containers are starting ...
 
-    Version: ${APIM_TAG}
+    Version: ${APIM_IMAGE_TAG}
 
     Available endpoints are:
         Gateway             http://localhost:30082

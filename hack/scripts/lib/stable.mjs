@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-import { HELM, LOG, isEmptyString } from "./lib/index.mjs";
+import { PROJECT_DIR } from "./index.mjs";
 
-import { Version } from "./lib/version.mjs";
+const MANIFEST = await parseManifest();
 
-const VERSION = argv.version || (await HELM.getChartVersion());
-
-if (isEmptyString(VERSION)) {
-  LOG.red("You must specify a version using the --version flag");
-  process.exit(1);
+async function parseManifest() {
+  const manifestFilePath = path.join(PROJECT_DIR, "hack", "stable.yaml");
+  const manifestFile = await fs.readFile(manifestFilePath, "utf8");
+  return await YAML.parse(manifestFile);
 }
 
-LOG.log(new Version(VERSION).branch());
+async function getBranch() {
+  return MANIFEST.branch;
+}
+
+export const STABLE = {
+  getBranch,
+};
