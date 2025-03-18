@@ -3,13 +3,14 @@
 .PHONY: helm-test
 helm-test: helm-unittest
 	@echo "Running helm unit tests ..."
-	@helm unittest helm/gko
+	@cd helm; helm unittest -f 'tests/**/*.yaml' gko
+
 
 IT_ARGS ?= ""
 TIMEOUT ?= 1200s 
 
-.PHONY: test
-it: use-cluster install ginkgo ## Run intgration tests
+.PHONY: it
+it: use-cluster install ginkgo ## Run integration tests
 	$(GINKGO) $(IT_ARGS) --timeout $(TIMEOUT)  test/integration/...
 
 UT_ARGS ?= ""
