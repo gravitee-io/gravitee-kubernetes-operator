@@ -78,7 +78,7 @@ commands:
 jobs:
   job-lint-sources:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
       - restore_cache:
