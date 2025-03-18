@@ -136,17 +136,32 @@ linters-settings:
     # Default: false
     require-specific: true
 
+
   rowserrcheck:
     # database/sql is always checked
     # Default: []
     packages:
       - github.com/jmoiron/sqlx
 
-  tenv:
-    # The option `all` will run against whole test files (`_test.go`) regardless of method/function signatures.
-    # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
-    # Default: false
-    all: true
+
+  usetesting:
+    # Enable/disable `os.CreateTemp("", ...)` detections.
+    os-create-temp: true
+    # Enable/disable `os.MkdirTemp()` detections.
+    os-mkdir-temp: true
+    # Enable/disable `os.Setenv()` detections.
+    os-setenv: true
+    # Enable/disable `os.TempDir()` detections
+    os-temp-dir: true
+    # Enable/disable `os.Chdir()` detections.
+    # Disabled if Go < 1.24.
+    os-chdir: true
+    # Enable/disable `context.Background()` detections.
+    # Disabled if Go < 1.24.
+    context-background: true
+    # Enable/disable `context.TO DO()` detections.
+    # Disabled if Go < 1.24.
+    context-todo: true
 
 linters:
   disable-all: true
@@ -165,6 +180,7 @@ linters:
     - bodyclose # checks whether HTTP response body is closed successfully
     - contextcheck # check the function whether use a non-inherited context
     - cyclop # checks function and package cyclomatic complexity
+    - decorder # check declaration order and count of types, constants, variables and functions
     - dupl # Tool for code clone detection
     - durationcheck # check for two durations multiplied together
     - errname # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error.
@@ -178,6 +194,7 @@ linters:
     - gocyclo # Computes and checks the cyclomatic complexity of functions
     - godot # Check if comments end in a period
     - gofmt
+    - goheader # Checks is file header matches to pattern
     - goimports # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
     - gomoddirectives # Manage the use of 'replace', 'retract', and 'excludes' directives in go.mod.
     - gomodguard # Allow and block list linter for direct Go module dependencies. This is different from depguard where there are different block types for example version constraints and module recommendations.
@@ -193,24 +210,22 @@ linters:
     - nolintlint # Reports ill-formed or insufficient nolint directives
     - nonamedreturns # Reports all named returns
     - nosprintfhostport # Checks for misuse of Sprintf to construct a host with port in a URL.
+    - prealloc # [premature optimization, but can be used in some cases] Finds slice declarations that could potentially be preallocated
     - predeclared # find code that shadows one of Go's predeclared identifiers
     - promlinter # Check Prometheus metrics naming via promlint
     - revive # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint.
     - rowserrcheck # checks whether Err of rows is checked successfully
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
     - stylecheck # Stylecheck is a replacement for golint
-    - tenv # tenv is analyzer that detects using os.Setenv instead of t.Setenv since Go1.17
     - tparallel # tparallel detects inappropriate usage of t.Parallel() method in your Go test codes
     - unconvert # Remove unnecessary type conversions
     - unparam # Reports unused function parameters
+    - usetesting
     - wastedassign # wastedassign finds wasted assignment statements.
     - whitespace # Tool for detection of leading and trailing whitespace
     ## you may want to enable
-    #- decorder # check declaration order and count of types, constants, variables and functions
     #- exhaustruct # Checks if all structure fields are initialized
-    #- goheader # Checks is file header matches to pattern
     #- ireturn # Accept Interfaces, Return Concrete Types
-    #- prealloc # [premature optimization, but can be used in some cases] Finds slice declarations that could potentially be preallocated
     #- varnamelen # [great idea, but too many false positives] checks that the length of a variable's name matches its scope
     #- wrapcheck # Checks that errors returned from external packages are wrapped
     ## disabled
