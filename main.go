@@ -26,6 +26,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
 
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
@@ -54,7 +56,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	v1 "k8s.io/api/networking/v1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -139,8 +140,9 @@ func main() {
 
 	k8s.RegisterClient(mgr.GetClient())
 
+	const cannotStartError = "Unable to start manager"
 	if err != nil {
-		log.Global.Error(err, "Unable to start manager")
+		log.Global.Error(err, cannotStartError)
 		os.Exit(1)
 	}
 
@@ -151,8 +153,8 @@ func main() {
 		}
 	}
 
-	if err = indexer.InitCache(context.Background(), mgr.GetCache()); err != nil {
-		log.Global.Error(err, "Unable to start manager")
+	if err = search.InitCache(context.Background(), mgr.GetCache()); err != nil {
+		log.Global.Error(err, cannotStartError)
 		os.Exit(1)
 	}
 
@@ -161,7 +163,7 @@ func main() {
 	if env.Config.EnableWebhook {
 		err = setupAdmissionWebhooks(mgr)
 		if err != nil {
-			log.Global.Error(err, "Unable to start manager")
+			log.Global.Error(err, cannotStartError)
 			os.Exit(1)
 		}
 	}
@@ -180,7 +182,7 @@ func main() {
 
 	log.Global.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		log.Global.Error(err, "Unable to start manager")
+		log.Global.Error(err, cannotStartError)
 		os.Exit(1)
 	}
 }
