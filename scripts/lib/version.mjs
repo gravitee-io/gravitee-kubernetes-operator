@@ -35,11 +35,28 @@ export class Version {
     return `${this.majorDigit}.${this.minorDigit}`;
   }
 
-  isNoPatch() {
+  isNotPatch() {
     return this.patchDigit === 0;
   }
 
   isPreRelease() {
     return !!this.suffix;
   }
+
+  next() {
+    return this.isNotPatch() ? this.nextMinor() : this.nextPatch();
+  }
+
+  nextMinor() {
+    return new Version(`${this.majorDigit}.${this.minorDigit + 1}.${this.patchDigit}`);
+  }
+
+  nextPatch() {
+    return new Version(`${this.majorDigit}.${this.minorDigit}.${this.patchDigit + 1}`);
+  }
+
+  toString() {
+    return `${this.majorDigit}.${this.minorDigit}.${this.patchDigit}`;
+  }
 }
+
