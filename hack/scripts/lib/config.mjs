@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const repoName = "cloud-gko";
+const repo = `gravitee-io/${repoName}`;
+const branch = "main";
+const gkoCommitHashAnnotationKey = "gko.gravitee.io/commit-hash";
+const apimCommitHashAnnotationKey = "apim.gravitee.io/commit-hash";
+const gkoValues = "gko/values-ci.yaml";
+const apimValues = "apim/values-ci.yaml";
 
-import { HELM, LOG, isEmptyString } from "./lib/index.mjs";
-
-import { Version } from "./lib/version.mjs";
-
-const VERSION = argv.version || (await HELM.getChartVersion());
-
-if (isEmptyString(VERSION)) {
-  LOG.red("You must specify a version using the --version flag");
-  process.exit(1);
-}
-
-LOG.log(new Version(VERSION).branch());
+export const CONFIG = {
+  repoName,
+  repo,
+  branch,
+  commitHashAnnotationKey: gkoCommitHashAnnotationKey,
+  apimCommitHashAnnotationKey,
+  gkoValues,
+  apimValues,
+};
