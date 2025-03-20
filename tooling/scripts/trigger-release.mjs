@@ -17,13 +17,23 @@
 import { triggerPipeline } from "./lib/circleci.mjs";
 
 import { toggleVerbosity, isEmptyString, LOG } from "./lib/index.mjs";
+import { Version } from "./lib/version.mjs";
 
 const VERSION = argv.version;
 const VERBOSE = argv.verbose;
 const DRY_RUN = argv["dry-run"] === "true" || argv["dry-run"] === true;
 const LATEST = argv["latest"] === "true" || argv["latest"] === true;
-const PIPELINE_BRANCH = argv["pipeline-branch"];
 const TRIGGER = "release";
+let PIPELINE_BRANCH = argv["pipeline-branch"];
+
+if (isEmptyString(PIPELINE_BRANCH)) {
+  const pipelineBranch = new Version(VERSION).branch();
+  if (await isGitBranch(pipelineBranch)) {
+    PIPELINE_BRANCH = pipelineBranch;
+  } else {
+    PIPELINE_BRANCH = "master";
+  }
+}
 
 toggleVerbosity(VERBOSE);
 
@@ -32,7 +42,9 @@ if (isEmptyString(VERSION)) {
   process.exit(1);
 }
 
-LOG.blue(`Triggering release pipeline for version ${VERSION}`);
+LOG.blue(
+  `Triggering release for version ${VERSION} using ${PIPELINE_BRANCH} branch pipeline`,
+);
 
 const parameters = {
   trigger: TRIGGER,
@@ -46,3 +58,10 @@ LOG.blue(`Parameters: ${JSON.stringify(parameters)}`);
 const pipelineURL = await triggerPipeline(parameters, PIPELINE_BRANCH);
 
 LOG.blue(`Pipeline is running at ${pipelineURL}`);
+
+async function isGitBranch(pipelineBranch) {
+  return (
+    (await $`git ls-remote --heads -q  | awk -F '/' '{print $3}' | grep '${pipelineBranch}$'`
+      .exitCode) === 0
+  );
+}
