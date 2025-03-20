@@ -32,9 +32,9 @@ on:
         default: true
         type: boolean
       pipeline-branch:
-        description: "On which branch is your circleci pipeline located ?"
-        required: true
-        default: "master"
+        description: "CircleCI release pipeline branch override (computed by default)"
+        required: false
+        default: ""
         type: string
 jobs:
   trigger-release:
