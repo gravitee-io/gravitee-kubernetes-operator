@@ -48,6 +48,16 @@ rules:
       - update
     resourceNames:
       - gko-mutating-webhook-configurations
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    resourceNames:
+      - {{ .Values.manager.webhook.cert.secret.name }}
+    verbs:
+      - get
+      - create
+      - update
 {{- end }}
 {{- end }}
 {{- end }}
