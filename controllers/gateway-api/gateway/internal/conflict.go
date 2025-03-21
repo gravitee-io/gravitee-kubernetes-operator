@@ -37,6 +37,11 @@ func DetectConflicts(gw *gateway.Gateway) {
 				condition.Reason(string(gwAPIv1.ListenerReasonHostnameConflict))
 				break
 			}
+			if k8s.IsKafkaListener(l1) && k8s.IsKafkaListener(l2) {
+				condition.Status(k8s.ConditionStatusTrue)
+				condition.Reason(k8s.ListenerReasonKafkaConflict)
+				break
+			}
 			listenerStatus := gw.Object.Status.Listeners[i]
 			k8s.SetCondition(&gateway.ListenerStatus{Object: &listenerStatus}, condition.Build())
 		}
