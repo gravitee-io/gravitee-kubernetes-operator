@@ -1,0 +1,190 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Gateway HTTP server
+# add support for multi-servers (both http and tcp)
+servers:
+  - type: http
+    port: 8082
+    host: 0.0.0.0
+kafka:
+  enabled: true
+  routingHostMode:
+    defaultDomain: "apim-master-gateway.team-apim-kafka.gravitee.dev"
+  ssl:
+    keystore:
+      type: PEM
+      watch: true
+      secret: secret://kubernetes/apim-master-gateway.team-apim-kafka.gravitee.dev-tls
+    openssl: true
+management:
+  type: mongodb
+  mongodb:
+    sslEnabled: false
+    socketKeepAlive: false
+    uri: secret://kubernetes/mongo-url:mongo_url
+
+ratelimit:
+  type: mongodb
+  mongodb:
+    sslEnabled: false
+    socketKeepAlive: false
+    uri: secret://kubernetes/mongo-url:mongo_url
+
+# Sharding tags configuration
+# Allows to define inclusion/exclusion sharding tags to only deploy a part of APIs. To exclude just prefix the tag with '!'.
+tags: 
+
+# Multi-tenant configuration
+# Allow only a single-value
+tenant: 
+
+# Reporters configuration (used to store reporting monitoring data, request metrics, healthchecks and others...
+# All reporters are enabled by default. To stop one of them, you have to add the property 'enabled: false'
+reporters:
+  # Elasticsearch reporter
+  elasticsearch:
+    endpoints:
+      - https://gravitee-devs.es.westeurope.azure.elastic-cloud.com
+    index_mode: ilm
+    pipeline:
+      plugins:
+        ingest: geoip, user_agent
+    lifecycle:
+      policy_property_name: index.lifecycle.name
+      rollover_alias_property_name: index.lifecycle.rollover_alias
+      policies:
+        monitor: monitor
+        request: request
+        health: health
+        log: log
+    security:
+      username: reporter
+      password: mLK1Vfj7zf1QGud3uIRh
+    index: dev_apim_master
+    settings:
+      number_of_replicas: 0
+      number_of_shards: 2
+      refresh_interval: 10s
+    bulk:
+      actions: 1000           # Number of requests action before flush
+      flush_interval: 5       # Flush interval in seconds
+  file:
+    enabled: true
+    retainDays: 1
+
+services:
+  core:
+    http:
+      enabled: true
+      port: 18082
+      host: 0.0.0.0
+      authentication:
+        type: basic
+        users:
+          admin: adminadmin
+      secured: false
+
+  sync: 
+    enabled: true
+    kubernetes:
+      enabled: true
+
+  # Service used to store and cache api-keys from the management repository to avoid direct repository communication
+  # while serving requests.
+  apikeyscache:
+    delay: 10000
+    unit: MILLISECONDS
+    threads: 3 # Threads core size used to retrieve api-keys from repository.
+
+  # Local registry service.
+  # This registry is used to load API Definition with json format from the file system. By doing so, you do not need
+  # to configure your API using the web console or the rest API (but you need to know and understand the json descriptor
+  # format to make it work....)
+  local:
+    enabled: false
+    path: ${gravitee.home}/apis # The path to API descriptors
+
+  # Gateway monitoring service.
+  # This service retrieves metrics like os / process / jvm metrics and send them to an underlying reporting service.
+  monitoring:
+    delay: 5000
+    unit: MILLISECONDS
+
+  # Endpoint healthcheck service.
+  healthcheck:
+    threads: 3 # Threads core size used to check endpoint availability
+
+  heartbeat: 
+    delay: 5000
+    enabled: true
+    unit: MILLISECONDS
+  bridge:
+    http:
+      enabled: true
+      port: 18092
+      host: localhost
+      tcpKeepAlive: true
+      maxHeaderSize: 8192
+      maxChunkSize: 8192
+      alpn: false
+      authentication:
+        type: none
+      secured: false
+      ssl:
+        enabled: false
+  metrics:
+    enabled: true
+    prometheus:
+      enabled: false
+policy:
+  api-key:
+    header: X-Gravitee-Api-Key
+    param: api-key
+
+# Alert Engine communication
+alerts:
+  alert-engine-connector-ws:
+    enabled: true
+  alert-engine:
+    enabled: true
+    ws:
+      discovery: true
+      endpoints:
+        - http://ae.team-apim.gravitee.dev
+      security:
+        username: admin
+        password: 09d43a128735f9db3d
+
+# APIs specific configuration
+api:
+  secrets:
+    providers:
+    - configuration:
+        enabled: true
+      plugin: kubernetes
+
+gracefulShutdown:
+  delay: 20
+  unit: SECONDS
+
+# Secret Manager configuration
+secrets:
+  kubernetes:
+    enabled: true
+
+# Old class loader behavior, false by default
+classloader:
+  legacy:
+    enabled: false

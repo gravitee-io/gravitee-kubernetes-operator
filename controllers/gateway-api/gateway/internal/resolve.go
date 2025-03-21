@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -28,9 +29,10 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func ResolveRefs(
+func Resolve(
 	ctx context.Context,
 	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
 ) error {
 	for i, listener := range gw.Object.Spec.Listeners {
 		conditionBuilder := k8s.NewResolvedRefsConditionBuilder(gw.Object.Generation)
@@ -43,6 +45,10 @@ func ResolveRefs(
 
 		resolveRouteKinds(listener, status.Object, conditionBuilder)
 
+		if k8s.IsKafkaListener(listener) {
+			resolveKafkaListener(params, conditionBuilder)
+		}
+
 		k8s.SetCondition(status, conditionBuilder.Build())
 
 		if httpRoutesCount, err := countAttachedHTTPRoutes(ctx, gw.Object, listener); err != nil {
@@ -52,6 +58,18 @@ func ResolveRefs(
 		}
 	}
 	return nil
+}
+
+func resolveKafkaListener(
+	params *v1alpha1.GatewayClassParameters,
+	builder *k8s.ConditionBuilder,
+) {
+	if !params.Spec.Gravitee.Kafka.Enabled {
+		builder.
+			RejectInvalidRouteKinds(
+				"Kafka is not enabled on the gateway class",
+			)
+	}
 }
 
 func resolveTLS(
@@ -162,7 +180,7 @@ func isValidRouteKind(
 	if kind.Group == nil {
 		return false
 	}
-	if *kind.Group != k8s.GwAPIv1Group {
+	if *kind.Group != k8s.GwAPIv1Group && *kind.Group != k8s.GraviteeGroup {
 		return false
 	}
 	for _, k := range supportedKinds {

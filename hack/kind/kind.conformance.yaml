@@ -24,3 +24,5 @@ nodes:
         hostPort: 80 
       - containerPort: 443
         hostPort: 443
+      - containerPort: 9092
+        hostPort: 9092
