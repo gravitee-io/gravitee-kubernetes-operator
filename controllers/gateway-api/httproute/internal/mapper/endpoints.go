@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -64,7 +63,6 @@ func buildEndpoint(
 	endpoint := v4.NewHttpEndpoint(
 		fmt.Sprintf("backend-%d", index),
 	)
-	endpoint.Config = utils.NewGenericStringMap()
 	endpoint.Config.Object["target"] = buildEndpointTarget(ref, ns)
 	return endpoint
 }

@@ -237,6 +237,7 @@ rules:
     verbs:
       - get
       - update
+{{- if .Values.gatewayAPI.controller.enabled }}
   - apiGroups:
       - gravitee.io
     resources:
@@ -259,7 +260,6 @@ rules:
     verbs:
       - get
       - update
-{{- if .Values.gatewayAPI.controller.enabled }}
   - apiGroups:
       - gateway.networking.k8s.io
     resources:

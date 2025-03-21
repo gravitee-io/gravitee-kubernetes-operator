@@ -17,6 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.1
+    gravitee.io/extends: gateway.networking.k8s.io
     gravitee.io/operator.version: 0.13.1
   name: gatewayclassparameters.gravitee.io
 spec:
@@ -54,15 +55,13 @@ spec:
                           default: true
                           type: boolean
                         routingHostMode:
-                          default:
-                            brokerPrefix: broker-
-                            domainSeparator: "-"
+                          default: {}
                           properties:
-                            brokerPrefix:
-                              default: broker-
+                            bootstrapDomainPattern:
+                              default: "{apiHost}"
                               type: string
-                            domainSeparator:
-                              default: "-"
+                            brokerDomainPattern:
+                              default: broker-{brokerId}-{apiHost}
                               type: string
                           type: object
                       type: object

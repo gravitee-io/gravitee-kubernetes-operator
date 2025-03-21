@@ -16,6 +16,6 @@ package dynamic
 
 import "strings"
 
-func PluralizeKind(kind string) string {
+func ResourceFromKind(kind string) string {
 	return strings.TrimRight(strings.ToLower(kind), "s") + "s"
 }
