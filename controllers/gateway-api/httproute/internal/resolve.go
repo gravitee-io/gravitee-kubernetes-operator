@@ -63,7 +63,7 @@ func resolveParent(
 		return conditionBuilder.Build(), nil
 	}
 
-	_, err := resolveGateway(ctx, route, ref)
+	_, err := k8s.ResolveGateway(ctx, route.ObjectMeta, ref)
 	if client.IgnoreNotFound(err) != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func resolveBackendRefs(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 
 	for i, rule := range route.Spec.Rules {
 		for j, ref := range rule.BackendRefs {
-			if !k8s.IsServiceKind(ref) {
+			if !k8s.IsServiceKind(ref.BackendRef.BackendObjectReference) {
 				resolvedBuilder.RejectInvalidBackendKind(
 					fmt.Sprintf("backend %d of rule %d is not of Service kind", i, j),
 				)

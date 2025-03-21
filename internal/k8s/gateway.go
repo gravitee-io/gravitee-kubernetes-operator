@@ -534,7 +534,7 @@ func getKafkaServer(
 		return yaml.Kafka.Object
 	}
 
-	kafkaListener := GetKafkaListener(gw)
+	kafkaListener := GetKafkaListener(gw.Object)
 	if kafkaListener == nil {
 		return yaml.Kafka.Object
 	}
@@ -552,10 +552,9 @@ func getKafkaServer(
 	kafka.Put(
 		"routingHostMode",
 		map[string]any{
-			"defaultDomain":   *kafkaListener.Hostname,
-			"defaultPort":     kafkaListener.Port,
-			"brokerPrefix":    routingHostModeParams.BrokerPrefix,
-			"domainSeparator": routingHostModeParams.DomainSeparator,
+			"defaultPort":            kafkaListener.Port,
+			"brokerDomainPattern":    routingHostModeParams.BokerDomainPattern,
+			"bootstrapDomainPattern": routingHostModeParams.BootstrapDomainPattern,
 		},
 	)
 

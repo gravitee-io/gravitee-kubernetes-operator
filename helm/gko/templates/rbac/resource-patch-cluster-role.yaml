@@ -49,6 +49,7 @@ rules:
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       - notification.gravitee.io
 =======
 =======
@@ -58,6 +59,11 @@ rules:
 >>>>>>> 8a0a3db0 (feat: add gateway controller)
 {{- if .Values.gatewayAPI.controller.enabled }}
 >>>>>>> 09204fe9 (feat: add controller for gateway class)
+=======
+{{- if .Values.gatewayAPI.controller.enabled }}
+      - gatewayclassparameters.gravitee.io
+      - kafkaroutes.gravitee.io
+>>>>>>> 41f36b75 (feat: add kafka route controller)
       - gateways.gateway.networking.k8s.io
       - gatewayclasses.gateway.networking.k8s.io
       - grpcroutes.gateway.networking.k8s.io
