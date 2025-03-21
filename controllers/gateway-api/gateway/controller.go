@@ -104,11 +104,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	dc := gw.DeepCopy()
 
 	err := k8s.CreateOrUpdate(ctx, gw.Object, func() error {
-		util.AddFinalizer(gw.Object, core.GatewayClassFinalizer)
+		util.AddFinalizer(gw.Object, core.GatewayFinalizer)
 
 		if !gw.Object.DeletionTimestamp.IsZero() {
 			return events.Record(event.Delete, gw.Object, func() error {
-				util.RemoveFinalizer(gw.Object, core.GatewayClassFinalizer)
+				util.RemoveFinalizer(gw.Object, core.GatewayFinalizer)
 				return nil
 			})
 		}
@@ -157,7 +157,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwAPIv1.Gateway{}).
-		Watches(&gwAPIv1.HTTPRoute{}, internal.WatchAttachedRoutes()).
+		Watches(&gwAPIv1.GatewayClass{}, internal.WatchGatewayClasses()).
+		Watches(&gwAPIv1.HTTPRoute{}, internal.WatchHTTPRoutes()).
+		Watches(&v1alpha1.KafkaRoute{}, internal.WatchKafkaRoutes()).
 		Watches(&coreV1.Service{}, internal.WatchServices()).
+		Watches(&coreV1.Secret{}, internal.WatchSecrets()).
 		Complete(r)
 }

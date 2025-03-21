@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package parameters
+package gatewayclassparameters
 
 import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/parameters/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclassparameters/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -50,12 +50,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	dc := params.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), params, func() error {
-		util.AddFinalizer(params, core.GraviteeGatewayFinalizer)
+		util.AddFinalizer(params, core.GraviteeClassParametersFinalizer)
 		k8s.AddAnnotation(params, core.LastSpecHashAnnotation, hash.Calculate(&params.Spec))
 
 		if !params.DeletionTimestamp.IsZero() {
 			return events.Record(event.Delete, params, func() error {
-				util.RemoveFinalizer(params, core.GraviteeGatewayFinalizer)
+				util.RemoveFinalizer(params, core.GraviteeClassParametersFinalizer)
 				return nil
 			})
 		}
