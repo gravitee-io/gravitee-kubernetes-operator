@@ -66,12 +66,14 @@ func UpdateStatus[T client.Object](ctx context.Context, objNew T) error {
 	}
 
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		objLast.SetAnnotations(map[string]string{})
+		objLast.SetResourceVersion("")
+
 		if err := GetClient().Get(ctx, key, objLast); err != nil {
 			return err
 		}
 
 		objNew.SetResourceVersion(objLast.GetResourceVersion())
-		objNew.SetGeneration(objLast.GetGeneration())
 
 		return GetClient().Status().Update(ctx, objNew)
 	})

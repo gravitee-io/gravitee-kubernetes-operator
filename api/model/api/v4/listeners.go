@@ -128,6 +128,22 @@ func NewHTTPListener() *HttpListener {
 	}
 }
 
+func NewKafkaListener(host string, port int) *KafkaListener {
+	return &KafkaListener{
+		AbstractListener: &AbstractListener{
+			Type: "KAFKA",
+			Entrypoints: []*Entrypoint{
+				{
+					Type: "native-kafka",
+					Qos:  &AutoQOS,
+				},
+			},
+		},
+		Host: host,
+		Port: port,
+	}
+}
+
 func (l *AbstractListener) ToGatewayDefinition() *AbstractListener {
 	listener := l.DeepCopy()
 	listener.Type = ListenerType(Enum(l.Type).ToGatewayDefinition())

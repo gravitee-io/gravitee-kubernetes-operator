@@ -294,7 +294,7 @@ func indexAPIv4Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
 	if kind == "" {
 		kind = core.CRDApiV4DefinitionResource
 	}
-	kind = dynamic.PluralizeKind(kind)
+	kind = dynamic.ResourceFromKind(kind)
 	if ns == "" {
 		ns = sub.GetNamespace()
 	}
@@ -313,7 +313,7 @@ func indexAPIv2Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
 	if kind == "" {
 		kind = core.CRDApiV4DefinitionResource
 	}
-	kind = dynamic.PluralizeKind(kind)
+	kind = dynamic.ResourceFromKind(kind)
 	if ns == "" {
 		ns = sub.GetNamespace()
 	}
