@@ -67,12 +67,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 
 		return events.Record(event.Update, gwc.Object, func() error {
-			if accepted, err := internal.Accept(ctx, gwc.Object); err != nil {
-				return err
-			} else {
-				k8s.SetCondition(dc, accepted)
-				return nil
-			}
+			return internal.Accept(ctx, dc)
 		})
 	})
 

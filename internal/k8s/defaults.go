@@ -25,13 +25,14 @@ import (
 )
 
 const (
-	DefaultCPURequest       = "200m"
-	DefaultCPULimit         = "500m"
-	DefaultMemRequest       = "256Mi"
-	DefaultMemLimit         = "512Mi"
-	DefaultConfigVolumeName = "config"
-	DefaultConfigFileEntry  = "gravitee.yml"
-	DefaultProbePort        = 18082
+	DefaultCPURequest        = "200m"
+	DefaultCPULimit          = "500m"
+	DefaultMemRequest        = "256Mi"
+	DefaultMemLimit          = "512Mi"
+	DefaultConfigVolumeName  = "config"
+	DefaultLicenseVolumeName = "license"
+	DefaultConfigFileEntry   = "gravitee.yml"
+	DefaultProbePort         = 18082
 
 	GatewayConfigMapPrefix     = "gio-gw-config-"
 	PEMRegistryConfigMapPrefix = "gio-pem-registry-"
@@ -39,6 +40,8 @@ const (
 	GatewayContainerName     = "gateway"
 	DefaultGatewayImage      = "graviteeio/apim-gateway"
 	DefaultGatewayConfigFile = "/opt/graviteeio-gateway/config/gravitee.yml"
+
+	DefaultLicenseMountPath = "/opt/graviteeio-gateway/license"
 
 	InstanceLabelKey  = "app.kubernetes.io/instance"
 	ComponentLabelKey = "app.kubernetes.io/component"
@@ -54,7 +57,10 @@ const (
 	PEMRegistryComponentLabelValue = "kubernetes-pem-registry"
 )
 
-var DefaultReplicas int32 = 1
+var (
+	DefaultReplicas         int32 = 1
+	DefaultVolumeSourceMode int32 = 420
+)
 
 var DefaultLivenessProbe = &coreV1.Probe{
 	FailureThreshold: 3,
@@ -119,12 +125,17 @@ var DefaultResources = &coreV1.ResourceRequirements{
 	},
 }
 
-var DefaultGatewayVolumeMounts = []coreV1.VolumeMount{
-	{
-		Name:      DefaultConfigVolumeName,
-		MountPath: DefaultGatewayConfigFile,
-		SubPath:   DefaultConfigFileEntry,
-	},
+var ConfigVolumeMount = coreV1.VolumeMount{
+	Name:      DefaultConfigVolumeName,
+	MountPath: DefaultGatewayConfigFile,
+	SubPath:   DefaultConfigFileEntry,
+	ReadOnly:  true,
+}
+
+var LicenseVolumeMount = coreV1.VolumeMount{
+	Name:      DefaultLicenseVolumeName,
+	MountPath: DefaultLicenseMountPath,
+	ReadOnly:  true,
 }
 
 var DefaultGatewayContainer = coreV1.Container{
@@ -133,17 +144,29 @@ var DefaultGatewayContainer = coreV1.Container{
 	LivenessProbe:  DefaultLivenessProbe,
 	ReadinessProbe: DefaultReadinessProbe,
 	StartupProbe:   DefaultStartupProbe,
-	VolumeMounts:   DefaultGatewayVolumeMounts,
+	VolumeMounts:   []coreV1.VolumeMount{},
 	Ports:          []coreV1.ContainerPort{},
 }
 
-var DefaultGatewayVolume = coreV1.Volume{
+var DefaultGatewayConfigVolume = coreV1.Volume{
 	Name:         DefaultConfigVolumeName,
-	VolumeSource: DefaultVolumeSource,
+	VolumeSource: DefaultConfigVolumeSource,
 }
 
-var DefaultVolumeSource = coreV1.VolumeSource{
+var DefaultLicenseConfigVolume = coreV1.Volume{
+	Name:         DefaultLicenseVolumeName,
+	VolumeSource: DefaultLicenseVolumeSource,
+}
+
+var DefaultLicenseVolumeSource = coreV1.VolumeSource{
+	Secret: &coreV1.SecretVolumeSource{
+		DefaultMode: &DefaultVolumeSourceMode,
+	},
+}
+
+var DefaultConfigVolumeSource = coreV1.VolumeSource{
 	ConfigMap: &coreV1.ConfigMapVolumeSource{
+		DefaultMode:          &DefaultVolumeSourceMode,
 		LocalObjectReference: coreV1.LocalObjectReference{},
 	},
 }

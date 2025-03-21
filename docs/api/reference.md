@@ -10222,7 +10222,7 @@ most of the time because the value is ignored or...<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>status</b></td>
+        <td><b><a href="#gatewayclassparametersstatus">status</a></b></td>
         <td>object</td>
         <td>
           <br/>
@@ -10262,13 +10262,6 @@ most of the time because the value is ignored or...<br/>
           <br/>
         </td>
         <td>false</td>
-      </tr><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindex">listeners</a></b></td>
-        <td>[]object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -10290,12 +10283,151 @@ most of the time because the value is ignored or...<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>dbLess</b></td>
+        <td><b><a href="#gatewayclassparametersspecgraviteekafka">kafka</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: map[enabled:false]<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#gatewayclassparametersspecgraviteelicenseref">licenseRef</a></b></td>
+        <td>object</td>
+        <td>
+          SecretObjectReference identifies an API object including its namespace,
+defaulting to Secret.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GatewayClassParameters.spec.gravitee.kafka
+[Go to parent definition](#gatewayclassparametersspecgravitee)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>enabled</b></td>
         <td>boolean</td>
         <td>
           <br/>
+          <br/>
+            <i>Default</i>: true<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#gatewayclassparametersspecgraviteekafkaroutinghostmode">routingHostMode</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: map[brokerPrefix:broker- domainSeparator:-]<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GatewayClassParameters.spec.gravitee.kafka.routingHostMode
+[Go to parent definition](#gatewayclassparametersspecgraviteekafka)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>brokerPrefix</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: broker-<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>domainSeparator</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Default</i>: -<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### GatewayClassParameters.spec.gravitee.licenseRef
+[Go to parent definition](#gatewayclassparametersspecgravitee)
+
+
+
+SecretObjectReference identifies an API object including its namespace,
+defaulting to Secret.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the referent.<br/>
         </td>
         <td>true</td>
+      </tr><tr>
+        <td><b>group</b></td>
+        <td>string</td>
+        <td>
+          Group is the group of the referent. For example, "gateway.networking.k8s.io".<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind is kind of the referent. For example "Secret".<br/>
+          <br/>
+            <i>Default</i>: Secret<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Namespace is the namespace of the referenced object.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -23942,8 +24074,8 @@ receive on one of...<br/>
 </table>
 
 
-### GatewayClassParameters.spec.listeners[index]
-[Go to parent definition](#gatewayclassparametersspec)
+### GatewayClassParameters.status
+[Go to parent definition](#gatewayclassparameters)
 
 
 
@@ -23959,118 +24091,22 @@ receive on one of...<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Name is the name of the Listener. This name MUST be unique within a
-Gateway.
-
-Support: Core<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>port</b></td>
-        <td>integer</td>
-        <td>
-          Port is the network port.<br/>
-          <br/>
-            <i>Format</i>: int32<br/>
-            <i>Minimum</i>: 1<br/>
-            <i>Maximum</i>: 65535<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>protocol</b></td>
-        <td>string</td>
-        <td>
-          Protocol specifies the network protocol this listener expects to receive.
-
-Support: Core<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutes">allowedRoutes</a></b></td>
-        <td>object</td>
-        <td>
-          AllowedRoutes defines the types of routes that MAY be attached to a
-Listener and the trusted...<br/>
-          <br/>
-            <i>Default</i>: map[namespaces:map[from:Same]]<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindexconfig">config</a></b></td>
-        <td>object</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>hostname</b></td>
-        <td>string</td>
-        <td>
-          Hostname specifies the virtual hostname to match for protocol types that
-define this concept.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindextls">tls</a></b></td>
-        <td>object</td>
-        <td>
-          TLS is the TLS configuration for the Listener.<br/>
-          <br/>
-            <i>Validations</i>:<li>self.mode == 'Terminate' ? size(self.certificateRefs) > 0 || size(self.options) > 0 : true: certificateRefs or options must be specified when mode is Terminate</li>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].allowedRoutes
-[Go to parent definition](#gatewayclassparametersspeclistenersindex)
-
-
-
-AllowedRoutes defines the types of routes that MAY be attached to a
-Listener and the trusted...
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedrouteskindsindex">kinds</a></b></td>
+        <td><b><a href="#gatewayclassparametersstatusconditionsindex">conditions</a></b></td>
         <td>[]object</td>
         <td>
-          Kinds specifies the groups and kinds of Routes that are allowed to bind
-to this Gateway Listener.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutesnamespaces">namespaces</a></b></td>
-        <td>object</td>
-        <td>
-          Namespaces indicates namespaces from which Routes may be attached to this
-Listener.<br/>
           <br/>
-            <i>Default</i>: map[from:Same]<br/>
         </td>
-        <td>false</td>
+        <td>true</td>
       </tr></tbody>
 </table>
 
 
-### GatewayClassParameters.spec.listeners[index].allowedRoutes.kinds[index]
-[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutes)
+### GatewayClassParameters.status.conditions[index]
+[Go to parent definition](#gatewayclassparametersstatus)
 
 
 
-RouteGroupKind indicates the group and kind of a Route resource.
+Condition contains details for one aspect of the current state of this API Resource.
 
 <table>
     <thead>
@@ -24082,348 +24118,52 @@ RouteGroupKind indicates the group and kind of a Route resource.
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>kind</b></td>
+        <td><b>lastTransitionTime</b></td>
         <td>string</td>
         <td>
-          Kind is the kind of the Route.<br/>
+          lastTransitionTime is the last time the condition transitioned from one status to another.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>group</b></td>
+        <td><b>message</b></td>
         <td>string</td>
         <td>
-          Group is the group of the Route.<br/>
-          <br/>
-            <i>Default</i>: gateway.networking.k8s.io<br/>
+          message is a human readable message indicating details about the transition.<br/>
         </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].allowedRoutes.namespaces
-[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutes)
-
-
-
-Namespaces indicates namespaces from which Routes may be attached to this
-Listener.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>from</b></td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
         <td>enum</td>
         <td>
-          From indicates where Routes will be selected for this Gateway.<br/>
+          status of the condition, one of True, False, Unknown.<br/>
           <br/>
-            <i>Enum</i>: All, Selector, Same<br/>
-            <i>Default</i>: Same<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutesnamespacesselector">selector</a></b></td>
-        <td>object</td>
-        <td>
-          Selector must be specified when From is set to "Selector".<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].allowedRoutes.namespaces.selector
-[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutesnamespaces)
-
-
-
-Selector must be specified when From is set to "Selector".
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindexallowedroutesnamespacesselectormatchexpressionsindex">matchExpressions</a></b></td>
-        <td>[]object</td>
-        <td>
-          matchExpressions is a list of label selector requirements. The requirements are ANDed.<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>matchLabels</b></td>
-        <td>map[string]string</td>
-        <td>
-          matchLabels is a map of {key,value} pairs.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].allowedRoutes.namespaces.selector.matchExpressions[index]
-[Go to parent definition](#gatewayclassparametersspeclistenersindexallowedroutesnamespacesselector)
-
-
-
-A label selector requirement is a selector that contains values, a key, and an operator that...
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>key</b></td>
-        <td>string</td>
-        <td>
-          key is the label key that the selector applies to.<br/>
+            <i>Enum</i>: True, False, Unknown<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>operator</b></td>
+        <td><b>type</b></td>
         <td>string</td>
         <td>
-          operator represents a key's relationship to a set of values.<br/>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
         </td>
         <td>true</td>
       </tr><tr>
-        <td><b>values</b></td>
-        <td>[]string</td>
-        <td>
-          values is an array of string values.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].config
-[Go to parent definition](#gatewayclassparametersspeclistenersindex)
-
-
-
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>idleTimeout</b></td>
+        <td><b>observedGeneration</b></td>
         <td>integer</td>
         <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.<br/>
           <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>tcpKeepAlive</b></td>
-        <td>boolean</td>
-        <td>
-          <br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].tls
-[Go to parent definition](#gatewayclassparametersspeclistenersindex)
-
-
-
-TLS is the TLS configuration for the Listener.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindextlscertificaterefsindex">certificateRefs</a></b></td>
-        <td>[]object</td>
-        <td>
-          CertificateRefs contains a series of references to Kubernetes objects that
-contains TLS...<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindextlsfrontendvalidation">frontendValidation</a></b></td>
-        <td>object</td>
-        <td>
-          FrontendValidation holds configuration information for validating the frontend (client).<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>mode</b></td>
-        <td>enum</td>
-        <td>
-          Mode defines the TLS behavior for the TLS session initiated by the client.<br/>
-          <br/>
-            <i>Enum</i>: Terminate, Passthrough<br/>
-            <i>Default</i>: Terminate<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>options</b></td>
-        <td>map[string]string</td>
-        <td>
-          Options are a list of key/value pairs to enable extended TLS
-configuration for each implementation.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].tls.certificateRefs[index]
-[Go to parent definition](#gatewayclassparametersspeclistenersindextls)
-
-
-
-SecretObjectReference identifies an API object including its namespace,
-defaulting to Secret.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Name is the name of the referent.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>group</b></td>
-        <td>string</td>
-        <td>
-          Group is the group of the referent. For example, "gateway.networking.k8s.io".<br/>
-          <br/>
-            <i>Default</i>: <br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>kind</b></td>
-        <td>string</td>
-        <td>
-          Kind is kind of the referent. For example "Secret".<br/>
-          <br/>
-            <i>Default</i>: Secret<br/>
-        </td>
-        <td>false</td>
-      </tr><tr>
-        <td><b>namespace</b></td>
-        <td>string</td>
-        <td>
-          Namespace is the namespace of the referenced object.<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].tls.frontendValidation
-[Go to parent definition](#gatewayclassparametersspeclistenersindextls)
-
-
-
-FrontendValidation holds configuration information for validating the frontend (client).
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b><a href="#gatewayclassparametersspeclistenersindextlsfrontendvalidationcacertificaterefsindex">caCertificateRefs</a></b></td>
-        <td>[]object</td>
-        <td>
-          CACertificateRefs contains one or more references to
-Kubernetes objects that contain TLS...<br/>
-        </td>
-        <td>false</td>
-      </tr></tbody>
-</table>
-
-
-### GatewayClassParameters.spec.listeners[index].tls.frontendValidation.caCertificateRefs[index]
-[Go to parent definition](#gatewayclassparametersspeclistenersindextlsfrontendvalidation)
-
-
-
-ObjectReference identifies an API object including its namespace.
-
-<table>
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Required</th>
-        </tr>
-    </thead>
-    <tbody><tr>
-        <td><b>group</b></td>
-        <td>string</td>
-        <td>
-          Group is the group of the referent. For example, "gateway.networking.k8s.io".<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>kind</b></td>
-        <td>string</td>
-        <td>
-          Kind is kind of the referent. For example "ConfigMap" or "Service".<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>name</b></td>
-        <td>string</td>
-        <td>
-          Name is the name of the referent.<br/>
-        </td>
-        <td>true</td>
-      </tr><tr>
-        <td><b>namespace</b></td>
-        <td>string</td>
-        <td>
-          Namespace is the namespace of the referenced object.<br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>

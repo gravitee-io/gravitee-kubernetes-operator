@@ -16,13 +16,10 @@
 package gateway
 
 import (
-	gAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 type GatewayClassParameters struct {
-	// +kubebuilder:validation:MaxItems:=64
-	// +kubebuilder:validation:Optional
-	Listeners []GraviteeListener `json:"listeners"`
 	// +kubebuilder:validation:Optional
 	Gravitee *GraviteeConfig `json:"gravitee"`
 	// +kubebuilder:validation:Optional
@@ -30,26 +27,33 @@ type GatewayClassParameters struct {
 }
 
 type GraviteeConfig struct {
-	DBLess bool `json:"dbLess"`
+	// +kubebuilder:validation:Optional
+	LicenseRef *gwAPIv1.SecretObjectReference `json:"licenseRef"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default={enabled: false}
+	Kafka *GraviteeKafkaConfig `json:"kafka"`
 }
 
-type GraviteeListener struct {
-	gAPIv1.Listener `json:",inline"`
-
+type GraviteeKafkaConfig struct {
 	// +kubebuilder:validation:Optional
-	Config *GraviteeListenerConfig `json:"config"`
+	// +kubebuilder:default:=true
+	Enabled bool `json:"enabled"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default={brokerPrefix: broker-, domainSeparator: -}
+	RoutingHostMode *GraviteeKafkaRoutingHostModeConfig `json:"routingHostMode"`
 }
 
-type GraviteeListenerConfig struct {
+type GraviteeKafkaRoutingHostModeConfig struct {
 	// +kubebuilder:validation:Optional
-	IdleTimeout *uint `json:"idleTimeout,omitempty"`
+	// +kubebuilder:default:=broker-
+	BrokerPrefix string `json:"brokerPrefix"`
 	// +kubebuilder:validation:Optional
-	TCPKeepAlive bool `json:"tcpKeepAlive"`
+	// +kubebuilder:default:=-
+	DomainSeparator string `json:"domainSeparator"`
 }
 
-type GraviteeListenerTLSConfig struct {
-	Protocols  string `json:"tlsProtocols"`
-	ClientAuth string `json:"clientAuth"`
+type GraviteeKafkaListenerConfig struct {
+	Name gwAPIv1.SectionName `json:"name"`
 }
 
 type KubernetesConfig struct {
