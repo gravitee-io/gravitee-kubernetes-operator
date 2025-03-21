@@ -39,17 +39,17 @@ type GraviteeKafkaConfig struct {
 	// +kubebuilder:default:=true
 	Enabled bool `json:"enabled"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default={brokerPrefix: broker-, domainSeparator: -}
+	// +kubebuilder:default={}
 	RoutingHostMode *GraviteeKafkaRoutingHostModeConfig `json:"routingHostMode"`
 }
 
 type GraviteeKafkaRoutingHostModeConfig struct {
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=broker-
-	BrokerPrefix string `json:"brokerPrefix"`
+	// +kubebuilder:default:="broker-{brokerId}-{apiHost}"
+	BokerDomainPattern string `json:"brokerDomainPattern"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=-
-	DomainSeparator string `json:"domainSeparator"`
+	// +kubebuilder:default:="{apiHost}"
+	BootstrapDomainPattern string `json:"bootstrapDomainPattern"`
 }
 
 type GraviteeKafkaListenerConfig struct {

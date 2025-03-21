@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -27,15 +28,52 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func WatchAttachedRoutes() handler.EventHandler {
-	return handler.EnqueueRequestsFromMapFunc(requestsFromHTTPRoutes)
+func WatchGatewayClasses() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromGatewayClass)
+}
+
+func WatchHTTPRoutes() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromHTTPRoute)
+}
+
+func WatchKafkaRoutes() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromKafkaRoute)
 }
 
 func WatchServices() handler.EventHandler {
-	return handler.EnqueueRequestsFromMapFunc(requestFromServices)
+	return handler.EnqueueRequestsFromMapFunc(requestsFromService)
 }
 
-func requestFromServices(ctx context.Context, obj client.Object) []reconcile.Request {
+func WatchSecrets() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromSecret)
+}
+
+func requestsFromGatewayClass(ctx context.Context, obj client.Object) []reconcile.Request {
+	gwc, ok := obj.(*gwAPIv1.GatewayClass)
+	if !ok {
+		return nil
+	}
+	if !gwc.DeletionTimestamp.IsZero() {
+		return nil
+	}
+	listOpts := &client.ListOptions{
+		Namespace: gwc.Namespace,
+	}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+		return nil
+	}
+	reqs := make([]reconcile.Request, len(list.Items))
+	for i := range list.Items {
+		gw := list.Items[i]
+		if gw.Spec.GatewayClassName == gwAPIv1.ObjectName(gwc.Name) {
+			reqs[i] = buildRequest(gw)
+		}
+	}
+	return reqs
+}
+
+func requestsFromService(ctx context.Context, obj client.Object) []reconcile.Request {
 	svc, ok := obj.(*coreV1.Service)
 	if !ok {
 		return nil
@@ -49,26 +87,21 @@ func requestFromServices(ctx context.Context, obj client.Object) []reconcile.Req
 	listOpts := &client.ListOptions{
 		Namespace: svc.Namespace,
 	}
-	gateways := &gwAPIv1.GatewayList{}
-	if err := k8s.GetClient().List(ctx, gateways, listOpts); err != nil {
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
 		return nil
 	}
-	reqs := make([]reconcile.Request, len(gateways.Items))
-	for i := range gateways.Items {
-		gw := gateways.Items[i]
+	reqs := make([]reconcile.Request, len(list.Items))
+	for i := range list.Items {
+		gw := list.Items[i]
 		if k8s.IsGatewayDependent(gateway.WrapGateway(&gw), svc) {
-			reqs[i] = reconcile.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: gw.Namespace,
-					Name:      gw.Name,
-				},
-			}
+			reqs[i] = buildRequest(gw)
 		}
 	}
 	return reqs
 }
 
-func requestsFromHTTPRoutes(ctx context.Context, obj client.Object) []reconcile.Request {
+func requestsFromHTTPRoute(ctx context.Context, obj client.Object) []reconcile.Request {
 	httpRoute, ok := obj.(*gwAPIv1.HTTPRoute)
 	if !ok {
 		return nil
@@ -76,24 +109,89 @@ func requestsFromHTTPRoutes(ctx context.Context, obj client.Object) []reconcile.
 	listOpts := &client.ListOptions{
 		Namespace: httpRoute.Namespace,
 	}
-	gateways := &gwAPIv1.GatewayList{}
-	if err := k8s.GetClient().List(ctx, gateways, listOpts); err != nil {
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
 		return nil
 	}
 	var reqs []reconcile.Request
-	for _, gateway := range gateways.Items {
+	for _, gw := range list.Items {
 		for _, ref := range httpRoute.Spec.ParentRefs {
-			if isParent(gateway, ref) {
-				reqs = append(reqs, reconcile.Request{
-					NamespacedName: types.NamespacedName{
-						Namespace: gateway.Namespace,
-						Name:      gateway.Name,
-					},
-				})
+			if isParent(gw, ref) {
+				reqs = append(reqs, buildRequest(gw))
 			}
 		}
 	}
 	return reqs
+}
+
+func requestsFromKafkaRoute(ctx context.Context, obj client.Object) []reconcile.Request {
+	kafkaRoute, ok := obj.(*v1alpha1.KafkaRoute)
+	if !ok {
+		return nil
+	}
+	listOpts := &client.ListOptions{
+		Namespace: kafkaRoute.Namespace,
+	}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+		return nil
+	}
+	var reqs []reconcile.Request
+	for _, gw := range list.Items {
+		for _, ref := range kafkaRoute.Spec.ParentRefs {
+			if isParent(gw, ref) {
+				reqs = append(reqs, buildRequest(gw))
+			}
+		}
+	}
+	return reqs
+}
+
+func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Request {
+	secret, ok := obj.(*coreV1.Secret)
+	if !ok {
+		return nil
+	}
+	listOpts := &client.ListOptions{
+		Namespace: secret.Namespace,
+	}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+		return nil
+	}
+	var reqs []reconcile.Request
+	for _, gw := range list.Items {
+		for _, l := range gw.Spec.Listeners {
+			if hasSecretRef(l, secret) {
+				reqs = append(reqs, buildRequest(gw))
+			}
+		}
+	}
+	return reqs
+}
+
+func hasSecretRef(
+	listener gwAPIv1.Listener,
+	secret *coreV1.Secret,
+) bool {
+	if listener.TLS == nil {
+		return false
+	}
+	for _, ref := range listener.TLS.CertificateRefs {
+		if k8s.IsSecretRef(secret, ref) {
+			return true
+		}
+	}
+	return false
+}
+
+func buildRequest(gateway gwAPIv1.Gateway) reconcile.Request {
+	return reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Namespace: gateway.Namespace,
+			Name:      gateway.Name,
+		},
+	}
 }
 
 func isParent(gw gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {

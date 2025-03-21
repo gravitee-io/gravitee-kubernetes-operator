@@ -52,6 +52,7 @@ func Resolve(ctx context.Context, params *v1alpha1.GatewayClassParameters) error
 		condition.RejectLicenseNotFound(
 			fmt.Sprintf("License secret [%s] could not be resolved", key.String()),
 		)
+		k8s.SetCondition(params, condition.Build())
 		return nil
 	}
 
