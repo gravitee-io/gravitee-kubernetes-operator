@@ -31,11 +31,17 @@ var (
 
 func Map(route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
 	api := newAPI(route)
-	api.Spec.Listeners = buildListeners(route)
-	api.Spec.EndpointGroups = buildEndpointGroups(route)
-	api.Spec.Flows = buildFlows(route)
-	api.Spec.Tags = buildTags(route)
+	api.Spec = MapSpec(route)
 	return api
+}
+
+func MapSpec(route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
+	spec := newAPISpec(route)
+	spec.Listeners = buildListeners(route)
+	spec.EndpointGroups = buildEndpointGroups(route)
+	spec.Flows = buildFlows(route)
+	spec.Tags = buildTags(route)
+	return spec
 }
 
 func newAPI(route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
@@ -62,6 +68,29 @@ func newAPI(route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
 					Origin:   v4.OriginKubernetes,
 					SyncFrom: v4.OriginKubernetes,
 				},
+			},
+		},
+	}
+}
+
+func newAPISpec(route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
+	return v1alpha1.ApiV4DefinitionSpec{
+		Api: v4.Api{
+			Type: "PROXY",
+			Plans: &map[string]*v4.Plan{
+				"default": newKeyLessPlan(),
+			},
+			FlowExecution: &v4.FlowExecution{
+				Mode:          v4.FlowModeDefault,
+				MatchRequired: true,
+			},
+			ApiBase: &base.ApiBase{
+				Name:    buildAPIName(route),
+				Version: "v1alpha1",
+			},
+			DefinitionContext: &v4.DefinitionContext{
+				Origin:   v4.OriginKubernetes,
+				SyncFrom: v4.OriginKubernetes,
 			},
 		},
 	}

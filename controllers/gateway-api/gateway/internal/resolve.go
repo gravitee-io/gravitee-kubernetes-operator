@@ -56,6 +56,12 @@ func Resolve(
 		} else {
 			status.Object.AttachedRoutes = httpRoutesCount
 		}
+
+		if kafkaRoutesCount, err := countAttachedKafkaRoutes(ctx, gw.Object, listener); err != nil {
+			return err
+		} else {
+			status.Object.AttachedRoutes += kafkaRoutesCount
+		}
 	}
 	return nil
 }
@@ -215,10 +221,47 @@ func countAttachedHTTPRoutes(
 	return count, nil
 }
 
+func countAttachedKafkaRoutes(
+	ctx context.Context,
+	gw *gwAPIv1.Gateway,
+	listener gwAPIv1.Listener,
+) (int32, error) {
+	var count int32 = 0
+
+	if !k8s.IsKafkaListener(listener) {
+		return 0, nil
+	}
+
+	opts := &client.ListOptions{}
+	routesList := &v1alpha1.KafkaRouteList{}
+	if err := k8s.GetClient().List(ctx, routesList, opts); err != nil {
+		return 0, err
+	}
+	for _, route := range routesList.Items {
+		if isAttachedKafkaRoute(gw, listener, route) {
+			count += 1
+		}
+	}
+	return count, nil
+}
+
 func isAttachedHTTPRoute(
 	gw *gwAPIv1.Gateway,
 	listener gwAPIv1.Listener,
 	route gwAPIv1.HTTPRoute,
+) bool {
+	for _, ref := range route.Spec.ParentRefs {
+		if k8s.IsListenerRef(gw, listener, ref) {
+			return true
+		}
+	}
+	return false
+}
+
+func isAttachedKafkaRoute(
+	gw *gwAPIv1.Gateway,
+	listener gwAPIv1.Listener,
+	route v1alpha1.KafkaRoute,
 ) bool {
 	for _, ref := range route.Spec.ParentRefs {
 		if k8s.IsListenerRef(gw, listener, ref) {
