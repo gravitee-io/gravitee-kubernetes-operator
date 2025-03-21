@@ -46,10 +46,61 @@ spec:
               properties:
                 gravitee:
                   properties:
-                    dbLess:
-                      type: boolean
-                  required:
-                    - dbLess
+                    kafka:
+                      default:
+                        enabled: false
+                      properties:
+                        enabled:
+                          default: true
+                          type: boolean
+                        routingHostMode:
+                          default:
+                            brokerPrefix: broker-
+                            domainSeparator: "-"
+                          properties:
+                            brokerPrefix:
+                              default: broker-
+                              type: string
+                            domainSeparator:
+                              default: "-"
+                              type: string
+                          type: object
+                      type: object
+                    licenseRef:
+                      description: >-
+                        SecretObjectReference identifies an API object including
+                        its namespace,
+
+                        defaulting to Secret.
+                      properties:
+                        group:
+                          default: ""
+                          description: Group is the group of the referent. For example,
+                            "gateway.networking.k8s.io".
+                          maxLength: 253
+                          pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                          type: string
+                        kind:
+                          default: Secret
+                          description: Kind is kind of the referent. For example "Secret".
+                          maxLength: 63
+                          minLength: 1
+                          pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
+                          type: string
+                        name:
+                          description: Name is the name of the referent.
+                          maxLength: 253
+                          minLength: 1
+                          type: string
+                        namespace:
+                          description: Namespace is the namespace of the referenced object.
+                          maxLength: 63
+                          minLength: 1
+                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                          type: string
+                      required:
+                        - name
+                      type: object
                   type: object
                 kubernetes:
                   properties:
@@ -6590,272 +6641,59 @@ spec:
                           type: string
                       type: object
                   type: object
-                listeners:
-                  items:
-                    properties:
-                      allowedRoutes:
-                        default:
-                          namespaces:
-                            from: Same
-                        description: >-
-                          AllowedRoutes defines the types of routes that MAY be
-                          attached to a
-
-                          Listener and the trusted...
-                        properties:
-                          kinds:
-                            description: >-
-                              Kinds specifies the groups and kinds of Routes
-                              that are allowed to bind
-
-                              to this Gateway Listener.
-                            items:
-                              description: RouteGroupKind indicates the group and kind of a Route resource.
-                              properties:
-                                group:
-                                  default: gateway.networking.k8s.io
-                                  description: Group is the group of the Route.
-                                  maxLength: 253
-                                  pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                                  type: string
-                                kind:
-                                  description: Kind is the kind of the Route.
-                                  maxLength: 63
-                                  minLength: 1
-                                  pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
-                                  type: string
-                              required:
-                                - kind
-                              type: object
-                            maxItems: 8
-                            type: array
-                          namespaces:
-                            default:
-                              from: Same
-                            description: >-
-                              Namespaces indicates namespaces from which Routes
-                              may be attached to this
-
-                              Listener.
-                            properties:
-                              from:
-                                default: Same
-                                description: From indicates where Routes will be selected for this Gateway.
-                                enum:
-                                  - All
-                                  - Selector
-                                  - Same
-                                type: string
-                              selector:
-                                description: Selector must be specified when From is set to "Selector".
-                                properties:
-                                  matchExpressions:
-                                    description: matchExpressions is a list of label selector requirements. The
-                                      requirements are ANDed.
-                                    items:
-                                      description: A label selector requirement is a selector that contains values, a
-                                        key, and an operator that...
-                                      properties:
-                                        key:
-                                          description: key is the label key that the selector applies to.
-                                          type: string
-                                        operator:
-                                          description: operator represents a key's relationship to a set of values.
-                                          type: string
-                                        values:
-                                          description: values is an array of string values.
-                                          items:
-                                            type: string
-                                          type: array
-                                          x-kubernetes-list-type: atomic
-                                      required:
-                                        - key
-                                        - operator
-                                      type: object
-                                    type: array
-                                    x-kubernetes-list-type: atomic
-                                  matchLabels:
-                                    additionalProperties:
-                                      type: string
-                                    description: matchLabels is a map of {key,value} pairs.
-                                    type: object
-                                type: object
-                                x-kubernetes-map-type: atomic
-                            type: object
-                        type: object
-                      config:
-                        properties:
-                          idleTimeout:
-                            type: integer
-                          tcpKeepAlive:
-                            type: boolean
-                        type: object
-                      hostname:
-                        description: >-
-                          Hostname specifies the virtual hostname to match for
-                          protocol types that
-
-                          define this concept.
-                        maxLength: 253
-                        minLength: 1
-                        pattern: ^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                        type: string
-                      name:
-                        description: >-
-                          Name is the name of the Listener. This name MUST be
-                          unique within a
-
-                          Gateway.
-
-
-                          Support: Core
-                        maxLength: 253
-                        minLength: 1
-                        pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                        type: string
-                      port:
-                        description: Port is the network port.
-                        format: int32
-                        maximum: 65535
-                        minimum: 1
-                        type: integer
-                      protocol:
-                        description: >-
-                          Protocol specifies the network protocol this listener
-                          expects to receive.
-
-
-                          Support: Core
-                        maxLength: 255
-                        minLength: 1
-                        pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$|[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\/[A-Za-z0-9]+$
-                        type: string
-                      tls:
-                        description: TLS is the TLS configuration for the Listener.
-                        properties:
-                          certificateRefs:
-                            description: >-
-                              CertificateRefs contains a series of references to
-                              Kubernetes objects that
-
-                              contains TLS...
-                            items:
-                              description: >-
-                                SecretObjectReference identifies an API object
-                                including its namespace,
-
-                                defaulting to Secret.
-                              properties:
-                                group:
-                                  default: ""
-                                  description: Group is the group of the referent. For example,
-                                    "gateway.networking.k8s.io".
-                                  maxLength: 253
-                                  pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                                  type: string
-                                kind:
-                                  default: Secret
-                                  description: Kind is kind of the referent. For example "Secret".
-                                  maxLength: 63
-                                  minLength: 1
-                                  pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
-                                  type: string
-                                name:
-                                  description: Name is the name of the referent.
-                                  maxLength: 253
-                                  minLength: 1
-                                  type: string
-                                namespace:
-                                  description: Namespace is the namespace of the referenced object.
-                                  maxLength: 63
-                                  minLength: 1
-                                  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                                  type: string
-                              required:
-                                - name
-                              type: object
-                            maxItems: 64
-                            type: array
-                          frontendValidation:
-                            description: FrontendValidation holds configuration information for validating
-                              the frontend (client).
-                            properties:
-                              caCertificateRefs:
-                                description: >-
-                                  CACertificateRefs contains one or more
-                                  references to
-
-                                  Kubernetes objects that contain TLS...
-                                items:
-                                  description: ObjectReference identifies an API object including its namespace.
-                                  properties:
-                                    group:
-                                      description: Group is the group of the referent. For example,
-                                        "gateway.networking.k8s.io".
-                                      maxLength: 253
-                                      pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
-                                      type: string
-                                    kind:
-                                      description: Kind is kind of the referent. For example "ConfigMap" or "Service".
-                                      maxLength: 63
-                                      minLength: 1
-                                      pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
-                                      type: string
-                                    name:
-                                      description: Name is the name of the referent.
-                                      maxLength: 253
-                                      minLength: 1
-                                      type: string
-                                    namespace:
-                                      description: Namespace is the namespace of the referenced object.
-                                      maxLength: 63
-                                      minLength: 1
-                                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-                                      type: string
-                                  required:
-                                    - group
-                                    - kind
-                                    - name
-                                  type: object
-                                maxItems: 8
-                                minItems: 1
-                                type: array
-                            type: object
-                          mode:
-                            default: Terminate
-                            description: Mode defines the TLS behavior for the TLS session initiated by the
-                              client.
-                            enum:
-                              - Terminate
-                              - Passthrough
-                            type: string
-                          options:
-                            additionalProperties:
-                              description: AnnotationValue is the value of an annotation in Gateway API.
-                              maxLength: 4096
-                              minLength: 0
-                              type: string
-                            description: >-
-                              Options are a list of key/value pairs to enable
-                              extended TLS
-
-                              configuration for each implementation.
-                            maxProperties: 16
-                            type: object
-                        type: object
-                        x-kubernetes-validations:
-                          - message: certificateRefs or options must be specified when mode is Terminate
-                            rule: "self.mode == 'Terminate' ? size(self.certificateRefs) > 0 ||
-                              size(self.options) > 0 : true"
-                    required:
-                      - name
-                      - port
-                      - protocol
-                    type: object
-                  maxItems: 64
-                  type: array
               type: object
             status:
+              properties:
+                conditions:
+                  items:
+                    description: Condition contains details for one aspect of the current state of
+                      this API Resource.
+                    properties:
+                      lastTransitionTime:
+                        description: lastTransitionTime is the last time the condition transitioned from
+                          one status to another.
+                        format: date-time
+                        type: string
+                      message:
+                        description: message is a human readable message indicating details about the
+                          transition.
+                        maxLength: 32768
+                        type: string
+                      observedGeneration:
+                        description: observedGeneration represents the .metadata.generation that the
+                          condition was set based upon.
+                        format: int64
+                        minimum: 0
+                        type: integer
+                      reason:
+                        description: reason contains a programmatic identifier indicating the reason for
+                          the condition's last transition.
+                        maxLength: 1024
+                        minLength: 1
+                        pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                        type: string
+                      status:
+                        description: status of the condition, one of True, False, Unknown.
+                        enum:
+                          - "True"
+                          - "False"
+                          - Unknown
+                        type: string
+                      type:
+                        description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        maxLength: 316
+                        pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                        type: string
+                    required:
+                      - lastTransitionTime
+                      - message
+                      - reason
+                      - status
+                      - type
+                    type: object
+                  type: array
+              required:
+                - conditions
               type: object
           type: object
       served: true
