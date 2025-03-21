@@ -19,7 +19,10 @@ metadata:
   name: gravitee-gateway
 spec:
   gravitee:
-    dbLess: true
+    licenseRef:
+      name: gravitee-license
+    kafka:
+      enabled: true
   kubernetes:
     deployment:
       replicas: 2

@@ -31,6 +31,9 @@ const (
 	ConditionResolvedRefs = "ResolvedRefs"
 
 	ListenerReasonTooManyCertRefs = "TooManyCertificateRefs"
+	ListenerReasonKafkaConflict   = "TooManyKafkaListeners"
+
+	ParamsReasonLicenseNotFound = "LicenseNotFound"
 
 	ConditionStatusTrue  = "True"
 	ConditionStatusFalse = "False"
@@ -138,6 +141,13 @@ func (b *ConditionBuilder) RejectBackendNotFound(msg string) *ConditionBuilder {
 		Message(msg)
 }
 
+func (b *ConditionBuilder) RejectLicenseNotFound(msg string) *ConditionBuilder {
+	return b.
+		Reason(ParamsReasonLicenseNotFound).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
 func (b *ConditionBuilder) RejectTooManyCertificateRefs(msg string) *ConditionBuilder {
 	return b.
 		Reason(ListenerReasonTooManyCertRefs).
@@ -233,4 +243,12 @@ func IsAccepted(obj core.ConditionAware) bool {
 func HasUnresolvedRefs(obj core.ConditionAware) bool {
 	resolvedRefs := GetCondition(obj, ConditionResolvedRefs)
 	return resolvedRefs != nil && resolvedRefs.Status == ConditionStatusFalse
+}
+
+func MapConditions(conditionsSlice []metav1.Condition) map[string]metav1.Condition {
+	conditions := make(map[string]metav1.Condition)
+	for _, condition := range conditionsSlice {
+		conditions[condition.Type] = condition
+	}
+	return conditions
 }

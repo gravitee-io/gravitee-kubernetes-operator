@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/yaml"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	rbacV1 "k8s.io/api/rbac/v1"
@@ -34,132 +35,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
-
-const (
-	GwAPIv1HTTPRouteKind = "HTTPRoute"
-	GwAPIv1GatewayKind   = "Gateway"
-	CoreV1ServiceKind    = "Service"
-	GwAPIv1APIVersion    = "gateway.networking.k8s.io/v1"
-)
-
-var GwAPIv1Group = gwAPIv1.Group(gwAPIv1.GroupVersion.Group)
-
-var SupportedGwAPIProtocols = sets.New(
-	gwAPIv1.HTTPProtocolType,
-	gwAPIv1.HTTPSProtocolType,
-)
-
-var ProtocolToRouteKinds = map[gwAPIv1.ProtocolType][]gwAPIv1.RouteGroupKind{
-	gwAPIv1.HTTPProtocolType: {
-		{
-			Group: &GwAPIv1Group,
-			Kind:  GwAPIv1HTTPRouteKind,
-		},
-	},
-	gwAPIv1.HTTPSProtocolType: {
-		{
-			Group: &GwAPIv1Group,
-			Kind:  GwAPIv1HTTPRouteKind,
-		},
-	},
-}
-
-var ProtocolToServerType = map[gwAPIv1.ProtocolType]string{
-	gwAPIv1.HTTPProtocolType:  "http",
-	gwAPIv1.HTTPSProtocolType: "http",
-}
-
-func GetSupportedRouteKinds(listener gwAPIv1.Listener) []gwAPIv1.RouteGroupKind {
-	if kinds, ok := ProtocolToRouteKinds[listener.Protocol]; ok {
-		return kinds
-	}
-	return []gwAPIv1.RouteGroupKind{}
-}
-
-func IsListenerRef(
-	gw *gwAPIv1.Gateway,
-	listener gwAPIv1.Listener,
-	ref gwAPIv1.ParentReference,
-) bool {
-	if !IsGatewayRef(gw, ref) {
-		return false
-	}
-	if ref.SectionName == nil {
-		return true
-	}
-	if *ref.SectionName != listener.Name {
-		return false
-	}
-	if ref.Port == nil {
-		return true
-	}
-	return *ref.Port == listener.Port
-}
-
-func HasHTTPRouteOwner(ownerRefs []metaV1.OwnerReference) bool {
-	for _, ref := range ownerRefs {
-		if ref.APIVersion == GwAPIv1APIVersion && ref.Kind == GwAPIv1HTTPRouteKind {
-			return true
-		}
-	}
-	return false
-}
-
-func IsGatewayKind(ref gwAPIv1.ParentReference) bool {
-	switch {
-	case ref.Group == nil:
-		return false
-	case *ref.Group != gwAPIv1.GroupName:
-		return false
-	case ref.Kind == nil:
-		return false
-	case *ref.Kind != gwAPIv1.Kind(GwAPIv1GatewayKind):
-		return false
-	default:
-		return true
-	}
-}
-
-func IsServiceKind(ref gwAPIv1.HTTPBackendRef) bool {
-	switch {
-	case ref.Group == nil:
-		return false
-	case *ref.Group != coreV1.GroupName:
-		return false
-	case ref.Kind == nil:
-		return false
-	case *ref.Kind != CoreV1ServiceKind:
-		return false
-	default:
-		return true
-	}
-}
-
-func IsGatewayRef(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
-	if ref.Group != nil && *ref.Group != GwAPIv1Group {
-		return false
-	}
-	if ref.Kind != nil && string(*ref.Kind) != gw.Kind {
-		return false
-	}
-	if string(ref.Name) != gw.Name {
-		return false
-	}
-	return true
-}
-
-func HasHTTPSupport(listener gwAPIv1.Listener) bool {
-	if kinds, ok := ProtocolToRouteKinds[listener.Protocol]; !ok {
-		return false
-	} else {
-		for _, k := range kinds {
-			if k.Kind == GwAPIv1HTTPRouteKind {
-				return true
-			}
-		}
-	}
-	return false
-}
 
 func DeployGateway(
 	ctx context.Context,
@@ -184,10 +59,11 @@ func DeployGateway(
 		return err
 	}
 
-	if gatewayConfig, err := getGatewayConfigMap(gw); err != nil {
+	gatewayConfig, err := getGatewayConfigMap(gw, params)
+	if err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, gatewayConfig, func() error {
-		return buildGatewayConfigData(gw, gatewayConfig)
+		return buildGatewayConfigData(gw, params, gatewayConfig)
 	}); err != nil {
 		return err
 	}
@@ -195,7 +71,8 @@ func DeployGateway(
 	if deployment, err := getDeployment(gw, params); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
-		return buildDeploymentSpec(gw, params, deployment)
+		AddAnnotation(deployment, "gravitee.io/config", hash.Calculate(gatewayConfig))
+		return buildDeployment(gw, params, deployment)
 	}); err != nil {
 		return err
 	}
@@ -246,7 +123,10 @@ func buildPEMRegistryValue(ns, refName string) (string, error) {
 	return string(b), nil
 }
 
-func getGatewayConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
+func getGatewayConfigMap(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+) (*coreV1.ConfigMap, error) {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	configMap := DefaultGatewayConfigMap.DeepCopy()
 
@@ -256,21 +136,26 @@ func getGatewayConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
 
 	setOwnerReference(gw.Object, configMap)
 
-	if err := buildGatewayConfigData(gw, configMap); err != nil {
+	if err := buildGatewayConfigData(gw, params, configMap); err != nil {
 		return nil, err
 	}
 
 	return configMap, nil
 }
 
-func buildGatewayConfigData(gw *gateway.Gateway, configMap *coreV1.ConfigMap) error {
-	servers, err := getYAMLServers(gw.Object.Spec.Listeners)
+func buildGatewayConfigData(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+	configMap *coreV1.ConfigMap,
+) error {
+	servers, err := getServers(gw)
 	if err != nil {
 		return err
 	}
 
 	yaml := yaml.DBLess.DeepCopy()
 	yaml.Put("servers", servers)
+	yaml.Put("kafka", getKafkaServer(gw, params))
 	yaml.Put("tags", BuildGatewayTag(gw))
 
 	if httpPort := getHTTPPort(gw.Object.Spec.Listeners); httpPort != nil {
@@ -293,7 +178,10 @@ func BuildTag(namespace, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
 }
 
-func getDeployment(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) (*appV1.Deployment, error) {
+func getDeployment(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+) (*appV1.Deployment, error) {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
 
@@ -303,14 +191,14 @@ func getDeployment(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters)
 
 	setOwnerReference(gw.Object, deployment)
 
-	if err := buildDeploymentSpec(gw, params, deployment); err != nil {
+	if err := buildDeployment(gw, params, deployment); err != nil {
 		return nil, err
 	}
 
 	return deployment, nil
 }
 
-func buildDeploymentSpec(
+func buildDeployment(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	deployment *appV1.Deployment,
@@ -325,13 +213,11 @@ func buildDeploymentSpec(
 		return err
 	}
 
-	volume := DefaultGatewayVolume.DeepCopy()
-	volume.ConfigMap.LocalObjectReference.Name = getGatewayConfigMapName(gw.Object.Name)
+	prepareContainer(template, gw, params)
 
-	prepareContainer(template, gw.Object)
+	template.Spec.Volumes = getVolumes(gw, params)
 
 	template.Labels = labels
-	template.Spec.Volumes = []coreV1.Volume{*volume}
 
 	deployment.Spec.Template = *template
 
@@ -447,11 +333,46 @@ func getPodTemplateSpec(
 		return template, nil
 	}
 }
+func getVolumes(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+) []coreV1.Volume {
+	configVolume := DefaultGatewayConfigVolume.DeepCopy()
+	configVolume.ConfigMap.LocalObjectReference.Name = getGatewayConfigMapName(gw.Object.Name)
+	volumes := []coreV1.Volume{*configVolume}
 
-func prepareContainer(template *coreV1.PodTemplateSpec, gw *gwAPIv1.Gateway) {
+	graviteeParams := params.Spec.Gravitee
+	if graviteeParams != nil && graviteeParams.LicenseRef != nil {
+		licenseRef := graviteeParams.LicenseRef
+		licenseVolume := DefaultLicenseConfigVolume.DeepCopy()
+		licenseVolume.Secret.SecretName = string(licenseRef.Name)
+		return append(volumes, *licenseVolume)
+	}
+
+	return volumes
+}
+
+func getVolumeMounts(
+	params *v1alpha1.GatewayClassParameters,
+) []coreV1.VolumeMount {
+	vm := []coreV1.VolumeMount{ConfigVolumeMount}
+
+	graviteeParams := params.Spec.Gravitee
+	if graviteeParams != nil && graviteeParams.LicenseRef != nil {
+		return append(vm, LicenseVolumeMount)
+	}
+
+	return vm
+}
+
+func prepareContainer(
+	template *coreV1.PodTemplateSpec,
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+) {
 	container := getGatewayContainer(template.Spec.Containers)
-	container.VolumeMounts = DefaultGatewayVolumeMounts
-	setContainerPorts(container, gw.Spec.Listeners)
+	container.VolumeMounts = getVolumeMounts(params)
+	setContainerPorts(container, gw.Object.Spec.Listeners)
 	for i := range template.Spec.Containers {
 		if template.Spec.Containers[i].Name == GatewayContainerName {
 			template.Spec.Containers[i] = *container
@@ -571,9 +492,18 @@ func getHTTPPort(listeners []gwAPIv1.Listener) *int32 {
 	return nil
 }
 
-func getYAMLServers(listeners []gwAPIv1.Listener) ([]map[string]any, error) {
-	servers := make([]map[string]any, len(listeners))
+func getServers(gw *gateway.Gateway) ([]map[string]any, error) {
+	listeners := gw.Object.Spec.Listeners
+	statuses := gw.Object.Status.Listeners
+	servers := make([]map[string]any, len(gw.Object.Spec.Listeners))
 	for i, listener := range listeners {
+		if IsKafkaListener(listener) {
+			continue
+		}
+		status := gateway.WrapListenerStatus(&statuses[i])
+		if !IsAccepted(status) {
+			continue
+		}
 		server := make(map[string]any)
 		serverType, ok := ProtocolToServerType[listener.Protocol]
 		if !ok {
@@ -587,18 +517,66 @@ func getYAMLServers(listeners []gwAPIv1.Listener) ([]map[string]any, error) {
 			server["hostname"] = "0.0.0.0"
 		}
 		if listener.TLS != nil {
-			tls := listener.TLS
-			ssl := make(map[string]any)
-			keystore := make(map[string]any)
-			keystore["type"] = "pem"
-			keystore["secret"] = buildKeystoreSecret(tls.CertificateRefs)
-			ssl["keystore"] = keystore
 			server["secured"] = true
-			server["ssl"] = ssl
+			server["ssl"] = buildTLS(listener)
 		}
 		servers[i] = server
 	}
 	return servers, nil
+}
+
+func getKafkaServer(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+) map[string]any {
+	kafkaParams := params.Spec.Gravitee.Kafka
+	if !kafkaParams.Enabled {
+		return yaml.Kafka.Object
+	}
+
+	kafkaListener := GetKafkaListener(gw)
+	if kafkaListener == nil {
+		return yaml.Kafka.Object
+	}
+
+	kafkaStatus := gateway.WrapListenerStatus(GetKafkaListenerStatus(gw))
+	if !IsAccepted(kafkaStatus) {
+		return yaml.Kafka.Object
+	}
+
+	kafka := yaml.Kafka.DeepCopy()
+
+	kafka.Put("enabled", true)
+
+	routingHostModeParams := kafkaParams.RoutingHostMode
+	kafka.Put(
+		"routingHostMode",
+		map[string]any{
+			"defaultDomain":   *kafkaListener.Hostname,
+			"defaultPort":     kafkaListener.Port,
+			"brokerPrefix":    routingHostModeParams.BrokerPrefix,
+			"domainSeparator": routingHostModeParams.DomainSeparator,
+		},
+	)
+
+	kafka.Put("port", kafkaListener.Port)
+
+	kafka.Put(
+		"ssl",
+		buildTLS(*kafkaListener),
+	)
+
+	return kafka.Object
+}
+
+func buildTLS(listener gwAPIv1.Listener) map[string]any {
+	tls := listener.TLS
+	ssl := make(map[string]any)
+	keystore := make(map[string]any)
+	keystore["type"] = "pem"
+	keystore["secret"] = buildKeystoreSecret(tls.CertificateRefs)
+	ssl["keystore"] = keystore
+	return ssl
 }
 
 func buildKeystoreSecret(certificateRefs []gwAPIv1.SecretObjectReference) string {
@@ -640,25 +618,4 @@ func getGatewayConfigMapName(gwName string) string {
 
 func getPEMRegistryConfigMapName(gwName string) string {
 	return PEMRegistryConfigMapPrefix + gwName
-}
-
-func IsGatewayComponent(obj client.Object) bool {
-	return obj.GetLabels()[ComponentLabelKey] == GatewayComponentLabelValue
-}
-
-func GetMatchingGatewayLabels(obj client.Object) map[string]string {
-	gwName, ok := obj.GetLabels()[InstanceLabelKey]
-	if !ok {
-		return map[string]string{}
-	}
-	return GwAPIv1GatewayLabels(gwName)
-}
-
-func IsGatewayDependent(gw *gateway.Gateway, obj client.Object) bool {
-	for _, ref := range obj.GetOwnerReferences() {
-		if ref.UID == gw.Object.UID {
-			return true
-		}
-	}
-	return false
 }

@@ -19,16 +19,10 @@ metadata:
 spec:
   gatewayClassName: gravitee-gateway
   listeners:
-    - allowedRoutes:
-        namespaces:
-          from: Same
-      name: http
+    - name: http
       port: 80
       protocol: HTTP
-    - allowedRoutes:
-        namespaces:
-          from: Same
-      name: https
+    - name: https
       port: 443
       protocol: HTTPS
       tls:
@@ -36,3 +30,17 @@ spec:
           - group: ""
             kind: Secret
             name: "tls-server"
+    - name: kafka
+      port: 9092
+      protocol: TLS
+      hostname: localhost
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: "tls-server"
+      allowedRoutes:
+        kinds:
+        - group: gravitee.io
+          kind: KafkaRoute
+      
