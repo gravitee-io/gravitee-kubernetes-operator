@@ -28,10 +28,13 @@ const (
 	GwAPIv1HTTPRouteKind = "HTTPRoute"
 	GwAPIv1GatewayKind   = "Gateway"
 	CoreV1ServiceKind    = "Service"
+	CoreV1SecretKind     = "Secret"
 	GwAPIv1APIVersion    = "gateway.networking.k8s.io/v1"
 
 	GraviteeAPIVersion     = "gravitee.io/v1alpha1"
 	GraviteeKafkaRouteKind = "KafkaRoute"
+
+	ServiceURIPattern = "http://%s.%s.svc.cluster.local:%d"
 )
 
 var (
@@ -122,7 +125,7 @@ func IsGatewayKind(ref gwAPIv1.ParentReference) bool {
 	}
 }
 
-func IsServiceKind(ref gwAPIv1.HTTPBackendRef) bool {
+func IsServiceKind(ref gwAPIv1.BackendObjectReference) bool {
 	switch {
 	case ref.Group == nil:
 		return false
@@ -145,6 +148,19 @@ func IsGatewayRef(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
 		return false
 	}
 	if string(ref.Name) != gw.Name {
+		return false
+	}
+	return true
+}
+
+func IsSecretRef(secret *coreV1.Secret, ref gwAPIv1.SecretObjectReference) bool {
+	if ref.Group != nil && *ref.Group != "" {
+		return false
+	}
+	if ref.Kind != nil && string(*ref.Kind) != CoreV1SecretKind {
+		return false
+	}
+	if string(ref.Name) != secret.Name {
 		return false
 	}
 	return true
@@ -184,10 +200,10 @@ func IsGatewayDependent(gw *gateway.Gateway, obj client.Object) bool {
 	return false
 }
 
-func GetKafkaListener(gw *gateway.Gateway) *gwAPIv1.Listener {
-	for i, l := range gw.Object.Spec.Listeners {
+func GetKafkaListener(gw *gwAPIv1.Gateway) *gwAPIv1.Listener {
+	for i, l := range gw.Spec.Listeners {
 		if IsKafkaListener(l) {
-			return &gw.Object.Spec.Listeners[i]
+			return &gw.Spec.Listeners[i]
 		}
 	}
 	return nil
@@ -212,6 +228,17 @@ func IsKafkaListener(listener gwAPIv1.Listener) bool {
 		return false
 	default:
 		return IsKafkaRouteKind(listener.AllowedRoutes.Kinds[0])
+	}
+}
+
+func IsKafkaListenerStatus(listener gwAPIv1.ListenerStatus) bool {
+	switch {
+	case listener.SupportedKinds == nil:
+		return false
+	case len(listener.SupportedKinds) != 1:
+		return false
+	default:
+		return IsKafkaRouteKind(listener.SupportedKinds[0])
 	}
 }
 

@@ -54,7 +54,7 @@ func acceptParent(
 		return accepted.Build(), nil
 	}
 
-	gw, err := resolveGateway(ctx, route, status.Object.ParentRef)
+	gw, err := k8s.ResolveGateway(ctx, route.ObjectMeta, status.Object.ParentRef)
 	if client.IgnoreNotFound(err) != nil {
 		return nil, err
 	}
@@ -81,23 +81,4 @@ func supportsHTTP(gw *gwAPIv1.Gateway) bool {
 		}
 	}
 	return false
-}
-
-func resolveGateway(
-	ctx context.Context,
-	route *gwAPIv1.HTTPRoute,
-	ref gwAPIv1.ParentReference,
-) (*gwAPIv1.Gateway, error) {
-	ns := ref.Namespace
-	if ns == nil {
-		routeNS := gwAPIv1.Namespace(route.Namespace)
-		ns = &routeNS
-	}
-
-	gw := &gwAPIv1.Gateway{}
-	key := client.ObjectKey{Namespace: string(*ns), Name: string(ref.Name)}
-	if err := k8s.GetClient().Get(ctx, key, gw); err != nil {
-		return nil, err
-	}
-	return gw, nil
 }

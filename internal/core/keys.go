@@ -36,12 +36,12 @@ const (
 
 	Extends = "gravitee.io/extends"
 
-	ApiDefinitionFinalizer         = "finalizers.gravitee.io/apidefinitiondeletion"
-	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
-	ManagementContextFinalizer     = "finalizers.gravitee.io/managementcontextdeletion"
-	ApiResourceFinalizer           = "finalizers.gravitee.io/apiresource"
 	//nolint:gosec // This is not an hardcoded secret
 	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
+	ApiDefinitionFinalizer           = "finalizers.gravitee.io/apidefinitiondeletion"
+	ApiDefinitionTemplateFinalizer   = "finalizers.gravitee.io/apidefinitiontemplate"
+	ManagementContextFinalizer       = "finalizers.gravitee.io/managementcontextdeletion"
+	ApiResourceFinalizer             = "finalizers.gravitee.io/apiresource"
 	IngressFinalizer                 = "finalizers.gravitee.io/ingress"
 	KeyPairFinalizer                 = "finalizers.gravitee.io/keypair"
 	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
@@ -49,10 +49,13 @@ const (
 	GroupFinalizer                   = "finalizers.gravitee.io/groups"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
-	GraviteeGatewayFinalizer         = "finalizers.gravitee.io/graviteegateway"
+	GraviteeClassParametersFinalizer = "finalizers.gravitee.io/gatewayclassparameters"
 	GatewayClassFinalizer            = "finalizers.gravitee.io/gatewayclass"
+	GatewayFinalizer                 = "finalizers.gravitee.io/gateway"
 	HTTPRouteFinalizer               = "finalizers.gravitee.io/httproute"
-	GraviteeGatewayClassController   = "apim.gravitee.io/gateway"
+	KafkaRouteFinalizer              = "finalizers.gravitee.io/kafkaroute"
+
+	GraviteeGatewayClassController = "apim.gravitee.io/gateway"
 
 	CloudTokenSecretKey  = "cloudToken"
 	BearerTokenSecretKey = "bearerToken"

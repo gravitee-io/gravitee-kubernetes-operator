@@ -25,8 +25,9 @@ import (
 
 func Program(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 	api := mapper.Map(route)
+	api.SetOwnerReferences(getOwnerReferences(route))
 	return k8s.CreateOrUpdate(ctx, api, func() error {
-		api.SetOwnerReferences(getOwnerReferences(route))
+		api.Spec = mapper.MapSpec(route)
 		return nil
 	})
 }
