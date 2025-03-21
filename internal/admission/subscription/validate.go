@@ -248,7 +248,7 @@ func validateApiKind(sub core.SubscriptionObject) *errors.AdmissionError {
 	if apiKind == "" {
 		return nil // will be defaulted later on
 	}
-	kind := dynamic.PluralizeKind(apiKind)
+	kind := dynamic.ResourceFromKind(apiKind)
 	if kind != core.CRDApiDefinitionResource && kind != core.CRDApiV4DefinitionResource {
 		return errors.NewSeveref(
 			"API kind is required and should be either ApiDefinition or ApiV4Definition, got [%s]",

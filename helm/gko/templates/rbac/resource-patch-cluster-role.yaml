@@ -47,8 +47,9 @@ rules:
       - sharedpolicygroups.gravitee.io
       - groups.gravitee.io
       - notification.gravitee.io
-      - gatewayclassparameters.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
+      - gatewayclassparameters.gravitee.io
+      - kafkaroutes.gravitee.io
       - gateways.gateway.networking.k8s.io
       - gatewayclasses.gateway.networking.k8s.io
       - grpcroutes.gateway.networking.k8s.io

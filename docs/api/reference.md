@@ -10874,7 +10874,7 @@ defaulting to Secret.<br/>
         <td>
           <br/>
           <br/>
-            <i>Default</i>: map[brokerPrefix:broker- domainSeparator:-]<br/>
+            <i>Default</i>: map[]<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10898,21 +10898,21 @@ defaulting to Secret.<br/>
         </tr>
     </thead>
     <tbody><tr>
-        <td><b>brokerPrefix</b></td>
+        <td><b>bootstrapDomainPattern</b></td>
         <td>string</td>
         <td>
           <br/>
           <br/>
-            <i>Default</i>: broker-<br/>
+            <i>Default</i>: {apiHost}<br/>
         </td>
         <td>false</td>
       </tr><tr>
-        <td><b>domainSeparator</b></td>
+        <td><b>brokerDomainPattern</b></td>
         <td>string</td>
         <td>
           <br/>
           <br/>
-            <i>Default</i>: -<br/>
+            <i>Default</i>: broker-{brokerId}-{apiHost}<br/>
         </td>
         <td>false</td>
       </tr></tbody>
