@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/parameters/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -38,36 +39,49 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	gw := &v1alpha1.GatewayClassParameters{}
+	params := &v1alpha1.GatewayClassParameters{}
 
-	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gw); err != nil {
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, params); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	events := event.NewRecorder(r.Recorder)
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), gw, func() error {
-		util.AddFinalizer(gw, core.GraviteeGatewayFinalizer)
-		k8s.AddAnnotation(gw, core.LastSpecHashAnnotation, hash.Calculate(&gw.Spec))
+	dc := params.DeepCopy()
 
-		if !gw.DeletionTimestamp.IsZero() {
-			return events.Record(event.Delete, gw, func() error {
-				util.RemoveFinalizer(gw, core.GraviteeGatewayFinalizer)
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), params, func() error {
+		util.AddFinalizer(params, core.GraviteeGatewayFinalizer)
+		k8s.AddAnnotation(params, core.LastSpecHashAnnotation, hash.Calculate(&params.Spec))
+
+		if !params.DeletionTimestamp.IsZero() {
+			return events.Record(event.Delete, params, func() error {
+				util.RemoveFinalizer(params, core.GraviteeGatewayFinalizer)
 				return nil
 			})
 		}
 
-		return events.Record(event.Update, gw, func() error {
+		return events.Record(event.Update, params, func() error {
+			internal.Init(dc)
+			if err := internal.Resolve(ctx, dc); err != nil {
+				return err
+			}
+			internal.Accept(dc)
 			return nil
 		})
 	})
 
 	if err != nil {
-		log.ErrorAbortingReconcile(ctx, err, gw)
+		log.ErrorAbortingReconcile(ctx, err, params)
 		return ctrl.Result{}, err
 	}
 
-	log.InfoEndReconcile(ctx, gw)
+	dc.Status.DeepCopyInto(&params.Status)
+	if err := k8s.UpdateStatus(ctx, params); client.IgnoreNotFound(err) != nil {
+		log.ErrorRequeuingReconcile(ctx, err, params)
+		return k8s.RequeueError(err)
+	}
+
+	log.InfoEndReconcile(ctx, params)
 	return ctrl.Result{}, nil
 }
 

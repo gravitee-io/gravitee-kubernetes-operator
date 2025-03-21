@@ -26,8 +26,20 @@ type GatewayClassParameters struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   GraviteeGatewaySpec   `json:"spec,omitempty"`
-	Status GraviteeGatewayStatus `json:"status,omitempty"`
+	Spec   GatewayClassParametersSpec   `json:"spec,omitempty"`
+	Status GatewayClassParametersStatus `json:"status,omitempty"`
+}
+
+func (params *GatewayClassParameters) GetConditions() map[string]metav1.Condition {
+	conditions := make(map[string]metav1.Condition)
+	for _, condition := range params.Status.Conditions {
+		conditions[condition.Type] = condition
+	}
+	return conditions
+}
+
+func (params *GatewayClassParameters) SetConditions(conditions []metav1.Condition) {
+	params.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true
@@ -38,11 +50,12 @@ type GatewayClassParametersList struct {
 }
 
 // +kubebuilder:object:generate=true
-type GraviteeGatewaySpec struct {
+type GatewayClassParametersSpec struct {
 	*gateway.GatewayClassParameters `json:",inline"`
 }
 
-type GraviteeGatewayStatus struct {
+type GatewayClassParametersStatus struct {
+	Conditions []metav1.Condition `json:"conditions"`
 }
 
 func init() {
