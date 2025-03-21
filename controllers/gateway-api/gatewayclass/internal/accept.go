@@ -17,55 +17,91 @@ package internal
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func Accept(ctx context.Context, gwc *gAPIv1.GatewayClass) (*metav1.Condition, error) {
-	condition := k8s.NewAcceptedConditionBuilder(gwc.Generation)
+func Accept(ctx context.Context, gwc *gateway.GatewayClass) error {
+	condition := k8s.NewAcceptedConditionBuilder(gwc.Object.Generation)
 
-	paramRef := gwc.Spec.ParametersRef
+	paramRef := gwc.Object.Spec.ParametersRef
 
 	if paramRef == nil {
 		condition.Accept("No parameters reference")
-		return condition.Build(), nil
+		k8s.SetCondition(gwc, condition.Accept("No parameters reference").Build())
+		return nil
 	}
 
 	if paramRef.Group != gAPIv1.Group(v1alpha1.GroupVersion.Group) {
-		condition.RejectInvalidParameters("parameters reference group must be gravitee.io")
-		return condition.Build(), nil
+		k8s.SetCondition(
+			gwc,
+			condition.
+				RejectInvalidParameters("parameters reference group must be gravitee.io").
+				Build(),
+		)
+		return nil
 	}
 
 	if paramRef.Kind != "GatewayClassParameters" {
-		condition.RejectInvalidParameters("parameters reference kind must be GatewayClassParameters")
-		return condition.Build(), nil
+		k8s.SetCondition(
+			gwc,
+			condition.
+				RejectInvalidParameters("parameters reference kind must be GatewayClassParameters").
+				Build(),
+		)
+		return nil
 	}
 
-	if gwc.Spec.ParametersRef.Namespace == nil {
-		condition.RejectInvalidParameters("parameters reference must be namespaced")
-		return condition.Build(), nil
+	if gwc.Object.Spec.ParametersRef.Namespace == nil {
+		k8s.SetCondition(
+			gwc,
+			condition.
+				RejectInvalidParameters("parameters reference must be namespaced").
+				Build(),
+		)
+		return nil
 	}
 
 	key := client.ObjectKey{
-		Name:      gwc.Spec.ParametersRef.Name,
-		Namespace: string(*gwc.Spec.ParametersRef.Namespace),
+		Name:      gwc.Object.Spec.ParametersRef.Name,
+		Namespace: string(*gwc.Object.Spec.ParametersRef.Namespace),
 	}
 
-	gw := new(v1alpha1.GatewayClassParameters)
+	params := new(v1alpha1.GatewayClassParameters)
 
-	err := k8s.GetClient().Get(ctx, key, gw)
+	err := k8s.GetClient().Get(ctx, key, params)
 	if client.IgnoreNotFound(err) != nil {
-		return nil, err
+		return err
 	}
 
 	if kErrors.IsNotFound(err) {
-		condition.RejectInvalidParameters("parameters reference not found")
-		return condition.Build(), nil
+		k8s.SetCondition(
+			gwc,
+			condition.
+				RejectInvalidParameters("parameters reference not found").
+				Build(),
+		)
+		return nil
 	}
 
-	return condition.Accept("gateway class has been accepted").Build(), nil
+	if !k8s.IsAccepted(params) {
+		k8s.SetCondition(
+			gwc,
+			condition.
+				RejectInvalidParameters("parameters are not accepted").
+				Build(),
+		)
+		return nil
+	}
+
+	k8s.SetCondition(
+		gwc,
+		condition.Accept("gateway class has been accepted").Build(),
+	)
+
+	return nil
 }

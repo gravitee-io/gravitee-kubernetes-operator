@@ -16,7 +16,6 @@ package yaml
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
@@ -24,7 +23,6 @@ var DBLess = utils.NewGenericStringMap()
 
 func init() {
 	runtime.Must(unmarshalDBLess())
-	log.Global.Info("parsed dbless config")
 }
 
 func unmarshalDBLess() error {
