@@ -15,7 +15,7 @@
 package v1alpha1
 
 import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/kafkaroute"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -23,7 +23,7 @@ import (
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 // +kubebuilder:metadata:annotations={"gravitee.io/extends=gateway.networking.k8s.io"}
-type GatewayClassParameters struct {
+type KafkaRoute struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -32,33 +32,20 @@ type GatewayClassParameters struct {
 }
 
 // +kubebuilder:object:root=true
-type GatewayClassParametersList struct {
+type KafkaRouteList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []GatewayClassParameters `json:"items"`
+	Items           []KafkaRoute `json:"items"`
 }
 
-// +kubebuilder:object:generate=true
-type GatewayClassParametersSpec struct {
-	*gateway.GatewayClassParameters `json:",inline"`
+type KafkaRouteSpec struct {
+	kafkaroute.Type `json:",inline"`
 }
 
-type GatewayClassParametersStatus struct {
+type KafkaRouteStatus struct {
 	Conditions []metav1.Condition `json:"conditions"`
 }
 
-func (params *GatewayClassParameters) GetConditions() map[string]metav1.Condition {
-	conditions := make(map[string]metav1.Condition)
-	for _, condition := range params.Status.Conditions {
-		conditions[condition.Type] = condition
-	}
-	return conditions
-}
-
-func (params *GatewayClassParameters) SetConditions(conditions []metav1.Condition) {
-	params.Status.Conditions = conditions
-}
-
 func init() {
-	SchemeBuilder.Register(&GatewayClassParameters{}, &GatewayClassParametersList{})
+	SchemeBuilder.Register(&KafkaRoute{}, &KafkaRouteList{})
 }

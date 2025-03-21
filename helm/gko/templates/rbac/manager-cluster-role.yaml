@@ -240,6 +240,7 @@ rules:
     verbs:
       - get
       - update
+{{- if .Values.gatewayAPI.controller.enabled }}
   - apiGroups:
       - gravitee.io
     resources:
@@ -262,7 +263,28 @@ rules:
     verbs:
       - get
       - update
-{{- if .Values.gatewayAPI.controller.enabled }}
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - kafkaroutes
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - kafkaroutes/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - kafkaroutes/status
+    verbs:
+      - get
+      - update
   - apiGroups:
       - gateway.networking.k8s.io
     resources:

@@ -19,14 +19,14 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.17.1
     gravitee.io/extends: gateway.networking.k8s.io
     gravitee.io/operator.version: 0.13.1
-  name: gatewayclassparameters.gravitee.io
+  name: kafkaroutes.gravitee.io
 spec:
   group: gravitee.io
   names:
-    kind: GatewayClassParameters
-    listKind: GatewayClassParametersList
-    plural: gatewayclassparameters
-    singular: gatewayclassparameters
+    kind: KafkaRoute
+    listKind: KafkaRouteList
+    plural: kafkaroutes
+    singular: kafkaroute
   scope: Namespaced
   versions:
     - name: v1alpha1
