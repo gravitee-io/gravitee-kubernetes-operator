@@ -142,12 +142,6 @@ linters-settings:
     packages:
       - github.com/jmoiron/sqlx
 
-  tenv:
-    # The option `all` will run against whole test files (`_test.go`) regardless of method/function signatures.
-    # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
-    # Default: false
-    all: true
-
 linters:
   disable-all: true
   enable:
@@ -199,7 +193,6 @@ linters:
     - rowserrcheck # checks whether Err of rows is checked successfully
     - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
     - stylecheck # Stylecheck is a replacement for golint
-    - tenv # tenv is analyzer that detects using os.Setenv instead of t.Setenv since Go1.17
     - tparallel # tparallel detects inappropriate usage of t.Parallel() method in your Go test codes
     - unconvert # Remove unnecessary type conversions
     - unparam # Reports unused function parameters

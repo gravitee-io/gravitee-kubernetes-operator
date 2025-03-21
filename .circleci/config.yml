@@ -165,6 +165,60 @@ jobs:
           paths:
             - cover-unit.out
 
+  job-conformance-test:
+    machine:
+      image: ubuntu-2204:2024.01.2
+      docker_layer_caching: true
+    resource_class: medium
+    steps:
+      - checkout
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - go/load-cache
+      - kubernetes/install-kubectl
+      - helm/install_helm_client
+      - run:
+          name: Install kind
+          command: |
+            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
+      - run:
+          name: Install cloud-provider-kind
+          command: |
+            make cloud-provider-kind
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      - run:
+          name: Start cluster
+          command: |
+            kind create cluster --config kind/kind.conformance.yaml
+      - run:
+          name: Run cloud-provider-kind
+          command: |
+            NET_MODE=kind docker compose -f kind/cloud-provider/compose.yaml up -d
+      - run:
+          name: Helm Install the Operator
+          command: |
+            IMG=gko TAG=latest make docker-build \
+              && kind load docker-image gko:latest --name gravitee \
+              && helm upgrade --install gko helm/gko \
+                --set manager.image.repository=gko \
+                --set manager.image.tag=latest \
+                --set gatewayAPI.controller.enabled=true
+      - run:
+          name: Apply resources
+          command: |
+            kubectl apply -f ./examples/gateway-api/gateway-class-parameters.yaml
+            kubectl apply -f ./examples/gateway-api/gateway-class.yaml
+      - run:
+          name: Run Gateway API Conformance Test
+          command: |
+            go test -v ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
+      - go/save-cache
+
   job-integration-test:
     machine:
       image: ubuntu-2204:2024.01.2
@@ -584,6 +638,15 @@ workflows:
             - Lint resources
             - Run unit tests
           ginkgo-filter: withoutContext
+      - job-conformance-test:
+          name: Run Conformance Test
+          context: cicd-orchestrator
+          requires:
+            - Lint sources
+            - Lint licenses
+            - Lint commits
+            - Lint resources
+            - Run unit tests
       - job-helm-lint:
           name: Lint Helm chart
       - job-helm-test:
