@@ -17,13 +17,13 @@
 import {
   LOG,
   HELM,
+  PROJECT_DIR,
   toggleVerbosity,
   time,
   isEmptyString,
 } from "./lib/index.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), "helm-charts");
-const PROJECT_DIR = path.join(__dirname, "..");
 
 const VERSION = argv.version;
 const VERBOSE = argv.verbose;
@@ -48,7 +48,7 @@ async function checkRequirements() {
 
   if (isEmptyString(GITHUB_TOKEN) && !DRY_RUN) {
     LOG.red(
-      "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable."
+      "A github token is needed to push the release. Please set the GITHUB_TOKEN environment variable.",
     );
     process.exit(1);
   }

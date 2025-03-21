@@ -19,9 +19,10 @@ package apidefinition
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -58,9 +59,9 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.ApiV4Definition{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ApiV4ContextField)).
-		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(indexer.ApiV4ResourceField)).
-		Watches(&v1alpha1.SharedPolicyGroup{}, r.Watcher.WatchSharedPolicyGroups(indexer.ApiV4SharedPolicyGroupsField)).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.ApiV4ContextField)).
+		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(search.ApiV4ResourceField)).
+		Watches(&v1alpha1.SharedPolicyGroup{}, r.Watcher.WatchSharedPolicyGroups(search.ApiV4SharedPolicyGroupsField)).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

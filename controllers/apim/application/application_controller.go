@@ -21,10 +21,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
@@ -134,7 +135,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Application{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.AppContextField)).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

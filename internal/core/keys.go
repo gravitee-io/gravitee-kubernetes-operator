@@ -18,11 +18,12 @@ const (
 	CRDGroup   = "gravitee.io"
 	CRDVersion = "v1alpha1"
 
-	CRDManagementContextResource = "managementcontexts"
-	CRDApplicationResource       = "applications"
-	CRDApiDefinitionResource     = "apidefinitions"
-	CRDApiV4DefinitionResource   = "apiv4definitions"
-	CRDResourceResource          = "apiresources"
+	CRDManagementContextResource          = "managementcontexts"
+	CRDApplicationResource                = "applications"
+	CRDApiDefinitionResource              = "apidefinitions"
+	CRDApiV4DefinitionResource            = "apiv4definitions"
+	CRDResourceResource                   = "apiresources"
+	CRDResourceSharedPolicyGroupsResource = "sharedpolicygroups"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"

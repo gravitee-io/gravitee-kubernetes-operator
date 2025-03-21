@@ -21,8 +21,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 )
+
+const kubectlCommand = "-A -o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'"
+const reviewMessage = "You can review those by running the following command: "
 
 func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	ctxRef := refs.NewNamespacedName(mCtx.GetNamespace(), mCtx.GetName())
@@ -30,7 +32,7 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := FindByFieldReferencing(
 		ctx,
-		indexer.ApiContextField,
+		ApiContextField,
 		ctxRef,
 		apis,
 	); err != nil {
@@ -39,9 +41,9 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	if len(apis.Items) > 0 {
 		return fmt.Errorf(
 			"[%s] cannot be deleted because %d APIs are relying on this context. "+
-				"You can review these APIs by running the following command: "+
-				"kubectl get apidefinitions.gravitee.io -A "+
-				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
+				reviewMessage+
+				"kubectl get apidefinitions.gravitee.io "+
+				kubectlCommand,
 			mCtx.GetName(), len(apis.Items), mCtx.GetName(),
 		)
 	}
@@ -49,7 +51,7 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	apisV4 := &v1alpha1.ApiV4DefinitionList{}
 	if err := FindByFieldReferencing(
 		ctx,
-		indexer.ApiV4ContextField,
+		ApiV4ContextField,
 		ctxRef,
 		apisV4,
 	); err != nil {
@@ -59,9 +61,9 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	if len(apisV4.Items) > 0 {
 		return fmt.Errorf(
 			"[%s] cannot be deleted because %d APIs are relying on this context. "+
-				"You can review these APIs by running the following command: "+
-				"kubectl get apiv4definitions.gravitee.io -A "+
-				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
+				reviewMessage+
+				"kubectl get apiv4definitions.gravitee.io "+
+				kubectlCommand,
 			mCtx.GetName(), len(apisV4.Items), mCtx.GetName(),
 		)
 	}
@@ -69,7 +71,7 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	apps := &v1alpha1.ApplicationList{}
 	if err := FindByFieldReferencing(
 		ctx,
-		indexer.AppContextField,
+		AppContextField,
 		ctxRef,
 		apps,
 	); err != nil {
@@ -79,9 +81,9 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	if len(apps.Items) > 0 {
 		return fmt.Errorf(
 			"[%s] cannot be deleted because %d applications are relying on this context. "+
-				"You can review these applications by running the following command: "+
-				"kubectl get applications.gravitee.io -A "+
-				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
+				reviewMessage+
+				"kubectl get applications.gravitee.io "+
+				kubectlCommand,
 			mCtx.GetName(), len(apps.Items), mCtx.GetName(),
 		)
 	}
@@ -89,7 +91,7 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	spg := &v1alpha1.SharedPolicyGroupList{}
 	if err := FindByFieldReferencing(
 		ctx,
-		indexer.SPGContextField,
+		SPGContextField,
 		ctxRef,
 		spg,
 	); err != nil {
@@ -99,9 +101,9 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	if len(spg.Items) > 0 {
 		return fmt.Errorf(
 			"[%s] cannot be deleted because %d SharedPolicyGroups are relying on this context. "+
-				"You can review these SharedPolicyGroups by running the following command: "+
-				"kubectl get sharedpolicygroups.gravitee.io -A "+
-				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
+				reviewMessage+
+				"kubectl get sharedpolicygroups.gravitee.io "+
+				kubectlCommand,
 			mCtx.GetName(), len(spg.Items), mCtx.GetName(),
 		)
 	}
@@ -115,7 +117,7 @@ func AssertNoSharedPolicyGroupRef(ctx context.Context, spg *v1alpha1.SharedPolic
 	apisV4 := &v1alpha1.ApiV4DefinitionList{}
 	if err := FindByFieldReferencing(
 		ctx,
-		indexer.ApiV4SharedPolicyGroupsField,
+		ApiV4SharedPolicyGroupsField,
 		nsn,
 		apisV4,
 	); err != nil {
@@ -125,9 +127,9 @@ func AssertNoSharedPolicyGroupRef(ctx context.Context, spg *v1alpha1.SharedPolic
 	if len(apisV4.Items) > 0 {
 		return fmt.Errorf(
 			"[%s] cannot be deleted because %d APIs are relying on this Shared Policy Group. "+
-				"You can review these APIs by running the following command: "+
-				"kubectl get sharedpolicygroups.gravitee.io -A "+
-				"-o jsonpath='{.items[?(@.spec.contextRef.name==\"%s\")].metadata.name}'",
+				reviewMessage+
+				"kubectl get sharedpolicygroups.gravitee.io "+
+				kubectlCommand,
 			spg.Name, len(apisV4.Items), spg.Name,
 		)
 	}

@@ -88,7 +88,10 @@ const red = newLoggerFn(chalk.red);
 export const LOG = Object.seal({ green, blue, magenta, yellow, red, log });
 
 // Path to the local helm chart directory
-const chartDir = path.join(__dirname, "..", "helm", "gko");
+export const PROJECT_DIR = path.join(__dirname, "..", "..");
+
+// Path to the local helm chart directory
+const chartDir = path.join(PROJECT_DIR, "helm", "gko");
 
 // Path to the helm crds directory. This resources are not templated.
 const crdDir = path.join(chartDir, "crds");

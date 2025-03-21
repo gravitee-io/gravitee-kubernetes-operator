@@ -17,12 +17,12 @@ package v2
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -94,7 +94,7 @@ func validateUpdate(
 
 	base.DeleteDefinitionConfigMapIfNeeded(ctx, oldApi, newApi)
 
-	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, indexer.ApiV2SubsField))
+	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, search.ApiV2SubsField))
 	if errs.IsSevere() {
 		return errs
 	}

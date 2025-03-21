@@ -18,6 +18,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+
 	policygroups "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
 
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +35,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
@@ -90,7 +91,7 @@ func init() {
 
 	cache := mgr.GetCache()
 
-	runtimeUtil.Must(indexer.InitCache(ctx, cache))
+	runtimeUtil.Must(search.InitCache(ctx, cache))
 
 	// index event for assertions
 	runtimeUtil.Must(
