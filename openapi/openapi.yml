@@ -69,7 +69,7 @@ paths:
   /organizations/{orgId}/environments/{envId}/apis/{apiId}:
     parameters:
       - $ref: "#/components/parameters/orgIdParam"
-      - $ref: "#/components/parameters/envIdParam"    
+      - $ref: "#/components/parameters/envIdParam"
       - $ref: "#/components/parameters/apiIdParam"
     get:
       operationId: getApi
@@ -118,7 +118,7 @@ paths:
       description: Create or update a V4 API from V4 CRD Spec
       parameters:
         - $ref: "#/components/parameters/orgIdParam"
-        - $ref: "#/components/parameters/envIdParam"   
+        - $ref: "#/components/parameters/envIdParam"
         - $ref: "#/components/parameters/dryRunQueryParam"
       requestBody:
         content:
@@ -150,7 +150,7 @@ paths:
       description: Get pagineted policy groups
       parameters:
         - $ref: "#/components/parameters/orgIdParam"
-        - $ref: "#/components/parameters/envIdParam"   
+        - $ref: "#/components/parameters/envIdParam"
         - $ref: "#/components/parameters/pageParam"
         - $ref: "#/components/parameters/perPageParam"
       responses:
@@ -167,7 +167,7 @@ paths:
   /organizations/{orgId}/environments/{envId}/shared-policy-groups/{spgId}:
     parameters:
       - $ref: "#/components/parameters/orgIdParam"
-      - $ref: "#/components/parameters/envIdParam"   
+      - $ref: "#/components/parameters/envIdParam"
       - $ref: "#/components/parameters/spgIdParam"
     get:
       operationId: getPolicyGroup
@@ -208,7 +208,7 @@ paths:
       description: Create or update Shared Policy Group from CRD Spec
       parameters:
         - $ref: "#/components/parameters/orgIdParam"
-        - $ref: "#/components/parameters/envIdParam"   
+        - $ref: "#/components/parameters/envIdParam"
         - $ref: "#/components/parameters/dryRunQueryParam"
       requestBody:
         content:
@@ -374,12 +374,12 @@ components:
                 type: string
               source:
                 description: Member source
-                examples: 
+                examples:
                   - gravitee
                 type: string
               sourceId:
                 description: Member source ID
-                examples: 
+                examples:
                   - "user@email.com"
                 type: string
             required:
@@ -624,7 +624,7 @@ components:
                     selectors:
                       description: List of Flow selectors
                       items:
-                        type: object
+                        $ref: "#/components/schemas/Selector"
                       type: array
                     connect:
                       description: List of Connect flow steps (Only available for Native APIs)
@@ -857,7 +857,7 @@ components:
         crossId:
           type: string
           description: API's crossId. Identifies API across environments.
-          examples: 
+          examples:
             - df83b2a4-cc3e-3f80-9f0d-c138c106c076
         definitionVersion:
           $ref: '#/components/schemas/ApiV4DefinitionVersion'
@@ -869,7 +869,7 @@ components:
           type: string
           format: date-time
           description: The last date (as timestamp) when the API was deployed.
-          examples: 
+          examples:
             - "1581256457163"
           readOnly: true
         deploymentState:
@@ -934,7 +934,7 @@ components:
         name:
           type: string
           description: API's name. Duplicate names can exists.
-          examples: 
+          examples:
             - My Api
         originContext:
           $ref: "#/components/schemas/BaseOriginContext"
@@ -979,7 +979,7 @@ components:
           type: string
           format: date-time
           description: The last date (as timestamp) when the API was updated.
-          examples: 
+          examples:
             - "1581256457163"
           readOnly: true
         version:
@@ -1008,24 +1008,24 @@ components:
         crossId:
           type: string
           description: The unique ID of the shared policy group
-          examples: 
+          examples:
             - "5e2b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b"
         description:
           type: string
           description: The description of the shared policy group
-          examples: 
+          examples:
             - This is a shared policy group
           maxLength: 1024
         prerequisiteMessage:
           type: string
           description: The prerequisite message of the shared policy group. This message is displayed to the user to help understand the prerequisite to use the shared policy group.
-          examples: 
+          examples:
             - The resource cache "my-cache" is required
           maxLength: 1024
         name:
           type: string
           description: The name of the shared policy group
-          examples: 
+          examples:
             - My Shared Policy Group
           maxLength: 512
         phase:
@@ -1052,7 +1052,7 @@ components:
             version:
               type: number
               description: The version of the shared policy group
-              examples: 
+              examples:
                 - 1
             originContext:
               $ref: "#/components/schemas/BaseOriginContext"
@@ -1060,19 +1060,19 @@ components:
               type: string
               format: date-time
               description: The date at which the shared policy group was deployed
-              examples: 
+              examples:
                 - "2020-01-01T00:00:00Z"
             createdAt:
               type: string
               format: date-time
               description: The date at which the shared policy group was created
-              examples: 
+              examples:
                 - "2020-01-01T00:00:00Z"
             updatedAt:
               type: string
               format: date-time
               description: The date at which the shared policy group was last updated
-              examples: 
+              examples:
                 - "2020-01-01T00:00:00Z"
             lifecycleState:
               $ref: "#/components/schemas/SharedPolicyGroupLifecycleState"
@@ -1665,7 +1665,7 @@ components:
         selectors:
           description: List of Flow selectors
           items:
-            type: object
+            $ref: "#/components/schemas/Selector"
           type: array
         connect:
           description: List of Connect flow steps (Only available for Native APIs)
@@ -1782,7 +1782,7 @@ components:
         type:
           type: string
           description: The type of the entrypoint
-          examples: 
+          examples:
             - http-get
             - http-proxy
         qos:
@@ -1902,7 +1902,7 @@ components:
               type: integer
               minimum: 0
               description: The port of the listener
-              examples: 
+              examples:
                 - "8080"
           required:
             - "host"
@@ -1912,7 +1912,7 @@ components:
         id:
           type: string
           description: Owner's uuid.
-          examples: 
+          examples:
             - "00f8c9e7-78fc-4907-b8c9-e778fc790750"
         email:
           type: string
@@ -1920,7 +1920,7 @@ components:
         displayName:
           type: string
           description: Owner's name.
-          examples: 
+          examples:
             - John Doe
           minLength: 1
         type:
@@ -2062,17 +2062,17 @@ components:
               type: string
               description: |-
                 The id of the integration that created the API.
-              examples: 
+              examples:
                 - "b300b445-8bbb-4034-865c-d2113ba5b768"
             provider:
               type: string
               description: Provider of this Federated API.
-              examples: 
+              examples:
                 - solace
             integrationName:
               type: string
               description: Name of integration of this Federated API.
-              examples: 
+              examples:
                 - My Solace env
     ApiLinks:
       type: object
@@ -2080,7 +2080,7 @@ components:
         pictureUrl:
           type: string
           description: The URL to the API's picture.
-          examples: 
+          examples:
             - "https://gravitee.example.com/management/v2/environments/00f8c9e7-78fc-4907-b8c9-e778fc790750/apis/6c530064-0b2c-4004-9300-640b2ce0047b/picture"
         backgroundUrl:
           type: string
@@ -2126,6 +2126,128 @@ components:
           type: integer
           format: int64
           description: The total number of items.
+    Selector:
+      oneOf:
+        - $ref: "#/components/schemas/HttpSelector"
+        - $ref: "#/components/schemas/ChannelSelector"
+        - $ref: "#/components/schemas/ConditionSelector"
+      discriminator:
+        propertyName: type
+        mapping:
+          HTTP: "#/components/schemas/HttpSelector"
+          CHANNEL: "#/components/schemas/ChannelSelector"
+          CONDITION: "#/components/schemas/ConditionSelector"
+    BaseSelector:
+      properties:
+        type:
+          type: string
+          description: Selector type.
+          example: HTTP
+          enum:
+            - HTTP
+            - CHANNEL
+            - CONDITION
+      discriminator:
+        propertyName: type
+        mapping:
+          HTTP: "#/components/schemas/HttpSelector"
+          CHANNEL: "#/components/schemas/ChannelSelector"
+          CONDITION: "#/components/schemas/ConditionSelector"
+      required:
+        - type
+    HttpSelector:
+      type: object
+      title: "HttpSelector"
+      required:
+        - type
+        - path
+        - pathOperator
+      allOf:
+        - $ref: "#/components/schemas/BaseSelector"
+        - type: object
+          properties:
+            path:
+              type: string
+              description: The path of the selector
+              example: /my/path
+              default: /
+            pathOperator:
+              $ref: "#/components/schemas/Operator"
+            methods:
+              type: array
+              items:
+                $ref: "#/components/schemas/HttpMethod"
+              uniqueItems: true
+    HttpMethod:
+      type: string
+      description: The method of the selector
+      example: GET
+      enum:
+        - CONNECT
+        - DELETE
+        - GET
+        - HEAD
+        - OPTIONS
+        - PATCH
+        - POST
+        - PUT
+        - TRACE
+        - OTHER
+    ChannelSelector:
+      type: object
+      title: "ChannelSelector"
+      required:
+        - type
+        - channel
+        - channelOperator
+      allOf:
+        - $ref: "#/components/schemas/BaseSelector"
+        - type: object
+          properties:
+            operations:
+              type: array
+              description: The list of operations associated with this channel selector.
+              items:
+                type: string
+                description: The operation associated with this channel selector.
+                enum:
+                  - PUBLISH
+                  - SUBSCRIBE
+              uniqueItems: true
+            channel:
+              type: string
+              description: The channel of the selector
+              example: /my/channel
+              default: /
+            channelOperator:
+              $ref: "#/components/schemas/Operator"
+            entrypoints:
+              type: array
+              items:
+                type: string
+              uniqueItems: true
+    ConditionSelector:
+      type: object
+      title: "ConditionSelector"
+      required:
+        - type
+        - condition
+      allOf:
+        - $ref: "#/components/schemas/BaseSelector"
+        - type: object
+          properties:
+            condition:
+              type: string
+              description: The condition of the selector
+              example: ${#jsonPath(payload, '$.myField') == 'myValue'}
+    Operator:
+      type: string
+      description: The path operator of the selector
+      example: EQUALS
+      default: STARTS_WITH
+      enum:
+        - EQUALS
+        - STARTS_WITH
   responses:
     ApisResponse:
       description: Page of apis
@@ -2172,17 +2294,17 @@ components:
                 type: integer
                 format: int32
                 description: The error code
-                examples: 
+                examples:
                   - "400"
               message:
                 type: string
                 description: The error message
-                examples: 
+                examples:
                   - Bad request
               technicalCode:
                 type: string
                 description: A technical code to identify the error
-                examples: 
+                examples:
                   - invalid.import.definition
               parameters:
                 type: object
@@ -2198,12 +2320,12 @@ components:
                     message:
                       type: string
                       description: The error message
-                      examples: 
+                      examples:
                         - Bad request
                     location:
                       type: string
                       description: The json path of the field in error.
-                      examples: 
+                      examples:
                         - updateApi.properties[0].key
                     invalidValue:
                       type: string
@@ -2217,7 +2339,7 @@ components:
       schema:
         type: string
         default: DEFAULT
-    orgIdParam:  
+    orgIdParam:
       name: orgId
       in: path
       required: true
