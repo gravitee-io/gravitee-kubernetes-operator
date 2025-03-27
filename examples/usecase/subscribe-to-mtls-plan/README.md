@@ -40,7 +40,7 @@ Here, both HTTP and HTTPS are enabled respectively on node ports 30082 and 30084
 Server keystore is sourced from a kubernetes secret that you can create like that:
 
 ```sh
-kubectl create secret tls tls-server --cert=pki//server.crt --key=pki/server.key
+kubectl create secret tls tls-server --cert=pki/server.crt --key=pki/server.key
 ```
 
 Note that for this to work you need to enabled kubernetes secrets at the root of your values file:
