@@ -13,9 +13,9 @@
 # limitations under the License.
 
 apiVersion: v2
-appVersion: 0.13.1
-version: 0.13.1
-kubeVersion: ">=1.14.0-0"
+appVersion: 4.6.0
+version: 4.6.0
+kubeVersion: ">=1.28.0-0"
 type: application
 name: gko
 description: The Gravitee Kubernetes Operator Helm Chart
