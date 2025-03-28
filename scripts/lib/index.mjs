@@ -91,7 +91,7 @@ export const LOG = Object.seal({ green, blue, magenta, yellow, red, log });
 const chartDir = path.join(__dirname, "..", "helm", "gko");
 
 // Path to the helm crds directory. This resources are not templated.
-const crdDir = path.join(chartDir, "crds");
+const crdDir = path.join(chartDir, "crds", "gravitee.io");
 
 // The gravitee.io official helm charts repository
 const chartsRepo = "gravitee-io/helm-charts";
