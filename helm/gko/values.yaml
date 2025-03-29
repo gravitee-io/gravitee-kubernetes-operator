@@ -98,7 +98,7 @@ manager:
     cluster: true
     ## @param manager.scope.namespaces Setting this list of namespaces will result in the operator listening only in this namespaces.
     namespaces: []
-  ## @param manager.applyCRDs 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup.
+  ## @param manager.applyCRDs If true, the manager will patch Custom Resource Definitions on startup.
   ## Please be aware that this will apply to Custom Resource Definitions 
   ## (which are the Open API model for Custom Resources such as API Definitions), 
   ## not to Custom Resources themselves.
@@ -106,6 +106,12 @@ manager:
   ## of this flag is. Because helm upgrades do not update CRDs once they have been
   ## installed, it is recommended to set this flag to true.
   applyCRDs: true
+  reconcile:
+    ## @param manager.reconcile.strategy The strategy used by the operator to decide wether a resource should be reconciled on not. The strategy can be either `onSpecChange` or `always`. Other values will falback to `onSpecChange`.
+    ## If the strategy is `onSpecChange` (which is the default), the operator
+    ## will compute a hash of the spec field of the resource an discard reconciles if the hash is known. The previous calculated hash is
+    ## is stored in the `gravitee.io/last-spec-hash` annotation.
+    strategy: onSpecChange
   metrics:
    ## @param manager.metrics.enabled If true, a metrics server will be created so that metrics can be scraped using prometheus.
     enabled: true

@@ -34,6 +34,7 @@ data:
   {{- if .Values.manager.applyCRDs }}
   APPLY_CRDS: "true"
   {{- end }}
+  RECONCILE_STRATEGY: {{ .Values.manager.reconcile.strategy }}
   {{- if not .Values.manager.logs.json }}
   DEV_MODE: "true"
   {{- end }}
