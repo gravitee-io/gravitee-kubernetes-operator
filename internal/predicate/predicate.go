@@ -18,6 +18,7 @@ package predicate
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	corev1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
@@ -32,6 +33,10 @@ type LastSpecHashPredicate struct {
 // Create returns true if the Create event should be processed.
 func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 	if e.Object.GetDeletionTimestamp() != nil {
+		return true
+	}
+
+	if shouldAlwaysReconcile() {
 		return true
 	}
 
@@ -108,4 +113,8 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	default:
 		return false
 	}
+}
+
+func shouldAlwaysReconcile() bool {
+	return env.Config.ReconcileStrategy == "always"
 }
