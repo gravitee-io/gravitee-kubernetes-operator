@@ -49,6 +49,8 @@ const (
 	// This default are applied when running the app locally.
 	defaultWebhookPort       = 9443
 	defaultHttpClientTimeout = 5
+
+	ReconcileStrategy = "RECONCILE_STRATEGY"
 )
 
 var Config = struct {
@@ -73,6 +75,7 @@ var Config = struct {
 	LogsLevelCase                        string
 	LogsTimestampField                   string
 	LogsTimestampFormat                  string
+	ReconcileStrategy                    string
 }{}
 
 func init() {
@@ -101,6 +104,7 @@ func init() {
 	Config.LogsLevelCase = os.Getenv(LogsLevelCase)
 	Config.LogsTimestampField = os.Getenv(LogsTimestampField)
 	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
+	Config.ReconcileStrategy = os.Getenv(ReconcileStrategy)
 }
 
 func parseInt(key string, defaultValue int) int {
