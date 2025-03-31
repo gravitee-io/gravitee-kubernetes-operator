@@ -11,7 +11,7 @@ require (
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	k8s.io/apimachinery v0.32.3
 	k8s.io/client-go v0.32.3
-	sigs.k8s.io/controller-runtime v0.20.3
+	sigs.k8s.io/controller-runtime v0.20.4
 )
 
 require (
