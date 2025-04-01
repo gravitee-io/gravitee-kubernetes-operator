@@ -69,7 +69,7 @@ func mapACL(acl []kafka.KafkaAccessControl) []any {
 	}
 }
 
-func mapAccessControl(accessControl kafka.KafkaAccessControl) map[string]interface{} {
+func mapAccessControl(accessControl kafka.KafkaAccessControl) map[string]any {
 	ac := map[string]any{}
 	ac["type"] = resourceMap[accessControl.Type]
 	ac["operations"] = mapOperations(accessControl)
