@@ -30,20 +30,28 @@ spec:
        - path:
            type: PathPrefix
            value: /bin
-      filters: []
+      filters:
+      - type: RequestHeaderModifier
+        requestHeaderModifier:
+          add:
+            - name: x-tag
+              value: kubernetes.io,gravitee.io
+          set:
+            - name: x-impl
+              value: gravitee.io
+          remove:
+            - x-rm
+      - type: ResponseHeaderModifier
+        responseHeaderModifier:
+          set:
+            - name: x-modified
+              value: "true"
       backendRefs:
         - kind: Service
           group: ""
           name: httpbin-1
           namespace: default
           port: 8080
-          weight: 90
-        - kind: Service
-          group: ""
-          name: httpbin-2
-          namespace: default
-          port: 8080
-          weight: 10
     - matches:
        - path:
            type: PathPrefix
