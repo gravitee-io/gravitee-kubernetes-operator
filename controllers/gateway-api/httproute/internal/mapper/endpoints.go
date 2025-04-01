@@ -21,7 +21,10 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-var serviceURIPattern = "http://%s.%s.svc.cluster.local:%d"
+var (
+	serviceURIPattern           = "http://%s.%s.svc.cluster.local:%d"
+	defaultEndpointWeight int32 = 1
+)
 
 func buildEndpointGroups(route *gwAPIv1.HTTPRoute) []*v4.EndpointGroup {
 	groups := []*v4.EndpointGroup{}
@@ -39,7 +42,12 @@ func buildEndpointGroup(
 	endpointGroup := v4.NewHttpEndpointGroup(
 		buildEndpointGroupName(index),
 	)
-	endpointGroup.Endpoints = buildEndpoints(rule, ns)
+	backendRefs := getActiveBackendRefs(rule.BackendRefs)
+
+	if len(backendRefs) > 1 {
+		endpointGroup.LoadBalancer = v4.NewLoadBalancer(v4.WeightedRoundRobin)
+	}
+	endpointGroup.Endpoints = buildEndpoints(backendRefs, ns)
 	return endpointGroup
 }
 
@@ -47,10 +55,13 @@ func buildEndpointGroupName(index int) string {
 	return fmt.Sprintf("rule-%d", index)
 }
 
-func buildEndpoints(rule gwAPIv1.HTTPRouteRule, ns string) []*v4.Endpoint {
+func buildEndpoints(
+	backendRefs []gwAPIv1.HTTPBackendRef,
+	namespace string,
+) []*v4.Endpoint {
 	endpoints := []*v4.Endpoint{}
-	for i, ref := range rule.BackendRefs {
-		endpoints = append(endpoints, buildEndpoint(ref, i, ns))
+	for i, ref := range backendRefs {
+		endpoints = append(endpoints, buildEndpoint(ref, i, namespace))
 	}
 	return endpoints
 }
@@ -58,18 +69,37 @@ func buildEndpoints(rule gwAPIv1.HTTPRouteRule, ns string) []*v4.Endpoint {
 func buildEndpoint(
 	ref gwAPIv1.HTTPBackendRef,
 	index int,
-	ns string,
+	namespace string,
 ) *v4.Endpoint {
 	endpoint := v4.NewHttpEndpoint(
 		fmt.Sprintf("backend-%d", index),
 	)
-	endpoint.Config.Object["target"] = buildEndpointTarget(ref, ns)
+	endpoint.Weight = ref.Weight
+	endpoint.Config.Object["target"] = buildEndpointTarget(ref, namespace)
 	return endpoint
 }
 
 func buildEndpointTarget(
 	ref gwAPIv1.HTTPBackendRef,
-	ns string,
+	namespace string,
 ) string {
-	return fmt.Sprintf(serviceURIPattern, ref.Name, ns, *ref.Port)
+	return fmt.Sprintf(serviceURIPattern, ref.Name, namespace, *ref.Port)
+}
+
+// If several backends are provided, skip backends with a weight defined to 0.
+// See https://gateway-api.sigs.k8s.io/guides/traffic-splitting
+func getActiveBackendRefs(refs []gwAPIv1.HTTPBackendRef) []gwAPIv1.HTTPBackendRef {
+	if len(refs) == 1 {
+		return refs
+	}
+	activeRefs := []gwAPIv1.HTTPBackendRef{}
+	for _, ref := range refs {
+		if ref.Weight == nil {
+			ref.Weight = &defaultEndpointWeight
+		}
+		if *ref.Weight > 0 {
+			activeRefs = append(activeRefs, ref)
+		}
+	}
+	return activeRefs
 }
