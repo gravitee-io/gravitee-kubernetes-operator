@@ -310,6 +310,7 @@ spec:
                               type: string
                             weight:
                               description: Endpoint Weight
+                              format: int32
                               type: integer
                           required:
                             - inheritConfiguration
