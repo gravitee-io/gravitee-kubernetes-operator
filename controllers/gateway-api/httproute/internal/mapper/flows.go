@@ -51,7 +51,7 @@ func buildFlows(route *gwAPIv1.HTTPRoute) []*v4.Flow {
 			flows = append(
 				flows,
 				buildFlow(
-					ruleIndex, match, matchIndex, conditionsExpressions,
+					rule, ruleIndex, match, matchIndex, conditionsExpressions,
 				),
 			)
 		}
@@ -60,6 +60,7 @@ func buildFlows(route *gwAPIv1.HTTPRoute) []*v4.Flow {
 }
 
 func buildFlow(
+	rule gwAPIv1.HTTPRouteRule,
 	ruleIndex int,
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
@@ -68,7 +69,8 @@ func buildFlow(
 	flowName := fmt.Sprintf("rule-%d-match%d", ruleIndex, matchIndex)
 	return &v4.Flow{
 		Name:      &flowName,
-		Request:   buildRouting(ruleIndex),
+		Request:   buildRequestFlow(rule, ruleIndex),
+		Response:  buildResponseFlow(rule),
 		Enabled:   true,
 		Selectors: buildFlowSelectors(match, conditionsExpressions),
 	}
@@ -141,8 +143,15 @@ func buildHTTPSelector(match gwAPIv1.HTTPRouteMatch) *v4.FlowSelector {
 	return v4.NewHTTPSelector("/", "START_WITH", methods)
 }
 
-func buildRouting(ruleIndex int) []*v4.FlowStep {
-	return []*v4.FlowStep{buildRoutingStep(ruleIndex)}
+func buildRequestFlow(rule gwAPIv1.HTTPRouteRule, ruleIndex int) []*v4.FlowStep {
+	return append(
+		[]*v4.FlowStep{buildRoutingStep(ruleIndex)},
+		buildRequestFilters(rule)...,
+	)
+}
+
+func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
+	return buildResponseFilters(rule)
 }
 
 func buildRoutingStep(ruleIndex int) *v4.FlowStep {
