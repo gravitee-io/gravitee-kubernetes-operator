@@ -358,7 +358,7 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 	}
 	if in.Weight != nil {
 		in, out := &in.Weight, &out.Weight
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.Config != nil {
