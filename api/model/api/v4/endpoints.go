@@ -38,7 +38,7 @@ type Endpoint struct {
 
 	// Endpoint Weight
 	// +kubebuilder:validation:Optional
-	Weight *int `json:"weight,omitempty"`
+	Weight *int32 `json:"weight,omitempty"`
 
 	// Should endpoint group configuration be inherited or not ?
 	Inherit bool `json:"inheritConfiguration"`
