@@ -77,12 +77,7 @@ spec:
             {{- . | toYaml | nindent 12 }}
           {{- end }}
 {{- end }}
-        - args:
-{{- if .Values.manager.metrics.enabled }}
-            - --health-probe-bind-address=:8081
-            - --metrics-bind-address=127.0.0.1:8080
-{{- end }}
-            - --leader-elect
+        - args: []
           command:
             - /manager
           envFrom:
@@ -94,14 +89,14 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8081
+              port: {{ .Values.manager.probes.port }}
             initialDelaySeconds: 15
             periodSeconds: 20
           name: manager
           readinessProbe:
             httpGet:
               path: /readyz
-              port: 8081
+              port: {{ .Values.manager.probes.port }}
             initialDelaySeconds: 5
             periodSeconds: 10
           {{- with .Values.manager.resources }}
@@ -116,8 +111,23 @@ spec:
               name: webhook-cert
               readOnly: true
           {{- end }}
+          ports:
+          - containerPort: {{ .Values.manager.probes.port }}
+            name: probes
+            protocol: TCP
+          {{- if .Values.manager.metrics.enabled }}
+          - containerPort: {{ .Values.manager.metrics.port }}
+            name: metrics
+            protocol: TCP
+          {{- end }}
+          {{- if .Values.manager.webhook.enabled }}
+          - containerPort: {{ .Values.manager.webhook.service.port }}
+            name: webhook
+            protocol: TCP
+          {{- end }}
       securityContext:
         runAsNonRoot: true
+      hostNetwork: {{ .Values.manager.hostNetwork }}
       serviceAccountName: {{ template "rbac.serviceAccountName" . }}
       {{- if .Values.manager.webhook.enabled }}
       volumes:
