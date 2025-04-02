@@ -80,6 +80,8 @@ manager:
       memory: 128Mi
   ## @param manager.tolerations Set pods tolerations. Please see https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ about this topic. 
   tolerations: []
+  ## @param manager.hostNetwork Use the host's network namespace. Please see https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#hosts-namespaces about this topic. 
+  hostNetwork: false
   scope:
     ## @param manager.scope.cluster Use false to listen only in the release namespace.
     cluster: true
@@ -94,8 +96,17 @@ manager:
   ## installed, it is recommended to set this flag to true.
   applyCRDs: true
   metrics:
-   ## @param manager.metrics.enabled If true, a metrics server will be created so that metrics can be scraped using prometheus.
+    ## @param manager.metrics.enabled If true, a metrics server will be created so that metrics can be scraped using prometheus.
     enabled: true
+    ## @param manager.metrics.port Which port the metric server will bind to.
+    port: 8080
+    ## @param manager.metrics.secured If true, the metrics will be served over TLS.
+    secured: true
+    ## @param manager.metrics.certDir The directory where the TLS certificate and key will be stored. If empty, a self signed certificate will be generated.
+    certDir: ""
+  probes:
+     ## @param manager.probes.port Which port the readiness and liveness probes will listen to.
+    port: 8081
   httpClient:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
