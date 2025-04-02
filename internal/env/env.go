@@ -15,6 +15,7 @@
 package env
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -29,6 +30,10 @@ const (
 	NS                                   = "NAMESPACE"
 	ApplyCRDs                            = "APPLY_CRDS"
 	EnableMetrics                        = "ENABLE_METRICS"
+	SecureMetrics                        = "SECURE_METRICS"
+	MetricsCertDir                       = "METRICS_CERT_DIR"
+	MetricsPort                          = "METRICS_PORT"
+	ProbesPort                           = "PROBES_PORT"
 	EnableIngress                        = "ENABLE_INGRESS"
 	EnableWebhook                        = "ENABLE_WEBHOOK"
 	WebhookNS                            = "WEBHOOK_NAMESPACE"
@@ -43,6 +48,8 @@ const (
 
 	// This default are applied when running the app locally.
 	defaultWebhookPort       = 9443
+	defaultMetricsPort       = 8080
+	defaultProbesPort        = 8081
 	defaultHttpClientTimeout = 5
 )
 
@@ -50,6 +57,10 @@ var Config = struct {
 	NS                                   string
 	ApplyCRDs                            bool
 	EnableMetrics                        bool
+	SecureMetrics                        bool
+	MetricsCertDir                       string
+	MetricsPort                          int
+	ProbesPort                           int
 	EnableIngress                        bool
 	EnableWebhook                        bool
 	WebhookNS                            string
@@ -74,6 +85,10 @@ func init() {
 	Config.HTTPClientInsecureSkipVerify = os.Getenv(HttpCLientInsecureSkipCertVerify) == TrueString
 	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
+	Config.SecureMetrics = os.Getenv(SecureMetrics) == TrueString
+	Config.MetricsCertDir = os.Getenv(MetricsCertDir)
+	Config.MetricsPort = parseInt(MetricsPort, defaultMetricsPort)
+	Config.ProbesPort = parseInt(ProbesPort, defaultProbesPort)
 	Config.EnableIngress = os.Getenv(EnableIngress) == TrueString
 	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
 	Config.WebhookNS = os.Getenv(WebhookNS)
@@ -86,6 +101,17 @@ func init() {
 		ingressClass = os.Getenv(IngressClasses)
 	}
 	Config.IngressClasses = strings.Split(ingressClass, ",")
+}
+
+func GetMetricsAddr() string {
+	if !Config.EnableMetrics {
+		return "0" // disables metrics
+	}
+	return fmt.Sprintf(":%d", Config.MetricsPort)
+}
+
+func GetProbesAddr() string {
+	return fmt.Sprintf(":%d", Config.ProbesPort)
 }
 
 func parseInt(key string, defaultValue int) int {

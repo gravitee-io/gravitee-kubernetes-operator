@@ -37,8 +37,16 @@ data:
   {{- if not .Values.manager.logs.json }}
   DEV_MODE: "true"
   {{- end }}
-  {{- if not .Values.manager.metrics.enabled }}
-  ENABLE_METRICS: "false"
+  PROBES_PORT: {{ quote .Values.manager.probes.port }}
+  {{- if .Values.manager.metrics.enabled }}
+  ENABLE_METRICS: "true"
+  METRICS_PORT: {{ quote .Values.manager.metrics.port }}
+  {{- if .Values.manager.metrics.secured }}
+  SECURE_METRICS: "true"
+  {{- if .Values.manager.metrics.certDir }}
+  METRICS_CERT_DIR: {{ .Values.manager.metrics.certDir }}
+  {{- end }}
+  {{- end }}
   {{- end }}
   {{- if not .Values.ingress.controller.enabled }}
   ENABLE_INGRESS: "false"
