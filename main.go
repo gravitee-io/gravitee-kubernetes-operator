@@ -92,15 +92,6 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-
 	var webhookServer webhook.Server
 	if env.Config.EnableWebhook {
 		patchAdmissionWebhook()
@@ -117,22 +108,32 @@ func main() {
 
 	flag.Parse()
 
-	if !env.Config.EnableMetrics {
-		metricsAddr = "0" // disables metrics
-	}
-
 	if env.Config.HTTPClientInsecureSkipVerify {
 		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
-	metrics := metricServer.Options{BindAddress: metricsAddr}
+	log.Global.Infof("Probes server listens on %s", env.GetProbesAddr())
+
+	if env.Config.EnableWebhook {
+		log.Global.Infof("Webhook server listens on :%d", env.Config.WebhookPort)
+	}
+
+	if env.Config.EnableIngress {
+		log.Global.Infof("Metrics server listens on %s", env.GetMetricsAddr())
+	}
+
+	metrics := metricServer.Options{
+		BindAddress:   env.GetMetricsAddr(),
+		SecureServing: env.Config.SecureMetrics,
+		CertDir:       env.Config.MetricsCertDir,
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metrics,
 		WebhookServer:          webhookServer,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		HealthProbeBindAddress: env.GetProbesAddr(),
+		LeaderElection:         true,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
 	})
