@@ -82,6 +82,7 @@ func init() {
 }
 
 func main() {
+<<<<<<< HEAD
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
@@ -94,25 +95,57 @@ func main() {
 	opts := zap.Options{
 		Development:          env.Config.Development,
 		EncoderConfigOptions: logging.NewEncoderConfigOption(),
+=======
+	var webhookServer webhook.Server
+	if env.Config.EnableWebhook {
+		patchAdmissionWebhook()
+		webhookServer = webhook.NewServer(webhook.Options{
+			CertDir:  "/tmp/webhook-server/certs",
+			Port:     env.Config.WebhookPort,
+			CertName: wk.CertName,
+			KeyName:  wk.KeyName,
+			TLSOpts: []func(*tls.Config){func(config *tls.Config) {
+				config.InsecureSkipVerify = true
+			}},
+		})
+>>>>>>> f2a071f (feat: improve helm charts)
 	}
 
 	opts.BindFlags(flag.CommandLine)
 
 	flag.Parse()
 
+<<<<<<< HEAD
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	if !env.Config.EnableMetrics {
 		metricsAddr = "0" // disables metrics
 	}
 
+=======
+>>>>>>> f2a071f (feat: improve helm charts)
 	if env.Config.HTTPClientInsecureSkipVerify {
 		setupLog.Info("TLS verification is skipped for APIM HTTP client")
 	}
 
-	metrics := metricServer.Options{BindAddress: metricsAddr}
+	log.Global.Infof("Probes server listens on %s", env.GetProbesAddr())
+
+	if env.Config.EnableWebhook {
+		log.Global.Infof("Webhook server listens on :%d", env.Config.WebhookPort)
+	}
+
+	if env.Config.EnableIngress {
+		log.Global.Infof("Metrics server listens on %s", env.GetMetricsAddr())
+	}
+
+	metrics := metricServer.Options{
+		BindAddress:   env.GetMetricsAddr(),
+		SecureServing: env.Config.SecureMetrics,
+		CertDir:       env.Config.MetricsCertDir,
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+<<<<<<< HEAD
 		Scheme:  scheme,
 		Metrics: metrics,
 		WebhookServer: webhook.NewServer(webhook.Options{
@@ -120,6 +153,13 @@ func main() {
 		}),
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
+=======
+		Scheme:                 scheme,
+		Metrics:                metrics,
+		WebhookServer:          webhookServer,
+		HealthProbeBindAddress: env.GetProbesAddr(),
+		LeaderElection:         true,
+>>>>>>> f2a071f (feat: improve helm charts)
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
 	})
