@@ -52,18 +52,3 @@ spec:
           name: httpbin-1
           namespace: default
           port: 8080
-    - matches:
-       - path:
-           type: PathPrefix
-           value: /bin
-         headers:
-          - name: env
-            type: Exact
-            value: canary
-      filters: []
-      backendRefs:
-        - kind: Service
-          group: ""
-          name: httpbin-2
-          namespace: default
-          port: 8080

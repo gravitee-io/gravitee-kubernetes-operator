@@ -24,22 +24,24 @@ spec:
       namespace: default
   hostname: demo.kafka.example.dev
   filters:
-  - type: ACL
-    acl:
-    - type: Topic
-      match:
-        type: Exact
-        value: demo
-      operations:
-        - Read
-        - Write
-        - Create
-    - type: Group
-      match:
-        type: Exact
-        value: demo-consumer-group
-      operations:
-        - Read
+  - type: AccessControl
+    accessControl:
+    rules:
+    - resources:
+      - type: Topic
+        match:
+          type: Exact
+          value: demo
+        operations:
+          - Read
+          - Write
+          - Create
+      - type: Group
+        match:
+          type: Exact
+          value: demo-consumer-group
+        operations:
+          - Read
   backendRefs:
     - group: ""
       kind: Service
