@@ -358,7 +358,6 @@ rules:
       - get
       - list
       - update
-      - 
   - apiGroups:
       - ""
     resources:
