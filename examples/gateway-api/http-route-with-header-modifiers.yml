@@ -37,8 +37,8 @@ spec:
             - name: x-tag
               value: kubernetes.io,gravitee.io
           set:
-            - name: x-impl
-              value: gravitee.io
+            - name: x-tag
+              value: acme.io
           remove:
             - x-rm
       - type: ResponseHeaderModifier
@@ -46,6 +46,9 @@ spec:
           set:
             - name: x-modified
               value: "true"
+          add:
+            - name: date
+              value: today
       backendRefs:
         - kind: Service
           group: ""
