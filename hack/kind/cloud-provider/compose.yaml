@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# TODO investigate how we can use this file to run kind-cloud-provider in our CI for conformance tests
 services:
   cloud-provider:
     image: registry.k8s.io/cloud-provider-kind/cloud-controller-manager:v0.6.0

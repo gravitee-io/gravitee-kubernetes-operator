@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 apiVersion: gravitee.io/v1alpha1
-kind: KafkaACLFilter
+kind: GatewayClassParameters
 metadata:
-  name: kafka-acl-filter-demo
+  name: gravitee-gateway
 spec:
-  authorizations:
-    - operations:
-      - "READ"
-      - "WRITE"
-      type: topic
-      match:
-        type: Exact
-        value: demo
-    - operations:
-      - "READ"
-      type: topic
-      match:
-        type: Exact
-        value: orders
+  gravitee:
+    licenseRef:
+      name: gravitee-license
+    kafka:
+      enabled: true
+  kubernetes:
+    deployment:
+      template:
+        spec:
+          containers:
+          - name: gateway
+            image: graviteeio/apim-gateway
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
