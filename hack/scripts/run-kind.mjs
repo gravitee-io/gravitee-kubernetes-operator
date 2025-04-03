@@ -23,7 +23,7 @@ import {
   toggleVerbosity,
 } from "./lib/index.mjs";
 
-const KIND_CONFIG = path.join(PROJECT_DIR, "tooling", "kind");
+const KIND_CONFIG = path.join(PROJECT_DIR, "hack", "kind");
 const PKI = path.join(
   PROJECT_DIR,
   "examples",

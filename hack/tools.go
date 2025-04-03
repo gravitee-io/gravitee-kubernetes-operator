@@ -15,7 +15,7 @@
 //go:build tools
 // +build tools
 
-package tooling
+package hack
 
 import (
 	_ "fybrik.io/crdoc"

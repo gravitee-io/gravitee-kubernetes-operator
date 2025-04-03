@@ -55,7 +55,7 @@ jobs:
           echo "🚀 Releasing version ${VERSION}"
           echo "    Latest: ${LATEST}"
           echo "    Dry run: ${DRY_RUN}"
-          npx zx tooling/scripts/trigger-release.mjs \
+          npx zx hack/scripts/trigger-release.mjs \
            --version ${VERSION} \
            --dry-run ${DRY_RUN} \
            --latest ${LATEST} \
