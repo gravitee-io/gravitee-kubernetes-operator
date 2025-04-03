@@ -40,4 +40,4 @@ jobs:
       - name: "Trigger test pipeline and notify on failure"
         run: |
           echo "🧪 Triggering test pipeline"
-          npx zx tooling/scripts/trigger-test.mjs --notify true --branch ${BRANCH}
+          npx zx hack/scripts/trigger-test.mjs --notify true --branch ${BRANCH}

@@ -25,7 +25,7 @@ download: ## Download all project dependencies
 .PHONY: install-go-tools
 install-go-tools: download ## Installs all required GO tools
 	@echo "Installing GO tools"
-	@cat tooling/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -I % sh -c 'GOBIN=$(LOCALBIN) go install %'
+	@cat hack/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -I % sh -c 'GOBIN=$(LOCALBIN) go install %'
 
 .PHONY: install-tools
 install-tools: install-go-tools ## Installs all required tools
