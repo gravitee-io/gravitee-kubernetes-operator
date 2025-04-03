@@ -220,7 +220,7 @@ curl -i -H "env: canary" http://demo.apis.example.dev/bin/hostname
 
 ## Traffic splitting between multiple backends
 
-You can update your HTTP route to add traffic splitting between the two backend by running the following command:
+You can update your HTTP route to add traffic splitting between the two backends by running the following command:
 
 ```sh
 kubectl apply -f examples/gateway-api/http-route-with-traffic-splitting.yaml
@@ -236,7 +236,7 @@ curl -i http://demo.apis.example.dev/bin/hostname
 
 ## Header modifier filter
 
-You update your HTTP route to add traffic splitting between the two backend by running the following command:
+You update your HTTP route test request and response header modifiers by running the following command:
 
 ```sh
 kubectl apply -f examples/gateway-api/http-route-with-header-modifiers.yml
@@ -248,9 +248,51 @@ Then you can check that headers are modified on the request and on the response 
 curl -i -H "x-tag: acme.com" -H "x-impl: acme.com" -H "x-rm: true" http://demo.apis.example.dev/bin/headers
 ```
 
+## HTTP Redirect
+
+You can update your HTTP route to test request redirects by running the following command:
+
+```sh
+kubectl apply -f examples/gateway-api/http-route-with-request-redirects.yml
+```
+
+The example test several configurations.
+
+### Replacing path prefix with host and scheme exlicitely defined
+
+Issuing the following call:
+
+```sh
+curl -iL -H "x-rule-match: first" http://demo.apis.example.dev/bin/headers
+```
+
+Should redirect to `https://httpbin.org/anything/headers`
+
+### Replacing full path with host and scheme exlicitely defined
+
+Issuing the following call:
+
+```sh
+curl -iL  -H "x-rule-match: second" http://demo.apis.example.dev/bin/headers
+```
+
+Should redirect to `https://api.gravitee.io/echo`
+
+### Replacing full path with host and scheme from request
+
+Issuing the following call:
+
+```sh
+curl -iL  -H "x-rule-match: third" http://demo.apis.example.dev/bin/hostname
+```
+
+Should redirect to `http://demo.apis.example.dev/bin/404`
+
+> In that case following the redirect leads to a 404 response status.
+
 ## Add a kafka listener to the gateway
 
-You update the gateway to add a kafka listener by running the following command:
+You can update the gateway to add a kafka listener by running the following command:
 
 ```sh
 kubectl apply -f examples/gateway-api/gateway-kafka.yaml
