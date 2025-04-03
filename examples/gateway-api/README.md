@@ -16,7 +16,7 @@ Commands are expected to be executed from the root of this respository.
 ## Run a kind cluster
 
 ```sh
-kind create cluster --config kind/kind.conformance.yaml
+kind create cluster --config hack/kind/kind.conformance.yaml
 ```
 
 > This will start Kind with ports `80`, `443` and `9092` bound to your host.
@@ -89,7 +89,7 @@ kubectl create secret generic gravitee-license --from-file=license.key
 ## Apply the gravitee.io GatewayClassParameters resource
 
 ```sh
-kubectl apply -f examples/gateway-api/gateway-class-parameters.yaml
+kubectl apply -f examples/gateway-api/gateway-class-parameters-with-license.yaml
 ```
 
 You can check if the license secret has been resolved in the gateway class status conditions by running the following command:
@@ -218,6 +218,36 @@ curl -i -H "env: canary" http://demo.apis.example.dev/bin/hostname
 ```
 
 > This should result in the httpbin-2 pod hostname being shown as an output with an HTTP 200 status.
+
+## Traffic splitting between multiple backends
+
+You can update your HTTP route to add traffic splitting between the two backend by running the following command:
+
+```sh
+kubectl apply -f examples/gateway-api/http-route-with-traffic-splitting.yaml
+```
+
+> Traffic splitting is apply on the first rule of the route.
+
+Then you should be able to reproduce what's described in the following [guide](https://gateway-api.sigs.k8s.io/guides/traffic-splitting/) by issuing the following call:
+
+```sh
+curl -i http://demo.apis.example.dev/bin/hostname
+```
+
+## Header modifier filter
+
+You update your HTTP route to add traffic splitting between the two backend by running the following command:
+
+```sh
+kubectl apply -f examples/gateway-api/http-route-with-header-modifiers.yml
+```
+
+Then you can check that headers are modified on the request and on the response by issuing the following call:
+
+```sh
+curl -i http://demo.apis.example.dev/bin/headers
+```
 
 ## Start a Kafka cluster with Strimzi
 

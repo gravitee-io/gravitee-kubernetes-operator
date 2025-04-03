@@ -219,7 +219,7 @@ jobs:
       - checkout
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
-      - go/load-cache
+      - go/load-mod-cache
       - kubernetes/install-kubectl
       - helm/install_helm_client
       - run:
@@ -228,10 +228,6 @@ jobs:
             curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
             chmod +x /tmp/kind
             sudo mv /tmp/kind /usr/local/bin/
-      - run:
-          name: Install cloud-provider-kind
-          command: |
-            make cloud-provider-kind
       - gravitee/docker-login:
           registry: graviteeio.azurecr.io
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
@@ -239,11 +235,11 @@ jobs:
       - run:
           name: Start cluster
           command: |
-            kind create cluster --config kind/kind.conformance.yaml
+            make start-conformance-cluster
       - run:
           name: Run cloud-provider-kind
           command: |
-            NET_MODE=kind docker compose -f kind/cloud-provider/compose.yaml up -d
+            NET_MODE=kind docker compose -f hack/kind/cloud-provider/compose.yaml up -d
       - run:
           name: Helm Install the Operator
           command: |
@@ -262,7 +258,7 @@ jobs:
           name: Run Gateway API Conformance Test
           command: |
             go test -v ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
-      - go/save-cache
+      - go/save-mod-cache
 
   job-integration-test:
     machine:
