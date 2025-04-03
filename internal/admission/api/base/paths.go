@@ -26,6 +26,7 @@ import (
 )
 
 func ValidateNoConflictingPath(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
+	// TODO replace with proper gateway api conflict handling as defined in the spec
 	if k8s.HasHTTPRouteOwner(api.GetOwnerReferences()) {
 		return nil
 	}
