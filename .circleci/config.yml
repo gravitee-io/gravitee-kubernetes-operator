@@ -87,7 +87,7 @@ jobs:
           name: Install GO tools
           command: make install-go-tools
       - go/save-cache
-      - save_cache:
+      - save_cache: 
           key: gotools-{{ checksum "go.sum" }}
           paths:
             - /home/circleci/project/bin
@@ -209,10 +209,6 @@ jobs:
             curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
             chmod +x /tmp/kind
             sudo mv /tmp/kind /usr/local/bin/
-      - run:
-          name: Install cloud-provider-kind
-          command: |
-            make cloud-provider-kind
       - gravitee/docker-login:
           registry: graviteeio.azurecr.io
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
@@ -220,11 +216,11 @@ jobs:
       - run:
           name: Start cluster
           command: |
-            kind create cluster --config kind/kind.conformance.yaml
+            make start-conformance-cluster
       - run:
           name: Run cloud-provider-kind
           command: |
-            NET_MODE=kind docker compose -f kind/cloud-provider/compose.yaml up -d
+            NET_MODE=kind docker compose -f hack/kind/cloud-provider/compose.yaml up -d
       - run:
           name: Helm Install the Operator
           command: |
