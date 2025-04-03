@@ -31,7 +31,7 @@ func resolveRefSpec[T any](
 	gvr schema.GroupVersionResource,
 	target T,
 ) (T, error) {
-	dynamic, err := Resolve(ctx, ref, parentNs, gvr)
+	dynamic, err := resolve(ctx, ref, parentNs, gvr)
 	if err != nil {
 		return target, err
 	}
@@ -45,7 +45,7 @@ func resolveRef[T any](
 	gvr schema.GroupVersionResource,
 	target T,
 ) (T, error) {
-	dynamic, err := Resolve(ctx, ref, parentNs, gvr)
+	dynamic, err := resolve(ctx, ref, parentNs, gvr)
 	if err != nil {
 		return target, err
 	}
@@ -55,7 +55,7 @@ func resolveRef[T any](
 	return convert(dynamic.Object, target)
 }
 
-func Resolve(
+func resolve(
 	ctx context.Context,
 	ref core.ObjectRef,
 	parentNs string,

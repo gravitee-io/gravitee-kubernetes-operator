@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import {
-  LOG,
-  setNoQuoteEscape,
-  setQuoteEscape,
-  time,
-} from "./lib/index.mjs";
+import { LOG, setNoQuoteEscape, setQuoteEscape, time } from "./lib/index.mjs";
 
 const KIND_CONFIG = path.join(__dirname, "..", "kind");
 
@@ -38,14 +33,14 @@ async function runCloudProvider() {
 }
 
 async function installCertManager() {
-    await $`
+  await $`
         helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager \
             --set config.apiVersion="controller.config.cert-manager.io/v1alpha1" \
             --set config.kind="ControllerConfiguration" \
             --set config.enableGatewayAPI=true \
              --set crds.enabled=true \
              --create-namespace
-    `
+    `;
 }
 
 LOG.blue(`
@@ -69,4 +64,3 @@ await time(installCertManager);
 LOG.blue(`
     ☸ Run the operator
 `);
-
