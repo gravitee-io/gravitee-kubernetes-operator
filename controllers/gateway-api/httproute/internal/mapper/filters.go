@@ -22,6 +22,9 @@ import (
 func buildRequestFilters(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 	steps := []*v4.FlowStep{}
 	for _, f := range rule.Filters {
+		if f.RequestRedirect != nil {
+			steps = append(steps, buildHTTPRedirect(*f.RequestRedirect))
+		}
 		if f.RequestHeaderModifier != nil {
 			steps = append(steps, buildHeaderTransformer(*f.RequestHeaderModifier))
 		}
