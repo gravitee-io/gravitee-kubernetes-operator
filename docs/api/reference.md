@@ -5140,6 +5140,8 @@ of an <a...<br/>
         <td>integer</td>
         <td>
           Endpoint Weight<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
         </td>
         <td>false</td>
       </tr></tbody>

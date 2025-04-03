@@ -18,11 +18,6 @@ kind: GatewayClassParameters
 metadata:
   name: gravitee-gateway
 spec:
-  gravitee:
-    licenseRef:
-      name: gravitee-license
-    kafka:
-      enabled: true
   kubernetes:
     deployment:
       template:
