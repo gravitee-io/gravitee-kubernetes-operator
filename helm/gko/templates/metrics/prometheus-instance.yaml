@@ -1,0 +1,38 @@
+{{- if and .Values.manager.metrics.enabled .Values.manager.metrics.prometheus.instance.create }}
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  labels:
+    control-plane: controller-manager
+    release: prometheus
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: gko-prometheus-instance
+
+spec:
+  image: quay.io/prometheus/prometheus:v2.32.1
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicas: 1
+  resources:
+    requests:
+      memory: 400Mi
+  ruleSelector: {}
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: {{ template "rbac.serviceAccountName" . }}
+  serviceMonitorNamespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: {{ .Release.Namespace }}
+  serviceMonitorSelector: {}
+
+  version: 2.32.1
+{{- end }}
