@@ -46,6 +46,18 @@ tests:
           path: data.DEV_MODE
           value: "true"
 
+  - it: Should have metrics enabled
+    set:
+      manager:
+        metrics:
+            enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: data.ENABLE_METRICS
+          value: "true"
+
   - it: Should have metrics disabled
     set:
       manager:
@@ -54,9 +66,8 @@ tests:
     asserts:
       - hasDocuments:
           count: 1
-      - equal:
+      - isNull:
           path: data.ENABLE_METRICS
-          value: "false"
 
   - it: Should have cluster scope disabled
     set:
