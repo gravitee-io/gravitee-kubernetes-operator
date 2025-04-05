@@ -40,14 +40,14 @@ func (c Expression) And(other Expression) Expression {
 	if c.IsEmpty() {
 		return other
 	}
-	return c + " && " + other
+	return c + " and " + other
 }
 
 func (c Expression) Or(other Expression) Expression {
 	if c.IsEmpty() {
 		return other
 	}
-	return c + " || " + other
+	return c + " or " + other
 }
 
 func (c Expression) Format(args ...interface{}) Expression {
@@ -59,7 +59,11 @@ func (c Expression) Negated() Expression {
 }
 
 func (c Expression) Equals(other Expression) Expression {
-	return c + " == " + other
+	return c + " eq " + other
+}
+
+func (c Expression) Matches(other Expression) Expression {
+	return c + " matches " + other
 }
 
 func (c Expression) IsEmpty() bool {

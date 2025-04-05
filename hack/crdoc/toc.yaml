@@ -28,3 +28,4 @@ groups:
       - name: Subscription
       - name: SharedPolicyGroup
       - name: Group
+      - name: GatewayClassParameters

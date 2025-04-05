@@ -40,3 +40,9 @@ bundle.yml
 
 # MacOS
 .DS_Store
+
+# Gravitee internal
+license.key
+examples/gateway-api/kafka_2.*
+kafka.ca.crt
+https.ca.crt
