@@ -39,7 +39,7 @@ func ResolveAPI(ctx context.Context, ref core.ObjectRef, parentNs string) (core.
 	if ref.GetKind() == "" {
 		refKind = ApiV4GVR.Resource
 	}
-	kind := PluralizeKind(refKind)
+	kind := ResourceFromKind(refKind)
 	switch kind {
 	case ApiGVR.Resource:
 		return resolveRef(ctx, ref, parentNs, ApiGVR, new(v1alpha1.ApiDefinition))
