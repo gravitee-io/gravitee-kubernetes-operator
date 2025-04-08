@@ -119,7 +119,7 @@ func main() {
 		log.Global.Infof("Webhook server listens on :%d", env.Config.WebhookPort)
 	}
 
-	if env.Config.EnableIngress {
+	if env.Config.EnableMetrics {
 		log.Global.Infof("Metrics server listens on %s", env.GetMetricsAddr())
 	}
 
