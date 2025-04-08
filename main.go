@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"embed"
-	"flag"
 	"fmt"
 	"io/fs"
 	"os"
@@ -105,10 +104,6 @@ func main() {
 		EncoderConfigOptions: logging.NewEncoderConfigOption(),
 	}
 
-	opts.BindFlags(flag.CommandLine)
-
-	flag.Parse()
-
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	if env.Config.HTTPClientInsecureSkipVerify {
@@ -126,10 +121,15 @@ func main() {
 		Metrics:                metrics,
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: env.GetProbesAddr(),
-		LeaderElection:         true,
+		LeaderElection:         env.Config.EnableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
 	})
+
+	if err != nil {
+		setupLog.Error(err, "Unable to configure manager")
+		os.Exit(1)
+	}
 
 	k8s.RegisterClient(mgr.GetClient())
 

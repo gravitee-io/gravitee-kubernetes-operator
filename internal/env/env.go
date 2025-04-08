@@ -28,6 +28,7 @@ const (
 	CMTemplate404NS                      = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
 	Development                          = "DEV_MODE"
 	NS                                   = "NAMESPACE"
+	EnableLeaderElection                 = "ENABLE_LEADER_ELECTION"
 	ApplyCRDs                            = "APPLY_CRDS"
 	EnableMetrics                        = "ENABLE_METRICS"
 	SecureMetrics                        = "SECURE_METRICS"
@@ -56,6 +57,7 @@ const (
 var Config = struct {
 	NS                                   string
 	ApplyCRDs                            bool
+	EnableLeaderElection                 bool
 	EnableMetrics                        bool
 	SecureMetrics                        bool
 	MetricsCertDir                       string
@@ -78,6 +80,7 @@ var Config = struct {
 
 func init() {
 	Config.NS = os.Getenv(NS)
+	Config.EnableLeaderElection = os.Getenv(EnableLeaderElection) == TrueString
 	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == TrueString
 	Config.Development = os.Getenv(Development) == TrueString
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
