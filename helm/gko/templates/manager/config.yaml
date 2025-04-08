@@ -34,6 +34,7 @@ data:
   {{- if .Values.manager.applyCRDs }}
   APPLY_CRDS: "true"
   {{- end }}
+  ENABLE_LEADER_ELECTION: "true"
   {{- if not .Values.manager.logs.json }}
   DEV_MODE: "true"
   {{- end }}
