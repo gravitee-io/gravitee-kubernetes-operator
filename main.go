@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"embed"
-	"flag"
 	"fmt"
 	"io/fs"
 	"os"
@@ -101,8 +100,6 @@ func main() {
 		})
 	}
 
-	flag.Parse()
-
 	if env.Config.HTTPClientInsecureSkipVerify {
 		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
@@ -128,10 +125,15 @@ func main() {
 		Metrics:                metrics,
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: env.GetProbesAddr(),
-		LeaderElection:         true,
+		LeaderElection:         env.Config.EnableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
 	})
+
+	if err != nil {
+		log.Global.Error(err, "Unable to configure manager")
+		os.Exit(1)
+	}
 
 	k8s.RegisterClient(mgr.GetClient())
 
