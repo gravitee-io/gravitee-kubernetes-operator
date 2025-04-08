@@ -35,17 +35,37 @@ const url = base.toString();
 
 console.log(`Testing connection to: ${url}`);
 
-try {
-    const response = await fetch(url);
-    const actualStatusCode = response.status;
+const maxRetry = 20; // Maximum number of retries
+const retryDelay = 500; // Delay in milliseconds between retries
 
-    if (actualStatusCode !== parseInt(expectedStatusCode, 10)) {
-        console.error(`Test failed: Expected ${expectedStatusCode} but got ${actualStatusCode} when calling ${url}`);
-        process.exit(1);
-    } else {
-        console.log(`Connection test passed: ${url} returned ${expectedStatusCode}`);
+let attempt = 0;
+let success = false;
+
+while (attempt < maxRetry && !success) {
+    attempt++;
+    console.log(`Attempt ${attempt} to connect to: ${url}`);
+
+    try {
+        const response = await fetch(url);
+        const actualStatusCode = response.status;
+
+        if (actualStatusCode !== parseInt(expectedStatusCode, 10)) {
+            console.error(`Test failed: Expected ${expectedStatusCode} but got ${actualStatusCode} when calling ${url}`);
+        } else {
+            console.log(`Connection test passed: ${url} returned ${expectedStatusCode}`);
+            success = true;
+        }
+    } catch (error) {
+        console.error(`Error during fetch request to ${url}: ${error.message}`);
     }
-} catch (error) {
-    console.error(`Error during fetch request to ${url}: ${error.message}`);
+
+    if (!success && attempt < maxRetry) {
+        console.log(`Retrying in ${retryDelay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+}
+
+if (!success) {
+    console.error(`Failed to connect to ${url} after ${maxRetry} attempts.`);
     process.exit(1);
 }

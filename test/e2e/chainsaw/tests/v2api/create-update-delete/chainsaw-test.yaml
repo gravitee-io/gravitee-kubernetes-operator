@@ -55,7 +55,6 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            sleep 10
             npx zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 200
     catch:
       - podLogs:
@@ -91,8 +90,6 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            echo "Waiting 10s for API to be deployed and accessible ..."
-            sleep 10
             npx zx $COMMAND_DIR/callGateway.mjs --endpoint updated-path --status 200
     catch:
       - podLogs:
@@ -108,8 +105,6 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            echo "Waiting 10s for API to be deployed and accessible ..."
-            sleep 10
             npx zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 404   
 
   - name: delete-api
@@ -139,8 +134,6 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
             content: |
-              echo "Waiting 10s for API to be deleted ..."
-              sleep 10
               npx zx $COMMAND_DIR/callGateway.mjs --endpoint updated-path --status 404
     catch:
         - podLogs:
