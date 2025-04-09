@@ -2769,6 +2769,13 @@ Custom HTTP SSL client options used for this endpoint
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexsslheadersindex">headers</a></b></td>
+        <td>[]object</td>
+        <td>
+          Http headers<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexendpointsindexsslkeystore">keyStore</a></b></td>
         <td>object</td>
         <td>
@@ -2780,6 +2787,40 @@ Custom HTTP SSL client options used for this endpoint
         <td>object</td>
         <td>
           TrustStore type (possible values PEM, PKCS12, JKS)<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.proxy.groups[index].endpoints[index].ssl.headers[index]
+[Go to parent definition](#apidefinitionspecproxygroupsindexendpointsindexssl)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3547,6 +3588,13 @@ Custom HTTP SSL client options used for this EndpointGroup
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionspecproxygroupsindexsslheadersindex">headers</a></b></td>
+        <td>[]object</td>
+        <td>
+          Http headers<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspecproxygroupsindexsslkeystore">keyStore</a></b></td>
         <td>object</td>
         <td>
@@ -3558,6 +3606,40 @@ Custom HTTP SSL client options used for this EndpointGroup
         <td>object</td>
         <td>
           TrustStore type (possible values PEM, PKCS12, JKS)<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.proxy.groups[index].ssl.headers[index]
+[Go to parent definition](#apidefinitionspecproxygroupsindexssl)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -3903,6 +3985,13 @@ Reference to a resource
         <td>map[string]string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>propagateErrorKeyToLogs</b></td>
+        <td>boolean</td>
+        <td>
+          Propagate error key to logs<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -5256,6 +5345,13 @@ Endpoint group http client SSL options
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionspecendpointgroupsindexsslheadersindex">headers</a></b></td>
+        <td>[]object</td>
+        <td>
+          Http headers<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apiv4definitionspecendpointgroupsindexsslkeystore">keyStore</a></b></td>
         <td>object</td>
         <td>
@@ -5267,6 +5363,40 @@ Endpoint group http client SSL options
         <td>object</td>
         <td>
           TrustStore type (possible values PEM, PKCS12, JKS)<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.endpointGroups[index].ssl.headers[index]
+[Go to parent definition](#apiv4definitionspecendpointgroupsindexssl)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header name<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          The HTTP header value<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -7253,6 +7383,13 @@ Reference to a resource
         <td>map[string]string</td>
         <td>
           <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>propagateErrorKeyToLogs</b></td>
+        <td>boolean</td>
+        <td>
+          Propagate error key to logs<br/>
         </td>
         <td>false</td>
       </tr><tr>

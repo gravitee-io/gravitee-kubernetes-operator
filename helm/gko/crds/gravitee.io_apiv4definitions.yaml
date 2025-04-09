@@ -471,6 +471,18 @@ spec:
                       ssl:
                         description: Endpoint group http client SSL options
                         properties:
+                          headers:
+                            description: Http headers
+                            items:
+                              properties:
+                                name:
+                                  description: The HTTP header name
+                                  type: string
+                                value:
+                                  description: The HTTP header value
+                                  type: string
+                              type: object
+                            type: array
                           hostnameVerifier:
                             default: true
                             description: Verify Hostname when establishing connection
@@ -1290,6 +1302,9 @@ spec:
                           additionalProperties:
                             type: string
                           type: object
+                        propagateErrorKeyToLogs:
+                          description: Propagate error key to logs
+                          type: boolean
                         status:
                           type: integer
                       type: object
