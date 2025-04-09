@@ -96,4 +96,6 @@ type ResponseTemplate struct {
 	StatusCode int               `json:"status,omitempty"`
 	Headers    map[string]string `json:"headers,omitempty"`
 	Body       string            `json:"body,omitempty"`
+	// Propagate error key to logs
+	PropagateErrorKeyToLogs *bool `json:"propagateErrorKeyToLogs,omitempty"`
 }
