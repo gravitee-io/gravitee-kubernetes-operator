@@ -26,7 +26,7 @@ toggleVerbosity(VERBOSE);
 LOG.blue(`Triggering E2E test pipeline`);
 
 const parameters = {
-  trigger: "test",
+  trigger: "e2e",
 };
 
 LOG.blue(`
