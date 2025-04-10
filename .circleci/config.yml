@@ -21,6 +21,7 @@ parameters:
     enum:
       - test
       - release
+      - e2e
       - none
   release-version:
     type: string
@@ -252,6 +253,20 @@ jobs:
           paths:
             - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
+
+  job-e2e-tests:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - run:
+          name: Install Chainsaw
+          command: |
+            GOBIN=$(PWD)/bin go install github.com/kyverno/chainsaw@latest
+      - run:
+          name: Print Chainsaw help
+          command: |
+            chainsaw -h
 
   job-stage-image:
     docker:
@@ -773,3 +788,14 @@ workflows:
                       event: pass
                       template: basic_success_1
                       branch_pattern: ".+"
+
+  e2e-test:
+    when:
+      equal:
+        - e2e
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-e2e-tests:
+          name: Run End-to-End tests
+          context: cicd-orchestrator
+
