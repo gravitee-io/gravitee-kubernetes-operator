@@ -266,7 +266,7 @@ jobs:
       - run:
           name: Print Chainsaw help
           command: |
-            chainsaw -h
+            bin/chainsaw -h
 
   job-stage-image:
     docker:
