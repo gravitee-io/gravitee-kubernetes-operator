@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-    gravitee.io/operator.version: 4.4.24
+    gravitee.io/operator.version: 4.4.25
   name: apidefinitions.gravitee.io
 spec:
   group: gravitee.io
