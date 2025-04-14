@@ -16,19 +16,18 @@
 apiVersion: chainsaw.kyverno.io/v1alpha2
 kind: Configuration
 metadata:
-  name: example
+  name: chainsaw-e2e-tests
 spec:
-  # discovery:
-  #   testFile: chainsaw-test
-  #   includeTestRegex: tests/v2api/invalid-v2api/.*
+  discovery:
+    testFile: chainsaw-test
   timeouts:
     apply: 5s
     assert: 5s
     cleanup: 10s
     delete: 15s
     error: 10s
-    exec: 30s     # for commands and scripts
-  # report:
-  #   format: XML
-  #   name: chainsaw-report
-  #   path: ./reports
+    exec: 30s     
+  report:
+    format: XML
+    name: chainsaw-junit-reports
+    path: /tmp/junit/reports-e2e

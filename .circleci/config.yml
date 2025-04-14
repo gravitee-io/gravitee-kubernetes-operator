@@ -76,6 +76,17 @@ commands:
       - keeper/env-export:
           secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
           var-name: AZURE_SP_PASSWORD
+  cmd-setup-azure-login-e2e:
+    steps:
+      - keeper/env-export:
+          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_APPLICATION_ID
+          var-name: AZURE_APPLICATION_ID
+      - keeper/env-export:
+          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_TENANT
+          var-name: AZURE_TENANT
+      - keeper/env-export:
+          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_APPLICATION_SECRET
+          var-name: AZURE_APPLICATION_SECRET
 jobs:
   job-install-go-tools:
     docker:
@@ -257,16 +268,29 @@ jobs:
   job-e2e-tests:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    environment:
+      APIM_GATEWAY: "https://apim-stable-gateway.team-gko.gravitee.dev"
     steps:
       - checkout
+      - kubernetes/install-kubectl
+      - azure-cli/install
+      - cmd-setup-azure-login-e2e
+      - run:
+          name: Run az job-azure-login-e2e
+          command: |
+            az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
+            az aks get-credentials --admin --resource-group Devs-Gko-Hosted --name gravitee-devs-gko-aks-cluster
+      - run:
+          name: Create junit reports directory for e2e tests
+          command: mkdir -p "/tmp/junit/reports-e2e"
       - run:
           name: Install Chainsaw
           command: |
             GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@latest
       - run:
-          name: Print Chainsaw help
+          name: Run Chainsaw tests
           command: |
-            bin/chainsaw -h
+            bin/chainsaw test --config test/e2e/chainsaw/config.yaml
 
   job-stage-image:
     docker:
