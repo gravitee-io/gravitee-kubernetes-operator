@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-await dotenv.config('.env');
+await dotenv.config(`${__dirname}/../.env`);
 const { endpoint: endpointPath, status: expectedStatusCode } = argv;
 
 if (!endpointPath || !expectedStatusCode) {
@@ -35,7 +35,7 @@ const url = base.toString();
 
 console.log(`Testing connection to: ${url}`);
 
-const maxRetry = 20; // Maximum number of retries
+const maxRetry = 20; 
 const retryDelay = 500; // Delay in milliseconds between retries
 
 let attempt = 0;
