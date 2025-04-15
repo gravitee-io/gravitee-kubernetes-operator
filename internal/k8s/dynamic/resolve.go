@@ -49,7 +49,7 @@ func resolveRef[T any](
 	if err != nil {
 		return target, err
 	}
-	if err := template.Compile(ctx, dynamic); err != nil {
+	if err := template.Compile(ctx, dynamic, true); err != nil {
 		return target, err
 	}
 	return convert(dynamic.Object, target)
