@@ -111,7 +111,7 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) e
 		return err
 	}
 
-	if err := template.Compile(ctx, spg); err != nil {
+	if err := template.Compile(ctx, spg, true); err != nil {
 		return err
 	}
 
