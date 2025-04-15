@@ -16,11 +16,19 @@ package watch
 
 import (
 	"context"
+<<<<<<< HEAD
 	"fmt"
 	"reflect"
+=======
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/types/list"
@@ -32,6 +40,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type Interface interface {
@@ -39,10 +49,19 @@ type Interface interface {
 	WatchResources() *handler.Funcs
 	WatchApiTemplate() *handler.Funcs
 	WatchTLSSecret() *handler.Funcs
+<<<<<<< HEAD
+=======
+	WatchTemplatingSource(objKind string) *handler.Funcs
+	WatchSharedPolicyGroups(index indexer.IndexField) *handler.Funcs
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 }
 
 type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.RateLimitingInterface)
 type CreateFunc = func(context.Context, event.CreateEvent, workqueue.RateLimitingInterface)
+
+var NoopCreateFunc = func(context.Context, event.CreateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+
+}
 
 type Type struct {
 	ctx        context.Context
@@ -127,6 +146,25 @@ func (w *Type) WatchTLSSecret() *handler.Funcs {
 	}
 }
 
+<<<<<<< HEAD
+=======
+// WatchSharedPolicyGroups can be used to trigger a reconciliation when a SPG is updated
+// on resources that should be synced with this SOG.
+func (w *Type) WatchSharedPolicyGroups(index indexer.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
+	}
+}
+
+func (w *Type) WatchTemplatingSource(objKind string) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: NoopCreateFunc,
+		UpdateFunc: w.UpdateForTemplating(objKind),
+	}
+}
+
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 // UpdateFromLookup creates an updater function that will trigger an update
 // on all resources that are referencing the updated object.
 // The lookupField is the field that is used to lookup the resources.
@@ -185,4 +223,49 @@ func (w *Type) queueByFieldReferencing(
 			}})
 		}
 	}
+}
+
+func (w *Type) UpdateForTemplating(objKind string) UpdateFunc {
+	return func(_ context.Context, e event.UpdateEvent, q workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+		w.queueForTemplating(objKind, e.ObjectOld, q)
+	}
+}
+
+func (w *Type) queueForTemplating(
+	objKind string,
+	obj client.Object,
+	q workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
+	if !util.ContainsFinalizer(obj, core.TemplatingFinalizer) {
+		return
+	}
+
+	annotationValue := obj.GetAnnotations()[getObjectAnnotationName(objKind)]
+	if annotationValue != "" {
+		values := make([]string, 0)
+		if err := json.Unmarshal([]byte(annotationValue), &values); err != nil {
+			log.Error(
+				w.ctx,
+				err,
+				fmt.Sprintf("Error while extracting list items of kind [%s]", objKind),
+			)
+			return
+		}
+
+		for _, val := range values {
+			q.Add(reconcile.Request{NamespacedName: getNamespacedName(val)})
+		}
+	}
+}
+
+func getNamespacedName(annotationValueItem string) types.NamespacedName {
+	nsAndName := strings.Split(annotationValueItem, "/")
+	return types.NamespacedName{
+		Name:      nsAndName[1],
+		Namespace: nsAndName[0],
+	}
+}
+
+func getObjectAnnotationName(objKind string) string {
+	return "gravitee.io/" + objKind
 }

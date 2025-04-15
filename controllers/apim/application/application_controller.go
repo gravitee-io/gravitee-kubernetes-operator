@@ -21,6 +21,15 @@ import (
 	"fmt"
 	"time"
 
+<<<<<<< HEAD
+=======
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
@@ -89,9 +98,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			return err
 		}
 
+<<<<<<< HEAD
 		if err := delegate.ResolveContext(application); err != nil {
 			status.Status = v1alpha1.ProcessingStatusFailed
 			logger.Error(err, "Unable to resolve context, no attempt will be made to sync with APIM")
+=======
+		if err := template.Compile(ctx, dc, true); err != nil {
+			application.Status.ProcessingStatus = core.ProcessingStatusFailed
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 			return err
 		}
 
@@ -135,6 +149,8 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Application{}).
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("applications")).
+		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("applications")).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

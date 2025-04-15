@@ -48,7 +48,11 @@ func (d *Delegate) resolveIfRef(resourceOrRef *base.ResourceOrRef) error {
 		return err
 	}
 
+<<<<<<< HEAD
 	if err := d.resolveResourceTemplate(resource); err != nil {
+=======
+	if err := template.Compile(ctx, resource, true); err != nil {
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 		return err
 	}
 

@@ -14,7 +14,13 @@
 
 package list
 
+<<<<<<< HEAD:pkg/types/list/list.go
 import "sigs.k8s.io/controller-runtime/pkg/client"
+=======
+import (
+	"strings"
+)
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes):internal/k8s/dynamic/kind.go
 
 type Item interface {
 	GetName() string
