@@ -16,6 +16,7 @@ package template
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,7 +24,7 @@ import (
 
 type valMapper func(interface{}) (interface{}, error)
 
-func traverse(ctx context.Context, obj runtime.Object) (interface{}, error) {
+func traverse(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) (interface{}, error) {
 	inner, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
 		return obj, err
@@ -41,9 +42,13 @@ func traverse(ctx context.Context, obj runtime.Object) (interface{}, error) {
 	cp["status"] = nil
 	cp["metadata"] = nil
 
+	isDeleted, err := isResourceDeleted(inner)
+	if err != nil {
+		return nil, err
+	}
 	result, err := doTraverse(cp, func(val interface{}) (interface{}, error) {
 		if v, ok := val.(string); ok {
-			return exec(ctx, v, ns)
+			return exec(ctx, v, ns, isDeleted, updateObjectMetadata)
 		}
 
 		return val, nil
@@ -58,6 +63,16 @@ func traverse(ctx context.Context, obj runtime.Object) (interface{}, error) {
 	inner["spec"] = resultMap["spec"]
 
 	return inner, nil
+}
+
+func isResourceDeleted(obj map[string]interface{}) (bool, error) {
+	metadata, ok := obj["metadata"].(map[string]interface{})
+	if !ok {
+		return false, fmt.Errorf("missing object metadata or unsupported type")
+	}
+
+	_, ok = metadata["deletionTimestamp"]
+	return ok, nil
 }
 
 func doTraverse(obj interface{}, mapper valMapper) (interface{}, error) {

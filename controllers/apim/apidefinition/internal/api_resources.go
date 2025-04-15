@@ -49,7 +49,7 @@ func resolveIfRef(ctx context.Context, resourceOrRef *base.ResourceOrRef) error 
 		return err
 	}
 
-	if err := template.Compile(ctx, resource); err != nil {
+	if err := template.Compile(ctx, resource, true); err != nil {
 		return err
 	}
 
