@@ -41,6 +41,8 @@ const (
 	WebhookServiceName                   = "WEBHOOK_SERVICE_NAME"
 	WebhookPort                          = "WEBHOOK_SERVICE_PORT"
 	WebhookCertSecret                    = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not a hardcoded secret
+	WebhookValidatingConfigurationName   = "WEBHOOK_VALIDATING_CONFIGURATION_NAME"
+	WebhookMutatingConfigurationName     = "WEBHOOK_MUTATING_CONFIGURATION_NAME"
 	HttpCLientInsecureSkipCertVerify     = "HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY"
 	HttpClientTimeoutSeconds             = "HTTP_CLIENT_TIMEOUT_SECONDS"
 	TrueString                           = "true"
@@ -74,6 +76,8 @@ var Config = struct {
 	WebhookService                       string
 	WebhookPort                          int
 	WebhookCertSecret                    string
+	WebhookValidatingConfigurationName   string
+	WebhookMutatingConfigurationName     string
 	Development                          bool
 	CMTemplate404Name                    string
 	CMTemplate404NS                      string
@@ -108,6 +112,8 @@ func init() {
 	Config.WebhookService = os.Getenv(WebhookServiceName)
 	Config.WebhookCertSecret = os.Getenv(WebhookCertSecret)
 	Config.WebhookPort = parseInt(WebhookPort, defaultWebhookPort)
+	Config.WebhookValidatingConfigurationName = os.Getenv(WebhookValidatingConfigurationName)
+	Config.WebhookMutatingConfigurationName = os.Getenv(WebhookMutatingConfigurationName)
 	Config.CheckApiContextPathConflictInCluster = os.Getenv(CheckApiContextPathConflictInCluster) == TrueString
 	var ingressClass string
 	if ingressClass = core.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {

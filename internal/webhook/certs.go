@@ -35,11 +35,9 @@ import (
 )
 
 const (
-	CertName              = "cert"
-	KeyName               = "key"
-	caName                = "ca"
-	ValidatingWebhookName = "gko-validating-webhook-configurations"
-	MutatingWebhookName   = "gko-mutating-webhook-configurations"
+	CertName = "cert"
+	KeyName  = "key"
+	caName   = "ca"
 )
 
 type Patcher struct {
