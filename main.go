@@ -331,7 +331,7 @@ func patchAdmissionWebhook() {
 
 	err = webhookPatcher.UpdateValidationCaBundle(
 		context.Background(),
-		wk.ValidatingWebhookName,
+		env.Config.WebhookValidatingConfigurationName,
 		env.Config.WebhookCertSecret,
 		ns)
 	if err != nil {
@@ -341,7 +341,7 @@ func patchAdmissionWebhook() {
 
 	err = webhookPatcher.UpdateMutationCaBundle(
 		context.Background(),
-		wk.MutatingWebhookName,
+		env.Config.WebhookMutatingConfigurationName,
 		env.Config.WebhookCertSecret,
 		ns)
 	if err != nil {

@@ -162,6 +162,32 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+ Create the name of the validating webhook configuration
+ */}}
+{{/*
+ Create the name of the validating webhook configuration
+ */}}
+{{- define "gko.ValidatingWebhookConfigurationName" -}}
+{{- if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+{{- printf "%s-%s" (include "rbac.serviceAccountName" .) .Values.manager.webhook.configuration.validatingName | trunc 63 | trimSuffix "-" -}}
+{{- else }}
+{{- print .Values.manager.webhook.configuration.validatingName -}}
+{{- end }}
+{{- end }}
+
+{{/*
+ Create the name of the validating webhook configuration
+ */}}
+{{- define "gko.MutatingWebhookConfigurationName" -}}
+{{- if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+{{- printf "%s-%s" (include "rbac.serviceAccountName" .) .Values.manager.webhook.configuration.mutatingName | trunc 63 | trimSuffix "-" -}}
+{{- else }}
+{{- print .Values.manager.webhook.configuration.mutatingName -}}
+{{- end }}
+{{- end }}
+
+
+{{/*
  merge list of ingress classes into a single string that will be parsed later in the code
  */}}
 {{- define "ingress.Classes" -}}

@@ -128,6 +128,13 @@ manager:
   webhook:
     ## @param manager.webhook.enabled If true, the manager will register a webhook server operating on custom resources.
     enabled: true
+    configuration:
+      ## @param manager.webhook.configuration.validatingName The name of ValidatingWebhookConfiguration resource created to access the validation controller.
+      validatingName: gko-validating-webhook-configurations
+      ## @param manager.webhook.configuration.mutatingName The name of MutatingWebhookConfiguration resource created to access the mutation controller.
+      mutatingName: gko-mutating-webhook-configurations
+      ## @param manager.webhook.configuration.useAutoUniqueNames If true each install will take care on prefixing the validating and mutating configuration names with the service account name. This allow deploying one operator per namespace, each using their own service account and webhook configurations.
+      useAutoUniqueNames: false
     service:
       ## @param manager.webhook.service.name The service used to expose the webhook server.
       name: gko-webhook
