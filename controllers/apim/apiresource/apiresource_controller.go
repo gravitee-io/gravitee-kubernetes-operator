@@ -68,7 +68,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(apiResource, core.ApiResourceFinalizer)
 		k8s.AddAnnotation(apiResource, core.LastSpecHashAnnotation, hash.Calculate(&apiResource.Spec))
 
+<<<<<<< HEAD
 		if err := template.Compile(ctx, apiResource); err != nil {
+=======
+		if err := template.Compile(ctx, dc, true); err != nil {
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 			return err
 		}
 

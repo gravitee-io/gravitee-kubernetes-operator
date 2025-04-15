@@ -14,7 +14,16 @@
 
 package model
 
+<<<<<<< HEAD:internal/apim/model/group.go
 type Group struct {
 	ID   string `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
+=======
+import (
+	"strings"
+)
+
+func PluralizeKind(kind string) string {
+	return strings.TrimRight(strings.ToLower(kind), "s") + "s"
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes):internal/k8s/dynamic/kind.go
 }
