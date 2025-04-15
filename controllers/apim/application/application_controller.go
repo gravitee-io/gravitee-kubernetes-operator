@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -81,8 +83,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(application, keys.ApplicationFinalizer)
 		k8s.AddAnnotation(application, keys.LastSpecHash, hash.Calculate(&application.Spec))
 
+<<<<<<< HEAD
 		if err := template.Compile(ctx, application); err != nil {
 			application.Status.Status = custom.ProcessingStatusFailed
+=======
+	_, err := util.CreateOrUpdate(ctx, r.Client, application, func() error {
+		util.AddFinalizer(application, core.ApplicationFinalizer)
+		k8s.AddAnnotation(application, core.LastSpecHashAnnotation, hash.Calculate(&application.Spec))
+
+		if err := template.Compile(ctx, dc, true); err != nil {
+			application.Status.ProcessingStatus = core.ProcessingStatusFailed
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes)
 			return err
 		}
 
@@ -126,6 +137,8 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Application{}).
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.AppContextField)).
+		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("applications")).
+		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("applications")).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

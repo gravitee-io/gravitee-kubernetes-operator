@@ -21,9 +21,20 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+<<<<<<< HEAD:internal/uuid/suite_test.go
 func TestUUID(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "package uuid")
+=======
+func CompileAndValidateTemplate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
+	err := template.Compile(ctx, obj, false)
+
+	if err != nil {
+		return errors.NewSeveref("%s", err.Error())
+	}
+
+	return nil
+>>>>>>> cc9c9c0 (fix: update templated resources on source changes):internal/admission/template.go
 }
 
 var _ = Describe("FromStrings", func() {
