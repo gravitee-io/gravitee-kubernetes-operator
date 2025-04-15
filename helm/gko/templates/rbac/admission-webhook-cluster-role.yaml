@@ -20,7 +20,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ template "rbac.AdmissionWebhookRoleName" . }}
-  namespace: '{{ .Release.Namespace }}'
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -38,7 +38,7 @@ rules:
       - get
       - update
     resourceNames:
-      - gko-validating-webhook-configurations
+      - {{ template "gko.ValidatingWebhookConfigurationName" . }}
   - apiGroups:
       - admissionregistration.k8s.io
     resources:
@@ -47,7 +47,7 @@ rules:
       - get
       - update
     resourceNames:
-      - gko-mutating-webhook-configurations
+      - {{ template "gko.MutatingWebhookConfigurationName" . }}
 {{- end }}
 {{- end }}
 {{- end }}

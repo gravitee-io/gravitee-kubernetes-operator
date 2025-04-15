@@ -24,7 +24,7 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-  name: gko-mutating-webhook-configurations
+  name: {{ template "gko.MutatingWebhookConfigurationName" . }}
   namespace: {{ .Release.Namespace }}
 webhooks:
 - name: v1alpha1.gravitee.io.managementcontext
