@@ -76,6 +76,8 @@ data:
   WEBHOOK_NAMESPACE: {{ .Release.Namespace }}
   WEBHOOK_SERVICE_NAME: {{ .Values.manager.webhook.service.name }}
   WEBHOOK_SERVICE_PORT: {{ quote .Values.manager.webhook.service.port }}
+  WEBHOOK_VALIDATING_CONFIGURATION_NAME: {{ template "gko.ValidatingWebhookConfigurationName" . }}
+  WEBHOOK_MUTATING_CONFIGURATION_NAME: {{ template "gko.MutatingWebhookConfigurationName" . }}
   {{- if .Values.manager.webhook.admission.checkApiContextPathConflictInCluster }}
   CHECK_API_CONTEXT_PATH_CONFLICT_IN_CLUSTER: "true"
   {{- end }}
