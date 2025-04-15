@@ -18,12 +18,23 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+<<<<<<< HEAD
 	coreerrors "errors"
+=======
+	"encoding/json"
+	"errors"
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
+<<<<<<< HEAD
 	"k8s.io/apimachinery/pkg/api/errors"
+=======
+	kErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/sets"
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -40,22 +51,62 @@ import (
 // example my-configmap/key1.
 const ksPropertyLength = 2
 
+<<<<<<< HEAD
 func Compile(ctx context.Context, obj runtime.Object) error {
 	return exec(ctx, obj)
 }
 
 func exec(ctx context.Context, obj runtime.Object) error {
 	text, err := yaml.Marshal(obj)
+=======
+type ctxKey string
+
+const objectIDCtxKey = ctxKey("gravitee.io/templating/objectId")
+const objectAnnotationKey = ctxKey("gravitee.io/templating/annotationKey")
+const totalReferenceKey = "gravitee.io/references"
+
+func Compile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) error {
+	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return err
+	}
+	return doCompile(
+		context.WithValue(
+			context.
+				WithValue(ctx, objectIDCtxKey, getUnstructuredObjectID(u)),
+			objectAnnotationKey, getObjectAnnotationName(u),
+		),
+		obj,
+		updateObjectMetadata,
+	)
+}
+
+func doCompile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) error {
+	c, err := traverse(ctx, obj, updateObjectMetadata)
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 	if err != nil {
 		return err
 	}
 
+<<<<<<< HEAD
 	funcMap := map[string]interface{}{
 		"configmap": func(name string) (string, error) {
 			return resolveConfigmap(ctx, obj, name)
 		},
 		"secret": func(name string) (string, error) {
 			return resolveSecret(ctx, obj, name)
+=======
+	return runtime.DefaultUnstructuredConverter.FromUnstructured(objData, obj)
+}
+
+func exec(ctx context.Context, text, ns string, parentResourceDeleted, updateObjectMetadata bool) (string, error) {
+	funcMap := map[string]interface{}{
+		"configmap": func(name string) (string, error) {
+			return resolveConfigmap(ctx, ns, name, parentResourceDeleted, updateObjectMetadata)
+		},
+		"secret": func(name string) (string, error) {
+			return resolveSecret(ctx, ns, name, parentResourceDeleted, updateObjectMetadata)
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 		},
 	}
 
@@ -78,7 +129,12 @@ func exec(ctx context.Context, obj runtime.Object) error {
 	return yaml.Unmarshal(buf.Bytes(), obj)
 }
 
+<<<<<<< HEAD
 func resolveConfigmap(ctx context.Context, obj runtime.Object, name string) (string, error) {
+=======
+func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDeleted,
+	updateObjectMetadata bool) (string, error) {
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 	if name == "" {
 		return "", fmt.Errorf("empty configmap name")
 	}
@@ -108,19 +164,36 @@ func resolveConfigmap(ctx context.Context, obj runtime.Object, name string) (str
 		return "", err
 	}
 
-	if err = addFinalizer(ctx, cm); err != nil {
-		return "", err
-	}
-
 	key := sp[1]
 	v := cm.Data[key]
 	if v == "" {
 		return "", fmt.Errorf("key [%s] not found in configmap [%s/%s]", key, u.GetNamespace(), name)
 	}
+	if !updateObjectMetadata {
+		return v, nil
+	}
+
+	totalReference, updated, err := updateAnnotation(ctx, cm, parentResourceDeleted)
+	if err != nil {
+		return "", err
+	}
+
+	if updated {
+		updateFinalizer(ctx, cm, parentResourceDeleted && totalReference == 0)
+		if err := k8s.UpdateSafely(ctx, cm); err != nil {
+			return "", err
+		}
+	}
+
 	return v, nil
 }
 
+<<<<<<< HEAD
 func resolveSecret(ctx context.Context, obj runtime.Object, name string) (string, error) {
+=======
+func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
+	updateObjectMetadata bool) (string, error) {
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 	if name == "" {
 		return "", fmt.Errorf("empty secret name")
 	}
@@ -150,38 +223,99 @@ func resolveSecret(ctx context.Context, obj runtime.Object, name string) (string
 		return "", err
 	}
 
-	if err = addFinalizer(ctx, sec); err != nil {
-		return "", err
-	}
-
 	key := sp[1]
 	v := sec.Data[key]
 	if len(v) == 0 {
 		return "", fmt.Errorf("key [%s] not found in secret [%s/%s]", key, u.GetNamespace(), name)
 	}
+
+	if !updateObjectMetadata {
+		return string(v), nil
+	}
+
+	totalReference, updated, err := updateAnnotation(ctx, sec, parentResourceDeleted)
+	if err != nil {
+		return "", err
+	}
+
+	if updated {
+		updateFinalizer(ctx, sec, parentResourceDeleted && totalReference == 0)
+		if err := k8s.UpdateSafely(ctx, sec); err != nil {
+			return "", err
+		}
+	}
+
 	return string(v), nil
 }
 
-func addFinalizer(ctx context.Context, obj client.Object) error {
-	if !util.ContainsFinalizer(obj, core.TemplatingFinalizer) {
-		var object client.Object
-		switch obj.(type) {
-		case *v1.ConfigMap:
-			object = new(v1.ConfigMap)
-		case *v1.Secret:
-			object = new(v1.Secret)
-		}
-
-		nn := types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
-		cli := k8s.GetClient()
-		if err := cli.Get(ctx, nn, object); err != nil {
-			return err
-		}
-
-		util.AddFinalizer(object, core.TemplatingFinalizer)
-
-		return k8s.UpdateSafely(ctx, object)
+func updateFinalizer(_ context.Context, obj client.Object, unreferenced bool) {
+	if unreferenced && util.ContainsFinalizer(obj, core.TemplatingFinalizer) {
+		util.RemoveFinalizer(obj, core.TemplatingFinalizer)
+		return
 	}
 
-	return nil
+	if !util.ContainsFinalizer(obj, core.TemplatingFinalizer) {
+		util.AddFinalizer(obj, core.TemplatingFinalizer)
+	}
+}
+
+func updateAnnotation(ctx context.Context, obj client.Object, parentResourceDeleted bool) (int, bool, error) {
+	annotationKey, _ := ctx.Value(objectAnnotationKey).(string)
+	objID, _ := ctx.Value(objectIDCtxKey).(string)
+	annotationValue, ok := obj.GetAnnotations()[annotationKey]
+	if !ok {
+		annotationValue = "[]"
+	}
+	totalReferenceString, ok := obj.GetAnnotations()[totalReferenceKey]
+	if !ok {
+		totalReferenceString = "0"
+	}
+	totalReference, err := strconv.Atoi(totalReferenceString)
+	if err != nil {
+		return 0, false, err
+	}
+	values := make([]string, 0)
+	if err := json.Unmarshal([]byte(annotationValue), &values); err != nil {
+		return totalReference, false, err
+	}
+
+	updated := false
+	valueSet := sets.New(values...)
+	if parentResourceDeleted {
+		updated = true
+		totalReference--
+		valueSet.Delete(objID)
+	} else if !valueSet.Has(objID) {
+		updated = true
+		totalReference++
+		valueSet.Insert(objID)
+	}
+
+	if updated {
+		b, err := json.Marshal(sets.List(valueSet))
+		if err != nil {
+			return totalReference, false, err
+		}
+		if obj.GetAnnotations() == nil {
+			obj.SetAnnotations(make(map[string]string))
+		}
+
+		obj.GetAnnotations()[annotationKey] = string(b)
+		obj.GetAnnotations()[totalReferenceKey] = fmt.Sprintf("%v", totalReference)
+		return totalReference, true, nil
+	}
+
+	return totalReference, false, nil
+}
+
+func getUnstructuredObjectID(unstructured map[string]interface{}) string {
+	metadata, _ := unstructured["metadata"].(map[string]interface{})
+	ns := metadata["namespace"]
+	name := metadata["name"]
+	return fmt.Sprintf("%v/%v", ns, name)
+}
+
+func getObjectAnnotationName(unstructured map[string]interface{}) string {
+	kind := unstructured["kind"]
+	return "gravitee.io/" + strings.ToLower(fmt.Sprintf("%v", kind)) + "s"
 }

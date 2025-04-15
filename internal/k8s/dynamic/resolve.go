@@ -49,8 +49,12 @@ func resolveRef[T any](
 	if err != nil {
 		return target, err
 	}
+<<<<<<< HEAD
 
 	if err := template.Compile(ctx, dynamic); err != nil {
+=======
+	if err := template.Compile(ctx, dynamic, true); err != nil {
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 		return target, err
 	}
 

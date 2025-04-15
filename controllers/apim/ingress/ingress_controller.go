@@ -73,7 +73,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(ingress, core.IngressFinalizer)
 		k8s.AddAnnotation(ingress, core.LastSpecHashAnnotation, hash.Calculate(&ingress.Spec))
 
+<<<<<<< HEAD
 		if err := template.Compile(ctx, ingress); err != nil {
+=======
+		err := template.Compile(ctx, dc, true)
+		if err != nil {
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 			return err
 		}
 
@@ -138,6 +143,8 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&v1alpha1.ApiDefinition{}).
 		Watches(&v1alpha1.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
 		Watches(&corev1.Secret{}, r.Watcher.WatchTLSSecret()).
+		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("ingresses")).
+		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("ingresses")).
 		WithEventFilter(r.ingressClassEventFilter()).
 		Complete(r)
 }

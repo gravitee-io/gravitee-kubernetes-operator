@@ -19,6 +19,8 @@ package managementcontext
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
@@ -66,7 +68,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(managementContext, core.ManagementContextFinalizer)
 		k8s.AddAnnotation(managementContext, core.LastSpecHashAnnotation, hash.Calculate(&managementContext.Spec))
 
-		if err := template.Compile(ctx, dc); err != nil {
+		if err := template.Compile(ctx, dc, true); err != nil {
 			return err
 		}
 
@@ -104,5 +106,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.ManagementContext{}).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
+		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("managementcontexts")).
+		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("managementcontexts")).
 		Complete(r)
 }

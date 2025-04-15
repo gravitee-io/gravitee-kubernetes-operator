@@ -63,6 +63,38 @@ func Reconcile(
 	return reconcileApiDefinition(ctx, apiDefinition, events)
 }
 
+<<<<<<< HEAD
+=======
+func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionObject) (ctrl.Result, error) {
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
+		dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
+		if err := template.Compile(ctx, dc, true); err != nil {
+			return err
+		}
+
+		if err := internal.SyncApiDefinitionTemplate(ctx, dc, apiDefinition.GetNamespace()); err != nil {
+			return err
+		}
+
+		apiDefinition.SetFinalizers(dc.GetFinalizers())
+
+		return dc.GetStatus().DeepCopyTo(apiDefinition)
+	})
+
+	if err != nil {
+		log.Error(ctx, err, "Failed to sync API definition template", log.KeyValues(apiDefinition)...)
+		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+	}
+
+	log.Debug(ctx, "Ingress template synced successfully.", log.KeyValues(apiDefinition)...)
+
+	if err := internal.UpdateStatusSuccess(ctx, apiDefinition); err != nil {
+		return ctrl.Result{}, err
+	}
+	return ctrl.Result{}, nil
+}
+
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 func reconcileApiDefinition(
 	ctx context.Context,
 	apiDefinition core.ApiDefinitionObject,
@@ -75,8 +107,13 @@ func reconcileApiDefinition(
 		util.AddFinalizer(apiDefinition, core.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, core.LastSpecHashAnnotation, apiDefinition.GetSpec().Hash())
 
+<<<<<<< HEAD
 		if err := template.Compile(ctx, apiDefinition); err != nil {
 			status.SetProcessingStatus(core.ProcessingStatusFailed)
+=======
+		if err := template.Compile(ctx, dc, true); err != nil {
+			apiDefinition.GetStatus().SetProcessingStatus(core.ProcessingStatusFailed)
+>>>>>>> f79cb05 (fix: update templated resources on source changes)
 			return err
 		}
 
