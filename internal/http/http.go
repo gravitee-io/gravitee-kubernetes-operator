@@ -194,7 +194,7 @@ func NewClient(ctx context.Context, auth *Auth) *Client {
 	transport := defaultTransport.Clone()
 	transport.TLSClientConfig = &tls.Config{
 		// #nosec G402
-		InsecureSkipVerify: env.Config.HTTPClientInsecureSkipVerify,
+		InsecureSkipVerify: true,
 	}
 
 	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
