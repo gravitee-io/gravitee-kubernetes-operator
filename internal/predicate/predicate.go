@@ -95,6 +95,10 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	case *corev1.Secret:
 		oo, _ := e.ObjectOld.(*corev1.Secret)
 		return hash.Calculate(&no.Data) != hash.Calculate(&oo.Data)
+	case *corev1.ConfigMap:
+		oo, _ := e.ObjectOld.(*corev1.ConfigMap)
+		return hash.Calculate(&no.Data) != hash.Calculate(&oo.Data) ||
+			hash.Calculate(&no.BinaryData) != hash.Calculate(&oo.BinaryData)
 	default:
 		return false
 	}
