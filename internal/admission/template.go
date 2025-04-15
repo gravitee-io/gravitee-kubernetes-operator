@@ -23,7 +23,7 @@ import (
 )
 
 func CompileAndValidateTemplate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	err := template.Compile(ctx, obj)
+	err := template.Compile(ctx, obj, false)
 
 	if err != nil {
 		return errors.NewSeveref("%s", err.Error())

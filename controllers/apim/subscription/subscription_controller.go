@@ -33,7 +33,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -45,7 +44,6 @@ type Reconciler struct {
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
-	Watcher  watch.Interface
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete;deletecollection
@@ -68,7 +66,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(subscription, core.SubscriptionFinalizer)
 		k8s.AddAnnotation(subscription, core.LastSpecHashAnnotation, hash.Calculate(&subscription.Spec))
 
-		if err := template.Compile(ctx, dc); err != nil {
+		if err := template.Compile(ctx, dc, true); err != nil {
 			subscription.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}

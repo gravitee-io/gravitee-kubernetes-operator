@@ -55,7 +55,7 @@ func Reconcile(
 func reconcileApiTemplate(ctx context.Context, apiDefinition core.ApiDefinitionObject) (ctrl.Result, error) {
 	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), apiDefinition, func() error {
 		dc, _ := apiDefinition.DeepCopyObject().(core.ApiDefinitionObject)
-		if err := template.Compile(ctx, dc); err != nil {
+		if err := template.Compile(ctx, dc, true); err != nil {
 			return err
 		}
 
@@ -92,7 +92,7 @@ func reconcileApiDefinition(
 		util.AddFinalizer(apiDefinition, core.ApiDefinitionFinalizer)
 		k8s.AddAnnotation(apiDefinition, core.LastSpecHashAnnotation, apiDefinition.GetSpec().Hash())
 
-		if err := template.Compile(ctx, dc); err != nil {
+		if err := template.Compile(ctx, dc, true); err != nil {
 			apiDefinition.GetStatus().SetProcessingStatus(core.ProcessingStatusFailed)
 			return err
 		}
