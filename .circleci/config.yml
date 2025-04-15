@@ -291,6 +291,8 @@ jobs:
           name: Run Chainsaw tests
           command: |
             bin/chainsaw test --config test/e2e/chainsaw/config.yaml
+      - store_test_results:
+          path: /tmp/junit/reports-e2e
 
   job-stage-image:
     docker:
