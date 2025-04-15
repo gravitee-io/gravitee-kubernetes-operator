@@ -14,7 +14,9 @@
 
 package dynamic
 
-import "strings"
+import (
+	"strings"
+)
 
 func PluralizeKind(kind string) string {
 	return strings.TrimRight(strings.ToLower(kind), "s") + "s"
