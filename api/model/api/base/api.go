@@ -63,7 +63,6 @@ type ApiBase struct {
 	// List of groups associated with the API.
 	// This groups are id or name references to existing groups in APIM.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Groups []string `json:"groups"`
 	// List of group references associated with the API
 	// This groups are references to Group custom resources created on the cluster.

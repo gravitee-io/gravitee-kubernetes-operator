@@ -297,7 +297,6 @@ spec:
                     type: object
                   type: array
                 groups:
-                  default: []
                   description: >-
                     List of groups associated with the API.
 

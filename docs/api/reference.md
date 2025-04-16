@@ -555,8 +555,6 @@ This groups are references to Group custom resources created on the cluster.<br/
         <td>
           List of groups associated with the API.
 This groups are id or name references to existing groups in APIM.<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -4902,8 +4900,6 @@ This groups are references to Group custom resources created on the cluster.<br/
         <td>
           List of groups associated with the API.
 This groups are id or name references to existing groups in APIM.<br/>
-          <br/>
-            <i>Default</i>: []<br/>
         </td>
         <td>false</td>
       </tr><tr>
