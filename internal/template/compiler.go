@@ -18,12 +18,14 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"text/template"
 
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -38,8 +40,24 @@ import (
 // example my-configmap/key1.
 const ksPropertyLength = 2
 
+type ctxKey string
+
+const objectIDCtxKey = ctxKey("gravitee.io/templating/objectId")
+const objectAnnotationKey = ctxKey("gravitee.io/templating/annotationKey")
+
 func Compile(ctx context.Context, obj runtime.Object) error {
-	return doCompile(ctx, obj)
+	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return err
+	}
+	return doCompile(
+		context.WithValue(
+			context.
+				WithValue(ctx, objectIDCtxKey, getUnstructuredObjectID(u)),
+			objectAnnotationKey, getObjectAnnotationName(u),
+		),
+		obj,
+	)
 }
 
 func doCompile(ctx context.Context, obj runtime.Object) error {
@@ -108,7 +126,15 @@ func resolveConfigmap(ctx context.Context, ns, name string) (string, error) {
 		return "", err
 	}
 
+	if err = addAnnotation(ctx, cm); err != nil {
+		return "", err
+	}
+
 	if err = addFinalizer(ctx, cm); err != nil {
+		return "", err
+	}
+
+	if err := k8s.UpdateSafely(ctx, cm); err != nil {
 		return "", err
 	}
 
@@ -144,7 +170,15 @@ func resolveSecret(ctx context.Context, ns, name string) (string, error) {
 		return "", err
 	}
 
+	if err = addAnnotation(ctx, sec); err != nil {
+		return "", err
+	}
+
 	if err = addFinalizer(ctx, sec); err != nil {
+		return "", err
+	}
+
+	if err := k8s.UpdateSafely(ctx, sec); err != nil {
 		return "", err
 	}
 
@@ -173,9 +207,40 @@ func addFinalizer(ctx context.Context, obj client.Object) error {
 		}
 
 		util.AddFinalizer(object, core.TemplatingFinalizer)
-
-		return k8s.UpdateSafely(ctx, object)
 	}
 
 	return nil
+}
+
+func addAnnotation(ctx context.Context, obj client.Object) error {
+	annotationKey, _ := ctx.Value(objectAnnotationKey).(string)
+	objID, _ := ctx.Value(objectIDCtxKey).(string)
+	annotationValue, ok := obj.GetAnnotations()[annotationKey]
+	if !ok {
+		annotationValue = "[]"
+	}
+	values := make([]string, 0)
+	if err := json.Unmarshal([]byte(annotationValue), &values); err != nil {
+		return err
+	}
+	valueSet := sets.New(values...)
+	valueSet.Insert(objID)
+	b, err := json.Marshal(sets.List(valueSet))
+	if err != nil {
+		return err
+	}
+	obj.GetAnnotations()[annotationKey] = string(b)
+	return nil
+}
+
+func getUnstructuredObjectID(unstructured map[string]interface{}) string {
+	metadata, _ := unstructured["metadata"].(map[string]interface{})
+	ns := metadata["namespace"]
+	name := metadata["name"]
+	return fmt.Sprintf("%v/%v", ns, name)
+}
+
+func getObjectAnnotationName(unstructured map[string]interface{}) string {
+	kind := unstructured["kind"]
+	return "gravitee.io/" + strings.ToLower(fmt.Sprintf("%v", kind)) + "s"
 }
