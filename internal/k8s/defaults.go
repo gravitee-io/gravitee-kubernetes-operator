@@ -139,13 +139,14 @@ var LicenseVolumeMount = coreV1.VolumeMount{
 }
 
 var DefaultGatewayContainer = coreV1.Container{
-	Image:          DefaultGatewayImage,
-	Name:           GatewayContainerName,
-	LivenessProbe:  DefaultLivenessProbe,
-	ReadinessProbe: DefaultReadinessProbe,
-	StartupProbe:   DefaultStartupProbe,
-	VolumeMounts:   []coreV1.VolumeMount{},
-	Ports:          []coreV1.ContainerPort{},
+	Image:           DefaultGatewayImage,
+	ImagePullPolicy: coreV1.PullIfNotPresent,
+	Name:            GatewayContainerName,
+	LivenessProbe:   DefaultLivenessProbe,
+	ReadinessProbe:  DefaultReadinessProbe,
+	StartupProbe:    DefaultStartupProbe,
+	VolumeMounts:    []coreV1.VolumeMount{},
+	Ports:           []coreV1.ContainerPort{},
 }
 
 var DefaultGatewayConfigVolume = coreV1.Volume{
