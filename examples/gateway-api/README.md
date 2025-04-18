@@ -246,7 +246,7 @@ kubectl apply -f examples/gateway-api/http-route-with-header-modifiers.yml
 Then you can check that headers are modified on the request and on the response by issuing the following call:
 
 ```sh
-curl -i http://demo.apis.example.dev/bin/headers
+curl -i -H "x-tag: acme.com" -H "x-impl: acme.com" -H "x-rm: true" http://demo.apis.example.dev/bin/headers
 ```
 
 ## Start a Kafka cluster with Strimzi
