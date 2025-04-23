@@ -70,18 +70,12 @@ func resolveKafkaListener(
 	params *v1alpha1.GatewayClassParameters,
 	builder *k8s.ConditionBuilder,
 ) {
-	if !hasKafkaEnabled(params) {
+	if !k8s.HasKafkaEnabled(params) {
 		builder.
 			RejectInvalidRouteKinds(
 				"Kafka is not enabled on the gateway class",
 			)
 	}
-}
-
-func hasKafkaEnabled(params *v1alpha1.GatewayClassParameters) bool {
-	return params.Spec.Gravitee != nil &&
-		params.Spec.Gravitee.Kafka != nil &&
-		params.Spec.Gravitee.Kafka.Enabled
 }
 
 func resolveTLS(
