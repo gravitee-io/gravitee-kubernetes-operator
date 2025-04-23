@@ -220,7 +220,7 @@ jobs:
       - run:
           name: Run cloud-provider-kind
           command: |
-            NET_MODE=kind docker compose -f hack/kind/cloud-provider/compose.yaml up -d
+            NET_MODE=host docker compose -f hack/kind/cloud-provider/compose.yaml up -d
       - run:
           name: Helm Install the Operator
           command: |
