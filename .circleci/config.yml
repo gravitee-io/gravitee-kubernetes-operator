@@ -248,6 +248,10 @@ jobs:
               && helm upgrade --install gko helm/gko \
                 --set manager.image.repository=gko \
                 --set manager.image.tag=latest \
+                --set manager.metrics.enabled=false \
+                --set manager.logs.format=console \
+                --set manager.logs.format=error \
+                --set manager.logs.timestamp.format=iso-8601 \
                 --set gatewayAPI.controller.enabled=true
       - run:
           name: Apply resources
