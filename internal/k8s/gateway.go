@@ -555,8 +555,7 @@ func getKafkaServer(
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) map[string]any {
-	kafkaParams := params.Spec.Gravitee.Kafka
-	if !kafkaParams.Enabled {
+	if !HasKafkaEnabled(params) {
 		return yaml.Kafka.Object
 	}
 
@@ -573,6 +572,8 @@ func getKafkaServer(
 	kafka := yaml.Kafka.DeepCopy()
 
 	kafka.Put("enabled", true)
+
+	kafkaParams := params.Spec.Gravitee.Kafka
 
 	routingHostModeParams := kafkaParams.RoutingHostMode
 	kafka.Put(
