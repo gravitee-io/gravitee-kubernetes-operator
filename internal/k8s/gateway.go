@@ -36,6 +36,8 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
+const portMin = int32(1024)
+
 func DeployGateway(
 	ctx context.Context,
 	gw *gateway.Gateway,
@@ -59,27 +61,29 @@ func DeployGateway(
 		return err
 	}
 
-	gatewayConfig, err := getGatewayConfigMap(gw, params)
+	portMapping := mapPorts(gw.Object)
+
+	gatewayConfig, err := getGatewayConfigMap(gw, params, portMapping)
 	if err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, gatewayConfig, func() error {
-		return buildGatewayConfigData(gw, params, gatewayConfig)
+		return buildGatewayConfigData(gw, params, gatewayConfig, portMapping)
 	}); err != nil {
 		return err
 	}
 
-	if deployment, err := getDeployment(gw, params); err != nil {
+	if deployment, err := getDeployment(gw, params, portMapping); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
 		AddAnnotation(deployment, "gravitee.io/config", hash.Calculate(gatewayConfig))
-		return buildDeployment(gw, params, deployment)
+		return buildDeployment(gw, params, deployment, portMapping)
 	}); err != nil {
 		return err
 	}
 
-	svc := getService(gw, params)
+	svc := getService(gw, params, portMapping)
 	return CreateOrUpdate(ctx, svc, func() error {
-		buildServiceSpec(gw, params, svc)
+		buildServiceSpec(gw, params, svc, portMapping)
 		return nil
 	})
 }
@@ -126,6 +130,7 @@ func buildPEMRegistryValue(ns, refName string) (string, error) {
 func getGatewayConfigMap(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
+	portMapping map[gwAPIv1.PortNumber]int32,
 ) (*coreV1.ConfigMap, error) {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	configMap := DefaultGatewayConfigMap.DeepCopy()
@@ -136,7 +141,7 @@ func getGatewayConfigMap(
 
 	setOwnerReference(gw.Object, configMap)
 
-	if err := buildGatewayConfigData(gw, params, configMap); err != nil {
+	if err := buildGatewayConfigData(gw, params, configMap, portMapping); err != nil {
 		return nil, err
 	}
 
@@ -147,18 +152,19 @@ func buildGatewayConfigData(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	configMap *coreV1.ConfigMap,
+	portMapping map[gwAPIv1.PortNumber]int32,
 ) error {
-	servers, err := getServers(gw)
+	servers, err := getServers(gw, portMapping)
 	if err != nil {
 		return err
 	}
 
 	yaml := yaml.DBLess.DeepCopy()
 	yaml.Put("servers", servers)
-	yaml.Put("kafka", getKafkaServer(gw, params))
+	yaml.Put("kafka", getKafkaServer(gw, params, portMapping))
 	yaml.Put("tags", BuildGatewayTag(gw))
 
-	if httpPort := getHTTPPort(gw.Object.Spec.Listeners); httpPort != nil {
+	if httpPort := getHTTPPort(gw.Object.Spec.Listeners, portMapping); httpPort != nil {
 		yaml.Put("http", map[string]int32{"port": *httpPort})
 	}
 
@@ -181,6 +187,7 @@ func BuildTag(namespace, name string) string {
 func getDeployment(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
+	portMapping map[gwAPIv1.PortNumber]int32,
 ) (*appV1.Deployment, error) {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
@@ -191,7 +198,7 @@ func getDeployment(
 
 	setOwnerReference(gw.Object, deployment)
 
-	if err := buildDeployment(gw, params, deployment); err != nil {
+	if err := buildDeployment(gw, params, deployment, portMapping); err != nil {
 		return nil, err
 	}
 
@@ -202,6 +209,7 @@ func buildDeployment(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	deployment *appV1.Deployment,
+	portMapping map[gwAPIv1.PortNumber]int32,
 ) error {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 
@@ -213,7 +221,7 @@ func buildDeployment(
 		return err
 	}
 
-	prepareContainer(template, gw, params)
+	prepareContainer(template, gw, params, portMapping)
 
 	template.Spec.Volumes = getVolumes(gw, params)
 
@@ -224,7 +232,11 @@ func buildDeployment(
 	return nil
 }
 
-func getService(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) *coreV1.Service {
+func getService(
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) *coreV1.Service {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	svc := DefaultService.DeepCopy()
 
@@ -233,7 +245,7 @@ func getService(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) *c
 	svc.Labels = labels
 	svc.Spec.Selector = labels
 
-	buildServiceSpec(gw, params, svc)
+	buildServiceSpec(gw, params, svc, portMapping)
 
 	return svc
 }
@@ -242,8 +254,9 @@ func buildServiceSpec(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	svc *coreV1.Service,
+	portMapping map[gwAPIv1.PortNumber]int32,
 ) {
-	setServicePorts(svc, gw.Object.Spec.Listeners)
+	setServicePorts(svc, gw.Object.Spec.Listeners, portMapping)
 
 	setOwnerReference(gw.Object, svc)
 
@@ -369,10 +382,11 @@ func prepareContainer(
 	template *coreV1.PodTemplateSpec,
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
+	portMapping map[gwAPIv1.PortNumber]int32,
 ) {
 	container := getGatewayContainer(template.Spec.Containers)
 	container.VolumeMounts = getVolumeMounts(params)
-	setContainerPorts(container, gw.Object.Spec.Listeners)
+	setContainerPorts(container, gw.Object.Spec.Listeners, portMapping)
 	for i := range template.Spec.Containers {
 		if template.Spec.Containers[i].Name == GatewayContainerName {
 			template.Spec.Containers[i] = *container
@@ -389,11 +403,15 @@ func getGatewayContainer(containers []coreV1.Container) *coreV1.Container {
 	return nil
 }
 
-func setContainerPorts(container *coreV1.Container, listeners []gwAPIv1.Listener) {
+func setContainerPorts(
+	container *coreV1.Container,
+	listeners []gwAPIv1.Listener,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) {
 	ports := make([]coreV1.ContainerPort, 0)
 	for _, listener := range listeners {
 		port := coreV1.ContainerPort{
-			ContainerPort: int32(listener.Port),
+			ContainerPort: portMapping[listener.Port],
 			Protocol:      coreV1.ProtocolTCP,
 		}
 		ports = append(ports, port)
@@ -436,7 +454,11 @@ func getProbePort(probe *coreV1.Probe) *int32 {
 	return nil
 }
 
-func setServicePorts(svc *coreV1.Service, listeners []gwAPIv1.Listener) {
+func setServicePorts(
+	svc *coreV1.Service,
+	listeners []gwAPIv1.Listener,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) {
 	servicePorts := make([]coreV1.ServicePort, 0)
 	knownPortNumbers := sets.New[int32]()
 	for _, listener := range listeners {
@@ -448,7 +470,7 @@ func setServicePorts(svc *coreV1.Service, listeners []gwAPIv1.Listener) {
 		servicePort := coreV1.ServicePort{
 			Name:       string(listener.Name),
 			Port:       portNumber,
-			TargetPort: intstr.FromInt32(int32(listener.Port)),
+			TargetPort: intstr.FromInt32(portMapping[listener.Port]),
 			Protocol:   coreV1.ProtocolTCP,
 		}
 		if svc.Spec.Type == "NodePort" && portNumber >= 30000 {
@@ -476,14 +498,14 @@ func setOwnerReference(gw *gwAPIv1.Gateway, obj client.Object) {
 	)
 }
 
-func getHTTPPort(listeners []gwAPIv1.Listener) *int32 {
+func getHTTPPort(listeners []gwAPIv1.Listener, portMapping map[gwAPIv1.PortNumber]int32) *int32 {
 	port := int32(0)
 	for _, listener := range listeners {
 		if listener.Protocol == gwAPIv1.HTTPProtocolType {
-			port = int32(listener.Port)
+			port = portMapping[listener.Port]
 		}
 		if port == 0 && listener.Protocol == gwAPIv1.HTTPSProtocolType {
-			port = int32(listener.Port)
+			port = portMapping[listener.Port]
 		}
 	}
 	if port > 0 {
@@ -492,10 +514,13 @@ func getHTTPPort(listeners []gwAPIv1.Listener) *int32 {
 	return nil
 }
 
-func getServers(gw *gateway.Gateway) ([]map[string]any, error) {
+func getServers(
+	gw *gateway.Gateway,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) ([]map[string]any, error) {
 	listeners := gw.Object.Spec.Listeners
 	statuses := gw.Object.Status.Listeners
-	servers := make([]map[string]any, len(gw.Object.Spec.Listeners))
+	servers := make([]map[string]any, 0)
 	for i, listener := range listeners {
 		if IsKafkaListener(listener) {
 			continue
@@ -510,7 +535,7 @@ func getServers(gw *gateway.Gateway) ([]map[string]any, error) {
 			return nil, fmt.Errorf("unknown server protocol")
 		}
 		server["type"] = serverType
-		server["port"] = listener.Port
+		server["port"] = portMapping[listener.Port]
 		if listener.Hostname != nil {
 			server["hostname"] = *listener.Hostname
 		} else {
@@ -520,7 +545,7 @@ func getServers(gw *gateway.Gateway) ([]map[string]any, error) {
 			server["secured"] = true
 			server["ssl"] = buildTLS(listener)
 		}
-		servers[i] = server
+		servers = append(servers, server)
 	}
 	return servers, nil
 }
@@ -528,6 +553,7 @@ func getServers(gw *gateway.Gateway) ([]map[string]any, error) {
 func getKafkaServer(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
+	portMapping map[gwAPIv1.PortNumber]int32,
 ) map[string]any {
 	kafkaParams := params.Spec.Gravitee.Kafka
 	if !kafkaParams.Enabled {
@@ -552,7 +578,7 @@ func getKafkaServer(
 	kafka.Put(
 		"routingHostMode",
 		map[string]any{
-			"defaultPort":            kafkaListener.Port,
+			"defaultPort":            portMapping[kafkaListener.Port],
 			"brokerDomainPattern":    routingHostModeParams.BokerDomainPattern,
 			"bootstrapDomainPattern": routingHostModeParams.BootstrapDomainPattern,
 		},
@@ -617,4 +643,41 @@ func getGatewayConfigMapName(gwName string) string {
 
 func getPEMRegistryConfigMapName(gwName string) string {
 	return PEMRegistryConfigMapPrefix + gwName
+}
+
+func mapPorts(gw *gwAPIv1.Gateway) map[gwAPIv1.PortNumber]int32 {
+	listenerToInternal := make(map[gwAPIv1.PortNumber]int32)
+	for _, l := range gw.Spec.Listeners {
+		listenerToInternal[l.Port] = ensureBindablePort(gw, l.Port)
+	}
+	return listenerToInternal
+}
+
+func getListenerPorts(gw *gwAPIv1.Gateway) sets.Set[int32] {
+	ports := sets.New[int32]()
+	for _, l := range gw.Spec.Listeners {
+		ports.Insert(int32(l.Port))
+	}
+	return ports
+}
+
+func ensureBindablePort(
+	gw *gwAPIv1.Gateway, port gwAPIv1.PortNumber,
+) int32 {
+	val := int32(port)
+	if val > portMin {
+		return val
+	}
+	return ensureBindableWithNoConflict(val, getListenerPorts(gw))
+}
+
+func ensureBindableWithNoConflict(
+	port int32,
+	listenerPorts sets.Set[int32],
+) int32 {
+	bindable := port + portMin
+	if listenerPorts.Has(bindable) {
+		return ensureBindableWithNoConflict(bindable+1, listenerPorts)
+	}
+	return bindable
 }
