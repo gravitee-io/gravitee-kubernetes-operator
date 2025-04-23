@@ -153,14 +153,13 @@ nc -w 1 -vz "$GW_ADDR" 443
 nc -w 1 -vz "$GW_ADDR" 9092
 ```
 
-## Get the CA certificates of the gateway servers
+## Get the CA certificate of the HTTPS server
 
 ```sh
-kubectl get secret kafka-server -o json | jq '.data."ca.crt"' | tr -d '"' | base64 --decode > examples/gateway-api/tmp/kafka.ca.crt
 kubectl get secret https-server -o json | jq '.data."ca.crt"' | tr -d '"' | base64 --decode > examples/gateway-api/tmp/https.ca.crt
 ```
 
-> This certificates can be used to configure your clients to trust the TLS gateway listeners.
+> This certificates can be used to configure your clients to trust the HTTPS gateway listener.
 
 ## Bind route hostnames to the Gateway listeners IP address in your /etc/hosts file
 
@@ -248,6 +247,22 @@ Then you can check that headers are modified on the request and on the response 
 ```sh
 curl -i -H "x-tag: acme.com" -H "x-impl: acme.com" -H "x-rm: true" http://demo.apis.example.dev/bin/headers
 ```
+
+## Add a kafka listener to the gateway
+
+You update the gateway to add a kafka listener by running the following command:
+
+```sh
+kubectl apply -f examples/gateway-api/gateway-kafka.yaml
+```
+
+## Get the CA certificate of the Kafka server
+
+```sh
+kubectl get secret kafka-server -o json | jq '.data."ca.crt"' | tr -d '"' | base64 --decode > examples/gateway-api/tmp/kafka.ca.crt
+```
+
+> This will be used later to configure the kafka client.
 
 ## Start a Kafka cluster with Strimzi
 
