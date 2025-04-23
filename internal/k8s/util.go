@@ -218,6 +218,15 @@ func GetKafkaListenerStatus(gw *gateway.Gateway) *gwAPIv1.ListenerStatus {
 	return nil
 }
 
+func HasHafkaListener(gw *gateway.Gateway) bool {
+	for _, l := range gw.Object.Spec.Listeners {
+		if IsKafkaListener(l) {
+			return true
+		}
+	}
+	return false
+}
+
 func IsKafkaListener(listener gwAPIv1.Listener) bool {
 	switch {
 	case listener.Protocol != gwAPIv1.TLSProtocolType:
@@ -253,4 +262,10 @@ func IsKafkaRouteKind(routeKind gwAPIv1.RouteGroupKind) bool {
 	default:
 		return true
 	}
+}
+
+func HasKafkaEnabled(params *v1alpha1.GatewayClassParameters) bool {
+	return params.Spec.Gravitee != nil &&
+		params.Spec.Gravitee.Kafka != nil &&
+		params.Spec.Gravitee.Kafka.Enabled
 }
