@@ -233,9 +233,15 @@ jobs:
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
-          name: Start cluster
+          name: Start Cluster
           command: |
             make start-conformance-cluster
+      - run:
+          name: Load master-latest Gateway Image
+          command: |
+            docker pull graviteeio.azurecr.io/apim-gateway:master-latest 
+            docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
+            kind load docker-image gateway:latest --name gravitee
       - run:
           name: Run cloud-provider-kind
           command: |
@@ -254,10 +260,10 @@ jobs:
                 --set manager.logs.timestamp.format=iso-8601 \
                 --set gatewayAPI.controller.enabled=true
       - run:
-          name: Apply resources
+          name: Apply Gateway Class
           command: |
-            kubectl apply -f ./examples/gateway-api/gateway-class-parameters.yaml
-            kubectl apply -f ./examples/gateway-api/gateway-class.yaml
+            kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
+            kubectl apply -f ./test/conformance/gateway-class.yaml
       - run:
           name: Run Gateway API Conformance Test
           command: |
