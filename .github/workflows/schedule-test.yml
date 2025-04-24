@@ -27,10 +27,10 @@ jobs:
       fail-fast: false
       matrix:
         branch:
-          - 4.3.x
           - 4.4.x
           - 4.5.x
           - 4.6.x
+          - 4.7.x
           - master
     steps:
       - uses: actions/checkout@v4
