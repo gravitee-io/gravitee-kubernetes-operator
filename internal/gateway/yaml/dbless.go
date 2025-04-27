@@ -75,6 +75,7 @@ services:
 
 api:
   validateSubscription: false
+  allowOverlappingContext: true
 
 gracefulShutdown:
   delay: 0
