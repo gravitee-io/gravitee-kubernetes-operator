@@ -30,8 +30,10 @@ const (
 	DefaultMemRequest        = "256Mi"
 	DefaultMemLimit          = "512Mi"
 	DefaultConfigVolumeName  = "config"
+	UserConfigVolumeName     = "user-config"
 	DefaultLicenseVolumeName = "license"
 	DefaultConfigFileEntry   = "gravitee.yml"
+	UserConfigFileEntry      = "user.yml"
 	DefaultProbePort         = 18082
 
 	GatewayConfigMapPrefix     = "gio-gw-config-"
@@ -39,7 +41,9 @@ const (
 
 	GatewayContainerName     = "gateway"
 	DefaultGatewayImage      = "graviteeio/apim-gateway"
-	DefaultGatewayConfigFile = "/opt/graviteeio-gateway/config/gravitee.yml"
+	DefaultGatewayConfigPath = "/opt/graviteeio-gateway/config/"
+	DefaultGatewayConfigFile = DefaultGatewayConfigPath + "gravitee.yml"
+	UserGatewayConfigFile    = DefaultGatewayConfigPath + "user.yml"
 
 	DefaultLicenseMountPath = "/opt/graviteeio-gateway/license"
 
@@ -124,6 +128,12 @@ var DefaultResources = &coreV1.ResourceRequirements{
 		coreV1.ResourceMemory: resource.MustParse(DefaultMemLimit),
 	},
 }
+var UserConfigVolumeMount = coreV1.VolumeMount{
+	Name:      UserConfigVolumeName,
+	MountPath: UserGatewayConfigFile,
+	SubPath:   UserConfigFileEntry,
+	ReadOnly:  true,
+}
 
 var ConfigVolumeMount = coreV1.VolumeMount{
 	Name:      DefaultConfigVolumeName,
@@ -151,6 +161,11 @@ var DefaultGatewayContainer = coreV1.Container{
 
 var DefaultGatewayConfigVolume = coreV1.Volume{
 	Name:         DefaultConfigVolumeName,
+	VolumeSource: DefaultConfigVolumeSource,
+}
+
+var UserGatewayConfigVolume = coreV1.Volume{
+	Name:         UserConfigVolumeName,
 	VolumeSource: DefaultConfigVolumeSource,
 }
 
