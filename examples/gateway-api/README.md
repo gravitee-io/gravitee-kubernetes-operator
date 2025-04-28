@@ -26,7 +26,7 @@ kind create cluster --config hack/kind/kind.conformance.yaml
 Install the `cloud-provider-kind` binary by running the following command:
 
 ```sh
-GOBIN=$(PWD)/bin go install sigs.k8s.io/cloud-provider-kind@latest 
+GOBIN=$(pwd)/bin go install sigs.k8s.io/cloud-provider-kind@latest 
 ```
 
 Then run the following command:
