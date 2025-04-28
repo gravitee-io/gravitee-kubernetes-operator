@@ -58,6 +58,9 @@ data:
   {{- if not .Values.ingress.controller.enabled }}
   ENABLE_INGRESS: "false"
   {{- end }}
+  {{- if .Values.gatewayAPI.controller.enabled }}
+  ENABLE_GATEWAY_API: "true"
+  {{- end }}
   INGRESS_CLASSES: {{ template "ingress.Classes" . }}
   {{- $template404 := get .Values.ingress.templates "404" }}
   {{- if $template404.name }}

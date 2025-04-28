@@ -21,10 +21,16 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-func validateNoConflictingPath(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
+func ValidateNoConflictingPath(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
+	// TODO replace with proper gateway api conflict handling as defined in the spec
+	if k8s.HasHTTPRouteOwner(api.GetOwnerReferences()) {
+		return nil
+	}
+
 	apiPaths := api.GetContextPaths()
 	existingPaths, err := getExistingPaths(ctx, api)
 	if err != nil {
