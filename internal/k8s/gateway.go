@@ -63,13 +63,25 @@ func DeployGateway(
 
 	portMapping := mapPorts(gw.Object)
 
-	gatewayConfig, err := getGatewayConfigMap(gw, params, portMapping)
+	gatewayConfig, err := getOverridingGatewayConfigMap(gw, params, portMapping)
 	if err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, gatewayConfig, func() error {
-		return buildGatewayConfigData(gw, params, gatewayConfig, portMapping)
+		return buildOverridingGatewayConfigData(gw, params, gatewayConfig, portMapping)
 	}); err != nil {
 		return err
+	}
+
+	if HasGraviteeYAML(params) {
+		userConfig, err := getUserConfigMap(gw, params)
+		if err != nil {
+			return err
+		}
+		if err := CreateOrUpdate(ctx, userConfig, func() error {
+			return buildUserGatewayConfigData(params, userConfig)
+		}); err != nil {
+			return err
+		}
 	}
 
 	if deployment, err := getDeployment(gw, params, portMapping); err != nil {
@@ -127,7 +139,23 @@ func buildPEMRegistryValue(ns, refName string) (string, error) {
 	return string(b), nil
 }
 
-func getGatewayConfigMap(
+func getUserConfigMap(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) (*coreV1.ConfigMap, error) {
+	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	configMap := DefaultGatewayConfigMap.DeepCopy()
+	configMap.Name = getUserGatewayConfigMapName(gw.Object.Name)
+	configMap.Namespace = gw.Object.Namespace
+	configMap.Labels = labels
+
+	setOwnerReference(gw.Object, configMap)
+
+	if err := buildUserGatewayConfigData(params, configMap); err != nil {
+		return nil, err
+	}
+
+	return configMap, nil
+}
+
+func getOverridingGatewayConfigMap(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
@@ -141,14 +169,27 @@ func getGatewayConfigMap(
 
 	setOwnerReference(gw.Object, configMap)
 
-	if err := buildGatewayConfigData(gw, params, configMap, portMapping); err != nil {
+	if err := buildOverridingGatewayConfigData(gw, params, configMap, portMapping); err != nil {
 		return nil, err
 	}
 
 	return configMap, nil
 }
 
-func buildGatewayConfigData(
+func buildUserGatewayConfigData(
+	params *v1alpha1.GatewayClassParameters,
+	configMap *coreV1.ConfigMap,
+) error {
+	yamlObj := params.Spec.Gravitee.YAML
+	yamlData, err := yamlObj.MarshalYAML()
+	if err != nil {
+		return err
+	}
+	configMap.Data[UserConfigFileEntry] = string(yamlData)
+	return nil
+}
+
+func buildOverridingGatewayConfigData(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	configMap *coreV1.ConfigMap,
@@ -330,6 +371,10 @@ func getPodTemplateSpec(
 	base := DefaultGatewayPodTemplate.DeepCopy()
 	base.Spec.ServiceAccountName = gw.Object.Name
 
+	if HasGraviteeYAML(parameters) {
+		setGraviteeConf(base)
+	}
+
 	if parameters.Spec.Kubernetes == nil {
 		return base, nil
 	}
@@ -346,6 +391,23 @@ func getPodTemplateSpec(
 		return template, nil
 	}
 }
+
+func setGraviteeConf(podTemplate *coreV1.PodTemplateSpec) {
+	containers := podTemplate.Spec.Containers
+	for i, container := range containers {
+		if container.Name == GatewayContainerName {
+			containers[i].Env = append(containers[i].Env, coreV1.EnvVar{
+				Name: "JAVA_OPTS",
+				Value: fmt.Sprintf(
+					"-Dgravitee.conf=%s,%s",
+					UserGatewayConfigFile,
+					DefaultGatewayConfigFile,
+				),
+			})
+		}
+	}
+}
+
 func getVolumes(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
@@ -354,12 +416,17 @@ func getVolumes(
 	configVolume.ConfigMap.LocalObjectReference.Name = getGatewayConfigMapName(gw.Object.Name)
 	volumes := []coreV1.Volume{*configVolume}
 
-	graviteeParams := params.Spec.Gravitee
-	if graviteeParams != nil && graviteeParams.LicenseRef != nil {
-		licenseRef := graviteeParams.LicenseRef
+	if HasGraviteeLicense(params) {
+		licenseRef := params.Spec.Gravitee.LicenseRef
 		licenseVolume := DefaultLicenseConfigVolume.DeepCopy()
 		licenseVolume.Secret.SecretName = string(licenseRef.Name)
-		return append(volumes, *licenseVolume)
+		volumes = append(volumes, *licenseVolume)
+	}
+
+	if HasGraviteeYAML(params) {
+		userVolume := UserGatewayConfigVolume.DeepCopy()
+		userVolume.ConfigMap.LocalObjectReference.Name = getUserGatewayConfigMapName(gw.Object.Name)
+		volumes = append(volumes, *userVolume)
 	}
 
 	return volumes
@@ -370,9 +437,12 @@ func getVolumeMounts(
 ) []coreV1.VolumeMount {
 	vm := []coreV1.VolumeMount{ConfigVolumeMount}
 
-	graviteeParams := params.Spec.Gravitee
-	if graviteeParams != nil && graviteeParams.LicenseRef != nil {
-		return append(vm, LicenseVolumeMount)
+	if HasGraviteeLicense(params) {
+		vm = append(vm, LicenseVolumeMount)
+	}
+
+	if HasGraviteeYAML(params) {
+		vm = append(vm, UserConfigVolumeMount)
 	}
 
 	return vm
@@ -640,6 +710,10 @@ func mergePodTemplates(base, patch *coreV1.PodTemplateSpec) (*coreV1.PodTemplate
 
 func getGatewayConfigMapName(gwName string) string {
 	return GatewayConfigMapPrefix + gwName
+}
+
+func getUserGatewayConfigMapName(gwName string) string {
+	return "user-" + GatewayConfigMapPrefix + gwName
 }
 
 func getPEMRegistryConfigMapName(gwName string) string {

@@ -16,6 +16,7 @@
 package gateway
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -32,6 +33,8 @@ type GraviteeConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={enabled: false}
 	Kafka *GraviteeKafkaConfig `json:"kafka"`
+	// +kubebuilder:validation:Optional
+	YAML *utils.GenericStringMap `json:"yaml,omitempty"`
 }
 
 type GraviteeKafkaConfig struct {

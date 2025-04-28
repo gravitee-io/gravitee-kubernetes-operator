@@ -25,3 +25,9 @@ spec:
           containers:
           - name: gateway
             image: gateway:latest
+  gravitee:
+    yaml:
+      handlers:
+        request:
+          transaction:
+            header: X-Custom-Transaction-Id
