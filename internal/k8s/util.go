@@ -269,3 +269,11 @@ func HasKafkaEnabled(params *v1alpha1.GatewayClassParameters) bool {
 		params.Spec.Gravitee.Kafka != nil &&
 		params.Spec.Gravitee.Kafka.Enabled
 }
+
+func HasGraviteeYAML(params *v1alpha1.GatewayClassParameters) bool {
+	return params.Spec.Gravitee != nil && params.Spec.Gravitee.YAML != nil
+}
+
+func HasGraviteeLicense(params *v1alpha1.GatewayClassParameters) bool {
+	return params.Spec.Gravitee != nil && params.Spec.Gravitee.LicenseRef != nil
+}

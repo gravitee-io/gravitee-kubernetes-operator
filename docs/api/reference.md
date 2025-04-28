@@ -10841,6 +10841,13 @@ most of the time because the value is ignored or...<br/>
 defaulting to Secret.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b>yaml</b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
