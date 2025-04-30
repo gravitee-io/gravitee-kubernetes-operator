@@ -1,0 +1,147 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: export-import-v2
+  # namespace: apim-apim-master
+spec:
+  bindings:
+    - name: commandDir
+      value: "../../../commands"
+    - name: createdApiJson
+      value: createdApi.json
+    - name: exportedApiYaml
+      value: exportedApi.yaml
+    - name: modifiedYamlExport
+      value: modifiedExport.yaml
+    - name: gkoNamespace
+      value: default
+    - name: apiName
+      value: v2-api-config-rich
+
+  steps:
+    - name: create-v2-api-by-json-import
+      try:
+        - script:
+            env:
+              - name: COMMAND_DIR
+                value: ($commandDir)
+              - name: CREATED_API_JSON
+                value: ($createdApiJson)
+              - name: API_NAME
+                value: ($apiName)
+            content: |
+              npx zx $COMMAND_DIR/createApiFromJson.mjs --jsonfile $API_NAME.json > $CREATED_API_JSON
+      catch:
+        - podLogs:
+            selector: "app.kubernetes.io/component=api"
+            namespace: ($gkoNamespace)
+
+    - name: export-api-as-yaml
+      try:
+        - script:
+            env:
+              - name: COMMAND_DIR
+                value: ($commandDir)
+              - name: CREATED_API_JSON
+                value: ($createdApiJson)
+              - name: EXPORTED_API_YAML
+                value: ($exportedApiYaml)
+            content: |
+              API_ID=$(cat $CREATED_API_JSON | jq -r '.id')
+              npx zx $COMMAND_DIR/exportApiAsYaml.mjs $API_ID > $EXPORTED_API_YAML
+      catch:
+        - podLogs:
+            selector: "app.kubernetes.io/component=api"
+            namespace: ($gkoNamespace)
+        - script:
+            env:
+              - name: CREATED_API_JSON
+                value: ($createdApiJson)
+            content: |
+              cat $CREATED_API_JSON
+
+    - name: add-contextRef-to-export
+      try:
+      - script:
+          env:
+          - name: EXPORTED_API_YAML
+            value: ($exportedApiYaml)
+          - name: MODIFIED_YAML_EXPORT
+            value: modifiedExport.yaml
+          - name: GKO_NAMESPACE
+            value: ($gkoNamespace)
+          content: |
+            cat "$EXPORTED_API_YAML" | \
+            yq -e ".spec.contextRef = {\"name\": \"dev-ctx\", \"namespace\": \"$GKO_NAMESPACE\"}" > $MODIFIED_YAML_EXPORT
+
+    - name: deploy-modified-export
+      try:
+        - apply:
+            file: ($modifiedYamlExport)
+        - assert:
+            resource:
+              apiVersion: gravitee.io/v1alpha1
+              kind: ApiDefinition
+              metadata:
+                name: ($apiName)
+              status:
+                state: STOPPED
+                processingStatus: Completed
+      catch:
+        - podLogs:
+            selector: "control-plane=controller-manager"
+            namespace: ($gkoNamespace)
+
+    - name: update-api-resource
+      try:
+        - patch:
+            resource:
+              apiVersion: gravitee.io/v1alpha1
+              kind: ApiDefinition
+              metadata:
+                name: ($apiName)
+              spec:
+                state: "STARTED"
+        - assert:
+            resource:
+              apiVersion: gravitee.io/v1alpha1
+              kind: ApiDefinition
+              metadata:
+                name: ($apiName)
+              status:
+                state: STARTED
+                processingStatus: Completed
+      catch:
+        - podLogs:
+            selector: "control-plane=controller-manager"
+            namespace: ($gkoNamespace)
+          
+    - name: cleanup-generated-files
+      try:
+        - script:
+            env:
+              - name: EXPORTED_API_YAML
+                value: ($exportedApiYaml)
+              - name: MODIFIED_YAML_EXPORT
+                value: ($modifiedYamlExport)
+              - name: CREATED_API_JSON
+                value: ($createdApiJson)
+            content: |
+              echo "Cleaning up generated files..."
+              rm -f "$EXPORTED_API_YAML" "$MODIFIED_YAML_EXPORT" "$CREATED_API_JSON"
+
