@@ -280,6 +280,9 @@ jobs:
           command: |
             az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
             az aks get-credentials --admin --resource-group Devs-Gko-Hosted --name gravitee-devs-gko-aks-cluster
+      - keeper/env-export:
+          secret-url: keeper://FfBDDAniV6df_8i04UrvZA/field/password
+          var-name: APIM_AUTH
       - run:
           name: Create junit reports directory for e2e tests
           command: mkdir -p "/tmp/junit/reports-e2e"
