@@ -44,3 +44,4 @@ bundle.yml
 # Kyverno Chainsaw E2E tests
 chainsaw/reports/
 node_modules
+license.key
