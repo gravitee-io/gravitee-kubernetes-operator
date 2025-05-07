@@ -52,7 +52,7 @@ func buildEndpointGroup(
 }
 
 func buildEndpointGroupName(index int) string {
-	return fmt.Sprintf("rule-%d", index)
+	return fmt.Sprintf("endpoints-%d", index)
 }
 
 func buildEndpoints(

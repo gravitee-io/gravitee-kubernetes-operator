@@ -24,8 +24,11 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
+const (
+	rootPath = "/"
+)
+
 var (
-	rootPath        = "/"
 	keyLessSecurity = v4.NewPlanSecurity("KEY_LESS")
 )
 
