@@ -48,15 +48,18 @@ export class Version {
   }
 
   nextMinor() {
-    return new Version(`${this.majorDigit}.${this.minorDigit + 1}.${this.patchDigit}`);
+    return new Version(
+      `${this.majorDigit}.${this.minorDigit + 1}.${this.patchDigit}`,
+    );
   }
 
   nextPatch() {
-    return new Version(`${this.majorDigit}.${this.minorDigit}.${this.patchDigit + 1}`);
+    return new Version(
+      `${this.majorDigit}.${this.minorDigit}.${this.patchDigit + 1}`,
+    );
   }
 
   toString() {
     return `${this.majorDigit}.${this.minorDigit}.${this.patchDigit}`;
   }
 }
-
