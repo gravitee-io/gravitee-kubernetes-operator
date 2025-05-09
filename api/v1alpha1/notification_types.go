@@ -18,7 +18,6 @@ package v1alpha1
 
 import (
 	"fmt"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -83,7 +82,7 @@ func (spec *NotificationSpec) Hash() string {
 
 type NotificationStatus struct {
 	// Conditions are the condition that must be met by the Notification
-	Conditions []metav1.Condition `json:"conditions"`
+	Conditions *[]metav1.Condition `json:"conditions"`
 }
 
 // DeepCopyFrom implements core.Status.
@@ -106,10 +105,17 @@ func (s *NotificationStatus) DeepCopyTo(obj client.Object) error {
 
 // SetProcessingStatus implements core.Status.
 func (s *NotificationStatus) SetProcessingStatus(core.ProcessingStatus) {
-	// no op
+	// unused
 }
 
 func (s *NotificationStatus) IsFailed() bool {
+	if s.Conditions != nil {
+		for _, condition := range *s.Conditions {
+			if condition.Status == metav1.ConditionFalse {
+				return true
+			}
+		}
+	}
 	return false
 }
 

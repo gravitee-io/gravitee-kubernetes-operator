@@ -16,6 +16,7 @@ package manager
 
 import (
 	"context"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"os"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -175,6 +176,12 @@ func init() {
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),
 		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.SharedPolicyGroupList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&notification.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("notification-controller"),
 	}).SetupWithManager(mgr))
 
 	go func() {
