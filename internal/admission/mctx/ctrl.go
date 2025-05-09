@@ -16,6 +16,7 @@ package mctx
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -63,5 +64,13 @@ func (a AdmissionCtrl) ValidateUpdate(
 	oldObj runtime.Object,
 	newObj runtime.Object,
 ) (admission.Warnings, error) {
+	mCtx, ok := newObj.(*v1alpha1.ManagementContext)
+	if !ok {
+		return admission.Warnings{}, fmt.Errorf("can't cast to *v1alpha1.ManagementContext")
+	}
+	if mCtx.IsBeingDeleted() {
+		return admission.Warnings{}, nil
+	}
+
 	return validateCreate(ctx, newObj).Map()
 }
