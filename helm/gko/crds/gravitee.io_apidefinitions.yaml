@@ -82,6 +82,34 @@ spec:
                   items:
                     type: string
                   type: array
+                consoleNotificationConfiguration:
+                  description: ConsoleNotification struct sent to the mAPI, not part of the CRD
+                    spec.
+                  properties:
+                    config_type:
+                      type: string
+                    groups:
+                      items:
+                        type: string
+                      type: array
+                    hooks:
+                      items:
+                        type: string
+                      type: array
+                    origin:
+                      type: string
+                    referenceId:
+                      type: string
+                    referenceType:
+                      type: string
+                    user:
+                      type: string
+                  required:
+                    - config_type
+                    - groups
+                    - hooks
+                    - origin
+                  type: object
                 contextRef:
                   properties:
                     kind:
@@ -282,8 +310,8 @@ spec:
                   description: >-
                     List of group references associated with the API
 
-                    This groups are references to Group custom resources created
-                    on the cluster.
+                    These groups are references to Group custom resources
+                    created on the cluster.
                   items:
                     properties:
                       kind:
@@ -410,6 +438,31 @@ spec:
                 name:
                   description: API name
                   type: string
+                notificationsRefs:
+                  default: []
+                  description: >-
+                    References to Notification custom resources to setup
+                    notifications.
+
+                    For an API Notification CRD `eventType` field must be set to
+                    `api`
+
+                    and only events set via `apiEvents` attributes are used.
+
+                    Only one notification with `target` equals to `console` is
+                    admitted.
+                  items:
+                    properties:
+                      kind:
+                        type: string
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  type: array
                 notifyMembers:
                   default: true
                   description: |-

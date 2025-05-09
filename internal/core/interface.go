@@ -81,6 +81,13 @@ type ApiDefinitionModel interface {
 	GetGroups() []string
 	SetGroups([]string)
 	GetGroupRefs() []ObjectRef
+	GetNotificationRefs() []ObjectRef
+	SetConsoleNotification(ConsoleNotificationSettingsObject)
+}
+
+// +k8s:deepcopy-gen=false
+type ConsoleNotificationSettingsObject interface {
+	IsConsoleNotification() bool
 }
 
 // +k8s:deepcopy-gen=false

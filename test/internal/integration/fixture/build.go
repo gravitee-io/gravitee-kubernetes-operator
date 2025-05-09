@@ -41,6 +41,7 @@ type Files struct {
 	Subscription       string
 	SharedPolicyGroups string
 	Group              string
+	Notification       string
 }
 
 type FSBuilder struct {
@@ -104,7 +105,41 @@ func (b *FSBuilder) Build() *Objects {
 		setupIngress(obj, ing, suffix)
 	}
 
+	if notif := decodeIfDefined(f.Notification, &v1alpha1.Notification{}, notificationKind); notif != nil {
+		setupNotification(obj, notif, suffix)
+	}
+
 	return obj
+}
+
+func setupNotification(obj *Objects, notif **v1alpha1.Notification, suffix string) {
+	obj.Notification = *notif
+	obj.Notification.Name += suffix
+	obj.Notification.Namespace = constants.Namespace
+
+	if obj.Group != nil && len(obj.Notification.Spec.Console.GroupRefs) > 0 {
+		obj.Notification.Spec.Console.GroupRefs = append(obj.Notification.Spec.Console.GroupRefs, refs.NamespacedName{
+			Name:      obj.Group.Name,
+			Namespace: constants.Namespace,
+		})
+	}
+
+	if obj.API != nil {
+		obj.API.Spec.NotificationsRefs = []refs.NamespacedName{
+			{
+				Name:      obj.Notification.Name,
+				Namespace: constants.Namespace,
+			},
+		}
+	}
+	if obj.APIv4 != nil {
+		obj.APIv4.Spec.NotificationsRefs = []refs.NamespacedName{
+			{
+				Name:      obj.Notification.Name,
+				Namespace: constants.Namespace,
+			},
+		}
+	}
 }
 
 func setupIngress(obj *Objects, ing **netV1.Ingress, suffix string) {
@@ -323,5 +358,10 @@ func (b *FSBuilder) WithGroup(file string) *FSBuilder {
 
 func (b *FSBuilder) WithIngress(file string) *FSBuilder {
 	b.files.Ingress = file
+	return b
+}
+
+func (b *FSBuilder) WithNotification(file string) *FSBuilder {
+	b.files.Notification = file
 	return b
 }

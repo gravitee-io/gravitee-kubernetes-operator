@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"embed"
 	"fmt"
+
 	"io/fs"
 	"os"
 	"strings"
@@ -51,6 +52,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	v1 "k8s.io/api/networking/v1"
@@ -144,10 +146,6 @@ func main() {
 	k8s.RegisterClient(mgr.GetClient())
 
 	const cannotStartError = "Unable to start manager"
-	if err != nil {
-		log.Global.Error(err, cannotStartError)
-		os.Exit(1)
-	}
 
 	if env.Config.ApplyCRDs {
 		if err = applyCRDs(); err != nil {
@@ -291,6 +289,15 @@ func registerControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.SharedPolicyGroupList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for shared policy groups")
+		os.Exit(1)
+	}
+
+	if err := (&notification.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("notification-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for notification")
 		os.Exit(1)
 	}
 }

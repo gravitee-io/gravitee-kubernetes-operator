@@ -51,6 +51,18 @@ var ResourceGVR = schema.GroupVersionResource{
 	Resource: core.CRDResourceResource,
 }
 
+var NotificationGVR = schema.GroupVersionResource{
+	Group:    core.CRDGroup,
+	Version:  core.CRDVersion,
+	Resource: core.CRDResourceNotification,
+}
+
+var GroupGVR = schema.GroupVersionResource{
+	Group:    core.CRDGroup,
+	Version:  core.CRDVersion,
+	Resource: core.CRDResourceGroup,
+}
+
 var SecretGVR = schema.GroupVersionResource{
 	Group:    "",
 	Version:  "v1",

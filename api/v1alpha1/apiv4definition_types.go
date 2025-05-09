@@ -111,6 +111,23 @@ func (api *ApiV4Definition) PopulateIDs(context core.ContextModel) {
 	api.Spec.Plans = api.pickPlanIDs()
 }
 
+func (api *ApiV4Definition) GetNotificationRefs() []core.ObjectRef {
+	result := make([]core.ObjectRef, 0)
+	for _, ref := range api.Spec.NotificationsRefs {
+		r := ref
+		result = append(result, &r)
+	}
+	return result
+}
+
+func (api *ApiV4Definition) SetConsoleNotification(consoleNotification core.ConsoleNotificationSettingsObject) {
+	if consoleNotification == nil {
+		api.Spec.ConsoleNotification = nil
+	} else if impl, ok := consoleNotification.(*base.ConsoleNotificationConfiguration); ok {
+		api.Spec.ConsoleNotification = impl
+	}
+}
+
 // pickID returns the ID of the API definition, when a context has been defined at the spec level.
 // The ID might be returned from the API status, meaning that the API is already known.
 // If the API is unknown, the ID is either given from the spec if given,
