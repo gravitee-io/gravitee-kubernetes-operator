@@ -71,7 +71,12 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	}
 
 	if e.ObjectNew.GetDeletionTimestamp() != nil {
-		return true
+		switch no := e.ObjectNew.(type) {
+		case *corev1.Secret, *corev1.ConfigMap:
+			return false
+		default:
+			return no.GetDeletionTimestamp() != nil
+		}
 	}
 
 	switch no := e.ObjectNew.(type) {
@@ -111,5 +116,15 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 			hash.Calculate(&no.BinaryData) != hash.Calculate(&oo.BinaryData)
 	default:
 		return false
+	}
+}
+
+// Delete returns true if the Delete event should be processed.
+func (LastSpecHashPredicate) Delete(e event.DeleteEvent) bool {
+	switch t := e.Object.(type) {
+	case *corev1.Secret, *corev1.ConfigMap:
+		return false
+	default:
+		return t.GetDeletionTimestamp() != nil
 	}
 }

@@ -57,6 +57,10 @@ func validateUpdate(
 	oldSpg, ook := oldObj.(*v1alpha1.SharedPolicyGroup)
 	newSpg, nok := newObj.(*v1alpha1.SharedPolicyGroup)
 	if ook && nok {
+		if newSpg.IsBeingDeleted() {
+			return nil
+		}
+
 		// Should be the first validation, it will also compile the templates internally
 		errs.Add(admission.CompileAndValidateTemplate(ctx, newSpg))
 		if errs.IsSevere() {
