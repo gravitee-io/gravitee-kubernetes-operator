@@ -21,13 +21,11 @@ type Console struct {
 	// Theses groups are references to gravitee.io/Group custom resources created on the cluster.
 	// All members of those groups will receive a notification for the defined events.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	GroupRefs []refs.NamespacedName `json:"groupRefs"`
 	// List events that will trigger a notification for an API. Recipients are the API primary owner
 	// and all members of groups referenced in `groupRefs`
 	// Notification spec attribute `eventType` must be set to `"api"`.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	// +kubebuilder:validation:Enum=APIKEY_EXPIRED;APIKEY_RENEWED;APIKEY_REVOKED;SUBSCRIPTION_NEW;SUBSCRIPTION_ACCEPTED;SUBSCRIPTION_CLOSED;SUBSCRIPTION_PAUSED;SUBSCRIPTION_RESUMED;SUBSCRIPTION_REJECTED;SUBSCRIPTION_TRANSFERRED;SUBSCRIPTION_FAILED;NEW_SUPPORT_TICKET;API_STARTED;API_STOPPED;API_UPDATED;API_DEPLOYED;NEW_RATING;NEW_RATING_ANSWER;MESSAGE;ASK_FOR_REVIEW;REVIEW_OK;REQUEST_FOR_CHANGES;API_DEPRECATED;NEW_SPEC_GENERATED
 	//nolint:lll
 	APIEvents []string `json:"apiEvents"`

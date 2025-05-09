@@ -74,7 +74,6 @@ spec:
                     to configure Gravitee console UI notifications.
                   properties:
                     apiEvents:
-                      default: []
                       description: >-
                         List events that will trigger a notification for an API.
                         Recipients are the API primary owner
@@ -112,7 +111,6 @@ spec:
                         type: string
                       type: array
                     groupRefs:
-                      default: []
                       description: >-
                         List of group references associated with this console
                         notification.
