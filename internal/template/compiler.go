@@ -239,7 +239,9 @@ func updateAnnotation(ctx context.Context, obj client.Object, parentResourceDele
 	valueSet := sets.New(values...)
 	if parentResourceDeleted {
 		updated = true
-		totalReference--
+		if totalReference > 0 {
+			totalReference--
+		}
 		valueSet.Delete(objID)
 	} else if !valueSet.Has(objID) {
 		updated = true

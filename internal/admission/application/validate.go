@@ -57,26 +57,32 @@ func validateUpdate(
 	errs := errors.NewAdmissionErrors()
 	oldApp, ook := oldObj.(core.ApplicationObject)
 	newApp, nok := newObj.(core.ApplicationObject)
-	if ook && nok {
-		// Should be the first validation, it will also compile the templates internally
-		errs.Add(admission.CompileAndValidateTemplate(ctx, newApp))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.Add(ctxref.Validate(ctx, newApp))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.MergeWith(validateSettings(newApp))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.MergeWith(validateSettingsUpdate(oldApp, newApp))
-		if errs.IsSevere() {
-			return errs
-		}
-		errs.MergeWith(validateDryRun(ctx, newApp))
+	if !ook || !nok {
+		return errs
 	}
+
+	if newApp.GetDeletionTimestamp() != nil {
+		return nil
+	}
+
+	// Should be the first validation, it will also compile the templates internally
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newApp))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.Add(ctxref.Validate(ctx, newApp))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateSettings(newApp))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateSettingsUpdate(oldApp, newApp))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateDryRun(ctx, newApp))
 	return errs
 }
 
