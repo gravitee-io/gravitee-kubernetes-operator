@@ -120,6 +120,28 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
+      - notification
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - notification/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - notification/status
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
       - managementcontexts
     verbs:
       - get

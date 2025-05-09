@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint:cyclop // as the number of types increases the package bigger and bigger switches
 package predicate
 
 import (
@@ -58,6 +59,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 	case *v1alpha1.SharedPolicyGroup:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Group:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.Notification:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *netV1.Ingress:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
@@ -107,6 +110,9 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.Group:
 		oo, _ := e.ObjectOld.(*v1alpha1.Group)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *v1alpha1.Notification:
+		oo, _ := e.ObjectOld.(*v1alpha1.Notification)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *netV1.Ingress:
 		oo, _ := e.ObjectOld.(*netV1.Ingress)

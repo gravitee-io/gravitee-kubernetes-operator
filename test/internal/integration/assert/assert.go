@@ -29,6 +29,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/sort"
 	v1 "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -36,6 +37,7 @@ import (
 )
 
 const reconcileStatus = "reconcile status"
+const reconcileCondition = "reconcile condition"
 
 func HasFinalizer(object client.Object, value string) error {
 	if !controllerutil.ContainsFinalizer(object, value) {
@@ -91,6 +93,14 @@ func GroupFailed(group *v1alpha1.Group) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, group.Status.ProcessingStatus)
 }
 
+func NotificationCompleted(notification *v1alpha1.Notification) error {
+	return Equals(reconcileCondition, false, notification.Status.IsFailed())
+}
+
+func NotificationFailed(notification *v1alpha1.Notification) error {
+	return Equals(reconcileCondition, true, notification.Status.IsFailed())
+}
+
 func ApiFailed(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, apiDefinition.Status.ProcessingStatus)
 }
@@ -121,6 +131,14 @@ func Equals(field string, expected, given any) error {
 		return newAssertEqualError(field, expected, given)
 	}
 	return nil
+}
+
+func Deleted[T client.Object](ctx context.Context, kind string, obj T) error {
+	err := manager.GetLatest(ctx, obj)
+	if k8serr.IsNotFound(err) {
+		return nil
+	}
+	return newAssertEqualError(kind, "NOT FOUND", err)
 }
 
 func SliceEqualsSorted[S ~[]E, E any](field string, expected S, given S, comp sort.Comparator[E]) error {

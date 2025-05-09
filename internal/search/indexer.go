@@ -35,6 +35,8 @@ const (
 	ApiV4ContextField            IndexField = "api-v4-context"
 	SecretRefField               IndexField = "secretRef"
 	ApiResourceField             IndexField = "resource"
+	ApiNotificationRefsField     IndexField = "notificationRefs"
+	ApiV4NotificationRefsField   IndexField = "api-v4-notificationRefs"
 	ApiV4ResourceField           IndexField = "api-v4-resource"
 	ApiV4SharedPolicyGroupsField IndexField = "api-v4-spg"
 	ApiTemplateField             IndexField = "api-template"
@@ -73,9 +75,25 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		errs = append(errs, err)
 	}
 
-	apiV4ResourceIndexer := newIndexer(ApiV4ResourceField, indexIApiV4ResourceRefs)
+	apiV4ResourceIndexer := newIndexer(ApiV4ResourceField, indexApiV4ResourceRefs)
 	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4ResourceIndexer.Field,
 		apiV4ResourceIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	notificationIndexer := newIndexer(ApiNotificationRefsField, indexNotificationRefs)
+	if err := cache.IndexField(ctx,
+		&v1alpha1.ApiDefinition{},
+		notificationIndexer.Field,
+		notificationIndexer.Func); err != nil {
+		errs = append(errs, err)
+	}
+
+	apiV4NotificationIndexer := newIndexer(ApiV4NotificationRefsField, indexApiV4NotificationRefs)
+	if err := cache.IndexField(ctx,
+		&v1alpha1.ApiV4Definition{},
+		apiV4NotificationIndexer.Field,
+		apiV4NotificationIndexer.Func); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -200,7 +218,7 @@ func indexApiResourceRefs(api *v1alpha1.ApiDefinition, fields *[]string) {
 	}
 }
 
-func indexIApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
+func indexApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 	if api.Spec.Resources == nil {
 		return
 	}
@@ -209,6 +227,28 @@ func indexIApiV4ResourceRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 		if resource.IsRef() {
 			*fields = append(*fields, ensureNamespacedRef(api, resource.Ref))
 		}
+	}
+}
+
+func indexNotificationRefs(api *v1alpha1.ApiDefinition, fields *[]string) {
+	if api.Spec.NotificationsRefs == nil {
+		return
+	}
+
+	for _, ref := range api.Spec.NotificationsRefs {
+		r := ref
+		*fields = append(*fields, ensureNamespacedRef(api, &r))
+	}
+}
+
+func indexApiV4NotificationRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
+	if api.Spec.NotificationsRefs == nil {
+		return
+	}
+
+	for _, ref := range api.Spec.NotificationsRefs {
+		r := ref
+		*fields = append(*fields, ensureNamespacedRef(api, &r))
 	}
 }
 

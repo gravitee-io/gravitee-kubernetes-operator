@@ -133,6 +133,8 @@ const (
 	NativeApiV4                        = "apim/api_definition/v4/api-v4-native.yml"
 	NativeApiV4WithContext             = "apim/api_definition/v4/api-v4-native-with-context.yml"
 	ApiV4WithPagesFile                 = "apim/api_definition/v4/api-v4-with-page-markdown.yml"
+	ApiWithNotificationsAndGroups      = "apim/api_definition/v2/api-with-notifications-and-groups.yml"
+	ApiV4WithNotificationsAndGroups    = "apim/api_definition/v4/api-v4-with-notifications-and-groups.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"
@@ -151,6 +153,9 @@ const (
 	SharedPolicyGroupsFile = "apim/shared_policy_groups/shared_policy_groups.yml"
 
 	GroupFile = "apim/group/group.yml"
+
+	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
+	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"
 
 	// Use cases.
 	SubscribeJWTUseCaseContextFile         = "usecase/subscribe-to-jwt-plan/resources/management-context.yml"

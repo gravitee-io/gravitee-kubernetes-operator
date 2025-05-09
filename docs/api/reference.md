@@ -56,6 +56,10 @@ Resources
             <td>SharedPolicyGroup</td>
         </tr>
         <tr>
+            <td><a href="#notification">Notification</a></td>
+            <td>Notification defines notification settings in Gravitee</td>
+        </tr>
+        <tr>
             <td><a href="#group">Group</a></td>
             <td></td>
         </tr></tbody>
@@ -467,6 +471,13 @@ Categories are reflected in APIM portal so that consumers can easily find the AP
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apidefinitionspecconsolenotificationconfiguration">consoleNotificationConfiguration</a></b></td>
+        <td>object</td>
+        <td>
+          ConsoleNotification struct sent to the mAPI, not part of the CRD spec.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apidefinitionspeccontextref">contextRef</a></b></td>
         <td>object</td>
         <td>
@@ -544,7 +555,7 @@ is managed using a kubernetes operator<br/>
         <td>[]object</td>
         <td>
           List of group references associated with the API
-This groups are references to Group custom resources created on the cluster.<br/>
+These groups are references to Group custom resources created on the cluster.<br/>
           <br/>
             <i>Default</i>: []<br/>
         </td>
@@ -616,6 +627,18 @@ This will cause Gateways to fetch the APIs from the datastore<br/>
         <td>[]object</td>
         <td>
           List of API metadata entries<br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apidefinitionspecnotificationsrefsindex">notificationsRefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          References to Notification custom resources to setup notifications.
+For an API Notification CRD `eventType` field must be set to `api`
+and only events set via `apiEvents` attributes are used.
+Only one notification with `target` equals to `console` is admitted.<br/>
           <br/>
             <i>Default</i>: []<br/>
         </td>
@@ -726,6 +749,75 @@ of an <a href="#apiresource">existing API resource definition</a>.<br/>
           <br/>
             <i>Enum</i>: PUBLIC, PRIVATE<br/>
             <i>Default</i>: PRIVATE<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.consoleNotificationConfiguration
+[Go to parent definition](#apidefinitionspec)
+
+
+
+ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>config_type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>groups</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>hooks</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>origin</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>referenceId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>referenceType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>user</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -1249,6 +1341,47 @@ List of path operators
         <td>string</td>
         <td>
           Metadata Value<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiDefinition.spec.notificationsRefs[index]
+[Go to parent definition](#apidefinitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -4827,6 +4960,13 @@ Categories are reflected in APIM portal so that consumers can easily find the AP
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b><a href="#apiv4definitionspecconsolenotificationconfiguration">consoleNotificationConfiguration</a></b></td>
+        <td>object</td>
+        <td>
+          ConsoleNotification struct sent to the mAPI, not part of the CRD spec.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b><a href="#apiv4definitionspeccontextref">contextRef</a></b></td>
         <td>object</td>
         <td>
@@ -4898,7 +5038,7 @@ from an API instance or from a config map created in the cluster (which is the d
         <td>[]object</td>
         <td>
           List of group references associated with the API
-This groups are references to Group custom resources created on the cluster.<br/>
+These groups are references to Group custom resources created on the cluster.<br/>
           <br/>
             <i>Default</i>: []<br/>
         </td>
@@ -4952,6 +5092,18 @@ field of the resource.<br/>
         <td>[]object</td>
         <td>
           List of API metadata entries<br/>
+          <br/>
+            <i>Default</i>: []<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#apiv4definitionspecnotificationsrefsindex">notificationsRefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          References to Notification custom resources to setup notifications.
+For an API Notification CRD `eventType` field must be set to `api`
+and only events set via `apiEvents` attributes are used.
+Only one notification with `target` equals to `console` is admitted.<br/>
           <br/>
             <i>Default</i>: []<br/>
         </td>
@@ -6115,6 +6267,75 @@ Analytics Tracing
 </table>
 
 
+### ApiV4Definition.spec.consoleNotificationConfiguration
+[Go to parent definition](#apiv4definitionspec)
+
+
+
+ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>config_type</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>groups</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>hooks</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>origin</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>referenceId</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>referenceType</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>user</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
 ### ApiV4Definition.spec.contextRef
 [Go to parent definition](#apiv4definitionspec)
 
@@ -7264,6 +7485,47 @@ Reference to an existing Shared Policy Group
         <td>string</td>
         <td>
           Metadata Value<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### ApiV4Definition.spec.notificationsRefs[index]
+[Go to parent definition](#apiv4definitionspec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -10028,6 +10290,311 @@ and is very unlikely to be persisted in the status<br/>
           warning errors do not block object reconciliation,
 most of the time because the value is ignored or defaulted
 when the API gets synced with APIM<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## Notification
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
+
+
+
+
+
+
+Notification defines notification settings in Gravitee
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#notificationspec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          NotificationSpec defines the desired state of a Notification.
+It is to be referenced in an API.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#notificationstatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          NotificationStatus defines the observed state of the Notification.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Notification.spec
+[Go to parent definition](#notification)
+
+
+
+NotificationSpec defines the desired state of a Notification.
+It is to be referenced in an API.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>eventType</b></td>
+        <td>string</td>
+        <td>
+          EventType defines the subject of those events.
+Notification can be used in API or Applications, each of those have different events.
+An attribute starting with `eventType` value exists in the target configuration
+to configure events: <eventType>Events (e.g `apiEvents`)<br/>
+          <br/>
+            <i>Default</i>: api<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>target</b></td>
+        <td>string</td>
+        <td>
+          Target of the notification: `"console"` is for notifications in Gravitee console UI.
+For each target there is an attribute of the same name to configure it.<br/>
+          <br/>
+            <i>Default</i>: console<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#notificationspecconsole">console</a></b></td>
+        <td>object</td>
+        <td>
+          Console is used when the `target` value is `"console"` and is meant
+to configure Gravitee console UI notifications.<br/>
+          <br/>
+            <i>Default</i>: map[]<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Notification.spec.console
+[Go to parent definition](#notificationspec)
+
+
+
+Console is used when the `target` value is `"console"` and is meant
+to configure Gravitee console UI notifications.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>apiEvents</b></td>
+        <td>[]enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: APIKEY_EXPIRED, APIKEY_RENEWED, APIKEY_REVOKED, SUBSCRIPTION_NEW, SUBSCRIPTION_ACCEPTED, SUBSCRIPTION_CLOSED, SUBSCRIPTION_PAUSED, SUBSCRIPTION_RESUMED, SUBSCRIPTION_REJECTED, SUBSCRIPTION_TRANSFERRED, SUBSCRIPTION_FAILED, NEW_SUPPORT_TICKET, API_STARTED, API_STOPPED, API_UPDATED, API_DEPLOYED, NEW_RATING, NEW_RATING_ANSWER, MESSAGE, ASK_FOR_REVIEW, REVIEW_OK, REQUEST_FOR_CHANGES, API_DEPRECATED, NEW_SPEC_GENERATED<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#notificationspecconsolegrouprefsindex">groupRefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          List of group references associated with this console notification.
+Theses groups are references to gravitee.io/Group custom resources created on the cluster.
+All members of those groups will receive a notification for the defined events.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>groups</b></td>
+        <td>[]string</td>
+        <td>
+          List of groups associated with the API.
+These groups are id to existing groups in APIM.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Notification.spec.console.groupRefs[index]
+[Go to parent definition](#notificationspecconsole)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Notification.status
+[Go to parent definition](#notification)
+
+
+
+NotificationStatus defines the observed state of the Notification.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#notificationstatusconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          Conditions are the condition that must be met by the Notification
+"Accepted" condition is used to indicate if the `Notification` can be used by another resource.
+"ResolveRef" condition is used to indicate if an error occurred while resolving console groups.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Notification.status.conditions[index]
+[Go to parent definition](#notificationstatus)
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+---
+This struct is intended for direct use as an array at the field path .status.conditions.  For example,
+
+
+	type FooStatus struct{
+	    // Represents the observations of a foo's current state.
+	    // Known .status.conditions.type are: "Available", "Progressing", and "Degraded"
+	    // +patchMergeKey=type
+	    // +patchStrategy=merge
+	    // +listType=map
+	    // +listMapKey=type
+	    Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+
+	    // other fields
+	}
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.
+This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.
+This may be an empty string.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.
+Producers of specific condition types may define expected values and meanings for this field,
+and whether the values are considered a guaranteed API.
+The value should be a CamelCase string.
+This field may not be empty.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.
+---
+Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+useful (see .node.status.conditions), the ability to deconflict is important.
+The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.
+For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+with respect to the current state of the instance.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
         </td>
         <td>false</td>
       </tr></tbody>
