@@ -16,6 +16,7 @@ package resource
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -64,5 +65,13 @@ func (a AdmissionCtrl) ValidateUpdate(
 	oldObj runtime.Object,
 	newObj runtime.Object,
 ) (admission.Warnings, error) {
+	res, ok := newObj.(*v1alpha1.ApiResource)
+	if !ok {
+		return admission.Warnings{}, fmt.Errorf("can't cast to *v1alpha1.ApiResource")
+	}
+	if res.IsBeingDeleted() {
+		return admission.Warnings{}, nil
+	}
+
 	return validateCreate(ctx, newObj).Map()
 }

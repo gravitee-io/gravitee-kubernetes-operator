@@ -134,6 +134,10 @@ func validateUpdate(
 		return errs
 	}
 
+	if newApi.IsBeingDeleted() {
+		return errs
+	}
+
 	base.DeleteDefinitionConfigMapIfNeeded(ctx, oldApi, newApi)
 
 	errs.Add(validateApiType(oldApi, newApi))
