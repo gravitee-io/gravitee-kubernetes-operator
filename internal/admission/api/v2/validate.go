@@ -92,6 +92,10 @@ func validateUpdate(
 		return errs
 	}
 
+	if newApi.GetDeletionTimestamp() != nil {
+		return nil
+	}
+
 	base.DeleteDefinitionConfigMapIfNeeded(ctx, oldApi, newApi)
 
 	errs.Add(base.ValidateSubscribedPlans(ctx, oldApi, newApi, indexer.ApiV2SubsField))

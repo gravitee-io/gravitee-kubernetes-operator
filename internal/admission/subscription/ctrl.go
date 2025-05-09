@@ -16,6 +16,7 @@ package subscription
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -56,5 +57,13 @@ func (a AdmissionCtrl) ValidateDelete(
 func (a AdmissionCtrl) ValidateUpdate(
 	ctx context.Context, oldObj runtime.Object, newObj runtime.Object,
 ) (admission.Warnings, error) {
+	subscription, ok := newObj.(*v1alpha1.Subscription)
+	if !ok {
+		return admission.Warnings{}, fmt.Errorf("can't cast to *v1alpha1.Subscription")
+	}
+	if subscription.IsBeingDeleted() {
+		return admission.Warnings{}, nil
+	}
+
 	return validateUpdate(ctx, oldObj, newObj).Map()
 }

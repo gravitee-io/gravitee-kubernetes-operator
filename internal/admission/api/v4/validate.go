@@ -127,6 +127,10 @@ func validateUpdate(
 		return errs
 	}
 
+	if newApi.GetDeletionTimestamp() != nil {
+		return nil
+	}
+
 	base.DeleteDefinitionConfigMapIfNeeded(ctx, oldApi, newApi)
 
 	errs.Add(validateApiType(oldApi, newApi))
