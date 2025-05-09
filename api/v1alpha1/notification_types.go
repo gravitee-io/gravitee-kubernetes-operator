@@ -72,7 +72,7 @@ type NotificationList struct {
 // It is to be referenced in an API.
 // +kubebuilder:object:generate=true
 type NotificationSpec struct {
-	*notification.Notification `json:",inline"`
+	*notification.Type `json:",inline"`
 }
 
 // Hash implements core.Spec.

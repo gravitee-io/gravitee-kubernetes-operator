@@ -16,6 +16,10 @@ package notification
 
 import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 
+const TargetConsole = "console"
+const EventTypeAPI = "api"
+
+
 type Console struct {
 	// List of group references associated with this console notification.
 	// Theses groups are references to gravitee.io/Group custom resources created on the cluster.
@@ -30,9 +34,13 @@ type Console struct {
 	// +kubebuilder:validation:items:Enum=APIKEY_EXPIRED;APIKEY_RENEWED;APIKEY_REVOKED;SUBSCRIPTION_NEW;SUBSCRIPTION_ACCEPTED;SUBSCRIPTION_CLOSED;SUBSCRIPTION_PAUSED;SUBSCRIPTION_RESUMED;SUBSCRIPTION_REJECTED;SUBSCRIPTION_TRANSFERRED;SUBSCRIPTION_FAILED;NEW_SUPPORT_TICKET;API_STARTED;API_STOPPED;API_UPDATED;API_DEPLOYED;NEW_RATING;NEW_RATING_ANSWER;MESSAGE;ASK_FOR_REVIEW;REVIEW_OK;REQUEST_FOR_CHANGES;API_DEPRECATED;NEW_SPEC_GENERATED
 	//nolint:lll
 	APIEvents []string `json:"apiEvents"`
+	// List of groups associated with the API.
+	// These groups are id to existing groups in APIM.
+	// +kubebuilder:validation:Optional
+	Groups []string `json:"groups"`
 }
 
-type Notification struct {
+type Type struct {
 	// Target of the notification: `"console"` is for notifications in Gravitee console UI.
 	// For each target there is an attribute of the same name to configure it.
 	// +kubebuilder:validation:Required

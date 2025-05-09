@@ -18,6 +18,7 @@ package notification
 
 import (
 	"context"
+
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -89,8 +90,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		} else {
 			err = events.Record(event.Update, notification, func() error {
-				// We don't do anything directly when there is an update on ApiResource
-				return nil
+				return internal.ResolveGroupRefs(ctx, notification.Spec.Type, notification.Namespace)
 			})
 		}
 

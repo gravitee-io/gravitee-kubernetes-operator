@@ -107,6 +107,13 @@ spec:
                           - name
                         type: object
                       type: array
+                    groups:
+                      description: |-
+                        List of groups associated with the API.
+                        These groups are id to existing groups in APIM.
+                      items:
+                        type: string
+                      type: array
                   type: object
                 eventType:
                   default: api
