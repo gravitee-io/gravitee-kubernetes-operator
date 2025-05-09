@@ -42,6 +42,12 @@ paths:
       summary: Search for APIs of a given type
       description: Search for APIs of a given type
       parameters:
+        - in: query
+          name: NewParameter
+          description: New parameter
+          required: true
+          schema:
+            : 
         - $ref: "#/components/parameters/orgIdParam"
         - $ref: "#/components/parameters/envIdParam"
         - $ref: "#/components/parameters/pageParam"
