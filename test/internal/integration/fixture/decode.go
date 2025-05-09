@@ -41,6 +41,7 @@ var (
 	subscriptionKind       = v1alpha1.GroupVersion.WithKind("Subscription")
 	groupKind              = v1alpha1.GroupVersion.WithKind("Group")
 	sharedPolicyGroupsKind = v1alpha1.GroupVersion.WithKind("SharedPolicyGroup")
+	notificationKind       = v1alpha1.GroupVersion.WithKind("Notification")
 )
 
 func decodeIfDefined[T client.Object](path string, rcv T, kind schema.GroupVersionKind) *T {

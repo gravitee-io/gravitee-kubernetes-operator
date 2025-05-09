@@ -81,6 +81,6 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		},
 		Entry("on API role scope", group.APIRoleScope),
 		Entry("on application role scope", group.ApplicationRoleScope),
-		Entry("on integration role scope", group.APIRoleScope),
+		Entry("on integration role scope", group.IntegrationRoleScope),
 	)
 })

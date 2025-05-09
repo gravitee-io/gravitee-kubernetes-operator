@@ -182,6 +182,23 @@ func (api *ApiDefinition) SetGroups(groups []string) {
 	api.Spec.Groups = groups
 }
 
+func (api *ApiDefinition) GetNotificationRefs() []core.ObjectRef {
+	result := make([]core.ObjectRef, 0)
+	for _, ref := range api.Spec.NotificationsRefs {
+		r := ref
+		result = append(result, &r)
+	}
+	return result
+}
+
+func (api *ApiDefinition) SetConsoleNotification(consoleNotification core.ConsoleNotificationSettingsObject) {
+	if consoleNotification == nil {
+		api.Spec.ConsoleNotification = nil
+	} else if impl, ok := consoleNotification.(*base.ConsoleNotificationConfiguration); ok {
+		api.Spec.ConsoleNotification = impl
+	}
+}
+
 func (api *ApiDefinition) GetRef() core.ObjectRef {
 	return &refs.NamespacedName{
 		Name:      api.Name,

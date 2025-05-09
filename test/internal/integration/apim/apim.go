@@ -32,6 +32,7 @@ type APIM struct {
 	Pages         *service.Pages
 	Org           *service.Org
 	Export        *Export
+	Notification  *Notification
 }
 
 func NewClient(ctx context.Context) *APIM {
@@ -47,6 +48,7 @@ func NewClient(ctx context.Context) *APIM {
 	pages := service.NewPages(apim.APIs.Client)
 	org := service.NewOrg(apim.APIs.Client)
 	export := NewExport(apim.APIs.Client)
+	notification := NewNotification(apim.APIs.Client)
 
 	return &APIM{
 		APIM:          apim,
@@ -54,5 +56,6 @@ func NewClient(ctx context.Context) *APIM {
 		Pages:         pages,
 		Org:           org,
 		Export:        export,
+		Notification:  notification,
 	}
 }

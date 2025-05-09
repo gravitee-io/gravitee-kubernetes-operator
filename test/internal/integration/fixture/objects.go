@@ -36,6 +36,7 @@ type Objects struct {
 	Subscription      *v1alpha1.Subscription
 	Group             *v1alpha1.Group
 	SharedPolicyGroup *v1alpha1.SharedPolicyGroup
+	Notification      *v1alpha1.Notification
 
 	randomSuffix string
 }

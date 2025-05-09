@@ -47,6 +47,7 @@ type Interface interface {
 	WatchApiTemplate() *handler.Funcs
 	WatchTLSSecret() *handler.Funcs
 	WatchSharedPolicyGroups(index search.IndexField) *handler.Funcs
+	WatchNotifications(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
 }
 
@@ -54,7 +55,7 @@ type UpdateFunc = func(context.Context, event.UpdateEvent, workqueue.TypedRateLi
 type CreateFunc = func(context.Context, event.CreateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request])
 
 var NoopCreateFunc = func(context.Context, event.CreateEvent, workqueue.TypedRateLimitingInterface[reconcile.Request]) {
-
+	// no op
 }
 
 type Type struct {
@@ -144,6 +145,13 @@ func (w *Type) WatchTLSSecret() *handler.Funcs {
 // WatchSharedPolicyGroups can be used to trigger a reconciliation when a SPG is updated
 // on resources that should be synced with this SOG.
 func (w *Type) WatchSharedPolicyGroups(index search.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
+	}
+}
+
+func (w *Type) WatchNotifications(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),

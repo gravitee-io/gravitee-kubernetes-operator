@@ -23,7 +23,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -51,14 +50,4 @@ func ResolveGroupRefs(ctx context.Context, api core.ApiDefinitionObject) error {
 	}
 	api.SetGroups(groups)
 	return nil
-}
-
-func getNamespacedName(ref core.ObjectRef, apiNs string) types.NamespacedName {
-	if ref.GetNamespace() == "" {
-		return types.NamespacedName{
-			Name:      ref.GetName(),
-			Namespace: apiNs,
-		}
-	}
-	return ref.NamespacedName()
 }

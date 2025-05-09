@@ -24,6 +24,8 @@ const (
 	CRDApiV4DefinitionResource            = "apiv4definitions"
 	CRDResourceResource                   = "apiresources"
 	CRDResourceSharedPolicyGroupsResource = "sharedpolicygroups"
+	CRDResourceNotification               = "notifications"
+	CRDResourceGroup                      = "groups"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"
@@ -40,6 +42,7 @@ const (
 	ApiDefinitionTemplateFinalizer = "finalizers.gravitee.io/apidefinitiontemplate"
 	ManagementContextFinalizer     = "finalizers.gravitee.io/managementcontextdeletion"
 	ApiResourceFinalizer           = "finalizers.gravitee.io/apiresource"
+	NotificationFinalizer          = "finalizers.gravitee.io/notification"
 	//nolint:gosec // This is not an hardcoded secret
 	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
 	IngressFinalizer                 = "finalizers.gravitee.io/ingress"

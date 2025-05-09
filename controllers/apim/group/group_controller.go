@@ -16,7 +16,6 @@ package group
 
 import (
 	"context"
-	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group/internal"
@@ -34,8 +33,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
-
-const requeueAfterTime = time.Second * 5
 
 type Reconciler struct {
 	Scheme   *runtime.Scheme
@@ -97,7 +94,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if errors.IsRecoverable(err) {
 		log.ErrorRequeuingReconcile(ctx, err, group)
-		return ctrl.Result{RequeueAfter: requeueAfterTime}, err
+		return ctrl.Result{}, err
 	}
 
 	log.ErrorAbortingReconcile(ctx, err, group)
