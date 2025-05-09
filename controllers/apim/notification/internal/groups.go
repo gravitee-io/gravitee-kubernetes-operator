@@ -49,8 +49,8 @@ func ResolveGroupRefs(ctx context.Context, notif *notification.Type, namespace s
 			log.Info(ctx, "Skipping group reference "+ref.String()+" as it does not exist")
 			continue
 		}
-		if !slices.Contains(groups, group.Spec.Name) {
-			groups = append(groups, group.Spec.Name)
+		if !slices.Contains(groups, group.Status.ID) {
+			groups = append(groups, group.Status.ID)
 		}
 	}
 	notif.Console.Groups = groups
