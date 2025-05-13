@@ -49,7 +49,16 @@ webhooks:
     resources:
     - managementcontexts
     scope: '*'
+  {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: "In"
+        values:
+          - {{ .Release.Namespace }}
+  {{ else }}
   namespaceSelector: {}
+  {{ end }}
   sideEffects: None
   timeoutSeconds: 10
   admissionReviewVersions:

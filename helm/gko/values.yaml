@@ -120,7 +120,7 @@ manager:
       validatingName: gko-validating-webhook-configurations
       ## @param manager.webhook.configuration.mutatingName The name of MutatingWebhookConfiguration resource created to access the mutation controller.
       mutatingName: gko-mutating-webhook-configurations
-      ## @param manager.webhook.configuration.useAutoUniqueNames If true each install will take care on prefixing the validating and mutating configuration names with the service account name. This allow deploying one operator per namespace, each using their own service account and webhook configurations.
+      ## @param manager.webhook.configuration.useAutoUniqueNames If true each install will take care on prefixing the validating and mutating configuration names with the service account name. This allows deploying one operator per namespace, each using their own service account and webhook configurations. This should not be set to true if manager.scope.cluster=true
       useAutoUniqueNames: false
     service:
       ## @param manager.webhook.service.name The service used to expose the webhook server.
