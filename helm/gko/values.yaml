@@ -98,6 +98,34 @@ manager:
 
     ## @param manager.httpClient.timeoutSeconds he timeout (in seconds) used when issuing request to the Management API.
     timeoutSeconds: 5
+<<<<<<< HEAD
+=======
+  webhook:
+    ## @param manager.webhook.enabled If true, the manager will register a webhook server operating on custom resources.
+    enabled: true
+    configuration:
+      ## @param manager.webhook.configuration.validatingName The name of ValidatingWebhookConfiguration resource created to access the validation controller.
+      validatingName: gko-validating-webhook-configurations
+      ## @param manager.webhook.configuration.mutatingName The name of MutatingWebhookConfiguration resource created to access the mutation controller.
+      mutatingName: gko-mutating-webhook-configurations
+      ## @param manager.webhook.configuration.useAutoUniqueNames If true each install will take care on prefixing the validating and mutating configuration names with the service account name. This allows deploying one operator per namespace, each using their own service account and webhook configurations. This should not be set to true if manager.scope.cluster=true
+      useAutoUniqueNames: false
+    service:
+      ## @param manager.webhook.service.name The service used to expose the webhook server.
+      name: gko-webhook
+      ## @param manager.webhook.service.port Which port the webhook server will listen to.
+      port: 9443
+    cert:
+      ## @param manager.webhook.cert.create If true, a secret will be created to store the webhook server certificate.
+      create: true
+      secret:
+        ## @param manager.webhook.cert.secret.name The name of the secret storing the webhook server certificate.
+        name: gko-webhook-cert
+    admission:
+      ## @param manager.webhook.admission.checkApiContextPathConflictInCluster check if the same API context path exists in the whole cluster.
+      checkApiContextPathConflictInCluster: false
+
+>>>>>>> f87c17f (fix: add namespace selector to webhooks)
 ## @section ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.

@@ -1,0 +1,318 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- if .Values.manager.webhook.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+  name: {{ template "gko.ValidatingWebhookConfigurationName" . }}
+  namespace: {{ .Release.Namespace }}
+webhooks:
+  - name: v1alpha1.gravitee.io.apidefinition
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-apidefinition
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'apidefinitions'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+  - name: v1alpha1.gravitee.io.apiv4definition
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-apiv4definition
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'apiv4definitions'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+  - name: v1alpha1.gravitee.io.application
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-application
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'applications'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+  - name: v1alpha1.gravitee.io.apiresource
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-apiresource
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'apiresources'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+  - name: v1alpha1.gravitee.io.managementcontext
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-managementcontext
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'managementcontexts'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+  - name: v1alpha1.gravitee.io.subscription
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-subscription
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'subscriptions'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+  - name: v1alpha1.gravitee.io.group
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-group
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'groups'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+  - name: v1alpha1.gravitee.io.sharedpolicygroups
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-sharedpolicygroup
+        port: 443
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'sharedpolicygroups'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
+{{- end }}
