@@ -84,6 +84,7 @@ type ApiDefinitionModel interface {
 	GetGroupRefs() []ObjectRef
 	GetNotificationRefs() []ObjectRef
 	SetConsoleNotification(ConsoleNotificationSettingsObject)
+	GetTags() []string
 }
 
 // +k8s:deepcopy-gen=false
