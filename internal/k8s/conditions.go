@@ -15,6 +15,7 @@
 package k8s
 
 import (
+	"fmt"
 	"maps"
 	"slices"
 
@@ -34,6 +35,7 @@ const (
 	ListenerReasonKafkaConflict   = "TooManyKafkaListeners"
 
 	ParamsReasonLicenseNotFound = "LicenseNotFound"
+	ReasonNoConflict            = "NoConflicts"
 
 	ConditionStatusTrue  = "True"
 	ConditionStatusFalse = "False"
@@ -74,7 +76,14 @@ func NewListenerConflictedConditionBuilder(generation int64) *ConditionBuilder {
 	return NewConditionBuilder(ConditionConflicted).
 		ObservedGeneration(generation).
 		Status(ConditionStatusFalse).
-		Reason(string(gwAPIv1.ListenerReasonNoConflicts))
+		Reason(ReasonNoConflict)
+}
+
+func NewHTTPRoutePathConflictedConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionConflicted).
+		ObservedGeneration(generation).
+		Status(ConditionStatusFalse).
+		Reason(ReasonNoConflict)
 }
 
 func NewConditionBuilder(cType string) *ConditionBuilder {
@@ -146,6 +155,17 @@ func (b *ConditionBuilder) RejectLicenseNotFound(msg string) *ConditionBuilder {
 		Reason(ParamsReasonLicenseNotFound).
 		Status(metav1.ConditionFalse).
 		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectConflictingPath(routeID string) *ConditionBuilder {
+	return b.
+		Reason(ConditionConflicted).
+		Status(metav1.ConditionTrue).
+		Message(
+			fmt.Sprintf("Route cannot be programmed because path conflicts with route [%s]",
+				routeID,
+			),
+		)
 }
 
 func (b *ConditionBuilder) RejectTooManyCertificateRefs(msg string) *ConditionBuilder {
