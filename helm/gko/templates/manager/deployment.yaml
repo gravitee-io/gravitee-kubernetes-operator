@@ -45,13 +45,10 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
-{{- if or .Values.manager.image.pullSecret .Values.rbacProxy.image.pullSecret }}
+{{- if .Values.manager.image.pullSecret }}
       imagePullSecrets:
 {{- if .Values.manager.image.pullSecret }}
         - {{ .Values.manager.image.pullSecret | toYaml }}
-{{- end }}
-{{- if .Values.rbacProxy.image.pullSecret }}
-        - {{ .Values.rbacProxy.image.pullSecret | toYaml }}
 {{- end }}
 {{- end }}
 {{- with .Values.manager.tolerations }}
@@ -59,24 +56,6 @@ spec:
         {{- toYaml . | nindent 8 }}
 {{- end }}
       containers:
-{{- if and .Values.manager.metrics.enabled .Values.rbacProxy.enabled }}
-        - args:
-            - --secure-listen-address=0.0.0.0:8443
-            - --upstream=http://127.0.0.1:8080/
-            - --logtostderr=true
-            - --v=0
-          image: '{{ .Values.rbacProxy.image.repository }}:{{ .Values.rbacProxy.image.tag }}'
-          imagePullPolicy: '{{ .Values.rbacProxy.image.pullPolicy }}'
-          name: kube-rbac-proxy
-          ports:
-            - containerPort: 8443
-              name: https
-              protocol: TCP
-          {{- with .Values.manager.resources }}
-          resources:
-            {{- . | toYaml | nindent 12 }}
-          {{- end }}
-{{- end }}
         - args: []
           command:
             - /manager

@@ -75,6 +75,7 @@ import (
 	cliScheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
 )
@@ -122,15 +123,16 @@ func main() {
 		log.Global.Infof("Metrics server listens on %s", env.GetMetricsAddr())
 	}
 
-	metrics := metricServer.Options{
-		BindAddress:   env.GetMetricsAddr(),
-		SecureServing: env.Config.SecureMetrics,
-		CertDir:       env.Config.MetricsCertDir,
+	metricsOpts := metricServer.Options{
+		BindAddress:    env.GetMetricsAddr(),
+		SecureServing:  env.Config.SecureMetrics,
+		CertDir:        env.Config.MetricsCertDir,
+		FilterProvider: filters.WithAuthenticationAndAuthorization,
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
-		Metrics:                metrics,
+		Metrics:                metricsOpts,
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: env.GetProbesAddr(),
 		LeaderElection:         env.Config.EnableLeaderElection,
