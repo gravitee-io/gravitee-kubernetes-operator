@@ -17,6 +17,7 @@ package httproute
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
@@ -38,6 +39,7 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
+//nolint:gocognit // acceptable complexity
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	route := &gwAPIv1.HTTPRoute{}
 	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
@@ -64,6 +66,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			}
 			if err := internal.Accept(ctx, dc); err != nil {
 				return err
+			}
+			if err := internal.DetectConflicts(ctx, dc); err != nil {
+				return err
+			}
+			for i := range route.Status.Parents {
+				parent := &route.Status.Parents[i]
+				if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
+					return nil
+				}
 			}
 			if err := internal.Program(ctx, dc); err != nil {
 				return err

@@ -166,6 +166,10 @@ func (api *ApiDefinition) IsStopped() bool {
 	return api.Spec.IsStopped()
 }
 
+func (api *ApiDefinition) GetTags() []string {
+	return api.Spec.Tags
+}
+
 func (api *ApiDefinition) GetPlan(name string) core.PlanModel {
 	return api.Spec.GetPlan(name)
 }
