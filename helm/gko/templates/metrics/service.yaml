@@ -32,7 +32,7 @@ spec:
     - name: https
       port: 8443
       protocol: TCP
-      targetPort: https
+      targetPort: {{ .Values.manager.metrics.port }}
   selector:
     control-plane: controller-manager
 {{- end }}  

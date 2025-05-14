@@ -28,25 +28,6 @@ rbac:
   ## @param rbac.skipClusterRoles Specifies if cluster roles should be created when RBAC resources are created.
   skipClusterRoles: false
 
-## @section RBAC Proxy
-## @descriptionStart 
-## Kube RBAC Proxy is deployed as a sidecar container and restricts access to the prometheus metrics endpoint.
-## 
-## ⚠️ If this is disabled, the prometheus metrics endpoint will be exposed with no access control at all.
-## @descriptionEnd
-rbacProxy:
-  ## @param rbacProxy.enabled Specifies if the kube-rbac-proxy sidecar should be enabled. 
-  enabled: true
-  image:
-    ## @param rbacProxy.image.repository Specifies the docker registry and image name to use.
-    repository: quay.io/brancz/kube-rbac-proxy
-    ## @param rbacProxy.image.tag Specifies the docker image tag to use.
-    tag: v0.18.2
-    ## @param rbacProxy.image.pullPolicy Specifies the pullPolicy to use when starting a new container
-    pullPolicy: IfNotPresent
-    ## @param rbacProxy.image.pullSecret Specifies the secret holding the credentials used to pull image from the registry
-    pullSecret: {}
-
 ## @section Controller Manager
 ## @descriptionStart
 ## This is where you can configure the deployment itself and the way the operator will interact with APIM and Custom Resources in your cluster.
@@ -123,6 +104,15 @@ manager:
     secured: true
     ## @param manager.metrics.certDir The directory where the TLS certificate and key will be stored. If empty, a self signed certificate will be generated.
     certDir: ""
+    prometheus:
+      instance:
+        ## @param manager.metrics.prometheus.instance.create If true, a prometheus 
+        create: false
+      monitor:
+        ## @param manager.metrics.prometheus.monitor.create If true, a service monitor will be created for the metrics server (requires the prometheus operator to be installed on the cluster). 
+        create: false
+        ## @param manager.metrics.prometheus.monitor.insecureSkipCertVerify If true, the service monitor will not verify the certificate used by the metrics server.
+        insecureSkipCertVerify: true
   probes:
      ## @param manager.probes.port Which port the readiness and liveness probes will listen to.
     port: 8081

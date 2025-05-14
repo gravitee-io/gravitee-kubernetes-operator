@@ -37,20 +37,6 @@ Required RBAC resources are created by default for all components involved in th
 | `rbac.create`           | Specifies if RBAC resources should be created.                                | `true`                   |
 | `rbac.skipClusterRoles` | Specifies if cluster roles should be created when RBAC resources are created. | `false`                  |
 
-### RBAC Proxy
-
-Kube RBAC Proxy is deployed as a sidecar container and restricts access to the prometheus metrics endpoint.
-
-⚠️ If this is disabled, the prometheus metrics endpoint will be exposed with no access control at all.
-
-| Name                         | Description                                                                       | Value                            |
-| ---------------------------- | --------------------------------------------------------------------------------- | -------------------------------- |
-| `rbacProxy.enabled`          | Specifies if the kube-rbac-proxy sidecar should be enabled.                       | `true`                           |
-| `rbacProxy.image.repository` | Specifies the docker registry and image name to use.                              | `quay.io/brancz/kube-rbac-proxy` |
-| `rbacProxy.image.tag`        | Specifies the docker image tag to use.                                            | `v0.18.2`                        |
-| `rbacProxy.image.pullPolicy` | Specifies the pullPolicy to use when starting a new container                     | `IfNotPresent`                   |
-| `rbacProxy.image.pullSecret` | Specifies the secret holding the credentials used to pull image from the registry | `{}`                             |
-
 ### Controller Manager
 
 This is where you can configure the deployment itself and the way the operator will interact with APIM and Custom Resources in your cluster.
@@ -82,6 +68,9 @@ This is where you can configure the deployment itself and the way the operator w
 | `manager.metrics.port`                                           | Which port the metric server will bind to.                                                                                                                                                                                                                                                                      | `8080`                                  |
 | `manager.metrics.secured`                                        | If true, the metrics will be served over TLS.                                                                                                                                                                                                                                                                   | `true`                                  |
 | `manager.metrics.certDir`                                        | The directory where the TLS certificate and key will be stored. If empty, a self signed certificate will be generated.                                                                                                                                                                                          | `""`                                    |
+| `manager.metrics.prometheus.instance.create`                     | If true, a prometheus                                                                                                                                                                                                                                                                                           | `false`                                 |
+| `manager.metrics.prometheus.monitor.create`                      | If true, a service monitor will be created for the metrics server (requires the prometheus operator to be installed on the cluster).                                                                                                                                                                            | `false`                                 |
+| `manager.metrics.prometheus.monitor.insecureSkipCertVerify`      | If true, the service monitor will not verify the certificate used by the metrics server.                                                                                                                                                                                                                        | `true`                                  |
 | `manager.probes.port`                                            | Which port the readiness and liveness probes will listen to.                                                                                                                                                                                                                                                    | `8081`                                  |
 | `manager.httpClient.insecureSkipCertVerify`                      | If true, the manager HTTP client will not verify the certificate used by the Management API.                                                                                                                                                                                                                    | `false`                                 |
 | `manager.httpClient.timeoutSeconds`                              | he timeout (in seconds) used when issuing request to the Management API.                                                                                                                                                                                                                                        | `5`                                     |

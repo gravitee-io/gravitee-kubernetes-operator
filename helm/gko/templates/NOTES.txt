@@ -5,6 +5,21 @@ To learn more about your release, try:
   $ helm status {{ .Release.Name }}
   $ helm get all {{ .Release.Name }}
 
+{{- if and .Values.manager.metrics.enabled .Values.manager.metrics.prometheus.instance.create }}
+Operator metrics are available from withing the cluster at the following endpoint:
+
+http://prometheus-operated.{{ .Release.Namespace }}.svc:9090
+
+To access them from your host, run the following command:
+
+kubectl port-forward services/prometheus-operated 9090:9090 -n {{ .Release.Namespace }}
+
+And access them using the following endpoint:
+
+http://localhost:9090
+{{- end }}
+
 Please visit our documentation to learn about custom resources managed by the operator:
 
 https://documentation.gravitee.io/gravitee-kubernetes-operator-gko
+

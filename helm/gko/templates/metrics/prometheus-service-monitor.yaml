@@ -11,38 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-{{- if .Values.rbac.create }}
-{{- if .Values.rbacProxy.enabled }}
-{{- if not .Values.rbac.skipClusterRoles }}
-{{- if .Values.manager.metrics.enabled }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+{{- if and .Values.manager.metrics.enabled .Values.manager.metrics.prometheus.monitor.create }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
 metadata:
-  name: {{ template "rbac.ProxyClusterRoleName" . }}
   labels:
+    control-plane: controller-manager
+    release: prometheus
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion }}
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-rules:
-  - apiGroups:
-      - authentication.k8s.io
-    resources:
-      - tokenreviews
-    verbs:
-      - create
-  - apiGroups:
-      - authorization.k8s.io
-    resources:
-      - subjectaccessreviews
-    verbs:
-      - create
-{{- end }}
-{{- end }}
-{{- end }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  name: gko-metrics-monitor
+spec:
+  endpoints:
+    - path: /metrics
+      {{- if .Values.manager.metrics.secured }}
+      port: https
+      scheme: https
+      {{- else }}
+      port: http
+      scheme: http
+      {{- end }}
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        insecureSkipVerify:  {{ .Values.manager.metrics.prometheus.monitor.insecureSkipCertVerify }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager
 {{- end }}
