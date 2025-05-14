@@ -110,6 +110,10 @@ func (api *Api) IsStopped() bool {
 	return api.State == base.StateStopped
 }
 
+func (api *Api) GetTags() []string {
+	return api.Tags
+}
+
 func (api *Api) GetContextPaths() []string {
 	paths := make([]string, 0)
 	proxy := api.Proxy

@@ -99,6 +99,10 @@ func (api *ApiV4Definition) IsStopped() bool {
 	return api.Spec.IsStopped()
 }
 
+func (api *ApiV4Definition) GetTags() []string {
+	return api.Spec.Tags
+}
+
 func (api *ApiV4Definition) IsSyncFromManagement() bool {
 	defCtx := api.Spec.DefinitionContext
 	return defCtx == nil || defCtx.SyncFrom == v4.OriginManagement

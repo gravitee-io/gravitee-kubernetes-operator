@@ -82,6 +82,7 @@ type ApiDefinitionModel interface {
 	GetGroups() []string
 	SetGroups([]string)
 	GetGroupRefs() []ObjectRef
+	GetTags() []string
 }
 
 // +k8s:deepcopy-gen=false
