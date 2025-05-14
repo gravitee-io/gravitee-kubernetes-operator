@@ -14,71 +14,11 @@
 
 suite: manager deployment
 tests:
-  - it: Should have kube rbac proxy sidecar
-    template: "manager/deployment.yaml"
-    asserts:
-      - hasDocuments:
-          count: 1
-      - isKind:
-          of: Deployment
-      - isAPIVersion:
-          of: apps/v1
-      - lengthEqual:
-          path: spec.template.spec.containers
-          count: 2
-
-  - it: Should not have kube rbac proxy sidecar when disabled
-    template: "manager/deployment.yaml"
-    set:
-      rbacProxy:
-        enabled: false
-    asserts:
-      - hasDocuments:
-          count: 1
-      - isKind:
-          of: Deployment
-      - isAPIVersion:
-          of: apps/v1
-      - lengthEqual:
-          path: spec.template.spec.containers
-          count: 1
-
-  - it: Should not have kube rbac proxy sidecar when metrics are disabled
-    template: "manager/deployment.yaml"
-    set:
-      manager:
-        metrics:
-          enabled: false
-    asserts:
-      - hasDocuments:
-          count: 1
-      - lengthEqual:
-          path: spec.template.spec.containers
-          count: 1
-
   - it: Should not have image pull secrets by default
     template: "manager/deployment.yaml"
     asserts:
       - isNull:
           path: spec.template.spec.imagePullSecrets
-
-  - it: Should have rbacProxy image pull secret
-    template: "manager/deployment.yaml"
-    set:
-      rbacProxy:
-        image:
-          pullSecret:
-            name: hush-hush
-    asserts:
-      - isNotNull:
-          path: spec.template.spec.imagePullSecrets
-      - lengthEqual:
-          path: spec.template.spec.imagePullSecrets
-          count: 1
-      - equal:
-          path: spec.template.spec.imagePullSecrets[0]
-          value:
-            name: hush-hush
 
   - it: Should have manager image pull secret
     template: "manager/deployment.yaml"
@@ -98,24 +38,3 @@ tests:
           value: 
             name: hush-hush
 
-  - it: Should have both image pull secrets
-    template: "manager/deployment.yaml"
-    set:
-      manager:
-        image:
-          pullSecret:
-            name: hush-hush
-      rbacProxy:
-        image:
-          pullSecret:
-            name: hush-hush
-    asserts:
-      - isNotNull:
-          path: spec.template.spec.imagePullSecrets
-      - lengthEqual:
-          path: spec.template.spec.imagePullSecrets
-          count: 2
-      - equal:
-          path: spec.template.spec.imagePullSecrets[*]
-          value:
-            name: hush-hush
