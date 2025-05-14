@@ -23,39 +23,58 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
+	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type Conflict struct {
+	ID                string
+	Path              string
+	CreationTimestamp metaV1.Time
+	Tags              []string
+}
+
+func (p Conflict) IsZero() bool {
+	return p.ID == "" && p.Path == ""
+}
+
 func ValidateNoConflictingPath(ctx context.Context, api core.ApiDefinitionObject) *errors.AdmissionError {
-	// TODO replace with proper gateway api conflict handling as defined in the spec
 	if k8s.HasHTTPRouteOwner(api.GetOwnerReferences()) {
 		return nil
 	}
+	if conflicting, err := FindConflictingPath(ctx, api); err != nil {
+		return errors.NewSevere(err.Error())
+	} else if !conflicting.IsZero() {
+		return errors.NewSeveref(
+			"invalid API context path [%s]. API [%s] is already defined with the same path",
+			conflicting.Path, conflicting.ID,
+		)
+	}
+	return nil
+}
 
+func FindConflictingPath(ctx context.Context, api core.ApiDefinitionObject) (Conflict, error) {
 	apiPaths := api.GetContextPaths()
 	existingPaths, err := getExistingPaths(ctx, api)
 	if err != nil {
-		return errors.NewSevere(err.Error())
+		return Conflict{}, errors.NewSevere(err.Error())
 	}
 	for _, apiPath := range apiPaths {
 		if _, err := url.Parse(apiPath); err != nil {
-			return errors.NewSeveref(
+			return Conflict{}, errors.NewSeveref(
 				"path [%s] is invalid",
 				apiPath,
 			)
 		}
 
-		if isConflictingPath(existingPaths, apiPath) {
-			return errors.NewSeveref(
-				"invalid API context path [%s]. Another API with the same path already exists",
-				apiPath,
-			)
+		if conflictingPath := findConflictingPathAPI(existingPaths, apiPath); !conflictingPath.IsZero() {
+			return conflictingPath, nil
 		}
 	}
-	return nil
+	return Conflict{}, nil
 }
 
-func getExistingPaths(ctx context.Context, api core.ApiDefinitionObject) ([]string, error) {
-	existingPaths := make([]string, 0)
+func getExistingPaths(ctx context.Context, api core.ApiDefinitionObject) ([]Conflict, error) {
+	existingPaths := make([]Conflict, 0)
 	apis, err := dynamic.GetAPIs(ctx, dynamic.ListOptions{
 		Namespace: api.GetNamespace(),
 		Excluded: []core.ObjectRef{
@@ -67,17 +86,26 @@ func getExistingPaths(ctx context.Context, api core.ApiDefinitionObject) ([]stri
 	}
 
 	for _, api := range apis {
+		paths := make([]Conflict, 0)
 		apiPaths := api.GetContextPaths()
-		existingPaths = append(existingPaths, apiPaths...)
+		for _, path := range apiPaths {
+			paths = append(paths, Conflict{
+				api.GetNamespace() + "/" + api.GetName(),
+				path,
+				api.GetCreationTimestamp(),
+				api.GetTags(),
+			})
+		}
+		existingPaths = append(existingPaths, paths...)
 	}
 	return existingPaths, nil
 }
 
-func isConflictingPath(existingPaths []string, path string) bool {
+func findConflictingPathAPI(existingPaths []Conflict, path string) Conflict {
 	for _, existingPath := range existingPaths {
-		if filepath.Clean(existingPath) == filepath.Clean(path) {
-			return true
+		if filepath.Clean(existingPath.Path) == filepath.Clean(path) {
+			return existingPath
 		}
 	}
-	return false
+	return Conflict{}
 }
