@@ -17,8 +17,6 @@ package dynamic
 import (
 	"context"
 
-	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -50,7 +48,7 @@ func ResolveAPI(ctx context.Context, ref core.ObjectRef, parentNs string) (core.
 	}
 }
 
-func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
+func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionObject, error) {
 	v2Apis, err := getV2Apis(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -59,16 +57,16 @@ func GetAPIs(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, 
 	if err != nil {
 		return nil, err
 	}
-	apis := make([]core.ApiDefinitionModel, 0)
+	apis := make([]core.ApiDefinitionObject, 0)
 	apis = append(apis, v2Apis...)
 	apis = append(apis, v4Apis...)
 	return apis, nil
 }
 
-func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
+func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionObject, error) {
 	resource := getAPIsResource(ApiGVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
-	apis := make([]core.ApiDefinitionModel, 0)
+	apis := make([]core.ApiDefinitionObject, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +74,8 @@ func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel
 		if isExcluded(item, opts) {
 			continue
 		}
-		api := new(v2.Api)
-		api, err := convert(item.Object["spec"], api)
+		api := new(v1alpha1.ApiDefinition)
+		api, err := convert(item.Object, api)
 		if err != nil {
 			return nil, err
 		}
@@ -86,19 +84,19 @@ func getV2Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel
 	return apis, nil
 }
 
-func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionModel, error) {
+func getV4Apis(ctx context.Context, opts ListOptions) ([]core.ApiDefinitionObject, error) {
 	resource := getAPIsResource(ApiV4GVR, opts.Namespace)
 	list, err := resource.List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
-	apis := make([]core.ApiDefinitionModel, 0)
+	apis := make([]core.ApiDefinitionObject, 0)
 	for _, item := range list.Items {
 		if isExcluded(item, opts) {
 			continue
 		}
-		api := new(v4.Api)
-		api, err := convert(item.Object["spec"], api)
+		api := new(v1alpha1.ApiV4Definition)
+		api, err := convert(item.Object, api)
 		if err != nil {
 			return nil, err
 		}
