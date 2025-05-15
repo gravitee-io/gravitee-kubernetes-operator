@@ -22,7 +22,7 @@ spec:
     - name: apiName
       value: chainsaw-keyless-v2
     - name: commandDir
-      value: "../../../commands"
+      value: "../../../../commands"
     - name: gkoNamespace
       value: gko-stable
 

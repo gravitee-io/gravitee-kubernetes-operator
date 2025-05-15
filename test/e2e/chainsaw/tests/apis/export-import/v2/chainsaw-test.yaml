@@ -21,7 +21,7 @@ metadata:
 spec:
   bindings:
     - name: commandDir
-      value: "../../../commands"
+      value: "../../../../commands"
     - name: createdApiJson
       value: createdApi.json
     - name: exportedApiYaml
