@@ -3,7 +3,7 @@
   "crossId" : "29b81b44-52f8-4984-b81b-4452f86984b1",
   "version" : "1",
   "execution_mode" : "v4-emulation-engine",
-  "description" : "all in one API",
+  "description" : "A config rich API - Created by Chainsaw E2E test",
   "visibility" : "PRIVATE",
   "flows" : [ ],
   "gravitee" : "2.0.0",
