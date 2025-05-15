@@ -16,11 +16,11 @@
 apiVersion: chainsaw.kyverno.io/v1alpha1
 kind: Test
 metadata:
-  name: create-update-delete-v2-api
+  name: create-update-delete-v4-api
 spec:
   bindings:
     - name: apiName
-      value: chainsaw-keyless-v2
+      value: chainsaw-keyless-v4
     - name: commandDir
       value: "../../../../commands"
     - name: gkoNamespace
@@ -30,11 +30,11 @@ spec:
   - name: create-resource
     try:
       - apply:
-          file: keyless-v2.yaml
+          file: keyless-v4.yaml
       - assert:
           resource: 
             apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
+            kind: ApiV4Definition
             metadata:
               name: ($apiName)
             status:
@@ -66,18 +66,22 @@ spec:
       - patch:
           resource:
             apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
+            kind: ApiV4Definition
             metadata:
               name: ($apiName)
             spec:
               version: "update"
-              proxy:
-                virtual_hosts:
-                  - path: "/cs-v2-updated-path"
+              listeners:
+                - type: HTTP
+                  paths:
+                    - path: "/cs-v4-updated-path"
+                  entrypoints:
+                    - type: http-proxy
+                      qos: AUTO
       - assert:
           resource:
             apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
+            kind: ApiV4Definition
             metadata:
               name: ($apiName)
             status:
@@ -90,7 +94,7 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            npx zx $COMMAND_DIR/callGateway.mjs --endpoint cs-v2-updated-path --status 200
+            npx zx $COMMAND_DIR/callGateway.mjs --endpoint cs-v4-updated-path --status 200
     catch:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"
@@ -112,12 +116,12 @@ spec:
       - delete:
           ref:
             apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
+            kind: ApiV4Definition
             name: ($apiName)
           expect:
             - match:
                 apiVersion: gravitee.io/v1alpha1
-                kind: ApiDefinition
+                kind: ApiV4Definition
                 name: ($apiName)
               check:
                 ($error != null): true
@@ -134,7 +138,7 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
             content: |
-              npx zx $COMMAND_DIR/callGateway.mjs --endpoint cs-v2-updated-path --status 404
+              npx zx $COMMAND_DIR/callGateway.mjs --endpoint cs-v4-updated-path --status 404
     catch:
         - podLogs:
             selector: "app.kubernetes.io/component=gateway"
