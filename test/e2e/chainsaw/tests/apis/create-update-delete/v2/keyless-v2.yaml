@@ -22,7 +22,7 @@ spec:
     name: "dev-ctx"
     namespace: "default"
   version: "initial"
-  description: "chainsaw keyless v2"
+  description: "keyless v2 API - Created by Chainsaw E2E test"
   local: false
   plans:
     - name: "KEY_LESS"
