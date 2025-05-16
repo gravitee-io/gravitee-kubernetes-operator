@@ -16,7 +16,7 @@
 apiVersion: chainsaw.kyverno.io/v1alpha1
 kind: Test
 metadata:
-  name: export-import-v2
+  name: export-import-v4
   # namespace: apim-apim-master
 spec:
   bindings:
@@ -31,10 +31,10 @@ spec:
     - name: gkoNamespace
       value: default
     - name: apiName
-      value: v2-api-config-rich
+      value: v4-api-config-rich
 
   steps:
-    - name: create-v2-api-by-json-import
+    - name: create-v4-api-by-json-import
       try:
         - script:
             env:
@@ -63,7 +63,7 @@ spec:
                 value: ($exportedApiYaml)
             content: |
               API_ID=$(cat $CREATED_API_JSON | jq -r '.id')
-              npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version v2 > $EXPORTED_API_YAML
+              npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version v4 > $EXPORTED_API_YAML
       catch:
         - podLogs:
             selector: "app.kubernetes.io/component=api"
@@ -96,7 +96,7 @@ spec:
         - assert:
             resource:
               apiVersion: gravitee.io/v1alpha1
-              kind: ApiDefinition
+              kind: ApiV4Definition
               metadata:
                 name: ($apiName)
               status:
@@ -112,7 +112,7 @@ spec:
         - patch:
             resource:
               apiVersion: gravitee.io/v1alpha1
-              kind: ApiDefinition
+              kind: ApiV4Definition
               metadata:
                 name: ($apiName)
               spec:
@@ -120,7 +120,7 @@ spec:
         - assert:
             resource:
               apiVersion: gravitee.io/v1alpha1
-              kind: ApiDefinition
+              kind: ApiV4Definition
               metadata:
                 name: ($apiName)
               status:

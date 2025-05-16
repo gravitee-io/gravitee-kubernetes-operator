@@ -36,17 +36,28 @@ if (!APIM_API || !APIM_AUTH) {
     process.exit(1);
 }
 
-const url = `${APIM_API}/management/organizations/DEFAULT/environments/DEFAULT/apis/import`;
+const fileContent = fs.readFileSync(jsonfile, 'utf8');
+const apiDefinition = JSON.parse(fileContent);
 
-try {
-    const payload = await fs.readFile(jsonfile, 'utf8');
-    const response = await fetch(url, {
-        method: 'POST',
-        body: payload,
-        headers: {
-            'Authorization': `Bearer ${APIM_AUTH}`,
-            'Content-Type': 'application/json'
-        }
+let url;
+if (apiDefinition.gravitee === '2.0.0') {
+    url = `${APIM_API}/management/organizations/DEFAULT/environments/DEFAULT/apis/import`;
+} else if (apiDefinition.api && apiDefinition.api.definitionVersion === 'V4') {
+    url = `${APIM_API}/management/v2/environments/DEFAULT/apis/_import/definition`;
+} else {
+    console.error('Unknown API definition version');
+    process.exit(1);
+}
+
+
+  try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: fileContent,
+            headers: {
+                'Authorization': `Bearer ${APIM_AUTH}`,
+                'Content-Type': 'application/json'
+            }
     });
 
     if (!response.ok) {

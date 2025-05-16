@@ -24,14 +24,27 @@ if (!APIM_API || !APIM_AUTH) {
     process.exit(1);
 }
 
-const apiId = argv._[0];
+const apiId = argv.api_id;
+const apiVersion = argv.api_version;
+
 if (!apiId) {
-    console.error('Error: API_ID parameter is not provided.');
-    console.error(`Usage: ${path.basename(process.argv[1])} API_ID`);
-    process.exit(1);
+    console.error('Error: --api_id parameter is not provided.');
+    console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
+    process.exit(2);
 }
 
-const url = `${APIM_API}/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`;
+if (!apiVersion || !['v2', 'v4'].includes(apiVersion)) {
+    console.error('Error: --api_version parameter is not provided or is invalid. Must be v2 or v4.');
+    console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
+    process.exit(3);
+}
+
+let url;
+if (apiVersion === 'v2') {
+    url = `${APIM_API}/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`;
+} else if (apiVersion === 'v4') {
+    url = `${APIM_API}/management/v2/environments/DEFAULT/apis/${apiId}/_export/crd`;
+}
 
 try {
     const headers = {
@@ -55,7 +68,7 @@ try {
         if (errorBody) {
             console.error(`Response body:\n${errorBody}`);
         }
-        process.exit(1);
+        process.exit(4);
     }
 
     const responseBody = await response.text();
@@ -64,5 +77,5 @@ try {
 } catch (error) {
     console.error(`Error: Failed to fetch API CRD for ID: ${apiId}.`);
     console.error(error);
-    process.exit(1);
+    process.exit(5);
 }
