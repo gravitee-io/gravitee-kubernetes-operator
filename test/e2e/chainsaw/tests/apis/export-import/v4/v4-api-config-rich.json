@@ -1,0 +1,348 @@
+{
+  "export": {
+    "date": "2025-05-16T21:42:31.292056876Z",
+    "apimVersion": "4.7.6-SNAPSHOT"
+  },
+  "api": {
+    "definitionVersion": "V4",
+    "type": "PROXY",
+    "listeners": [
+      {
+        "type": "HTTP",
+        "paths": [
+          {
+            "path": "/v4-api-config-rich/",
+            "overrideAccess": false
+          }
+        ],
+        "entrypoints": [
+          {
+            "type": "http-proxy",
+            "qos": "AUTO",
+            "configuration": {}
+          }
+        ]
+      }
+    ],
+    "endpointGroups": [
+      {
+        "name": "Default HTTP proxy group",
+        "type": "http-proxy",
+        "loadBalancer": {
+          "type": "ROUND_ROBIN"
+        },
+        "sharedConfiguration": "{\"proxy\":{\"useSystemProxy\":false,\"enabled\":false},\"http\":{\"keepAliveTimeout\":30000,\"keepAlive\":true,\"followRedirects\":true,\"readTimeout\":10000,\"idleTimeout\":60000,\"connectTimeout\":3000,\"useCompression\":true,\"maxConcurrentConnections\":20,\"version\":\"HTTP_1_1\",\"pipelining\":false},\"ssl\":{\"keyStore\":{\"type\":\"\"},\"hostnameVerifier\":true,\"trustStore\":{\"type\":\"\"},\"trustAll\":false}}",
+        "endpoints": [
+          {
+            "name": "Default HTTP proxy",
+            "type": "http-proxy",
+            "weight": 1,
+            "inheritConfiguration": true,
+            "configuration": {
+              "target": "https://api.gravitee.io/echo"
+            },
+            "services": {},
+            "secondary": false
+          },
+          {
+            "name": "endpoint2",
+            "type": "http-proxy",
+            "weight": 2,
+            "inheritConfiguration": true,
+            "configuration": {
+              "target": "https://api.gravitee.io/echo"
+            },
+            "sharedConfigurationOverride": "{}",
+            "services": {},
+            "secondary": false
+          }
+        ],
+        "services": {}
+      }
+    ],
+    "analytics": {
+      "enabled": true
+    },
+    "flowExecution": {
+      "mode": "DEFAULT",
+      "matchRequired": false
+    },
+    "flows": [],
+    "id": "40587008-6131-4518-9870-0861314518c1",
+    "name": "v4-api-config-rich",
+    "description": "A config rich API - Created by Chainsaw E2E test",
+    "apiVersion": "1",
+    "deployedAt": "2025-05-16T21:42:06.869Z",
+    "createdAt": "2025-05-16T21:34:56.751Z",
+    "updatedAt": "2025-05-16T21:42:06.869Z",
+    "disableMembershipNotifications": false,
+    "groups": [],
+    "state": "STOPPED",
+    "visibility": "PRIVATE",
+    "labels": [
+      "label1",
+      "label2"
+    ],
+    "lifecycleState": "CREATED",
+    "tags": [],
+    "primaryOwner": {
+      "id": "361af531-45fc-48c9-9af5-3145fcb8c957",
+      "email": "no-reply@graviteesource.com",
+      "displayName": "Admin master",
+      "type": "USER"
+    },
+    "originContext": {
+      "origin": "MANAGEMENT"
+    },
+    "responseTemplates": {},
+    "properties": [
+      {
+        "key": "prop1",
+        "value": "123",
+        "encrypted": false,
+        "dynamic": false
+      },
+      {
+        "key": "prop2_enc",
+        "value": "5LNNu4MWD5pgHBoP1An0Wg==",
+        "encrypted": true,
+        "dynamic": false
+      }
+    ]
+  },
+  "members": [
+    {
+      "id": "4fb854c1-f39b-4389-b854-c1f39be38923",
+      "displayName": "api1",
+      "roles": [
+        {
+          "name": "OWNER",
+          "scope": "API"
+        }
+      ]
+    },
+    {
+      "id": "361af531-45fc-48c9-9af5-3145fcb8c957",
+      "displayName": "Admin master",
+      "roles": [
+        {
+          "name": "PRIMARY_OWNER",
+          "scope": "API"
+        }
+      ]
+    }
+  ],
+  "metadata": [
+    {
+      "key": "email-support",
+      "name": "email-support",
+      "format": "MAIL",
+      "value": "${(api.primaryOwner.email)!''}",
+      "defaultValue": "support@change.me"
+    }
+  ],
+  "pages": [
+    {
+      "id": "68856652-d37d-44f0-8566-52d37de4f08f",
+      "name": "markdown_test",
+      "type": "MARKDOWN",
+      "content": "# Header level 1\n## Header level 2\n* item1\n* item2\n\n_italic_ normal text",
+      "order": 0,
+      "published": true,
+      "visibility": "PUBLIC",
+      "updatedAt": "2025-05-16T21:41:54.244Z",
+      "homepage": false,
+      "excludedAccessControls": false,
+      "accessControls": []
+    }
+  ],
+  "plans": [
+    {
+      "definitionVersion": "V4",
+      "flows": [
+        {
+          "id": "34fc5fcc-ba55-4f02-bc5f-ccba551f02c7",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "HTTP",
+              "path": "/",
+              "pathOperator": "STARTS_WITH"
+            }
+          ],
+          "request": [
+            {
+              "name": "Rate Limiting",
+              "enabled": true,
+              "policy": "rate-limit",
+              "configuration": {
+                "async": false,
+                "addHeaders": false,
+                "rate": {
+                  "useKeyOnly": false,
+                  "dynamicLimit": "80",
+                  "periodTime": 1,
+                  "limit": 60,
+                  "periodTimeUnit": "MINUTES",
+                  "key": ""
+                }
+              }
+            },
+            {
+              "name": "Quota",
+              "enabled": true,
+              "policy": "quota",
+              "configuration": {
+                "async": false,
+                "addHeaders": true,
+                "quota": {
+                  "useKeyOnly": false,
+                  "dynamicLimit": "800",
+                  "periodTime": 1,
+                  "limit": 600,
+                  "periodTimeUnit": "MONTHS",
+                  "key": ""
+                }
+              }
+            },
+            {
+              "name": "Resource Filtering",
+              "enabled": true,
+              "policy": "resource-filtering",
+              "configuration": {
+                "blacklist": [
+                  {
+                    "methods": [
+                      "POST",
+                      "PUT"
+                    ],
+                    "pattern": "**/blacklisted"
+                  }
+                ],
+                "whitelist": []
+              }
+            }
+          ],
+          "response": [],
+          "subscribe": [],
+          "publish": []
+        }
+      ],
+      "id": "e74ca6dd-27a1-456f-8ca6-dd27a1756fec",
+      "name": "Default Keyless (UNSECURED)",
+      "description": "Default unsecured plan",
+      "apiId": "40587008-6131-4518-9870-0861314518c1",
+      "security": {
+        "type": "KEY_LESS",
+        "configuration": {}
+      },
+      "mode": "STANDARD",
+      "characteristics": [],
+      "commentRequired": false,
+      "createdAt": "2025-05-16T21:34:57.283Z",
+      "excludedGroups": [],
+      "order": 1,
+      "publishedAt": "2025-05-16T21:34:57.67Z",
+      "status": "PUBLISHED",
+      "tags": [],
+      "type": "API",
+      "updatedAt": "2025-05-16T21:34:57.67Z",
+      "validation": "MANUAL"
+    },
+    {
+      "definitionVersion": "V4",
+      "flows": [
+        {
+          "id": "ea7c4b64-4dc4-408b-bc4b-644dc4e08bae",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "HTTP",
+              "path": "/",
+              "pathOperator": "STARTS_WITH"
+            }
+          ],
+          "request": [
+            {
+              "name": "Rate Limiting",
+              "enabled": true,
+              "policy": "rate-limit",
+              "configuration": {
+                "async": false,
+                "addHeaders": false,
+                "rate": {
+                  "useKeyOnly": false,
+                  "dynamicLimit": "80",
+                  "periodTime": 1,
+                  "limit": 50,
+                  "periodTimeUnit": "MINUTES",
+                  "key": ""
+                }
+              }
+            },
+            {
+              "name": "Quota",
+              "enabled": true,
+              "policy": "quota",
+              "configuration": {
+                "async": false,
+                "addHeaders": true,
+                "quota": {
+                  "useKeyOnly": false,
+                  "dynamicLimit": "900",
+                  "periodTime": 1,
+                  "limit": 600,
+                  "periodTimeUnit": "MONTHS",
+                  "key": ""
+                }
+              }
+            },
+            {
+              "name": "Resource Filtering",
+              "enabled": true,
+              "policy": "resource-filtering",
+              "configuration": {
+                "blacklist": [
+                  {
+                    "methods": [
+                      "POST",
+                      "PUT"
+                    ],
+                    "pattern": "**/blacklisted"
+                  }
+                ],
+                "whitelist": []
+              }
+            }
+          ],
+          "response": [],
+          "subscribe": [],
+          "publish": []
+        }
+      ],
+      "id": "cf18dd7c-1752-453e-98dd-7c1752d53ee4",
+      "name": "myApiKeyPlan",
+      "description": "API key plan",
+      "apiId": "40587008-6131-4518-9870-0861314518c1",
+      "security": {
+        "type": "API_KEY",
+        "configuration": {}
+      },
+      "mode": "STANDARD",
+      "characteristics": [],
+      "commentMessage": "",
+      "commentRequired": false,
+      "createdAt": "2025-05-16T21:34:57.861Z",
+      "excludedGroups": [],
+      "generalConditions": "",
+      "order": 2,
+      "publishedAt": "2025-05-16T21:34:58.079Z",
+      "status": "PUBLISHED",
+      "tags": [],
+      "type": "API",
+      "updatedAt": "2025-05-16T21:34:58.079Z",
+      "validation": "AUTO"
+    }
+  ],
+  "apiMedia": []
+}
