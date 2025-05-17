@@ -51,6 +51,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyResource(cli, ctx)
 	}
 
+	if o.Notification != nil {
+		o.applyNotification(ctx, cli)
+	}
+
 	if o.Application != nil {
 		o.applyApplication(cli, ctx)
 	}
@@ -185,6 +189,20 @@ func (o *Objects) applyGroup(ctx context.Context, cli client.Client) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Group.Name)
+}
+
+func (o *Objects) applyNotification(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.Notification)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Notification)
+		if err != nil {
+			return err
+		}
+		if err = assert.NotificationCompleted(o.Notification); err != nil {
+			return assert.NotificationFailed(o.Notification)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Notification.Name)
 }
 
 func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {

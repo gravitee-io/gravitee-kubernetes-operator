@@ -114,6 +114,23 @@ func (api *Api) SetGroups(groups []string) {
 	api.Groups = groups
 }
 
+func (api *Api) GetNotificationRefs() []core.ObjectRef {
+	result := make([]core.ObjectRef, 0)
+	for _, ref := range api.NotificationsRefs {
+		r := ref
+		result = append(result, &r)
+	}
+	return result
+}
+
+func (api *Api) SetConsoleNotification(consoleNotification core.ConsoleNotificationSettingsObject) {
+	if consoleNotification == nil {
+		api.ConsoleNotification = nil
+	} else if impl, ok := consoleNotification.(*base.ConsoleNotificationConfiguration); ok {
+		api.ConsoleNotification = impl
+	}
+}
+
 type GatewayDefinitionApi struct {
 	*Api    `json:",inline"`
 	Version string                   `json:"apiVersion"`

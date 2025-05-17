@@ -59,6 +59,11 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	cp.PopulateIDs(nil)
 
+	err := ResolveConsoleNotificationRefs(ctx, cp)
+	if err != nil {
+		return err
+	}
+
 	if !apiDefinition.HasContext() {
 		if !spec.IsLocal {
 			return errors.NewUnrecoverableError("a context is required when setting local to false")
@@ -126,6 +131,11 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 			return err
 		}
 		cp.PopulateIDs(apimClient.Context)
+
+		err = ResolveConsoleNotificationRefs(ctx, cp)
+		if err != nil {
+			return err
+		}
 
 		status, err := apimClient.APIs.ImportV4(&spec.Api)
 

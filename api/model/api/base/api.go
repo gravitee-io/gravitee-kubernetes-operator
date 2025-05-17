@@ -66,7 +66,7 @@ type ApiBase struct {
 	// +kubebuilder:default:={}
 	Groups []string `json:"groups"`
 	// List of group references associated with the API
-	// This groups are references to Group custom resources created on the cluster.
+	// These groups are references to Group custom resources created on the cluster.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	GroupRefs []refs.NamespacedName `json:"groupRefs"`
@@ -80,6 +80,16 @@ type ApiBase struct {
 	// If true, new members added to the API spec will
 	// be notified when the API is synced with APIM.
 	NotifyMembers bool `json:"notifyMembers"`
+	// References to Notification custom resources to setup notifications.
+	// For an API Notification CRD `eventType` field must be set to `api`
+	// and only events set via `apiEvents` attributes are used.
+	// Only one notification with `target` equals to `console` is admitted.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:={}
+	NotificationsRefs []refs.NamespacedName `json:"notificationsRefs,omitempty"`
+	// ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
+	// +kubebuilder:skipversion
+	ConsoleNotification *ConsoleNotificationConfiguration `json:"consoleNotificationConfiguration,omitempty"`
 }
 
 // GetResources implements core.ApiDefinitionModel.
