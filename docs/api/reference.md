@@ -793,6 +793,13 @@ ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
         </td>
         <td>true</td>
       </tr><tr>
+        <td><b>origin</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
         <td><b>referenceId</b></td>
         <td>string</td>
         <td>
@@ -6286,6 +6293,13 @@ ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
       </tr><tr>
         <td><b>hooks</b></td>
         <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>origin</b></td>
+        <td>string</td>
         <td>
           <br/>
         </td>
