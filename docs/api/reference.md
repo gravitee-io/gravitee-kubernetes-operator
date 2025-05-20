@@ -2047,6 +2047,13 @@ Rule policy
         </td>
         <td>false</td>
       </tr><tr>
+        <td><b>encryptable</b></td>
+        <td>boolean</td>
+        <td>
+          Property is encryptable or not?<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
         <td><b>encrypted</b></td>
         <td>boolean</td>
         <td>
@@ -8474,6 +8481,13 @@ Plan security
         <td>boolean</td>
         <td>
           Property is dynamic or not?<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>encryptable</b></td>
+        <td>boolean</td>
+        <td>
+          Property is encryptable or not?<br/>
         </td>
         <td>false</td>
       </tr><tr>
