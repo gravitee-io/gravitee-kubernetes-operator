@@ -34,6 +34,8 @@ data:
   {{- if .Values.manager.applyCRDs }}
   APPLY_CRDS: "true"
   {{- end }}
+  ENABLE_LEADER_ELECTION: "true"
+  RECONCILE_STRATEGY: {{ .Values.manager.reconcile.strategy }}
   {{- if not .Values.manager.logs.json }}
   DEV_MODE: "true"
   {{- end }}
@@ -42,8 +44,16 @@ data:
   LOGS_LEVEL_CASE: {{ .Values.manager.logs.levelCase }}
   LOGS_TIMESTAMP_FIELD: {{ .Values.manager.logs.timestamp.field }}
   LOGS_TIMESTAMP_FORMAT: {{ .Values.manager.logs.timestamp.format }}
-  {{- if not .Values.manager.metrics.enabled }}
-  ENABLE_METRICS: "false"
+  PROBES_PORT: {{ quote .Values.manager.probes.port }}
+  {{- if .Values.manager.metrics.enabled }}
+  ENABLE_METRICS: "true"
+  METRICS_PORT: {{ quote .Values.manager.metrics.port }}
+  {{- if .Values.manager.metrics.secured }}
+  SECURE_METRICS: "true"
+  {{- if .Values.manager.metrics.certDir }}
+  METRICS_CERT_DIR: {{ .Values.manager.metrics.certDir }}
+  {{- end }}
+  {{- end }}
   {{- end }}
   {{- if not .Values.ingress.controller.enabled }}
   ENABLE_INGRESS: "false"
@@ -66,6 +76,8 @@ data:
   WEBHOOK_NAMESPACE: {{ .Release.Namespace }}
   WEBHOOK_SERVICE_NAME: {{ .Values.manager.webhook.service.name }}
   WEBHOOK_SERVICE_PORT: {{ quote .Values.manager.webhook.service.port }}
+  WEBHOOK_VALIDATING_CONFIGURATION_NAME: {{ template "gko.ValidatingWebhookConfigurationName" . }}
+  WEBHOOK_MUTATING_CONFIGURATION_NAME: {{ template "gko.MutatingWebhookConfigurationName" . }}
   {{- if .Values.manager.webhook.admission.checkApiContextPathConflictInCluster }}
   CHECK_API_CONTEXT_PATH_CONFLICT_IN_CLUSTER: "true"
   {{- end }}

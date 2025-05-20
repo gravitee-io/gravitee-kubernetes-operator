@@ -6,5 +6,9 @@
     ":semanticCommitTypeAll(chore)"
   ],
   "prConcurrentLimit": 3,
-  "rebaseWhen": "conflicted"
+  "rebaseWhen": "conflicted",
+  "postUpdateOptions": ["gomodTidy"],
+  "gomod": {
+        "enabled": true
+  }
 }

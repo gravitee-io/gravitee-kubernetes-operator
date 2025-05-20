@@ -20,11 +20,12 @@ import (
 	"context"
 	"crypto/tls"
 	"embed"
-	"flag"
 	"fmt"
 	"io/fs"
 	"os"
 	"strings"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
 
@@ -54,7 +55,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	v1 "k8s.io/api/networking/v1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -92,15 +92,6 @@ func init() {
 }
 
 func main() {
-	var metricsAddr string
-	var enableLeaderElection bool
-	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
-
 	var webhookServer webhook.Server
 	if env.Config.EnableWebhook {
 		patchAdmissionWebhook()
@@ -115,32 +106,46 @@ func main() {
 		})
 	}
 
-	flag.Parse()
-
-	if !env.Config.EnableMetrics {
-		metricsAddr = "0" // disables metrics
-	}
-
 	if env.Config.HTTPClientInsecureSkipVerify {
 		log.Global.Warn("TLS certificates verification is skipped for APIM HTTP client")
 	}
 
-	metrics := metricServer.Options{BindAddress: metricsAddr}
+	log.Global.Infof("Probes server listens on %s", env.GetProbesAddr())
+
+	if env.Config.EnableWebhook {
+		log.Global.Infof("Webhook server listens on :%d", env.Config.WebhookPort)
+	}
+
+	if env.Config.EnableMetrics {
+		log.Global.Infof("Metrics server listens on %s", env.GetMetricsAddr())
+	}
+
+	metrics := metricServer.Options{
+		BindAddress:   env.GetMetricsAddr(),
+		SecureServing: env.Config.SecureMetrics,
+		CertDir:       env.Config.MetricsCertDir,
+	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metrics,
 		WebhookServer:          webhookServer,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
+		HealthProbeBindAddress: env.GetProbesAddr(),
+		LeaderElection:         env.Config.EnableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
 	})
 
+	if err != nil {
+		log.Global.Error(err, "Unable to configure manager")
+		os.Exit(1)
+	}
+
 	k8s.RegisterClient(mgr.GetClient())
 
+	const cannotStartError = "Unable to start manager"
 	if err != nil {
-		log.Global.Error(err, "Unable to start manager")
+		log.Global.Error(err, cannotStartError)
 		os.Exit(1)
 	}
 
@@ -151,8 +156,8 @@ func main() {
 		}
 	}
 
-	if err = indexer.InitCache(context.Background(), mgr.GetCache()); err != nil {
-		log.Global.Error(err, "Unable to start manager")
+	if err = search.InitCache(context.Background(), mgr.GetCache()); err != nil {
+		log.Global.Error(err, cannotStartError)
 		os.Exit(1)
 	}
 
@@ -161,7 +166,7 @@ func main() {
 	if env.Config.EnableWebhook {
 		err = setupAdmissionWebhooks(mgr)
 		if err != nil {
-			log.Global.Error(err, "Unable to start manager")
+			log.Global.Error(err, cannotStartError)
 			os.Exit(1)
 		}
 	}
@@ -180,7 +185,7 @@ func main() {
 
 	log.Global.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		log.Global.Error(err, "Unable to start manager")
+		log.Global.Error(err, cannotStartError)
 		os.Exit(1)
 	}
 }
@@ -351,7 +356,7 @@ func patchAdmissionWebhook() {
 
 	err = webhookPatcher.UpdateValidationCaBundle(
 		context.Background(),
-		wk.ValidatingWebhookName,
+		env.Config.WebhookValidatingConfigurationName,
 		env.Config.WebhookCertSecret,
 		ns)
 	if err != nil {
@@ -361,7 +366,7 @@ func patchAdmissionWebhook() {
 
 	err = webhookPatcher.UpdateMutationCaBundle(
 		context.Background(),
-		wk.MutatingWebhookName,
+		env.Config.WebhookMutatingConfigurationName,
 		env.Config.WebhookCertSecret,
 		ns)
 	if err != nil {

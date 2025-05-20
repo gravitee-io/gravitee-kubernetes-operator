@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +kubebuilder:object:generate=true
 package base
 
 import (
@@ -122,6 +121,8 @@ type ResponseTemplate struct {
 	Headers *map[string]string `json:"headers,omitempty"`
 	// +kubebuilder:validation:Optional
 	Body *string `json:"body,omitempty"`
+	// Propagate error key to logs
+	PropagateErrorKeyToLogs *bool `json:"propagateErrorKeyToLogs,omitempty"`
 }
 
 func (api *ApiBase) GetName() string {

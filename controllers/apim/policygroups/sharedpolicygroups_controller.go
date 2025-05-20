@@ -18,7 +18,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups/internal"
 
@@ -72,7 +73,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(spg, core.SharedPolicyGroupFinalizer)
 		k8s.AddAnnotation(spg, core.LastSpecHashAnnotation, hash.Calculate(&spg.Spec))
 
-		if err := template.Compile(ctx, dc); err != nil {
+		if err := template.Compile(ctx, dc, true); err != nil {
 			spg.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
@@ -121,7 +122,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.SharedPolicyGroup{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.SPGContextField)).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.SPGContextField)).
+		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("sharedpolicygroups")).
+		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("sharedpolicygroups")).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

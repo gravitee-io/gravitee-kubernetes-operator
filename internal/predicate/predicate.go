@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint:cyclop // package can't be split more than this
 package predicate
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	corev1 "k8s.io/api/core/v1"
 	netV1 "k8s.io/api/networking/v1"
@@ -32,6 +32,10 @@ type LastSpecHashPredicate struct {
 // Create returns true if the Create event should be processed.
 func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 	if e.Object.GetDeletionTimestamp() != nil {
+		return true
+	}
+
+	if shouldAlwaysReconcile() {
 		return true
 	}
 
@@ -71,7 +75,12 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	}
 
 	if e.ObjectNew.GetDeletionTimestamp() != nil {
-		return true
+		switch no := e.ObjectNew.(type) {
+		case *corev1.Secret, *corev1.ConfigMap:
+			return false
+		default:
+			return no.GetDeletionTimestamp() != nil
+		}
 	}
 
 	switch no := e.ObjectNew.(type) {
@@ -105,7 +114,25 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	case *corev1.Secret:
 		oo, _ := e.ObjectOld.(*corev1.Secret)
 		return hash.Calculate(&no.Data) != hash.Calculate(&oo.Data)
+	case *corev1.ConfigMap:
+		oo, _ := e.ObjectOld.(*corev1.ConfigMap)
+		return hash.Calculate(&no.Data) != hash.Calculate(&oo.Data) ||
+			hash.Calculate(&no.BinaryData) != hash.Calculate(&oo.BinaryData)
 	default:
 		return false
 	}
+}
+
+// Delete returns true if the Delete event should be processed.
+func (LastSpecHashPredicate) Delete(e event.DeleteEvent) bool {
+	switch t := e.Object.(type) {
+	case *corev1.Secret, *corev1.ConfigMap:
+		return false
+	default:
+		return t.GetDeletionTimestamp() != nil
+	}
+}
+
+func shouldAlwaysReconcile() bool {
+	return env.Config.ReconcileStrategy == "always"
 }

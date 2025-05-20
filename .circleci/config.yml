@@ -1,13 +1,13 @@
 version: 2.1
 
 orbs:
-  gravitee: gravitee-io/gravitee@4.12.1
+  gravitee: gravitee-io/gravitee@4.13.0
   kubernetes: circleci/kubernetes@1.3.1
   go: circleci/go@1.12.0
   helm: circleci/helm@3.1.0
-  keeper: gravitee-io/keeper@0.6.3
+  keeper: gravitee-io/keeper@0.7.0
   slack: circleci/slack@5.0.0
-  gh: circleci/github-cli@2.6.3
+  gh: circleci/github-cli@2.7.0
   aquasec: gravitee-io/aquasec@1.0.4
   azure-cli: circleci/azure-cli@1.3.2
 
@@ -21,6 +21,7 @@ parameters:
     enum:
       - test
       - release
+      - e2e
       - none
   release-version:
     type: string
@@ -40,7 +41,7 @@ parameters:
 executors:
   azure-cli:
     docker:
-      - image: mcr.microsoft.com/azure-cli:2.68.0
+      - image: mcr.microsoft.com/azure-cli:2.72.0
     resource_class: small
 
 commands:
@@ -75,34 +76,64 @@ commands:
       - keeper/env-export:
           secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
           var-name: AZURE_SP_PASSWORD
-jobs:
-  job-lint-sources:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+  cmd-setup-azure-login-e2e:
     steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - golangci-lint-{{ checksum ".golangci.yml" }}
-      - run:
-          name: Lint sources
-          command: make lint-sources
-      - save_cache:
-          key: golangci-lint-{{ checksum ".golangci.yml" }}
-          paths:
-            - /home/circleci/.cache
-            - /home/circleci/go/pkg/mod
-
-  job-lint-licenses:
+      - keeper/env-export:
+          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_APPLICATION_ID
+          var-name: AZURE_APPLICATION_ID
+      - keeper/env-export:
+          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_TENANT
+          var-name: AZURE_TENANT
+      - keeper/env-export:
+          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_APPLICATION_SECRET
+          var-name: AZURE_APPLICATION_SECRET
+jobs:
+  job-install-go-tools:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
       - go/load-cache
       - run:
+          name: Install GO tools
+          command: make install-go-tools
+      - go/save-cache
+      - save_cache:
+          key: gotools-{{ checksum "go.sum" }}
+          paths:
+            - /home/circleci/project/bin
+  job-lint-sources:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
+      - restore_cache:
+          keys:
+            - golangci-{{ checksum ".golangci.yml" }}
+      - run:
+          name: Lint sources
+          command: make lint-sources
+      - save_cache:
+          key: golangci-{{ checksum ".golangci.yml" }}
+          paths:
+            - /home/circleci/.cache
+
+  job-lint-licenses:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
+      - run:
           name: Lint licenses
           command: make lint-licenses
-      - go/save-cache
 
   job-lint-commits:
     docker:
@@ -125,7 +156,10 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - go/mod-download-cached
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - run:
           name: Check that `make generate` has been executed
           command: |
@@ -149,10 +183,13 @@ jobs:
 
   job-unit-test:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
-      - go/mod-download-cached
+      - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - run:
           name: Run unit tests
           command: |
@@ -182,6 +219,9 @@ jobs:
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - kubernetes/install-kubectl
       - helm/install_helm_client
       - run:
@@ -197,9 +237,6 @@ jobs:
       - run:
           name: Create junit reports directory
           command: mkdir -p "/tmp/junit/reports"
-      - run:
-          name: Install ginkgo
-          command: make ginkgo
       - when:
           condition:
             equal:
@@ -228,6 +265,38 @@ jobs:
             - cover-<< parameters.ginkgo-filter >>.out
       - go/save-cache
 
+  job-e2e-tests:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    environment:
+      APIM_GATEWAY: "https://apim-stable-gateway.team-gko.gravitee.dev"
+    steps:
+      - checkout
+      - kubernetes/install-kubectl
+      - azure-cli/install
+      - cmd-setup-azure-login-e2e
+      - run:
+          name: Run az job-azure-login-e2e
+          command: |
+            az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
+            az aks get-credentials --admin --resource-group Devs-Gko-Hosted --name gravitee-devs-gko-aks-cluster
+      - keeper/env-export:
+          secret-url: keeper://FfBDDAniV6df_8i04UrvZA/field/password
+          var-name: APIM_AUTH
+      - run:
+          name: Create junit reports directory for e2e tests
+          command: mkdir -p "/tmp/junit/reports-e2e"
+      - run:
+          name: Install Chainsaw
+          command: |
+            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@latest
+      - run:
+          name: Run Chainsaw tests
+          command: |
+            bin/chainsaw test --config test/e2e/chainsaw/config.yaml
+      - store_test_results:
+          path: /tmp/junit/reports-e2e
+
   job-stage-image:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -255,7 +324,6 @@ jobs:
       - aquasec/pull_aqua_scanner_image
       - aquasec/register_artifact:
           artifact_to_register: << parameters.image >>:<< parameters.tag >>
-          debug: true
       - aquasec/scan_docker_image:
           docker_image_to_scan: << parameters.image >>:<< parameters.tag >>
           scanner_url: https://82fb8f75da.cloud.aquasec.com
@@ -339,9 +407,12 @@ jobs:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
       - run:
+          name: Install GO tools
+          command: make install-go-tools
+      - run:
           name: Switch to release branch
           command: |
-            export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+            export RELEASE_BRANCH=$(npx zx hack/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
             echo "Switching to branch $RELEASE_BRANCH"
             git fetch
             git switch $RELEASE_BRANCH 2>/dev/null || git switch -c $RELEASE_BRANCH
@@ -389,7 +460,7 @@ jobs:
             - run:
                 name: Dry run release Helm chart
                 command: |
-                  npx zx scripts/release-helm-chart.mjs --dry-run --version << pipeline.parameters.release-version >>
+                  npx zx hack/scripts/release-helm-chart.mjs --dry-run --version << pipeline.parameters.release-version >>
       - when:
           condition:
             not: << pipeline.parameters.dry-run >>
@@ -397,7 +468,7 @@ jobs:
             - run:
                 name: Release Helm chart
                 command: |
-                  npx zx scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
+                  npx zx hack/scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
       - run:
           name: Commit and tag release
           command: |
@@ -415,12 +486,12 @@ jobs:
             - run:
                 name: Push release tag and commit
                 command: |
-                  export RELEASE_BRANCH=$(npx zx scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
+                  export RELEASE_BRANCH=$(npx zx hack/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
                   git push -u origin $RELEASE_BRANCH
                   git push --tags origin $RELEASE_BRANCH
       - run:
           name: Generate Changelog
-          command: npx zx scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
+          command: npx zx hack/scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
       - when:
           condition: << pipeline.parameters.dry-run >>
           steps:
@@ -468,7 +539,7 @@ jobs:
             - run:
                 name: Submit Release Changelog for << pipeline.parameters.release-version >>
                 command: |
-                  npx zx scripts/submit-changelog.mjs \
+                  npx zx hack/scripts/submit-changelog.mjs \
                     --version << pipeline.parameters.release-version >> \
                     --file /tmp/CHANGELOG.md --output /tmp/pr.txt
 
@@ -519,7 +590,7 @@ jobs:
           helm_plugin_url: https://github.com/quintush/helm-unittest
       - run:
           name: Run Helm unit tests
-          command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
+          command: make helm-test
       - go/save-cache
 
   job-sonarcloud-analysis:
@@ -554,16 +625,26 @@ workflows:
         - none
         - << pipeline.parameters.trigger >>
     jobs:
+      - job-install-go-tools:
+          name: Install GO tools
       - job-lint-sources:
           name: Lint sources
+          requires:
+            - Install GO tools
       - job-lint-licenses:
           name: Lint licenses
+          requires:
+            - Install GO tools
       - job-lint-commits:
           name: Lint commits
       - job-lint-resources:
           name: Lint resources
+          requires:
+            - Install GO tools
       - job-unit-test:
           name: Run unit tests
+          requires:
+            - Install GO tools
       - job-integration-test:
           name: Run IT with context
           context: cicd-orchestrator
@@ -735,3 +816,14 @@ workflows:
                       event: pass
                       template: basic_success_1
                       branch_pattern: ".+"
+
+  e2e-test:
+    when:
+      equal:
+        - e2e
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-e2e-tests:
+          name: Run End-to-End tests
+          context: cicd-orchestrator
+

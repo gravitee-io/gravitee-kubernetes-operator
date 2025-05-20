@@ -58,7 +58,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(group, core.GroupFinalizer)
 		k8s.AddAnnotation(group, core.LastSpecHashAnnotation, hash.Calculate(&dc.Spec))
 
-		if err := template.Compile(ctx, dc); err != nil {
+		if err := template.Compile(ctx, dc, true); err != nil {
 			group.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}

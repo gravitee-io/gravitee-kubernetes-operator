@@ -27,10 +27,10 @@ jobs:
       fail-fast: false
       matrix:
         branch:
-          - 4.3.x
           - 4.4.x
           - 4.5.x
           - 4.6.x
+          - 4.7.x
           - master
     steps:
       - uses: actions/checkout@v4
@@ -40,4 +40,4 @@ jobs:
       - name: "Trigger test pipeline and notify on failure"
         run: |
           echo "🧪 Triggering test pipeline"
-          npx zx scripts/trigger-test.mjs --notify true --branch ${BRANCH}
+          npx zx hack/scripts/trigger-test.mjs --notify true --branch ${BRANCH}

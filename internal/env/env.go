@@ -15,6 +15,7 @@
 package env
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -27,14 +28,21 @@ const (
 	CMTemplate404NS                      = "TEMPLATE_404_CONFIG_MAP_NAMESPACE"
 	Development                          = "DEV_MODE"
 	NS                                   = "NAMESPACE"
+	EnableLeaderElection                 = "ENABLE_LEADER_ELECTION"
 	ApplyCRDs                            = "APPLY_CRDS"
 	EnableMetrics                        = "ENABLE_METRICS"
+	SecureMetrics                        = "SECURE_METRICS"
+	MetricsCertDir                       = "METRICS_CERT_DIR"
+	MetricsPort                          = "METRICS_PORT"
+	ProbesPort                           = "PROBES_PORT"
 	EnableIngress                        = "ENABLE_INGRESS"
 	EnableWebhook                        = "ENABLE_WEBHOOK"
 	WebhookNS                            = "WEBHOOK_NAMESPACE"
 	WebhookServiceName                   = "WEBHOOK_SERVICE_NAME"
 	WebhookPort                          = "WEBHOOK_SERVICE_PORT"
 	WebhookCertSecret                    = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not a hardcoded secret
+	WebhookValidatingConfigurationName   = "WEBHOOK_VALIDATING_CONFIGURATION_NAME"
+	WebhookMutatingConfigurationName     = "WEBHOOK_MUTATING_CONFIGURATION_NAME"
 	HttpCLientInsecureSkipCertVerify     = "HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY"
 	HttpClientTimeoutSeconds             = "HTTP_CLIENT_TIMEOUT_SECONDS"
 	TrueString                           = "true"
@@ -48,19 +56,30 @@ const (
 
 	// This default are applied when running the app locally.
 	defaultWebhookPort       = 9443
+	defaultMetricsPort       = 8080
+	defaultProbesPort        = 8081
 	defaultHttpClientTimeout = 5
+
+	ReconcileStrategy = "RECONCILE_STRATEGY"
 )
 
 var Config = struct {
 	NS                                   string
 	ApplyCRDs                            bool
+	EnableLeaderElection                 bool
 	EnableMetrics                        bool
+	SecureMetrics                        bool
+	MetricsCertDir                       string
+	MetricsPort                          int
+	ProbesPort                           int
 	EnableIngress                        bool
 	EnableWebhook                        bool
 	WebhookNS                            string
 	WebhookService                       string
 	WebhookPort                          int
 	WebhookCertSecret                    string
+	WebhookValidatingConfigurationName   string
+	WebhookMutatingConfigurationName     string
 	Development                          bool
 	CMTemplate404Name                    string
 	CMTemplate404NS                      string
@@ -73,10 +92,12 @@ var Config = struct {
 	LogsLevelCase                        string
 	LogsTimestampField                   string
 	LogsTimestampFormat                  string
+	ReconcileStrategy                    string
 }{}
 
 func init() {
 	Config.NS = os.Getenv(NS)
+	Config.EnableLeaderElection = os.Getenv(EnableLeaderElection) == TrueString
 	Config.ApplyCRDs = os.Getenv(ApplyCRDs) == TrueString
 	Config.Development = os.Getenv(Development) == TrueString
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
@@ -84,12 +105,18 @@ func init() {
 	Config.HTTPClientInsecureSkipVerify = os.Getenv(HttpCLientInsecureSkipCertVerify) == TrueString
 	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
+	Config.SecureMetrics = os.Getenv(SecureMetrics) == TrueString
+	Config.MetricsCertDir = os.Getenv(MetricsCertDir)
+	Config.MetricsPort = parseInt(MetricsPort, defaultMetricsPort)
+	Config.ProbesPort = parseInt(ProbesPort, defaultProbesPort)
 	Config.EnableIngress = os.Getenv(EnableIngress) == TrueString
 	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
 	Config.WebhookNS = os.Getenv(WebhookNS)
 	Config.WebhookService = os.Getenv(WebhookServiceName)
 	Config.WebhookCertSecret = os.Getenv(WebhookCertSecret)
 	Config.WebhookPort = parseInt(WebhookPort, defaultWebhookPort)
+	Config.WebhookValidatingConfigurationName = os.Getenv(WebhookValidatingConfigurationName)
+	Config.WebhookMutatingConfigurationName = os.Getenv(WebhookMutatingConfigurationName)
 	Config.CheckApiContextPathConflictInCluster = os.Getenv(CheckApiContextPathConflictInCluster) == TrueString
 	var ingressClass string
 	if ingressClass = core.IngressClassAnnotationValue; os.Getenv(IngressClasses) != "" {
@@ -101,6 +128,18 @@ func init() {
 	Config.LogsLevelCase = os.Getenv(LogsLevelCase)
 	Config.LogsTimestampField = os.Getenv(LogsTimestampField)
 	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
+	Config.ReconcileStrategy = os.Getenv(ReconcileStrategy)
+}
+
+func GetMetricsAddr() string {
+	if !Config.EnableMetrics {
+		return "0" // disables metrics
+	}
+	return fmt.Sprintf(":%d", Config.MetricsPort)
+}
+
+func GetProbesAddr() string {
+	return fmt.Sprintf(":%d", Config.ProbesPort)
 }
 
 func parseInt(key string, defaultValue int) int {

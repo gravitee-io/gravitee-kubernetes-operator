@@ -40,3 +40,8 @@ bundle.yml
 
 # MacOS
 .DS_Store
+
+# Kyverno Chainsaw E2E tests
+chainsaw/reports/
+node_modules
+license.key

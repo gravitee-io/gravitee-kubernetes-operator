@@ -110,6 +110,8 @@ type HttpClientSslOptions struct {
 	TrustStore *TrustStore `json:"trustStore,omitempty"`
 	// KeyStore type (possible values PEM, PKCS12, JKS)
 	KeyStore *KeyStore `json:"keyStore,omitempty"`
+	// Http headers
+	Headers []*HttpHeader `json:"headers,omitempty"`
 }
 
 type HttpProxy struct {

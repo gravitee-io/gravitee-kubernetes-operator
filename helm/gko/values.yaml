@@ -93,12 +93,14 @@ manager:
       memory: 128Mi
   ## @param manager.tolerations Set pods tolerations. Please see https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ about this topic. 
   tolerations: []
+  ## @param manager.hostNetwork Use the host's network namespace. Please see https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#hosts-namespaces about this topic. 
+  hostNetwork: false
   scope:
     ## @param manager.scope.cluster Use false to listen only in the release namespace.
     cluster: true
     ## @param manager.scope.namespaces Setting this list of namespaces will result in the operator listening only in this namespaces.
     namespaces: []
-  ## @param manager.applyCRDs 👎 This feature is deprecated and will be replaced in a future release. If true, the manager will patch Custom Resource Definitions on startup.
+  ## @param manager.applyCRDs If true, the manager will patch Custom Resource Definitions on startup.
   ## Please be aware that this will apply to Custom Resource Definitions 
   ## (which are the Open API model for Custom Resources such as API Definitions), 
   ## not to Custom Resources themselves.
@@ -106,9 +108,24 @@ manager:
   ## of this flag is. Because helm upgrades do not update CRDs once they have been
   ## installed, it is recommended to set this flag to true.
   applyCRDs: true
+  reconcile:
+    ## @param manager.reconcile.strategy The strategy used by the operator to decide wether a resource should be reconciled on not. The strategy can be either `onSpecChange` or `always`. Other values will falback to `onSpecChange`.
+    ## If the strategy is `onSpecChange` (which is the default), the operator
+    ## will compute a hash of the spec field of the resource an discard reconciles if the hash is known. The previous calculated hash is
+    ## is stored in the `gravitee.io/last-spec-hash` annotation.
+    strategy: onSpecChange
   metrics:
-   ## @param manager.metrics.enabled If true, a metrics server will be created so that metrics can be scraped using prometheus.
+    ## @param manager.metrics.enabled If true, a metrics server will be created so that metrics can be scraped using prometheus.
     enabled: true
+    ## @param manager.metrics.port Which port the metric server will bind to.
+    port: 8080
+    ## @param manager.metrics.secured If true, the metrics will be served over TLS.
+    secured: true
+    ## @param manager.metrics.certDir The directory where the TLS certificate and key will be stored. If empty, a self signed certificate will be generated.
+    certDir: ""
+  probes:
+     ## @param manager.probes.port Which port the readiness and liveness probes will listen to.
+    port: 8081
   httpClient:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
@@ -117,6 +134,13 @@ manager:
   webhook:
     ## @param manager.webhook.enabled If true, the manager will register a webhook server operating on custom resources.
     enabled: true
+    configuration:
+      ## @param manager.webhook.configuration.validatingName The name of ValidatingWebhookConfiguration resource created to access the validation controller.
+      validatingName: gko-validating-webhook-configurations
+      ## @param manager.webhook.configuration.mutatingName The name of MutatingWebhookConfiguration resource created to access the mutation controller.
+      mutatingName: gko-mutating-webhook-configurations
+      ## @param manager.webhook.configuration.useAutoUniqueNames If true each install will take care on prefixing the validating and mutating configuration names with the service account name. This allows deploying one operator per namespace, each using their own service account and webhook configurations. This should not be set to true if manager.scope.cluster=true
+      useAutoUniqueNames: false
     service:
       ## @param manager.webhook.service.name The service used to expose the webhook server.
       name: gko-webhook
