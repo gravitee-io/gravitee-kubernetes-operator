@@ -255,7 +255,6 @@ jobs:
       - aquasec/pull_aqua_scanner_image
       - aquasec/register_artifact:
           artifact_to_register: << parameters.image >>:<< parameters.tag >>
-          debug: true
       - aquasec/scan_docker_image:
           docker_image_to_scan: << parameters.image >>:<< parameters.tag >>
           scanner_url: https://82fb8f75da.cloud.aquasec.com
