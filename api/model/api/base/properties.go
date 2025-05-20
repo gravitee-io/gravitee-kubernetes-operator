@@ -27,4 +27,7 @@ type Property struct {
 	// Property is dynamic or not?
 	// +kubebuilder:validation:Optional
 	Dynamic *bool `json:"dynamic,omitempty"`
+	// Property is encryptable or not?
+	// +kubebuilder:validation:Optional
+	Encryptable *bool `json:"encryptable,omitempty"`
 }
