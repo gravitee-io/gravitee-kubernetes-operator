@@ -39,7 +39,7 @@ func validateNotifications(ctx context.Context, api core.ApiDefinitionObject) *e
 			}
 			if notif.Spec.EventType != notification.EventTypeAPI {
 				errs.AddSeveref(
-					"api references notification [%s] is configured for apis but for [%s]", notificationRef, notif.Spec.EventType,
+					"api references notification [%s] is not configured for apis but for [%s]", notificationRef, notif.Spec.EventType,
 				)
 			}
 			if notif.Spec.Target == notification.TargetConsole {
@@ -49,7 +49,6 @@ func validateNotifications(ctx context.Context, api core.ApiDefinitionObject) *e
 			if consoleNotificationRef > 1 {
 				errs.AddSeveref(
 					"api references notification [%s] but there is already another console notification referenced", notificationRef)
-				break
 			}
 		}
 	}

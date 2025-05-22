@@ -17,7 +17,6 @@ package internal
 import (
 	"context"
 	"fmt"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
@@ -36,6 +35,18 @@ func Delete(
 		return nil
 	}
 
+	if err := checkAPIRefs(ctx, notification); err != nil {
+		return err
+	}
+
+	if err := checkAPIv4Refs(ctx, notification); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkAPIRefs(ctx context.Context, notification *v1alpha1.Notification) error {
 	apis := &v1alpha1.ApiDefinitionList{}
 	err := checkRefs(ctx, notification, search.ApiNotificationRefsField, apis)
 	if err != nil {
@@ -43,20 +54,37 @@ func Delete(
 	}
 
 	if len(apis.Items) > 0 {
-		return fmt.Errorf("notification is referenced and will remain")
+		return formatApiError(apis.Items)
 	}
+	return nil
+}
 
-	apiV4 := &v1alpha1.ApiV4DefinitionList{}
-	err = checkRefs(ctx, notification, search.ApiV4NotificationRefsField, apiV4)
+func checkAPIv4Refs(ctx context.Context, notification *v1alpha1.Notification) error {
+	apis := &v1alpha1.ApiV4DefinitionList{}
+	err := checkRefs(ctx, notification, search.ApiV4NotificationRefsField, apis)
 	if err != nil {
 		return err
 	}
 
-	if len(apiV4.Items) > 0 {
-		return fmt.Errorf("notification is referenced and will remain")
+	if len(apis.Items) > 0 {
+		return formatApV4iError(apis.Items)
 	}
-
 	return nil
+}
+
+func formatApiError(apis []v1alpha1.ApiDefinition) error {
+	apiRefs := make([]string, len(apis))
+	for _, api := range apis {
+		apiRefs = append(apiRefs, api.GetRef().NamespacedName().String())
+	}
+	return fmt.Errorf("notification is referenced by APIs: %v and will remain until those are removed", apiRefs)
+}
+func formatApV4iError(apis []v1alpha1.ApiV4Definition) error {
+	apiRefs := make([]string, len(apis))
+	for _, api := range apis {
+		apiRefs = append(apiRefs, api.GetRef().NamespacedName().String())
+	}
+	return fmt.Errorf("notification is referenced by V4 APIs: %v and will remain until those are removed", apiRefs)
 }
 
 func checkRefs(

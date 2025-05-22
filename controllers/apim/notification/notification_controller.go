@@ -18,16 +18,14 @@ package notification
 
 import (
 	"context"
-
-	"k8s.io/apimachinery/pkg/api/meta"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -39,8 +37,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 )
 
-const resolveRefCondition = "ResolveRef"
-const acceptedCondition = "Accepted"
+const requeueAfterTime = time.Second * 5
 
 // Reconciler reconciles a Notification object.
 type Reconciler struct {
@@ -85,75 +82,32 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		} else {
 			err = events.Record(event.Update, notification, func() error {
-				err := internal.ResolveGroupRefs(ctx, notification.Spec.Type, notification.Namespace)
-				if err := r.setGroupRefsConditions(ctx, err, notification); err != nil {
-					return err
-				}
-				return err
+				return internal.ResolveGroupRefs(ctx, notification.Spec.Type, notification.Namespace)
 			})
 		}
 		return err
 	})
 
-	// in any case of error, reconcile now
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	changed := meta.SetStatusCondition(notification.Status.Conditions, v1.Condition{
-		Type:    acceptedCondition,
-		Status:  v1.ConditionTrue,
-		Reason:  "Reconciled",
-		Message: "Successfully reconciled",
-	})
-
-	if changed {
-		if err := r.Client.Status().Update(ctx, notification); err != nil {
+	if !notification.IsBeingDeleted() && err != nil {
+		if err := internal.SetGroupRefsConditions(ctx, r.Client, err, notification); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
 
-	// no error
+	// in any case of error
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// update status
+	if err := internal.SetAcceptedCondition(ctx, r.Client, notification); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// no error, we are done
 	log.InfoEndReconcile(ctx, notification)
 	return ctrl.Result{}, nil
-}
 
-func (r *Reconciler) setGroupRefsConditions(ctx context.Context, err error, notification *v1alpha1.Notification) error {
-	if err != nil {
-		refConditionChanged := meta.SetStatusCondition(notification.Status.Conditions, v1.Condition{
-			Type:    resolveRefCondition,
-			Status:  v1.ConditionFalse,
-			Reason:  "GroupsResolveRefFailed",
-			Message: err.Error(),
-		})
-		acceptedConditionChanged := meta.SetStatusCondition(notification.Status.Conditions, v1.Condition{
-			Type:    acceptedCondition,
-			Status:  v1.ConditionFalse,
-			Reason:  "GroupsRefsResolveFailed",
-			Message: err.Error(),
-		})
-		if refConditionChanged || acceptedConditionChanged {
-			err := r.Client.Status().Update(ctx, notification)
-			if err != nil {
-				return err
-			}
-		}
-		return err
-	}
-
-	changed := meta.SetStatusCondition(notification.Status.Conditions, v1.Condition{
-		Type:    resolveRefCondition,
-		Status:  v1.ConditionFalse,
-		Reason:  "GroupsRefsResolved",
-		Message: "Successfully resolved groups references",
-	})
-	if changed {
-		err := r.Client.Status().Update(ctx, notification)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
