@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
@@ -74,15 +75,16 @@ func checkAPIv4Refs(ctx context.Context, notification *v1alpha1.Notification) er
 
 func formatApiError(apis []v1alpha1.ApiDefinition) error {
 	apiRefs := make([]string, len(apis))
-	for _, api := range apis {
-		apiRefs = append(apiRefs, api.GetRef().NamespacedName().String())
+	for i, api := range apis {
+		apiRefs[i] = api.GetRef().NamespacedName().String()
 	}
 	return fmt.Errorf("notification is referenced by APIs: %v and will remain until those are removed", apiRefs)
 }
+
 func formatApV4iError(apis []v1alpha1.ApiV4Definition) error {
 	apiRefs := make([]string, len(apis))
-	for _, api := range apis {
-		apiRefs = append(apiRefs, api.GetRef().NamespacedName().String())
+	for i, api := range apis {
+		apiRefs[i] = api.GetRef().NamespacedName().String()
 	}
 	return fmt.Errorf("notification is referenced by V4 APIs: %v and will remain until those are removed", apiRefs)
 }
