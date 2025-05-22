@@ -34,10 +34,9 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 	When("deleting referenced API notification", func() {
 
-		It("should not delete API V4 notification when referenced", func() {
+		DescribeTable("should not delete notification when referenced by", func(builder *fixture.FSBuilder) {
 
-			fixtures := fixture.Builder().
-				WithAPIv4(constants.ApiV4).
+			fixtures := builder.WithContext(constants.ContextWithCredentialsFile).
 				WithNotification(constants.NotificationNoGroupFile).
 				Build().
 				Apply()
@@ -55,15 +54,20 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 			By("deleting the API")
 
-			Expect(manager.Client().Delete(ctx, fixtures.APIv4)).To(Succeed())
+			if fixtures.API != nil {
+				Expect(manager.Client().Delete(ctx, fixtures.API)).To(Succeed())
+			} else if fixtures.APIv4 != nil {
+				Expect(manager.Client().Delete(ctx, fixtures.APIv4)).To(Succeed())
+			}
 
 			By("expecting notification to have been deleted")
 
 			Eventually(func() error {
 				return assert.Deleted(ctx, "Notification", fixtures.Notification)
 			}, timeout, interval).Should(Succeed())
-		})
-
+		}, Entry("v2 API", fixture.Builder().WithAPI(constants.ApiWithContextFile)),
+			Entry("v4 API", fixture.Builder().WithAPIv4(constants.ApiV4WithContextFile)),
+		)
 	})
 
 })

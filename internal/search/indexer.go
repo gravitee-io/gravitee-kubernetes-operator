@@ -35,7 +35,7 @@ const (
 	ApiV4ContextField            IndexField = "api-v4-context"
 	SecretRefField               IndexField = "secretRef"
 	ApiResourceField             IndexField = "resource"
-	ApiNotificationRefsField     IndexField = "notificationRefs"
+	ApiNotificationRefsField     IndexField = "api-notificationRefs"
 	ApiV4NotificationRefsField   IndexField = "api-v4-notificationRefs"
 	ApiV4ResourceField           IndexField = "api-v4-resource"
 	ApiV4SharedPolicyGroupsField IndexField = "api-v4-spg"

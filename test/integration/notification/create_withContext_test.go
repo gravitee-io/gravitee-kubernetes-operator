@@ -40,7 +40,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 	})
 	When("creating a notification with groups", func() {
 
-		It("should have only have known groups id", func() {
+		It("should have only have known group ids", func() {
 			objects := fixture.Builder().
 				WithContext(constants.ContextWithCredentialsFile).
 				WithGroup(constants.GroupFile).
