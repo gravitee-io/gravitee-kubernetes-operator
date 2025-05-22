@@ -18,6 +18,7 @@ package notification
 
 import (
 	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -25,7 +26,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -36,8 +36,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 )
-
-const requeueAfterTime = time.Second * 5
 
 // Reconciler reconciles a Notification object.
 type Reconciler struct {
@@ -107,7 +105,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	// no error, we are done
 	log.InfoEndReconcile(ctx, notification)
 	return ctrl.Result{}, nil
-
 }
 
 // SetupWithManager sets up the controller with the Manager.
