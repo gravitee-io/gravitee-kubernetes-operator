@@ -63,6 +63,11 @@ func resolveParent(
 		return conditionBuilder.Build(), nil
 	}
 
+	if ref.Namespace != nil && string(*ref.Namespace) != route.Namespace {
+		conditionBuilder.RejectInvalidGatewayKind("parent reference must be in the same namespace as the route")
+		return conditionBuilder.Build(), nil
+	}
+
 	_, err := k8s.ResolveGateway(ctx, route.ObjectMeta, ref)
 	if client.IgnoreNotFound(err) != nil {
 		return nil, err
