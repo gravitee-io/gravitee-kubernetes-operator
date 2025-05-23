@@ -120,7 +120,7 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
-      - notification
+      - notifications
     verbs:
       - get
       - list
@@ -129,13 +129,13 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
-      - notification/finalizers
+      - notifications/finalizers
     verbs:
       - update
   - apiGroups:
       - gravitee.io
     resources:
-      - notification/status
+      - notifications/status
     verbs:
       - get
       - update

@@ -16,6 +16,7 @@ package notification
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -87,6 +88,75 @@ var _ = Describe("Update", labels.WithContext, func() {
 				if err := assert.Equals("APIEvents",
 					objects.Notification.Spec.Console.APIEvents,
 					[]notification.ApiEvent{"API_STOPPED"}); err != nil {
+					return err
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+		})
+	})
+
+	When("Updating groups", func() {
+
+		It("should have groups added", func() {
+
+			By("creating a notification with events")
+			objects := fixture.Builder().
+				WithContext(constants.ContextWithCredentialsFile).
+				WithGroup(constants.GroupFile).
+				WithNotification(constants.NotificationWithGroupFile).
+				Build().
+				Apply()
+
+			newGroup := fixture.Builder().
+				WithGroup(constants.GroupFile).Build().Apply()
+
+			By("adding a new groups")
+			dc := objects.Notification.DeepCopy()
+			dc.Spec.Console.GroupRefs = append(dc.Spec.Console.GroupRefs, refs.NamespacedName{
+				Name:      newGroup.Group.Name,
+				Namespace: constants.Namespace,
+			})
+
+			Eventually(func() error {
+				return manager.UpdateSafely(ctx, dc)
+			}, timeout, interval).Should(Succeed())
+
+			Eventually(func() error {
+				err := manager.GetLatest(ctx, objects.Notification)
+				if err != nil {
+					return err
+				}
+				return assert.Equals("groups", objects.Notification.Spec.Console.Groups,
+					[]string{objects.Group.Status.ID, newGroup.Group.Status.ID})
+			}, timeout, interval).Should(Succeed())
+
+		})
+
+		It("should have groups removed", func() {
+
+			By("creating a notification with events")
+			objects := fixture.Builder().
+				WithContext(constants.ContextWithCredentialsFile).
+				WithGroup(constants.GroupFile).
+				WithNotification(constants.NotificationWithGroupFile).
+				Build().
+				Apply()
+
+			By("updating removing groups")
+			dc := objects.Notification.DeepCopy()
+			dc.Spec.Console.GroupRefs = make([]refs.NamespacedName, 0)
+
+			Eventually(func() error {
+				return manager.UpdateSafely(ctx, dc)
+			}, timeout, interval).Should(Succeed())
+			Eventually(func() error {
+				err := manager.GetLatest(ctx, objects.Notification)
+				if err != nil {
+					return err
+				}
+				if err := assert.Equals("Group",
+					objects.Notification.Spec.Console.Groups,
+					[]string{}); err != nil {
 					return err
 				}
 				return nil

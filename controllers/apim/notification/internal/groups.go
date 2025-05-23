@@ -37,7 +37,7 @@ func ResolveGroupRefs(ctx context.Context, notif *notification.Type, namespace s
 		return nil
 	}
 
-	groups := notif.Console.Groups
+	groups := make([]string, 0)
 	for _, ref := range notif.Console.GroupRefs {
 		group := new(v1alpha1.Group)
 		r := ref
