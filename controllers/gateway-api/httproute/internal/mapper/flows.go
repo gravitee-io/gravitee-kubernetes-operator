@@ -24,20 +24,21 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-const (
-	contextPathEqualsCondition = el.Expression("#request.contextPath eq '%s'")
-	pathInfoEqualsCondition    = el.Expression("#request.pathInfo eq '%s'")
-	pathInfoMatchesCondition   = el.Expression("#request.pathInfo matches '%s'")
-	headerEqualsCondition      = el.Expression("#request.headers['%s'][0] eq '%s'")
-	headerMatchesCondition     = el.Expression("#request.headers['%s'][0] matches '%s'")
-	paramEqualsCondition       = el.Expression("#request.params['%s'] eq '%s'")
-	paramMatchesCondition      = el.Expression("#request.params['%s'] matches '%s'")
+var (
+	contextPathStartsWithCondition = el.Expression("#request.contextPath.startsWith('%s')")
+	contextPathEqualsCondition     = el.Expression("#request.contextPath eq '%s'")
+	pathInfoEqualsCondition        = el.Expression("#request.pathInfo eq '%s'")
+	pathInfoMatchesCondition       = el.Expression("#request.pathInfo matches '%s'")
+	headerEqualsCondition          = el.Expression("#request.headers['%s'][0] eq '%s'")
+	headerMatchesCondition         = el.Expression("#request.headers['%s'][0] matches '%s'")
+	paramEqualsCondition           = el.Expression("#request.params['%s'] eq '%s'")
+	paramMatchesCondition          = el.Expression("#request.params['%s'] matches '%s'")
 
 	routingPolicyName = "dynamic-routing"
 	routingRulesKey   = "rules"
 	routingPatternKey = "pattern"
 	routingPattern    = "(.*)"
-	routingURLKey     = "url"
+	routingUrlKey     = "url"
 
 	endpointMatcherPattern = "%s:{#group[0]}"
 )
@@ -121,29 +122,23 @@ func buildHeaderCondition(match gwAPIv1.HTTPHeaderMatch) el.Expression {
 func buildPathCondition(match *gwAPIv1.HTTPPathMatch) el.Expression {
 	switch *match.Type {
 	case gwAPIv1.PathMatchPathPrefix:
-		return contextPathEqualsCondition.Format(addTrailingSlash(*match.Value))
+		return contextPathStartsWithCondition.Format(*match.Value)
 	case gwAPIv1.PathMatchRegularExpression:
 		return contextPathEqualsCondition.Format(rootPath).
 			And(pathInfoMatchesCondition.Format(*match.Value))
 	case gwAPIv1.PathMatchExact:
-		return contextPathEqualsCondition.Format(addTrailingSlash(*match.Value)).
+		return contextPathEqualsCondition.Format(*match.Value).
 			And(pathInfoEqualsCondition.Format(rootPath))
 	default:
-		panic(fmt.Sprintf("unsupported path match type: %s", *match.Type))
+		return contextPathEqualsCondition.Format(*match.Value).
+			And(pathInfoEqualsCondition.Format(rootPath))
 	}
-}
-
-func addTrailingSlash(s string) string {
-	if s == rootPath {
-		return s
-	}
-	return s + "/"
 }
 
 func buildHTTPSelector(match gwAPIv1.HTTPRouteMatch) *v4.FlowSelector {
 	methods := []base.HttpMethod{}
 	if match.Method != nil {
-		methods = append(methods, base.HttpMethod(*match.Method))
+		methods = append(methods, base.HttpMethod(string(*match.Method)))
 	}
 	return v4.NewHTTPSelector("/", "START_WITH", methods)
 }
@@ -160,9 +155,8 @@ func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 }
 
 func buildRoutingStep(ruleIndex int) *v4.FlowStep {
-	policyName := routingPolicyName
 	return v4.NewFlowStep(base.FlowStep{
-		Policy:  &policyName,
+		Policy:  &routingPolicyName,
 		Enabled: true,
 		Configuration: utils.NewGenericStringMap().
 			Put(routingRulesKey, buildRoutingRule(ruleIndex)),
@@ -173,7 +167,7 @@ func buildRoutingRule(index int) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			routingPatternKey: routingPattern,
-			routingURLKey:     buildRoutingTarget(index),
+			routingUrlKey:     buildRoutingTarget(index),
 		},
 	}
 }
