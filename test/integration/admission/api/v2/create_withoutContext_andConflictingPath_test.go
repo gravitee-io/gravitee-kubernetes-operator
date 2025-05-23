@@ -40,7 +40,7 @@ var _ = Describe("Validate create", labels.WithoutContext, func() {
 		By("building an API with path conflict")
 
 		existingPath := fixtures.APIv4.GetContextPaths()[0]
-		conflictingPath := existingPath + "/"
+		conflictingPath := existingPath
 
 		api := fixture.Builder().WithAPI(constants.Api).Build().API
 		api.Spec.Proxy.VirtualHosts[0].Path = conflictingPath
@@ -51,8 +51,8 @@ var _ = Describe("Validate create", labels.WithoutContext, func() {
 
 		Expect(err).To(Equal(
 			errors.NewSeveref(
-				"invalid API context path [%s]. Another API with the same path already exists",
-				conflictingPath,
+				"invalid API context path [%s]. API [%s/%s] is already defined with the same path",
+				conflictingPath, fixtures.APIv4.Namespace, fixtures.APIv4.Name,
 			),
 		))
 	})

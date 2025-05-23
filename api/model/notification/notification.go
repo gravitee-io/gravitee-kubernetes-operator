@@ -61,7 +61,6 @@ type Console struct {
 	// and all members of groups referenced in `groupRefs`
 	// Notification spec attribute `eventType` must be set to `"api"`.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:items:UniqueItems=true
 
 	APIEvents []ApiEvent `json:"apiEvents"`
 	// List of groups associated with the API.
