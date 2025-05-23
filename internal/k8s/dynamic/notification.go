@@ -27,7 +27,7 @@ func ResolveNotification(ctx context.Context, ref core.ObjectRef, namespace stri
 	if ref.GetKind() == "" {
 		refKind = NotificationGVR.Resource
 	}
-	kind := PluralizeKind(refKind)
+	kind := ResourceFromKind(refKind)
 	switch kind {
 	case NotificationGVR.Resource:
 		return resolveRef(ctx, ref, namespace, NotificationGVR, new(v1alpha1.Notification))
