@@ -27,7 +27,7 @@ func ResolveGroup(ctx context.Context, ref core.ObjectRef, namespace string) (*v
 	if ref.GetKind() == "" {
 		refKind = GroupGVR.Resource
 	}
-	kind := PluralizeKind(refKind)
+	kind := ResourceFromKind(refKind)
 	switch kind {
 	case GroupGVR.Resource:
 		return resolveRef(ctx, ref, namespace, NotificationGVR, new(v1alpha1.Group))
