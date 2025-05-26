@@ -10353,23 +10353,25 @@ It is to be referenced in an API.
     </thead>
     <tbody><tr>
         <td><b>eventType</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           EventType defines the subject of those events.
 Notification can be used in API or Applications, each of those have different events.
-An attribute starting with `eventType` value exists in the target configuration
-to configure events: <eventType>Events (e.g `apiEvents`)<br/>
+An attribute starting with eventType value exists in the target configuration
+to configure events: < eventType >Events (e.g apiEvents)<br/>
           <br/>
+            <i>Enum</i>: api<br/>
             <i>Default</i>: api<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>target</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
-          Target of the notification: `"console"` is for notifications in Gravitee console UI.
+          Target of the notification: "console" is for notifications in Gravitee console UI.
 For each target there is an attribute of the same name to configure it.<br/>
           <br/>
+            <i>Enum</i>: console<br/>
             <i>Default</i>: console<br/>
         </td>
         <td>true</td>
@@ -10377,7 +10379,7 @@ For each target there is an attribute of the same name to configure it.<br/>
         <td><b><a href="#notificationspecconsole">console</a></b></td>
         <td>object</td>
         <td>
-          Console is used when the `target` value is `"console"` and is meant
+          Console is used when the target value is "console" and is meant
 to configure Gravitee console UI notifications.<br/>
           <br/>
             <i>Default</i>: map[]<br/>
@@ -10392,7 +10394,7 @@ to configure Gravitee console UI notifications.<br/>
 
 
 
-Console is used when the `target` value is `"console"` and is meant
+Console is used when the target value is "console" and is meant
 to configure Gravitee console UI notifications.
 
 <table>
@@ -10408,7 +10410,9 @@ to configure Gravitee console UI notifications.
         <td><b>apiEvents</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          List events that will trigger a notification for an API. Recipients are the API primary owner
+and all members of groups referenced in groupRefs
+Notification spec attribute eventType must be set to "api".<br/>
           <br/>
             <i>Enum</i>: APIKEY_EXPIRED, APIKEY_RENEWED, APIKEY_REVOKED, SUBSCRIPTION_NEW, SUBSCRIPTION_ACCEPTED, SUBSCRIPTION_CLOSED, SUBSCRIPTION_PAUSED, SUBSCRIPTION_RESUMED, SUBSCRIPTION_REJECTED, SUBSCRIPTION_TRANSFERRED, SUBSCRIPTION_FAILED, NEW_SUPPORT_TICKET, API_STARTED, API_STOPPED, API_UPDATED, API_DEPLOYED, NEW_RATING, NEW_RATING_ANSWER, MESSAGE, ASK_FOR_REVIEW, REVIEW_OK, REQUEST_FOR_CHANGES, API_DEPRECATED, NEW_SPEC_GENERATED<br/>
         </td>
@@ -10418,7 +10422,7 @@ to configure Gravitee console UI notifications.
         <td>[]object</td>
         <td>
           List of group references associated with this console notification.
-Theses groups are references to gravitee.io/Group custom resources created on the cluster.
+These groups are references to gravitee.io/Group custom resources created on the cluster.
 All members of those groups will receive a notification for the defined events.<br/>
         </td>
         <td>false</td>

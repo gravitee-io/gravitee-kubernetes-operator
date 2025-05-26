@@ -69,12 +69,20 @@ spec:
                 console:
                   default: {}
                   description: >-
-                    Console is used when the `target` value is `"console"` and
-                    is meant
+                    Console is used when the target value is "console" and is
+                    meant
 
                     to configure Gravitee console UI notifications.
                   properties:
                     apiEvents:
+                      description: >-
+                        List events that will trigger a notification for an API.
+                        Recipients are the API primary owner
+
+                        and all members of groups referenced in groupRefs
+
+                        Notification spec attribute eventType must be set to
+                        "api".
                       items:
                         description: ApiEvent defines the events that can be sent to the console.
                         enum:
@@ -109,7 +117,7 @@ spec:
                         List of group references associated with this console
                         notification.
 
-                        Theses groups are references to gravitee.io/Group custom
+                        These groups are references to gravitee.io/Group custom
                         resources created on the cluster.
 
                         All members of those groups will receive a notification
@@ -142,19 +150,23 @@ spec:
                     Notification can be used in API or Applications, each of
                     those have different events.
 
-                    An attribute starting with `eventType` value exists in the
+                    An attribute starting with eventType value exists in the
                     target configuration
 
-                    to configure events: <eventType>Events (e.g `apiEvents`)
+                    to configure events: < eventType >Events (e.g apiEvents)
+                  enum:
+                    - api
                   type: string
                 target:
                   default: console
                   description: >-
-                    Target of the notification: `"console"` is for notifications
+                    Target of the notification: "console" is for notifications
                     in Gravitee console UI.
 
                     For each target there is an attribute of the same name to
                     configure it.
+                  enum:
+                    - console
                   type: string
               required:
                 - eventType
