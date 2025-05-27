@@ -24,6 +24,7 @@ import (
 	netV1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 type LastSpecHashPredicate struct {
@@ -66,12 +67,22 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *corev1.Secret:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Data)
+	case *v1alpha1.GatewayClassParameters:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *gwAPIv1.GatewayClass:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *gwAPIv1.HTTPRoute:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.KafkaRoute:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	default:
 		return false
 	}
 }
 
 // Update implements default UpdateEvent filter for validating spec hash change.
+//
+//nolint:funlen // keep
 func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	if e.ObjectOld == nil || e.ObjectNew == nil {
 		return false
@@ -124,6 +135,18 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		oo, _ := e.ObjectOld.(*corev1.ConfigMap)
 		return hash.Calculate(&no.Data) != hash.Calculate(&oo.Data) ||
 			hash.Calculate(&no.BinaryData) != hash.Calculate(&oo.BinaryData)
+	case *v1alpha1.GatewayClassParameters:
+		oo, _ := e.ObjectOld.(*v1alpha1.GatewayClassParameters)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *gwAPIv1.GatewayClass:
+		oo, _ := e.ObjectOld.(*gwAPIv1.GatewayClass)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *gwAPIv1.HTTPRoute:
+		oo, _ := e.ObjectOld.(*gwAPIv1.HTTPRoute)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *v1alpha1.KafkaRoute:
+		oo, _ := e.ObjectOld.(*v1alpha1.KafkaRoute)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	default:
 		return false
 	}

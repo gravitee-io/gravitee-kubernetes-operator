@@ -48,7 +48,8 @@ IMG=gko TAG=dev make docker-build \
     --set manager.image.repository=gko \
     --set manager.image.tag=dev \
     --set manager.metrics.enabled=false \
-    --set gatewayAPI.controller.enabled=true
+    --set gatewayAPI.controller.enabled=true \
+    --set manager.reconcile.strategy=always
 ```
 
 > This will build the head of the repository and deploy the operator using Helm. The required resources to enable gateway-api support on your cluster will be installed by the operator.
