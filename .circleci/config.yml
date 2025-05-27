@@ -250,7 +250,8 @@ jobs:
                 --set manager.logs.format=console \
                 --set manager.logs.format=error \
                 --set manager.logs.timestamp.format=iso-8601 \
-                --set gatewayAPI.controller.enabled=true
+                --set gatewayAPI.controller.enabled=true \
+                --set manager.reconcile.strategy=always
       - run:
           name: Apply Gateway Class
           command: |
