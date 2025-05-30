@@ -18,11 +18,13 @@ import (
 	"fmt"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 var (
 	serviceURIPattern           = "http://%s.%s.svc.cluster.local:%d%s"
+	discardURI                  = "http://not.a.service.cluster.local"
 	defaultEndpointWeight int32 = 1
 )
 
@@ -110,6 +112,9 @@ func buildEndpointTarget(
 	backendRef gwAPIv1.HTTPBackendRef,
 	namespace string,
 ) string {
+	if !k8s.IsServiceKind(backendRef.BackendObjectReference) {
+		return discardURI
+	}
 	return fmt.Sprintf(
 		serviceURIPattern,
 		backendRef.Name,

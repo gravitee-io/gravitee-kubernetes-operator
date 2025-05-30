@@ -51,8 +51,11 @@ func acceptParent(
 	accepted := k8s.NewAcceptedConditionBuilder(route.Generation).Accept("route is accepted")
 
 	if !k8s.IsResolved(status) {
-		accepted.RejectNoMatchingParent("parent ref could not be resolved")
-		return accepted.Build(), nil
+		unresolved := k8s.GetCondition(status, k8s.ConditionResolvedRefs)
+		if unresolved.Reason == string(gwAPIv1.RouteReasonNoMatchingParent) {
+			accepted.RejectNoMatchingParent("parent ref could not be resolved")
+			return accepted.Build(), nil
+		}
 	}
 
 	gw, err := k8s.ResolveGateway(ctx, route.ObjectMeta, status.Object.ParentRef)
