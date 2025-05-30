@@ -58,7 +58,7 @@ services:
     enabled: true
     kubernetes:
       enabled: true
-
+      namespaces: ALL
   monitoring:
     delay: 5000
     unit: MILLISECONDS

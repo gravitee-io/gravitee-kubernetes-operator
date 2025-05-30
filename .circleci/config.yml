@@ -261,14 +261,14 @@ jobs:
                 --set gatewayAPI.controller.enabled=true \
                 --set manager.reconcile.strategy=always
       - run:
-          name: Apply Gateway Class
+          name: Apply GatewayClassParameters and GatewayClass
           command: |
             kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
             kubectl apply -f ./test/conformance/gateway-class.yaml
       - run:
           name: Run Gateway API Conformance Test
           command: |
-            go test -v ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
+            bin/gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
       - go/save-mod-cache
 
   job-integration-test:
