@@ -35,6 +35,21 @@ func TestGatewayAPIConformance(t *testing.T) {
 		// features.GRPCRouteFeature.Name,
 		// features.ReferenceGrantFeature.Name,
 	)
+
+	// Here you can specify test name for debug purpose
+
+	// Failing tests
+	//   HTTPRouteInvalidBackendRefUnknownKind
+	//   HTTPRouteHostnameIntersection
+	//   HTTPRouteHTTPSListener
+	//   HTTPRouteListenerHostnameMatching
+	//   HTTPRouteMatchingAcrossRoutes
+	//   HTTPRouteMatching
+	//   HTTPRoutePathMatchOrder
+
+	opts.RunTest = ""
+	opts.CleanupBaseResources = false
+
 	cSuite, err := suite.NewConformanceTestSuite(opts)
 	if err != nil {
 		t.Fatalf("Error creating conformance test suite: %v", err)
