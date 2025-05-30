@@ -14,6 +14,7 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476
+	gotest.tools/gotestsum v1.12.2
 	k8s.io/apimachinery v0.33.1
 	k8s.io/client-go v0.33.1
 	sigs.k8s.io/controller-runtime v0.21.0
@@ -71,6 +72,8 @@ require (
 )
 
 require (
+	github.com/bitfield/gotestdox v0.2.2 // indirect
+	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -107,6 +110,7 @@ require (
 	github.com/google/cel-go v0.23.2 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
 	github.com/google/pprof v0.0.0-20250403155104-27863c87afa6 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
@@ -252,7 +256,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-logr/logr v1.4.3
 	github.com/go-logr/zapr v1.3.0
 	github.com/gogo/protobuf v1.3.2 // indirect

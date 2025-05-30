@@ -22,68 +22,108 @@ import (
 )
 
 var (
-	serviceURIPattern           = "http://%s.%s.svc.cluster.local:%d"
+	serviceURIPattern           = "http://%s.%s.svc.cluster.local:%d%s"
 	defaultEndpointWeight int32 = 1
 )
 
 func buildEndpointGroups(route *gwAPIv1.HTTPRoute) []*v4.EndpointGroup {
 	groups := []*v4.EndpointGroup{}
-	for i, rule := range route.Spec.Rules {
-		groups = append(groups, buildEndpointGroup(rule, i, route.Namespace))
+	for ruleIndex, rule := range route.Spec.Rules {
+		for matchIndex, match := range rule.Matches {
+			groups = append(
+				groups,
+				buildEndpointGroup(
+					rule,
+					ruleIndex,
+					match,
+					matchIndex,
+					route.Namespace,
+				),
+			)
+		}
 	}
 	return groups
 }
 
 func buildEndpointGroup(
 	rule gwAPIv1.HTTPRouteRule,
-	index int,
+	ruleIndex int,
+	match gwAPIv1.HTTPRouteMatch,
+	matchIndex int,
 	ns string,
 ) *v4.EndpointGroup {
 	endpointGroup := v4.NewHttpEndpointGroup(
-		buildEndpointGroupName(index),
+		buildEndpointGroupName(ruleIndex, matchIndex),
 	)
 	backendRefs := getActiveBackendRefs(rule.BackendRefs)
 
 	if len(backendRefs) > 1 {
 		endpointGroup.LoadBalancer = v4.NewLoadBalancer(v4.WeightedRoundRobin)
 	}
-	endpointGroup.Endpoints = buildEndpoints(backendRefs, ns)
+	endpointGroup.Endpoints = buildEndpoints(match, matchIndex, backendRefs, ns)
 	return endpointGroup
 }
 
-func buildEndpointGroupName(index int) string {
-	return fmt.Sprintf("endpoints-%d", index)
+func buildEndpointGroupName(ruleIndex, matchIndex int) string {
+	return fmt.Sprintf("endpoints-%d-%d", ruleIndex, matchIndex)
 }
 
 func buildEndpoints(
+	match gwAPIv1.HTTPRouteMatch,
+	matchIndex int,
 	backendRefs []gwAPIv1.HTTPBackendRef,
 	namespace string,
 ) []*v4.Endpoint {
 	endpoints := []*v4.Endpoint{}
-	for i, ref := range backendRefs {
-		endpoints = append(endpoints, buildEndpoint(ref, i, namespace))
+	for backendIndex, backendRef := range backendRefs {
+		endpoints = append(
+			endpoints,
+			buildEndpoint(
+				backendRef,
+				backendIndex,
+				match,
+				matchIndex,
+				namespace,
+			),
+		)
 	}
 	return endpoints
 }
 
 func buildEndpoint(
-	ref gwAPIv1.HTTPBackendRef,
-	index int,
+	backendRef gwAPIv1.HTTPBackendRef,
+	backendIndex int,
+	match gwAPIv1.HTTPRouteMatch,
+	matchIndex int,
 	namespace string,
 ) *v4.Endpoint {
 	endpoint := v4.NewHttpEndpoint(
-		fmt.Sprintf("backend-%d", index),
+		fmt.Sprintf("backend-%d-match-%d", backendIndex, matchIndex),
 	)
-	endpoint.Weight = ref.Weight
-	endpoint.Config.Object["target"] = buildEndpointTarget(ref, namespace)
+	endpoint.Weight = backendRef.Weight
+	endpoint.Config.Object["target"] = buildEndpointTarget(match, backendRef, namespace)
 	return endpoint
 }
 
 func buildEndpointTarget(
-	ref gwAPIv1.HTTPBackendRef,
+	match gwAPIv1.HTTPRouteMatch,
+	backendRef gwAPIv1.HTTPBackendRef,
 	namespace string,
 ) string {
-	return fmt.Sprintf(serviceURIPattern, ref.Name, namespace, *ref.Port)
+	return fmt.Sprintf(
+		serviceURIPattern,
+		backendRef.Name,
+		namespace,
+		*backendRef.Port,
+		getEndpointPath(match),
+	)
+}
+
+func getEndpointPath(match gwAPIv1.HTTPRouteMatch) string {
+	if match.Path == nil {
+		return rootPath
+	}
+	return *match.Path.Value
 }
 
 // If several backends are provided, skip backends with a weight defined to 0.

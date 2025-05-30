@@ -72,6 +72,9 @@ func DeployGateway(
 		return err
 	}
 
+	configData := map[string]string{}
+	maps.Copy(configData, gatewayConfig.Data)
+
 	if HasGraviteeYAML(params) {
 		userConfig, err := getUserConfigMap(gw, params)
 		if err != nil {
@@ -82,12 +85,13 @@ func DeployGateway(
 		}); err != nil {
 			return err
 		}
+		maps.Copy(configData, userConfig.Data)
 	}
 
 	if deployment, err := getDeployment(gw, params, portMapping); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
-		AddAnnotation(deployment, "gravitee.io/config", hash.Calculate(gatewayConfig))
+		AddAnnotation(deployment, "gravitee.io/config", hash.Calculate(configData))
 		return buildDeployment(gw, params, deployment, portMapping)
 	}); err != nil {
 		return err
@@ -323,11 +327,10 @@ func getServiceAccount(gw *gateway.Gateway) *coreV1.ServiceAccount {
 	return sa
 }
 
-func getRoleBinding(gw *gateway.Gateway) *rbacV1.RoleBinding {
-	binding := &rbacV1.RoleBinding{
+func getRoleBinding(gw *gateway.Gateway) *rbacV1.ClusterRoleBinding {
+	binding := &rbacV1.ClusterRoleBinding{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name:      gw.Object.Name,
-			Namespace: gw.Object.Namespace,
+			Name: gw.Object.Name,
 		},
 		Subjects: []rbacV1.Subject{
 			{
@@ -338,7 +341,7 @@ func getRoleBinding(gw *gateway.Gateway) *rbacV1.RoleBinding {
 		},
 		RoleRef: rbacV1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "Role",
+			Kind:     "ClusterRole",
 			Name:     gw.Object.Name,
 		},
 	}
@@ -346,11 +349,10 @@ func getRoleBinding(gw *gateway.Gateway) *rbacV1.RoleBinding {
 	return binding
 }
 
-func getRole(gw *gateway.Gateway) *rbacV1.Role {
-	role := &rbacV1.Role{
+func getRole(gw *gateway.Gateway) *rbacV1.ClusterRole {
+	role := &rbacV1.ClusterRole{
 		ObjectMeta: metaV1.ObjectMeta{
-			Name:      gw.Object.Name,
-			Namespace: gw.Object.Namespace,
+			Name: gw.Object.Name,
 		},
 		Rules: []rbacV1.PolicyRule{
 			{

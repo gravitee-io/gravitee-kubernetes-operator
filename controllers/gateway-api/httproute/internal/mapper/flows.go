@@ -42,20 +42,53 @@ const (
 	endpointMatcherPattern = "%s:{#group[0]}"
 )
 
+type weightedFlow struct {
+	Flow   *v4.Flow
+	Weight int
+}
+
 func buildFlows(route *gwAPIv1.HTTPRoute) []*v4.Flow {
-	flows := make([]*v4.Flow, 0)
+	weightedFlows := make([]weightedFlow, 0)
 	for ruleIndex, rule := range route.Spec.Rules {
 		for matchIndex, match := range rule.Matches {
 			conditionsExpressions := buildFlowConditionExpressions(match)
-			flows = append(
-				flows,
-				buildFlow(
-					rule, ruleIndex, match, matchIndex, conditionsExpressions,
-				),
+			weightedFlows = append(
+				weightedFlows,
+				weightedFlow{
+					Flow: buildFlow(
+						rule, ruleIndex, match, matchIndex, conditionsExpressions,
+					),
+					Weight: len(conditionsExpressions),
+				},
 			)
 		}
 	}
+	return sortFlows(weightedFlows)
+}
+
+// must appear first in the list and in the same order as defined.
+func sortFlows(weightedFlows []weightedFlow) []*v4.Flow {
+	flows := []*v4.Flow{}
+	maxWeight := getMaxWeight(weightedFlows)
+	for len(flows) != len(weightedFlows) {
+		for _, wf := range weightedFlows {
+			if wf.Weight == maxWeight {
+				flows = append(flows, wf.Flow)
+			}
+		}
+		maxWeight--
+	}
 	return flows
+}
+
+func getMaxWeight(weightedFlows []weightedFlow) int {
+	maxWeight := 0
+	for i := range weightedFlows {
+		if weightedFlows[i].Weight > maxWeight {
+			maxWeight = weightedFlows[i].Weight
+		}
+	}
+	return maxWeight
 }
 
 func buildFlow(
@@ -68,7 +101,7 @@ func buildFlow(
 	flowName := fmt.Sprintf("rule-%d-match%d", ruleIndex, matchIndex)
 	return &v4.Flow{
 		Name:      &flowName,
-		Request:   buildRequestFlow(rule, ruleIndex),
+		Request:   buildRequestFlow(rule, ruleIndex, matchIndex),
 		Response:  buildResponseFlow(rule),
 		Enabled:   true,
 		Selectors: buildFlowSelectors(match, conditionsExpressions),
@@ -127,10 +160,17 @@ func buildPathCondition(match *gwAPIv1.HTTPPathMatch) el.Expression {
 			And(pathInfoMatchesCondition.Format(*match.Value))
 	case gwAPIv1.PathMatchExact:
 		return contextPathEqualsCondition.Format(addTrailingSlash(*match.Value)).
-			And(pathInfoEqualsCondition.Format(rootPath))
+			And(pathInfoEqualsCondition.Format(getPathInfo(*match.Value)))
 	default:
 		panic(fmt.Sprintf("unsupported path match type: %s", *match.Type))
 	}
+}
+
+func getPathInfo(matchValue string) string {
+	if matchValue[len(matchValue)-1:] == "/" {
+		return rootPath
+	}
+	return ""
 }
 
 func addTrailingSlash(s string) string {
@@ -145,12 +185,12 @@ func buildHTTPSelector(match gwAPIv1.HTTPRouteMatch) *v4.FlowSelector {
 	if match.Method != nil {
 		methods = append(methods, base.HttpMethod(*match.Method))
 	}
-	return v4.NewHTTPSelector("/", "START_WITH", methods)
+	return v4.NewHTTPSelector("/", "STARTS_WITH", methods)
 }
 
-func buildRequestFlow(rule gwAPIv1.HTTPRouteRule, ruleIndex int) []*v4.FlowStep {
+func buildRequestFlow(rule gwAPIv1.HTTPRouteRule, ruleIndex, matchIndex int) []*v4.FlowStep {
 	return append(
-		[]*v4.FlowStep{buildRoutingStep(ruleIndex)},
+		[]*v4.FlowStep{buildRoutingStep(ruleIndex, matchIndex)},
 		buildRequestFilters(rule)...,
 	)
 }
@@ -159,25 +199,27 @@ func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 	return buildResponseFilters(rule)
 }
 
-func buildRoutingStep(ruleIndex int) *v4.FlowStep {
+func buildRoutingStep(ruleIndex, matchIndex int) *v4.FlowStep {
 	policyName := routingPolicyName
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &policyName,
 		Enabled: true,
 		Configuration: utils.NewGenericStringMap().
-			Put(routingRulesKey, buildRoutingRule(ruleIndex)),
+			Put(routingRulesKey, buildRoutingRule(ruleIndex, matchIndex)),
 	})
 }
 
-func buildRoutingRule(index int) []interface{} {
+func buildRoutingRule(ruleIndex, matchIndex int) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			routingPatternKey: routingPattern,
-			routingURLKey:     buildRoutingTarget(index),
+			routingURLKey:     buildRoutingTarget(ruleIndex, matchIndex),
 		},
 	}
 }
 
-func buildRoutingTarget(index int) string {
-	return fmt.Sprintf(endpointMatcherPattern, buildEndpointGroupName(index))
+func buildRoutingTarget(ruleIndex, matchIndex int) string {
+	return fmt.Sprintf(
+		endpointMatcherPattern, buildEndpointGroupName(ruleIndex, matchIndex),
+	)
 }

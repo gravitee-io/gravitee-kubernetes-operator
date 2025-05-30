@@ -53,26 +53,7 @@ func newAPI(route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
 			Name:      route.Name,
 			Namespace: route.Namespace,
 		},
-		Spec: v1alpha1.ApiV4DefinitionSpec{
-			Api: v4.Api{
-				Type: "PROXY",
-				Plans: &map[string]*v4.Plan{
-					"default": newKeyLessPlan(),
-				},
-				FlowExecution: &v4.FlowExecution{
-					Mode:          v4.FlowModeDefault,
-					MatchRequired: true,
-				},
-				ApiBase: &base.ApiBase{
-					Name:    buildAPIName(route),
-					Version: "v1alpha1",
-				},
-				DefinitionContext: &v4.DefinitionContext{
-					Origin:   v4.OriginKubernetes,
-					SyncFrom: v4.OriginKubernetes,
-				},
-			},
-		},
+		Spec: newAPISpec(route),
 	}
 }
 
@@ -84,7 +65,7 @@ func newAPISpec(route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
 				"default": newKeyLessPlan(),
 			},
 			FlowExecution: &v4.FlowExecution{
-				Mode:          v4.FlowModeDefault,
+				Mode:          v4.FlowModeBestMatch,
 				MatchRequired: true,
 			},
 			ApiBase: &base.ApiBase{

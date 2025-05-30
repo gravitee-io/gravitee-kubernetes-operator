@@ -30,9 +30,9 @@ func Accept(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 }
 
 func acceptParents(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
-	for i := range route.Spec.ParentRefs {
+	for i, ref := range route.Spec.ParentRefs {
 		status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
-		if accepted, err := acceptParent(ctx, route, status); err != nil {
+		if accepted, err := acceptParent(ctx, route, ref, status); err != nil {
 			return err
 		} else {
 			k8s.SetCondition(status, accepted)
@@ -45,6 +45,7 @@ func acceptParents(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 func acceptParent(
 	ctx context.Context,
 	route *gwAPIv1.HTTPRoute,
+	ref gwAPIv1.ParentReference,
 	status *gateway.RouteParentStatus,
 ) (*metaV1.Condition, error) {
 	accepted := k8s.NewAcceptedConditionBuilder(route.Generation).Accept("route is accepted")
@@ -64,20 +65,31 @@ func acceptParent(
 		return accepted.Build(), nil
 	}
 
-	if !supportsHTTP(gw) {
+	if !supportsHTTP(gw, ref) {
 		accepted.RejectNoMatchingParent("parent ref does not support HTTP routes")
 	}
 
 	return accepted.Build(), nil
 }
 
-func supportsHTTP(gw *gwAPIv1.Gateway) bool {
+func supportsHTTP(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
+	if ref.SectionName != nil {
+		lIdx := findListenerIndexBySectionName(gw, *ref.SectionName)
+		return supportsHTTPatListenerIndex(gw, lIdx)
+	}
 	for i := range gw.Status.Listeners {
-		for j := range gw.Status.Listeners[i].SupportedKinds {
-			lst := gw.Status.Listeners[i]
-			if lst.SupportedKinds[j].Kind == gwAPIv1.Kind(k8s.GwAPIv1HTTPRouteKind) {
-				return true
-			}
+		if supportsHTTPatListenerIndex(gw, i) {
+			return true
+		}
+	}
+	return false
+}
+
+func supportsHTTPatListenerIndex(gw *gwAPIv1.Gateway, index int) bool {
+	lst := gw.Status.Listeners[index]
+	for j := range lst.SupportedKinds {
+		if lst.SupportedKinds[j].Kind == gwAPIv1.Kind(k8s.GwAPIv1HTTPRouteKind) {
+			return true
 		}
 	}
 	return false
