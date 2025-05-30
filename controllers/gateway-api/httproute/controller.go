@@ -64,9 +64,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			if err := internal.Resolve(ctx, dc); err != nil {
 				return err
 			}
+
 			if err := internal.Accept(ctx, dc); err != nil {
 				return err
 			}
+
 			if err := internal.DetectConflicts(ctx, dc); err != nil {
 				return err
 			}
