@@ -40,3 +40,18 @@ func ResolveGateway(
 	}
 	return gw, nil
 }
+
+func ResolveRouteHostnames(ctx context.Context, route *gwAPIv1.HTTPRoute) []string {
+	hostnames := []string{}
+	for i := range route.Spec.ParentRefs {
+		refStatus := route.Status.Parents[i]
+		ref := refStatus.ParentRef
+		gw, err := ResolveGateway(ctx, route.ObjectMeta, ref)
+		if err != nil {
+			continue
+		}
+		parentHosts := GetHTTPHosts(route, gw, ref)
+		hostnames = append(hostnames, parentHosts...)
+	}
+	return hostnames
+}

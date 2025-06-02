@@ -39,15 +39,15 @@ func TestGatewayAPIConformance(t *testing.T) {
 	// Here you can specify test name for debug purpose
 
 	// Failing tests
-	//   HTTPRouteInvalidBackendRefUnknownKind
-	//   HTTPRouteHostnameIntersection
+
+	//   HTTPRouteHostnameIntersection (blocked by https://gravitee.atlassian.net/browse/APIM-9738)
+	//   HTTPRouteMatching
+	//   HTTPRoutePathMatchOrder (Antoine)
 	//   HTTPRouteHTTPSListener
 	//   HTTPRouteListenerHostnameMatching
 	//   HTTPRouteMatchingAcrossRoutes
-	//   HTTPRouteMatching
-	//   HTTPRoutePathMatchOrder
 
-	opts.RunTest = ""
+	opts.RunTest = "HTTPRouteHostnameIntersection"
 	opts.CleanupBaseResources = false
 
 	cSuite, err := suite.NewConformanceTestSuite(opts)

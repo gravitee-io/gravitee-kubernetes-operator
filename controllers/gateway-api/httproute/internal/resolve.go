@@ -74,7 +74,7 @@ func resolveParent(
 	}
 
 	if ref.SectionName != nil {
-		lIdx := findListenerIndexBySectionName(gw, *ref.SectionName)
+		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
 		if lIdx == -1 {
 			conditionBuilder.RejectNoMatchingParent("unable to resolve parent section name")
 			return conditionBuilder.Build(), nil
@@ -103,7 +103,7 @@ func supportsRouteNamespace(
 	route *gwAPIv1.HTTPRoute,
 ) (bool, error) {
 	if ref.SectionName != nil {
-		lIdx := findListenerIndexBySectionName(gw, *ref.SectionName)
+		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
 		return supportsRouteNamespaceAtListenerIndex(
 			ctx, gw, ref, route, lIdx,
 		)
@@ -217,14 +217,4 @@ func isResolvedBackend(
 	}
 
 	return true, nil
-}
-
-func findListenerIndexBySectionName(gw *gwAPIv1.Gateway, sectionName gwAPIv1.SectionName) int {
-	for i := range gw.Status.Listeners {
-		lst := gw.Status.Listeners[i]
-		if lst.Name == sectionName {
-			return i
-		}
-	}
-	return -1
 }

@@ -26,12 +26,13 @@ import (
 
 const (
 	contextPathEqualsCondition = el.Expression("#request.contextPath eq '%s'")
-	pathInfoEqualsCondition    = el.Expression("#request.pathInfo eq '%s'")
-	pathInfoMatchesCondition   = el.Expression("#request.pathInfo matches '%s'")
-	headerEqualsCondition      = el.Expression("#request.headers['%s'][0] eq '%s'")
-	headerMatchesCondition     = el.Expression("#request.headers['%s'][0] matches '%s'")
-	paramEqualsCondition       = el.Expression("#request.params['%s'] eq '%s'")
-	paramMatchesCondition      = el.Expression("#request.params['%s'] matches '%s'")
+	//hostHeaderWithoutPortEqualsCondition = el.Expression("#request.host.replaceAll(':(.*)$', '') eq '%s'").
+	pathInfoEqualsCondition  = el.Expression("#request.pathInfo eq '%s'")
+	pathInfoMatchesCondition = el.Expression("#request.pathInfo matches '%s'")
+	headerEqualsCondition    = el.Expression("#request.headers['%s'][0] eq '%s'")
+	headerMatchesCondition   = el.Expression("#request.headers['%s'][0] matches '%s'")
+	paramEqualsCondition     = el.Expression("#request.params['%s'] eq '%s'")
+	paramMatchesCondition    = el.Expression("#request.params['%s'] matches '%s'")
 
 	routingPolicyName = "dynamic-routing"
 	routingRulesKey   = "rules"
@@ -49,6 +50,7 @@ type weightedFlow struct {
 
 func buildFlows(route *gwAPIv1.HTTPRoute) []*v4.Flow {
 	weightedFlows := make([]weightedFlow, 0)
+
 	for ruleIndex, rule := range route.Spec.Rules {
 		for matchIndex, match := range rule.Matches {
 			conditionsExpressions := buildFlowConditionExpressions(match)
@@ -123,6 +125,7 @@ func buildCondition(conditionsExpressions []el.Expression) string {
 	for _, exp := range conditionsExpressions {
 		el = el.And(exp)
 	}
+
 	return el.Closed().String()
 }
 
