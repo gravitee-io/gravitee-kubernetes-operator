@@ -1,0 +1,187 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: httproute-hostname-intersection-all
+  namespace: gateway-conformance-infra
+spec:
+  hostnames:
+  - first.com
+  - sub.first.com
+  - second.com
+  - sub.second.com
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: httproute-hostname-intersection-all
+    namespace: gateway-conformance-infra
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: infra-backend-v2
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: no-intersecting-hosts
+  namespace: gateway-conformance-infra
+spec:
+  hostnames:
+  - specific.but.wrong.com
+  - wildcard.io
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: httproute-hostname-intersection
+    namespace: gateway-conformance-infra
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: infra-backend-v2
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /s5
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: specific-host-matches-listener-specific-host
+  namespace: gateway-conformance-infra
+spec:
+  hostnames:
+  - non.matching.com
+  - '*.nonmatchingwildcard.io'
+  - very.specific.com
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: httproute-hostname-intersection
+    namespace: gateway-conformance-infra
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: infra-backend-v1
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /s1
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: specific-host-matches-listener-wildcard-host
+  namespace: gateway-conformance-infra
+spec:
+  hostnames:
+  - non.matching.com
+  - wildcard.io
+  - foo.wildcard.io
+  - bar.wildcard.io
+  - foo.bar.wildcard.io
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: httproute-hostname-intersection
+    namespace: gateway-conformance-infra
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: infra-backend-v2
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /s2
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  creationTimestamp: "2025-05-30T18:58:36Z"
+  finalizers:
+  - finalizers.gravitee.io/httproute
+  generation: 1
+  name: wildcard-host-matches-listener-specific-host
+  namespace: gateway-conformance-infra
+  resourceVersion: "1592"
+  uid: 21aef4bd-9734-4bd5-923a-72e027c67b66
+spec:
+  hostnames:
+  - non.matching.com
+  - '*.specific.com'
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: httproute-hostname-intersection
+    namespace: gateway-conformance-infra
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: infra-backend-v3
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /s3
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  creationTimestamp: "2025-05-30T18:58:36Z"
+  finalizers:
+  - finalizers.gravitee.io/httproute
+  generation: 1
+  name: wildcard-host-matches-listener-wildcard-host
+  namespace: gateway-conformance-infra
+  resourceVersion: "1514"
+  uid: e64a38ab-689d-456f-bec2-12ec0b5299a9
+spec:
+  hostnames:
+  - '*.anotherwildcard.io'
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: httproute-hostname-intersection
+    namespace: gateway-conformance-infra
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: infra-backend-v1
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /s4
