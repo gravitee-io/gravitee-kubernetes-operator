@@ -57,6 +57,7 @@ func buildEndpointGroup(
 	endpointGroup := v4.NewHttpEndpointGroup(
 		buildEndpointGroupName(ruleIndex, matchIndex),
 	)
+
 	backendRefs := getActiveBackendRefs(rule.BackendRefs)
 
 	if len(backendRefs) > 1 {
@@ -104,6 +105,7 @@ func buildEndpoint(
 	)
 	endpoint.Weight = backendRef.Weight
 	endpoint.Config.Object["target"] = buildEndpointTarget(match, backendRef, namespace)
+	endpoint.Inherit = false
 	return endpoint
 }
 

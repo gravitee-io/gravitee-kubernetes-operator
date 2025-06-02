@@ -25,7 +25,7 @@ import (
 )
 
 func DetectConflicts(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
-	api := mapper.Map(route)
+	api := mapper.Map(ctx, route)
 	conflict, err := base.FindConflictingPath(ctx, api)
 	if err != nil {
 		return err
