@@ -24,10 +24,10 @@ import (
 )
 
 func Program(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
-	api := mapper.Map(route)
+	api := mapper.Map(ctx, route)
 	api.SetOwnerReferences(getOwnerReferences(route))
 	return k8s.CreateOrUpdate(ctx, api, func() error {
-		api.Spec = mapper.MapSpec(route)
+		api.Spec = mapper.MapSpec(ctx, route)
 		return nil
 	})
 }

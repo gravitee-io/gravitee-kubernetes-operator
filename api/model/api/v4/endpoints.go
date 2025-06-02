@@ -65,9 +65,10 @@ type Endpoint struct {
 
 func NewHttpEndpoint(name string) *Endpoint {
 	return &Endpoint{
-		Name:   &name,
-		Type:   string(EndpointTypeHTTP),
-		Config: utils.NewGenericStringMap(),
+		Name:           &name,
+		Type:           string(EndpointTypeHTTP),
+		Config:         utils.NewGenericStringMap(),
+		ConfigOverride: utils.NewGenericStringMap(),
 	}
 }
 

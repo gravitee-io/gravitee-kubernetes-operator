@@ -78,6 +78,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 					return nil
 				}
 			}
+
 			if err := internal.Program(ctx, dc); err != nil {
 				return err
 			}

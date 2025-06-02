@@ -15,8 +15,11 @@
 package mapper
 
 import (
+	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 
@@ -32,15 +35,15 @@ var (
 	keyLessSecurity = v4.NewPlanSecurity("KEY_LESS")
 )
 
-func Map(route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
+func Map(ctx context.Context, route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
 	api := newAPI(route)
-	api.Spec = MapSpec(route)
+	api.Spec = MapSpec(ctx, route)
 	return api
 }
 
-func MapSpec(route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
+func MapSpec(ctx context.Context, route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
 	spec := newAPISpec(route)
-	spec.Listeners = buildListeners(route)
+	spec.Listeners = buildListeners(ctx, route)
 	spec.EndpointGroups = buildEndpointGroups(route)
 	spec.Flows = buildFlows(route)
 	spec.Tags = buildTags(route)
@@ -65,7 +68,7 @@ func newAPISpec(route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
 				"default": newKeyLessPlan(),
 			},
 			FlowExecution: &v4.FlowExecution{
-				Mode:          v4.FlowModeBestMatch,
+				Mode:          v4.FlowModeDefault,
 				MatchRequired: true,
 			},
 			ApiBase: &base.ApiBase{
@@ -92,8 +95,11 @@ func newKeyLessPlan() *v4.Plan {
 
 func buildTags(route *gwAPIv1.HTTPRoute) []string {
 	tags := []string{}
-	for _, ref := range route.Spec.ParentRefs {
-		tags = append(tags, buildTag(route, ref))
+	for i, ref := range route.Spec.ParentRefs {
+		routeParentStatus := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
+		if k8s.IsAccepted(routeParentStatus) {
+			tags = append(tags, buildTag(route, ref))
+		}
 	}
 	return tags
 }

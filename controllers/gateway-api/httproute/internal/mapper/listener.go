@@ -15,24 +15,28 @@
 package mapper
 
 import (
+	"context"
+
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/util/sets"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func buildListeners(route *gwAPIv1.HTTPRoute) []*v4.GenericListener {
+func buildListeners(ctx context.Context, route *gwAPIv1.HTTPRoute) []*v4.GenericListener {
 	listener := v4.NewHTTPListener()
-	listener.Paths = getPaths(route)
+	hostnames := k8s.ResolveRouteHostnames(ctx, route)
+	listener.Paths = getPaths(route, hostnames)
 	return []*v4.GenericListener{
 		v4.ToGenericListener(listener),
 	}
 }
 
-func getPaths(route *gwAPIv1.HTTPRoute) []*v4.Path {
-	if len(route.Spec.Hostnames) == 0 {
+func getPaths(route *gwAPIv1.HTTPRoute, hostnames []string) []*v4.Path {
+	if len(hostnames) == 0 {
 		return getPathsWithoutHostnames(route)
 	}
-	return getPathsWithHostnames(route)
+	return getPathsWithHostnames(route, hostnames)
 }
 
 func getPathsWithoutHostnames(route *gwAPIv1.HTTPRoute) []*v4.Path {
@@ -44,12 +48,12 @@ func getPathsWithoutHostnames(route *gwAPIv1.HTTPRoute) []*v4.Path {
 	return paths
 }
 
-func getPathsWithHostnames(route *gwAPIv1.HTTPRoute) []*v4.Path {
+func getPathsWithHostnames(route *gwAPIv1.HTTPRoute, hostnames []string) []*v4.Path {
 	paths := []*v4.Path{}
 	routePaths := extractPaths(route)
-	for _, hostname := range route.Spec.Hostnames {
+	for _, hostname := range hostnames {
 		for _, path := range routePaths {
-			paths = append(paths, v4.NewPath(string(hostname), path))
+			paths = append(paths, v4.NewPath(hostname, path))
 		}
 	}
 	return paths
