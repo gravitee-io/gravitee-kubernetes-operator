@@ -47,8 +47,9 @@ func TestGatewayAPIConformance(t *testing.T) {
 	//   HTTPRouteListenerHostnameMatching
 	//   HTTPRouteMatchingAcrossRoutes
 
-	opts.RunTest = "HTTPRouteHostnameIntersection"
+	opts.RunTest = "HTTPRouteInvalidCrossNamespaceParentRef"
 	opts.CleanupBaseResources = false
+	opts.RestConfig.QPS = -1
 
 	cSuite, err := suite.NewConformanceTestSuite(opts)
 	if err != nil {

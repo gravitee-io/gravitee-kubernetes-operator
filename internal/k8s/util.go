@@ -117,9 +117,10 @@ func IsAttachedHTTPRoute(
 	listener gwAPIv1.Listener,
 	route gwAPIv1.HTTPRoute,
 ) bool {
-	for _, ref := range route.Spec.ParentRefs {
+	for i, ref := range route.Spec.ParentRefs {
 		if IsListenerRef(gw, listener, ref) {
-			return true
+			refStatus := route.Status.Parents[i]
+			return IsAccepted(gateway.WrapRouteParentStatus(&refStatus))
 		}
 	}
 	return false

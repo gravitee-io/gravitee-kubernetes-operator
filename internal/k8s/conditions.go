@@ -136,6 +136,13 @@ func (b *ConditionBuilder) RejectNoMatchingParent(msg string) *ConditionBuilder 
 		Message(msg)
 }
 
+func (b *ConditionBuilder) RejectNotAllowedByListeners(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.RouteReasonNotAllowedByListeners)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
 func (b *ConditionBuilder) RejectNoMatchingListenerHostname(msg string) *ConditionBuilder {
 	return b.
 		Reason(string(gwAPIv1.RouteReasonNoMatchingListenerHostname)).
