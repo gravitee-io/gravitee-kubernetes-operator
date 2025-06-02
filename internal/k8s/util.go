@@ -15,6 +15,8 @@
 package k8s
 
 import (
+	"strings"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	coreV1 "k8s.io/api/core/v1"
@@ -104,6 +106,32 @@ func IsListenerRef(
 func HasHTTPRouteOwner(ownerRefs []metaV1.OwnerReference) bool {
 	for _, ref := range ownerRefs {
 		if ref.APIVersion == GwAPIv1APIVersion && ref.Kind == GwAPIv1HTTPRouteKind {
+			return true
+		}
+	}
+	return false
+}
+
+func IsAttachedHTTPRoute(
+	gw *gwAPIv1.Gateway,
+	listener gwAPIv1.Listener,
+	route gwAPIv1.HTTPRoute,
+) bool {
+	for _, ref := range route.Spec.ParentRefs {
+		if IsListenerRef(gw, listener, ref) {
+			return true
+		}
+	}
+	return false
+}
+
+func IsAttachedKafkaRoute(
+	gw *gwAPIv1.Gateway,
+	listener gwAPIv1.Listener,
+	route v1alpha1.KafkaRoute,
+) bool {
+	for _, ref := range route.Spec.ParentRefs {
+		if IsListenerRef(gw, listener, ref) {
 			return true
 		}
 	}
@@ -276,4 +304,147 @@ func HasGraviteeYAML(params *v1alpha1.GatewayClassParameters) bool {
 
 func HasGraviteeLicense(params *v1alpha1.GatewayClassParameters) bool {
 	return params.Spec.Gravitee != nil && params.Spec.Gravitee.LicenseRef != nil
+}
+
+func FindListenerIndexBySectionName(gw *gwAPIv1.Gateway, sectionName gwAPIv1.SectionName) int {
+	for i := range gw.Status.Listeners {
+		lst := gw.Status.Listeners[i]
+		if lst.Name == sectionName {
+			return i
+		}
+	}
+	return -1
+}
+
+func HasHTTPListenerAtIndex(gw *gwAPIv1.Gateway, index int) bool {
+	if index < 0 {
+		return false
+	}
+	lst := gw.Status.Listeners[index]
+	for j := range lst.SupportedKinds {
+		if lst.SupportedKinds[j].Kind == gwAPIv1.Kind(GwAPIv1HTTPRouteKind) {
+			return true
+		}
+	}
+	return false
+}
+
+func GetHTTPHosts(route *gwAPIv1.HTTPRoute, gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) []string {
+	if ref.SectionName != nil {
+		listenerIndex := FindListenerIndexBySectionName(gw, *ref.SectionName)
+		if !HasHTTPListenerAtIndex(gw, listenerIndex) {
+			return nil
+		}
+		listener := gw.Spec.Listeners[listenerIndex]
+		return GetHTTPHostsForListenerAndRoute(route, listener)
+	}
+	hostnames := []string{}
+	for i := range gw.Spec.Listeners {
+		if !HasHTTPListenerAtIndex(gw, i) {
+			continue
+		}
+		listener := gw.Spec.Listeners[i]
+		hostnames = append(hostnames, GetHTTPHostsForListenerAndRoute(route, listener)...)
+	}
+	return hostnames
+}
+
+func GetHTTPHostsForListenerAndRoute(httpRoute *gwAPIv1.HTTPRoute, listener gwAPIv1.Listener) []string {
+	hostnames := sets.New[string]()
+	if listener.Hostname == nil {
+		for i := range httpRoute.Spec.Hostnames {
+			routeHostname := string(httpRoute.Spec.Hostnames[i])
+			hostnames.Insert(routeHostname)
+		}
+		return hostnames.UnsortedList()
+	}
+
+	listenerHostname := string(*listener.Hostname)
+	for i := range httpRoute.Spec.Hostnames {
+		routeHostname := string(httpRoute.Spec.Hostnames[i])
+		if intersect(listenerHostname, routeHostname) {
+			if instersecFromRouteWildcard(listenerHostname, routeHostname) {
+				hostnames.Insert(listenerHostname)
+			} else {
+				hostnames.Insert(routeHostname)
+			}
+		}
+	}
+
+	return hostnames.UnsortedList()
+}
+
+func HasIntersectingHostName(route *gwAPIv1.HTTPRoute, gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
+	if ref.SectionName != nil {
+		i := FindListenerIndexBySectionName(gw, *ref.SectionName)
+		if i < 0 {
+			return false
+		}
+		return HasIntersectingHostNameAtIndex(route, gw, i)
+	}
+	for i := range gw.Spec.Listeners {
+		if HasIntersectingHostNameAtIndex(route, gw, i) {
+			return true
+		}
+	}
+	return false
+}
+
+func HasIntersectingHostNameAtIndex(route *gwAPIv1.HTTPRoute, gw *gwAPIv1.Gateway, index int) bool {
+	listener := gw.Spec.Listeners[index]
+	listenerHostname := listener.Hostname
+
+	if listenerHostname == nil {
+		return true
+	}
+
+	if len(route.Spec.Hostnames) == 0 {
+		return true
+	}
+
+	for _, routeHostname := range route.Spec.Hostnames {
+		if intersect(string(*listenerHostname), string(routeHostname)) {
+			return true
+		}
+	}
+	return false
+}
+
+func intersect(listenerHostname, routeHostname string) bool {
+	if strings.EqualFold(listenerHostname, routeHostname) {
+		return true
+	}
+
+	if instersecFromListenerWildcard(listenerHostname, routeHostname) {
+		return true
+	}
+
+	if instersecFromRouteWildcard(listenerHostname, routeHostname) {
+		return true
+	}
+
+	return false
+}
+
+func instersecFromListenerWildcard(listenerHostname, routeHostname string) bool {
+	if strings.HasPrefix(listenerHostname, "*") {
+		return intersectWithWildcard(routeHostname, listenerHostname)
+	}
+	return false
+}
+
+func instersecFromRouteWildcard(listenerHostname, routeHostname string) bool {
+	if strings.HasPrefix(routeHostname, "*") {
+		return intersectWithWildcard(listenerHostname, routeHostname)
+	}
+	return false
+}
+
+func intersectWithWildcard(hostname, wildcardHostname string) bool {
+	if !strings.HasSuffix(hostname, strings.TrimPrefix(wildcardHostname, "*")) {
+		return false
+	}
+
+	wildcardMatch := strings.TrimSuffix(hostname, strings.TrimPrefix(wildcardHostname, "*"))
+	return len(wildcardMatch) > 0
 }

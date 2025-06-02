@@ -214,7 +214,7 @@ func countAttachedHTTPRoutes(
 		return 0, err
 	}
 	for _, route := range routesList.Items {
-		if isAttachedHTTPRoute(gw, listener, route) {
+		if k8s.IsAttachedHTTPRoute(gw, listener, route) {
 			count += 1
 		}
 	}
@@ -238,37 +238,11 @@ func countAttachedKafkaRoutes(
 		return 0, err
 	}
 	for _, route := range routesList.Items {
-		if isAttachedKafkaRoute(gw, listener, route) {
+		if k8s.IsAttachedKafkaRoute(gw, listener, route) {
 			count += 1
 		}
 	}
 	return count, nil
-}
-
-func isAttachedHTTPRoute(
-	gw *gwAPIv1.Gateway,
-	listener gwAPIv1.Listener,
-	route gwAPIv1.HTTPRoute,
-) bool {
-	for _, ref := range route.Spec.ParentRefs {
-		if k8s.IsListenerRef(gw, listener, ref) {
-			return true
-		}
-	}
-	return false
-}
-
-func isAttachedKafkaRoute(
-	gw *gwAPIv1.Gateway,
-	listener gwAPIv1.Listener,
-	route v1alpha1.KafkaRoute,
-) bool {
-	for _, ref := range route.Spec.ParentRefs {
-		if k8s.IsListenerRef(gw, listener, ref) {
-			return true
-		}
-	}
-	return false
 }
 
 func hasInvalidSecretGroup(ref gwAPIv1.SecretObjectReference) bool {

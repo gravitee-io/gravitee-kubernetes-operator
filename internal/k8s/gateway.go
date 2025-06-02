@@ -63,11 +63,11 @@ func DeployGateway(
 
 	portMapping := mapPorts(gw.Object)
 
-	gatewayConfig, err := getOverridingGatewayConfigMap(gw, params, portMapping)
+	gatewayConfig, err := getOverridingGatewayConfigMap(ctx, gw, params, portMapping)
 	if err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, gatewayConfig, func() error {
-		return buildOverridingGatewayConfigData(gw, params, gatewayConfig, portMapping)
+		return buildOverridingGatewayConfigData(ctx, gw, params, gatewayConfig, portMapping)
 	}); err != nil {
 		return err
 	}
@@ -160,6 +160,7 @@ func getUserConfigMap(gw *gateway.Gateway, params *v1alpha1.GatewayClassParamete
 }
 
 func getOverridingGatewayConfigMap(
+	ctx context.Context,
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
@@ -173,7 +174,7 @@ func getOverridingGatewayConfigMap(
 
 	setOwnerReference(gw.Object, configMap)
 
-	if err := buildOverridingGatewayConfigData(gw, params, configMap, portMapping); err != nil {
+	if err := buildOverridingGatewayConfigData(ctx, gw, params, configMap, portMapping); err != nil {
 		return nil, err
 	}
 
@@ -194,12 +195,13 @@ func buildUserGatewayConfigData(
 }
 
 func buildOverridingGatewayConfigData(
+	ctx context.Context,
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	configMap *coreV1.ConfigMap,
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) error {
-	servers, err := getServers(gw, portMapping)
+	servers, err := getServers(ctx, gw, portMapping)
 	if err != nil {
 		return err
 	}
@@ -401,7 +403,7 @@ func setGraviteeConf(podTemplate *coreV1.PodTemplateSpec) {
 			containers[i].Env = append(containers[i].Env, coreV1.EnvVar{
 				Name: "JAVA_OPTS",
 				Value: fmt.Sprintf(
-					"-Dgravitee.conf=%s,%s",
+					"-Dgravitee.conf=%s,%s -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",
 					UserGatewayConfigFile,
 					DefaultGatewayConfigFile,
 				),
@@ -481,13 +483,19 @@ func setContainerPorts(
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) {
 	ports := make([]coreV1.ContainerPort, 0)
+	knownPorts := sets.New[int32]()
 	for _, listener := range listeners {
-		port := coreV1.ContainerPort{
-			ContainerPort: portMapping[listener.Port],
-			Protocol:      coreV1.ProtocolTCP,
+		mappedPort := portMapping[listener.Port]
+		if !knownPorts.Has(mappedPort) {
+			port := coreV1.ContainerPort{
+				ContainerPort: mappedPort,
+				Protocol:      coreV1.ProtocolTCP,
+			}
+			ports = append(ports, port)
 		}
-		ports = append(ports, port)
+		knownPorts.Insert(mappedPort)
 	}
+
 	probePorts := make(map[int32]coreV1.ContainerPort)
 	if rp := getProbePort(container.ReadinessProbe); rp != nil {
 		probePorts[*rp] = coreV1.ContainerPort{
@@ -587,37 +595,45 @@ func getHTTPPort(listeners []gwAPIv1.Listener, portMapping map[gwAPIv1.PortNumbe
 }
 
 func getServers(
+	_ context.Context,
 	gw *gateway.Gateway,
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) ([]map[string]any, error) {
 	listeners := gw.Object.Spec.Listeners
 	statuses := gw.Object.Status.Listeners
 	servers := make([]map[string]any, 0)
+	knownPorts := sets.New[int32]()
 	for i, listener := range listeners {
 		if IsKafkaListener(listener) {
 			continue
 		}
+
 		status := gateway.WrapListenerStatus(&statuses[i])
 		if !IsAccepted(status) {
 			continue
 		}
+
+		serverPort := portMapping[listener.Port]
+
+		if knownPorts.Has(serverPort) {
+			continue
+		}
+
 		server := make(map[string]any)
 		serverType, ok := ProtocolToServerType[listener.Protocol]
 		if !ok {
 			return nil, fmt.Errorf("unknown server protocol")
 		}
 		server["type"] = serverType
-		server["port"] = portMapping[listener.Port]
-		if listener.Hostname != nil {
-			server["hostname"] = *listener.Hostname
-		} else {
-			server["hostname"] = "0.0.0.0"
-		}
+		server["port"] = serverPort
+		server["host"] = "0.0.0.0"
+
 		if listener.TLS != nil {
 			server["secured"] = true
 			server["ssl"] = buildTLS(listener)
 		}
 		servers = append(servers, server)
+		knownPorts.Insert(serverPort)
 	}
 	return servers, nil
 }

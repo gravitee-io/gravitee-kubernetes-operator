@@ -68,8 +68,21 @@ func acceptParent(
 		return accepted.Build(), nil
 	}
 
+	if ref.SectionName != nil {
+		if k8s.FindListenerIndexBySectionName(gw, *ref.SectionName) == -1 {
+			accepted.RejectNoMatchingParent("section name does not exist")
+			return accepted.Build(), nil
+		}
+	}
+
 	if !supportsHTTP(gw, ref) {
 		accepted.RejectNoMatchingParent("parent ref does not support HTTP routes")
+		return accepted.Build(), nil
+	}
+
+	if !k8s.HasIntersectingHostName(route, gw, ref) {
+		accepted.RejectNoMatchingListenerHostname("parent hostname and route hostnames do not intersect")
+		return accepted.Build(), nil
 	}
 
 	return accepted.Build(), nil
@@ -77,21 +90,11 @@ func acceptParent(
 
 func supportsHTTP(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
 	if ref.SectionName != nil {
-		lIdx := findListenerIndexBySectionName(gw, *ref.SectionName)
-		return supportsHTTPatListenerIndex(gw, lIdx)
+		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
+		return k8s.HasHTTPListenerAtIndex(gw, lIdx)
 	}
 	for i := range gw.Status.Listeners {
-		if supportsHTTPatListenerIndex(gw, i) {
-			return true
-		}
-	}
-	return false
-}
-
-func supportsHTTPatListenerIndex(gw *gwAPIv1.Gateway, index int) bool {
-	lst := gw.Status.Listeners[index]
-	for j := range lst.SupportedKinds {
-		if lst.SupportedKinds[j].Kind == gwAPIv1.Kind(k8s.GwAPIv1HTTPRouteKind) {
+		if k8s.HasHTTPListenerAtIndex(gw, i) {
 			return true
 		}
 	}
