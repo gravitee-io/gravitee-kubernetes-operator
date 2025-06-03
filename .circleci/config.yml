@@ -212,7 +212,7 @@ jobs:
           name: Start cluster
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=master-latest
+            export APIM_IMAGE_TAG=4.7.x-latest
             make start-cluster
       - run:
           name: Run IT with filter << parameters.ginkgo-filter >>
@@ -622,7 +622,7 @@ workflows:
       - job-stage-image:
           name: Stage image
           image: graviteeio.azurecr.io/kubernetes-operator
-          tag: master-latest
+          tag: 4.7.x-latest
           context: cicd-orchestrator
           filters:
             branches:
