@@ -64,7 +64,7 @@ func extractPaths(route *gwAPIv1.HTTPRoute) []string {
 	for _, rule := range route.Spec.Rules {
 		for _, match := range rule.Matches {
 			if *match.Path.Type != gwAPIv1.PathMatchRegularExpression {
-				paths.Insert(*match.Path.Value)
+				paths.Insert(addTrailingSlash(*match.Path.Value))
 			} else {
 				paths.Insert(rootPath)
 			}
