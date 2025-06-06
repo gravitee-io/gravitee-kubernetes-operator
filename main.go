@@ -29,6 +29,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
+	parameters "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclassparameters"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/kafkaroute"
 
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
@@ -38,6 +43,7 @@ import (
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -58,6 +64,8 @@ import (
 	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -302,6 +310,54 @@ func registerControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for notification")
 		os.Exit(1)
 	}
+
+	if env.Config.EnableGatewayAPI {
+		registerGatewayAPIsControllers(mgr)
+	}
+}
+
+func registerGatewayAPIsControllers(mgr ctrl.Manager) {
+	runtimeUtil.Must(gwAPIv1.SchemeBuilder.AddToScheme(scheme))
+
+	if err := (&parameters.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("gravitee-gateway-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for gravitee gateway")
+		os.Exit(1)
+	}
+
+	if err := (&gatewayclass.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("gateway-class-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for gateway class")
+		os.Exit(1)
+	}
+
+	if err := (&gateway.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("gateway-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for gateway")
+		os.Exit(1)
+	}
+
+	if err := (&httproute.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("http-route"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for HTTP route")
+		os.Exit(1)
+	}
+
+	if err := (&kafkaroute.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("kafka-route"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for Kafka route")
+		os.Exit(1)
+	}
 }
 
 func applyCRDs() error {
@@ -323,6 +379,10 @@ func applyCRDs() error {
 			return nil
 		}
 
+		if strings.Contains(path, "gateway-api") && !env.Config.EnableGatewayAPI {
+			return nil
+		}
+
 		b, err := fs.ReadFile(helm, path)
 		if err != nil {
 			return err
@@ -335,6 +395,11 @@ func applyCRDs() error {
 
 		opts := metav1.ApplyOptions{Force: true, FieldManager: "gravitee.io/operator"}
 		crd := &unstructured.Unstructured{Object: obj}
+
+		isGatewayAPIExtension := crd.GetAnnotations()[core.Extends] == gwAPIv1.GroupName
+		if isGatewayAPIExtension && !env.Config.EnableGatewayAPI {
+			return nil
+		}
 
 		if crd, err = client.Resource(version).Apply(ctx, crd.GetName(), crd, opts); err == nil {
 			log.Global.Infof("Applied resource definition [%s]", crd.GetName())

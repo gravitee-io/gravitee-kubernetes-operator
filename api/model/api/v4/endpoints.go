@@ -23,7 +23,8 @@ import (
 type EndpointType string
 
 const (
-	EndpointTypeHTTP = EndpointType("http-proxy")
+	EndpointTypeHTTP  = EndpointType("http-proxy")
+	EndpointTypeKafka = EndpointType("native-kafka")
 )
 
 type Endpoint struct {
@@ -37,7 +38,7 @@ type Endpoint struct {
 
 	// Endpoint Weight
 	// +kubebuilder:validation:Optional
-	Weight *int `json:"weight,omitempty"`
+	Weight *int32 `json:"weight,omitempty"`
 
 	// Should endpoint group configuration be inherited or not ?
 	Inherit bool `json:"inheritConfiguration"`
@@ -64,8 +65,18 @@ type Endpoint struct {
 
 func NewHttpEndpoint(name string) *Endpoint {
 	return &Endpoint{
-		Name: &name,
-		Type: string(EndpointTypeHTTP),
+		Name:           &name,
+		Type:           string(EndpointTypeHTTP),
+		Config:         utils.NewGenericStringMap(),
+		ConfigOverride: utils.NewGenericStringMap(),
+	}
+}
+
+func NewKafkaEndpoint(name string) *Endpoint {
+	return &Endpoint{
+		Name:   &name,
+		Type:   string(EndpointTypeKafka),
+		Config: utils.NewGenericStringMap(),
 	}
 }
 
@@ -124,8 +135,20 @@ type EndpointGroup struct {
 func NewHttpEndpointGroup(name string) *EndpointGroup {
 	t := string(EndpointTypeHTTP)
 	return &EndpointGroup{
-		Name: name,
-		Type: &t,
+		Name:         name,
+		Type:         &t,
+		Endpoints:    []*Endpoint{},
+		SharedConfig: utils.NewGenericStringMap(),
+	}
+}
+
+func NewKafkaEndpointGroup(name string) *EndpointGroup {
+	t := string(EndpointTypeKafka)
+	return &EndpointGroup{
+		Name:         name,
+		Type:         &t,
+		Endpoints:    []*Endpoint{},
+		SharedConfig: utils.NewGenericStringMap(),
 	}
 }
 

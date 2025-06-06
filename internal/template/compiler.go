@@ -146,7 +146,7 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 
 	if updated {
 		updateFinalizer(ctx, cm, parentResourceDeleted && totalReference == 0)
-		if err := k8s.UpdateSafely(ctx, cm); err != nil {
+		if err := k8s.Update(ctx, cm); err != nil {
 			return "", err
 		}
 	}
@@ -196,7 +196,7 @@ func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
 
 	if updated {
 		updateFinalizer(ctx, sec, parentResourceDeleted && totalReference == 0)
-		if err := k8s.UpdateSafely(ctx, sec); err != nil {
+		if err := k8s.Update(ctx, sec); err != nil {
 			return "", err
 		}
 	}

@@ -259,6 +259,10 @@ func (api *Api) IsStopped() bool {
 	return api.State == base.StateStopped
 }
 
+func (api *Api) GetTags() []string {
+	return api.Tags
+}
+
 // Converts the API to its gateway definition equivalent.
 func (api *Api) ToGatewayDefinition() GatewayDefinitionApi {
 	def := GatewayDefinitionApi{Api: api}

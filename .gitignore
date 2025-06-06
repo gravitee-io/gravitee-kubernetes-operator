@@ -44,4 +44,9 @@ bundle.yml
 # Kyverno Chainsaw E2E tests
 chainsaw/reports/
 node_modules
+
+# Gravitee internal
 license.key
+examples/gateway-api/kafka_2.*
+kafka.ca.crt
+https.ca.crt
