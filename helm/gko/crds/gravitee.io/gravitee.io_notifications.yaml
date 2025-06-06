@@ -62,12 +62,13 @@ spec:
                 console:
                   default: {}
                   description: >-
-                    Console is used when the `target` value is `"console"` and
-                    is meant
+                    Console is used when the target value is "console" and is
+                    meant
 
-                    to configure Gravitee console...
+                    to configure Gravitee console UI...
                   properties:
                     apiEvents:
+                      description: List events that will trigger a notification for an API.
                       items:
                         description: ApiEvent defines the events that can be sent to the console.
                         enum:
@@ -122,11 +123,15 @@ spec:
                 eventType:
                   default: api
                   description: EventType defines the subject of those events.
+                  enum:
+                    - api
                   type: string
                 target:
                   default: console
-                  description: 'Target of the notification: `"console"` is for notifications in
+                  description: 'Target of the notification: "console" is for notifications in
                     Gravitee console UI.'
+                  enum:
+                    - console
                   type: string
               required:
                 - eventType
