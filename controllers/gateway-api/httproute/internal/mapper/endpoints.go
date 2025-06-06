@@ -16,6 +16,7 @@ package mapper
 
 import (
 	"fmt"
+	"strings"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -105,7 +106,6 @@ func buildEndpoint(
 	)
 	endpoint.Weight = backendRef.Weight
 	endpoint.Config.Object["target"] = buildEndpointTarget(match, backendRef, namespace)
-	endpoint.Inherit = false
 	return endpoint
 }
 
@@ -128,9 +128,9 @@ func buildEndpointTarget(
 
 func getEndpointPath(match gwAPIv1.HTTPRouteMatch) string {
 	if match.Path == nil {
-		return rootPath
+		return ""
 	}
-	return *match.Path.Value
+	return strings.TrimSuffix(*match.Path.Value, "/")
 }
 
 // If several backends are provided, skip backends with a weight defined to 0.

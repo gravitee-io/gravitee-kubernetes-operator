@@ -37,7 +37,7 @@ const (
 	routingPolicyName = "dynamic-routing"
 	routingRulesKey   = "rules"
 	routingPatternKey = "pattern"
-	routingPattern    = "(.*)"
+	routingPattern    = `(.*)`
 	routingURLKey     = "url"
 
 	endpointMatcherPattern = "%s:{#group[0]}"
@@ -163,24 +163,10 @@ func buildPathCondition(match *gwAPIv1.HTTPPathMatch) el.Expression {
 			And(pathInfoMatchesCondition.Format(*match.Value))
 	case gwAPIv1.PathMatchExact:
 		return contextPathEqualsCondition.Format(addTrailingSlash(*match.Value)).
-			And(pathInfoEqualsCondition.Format(getPathInfo(*match.Value)))
+			And(pathInfoEqualsCondition.Format(getExpectedPathInfo(*match.Value)))
 	default:
 		panic(fmt.Sprintf("unsupported path match type: %s", *match.Type))
 	}
-}
-
-func getPathInfo(matchValue string) string {
-	if matchValue[len(matchValue)-1:] == "/" {
-		return rootPath
-	}
-	return ""
-}
-
-func addTrailingSlash(s string) string {
-	if s == rootPath {
-		return s
-	}
-	return s + "/"
 }
 
 func buildHTTPSelector(match gwAPIv1.HTTPRouteMatch) *v4.FlowSelector {

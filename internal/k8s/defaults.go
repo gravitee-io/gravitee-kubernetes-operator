@@ -67,7 +67,7 @@ var (
 )
 
 var DefaultLivenessProbe = &coreV1.Probe{
-	FailureThreshold: 3,
+	FailureThreshold: 300000,
 	PeriodSeconds:    5,
 	SuccessThreshold: 1,
 	TimeoutSeconds:   2,
