@@ -68,7 +68,7 @@ func newAPISpec(route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
 				"default": newKeyLessPlan(),
 			},
 			FlowExecution: &v4.FlowExecution{
-				Mode:          v4.FlowModeDefault,
+				Mode:          v4.FlowModeBestMatch,
 				MatchRequired: true,
 			},
 			ApiBase: &base.ApiBase{
