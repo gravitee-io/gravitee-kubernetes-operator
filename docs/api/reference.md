@@ -10245,19 +10245,21 @@ It is to be referenced in an API.
     </thead>
     <tbody><tr>
         <td><b>eventType</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
           EventType defines the subject of those events.<br/>
           <br/>
+            <i>Enum</i>: api<br/>
             <i>Default</i>: api<br/>
         </td>
         <td>true</td>
       </tr><tr>
         <td><b>target</b></td>
-        <td>string</td>
+        <td>enum</td>
         <td>
-          Target of the notification: `"console"` is for notifications in Gravitee console UI.<br/>
+          Target of the notification: "console" is for notifications in Gravitee console UI.<br/>
           <br/>
+            <i>Enum</i>: console<br/>
             <i>Default</i>: console<br/>
         </td>
         <td>true</td>
@@ -10265,8 +10267,8 @@ It is to be referenced in an API.
         <td><b><a href="#notificationspecconsole">console</a></b></td>
         <td>object</td>
         <td>
-          Console is used when the `target` value is `"console"` and is meant
-to configure Gravitee console...<br/>
+          Console is used when the target value is "console" and is meant
+to configure Gravitee console UI...<br/>
           <br/>
             <i>Default</i>: map[]<br/>
         </td>
@@ -10280,8 +10282,8 @@ to configure Gravitee console...<br/>
 
 
 
-Console is used when the `target` value is `"console"` and is meant
-to configure Gravitee console...
+Console is used when the target value is "console" and is meant
+to configure Gravitee console UI...
 
 <table>
     <thead>
@@ -10296,7 +10298,7 @@ to configure Gravitee console...
         <td><b>apiEvents</b></td>
         <td>[]enum</td>
         <td>
-          <br/>
+          List events that will trigger a notification for an API.<br/>
           <br/>
             <i>Enum</i>: APIKEY_EXPIRED, APIKEY_RENEWED, APIKEY_REVOKED, SUBSCRIPTION_NEW, SUBSCRIPTION_ACCEPTED, SUBSCRIPTION_CLOSED, SUBSCRIPTION_PAUSED, SUBSCRIPTION_RESUMED, SUBSCRIPTION_REJECTED, SUBSCRIPTION_TRANSFERRED, SUBSCRIPTION_FAILED, NEW_SUPPORT_TICKET, API_STARTED, API_STOPPED, API_UPDATED, API_DEPLOYED, NEW_RATING, NEW_RATING_ANSWER, MESSAGE, ASK_FOR_REVIEW, REVIEW_OK, REQUEST_FOR_CHANGES, API_DEPRECATED, NEW_SPEC_GENERATED<br/>
         </td>

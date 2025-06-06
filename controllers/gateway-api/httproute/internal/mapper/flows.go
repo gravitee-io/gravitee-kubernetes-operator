@@ -26,7 +26,7 @@ import (
 
 const (
 	contextPathEqualsCondition = el.Expression("#request.contextPath eq '%s'")
-	//hostHeaderWithoutPortEqualsCondition = el.Expression("#request.host.replaceAll(':(.*)$', '') eq '%s'").
+	// hostHeaderWithoutPortEqualsCondition = el.Expression("#request.host.replaceAll(':(.*)$', '') eq '%s'").
 	pathInfoEqualsCondition  = el.Expression("#request.pathInfo eq '%s'")
 	pathInfoMatchesCondition = el.Expression("#request.pathInfo matches '%s'")
 	headerEqualsCondition    = el.Expression("#request.headers['%s'][0] eq '%s'")
