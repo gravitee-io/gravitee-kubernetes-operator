@@ -220,6 +220,9 @@ jobs:
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
       - go/load-mod-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - kubernetes/install-kubectl
       - helm/install_helm_client
       - run:

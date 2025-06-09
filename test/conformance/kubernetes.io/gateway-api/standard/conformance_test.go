@@ -42,12 +42,11 @@ func TestGatewayAPIConformance(t *testing.T) {
 
 	//   HTTPRouteHostnameIntersection (blocked by https://gravitee.atlassian.net/browse/APIM-9738)
 	//   HTTPRouteMatching
-	//   HTTPRoutePathMatchOrder (Antoine)
 	//   HTTPRouteHTTPSListener
 	//   HTTPRouteListenerHostnameMatching
 	//   HTTPRouteMatchingAcrossRoutes
 
-	opts.RunTest = "HTTPRoutePathMatchOrder"
+	opts.RunTest = ""
 	opts.CleanupBaseResources = false
 
 	cSuite, err := suite.NewConformanceTestSuite(opts)
