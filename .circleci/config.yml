@@ -212,6 +212,9 @@ jobs:
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
       - go/load-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
       - kubernetes/install-kubectl
       - helm/install_helm_client
       - run:
@@ -260,7 +263,7 @@ jobs:
       - run:
           name: Run Gateway API Conformance Test
           command: |
-            gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
+            bin/gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
       - go/save-cache
 
   job-integration-test:
