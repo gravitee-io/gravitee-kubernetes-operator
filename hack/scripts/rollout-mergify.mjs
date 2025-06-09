@@ -19,6 +19,8 @@ import { Version } from "./lib/version.mjs";
 
 const mergifyConfig = path.join(PROJECT_DIR, ".mergify.yml");
 
+const VERSION = argv.version;
+
 async function rolloutMergify(newVersion) {
   const branch = new Version(newVersion).branch();
   LOG.blue(`Reading file ${mergifyConfig}`);
@@ -41,4 +43,4 @@ async function rolloutMergify(newVersion) {
   await fs.writeFile(mergifyConfig, YAML.stringify(configYaml));
 }
 
-await rolloutMergify("4.8.0");
+await rolloutMergify(VERSION);
