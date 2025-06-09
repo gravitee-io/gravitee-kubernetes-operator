@@ -2,7 +2,7 @@ module github.com/gravitee-io/gravitee-kubernetes-operator
 
 go 1.24.0
 
-toolchain go1.24.3
+toolchain go1.24.4
 
 require (
 	fybrik.io/crdoc v0.6.4
