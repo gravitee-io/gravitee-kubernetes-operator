@@ -330,49 +330,6 @@ jobs:
       - gravitee/docker-logout:
           registry: graviteeio.azurecr.io
 
-  job-helm-install:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>-node
-    resource_class: small
-    parameters:
-      namespace:
-        type: string
-        default: "apim-apim-master"
-        description: The kubernetes namespace in which the operator is deployed
-      image:
-        type: string
-      tag:
-        type: string
-    steps:
-      - checkout
-      - helm/install_helm_client
-      - kubernetes/install-kubectl
-      - azure-cli/install
-      - go/load-cache
-      - cmd-setup-azure-login
-      - run:
-          name: Run az job-azure-login
-          command: |
-            az login --service-principal -u $AZURE_SP --tenant $AZURE_TENANT -p $AZURE_SP_PASSWORD
-            az aks get-credentials --admin --resource-group Devs-Preprod-Hosted --name gravitee-devs-preprod-aks-cluster
-      - run:
-          name: Helm install the operator
-          command: |
-            helm upgrade --install \
-              gko helm/gko \
-              --set manager.scope.cluster=false \
-              --set manager.image.repository=<< parameters.image >> \
-              --set manager.image.tag=<< parameters.tag >> \
-              --set manager.image.pullPolicy=Always \
-              --set serviceAccount.name=gko-<< parameters.namespace >> \
-              -n << parameters.namespace >>
-      - run:
-          name: Rollout controller deployment
-          command: |
-            kubectl rollout restart deployment gko-controller-manager \
-              -n << parameters.namespace >>
-      - go/save-cache
-
   job-release:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -713,24 +670,6 @@ workflows:
                 - master
             tags:
               ignore: /.*/
-      - job-helm-install:
-          context: cicd-orchestrator
-          filters:
-            branches:
-              only:
-                - master
-            tags:
-              ignore:
-                - /.*/
-          name: Deploy in << matrix.namespace >>
-          matrix:
-            parameters:
-              namespace:
-                - apim-apim-master
-              image: [graviteeio.azurecr.io/kubernetes-operator]
-              tag: [master-latest]
-          requires:
-            - Stage image
   release:
     when:
       equal:
