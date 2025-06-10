@@ -26,7 +26,7 @@ import { Version } from "./lib/version.mjs";
 const WORKING_DIR = path.join(os.tmpdir(), "helm-charts");
 const PROJECT_DIR = path.join(__dirname, "..");
 
-const VERSION = new Version(await HELM.getChartVersion()).next().toString();
+const VERSION = await HELM.getChartVersion();
 const VERBOSE = argv.verbose;
 
 const ACR_USER_NAME = $.env.ACR_USER_NAME;
@@ -42,19 +42,19 @@ LOG.magenta(`
 await checkRequirements();
 
 async function checkRequirements() {
-  if (isEmptyString(ACR_USER_NAME)) {
-    LOG.red(
-      "Azure container registry username is mandatory. Please set the ACR_USER_NAME environment variable.",
-    );
-    process.exit(1);
-  }
+  // if (isEmptyString(ACR_USER_NAME)) {
+  //   LOG.red(
+  //     "Azure container registry username is mandatory. Please set the ACR_USER_NAME environment variable.",
+  //   );
+  //   process.exit(1);
+  // }
 
-  if (isEmptyString(ACR_PASSWORD)) {
-    LOG.red(
-      "Azure container registry password is mandatory. Please set the ACR_PASSWORD environment variable.",
-    );
-    process.exit(1);
-  }
+  // if (isEmptyString(ACR_PASSWORD)) {
+  //   LOG.red(
+  //     "Azure container registry password is mandatory. Please set the ACR_PASSWORD environment variable.",
+  //   );
+  //   process.exit(1);
+  // }
 
   if (!$.env.CIRCLECI) {
     LOG.yellow(`
@@ -84,12 +84,8 @@ LOG.blue(`
 await time(stageChart);
 
 async function stageChart() {
-  await $`helm registry login graviteeio.azurecr.io --username $ACR_USER_NAME --password $ACR_PASSWORD`;
+ // await $`helm registry login graviteeio.azurecr.io --username $ACR_USER_NAME --password $ACR_PASSWORD`;
   await $`helm push ${HELM.chartDir}/gko-${VERSION}.tgz oci://graviteeio.azurecr.io/helm/`;
-}
-
-async function getVersion() {
-  return new Version(await HELM.getChartVersion()).next().toString();
 }
 
 LOG.magenta(`
