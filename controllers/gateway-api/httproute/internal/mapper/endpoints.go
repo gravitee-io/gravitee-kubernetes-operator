@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
@@ -79,6 +80,10 @@ func buildEndpoints(
 	namespace string,
 ) []*v4.Endpoint {
 	endpoints := []*v4.Endpoint{}
+	if len(backendRefs) == 0 {
+		// in case of HTTP redirect, there is no backend ref
+		return append(endpoints, buildDummyEndpoint())
+	}
 	for backendIndex, backendRef := range backendRefs {
 		endpoints = append(
 			endpoints,
@@ -94,6 +99,12 @@ func buildEndpoints(
 	return endpoints
 }
 
+func buildDummyEndpoint() *v4.Endpoint {
+	ep := buildEndpoint(gwAPIv1.HTTPBackendRef{}, 0, gwAPIv1.HTTPRouteMatch{}, 0, "")
+	ep.Secondary = true
+	return ep
+}
+
 func buildEndpoint(
 	backendRef gwAPIv1.HTTPBackendRef,
 	backendIndex int,
@@ -104,8 +115,15 @@ func buildEndpoint(
 	endpoint := v4.NewHttpEndpoint(
 		fmt.Sprintf("backend-%d-match-%d", backendIndex, matchIndex),
 	)
+
 	endpoint.Weight = backendRef.Weight
 	endpoint.Config.Object["target"] = buildEndpointTarget(match, backendRef, namespace)
+	endpoint.Inherit = false
+
+	httpConfig := utils.NewGenericStringMap()
+	httpConfig.Put("propagateClientHost", true)
+	endpoint.ConfigOverride.Put("http", httpConfig)
+
 	return endpoint
 }
 
