@@ -17,13 +17,17 @@ package standard
 import (
 	"flag"
 	"testing"
+	"time"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/gateway-api/conformance"
 	"sigs.k8s.io/gateway-api/conformance/tests"
+	"sigs.k8s.io/gateway-api/conformance/utils/config"
 	"sigs.k8s.io/gateway-api/conformance/utils/suite"
 	"sigs.k8s.io/gateway-api/pkg/features"
 )
+
+const timeout = 180 * time.Second
 
 func TestGatewayAPIConformance(t *testing.T) {
 	flag.Parse()
@@ -36,11 +40,16 @@ func TestGatewayAPIConformance(t *testing.T) {
 		// features.ReferenceGrantFeature.Name,
 	)
 
+	opts.TimeoutConfig = config.DefaultTimeoutConfig()
+	opts.TimeoutConfig.GatewayStatusMustHaveListeners = timeout
+	opts.TimeoutConfig.GatewayListenersMustHaveConditions = timeout
+	opts.TimeoutConfig.HTTPRouteMustHaveCondition = timeout
+	opts.RestConfig.QPS = -1
+
 	// Here you can specify test name for debug purpose
 
 	// Failing tests
 
-	//   HTTPRouteHostnameIntersection (blocked by https://gravitee.atlassian.net/browse/APIM-9738)
 	//   HTTPRouteMatching
 	//   HTTPRouteHTTPSListener
 	//   HTTPRouteListenerHostnameMatching

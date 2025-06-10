@@ -86,79 +86,7 @@ func resolveParent(
 		}
 	}
 
-	if hasNsSupport, err := supportsRouteNamespace(ctx, gw, ref, route); err != nil {
-		return nil, err
-	} else if !hasNsSupport {
-		conditionBuilder.RejectNoMatchingParent("parent namespace policy does not match route")
-		return conditionBuilder.Build(), nil
-	}
-
 	return conditionBuilder.ResolveRefs("parent has been resolved").Build(), nil
-}
-
-func supportsRouteNamespace(
-	ctx context.Context,
-	gw *gwAPIv1.Gateway,
-	ref gwAPIv1.ParentReference,
-	route *gwAPIv1.HTTPRoute,
-) (bool, error) {
-	if ref.SectionName != nil {
-		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
-		return supportsRouteNamespaceAtListenerIndex(
-			ctx, gw, ref, route, lIdx,
-		)
-	}
-	for i := range gw.Spec.Listeners {
-		if hasNsSupport, err := supportsRouteNamespaceAtListenerIndex(
-			ctx, gw, ref, route, i,
-		); err != nil {
-			return false, err
-		} else if hasNsSupport {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-func supportsRouteNamespaceAtListenerIndex(
-	ctx context.Context,
-	gw *gwAPIv1.Gateway,
-	ref gwAPIv1.ParentReference,
-	route *gwAPIv1.HTTPRoute,
-	lIdx int,
-) (bool, error) {
-	listener := gw.Spec.Listeners[lIdx]
-	if *listener.AllowedRoutes.Namespaces.From == gwAPIv1.NamespacesFromAll {
-		return true, nil
-	}
-	if *listener.AllowedRoutes.Namespaces.From == gwAPIv1.NamespacesFromSame {
-		return ref.Namespace == nil || string(*ref.Namespace) == route.Namespace, nil
-	}
-	if *listener.AllowedRoutes.Namespaces.From == gwAPIv1.NamespacesFromSelector {
-		ns, err := resolveNS(ctx, route.Namespace)
-		if err != nil {
-			return false, err
-		}
-		nsLabels := ns.Labels
-		selectorLabels := listener.AllowedRoutes.Namespaces.Selector
-		for k := range selectorLabels.MatchLabels {
-			if nsLabels[k] != selectorLabels.MatchLabels[k] {
-				return false, nil
-			}
-		}
-		// For now we don't support label expressions
-		return true, nil
-	}
-	return false, nil
-}
-
-func resolveNS(ctx context.Context, name string) (*coreV1.Namespace, error) {
-	ns := &coreV1.Namespace{}
-	err := k8s.GetClient().Get(ctx, client.ObjectKey{Name: name}, ns)
-	if err != nil {
-		return nil, err
-	}
-	return ns, nil
 }
 
 func resolveBackendRefs(ctx context.Context, route *gwAPIv1.HTTPRoute) error {

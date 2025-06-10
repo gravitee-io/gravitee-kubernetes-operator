@@ -178,10 +178,11 @@ func buildHTTPSelector(match gwAPIv1.HTTPRouteMatch) *v4.FlowSelector {
 }
 
 func buildRequestFlow(rule gwAPIv1.HTTPRouteRule, ruleIndex, matchIndex int) []*v4.FlowStep {
-	return append(
-		[]*v4.FlowStep{buildRoutingStep(ruleIndex, matchIndex)},
-		buildRequestFilters(rule)...,
-	)
+	steps := []*v4.FlowStep{}
+	if len(rule.BackendRefs) > 0 {
+		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex))
+	}
+	return append(steps, buildRequestFilters(rule)...)
 }
 
 func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {

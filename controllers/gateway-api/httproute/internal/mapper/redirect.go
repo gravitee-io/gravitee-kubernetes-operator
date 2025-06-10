@@ -31,10 +31,10 @@ var (
 	ruleLocationKey = "location"
 	ruleStatusKey   = "status"
 
-	rulePath = "/(.*)"
+	rulePath = "(.*)"
 
-	locationPathWhenNoGivenPath   = "{#request.contextPath}/{#group[0]}"
-	locationPathWhenReplacePrefix = "/%s/{#group[0]}"
+	locationPathWhenNoGivenPath   = "{#request.contextPath.replaceAll('/$', '')}{#request.pathInfo}"
+	locationPathWhenReplacePrefix = "/%s{#request.pathInfo}"
 
 	locationSchemeDefault = "{#request.scheme}"
 	locationHostDefault   = "{#request.host}"

@@ -117,9 +117,11 @@ func IsAttachedHTTPRoute(
 	listener gwAPIv1.Listener,
 	route gwAPIv1.HTTPRoute,
 ) bool {
-	for _, ref := range route.Spec.ParentRefs {
+	for i := range route.Status.Parents {
+		ref := route.Spec.ParentRefs[i]
 		if IsListenerRef(gw, listener, ref) {
-			return true
+			status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
+			return IsAccepted(status)
 		}
 	}
 	return false
@@ -130,9 +132,11 @@ func IsAttachedKafkaRoute(
 	listener gwAPIv1.Listener,
 	route v1alpha1.KafkaRoute,
 ) bool {
-	for _, ref := range route.Spec.ParentRefs {
+	for i := range route.Status.Parents {
+		ref := route.Spec.ParentRefs[i]
 		if IsListenerRef(gw, listener, ref) {
-			return true
+			status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
+			return IsAccepted(status)
 		}
 	}
 	return false
