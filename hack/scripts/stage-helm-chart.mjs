@@ -84,7 +84,7 @@ LOG.blue(`
 await time(stageChart);
 
 async function stageChart() {
- // await $`helm registry login graviteeio.azurecr.io --username $ACR_USER_NAME --password $ACR_PASSWORD`;
+  // await $`helm registry login graviteeio.azurecr.io --username $ACR_USER_NAME --password $ACR_PASSWORD`;
   await $`helm push ${HELM.chartDir}/gko-${VERSION}.tgz oci://graviteeio.azurecr.io/helm/`;
 }
 
