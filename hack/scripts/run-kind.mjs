@@ -46,7 +46,7 @@ const IMAGES = new Map([
     `${APIM_REGISTRY}/apim-management-ui:${APIM_TAG}`,
     `gravitee-apim-management-ui:dev`,
   ],
-  [`mongo:6.0.15-jammy`, `mongo:6.0.15-jammy`],
+  //   [`${APIM_REGISTRY}/apim-portal-ui:${APIM_TAG}`, `gravitee-apim-portal:dev`],
   [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
 ]);
 
