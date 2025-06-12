@@ -19,9 +19,7 @@ import { Version } from "./lib/version.mjs";
 
 const mergifyConfig = path.join(PROJECT_DIR, ".mergify.yml");
 
-const VERSION = argv.version;
-
-async function rolloutMergify(newVersion) {
+export async function rolloutMergify(newVersion) {
   const branch = new Version(newVersion).branch();
   LOG.blue(`Reading file ${mergifyConfig}`);
   const config = await fs.readFile(mergifyConfig, "utf8");
@@ -42,5 +40,3 @@ async function rolloutMergify(newVersion) {
   LOG.blue(`Inserted branch ${branch} in config`);
   await fs.writeFile(mergifyConfig, YAML.stringify(configYaml));
 }
-
-await rolloutMergify(VERSION);

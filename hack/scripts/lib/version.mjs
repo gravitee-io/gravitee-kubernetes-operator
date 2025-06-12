@@ -52,6 +52,10 @@ export class Version {
     );
   }
 
+  isPatch() {
+    return this.patchDigit !== 0;
+  }
+
   isNotPatch() {
     return this.patchDigit === 0;
   }
