@@ -4,7 +4,13 @@ image:https://img.shields.io/badge/License-Apache%202.0-blue.svg["License", link
 image:https://circleci.com/gh/gravitee-io/gravitee-kubernetes-operator/tree/alpha.svg?style=svg[link="https://app.circleci.com/pipelines/github/gravitee-io/gravitee-kubernetes-operator?branch=alpha"]
 image:https://goreportcard.com/badge/github.com/gravitee-io/gravitee-kubernetes-operator["Go Report Card", link="https://goreportcard.com/report/github.com/gravitee-io/gravitee-kubernetes-operator"]
 
-image:./.assets/gravitee-logo-cyan.svg["Gravitee.io",400]
+++++
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".assets/gravitee-logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset=".assets/gravitee-logo-light.svg">
+  <img alt="Gravitee.io" width="400">
+</picture>
+++++
 
 == Introduction
 
