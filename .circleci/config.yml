@@ -15,6 +15,9 @@ parameters:
   go-version:
     type: string
     default: "1.23.1"
+  apim-version:
+    type: string
+    default: master-latest
   trigger:
     type: enum
     default: none
@@ -249,7 +252,7 @@ jobs:
           name: Start cluster
           command: |
             export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
-            export APIM_IMAGE_TAG=master-latest
+            export APIM_IMAGE_TAG=<< pipeline.parameters.apim-version >>
             make start-cluster
       - run:
           name: Run IT with filter << parameters.ginkgo-filter >>
