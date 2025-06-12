@@ -16,10 +16,6 @@
 
 import { GH } from "./lib/github.mjs";
 
-const VERSION = argv.version;
-
 export async function rolloutTestScheduller(version) {
   GH.rolloutMatrix("schedule-test.yml", "trigger-test-suite", version);
 }
-
-await rolloutTestScheduller(VERSION);
