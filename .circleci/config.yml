@@ -670,6 +670,50 @@ workflows:
                 - master
             tags:
               ignore: /.*/
+      - aquasec/register_artifact:
+          name: Register staged artifact
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+            tags:
+              ignore: /.*/
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: echo "graviteeio.azurecr.io/kubernetes-operator:master-latest" > /tmp/docker-image.txt
+      - aquasec/docker_image_scan:
+          name: Scan staged image
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+            tags:
+              ignore: /.*/
+          requires:
+            - Register staged artifact
+          scanner_url: https://82fb8f75da.cloud.aquasec.com
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - checkout
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: echo "graviteeio.azurecr.io/kubernetes-operator:master-latest" > /tmp/docker-image.txt
+            - gravitee/docker-login:
+                registry: graviteeio.azurecr.io
+                username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+                password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+            - run:
+                name: Pull Docker image
+                command: docker pull graviteeio.azurecr.io/kubernetes-operator:master-latest
+              
   release:
     when:
       equal:
@@ -763,6 +807,6 @@ workflows:
         - << pipeline.parameters.trigger >>
     jobs:
       - job-e2e-tests:
-          name: Run End-to-End tests
+          name: Run end to end tests
           context: cicd-orchestrator
 
