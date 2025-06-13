@@ -300,6 +300,19 @@ jobs:
       - store_test_results:
           path: /tmp/junit/reports-e2e
 
+  job-stage-helm-chart:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node 
+    steps:
+      - checkout
+      - setup_remote_docker
+      - helm/install_helm_client
+      - azure-cli/install
+      - cmd-setup-azure-login-e2e
+      - run:
+          name: Stage Helm Chart
+          command: npx zx hack/scripts/stage-helm-chart.mjs
+
   job-stage-image:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -339,6 +352,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - helm/install_helm_client
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
@@ -413,7 +427,6 @@ jobs:
                 name: Push << pipeline.parameters.release-version >> Docker image tag
                 command: |
                   docker push graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>
-      - helm/install_helm_client
       - when:
           condition: << pipeline.parameters.dry-run >>
           steps:
@@ -571,13 +584,6 @@ jobs:
       - run:
           name: Run Sonarcloud analysis
           command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
-  job-fail:
-    description: This is a test job for slack notifications
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
-    steps:
-      - run:
-          command: exit 1
 workflows:
   pull-request:
     when:
@@ -673,6 +679,16 @@ workflows:
                 - master
             tags:
               ignore: /.*/
+      - job-stage-helm-chart:
+          name: Stage Helm Chart
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+            tags:
+              ignore: /.*/              
   release:
     when:
       equal:
