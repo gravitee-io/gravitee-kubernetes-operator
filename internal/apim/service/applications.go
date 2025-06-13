@@ -92,7 +92,7 @@ func (svc *Applications) DryRunCreateOrUpdate(spec *application.Application) (*a
 }
 
 func (svc *Applications) createOrUpdate(spec *application.Application, dryRun bool) (*application.Status, error) {
-	url := svc.EnvV2Target(applicationsPath).
+	url := svc.EnvV1Target(applicationsPath).
 		WithPath("/_import/crd").
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
