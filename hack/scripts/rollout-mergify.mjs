@@ -20,15 +20,16 @@ import { Version } from "./lib/version.mjs";
 const mergifyConfig = path.join(PROJECT_DIR, ".mergify.yml");
 
 export async function rolloutMergify(newVersion) {
+  LOG.blue(`
+    Rolling out mergify config`);
   const branch = new Version(newVersion).branch();
-  LOG.blue(`Reading file ${mergifyConfig}`);
   const config = await fs.readFile(mergifyConfig, "utf8");
   const configYaml = await YAML.parse(config);
-  LOG.blue(`Rolling out mergify config`);
   const rules = configYaml.pull_request_rules;
   const rule = rules.pop();
   const removedBranch = rule.actions.backport.branches[0];
-  LOG.blue(`Removed branch ${removedBranch} from config`);
+  LOG.blue(`
+    Removed branch ${removedBranch} from config`);
   rule.name = rule.name.replace(removedBranch, branch);
   rule.conditions = [`label=apply-on-${branch.replaceAll(".", "-")}`];
   rule.actions.backport.branches = [branch];
@@ -37,6 +38,8 @@ export async function rolloutMergify(newVersion) {
     branch,
   );
   configYaml.pull_request_rules.splice(1, 0, rule);
-  LOG.blue(`Inserted branch ${branch} in config`);
+  LOG.blue(`
+    Inserted branch ${branch} in config`);
+  LOG.log();
   await fs.writeFile(mergifyConfig, YAML.stringify(configYaml));
 }
