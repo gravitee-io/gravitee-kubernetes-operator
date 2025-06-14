@@ -29,7 +29,7 @@ parameters:
   release-version:
     type: string
     default: ""
-    description: "The version under release then using the release trigger"
+    description: "The version being released when using the release trigger"
   latest:
     type: boolean
     default: false
@@ -330,6 +330,42 @@ jobs:
           name: Stage Docker image
           command: npx zx hack/scripts/stage-docker-image.mjs
 
+  job-rollout-environment:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    parameters:
+      env:
+        type: enum
+        enum:
+          - dev
+          - stable
+        default: dev
+    steps:
+      - checkout
+      - setup_remote_docker
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - run:
+          name: "Rollout deployments"
+          command: |
+            npx zx hack/scripts/rollout-environment.mjs --verbose --env << parameters.env >>
+          
   job-release:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -675,6 +711,20 @@ workflows:
                 - ci-stage-helm-chart
             tags:
               ignore: /.*/
+      - job-rollout-environment:
+          name: Rollout dev environment
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+                - ci-stage-helm-chart
+            tags:
+              ignore: /.*/
+          requires:
+            - Stage Docker image
+            - Stage Helm chart
       - aquasec/register_artifact:
           name: Register staged image for scanning
           context: cicd-orchestrator
