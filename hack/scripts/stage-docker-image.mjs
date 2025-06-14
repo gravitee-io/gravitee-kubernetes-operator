@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-import {
-  LOG,
-  HELM,
-  toggleVerbosity,
-  time,
-  isEmptyString,
-} from "./lib/index.mjs";
+import { LOG, HELM, toggleVerbosity, time } from "./lib/index.mjs";
 
-const WORKING_DIR = path.join(os.tmpdir(), "helm-charts");
 const PROJECT_DIR = path.join(__dirname, "..", "..");
 
+const IMG = "graviteeio.azurecr.io/kubernetes-operator";
 const VERSION = argv.version || (await HELM.getChartVersion());
 const VERBOSE = argv.verbose;
 
@@ -34,7 +28,7 @@ LOG.magenta(`
 🚀 Staging version ${VERSION} ...
 
     📦 Project dir    | ${PROJECT_DIR}
-    📦 Working dir    | ${WORKING_DIR}`);
+    📦 Working dir    | ${PROJECT_DIR}`);
 
 await checkRequirements();
 
@@ -50,25 +44,19 @@ async function checkRequirements() {
   }
 }
 
-LOG.blue(`
-⎈ Packaging chart ...
-`);
-
-await time(packageChart);
-
-async function packageChart() {
-  await $`helm package -d ${HELM.chartDir} ${HELM.chartDir} --app-version ${VERSION} --version ${VERSION}`;
-}
+cd(PROJECT_DIR);
 
 LOG.blue(`
-⎈ Staging chart ...
+🐳  Building image ...
 `);
 
-await time(stageChart);
+await time(async () => $`docker build -t ${IMG}:${VERSION} .`);
 
-async function stageChart() {
-  await $`helm push ${HELM.chartDir}/gko-${VERSION}.tgz oci://graviteeio.azurecr.io/helm/`;
-}
+LOG.blue(`
+🐳  Staging image ...
+`);
+
+await time(async () => $`docker push ${IMG}:${VERSION}`);
 
 LOG.magenta(`
-  🎉 version ${VERSION} has been staged !`);
+  🎉 Image ${IMG}:${VERSION} has been staged !`);

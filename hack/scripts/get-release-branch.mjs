@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { LOG, isEmptyString } from "./lib/index.mjs";
+import { HELM, LOG, isEmptyString } from "./lib/index.mjs";
 
 import { Version } from "./lib/version.mjs";
 
-const VERSION = argv.version;
+const VERSION = argv.version || (await HELM.getChartVersion());
 
 if (isEmptyString(VERSION)) {
   LOG.red("You must specify a version using the --version flag");

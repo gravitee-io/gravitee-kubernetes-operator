@@ -16,4 +16,6 @@
 
 import { HELM } from "./lib/index.mjs";
 
-await HELM.annotateCRDs(await HELM.getChartVersion());
+const VERSION = argv.version || (await HELM.getChartVersion());
+
+await HELM.annotateCRDs(VERSION);
