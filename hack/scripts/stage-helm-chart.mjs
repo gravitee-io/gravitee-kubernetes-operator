@@ -20,10 +20,10 @@ import {
   toggleVerbosity,
   time,
   isEmptyString,
+  PROJECT_DIR,
 } from "./lib/index.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), "helm-charts");
-const PROJECT_DIR = path.join(__dirname, "..", "..");
 
 const VERSION = argv.version || (await HELM.getChartVersion());
 const VERBOSE = argv.verbose;
