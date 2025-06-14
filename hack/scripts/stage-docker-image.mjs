@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import { LOG, HELM, toggleVerbosity, time } from "./lib/index.mjs";
-
-const PROJECT_DIR = path.join(__dirname, "..", "..");
+import { LOG, HELM, toggleVerbosity, time, PROJECT_DIR } from "./lib/index.mjs";
 
 const IMG = "graviteeio.azurecr.io/kubernetes-operator";
 const VERSION = argv.version || (await HELM.getChartVersion());
