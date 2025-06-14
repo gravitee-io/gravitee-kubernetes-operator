@@ -650,6 +650,7 @@ workflows:
               only:
                 - /^[0-9]+\.[0-9]+\.x$/
                 - master
+                - ci-stage-helm-chart
             tags:
               ignore: /.*/
       - job-stage-image:
@@ -660,6 +661,7 @@ workflows:
               only:
                 - /^[0-9]+\.[0-9]+\.x$/
                 - master
+                - ci-stage-helm-chart
             tags:
               ignore: /.*/
       - job-stage-helm-chart:
@@ -670,6 +672,7 @@ workflows:
               only:
                 - /^[0-9]+\.[0-9]+\.x$/
                 - master
+                - ci-stage-helm-chart
             tags:
               ignore: /.*/
       - aquasec/register_artifact:
@@ -680,6 +683,7 @@ workflows:
               only:
                 - /^[0-9]+\.[0-9]+\.x$/
                 - master
+                - ci-stage-helm-chart
             tags:
               ignore: /.*/
           requires:
@@ -701,6 +705,7 @@ workflows:
               only:
                 - /^[0-9]+\.[0-9]+\.x$/
                 - master
+                - ci-stage-helm-chart
             tags:
               ignore: /.*/
           requires:
