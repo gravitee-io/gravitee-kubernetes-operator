@@ -308,7 +308,10 @@ jobs:
       - setup_remote_docker
       - helm/install_helm_client
       - azure-cli/install
-      - cmd-setup-azure-login-e2e
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
           name: Stage Helm Chart
           command: npx zx hack/scripts/stage-helm-chart.mjs
@@ -316,11 +319,6 @@ jobs:
   job-stage-image:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
-    parameters:
-      image:
-        type: string
-      tag:
-        type: string
     steps:
       - checkout
       - setup_remote_docker
@@ -329,22 +327,8 @@ jobs:
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
-          name: Build image << parameters.image >>
-          command: IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-build
-      - run:
-          name: Push image << parameters.image >>:<<parameters.tag >>
-          command: |
-            IMG=<< parameters.image >> TAG=<< parameters.tag >> make docker-push
-      - cmd-setup-aqua-scan
-      - aquasec/install_billy
-      - aquasec/pull_aqua_scanner_image
-      - aquasec/register_artifact:
-          artifact_to_register: << parameters.image >>:<< parameters.tag >>
-      - aquasec/scan_docker_image:
-          docker_image_to_scan: << parameters.image >>:<< parameters.tag >>
-          scanner_url: https://82fb8f75da.cloud.aquasec.com
-      - gravitee/docker-logout:
-          registry: graviteeio.azurecr.io
+          name: Stage Docker image
+          command: npx zx hack/scripts/stage-docker-image.mjs
 
   job-release:
     docker:
@@ -657,6 +641,7 @@ workflows:
         - << pipeline.parameters.trigger >>
     jobs:
       - aquasec/fs_scan:
+          name: Scan code repository
           context: cicd-orchestrator
           pre-steps:
             - cmd-setup-aqua-scan
@@ -668,9 +653,7 @@ workflows:
             tags:
               ignore: /.*/
       - job-stage-image:
-          name: Stage image
-          image: graviteeio.azurecr.io/kubernetes-operator
-          tag: master-latest
+          name: Stage Docker image
           context: cicd-orchestrator
           filters:
             branches:
@@ -690,7 +673,7 @@ workflows:
             tags:
               ignore: /.*/
       - aquasec/register_artifact:
-          name: Register staged artifact
+          name: Register staged image for scanning
           context: cicd-orchestrator
           filters:
             branches:
@@ -699,12 +682,17 @@ workflows:
                 - master
             tags:
               ignore: /.*/
+          requires:
+            - Stage Docker image
           built_docker_image_file: /tmp/docker-image.txt
           pre-steps:
+            - checkout
             - cmd-setup-aqua-scan
             - run:
                 name: Store docker image version
-                command: echo "graviteeio.azurecr.io/kubernetes-operator:master-latest" > /tmp/docker-image.txt
+                command: |
+                  export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
+                  echo "graviteeio.azurecr.io/kubernetes-operator:${VERSION}" > /tmp/docker-image.txt
       - aquasec/docker_image_scan:
           name: Scan staged image
           context: cicd-orchestrator
@@ -716,7 +704,7 @@ workflows:
             tags:
               ignore: /.*/
           requires:
-            - Register staged artifact
+            - Register staged image for scanning
           scanner_url: https://82fb8f75da.cloud.aquasec.com
           built_docker_image_file: /tmp/docker-image.txt
           pre-steps:
@@ -724,14 +712,18 @@ workflows:
             - cmd-setup-aqua-scan
             - run:
                 name: Store docker image version
-                command: echo "graviteeio.azurecr.io/kubernetes-operator:master-latest" > /tmp/docker-image.txt
+                command: |
+                  export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
+                  echo "graviteeio.azurecr.io/kubernetes-operator:${VERSION}" > /tmp/docker-image.txt
             - gravitee/docker-login:
                 registry: graviteeio.azurecr.io
                 username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
                 password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
             - run:
                 name: Pull Docker image
-                command: docker pull graviteeio.azurecr.io/kubernetes-operator:master-latest
+                command: |
+                  export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
+                  docker pull "graviteeio.azurecr.io/kubernetes-operator:${VERSION}"
               
   release:
     when:

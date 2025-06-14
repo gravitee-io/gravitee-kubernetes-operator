@@ -55,9 +55,9 @@ async function checkRequirements() {
 
   if (!$.env.CIRCLECI) {
     LOG.yellow(`
-  ⚠️ it looks like you are trying to run this script locally, while it is meant to be ran in a CI environment.
+  🤔 It looks like you are trying to run this script locally, while it is meant to be ran in a CI environment.
 
-  If you are sure you want to continue, please set the CIRCLECI environment variable to true.
+  If you are sure about what you are doing, set the CIRCLECI environment variable to true.
 
 `);
     process.exit(1);
