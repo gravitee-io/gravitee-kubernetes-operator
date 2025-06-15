@@ -52,6 +52,16 @@ ui:
 
 portal:
   enabled: false
+  image:
+    repository: gravitee-apim-portal
+    tag: dev
+    pullPolicy: IfNotPresent
+  ingress:
+    enabled: false
+  service:
+    type: NodePort
+    nodePort: 30081
+  baseURL: http://localhost:30083/portal
 
 gateway:
   image:
