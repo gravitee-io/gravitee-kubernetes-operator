@@ -21,8 +21,9 @@ export class Version {
   suffix;
 
   constructor(version) {
-    const [majorDigit, minorDigit, patchDigit, suffix] = [
-      ...version.split(".").map(Number),
+    const [cleanVersion, suffix] = version.split("-");
+    const [majorDigit, minorDigit, patchDigit] = [
+      ...cleanVersion.split(".").map(Number),
     ];
     Object.assign(this, { majorDigit, minorDigit, patchDigit, suffix });
   }
@@ -35,11 +36,38 @@ export class Version {
     return `${this.majorDigit}.${this.minorDigit}`;
   }
 
-  isNoPatch() {
+  nextMinor() {
+    return new Version(`${this.majorDigit}.${this.minorDigit + 1}.0`);
+  }
+
+  nextPatch() {
+    return new Version(
+      `${this.majorDigit}.${this.minorDigit}.${this.patchDigit + 1}`,
+    );
+  }
+
+  rc() {
+    return new Version(
+      `${this.majorDigit}.${this.minorDigit}.${this.patchDigit}-rc`,
+    );
+  }
+
+  isPatch() {
+    return this.patchDigit !== 0;
+  }
+
+  isNotPatch() {
     return this.patchDigit === 0;
   }
 
   isPreRelease() {
     return !!this.suffix;
+  }
+
+  toString() {
+    if (this.suffix) {
+      return `${this.majorDigit}.${this.minorDigit}.${this.patchDigit}-${this.suffix}`;
+    }
+    return `${this.majorDigit}.${this.minorDigit}.${this.patchDigit}`;
   }
 }

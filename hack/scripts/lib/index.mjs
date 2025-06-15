@@ -111,6 +111,7 @@ export const HELM = {
   releaseBranch,
   releaseVersionAnnotation,
   getChartVersion,
+  setChartVersion,
   annotateCRDs,
 };
 
@@ -128,6 +129,14 @@ async function getChartVersion() {
   const chartFile = await fs.readFile(`${chartDir}/Chart.yaml`, "utf8");
   const chartYaml = await YAML.parse(chartFile);
   return chartYaml.version;
+}
+
+async function setChartVersion(version) {
+  const chartFile = await fs.readFile(`${chartDir}/Chart.yaml`, "utf8");
+  const chartYaml = await YAML.parse(chartFile);
+  chartYaml.version = version;
+  chartYaml.appVersion = version;
+  await fs.writeFile(`${chartDir}/Chart.yaml`, YAML.stringify(chartYaml));
 }
 
 async function annotateCRDs(version) {
