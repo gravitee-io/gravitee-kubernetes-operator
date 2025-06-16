@@ -35,19 +35,28 @@ var (
 	keyLessSecurity = v4.NewPlanSecurity("KEY_LESS")
 )
 
-func Map(ctx context.Context, route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
+func Map(ctx context.Context, route *gwAPIv1.HTTPRoute) (*v1alpha1.ApiV4Definition, error) {
 	api := newAPI(route)
-	api.Spec = MapSpec(ctx, route)
-	return api
+	spec, err := MapSpec(ctx, route)
+	if err != nil {
+		return nil, err
+	}
+	api.Spec = spec
+
+	return api, nil
 }
 
-func MapSpec(ctx context.Context, route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
+func MapSpec(ctx context.Context, route *gwAPIv1.HTTPRoute) (v1alpha1.ApiV4DefinitionSpec, error) {
 	spec := newAPISpec(route)
-	spec.Listeners = buildListeners(ctx, route)
+	listeners, err := buildListeners(ctx, route)
+	if err != nil {
+		return v1alpha1.ApiV4DefinitionSpec{}, err
+	}
+	spec.Listeners = listeners
 	spec.EndpointGroups = buildEndpointGroups(route)
 	spec.Flows = buildFlows(route)
 	spec.Tags = buildTags(route)
-	return spec
+	return spec, nil
 }
 
 func newAPI(route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
