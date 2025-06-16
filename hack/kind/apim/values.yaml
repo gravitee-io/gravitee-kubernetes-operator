@@ -69,12 +69,16 @@ gateway:
         type: NodePort
         nodePort: 30082
         externalPort: 82
+      ingress:
+        enabled: false
     - type: http
       port: 8084
       service:
         type: NodePort
         nodePort: 30084
         externalPort: 84
+      ingress:
+        enabled: false
       ssl:
         keystore:
           type: pem
