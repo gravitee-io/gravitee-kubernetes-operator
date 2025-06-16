@@ -109,7 +109,7 @@ kubectl apply -f examples/gateway-api/gateway-class.yaml
 
 You can check that the gateway class has been accepted by running the following command:
 
-```
+```sh
 kubectl get gatewayclass -o jsonpath='{"Accepted="}{.items[*].status.conditions[?(@.type == "Accepted")].status}{"\n"}' 
 ```
 

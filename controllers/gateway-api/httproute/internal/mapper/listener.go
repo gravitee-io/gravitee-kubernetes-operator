@@ -23,29 +23,69 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func buildListeners(ctx context.Context, route *gwAPIv1.HTTPRoute) []*v4.GenericListener {
+func buildListeners(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.GenericListener, error) {
 	listener := v4.NewHTTPListener()
 	hostnames := k8s.ResolveRouteHostnames(ctx, route)
-	listener.Paths = getPaths(route, hostnames)
+	paths, err := getPaths(ctx, route, hostnames)
+	if err != nil {
+		return nil, err
+	}
+	listener.Paths = paths
+
 	return []*v4.GenericListener{
 		v4.ToGenericListener(listener),
-	}
+	}, nil
 }
 
-func getPaths(route *gwAPIv1.HTTPRoute, hostnames []string) []*v4.Path {
+func getPaths(ctx context.Context, route *gwAPIv1.HTTPRoute, hostnames []string) ([]*v4.Path, error) {
 	if len(hostnames) == 0 {
-		return getPathsWithoutHostnames(route)
+		paths, err := getPathsWithoutHostnames(ctx, route)
+		if err != nil {
+			return nil, err
+		}
+
+		return paths, nil
 	}
-	return getPathsWithHostnames(route, hostnames)
+	return getPathsWithHostnames(route, hostnames), nil
 }
 
-func getPathsWithoutHostnames(route *gwAPIv1.HTTPRoute) []*v4.Path {
-	paths := []*v4.Path{}
+func getPathsWithoutHostnames(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.Path, error) {
+	paths := sets.New[*v4.Path]()
 	routePaths := extractPaths(route)
+
 	for _, path := range routePaths {
-		paths = append(paths, v4.NewPath("", path))
+		if len(route.Spec.ParentRefs) == 0 {
+			paths.Insert(v4.NewPath("", path))
+		} else {
+			for _, parentRef := range route.Spec.ParentRefs {
+				host, err := resolveParentRefHostname(ctx, route, parentRef)
+				if err != nil {
+					return nil, err
+				}
+				paths.Insert(v4.NewPath(host, path))
+			}
+		}
 	}
-	return paths
+
+	return paths.UnsortedList(), nil
+}
+
+func resolveParentRefHostname(ctx context.Context, route *gwAPIv1.HTTPRoute,
+	parentRef gwAPIv1.ParentReference) (string, error) {
+	if parentRef.SectionName != nil && k8s.IsGatewayKind(parentRef) {
+		gateway, err := k8s.ResolveGateway(ctx, route.ObjectMeta, parentRef)
+		if err != nil {
+			return "", err
+		}
+
+		for _, l := range gateway.Spec.Listeners {
+			if l.Name == *parentRef.SectionName && l.Hostname != nil {
+				return string(*l.Hostname), nil
+			}
+		}
+	}
+
+	return "", nil
 }
 
 func getPathsWithHostnames(route *gwAPIv1.HTTPRoute, hostnames []string) []*v4.Path {
