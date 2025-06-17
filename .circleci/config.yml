@@ -24,12 +24,18 @@ parameters:
       - e2e
       - rollout-apim
       - none
-  env:
-    type: enum
-    default: dev
-    enum:
-      - dev
-      - stable
+  apim-source-branch:
+    type: string
+    default: ""
+    description: |
+      The branch that triggered a rollout of APIM on our side. 
+      This commit comes from APIM repository.
+  apim-commit-hash:
+    type: string
+    default: ""
+    description: |
+      The commit hash that triggered a roullout of APIM on our side. 
+      This branch belongs to APIM repository.
   release-version:
     type: string
     default: ""
@@ -365,11 +371,10 @@ jobs:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     parameters:
-      env:
-        type: enum
-        enum:
-          - dev
-          - stable
+      apim-source-branch:
+        type: string
+      apim-commit-hash:
+        type: string
     steps:
       - checkout
       - setup_remote_docker
@@ -392,9 +397,11 @@ jobs:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
       - run:
-          name: "Rollout APIM << parameters.env >> config"
+          name: "Rollout APIM config"
           command: |
-            npx zx hack/scripts/rollout-apim.mjs --verbose --env << parameters.env >>
+            npx zx hack/scripts/rollout-apim.mjs --verbose \
+              --srcBranch=<< parameters.apim-source-branch >> \
+              --srcSha=<< parameters.apim-commit-hash >>
        
   job-release:
     docker:
@@ -755,22 +762,7 @@ workflows:
               ignore: /.*/
           requires:
             - Stage Docker image
-            - Stage Helm chart
-      - job-rollout-apim:
-          name: Rollout APIM
-          context: cicd-orchestrator
-          env: dev
-          filters:
-            branches:
-              only:
-                - /^[0-9]+\.[0-9]+\.x$/
-                - master
-                - ci-stage-helm-chart
-            tags:
-              ignore: /.*/
-          requires:
-            - Stage Docker image
-            - Stage Helm chart      
+            - Stage Helm chart     
       - aquasec/register_artifact:
           name: Register staged image for scanning
           context: cicd-orchestrator
@@ -929,6 +921,7 @@ workflows:
         - << pipeline.parameters.trigger >>
     jobs:
       - job-rollout-apim:
-          name: Run end to end tests
+          name: Rollout APIM components
           context: cicd-orchestrator
-          env: << pipeline.parameters.env >>
+          apim-source-branch: << pipeline.parameters.apim-source-branch >>
+          apim-commit-hash: << pipeline.parameters.apim-commit-hash >>
