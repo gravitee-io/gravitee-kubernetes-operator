@@ -24,19 +24,20 @@ import {
 } from "./lib/index.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), CONFIG.repoName);
-const ENV = "dev";
 const VERBOSE = argv.verbose;
 const COMMIT_HASH = argv.srcSha;
 const SOURCE_BRANCH = argv.srcBRanch;
 
 toggleVerbosity(VERBOSE);
 
+await checkRequirements();
+
+const env = await getEnv();
+
 LOG.magenta(`
-🚀 Rolling out deployments in environement ${ENV} ...
+🚀 Rolling out deployments in environement ${env} ...
     📦 Project dir    | ${PROJECT_DIR}
     📦 Working dir    | ${WORKING_DIR}`);
-
-await checkRequirements();
 
 async function checkRequirements() {
   if (isEmptyString($.env.CIRCLECI)) {
@@ -55,11 +56,11 @@ async function checkRequirements() {
     process.exit(1);
   }
 
-  if (isEmptyString(ENV)) {
+  if (isEmptyString(env)) {
     LOG.yellow(`
-  ⚠️ Setting an environment via the --env flag is required. This flag must match one of the root directories of ${CONFIG.repo}.
+  🧐 It looks like the origin branch does not require to rollout any component.
 `);
-    process.exit(1);
+    process.exit(0);
   }
 }
 
@@ -80,7 +81,7 @@ LOG.blue(`
 
 await time(async () => {
   cd(WORKING_DIR);
-  const apimValuesFilePath = path.join(ENV, CONFIG.apimValues);
+  const apimValuesFilePath = path.join(env, CONFIG.apimValues);
   const apimValuesFile = await fs.readFile(apimValuesFilePath, "utf8");
   const apimValuesYAML = await YAML.parse(apimValuesFile);
   const annotationKey = CONFIG.apimCommitHashAnnotationKey;
@@ -95,10 +96,19 @@ LOG.blue(`
 
 await time(async () => {
   cd(WORKING_DIR);
-  const apimValuesFile = path.join(ENV, CONFIG.apimValues);
+  const apimValuesFile = path.join(env, CONFIG.apimValues);
   await $`git add ${apimValuesFile}`;
-  await $`git commit -m "ci(${ENV}): rollout APIM config (${COMMIT_HASH})"`;
+  await $`git commit -m "ci(${env}): rollout APIM config (${COMMIT_HASH})"`;
   await $`git push origin ${CONFIG.branch}`;
   LOG.log();
   cd(PROJECT_DIR);
 });
+
+async function getEnv() {
+  if (SOURCE_BRANCH == "master") {
+    return "dev;";
+  }
+  if (SOURCE_BRANCH == STABLE.getBranch()) {
+    return "stable;";
+  }
+}
