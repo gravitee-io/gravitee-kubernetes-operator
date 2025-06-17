@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { ENVIRONMENTS } from "./lib/env.mjs";
+import { CONFIG } from "./lib/config.mjs";
 import {
   LOG,
   PROJECT_DIR,
@@ -23,7 +23,7 @@ import {
   isEmptyString,
 } from "./lib/index.mjs";
 
-const WORKING_DIR = path.join(os.tmpdir(), ENVIRONMENTS.configRepoName);
+const WORKING_DIR = path.join(os.tmpdir(), CONFIG.repoName);
 
 const VERBOSE = argv.verbose;
 const ENV = argv.env;
@@ -57,19 +57,19 @@ async function checkRequirements() {
 
   if (isEmptyString(ENV)) {
     LOG.yellow(`
-  ⚠️ Setting an environment via the --env flag is required. This flag must match one of the root directories of ${ENVIRONMENTS.configRepo}.
+  ⚠️ Setting an environment via the --env flag is required. This flag must match one of the root directories of ${CONFIG.configRepo}.
 `);
     process.exit(1);
   }
 }
 
 LOG.blue(`
-    🚧 Checking out ${ENVIRONMENTS.configRepo}:${ENVIRONMENTS.configBranch} ...
+    🚧 Checking out ${CONFIG.repo}:${CONFIG.branch} ...
 `);
 
 await time(async () => {
-  await $`git clone -q git@github.com:${ENVIRONMENTS.configRepo}.git \
-    --branch ${ENVIRONMENTS.configBranch} \
+  await $`git clone -q git@github.com:${CONFIG.repo}.git \
+    --branch ${CONFIG.branch} \
     --single-branch \
     --depth 1 ${WORKING_DIR}`;
 });
@@ -80,10 +80,10 @@ LOG.blue(`
 
 await time(async () => {
   cd(WORKING_DIR);
-  const gkoValuesFilePath = path.join(ENV, ENVIRONMENTS.gkoValues);
+  const gkoValuesFilePath = path.join(ENV, CONFIG.gkoValues);
   const gkoValuesFile = await fs.readFile(gkoValuesFilePath, "utf8");
   const gkoValuesYAML = await YAML.parse(gkoValuesFile);
-  const annotationKey = ENVIRONMENTS.commitHashAnnotationKey;
+  const annotationKey = CONFIG.commitHashAnnotationKey;
   gkoValuesYAML.gko.manager.annotations[annotationKey] = COMMIT_HASH;
   await fs.writeFile(gkoValuesFilePath, YAML.stringify(gkoValuesYAML));
   cd(PROJECT_DIR);
@@ -95,10 +95,10 @@ LOG.blue(`
 
 await time(async () => {
   cd(WORKING_DIR);
-  const gkoValuesFile = path.join(ENV, ENVIRONMENTS.gkoValues);
+  const gkoValuesFile = path.join(ENV, CONFIG.gkoValues);
   await $`git add ${gkoValuesFile}`;
-  await $`git commit -m "ci(${ENV}): rollout config"`;
-  await $`git push origin ${ENVIRONMENTS.configBranch}`;
+  await $`git commit -m "ci(${ENV}): rollout GKO config"`;
+  await $`git push origin ${CONFIG.branch}`;
   LOG.log();
   cd(PROJECT_DIR);
 });

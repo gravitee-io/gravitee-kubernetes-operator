@@ -22,6 +22,7 @@ parameters:
       - test
       - release
       - e2e
+      - rollout-apim
       - none
   release-version:
     type: string
@@ -319,7 +320,7 @@ jobs:
           name: Stage Docker image
           command: npx zx hack/scripts/stage-docker-image.mjs
 
-  job-rollout-environment:
+  job-rollout-operator:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     parameters:
@@ -328,7 +329,6 @@ jobs:
         enum:
           - dev
           - stable
-        default: dev
     steps:
       - checkout
       - setup_remote_docker
@@ -351,10 +351,45 @@ jobs:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
       - run:
-          name: "Rollout deployments"
+          name: "Rollout << parameters.env >> GKO config"
           command: |
-            npx zx hack/scripts/rollout-environment.mjs --verbose --env << parameters.env >>
-          
+            npx zx hack/scripts/rollout-operator.mjs --verbose --env << parameters.env >>
+
+  job-rollout-apim:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    parameters:
+      env:
+        type: enum
+        enum:
+          - dev
+          - stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - run:
+          name: "Rollout APIM << parameters.env >> config"
+          command: |
+            npx zx hack/scripts/rollout-apim.mjs --verbose --env << parameters.env >>
+       
   job-release:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -700,9 +735,10 @@ workflows:
                 - ci-stage-helm-chart
             tags:
               ignore: /.*/
-      - job-rollout-environment:
-          name: Rollout dev environment
+      - job-rollout-operator:
+          name: Rollout Operator
           context: cicd-orchestrator
+          env: dev
           filters:
             branches:
               only:
@@ -714,6 +750,21 @@ workflows:
           requires:
             - Stage Docker image
             - Stage Helm chart
+      - job-rollout-apim:
+          name: Rollout APIM
+          context: cicd-orchestrator
+          env: dev
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+                - ci-stage-helm-chart
+            tags:
+              ignore: /.*/
+          requires:
+            - Stage Docker image
+            - Stage Helm chart      
       - aquasec/register_artifact:
           name: Register staged image for scanning
           context: cicd-orchestrator
@@ -865,3 +916,12 @@ workflows:
           name: Run end to end tests
           context: cicd-orchestrator
 
+  rollout-apim:
+    when:
+      equal:
+        - rollout-apim
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-e2e-tests:
+          name: Run end to end tests
+          context: cicd-orchestrator

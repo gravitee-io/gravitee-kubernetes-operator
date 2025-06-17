@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const configRepoName = "cloud-gko";
-const configRepo = `gravitee-io/${configRepoName}`;
-const configBranch = "main";
+const repoName = "cloud-gko";
+const repo = `gravitee-io/${repoName}`;
+const branch = "main";
 const commitHashAnnotationKey = "gko.gravitee.io/commit-hash";
 const gkoValues = "gko/values-ci.yaml";
+const apimValues = "apim/values-ci.yaml";
 
-export const ENVIRONMENTS = {
-  configRepoName,
-  configRepo,
-  configBranch,
+export const CONFIG = {
+  repoName,
+  repo,
+  branch,
   commitHashAnnotationKey,
   gkoValues,
+  apimValues,
 };
