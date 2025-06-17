@@ -24,6 +24,12 @@ parameters:
       - e2e
       - rollout-apim
       - none
+  env:
+    type: enum
+    default: dev
+    enum:
+      - dev
+      - stable
   release-version:
     type: string
     default: ""
@@ -922,6 +928,7 @@ workflows:
         - rollout-apim
         - << pipeline.parameters.trigger >>
     jobs:
-      - job-e2e-tests:
+      - job-rollout-apim:
           name: Run end to end tests
           context: cicd-orchestrator
+          env: << pipeline.parameters.env >>
