@@ -58,6 +58,31 @@ gateway:
     enabled: false
   ingressController:
     enabled: true
+<<<<<<< HEAD:kind/apim/values.yaml
+=======
+  servers:
+    - type: http
+      port: 8082
+      service:
+        type: NodePort
+        nodePort: 30082
+        externalPort: 82
+      ingress:
+        enabled: false
+    - type: http
+      port: 8084
+      service:
+        type: NodePort
+        nodePort: 30084
+        externalPort: 84
+      ssl:
+        keystore:
+          type: pem
+          secret: secret://kubernetes/tls-server
+        clientAuth: request
+      ingress:
+        enabled: false
+>>>>>>> 844c77e (ci: explicitly disable ingress on apim gateway):hack/kind/apim/values.yaml
   service:
     type: NodePort
     nodePort: 30082
