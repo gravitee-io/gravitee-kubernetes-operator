@@ -83,7 +83,7 @@ await time(async () => {
   const gkoValuesFilePath = path.join(ENV, CONFIG.gkoValues);
   const gkoValuesFile = await fs.readFile(gkoValuesFilePath, "utf8");
   const gkoValuesYAML = await YAML.parse(gkoValuesFile);
-  const annotationKey = CONFIG.commitHashAnnotationKey;
+  const annotationKey = CONFIG.gkoCommitHashAnnotationKey;
   gkoValuesYAML.gko.manager.annotations[annotationKey] = COMMIT_HASH;
   await fs.writeFile(gkoValuesFilePath, YAML.stringify(gkoValuesYAML));
   cd(PROJECT_DIR);
