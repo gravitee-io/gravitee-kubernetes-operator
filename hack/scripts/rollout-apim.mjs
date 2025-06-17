@@ -24,10 +24,10 @@ import {
 } from "./lib/index.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), CONFIG.repoName);
-
+const ENV = "dev";
 const VERBOSE = argv.verbose;
-const ENV = argv.env;
-const COMMIT_HASH = $.env.CIRCLE_SHA1 || $.env.COMMIT_HASH;
+const COMMIT_HASH = argv.srcSha;
+const SOURCE_BRANCH = argv.srcBRanch;
 
 toggleVerbosity(VERBOSE);
 
@@ -84,7 +84,7 @@ await time(async () => {
   const apimValuesFile = await fs.readFile(apimValuesFilePath, "utf8");
   const apimValuesYAML = await YAML.parse(apimValuesFile);
   const annotationKey = CONFIG.apimCommitHashAnnotationKey;
-  apimValuesYAML.common.annotations[annotationKey] = COMMIT_HASH;
+  apimValuesYAML.apim.common.annotations[annotationKey] = COMMIT_HASH;
   await fs.writeFile(apimValuesFilePath, YAML.stringify(apimValuesYAML));
   cd(PROJECT_DIR);
 });
@@ -97,7 +97,7 @@ await time(async () => {
   cd(WORKING_DIR);
   const apimValuesFile = path.join(ENV, CONFIG.apimValues);
   await $`git add ${apimValuesFile}`;
-  await $`git commit -m "ci(${ENV}): rollout APIM config"`;
+  await $`git commit -m "ci(${ENV}): rollout APIM config (${COMMIT_HASH})"`;
   await $`git push origin ${CONFIG.branch}`;
   LOG.log();
   cd(PROJECT_DIR);

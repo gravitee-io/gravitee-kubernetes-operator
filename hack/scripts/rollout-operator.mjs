@@ -97,7 +97,7 @@ await time(async () => {
   cd(WORKING_DIR);
   const gkoValuesFile = path.join(ENV, CONFIG.gkoValues);
   await $`git add ${gkoValuesFile}`;
-  await $`git commit -m "ci(${ENV}): rollout GKO config"`;
+  await $`git commit -m "ci(${ENV}): rollout operator (${COMMIT_HASH})"`;
   await $`git push origin ${CONFIG.branch}`;
   LOG.log();
   cd(PROJECT_DIR);
