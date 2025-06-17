@@ -16,7 +16,8 @@
 const repoName = "cloud-gko";
 const repo = `gravitee-io/${repoName}`;
 const branch = "main";
-const commitHashAnnotationKey = "gko.gravitee.io/commit-hash";
+const gkoCommitHashAnnotationKey = "gko.gravitee.io/commit-hash";
+const apimCommitHashAnnotationKey = "apim.gravitee.io/commit-hash";
 const gkoValues = "gko/values-ci.yaml";
 const apimValues = "apim/values-ci.yaml";
 
@@ -24,7 +25,8 @@ export const CONFIG = {
   repoName,
   repo,
   branch,
-  commitHashAnnotationKey,
+  commitHashAnnotationKey: gkoCommitHashAnnotationKey,
+  apimCommitHashAnnotationKey,
   gkoValues,
   apimValues,
 };

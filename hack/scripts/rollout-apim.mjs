@@ -83,7 +83,7 @@ await time(async () => {
   const apimValuesFilePath = path.join(ENV, CONFIG.apimValues);
   const apimValuesFile = await fs.readFile(apimValuesFilePath, "utf8");
   const apimValuesYAML = await YAML.parse(apimValuesFile);
-  const annotationKey = CONFIG.commitHashAnnotationKey;
+  const annotationKey = CONFIG.apimCommitHashAnnotationKey;
   apimValuesYAML.common.annotations[annotationKey] = COMMIT_HASH;
   await fs.writeFile(apimValuesFilePath, YAML.stringify(apimValuesYAML));
   cd(PROJECT_DIR);
