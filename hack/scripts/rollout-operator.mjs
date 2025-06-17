@@ -22,17 +22,20 @@ import {
   time,
   isEmptyString,
 } from "./lib/index.mjs";
+import { STABLE } from "./lib/stable.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), CONFIG.repoName);
 
 const VERBOSE = argv.verbose;
-const ENV = argv.env;
 const COMMIT_HASH = $.env.CIRCLE_SHA1 || $.env.COMMIT_HASH;
+const BRANCH = $.env.CIRCLE_BRANCH || $.env.BRANCH;
 
 toggleVerbosity(VERBOSE);
 
+const env = await getEnv();
+
 LOG.magenta(`
-🚀 Rolling out deployments in environement ${ENV} ...
+🚀 Rolling out deployments in environement ${env} ...
     📦 Project dir    | ${PROJECT_DIR}
     📦 Working dir    | ${WORKING_DIR}`);
 
@@ -55,11 +58,11 @@ async function checkRequirements() {
     process.exit(1);
   }
 
-  if (isEmptyString(ENV)) {
+  if (isEmptyString(env)) {
     LOG.yellow(`
-  ⚠️ Setting an environment via the --env flag is required. This flag must match one of the root directories of ${CONFIG.configRepo}.
+  🧐 It looks like the origin branch does not require to rollout any component.
 `);
-    process.exit(1);
+    process.exit(0);
   }
 }
 
@@ -80,7 +83,7 @@ LOG.blue(`
 
 await time(async () => {
   cd(WORKING_DIR);
-  const gkoValuesFilePath = path.join(ENV, CONFIG.gkoValues);
+  const gkoValuesFilePath = path.join(env, CONFIG.gkoValues);
   const gkoValuesFile = await fs.readFile(gkoValuesFilePath, "utf8");
   const gkoValuesYAML = await YAML.parse(gkoValuesFile);
   const annotationKey = CONFIG.gkoCommitHashAnnotationKey;
@@ -95,10 +98,19 @@ LOG.blue(`
 
 await time(async () => {
   cd(WORKING_DIR);
-  const gkoValuesFile = path.join(ENV, CONFIG.gkoValues);
+  const gkoValuesFile = path.join(env, CONFIG.gkoValues);
   await $`git add ${gkoValuesFile}`;
-  await $`git commit -m "ci(${ENV}): rollout operator (${COMMIT_HASH})"`;
+  await $`git commit -m "ci(${env}): rollout operator (${COMMIT_HASH})"`;
   await $`git push origin ${CONFIG.branch}`;
   LOG.log();
   cd(PROJECT_DIR);
 });
+
+async function getEnv() {
+  if (BRANCH == "master") {
+    return "dev;";
+  }
+  if (BRANCH == STABLE.getBranch()) {
+    return "stable;";
+  }
+}

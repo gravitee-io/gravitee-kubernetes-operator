@@ -18,31 +18,16 @@ import { PROJECT_DIR } from "./index.mjs";
 
 const MANIFEST = await parseManifest();
 
-async function getImageTag() {
-  return MANIFEST.apim.image.version;
-}
-
-async function getImageRegistry() {
-  return MANIFEST.apim.image.registry;
-}
-
-async function getChartVersion() {
-  return MANIFEST.apim.chart.version;
-}
-
-async function getChartRegistry() {
-  return MANIFEST.apim.chart.registry;
-}
-
 async function parseManifest() {
-  const manifestFilePath = path.join(PROJECT_DIR, "hack", "apim.yaml");
+  const manifestFilePath = path.join(PROJECT_DIR, "hack", "stable.yaml");
   const manifestFile = await fs.readFile(manifestFilePath, "utf8");
   return await YAML.parse(manifestFile);
 }
 
-export const APIM = {
-  getChartVersion,
-  getChartRegistry,
-  getImageTag,
-  getImageRegistry,
+async function getBranch() {
+  return MANIFEST.branch;
+}
+
+export const STABLE = {
+  getBranch,
 };

@@ -335,12 +335,6 @@ jobs:
   job-rollout-operator:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
-    parameters:
-      env:
-        type: enum
-        enum:
-          - dev
-          - stable
     steps:
       - checkout
       - setup_remote_docker
@@ -363,9 +357,9 @@ jobs:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
       - run:
-          name: "Rollout << parameters.env >> GKO config"
+          name: "Rollout GKO components"
           command: |
-            npx zx hack/scripts/rollout-operator.mjs --verbose --env << parameters.env >>
+            npx zx hack/scripts/rollout-operator.mjs
 
   job-rollout-apim:
     docker:
@@ -397,7 +391,7 @@ jobs:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
       - run:
-          name: "Rollout APIM config"
+          name: "Rollout APIM components"
           command: |
             npx zx hack/scripts/rollout-apim.mjs --verbose \
               --srcBranch=<< parameters.apim-source-branch >> \
@@ -751,7 +745,6 @@ workflows:
       - job-rollout-operator:
           name: Rollout Operator
           context: cicd-orchestrator
-          env: dev
           filters:
             branches:
               only:
