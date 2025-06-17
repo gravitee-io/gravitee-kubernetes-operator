@@ -69,6 +69,8 @@ gateway:
         type: NodePort
         nodePort: 30082
         externalPort: 82
+      ingress:
+        enabled: false
     - type: http
       port: 8084
       service:
@@ -80,6 +82,8 @@ gateway:
           type: pem
           secret: secret://kubernetes/tls-server
         clientAuth: request
+      ingress:
+        enabled: false
   service:
     type: NodePort
   services:
