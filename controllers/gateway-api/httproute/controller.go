@@ -72,8 +72,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			if err := internal.DetectConflicts(ctx, dc); err != nil {
 				return err
 			}
-			for i := range route.Status.Parents {
-				parent := &route.Status.Parents[i]
+
+			for i := range dc.Status.Parents {
+				parent := &dc.Status.Parents[i]
 				if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
 					return nil
 				}
