@@ -157,6 +157,7 @@ var DefaultGatewayContainer = coreV1.Container{
 	StartupProbe:    DefaultStartupProbe,
 	VolumeMounts:    []coreV1.VolumeMount{},
 	Ports:           []coreV1.ContainerPort{},
+	Resources:       *DefaultResources,
 }
 
 var DefaultGatewayConfigVolume = coreV1.Volume{
