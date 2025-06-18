@@ -276,6 +276,29 @@ func buildDeployment(
 
 	deployment.Spec.Template = *template
 
+	if params.Spec.Kubernetes == nil {
+		return nil
+	}
+	if params.Spec.Kubernetes.Deployment == nil {
+		return nil
+	}
+
+	if params.Spec.Kubernetes.Deployment.Replicas != nil {
+		deployment.Spec.Replicas = params.Spec.Kubernetes.Deployment.Replicas
+	}
+
+	if params.Spec.Kubernetes.Deployment.Strategy != nil {
+		deployment.Spec.Strategy = *params.Spec.Kubernetes.Deployment.Strategy
+	}
+
+	for k, v := range params.Spec.Kubernetes.Deployment.Annotations {
+		deployment.Annotations[k] = v
+	}
+
+	for k, v := range params.Spec.Kubernetes.Deployment.Labels {
+		deployment.Labels[k] = v
+	}
+
 	return nil
 }
 
@@ -403,7 +426,7 @@ func setGraviteeConf(podTemplate *coreV1.PodTemplateSpec) {
 			containers[i].Env = append(containers[i].Env, coreV1.EnvVar{
 				Name: "JAVA_OPTS",
 				Value: fmt.Sprintf(
-					"-Dgravitee.conf=%s,%s -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005",
+					"-Dgravitee.conf=%s,%s -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dvertx.options.maxEventLoopExecuteTime=10000000000",
 					UserGatewayConfigFile,
 					DefaultGatewayConfigFile,
 				),
