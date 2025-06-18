@@ -426,7 +426,7 @@ func setGraviteeConf(podTemplate *coreV1.PodTemplateSpec) {
 			containers[i].Env = append(containers[i].Env, coreV1.EnvVar{
 				Name: "JAVA_OPTS",
 				Value: fmt.Sprintf(
-					"-Dgravitee.conf=%s,%s -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dvertx.options.maxEventLoopExecuteTime=10000000000",
+					"-Dgravitee.conf=%s,%s",
 					UserGatewayConfigFile,
 					DefaultGatewayConfigFile,
 				),
