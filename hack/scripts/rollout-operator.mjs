@@ -108,7 +108,7 @@ await time(async () => {
 
 async function getEnv() {
   if (BRANCH == "master") {
-    return "dev;";
+    return "dev";
   }
   if (BRANCH == STABLE.getBranch()) {
     return "stable;";
