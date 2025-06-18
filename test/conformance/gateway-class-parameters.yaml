@@ -25,6 +25,13 @@ spec:
           containers:
           - name: gateway
             image: gateway:latest
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 1024Mi
+              requests:
+                cpu: 200m
+                memory: 256Mi
   gravitee:
     yaml:
       handlers:
