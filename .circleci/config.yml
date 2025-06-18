@@ -252,17 +252,12 @@ jobs:
       - run:
           name: Helm Install the Operator
           command: |
-            IMG=gko TAG=latest make docker-build \
+            IMG=gko TAG=latest make docker-build-cover \
               && kind load docker-image gko:latest --name gravitee \
-              && helm upgrade --install gko helm/gko \
+              && helm upgrade --install gko helm/gko -n default \
                 --set manager.image.repository=gko \
                 --set manager.image.tag=latest \
-                --set manager.metrics.enabled=false \
-                --set manager.logs.format=console \
-                --set manager.logs.format=error \
-                --set manager.logs.timestamp.format=iso-8601 \
-                --set gatewayAPI.controller.enabled=true \
-                --set manager.reconcile.strategy=always
+                -f ./test/conformance/operator.values.yaml
       - run:
           name: Apply GatewayClassParameters and GatewayClass
           command: |
@@ -272,6 +267,19 @@ jobs:
           name: Run Gateway API Conformance Test
           command: |
             bin/gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
+      - run:
+          name: Shutdown Operator
+          command: |
+            kubectl scale deploy gko-controller-manager --replicas 0
+      - run: 
+          name: Generate Coverage
+          command: |
+            mkdir -p /tmp/junit/reports
+            go tool covdata textfmt  -i=/tmp/coverage -o /tmp/junit/reports/cover-conformance.out
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover-conformance.out
       - go/save-mod-cache
 
   job-integration-test:
@@ -767,6 +775,7 @@ workflows:
           requires:
             - Run IT with context
             - Run IT without context
+            - Run Conformance Test
       - aquasec/fs_scan:
           context: cicd-orchestrator
           pre-steps:
