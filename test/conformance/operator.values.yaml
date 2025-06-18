@@ -12,21 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: kind.x-k8s.io/v1alpha4
-kind: Cluster
-name: gravitee
-networking:
-  apiServerPort: 6443
-nodes:
-  - role: control-plane
-    extraPortMappings:
-      - containerPort: 80
-        hostPort: 80 
-      - containerPort: 443
-        hostPort: 443
-      - containerPort: 9092
-        hostPort: 9092
-    extraMounts:
-      - hostPath: /tmp/coverage
-        containerPath: /tmp/coverage
-        readOnly: false
+gatewayAPI:
+  controller:
+    enabled: true
+
+manager:
+  reconcile:
+    strategy: always
+  metrics:
+    enabled: false
+  logs:
+    format: console
+    level: debug
+    timestamp:
+      format: iso-8601
+  volumes:
+    - name: coverage
+      hostPath:
+        path: /tmp/coverage
+  volumeMounts:
+    - mountPath: /tmp/coverage
+      name: coverage

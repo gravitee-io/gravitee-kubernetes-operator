@@ -103,12 +103,20 @@ spec:
           {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
-          {{- if .Values.manager.webhook.enabled }}
+{{- if .Values.manager.webhook.enabled }}
           volumeMounts:
             - mountPath: /tmp/webhook-server/certs/
               name: webhook-cert
               readOnly: true
-          {{- end }}
+{{- with .Values.manager.volumeMounts }}
+{{-  . | toYaml | nindent 12 }}
+{{- end }}
+{{- else if .Values.manager.volumeMounts }}
+          volumeMounts:
+{{- with .Values.manager.volumeMounts }}
+{{-  . | toYaml | nindent 12 }}
+{{- end }}
+{{- end }}
           ports:
           - containerPort: {{ .Values.manager.probes.port }}
             name: probes
@@ -127,12 +135,20 @@ spec:
         runAsNonRoot: true
       hostNetwork: {{ .Values.manager.hostNetwork }}
       serviceAccountName: {{ template "rbac.serviceAccountName" . }}
-      {{- if .Values.manager.webhook.enabled }}
+{{- if .Values.manager.webhook.enabled }}
       volumes:
         - name: webhook-cert
           secret:
             defaultMode: 420
             secretName: {{ .Values.manager.webhook.cert.secret.name }}
-      {{- end }}
-      terminationGracePeriodSeconds: 10
+{{- with .Values.manager.volumes }}
+{{-  . | toYaml | nindent 8 }}
 {{- end }}
+{{- end }}
+{{- else if .Values.manager.volumes }}
+      volumes:
+{{- with .Values.manager.volumes }}
+{{-  . | toYaml | nindent 8 }}
+{{- end }}
+{{- end }}
+      terminationGracePeriodSeconds: 10

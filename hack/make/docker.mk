@@ -16,3 +16,6 @@ docker-push: ## Push docker image with the manager.
 
 docker-build-debug: ## Build docker image with remote debug enabled
 	docker build -f Dockerfile.debug -t ${IMG}:${TAG} .
+
+docker-build-cover: ## Build docker image with coverage enabled on binary
+	docker build -f Dockerfile.cover -t ${IMG}:${TAG} .
