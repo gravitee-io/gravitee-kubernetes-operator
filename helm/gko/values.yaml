@@ -52,6 +52,17 @@ rbacProxy:
 ## This is where you can configure the deployment itself and the way the operator will interact with APIM and Custom Resources in your cluster.
 ## @descriptionEnd
 manager:
+<<<<<<< HEAD
+=======
+  ## @param manager.annotations Specifies custom annotations to be added to the manager deployment and pod.
+  annotations: {}
+  ## @param manager.labels Specifies custom labels to be added to the manager deployment and pod.
+  labels: {}
+  ## @param manager.volumes Volumes to add to the manager pod.
+  volumes: []
+  ## @param manager.volumeMounts Volume mounts to add to the manager container.
+  volumeMounts: []
+>>>>>>> 382fc14 (ci: run conformance tests with coverage)
   image:
     ## @param manager.image.repository Specifies the docker registry and image name to use.
     repository: graviteeio/kubernetes-operator
@@ -155,7 +166,6 @@ manager:
     admission:
       ## @param manager.webhook.admission.checkApiContextPathConflictInCluster check if the same API context path exists in the whole cluster.
       checkApiContextPathConflictInCluster: false
-
 ## @section ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.

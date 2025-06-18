@@ -210,6 +210,81 @@ jobs:
           paths:
             - cover-unit.out
 
+<<<<<<< HEAD
+=======
+  job-conformance-test:
+    machine:
+      image: ubuntu-2204:2024.01.2
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - checkout
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - go/load-mod-cache
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "go.sum" }}
+      - kubernetes/install_kubectl
+      - helm/install_helm_client
+      - run:
+          name: Install kind
+          command: |
+            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      - run:
+          name: Start Cluster
+          command: |
+            make start-conformance-cluster
+      - run:
+          name: Load master-latest Gateway Image
+          command: |
+            docker pull graviteeio.azurecr.io/apim-gateway:master-latest 
+            docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
+            kind load docker-image gateway:latest --name gravitee
+      - run:
+          name: Run cloud-provider-kind
+          command: |
+            NET_MODE=host docker compose -f hack/kind/cloud-provider/compose.yaml up -d
+      - run:
+          name: Helm Install the Operator
+          command: |
+            IMG=gko TAG=latest make docker-build-cover \
+              && kind load docker-image gko:latest --name gravitee \
+              && helm upgrade --install gko helm/gko -n default \
+                --set manager.image.repository=gko \
+                --set manager.image.tag=latest \
+                -f ./test/conformance/operator.values.yaml
+      - run:
+          name: Apply GatewayClassParameters and GatewayClass
+          command: |
+            kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
+            kubectl apply -f ./test/conformance/gateway-class.yaml
+      - run:
+          name: Run Gateway API Conformance Test
+          command: |
+            bin/gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
+      - run:
+          name: Shutdown Operator
+          command: |
+            kubectl scale deploy gko-controller-manager --replicas 0
+      - run: 
+          name: Generate Coverage
+          command: |
+            mkdir -p /tmp/junit/reports
+            go tool covdata textfmt  -i=/tmp/coverage -o /tmp/junit/reports/cover-conformance.out
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover-conformance.out
+      - go/save-mod-cache
+
+>>>>>>> 382fc14 (ci: run conformance tests with coverage)
   job-integration-test:
     machine:
       image: ubuntu-2204:2024.01.2
@@ -694,6 +769,7 @@ workflows:
           requires:
             - Run IT with context
             - Run IT without context
+            - Run Conformance Test
       - aquasec/fs_scan:
           context: cicd-orchestrator
           pre-steps:
