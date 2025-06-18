@@ -377,6 +377,7 @@ rules:
       - ""
     resources:
       - serviceaccounts
+      - namespaces
     verbs:
       - create
       - delete
