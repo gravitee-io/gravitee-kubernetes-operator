@@ -37,6 +37,10 @@ manager:
   annotations: {}
   ## @param manager.labels Specifies custom labels to be added to the manager deployment and pod.
   labels: {}
+  ## @param manager.volumes Volumes to add to the manager pod.
+  volumes: []
+  ## @param manager.volumeMounts Volume mounts to add to the manager container.
+  volumeMounts: []
   image:
     ## @param manager.image.repository Specifies the docker registry and image name to use.
     repository: graviteeio/kubernetes-operator
@@ -149,7 +153,6 @@ manager:
     admission:
       ## @param manager.webhook.admission.checkApiContextPathConflictInCluster check if the same API context path exists in the whole cluster.
       checkApiContextPathConflictInCluster: false
-
 ## @section ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.
