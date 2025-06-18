@@ -296,6 +296,22 @@ func IsKafkaRouteKind(routeKind gwAPIv1.RouteGroupKind) bool {
 	}
 }
 
+func HasGatewayClassParameters(gw *gwAPIv1.GatewayClass, params *v1alpha1.GatewayClassParameters) bool {
+	paramsRef := gw.Spec.ParametersRef
+	switch {
+	case paramsRef.Group != "gravitee.io":
+		return false
+	case paramsRef.Kind != "GatewayClassParameters":
+		return false
+	case paramsRef.Name != params.Name:
+		return false
+	case paramsRef.Namespace == nil:
+		return gw.Namespace == params.Namespace
+	default:
+		return string(*paramsRef.Namespace) == params.Namespace
+	}
+}
+
 func HasKafkaEnabled(params *v1alpha1.GatewayClassParameters) bool {
 	return params.Spec.Gravitee != nil &&
 		params.Spec.Gravitee.Kafka != nil &&
