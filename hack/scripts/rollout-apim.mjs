@@ -28,7 +28,7 @@ const VERBOSE = argv.verbose;
 const COMMIT_HASH = argv.srcSha;
 const SOURCE_BRANCH = argv.srcBRanch;
 
-toggleVerbosity(VERBOSE)
+toggleVerbosity(VERBOSE);
 
 const env = await getEnv();
 
