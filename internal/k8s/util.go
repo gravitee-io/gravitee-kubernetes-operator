@@ -340,6 +340,9 @@ func HasHTTPListenerAtIndex(gw *gwAPIv1.Gateway, index int) bool {
 	if index < 0 {
 		return false
 	}
+	if index >= len(gw.Status.Listeners) {
+		return false
+	}
 	lst := gw.Status.Listeners[index]
 	for j := range lst.SupportedKinds {
 		if lst.SupportedKinds[j].Kind == gwAPIv1.Kind(GwAPIv1HTTPRouteKind) {
