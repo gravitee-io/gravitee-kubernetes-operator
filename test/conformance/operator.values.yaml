@@ -17,13 +17,8 @@ gatewayAPI:
     enabled: true
 
 manager:
-  resources:
-    limits:
-      memory: 512Mi
-    requests:
-      cpu: 200m
-  reconcile:
-    strategy: always
+  image:
+    pullPocicy: Always
   metrics:
     enabled: false
   logs:

@@ -18,7 +18,7 @@ name: gravitee
 networking:
   apiServerPort: 6443
 nodes:
-  - role: control-plane
+  - role: worker
     extraPortMappings:
       - containerPort: 80
         hostPort: 80 
@@ -30,3 +30,4 @@ nodes:
       - hostPath: /tmp/coverage
         containerPath: /tmp/coverage
         readOnly: false
+  - role: control-plane
