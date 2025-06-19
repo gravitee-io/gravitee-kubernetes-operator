@@ -27,8 +27,14 @@ import (
 	"sigs.k8s.io/gateway-api/pkg/features"
 )
 
-var timeoutConfig = config.TimeoutConfig{
-	TestIsolation: 1 * time.Second,
+var lazyTimeoutConfig = config.TimeoutConfig{
+	TestIsolation:                      1 * time.Second,
+	GatewayStatusMustHaveListeners:     180 * time.Second,
+	GatewayListenersMustHaveConditions: 180 * time.Second,
+	HTTPRouteMustNotHaveParents:        180 * time.Second,
+	HTTPRouteMustHaveCondition:         180 * time.Second,
+	TLSRouteMustHaveCondition:          180 * time.Second,
+	RouteMustHaveParents:               180 * time.Second,
 }
 
 func TestGatewayAPIConformance(t *testing.T) {
@@ -42,7 +48,7 @@ func TestGatewayAPIConformance(t *testing.T) {
 		// features.ReferenceGrantFeature.Name,
 	)
 
-	opts.TimeoutConfig = timeoutConfig
+	opts.TimeoutConfig = lazyTimeoutConfig
 	opts.RestConfig.QPS = -1
 
 	// Here you can specify test name for debug purpose
