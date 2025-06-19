@@ -25,6 +25,30 @@ spec:
           containers:
           - name: gateway
             image: gateway:latest
+            livenessProbe:
+              failureThreshold: 10000
+              # httpGet:
+              #   httpHeaders:
+              #   - name: Authorization
+              #     value: Basic YWRtaW46YWRtaW4=
+              #   path: /_node/health?probes=http-server
+              #   port: 18082
+              #   scheme: HTTP
+              periodSeconds: 5
+              successThreshold: 1
+              timeoutSeconds: 5
+            readinessProbe:
+              failureThreshold: 10000
+              # httpGet:
+              #   httpHeaders:
+              #   - name: Authorization
+              #     value: Basic YWRtaW46YWRtaW4=
+              #   path: /_node/health?probes=http-server
+              #   port: 18082
+              #   scheme: HTTP
+              periodSeconds: 5
+              successThreshold: 1
+              timeoutSeconds: 5
   gravitee:
     yaml:
       handlers:
