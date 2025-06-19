@@ -127,14 +127,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 		return events.Record(event.Update, gw.Object, func() error {
 			internal.Init(dc)
+
 			if err := internal.Resolve(ctx, dc, params); err != nil {
 				return err
 			}
+
 			internal.DetectConflicts(dc)
+
 			internal.Accept(dc)
+
 			if !k8s.IsAccepted(dc) {
 				return nil
 			}
+
 			return internal.Program(ctx, dc, params)
 		})
 	})
