@@ -28,9 +28,7 @@ const VERBOSE = argv.verbose;
 const COMMIT_HASH = argv.srcSha;
 const SOURCE_BRANCH = argv.srcBRanch;
 
-toggleVerbosity(VERBOSE);
-
-await checkRequirements();
+toggleVerbosity(VERBOSE)
 
 const env = await getEnv();
 
@@ -38,6 +36,8 @@ LOG.magenta(`
 🚀 Rolling out deployments in environement ${env} ...
     📦 Project dir    | ${PROJECT_DIR}
     📦 Working dir    | ${WORKING_DIR}`);
+
+await checkRequirements();
 
 async function checkRequirements() {
   if (isEmptyString($.env.CIRCLECI)) {
