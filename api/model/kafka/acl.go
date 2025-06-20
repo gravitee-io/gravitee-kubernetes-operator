@@ -51,25 +51,47 @@ const (
 )
 
 type KafkaAccessControlMatch struct {
-	Type  KafkaAccessControlResourceMatchType `json:"type"`
-	Value string                              `json:"value"`
+	// Type specifies the semantics of how the resource should be matched.
+
+	// Valid PathMatchType values, along with their support levels, are:
+	//
+	// * "Exact" Resources whose name is an exact match to the specified string receive the ACL.
+	// * "Prefix" Resources whose name starts with the specified string receive the ACL.
+	// * "RegularExpression" Resources that match the specified expression receive the ACL.
+	Type KafkaAccessControlResourceMatchType `json:"type"`
+	// Value of the resource to match against.
+	Value string `json:"value"`
 }
 
 type KafkaAccessControl struct {
-	Type       KafkaAcccessControlResourceType `json:"type"`
-	Operations []KafkaAccessControlOperation   `json:"operations"`
+	Type KafkaAcccessControlResourceType `json:"type"`
+	// Operations specifies the set of operations / verbs to allow for the resource
+	// under access control.
+	Operations []KafkaAccessControlOperation `json:"operations"`
 	//+optional
+	// Match describes how to select the resource that will be subject to the access control.
+	// If not specified, any resource will be matched.
 	Match *KafkaAccessControlMatch `json:"match,omitempty"`
 }
 
 type KafkaAccessControlRules struct {
+	// A resource group together a type of matched resource and a set of operations
+	// to be granted by the access control for that resource.
+	// +kubebuilder:validation:MinItems=1
 	Resources []KafkaAccessControl `json:"resources"`
+	// Options allow to specify implementation specific behaviours
+	// for a set of rules.
 	// +optional
 	// +kubebuilder:validation:MaxProperties=16
 	Options map[gwAPIv1.AnnotationKey]gwAPIv1.AnnotationValue `json:"options,omitempty"`
 }
 
 type KafkaACLFilter struct {
+	// Rules define a set of rules that can be use to group a set of resources together with
+	// access control rules to be applied.
+	// ACLs are restrictive because once they are applied,
+	// proxy clients must be authorized to perform the actions they are taking.
+	// If there is no ACL defined for the action taken by the user, the action is prohibited.
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=16
 	Rules []KafkaAccessControlRules `json:"rules"`

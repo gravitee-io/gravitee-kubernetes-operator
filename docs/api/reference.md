@@ -66,6 +66,10 @@ Resources
         <tr>
             <td><a href="#gatewayclassparameters">GatewayClassParameters</a></td>
             <td></td>
+        </tr>
+        <tr>
+            <td><a href="#kafkaroute">KafkaRoute</a></td>
+            <td></td>
         </tr></tbody>
 </table>
 
@@ -24675,6 +24679,687 @@ receive on one of...<br/>
 
 ### GatewayClassParameters.status.conditions[index]
 [Go to parent definition](#gatewayclassparametersstatus)
+
+
+
+Condition contains details for one aspect of the current state of this API Resource.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>lastTransitionTime</b></td>
+        <td>string</td>
+        <td>
+          lastTransitionTime is the last time the condition transitioned from one status to another.<br/>
+          <br/>
+            <i>Format</i>: date-time<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>message</b></td>
+        <td>string</td>
+        <td>
+          message is a human readable message indicating details about the transition.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>reason</b></td>
+        <td>string</td>
+        <td>
+          reason contains a programmatic identifier indicating the reason for the condition's last transition.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>status</b></td>
+        <td>enum</td>
+        <td>
+          status of the condition, one of True, False, Unknown.<br/>
+          <br/>
+            <i>Enum</i>: True, False, Unknown<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>string</td>
+        <td>
+          type of condition in CamelCase or in foo.example.com/CamelCase.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>observedGeneration</b></td>
+        <td>integer</td>
+        <td>
+          observedGeneration represents the .metadata.generation that the condition was set based upon.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+            <i>Minimum</i>: 0<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+## KafkaRoute
+
+[gravitee.io/v1alpha1](#graviteeiov1alpha1)
+
+
+
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#kafkaroutespec">spec</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutestatus">status</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec
+[Go to parent definition](#kafkaroute)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#kafkaroutespecbackendrefsindex">backendRefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutespecfiltersindex">filters</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>hostname</b></td>
+        <td>string</td>
+        <td>
+          We do not accept the route in our case if hostname is not set (for now)<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>options</b></td>
+        <td>map[string]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutespecparentrefsindex">parentRefs</a></b></td>
+        <td>[]object</td>
+        <td>
+          ParentRefs references the resources (usually Gateways) that a Route wants
+to be attached to.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.backendRefs[index]
+[Go to parent definition](#kafkaroutespec)
+
+
+
+Leave room for backend security configuration.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the referent.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>group</b></td>
+        <td>string</td>
+        <td>
+          Group is the group of the referent. For example, "gateway.networking.k8s.io".<br/>
+          <br/>
+            <i>Default</i>: <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind is the Kubernetes resource kind of the referent. For example
+"Service".<br/>
+          <br/>
+            <i>Default</i>: Service<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Namespace is the namespace of the backend. When unspecified, the local
+namespace is inferred.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>port</b></td>
+        <td>integer</td>
+        <td>
+          Port specifies the destination port number to use for this resource.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 65535<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.filters[index]
+[Go to parent definition](#kafkaroutespec)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: ACL, ExtensionRef<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutespecfiltersindexacl">acl</a></b></td>
+        <td>object</td>
+        <td>
+          <br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutespecfiltersindexextensionref">extensionRef</a></b></td>
+        <td>object</td>
+        <td>
+          LocalObjectReference identifies an API object within the namespace of the
+referrer.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.filters[index].acl
+[Go to parent definition](#kafkaroutespecfiltersindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#kafkaroutespecfiltersindexaclrulesindex">rules</a></b></td>
+        <td>[]object</td>
+        <td>
+          Rules define a set of rules that can be use to group a set of resources together with
+access...<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.filters[index].acl.rules[index]
+[Go to parent definition](#kafkaroutespecfiltersindexacl)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#kafkaroutespecfiltersindexaclrulesindexresourcesindex">resources</a></b></td>
+        <td>[]object</td>
+        <td>
+          A resource group together a type of matched resource and a set of operations
+to be granted by the...<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>options</b></td>
+        <td>map[string]string</td>
+        <td>
+          Options allow to specify implementation specific behaviours
+for a set of rules.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.filters[index].acl.rules[index].resources[index]
+[Go to parent definition](#kafkaroutespecfiltersindexaclrulesindex)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>operations</b></td>
+        <td>[]enum</td>
+        <td>
+          Operations specifies the set of operations / verbs to allow for the resource
+under access control.<br/>
+          <br/>
+            <i>Enum</i>: Create, Read, Write, Delete, Alter, AlterConfigs, Describe, DescribeConfigs, ClusterAction<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          <br/>
+          <br/>
+            <i>Enum</i>: Topic, Cluster, Group, TransactionalIdentifier<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutespecfiltersindexaclrulesindexresourcesindexmatch">match</a></b></td>
+        <td>object</td>
+        <td>
+          Match describes how to select the resource that will be subject to the access control.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.filters[index].acl.rules[index].resources[index].match
+[Go to parent definition](#kafkaroutespecfiltersindexaclrulesindexresourcesindex)
+
+
+
+Match describes how to select the resource that will be subject to the access control.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>type</b></td>
+        <td>enum</td>
+        <td>
+          Valid PathMatchType values, along with their support levels, are:
+
+* "Exact" Resources whose name...<br/>
+          <br/>
+            <i>Enum</i>: Exact, Prefix, RegularExpression<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Value of the resource to match against.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.filters[index].extensionRef
+[Go to parent definition](#kafkaroutespecfiltersindex)
+
+
+
+LocalObjectReference identifies an API object within the namespace of the
+referrer.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>group</b></td>
+        <td>string</td>
+        <td>
+          Group is the group of the referent. For example, "gateway.networking.k8s.io".<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind is kind of the referent. For example "HTTPRoute" or "Service".<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the referent.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.spec.parentRefs[index]
+[Go to parent definition](#kafkaroutespec)
+
+
+
+ParentReference identifies an API object (usually a Gateway) that can be considered
+a parent of...
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the referent.
+
+Support: Core<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>group</b></td>
+        <td>string</td>
+        <td>
+          Group is the group of the referent.
+When unspecified, "gateway.networking.k8s.io" is inferred.<br/>
+          <br/>
+            <i>Default</i>: gateway.networking.k8s.io<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind is kind of the referent.<br/>
+          <br/>
+            <i>Default</i>: Gateway<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Namespace is the namespace of the referent.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>port</b></td>
+        <td>integer</td>
+        <td>
+          Port is the network port this Route targets.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 65535<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sectionName</b></td>
+        <td>string</td>
+        <td>
+          SectionName is the name of a section within the target resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.status
+[Go to parent definition](#kafkaroute)
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#kafkaroutestatusparentsindex">parents</a></b></td>
+        <td>[]object</td>
+        <td>
+          Parents is a list of parent resources (usually Gateways) that are
+associated with the route, and...<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.status.parents[index]
+[Go to parent definition](#kafkaroutestatus)
+
+
+
+RouteParentStatus describes the status of a route with respect to an
+associated Parent.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>controllerName</b></td>
+        <td>string</td>
+        <td>
+          ControllerName is a domain/path string that indicates the name of the
+controller that wrote this...<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutestatusparentsindexparentref">parentRef</a></b></td>
+        <td>object</td>
+        <td>
+          ParentRef corresponds with a ParentRef in the spec that this
+RouteParentStatus struct describes the...<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#kafkaroutestatusparentsindexconditionsindex">conditions</a></b></td>
+        <td>[]object</td>
+        <td>
+          Conditions describes the status of the route with respect to the Gateway.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.status.parents[index].parentRef
+[Go to parent definition](#kafkaroutestatusparentsindex)
+
+
+
+ParentRef corresponds with a ParentRef in the spec that this
+RouteParentStatus struct describes the...
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name is the name of the referent.
+
+Support: Core<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>group</b></td>
+        <td>string</td>
+        <td>
+          Group is the group of the referent.
+When unspecified, "gateway.networking.k8s.io" is inferred.<br/>
+          <br/>
+            <i>Default</i>: gateway.networking.k8s.io<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>kind</b></td>
+        <td>string</td>
+        <td>
+          Kind is kind of the referent.<br/>
+          <br/>
+            <i>Default</i>: Gateway<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>namespace</b></td>
+        <td>string</td>
+        <td>
+          Namespace is the namespace of the referent.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>port</b></td>
+        <td>integer</td>
+        <td>
+          Port is the network port this Route targets.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+            <i>Minimum</i>: 1<br/>
+            <i>Maximum</i>: 65535<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>sectionName</b></td>
+        <td>string</td>
+        <td>
+          SectionName is the name of a section within the target resource.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### KafkaRoute.status.parents[index].conditions[index]
+[Go to parent definition](#kafkaroutestatusparentsindex)
 
 
 
