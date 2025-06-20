@@ -14,7 +14,6 @@
 
 // +kubebuilder:object:generate=true
 // +groupName=gravitee.io/v1alpha1
-
-package management
+package kafka
 
 // placeholder files for package level markers

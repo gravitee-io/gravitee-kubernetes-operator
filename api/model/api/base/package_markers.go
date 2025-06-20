@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // +kubebuilder:object:generate=true
-
+// +groupName=gravitee.io/v1alpha1
 package base
 
 // placeholder files for package level markers
