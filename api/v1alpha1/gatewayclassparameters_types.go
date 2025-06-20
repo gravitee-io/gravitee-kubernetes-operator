@@ -38,9 +38,10 @@ type GatewayClassParametersList struct {
 	Items           []GatewayClassParameters `json:"items"`
 }
 
+// GatewayClassParametersSpec defines the desired state of GatewayClassParameters
 // +kubebuilder:object:generate=true
 type GatewayClassParametersSpec struct {
-	*gateway.GatewayClassParameters `json:",inline"`
+	gateway.GatewayClassParameters `json:",inline"`
 }
 
 type GatewayClassParametersStatus struct {

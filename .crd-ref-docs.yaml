@@ -1,0 +1,15 @@
+# https://github.com/elastic/crd-ref-docs.
+
+processor:
+  ignoreTypes:
+    - "()List$"
+  # RE2 regular expressions describing type fields that should be excluded from the generated documentation.
+  ignoreFields:
+    - "TypeMeta$"
+
+render:
+  kubernetesVersion: 1.32
+  knownTypes:
+   - name: SecretObjectReference
+     package: sigs.k8s.io/gateway-api/apis/v1
+     link: https://gateway-api.sigs.k8s.io/reference/spec/#secretobjectreference
