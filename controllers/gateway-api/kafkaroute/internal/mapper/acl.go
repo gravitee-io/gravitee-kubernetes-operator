@@ -50,23 +50,29 @@ var (
 	}
 )
 
-func buildACL(acl []kafka.KafkaAccessControl) *v4.FlowStep {
+func buildACL(acl kafka.KafkaACLFilter) *v4.FlowStep {
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &kafkaACLPolicyName,
 		Enabled: true,
 		Configuration: utils.NewGenericStringMap().
-			Put("authorizations", mapACL(acl)),
+			Put("authorizations", mapKafkaAccessControlRules(acl)),
 	})
 }
 
-func mapACL(acl []kafka.KafkaAccessControl) []any {
+func mapKafkaAccessControlRules(acl kafka.KafkaACLFilter) []any {
+	authz := make([]any, len(acl.Rules))
+	for i := range acl.Rules {
+		authz[i] = mapAccessControlRule(acl.Rules[i].Resources)
+	}
+	return authz
+}
+
+func mapAccessControlRule(acl []kafka.KafkaAccessControl) any {
 	resources := make([]any, len(acl))
 	for i := range acl {
 		resources[i] = mapAccessControl(acl[i])
 	}
-	return []any{
-		map[string]any{"resources": resources},
-	}
+	return utils.NewGenericStringMap().Put("resources", resources)
 }
 
 func mapAccessControl(accessControl kafka.KafkaAccessControl) map[string]any {

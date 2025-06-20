@@ -14,6 +14,8 @@
 
 package kafka
 
+import gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+
 // +kubebuilder:validation:Enum:=Topic;Cluster;Group;TransactionalIdentifier;
 type KafkaAcccessControlResourceType string
 
@@ -60,8 +62,15 @@ type KafkaAccessControl struct {
 	Match *KafkaAccessControlMatch `json:"match,omitempty"`
 }
 
+type KafkaAccessControlRules struct {
+	Resources []KafkaAccessControl `json:"resources"`
+	// +optional
+	// +kubebuilder:validation:MaxProperties=16
+	Options map[gwAPIv1.AnnotationKey]gwAPIv1.AnnotationValue `json:"options,omitempty"`
+}
+
 type KafkaACLFilter struct {
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=16
-	Authorizations []KafkaAccessControl `json:"accessControls"`
+	Rules []KafkaAccessControlRules `json:"rules"`
 }
