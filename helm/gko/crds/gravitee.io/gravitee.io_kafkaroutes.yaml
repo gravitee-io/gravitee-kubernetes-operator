@@ -105,6 +105,11 @@ spec:
                       acl:
                         properties:
                           rules:
+                            description: >-
+                              Rules define a set of rules that can be use to
+                              group a set of resources together with
+
+                              access...
                             items:
                               properties:
                                 options:
@@ -113,26 +118,51 @@ spec:
                                     maxLength: 4096
                                     minLength: 0
                                     type: string
+                                  description: >-
+                                    Options allow to specify implementation
+                                    specific behaviours
+
+                                    for a set of rules.
                                   maxProperties: 16
                                   type: object
                                 resources:
+                                  description: >-
+                                    A resource group together a type of matched
+                                    resource and a set of operations
+
+                                    to be granted by the...
                                   items:
                                     properties:
                                       match:
+                                        description: Match describes how to select the resource that will be subject to
+                                          the access control.
                                         properties:
                                           type:
+                                            description: >-
+                                              Valid PathMatchType values, along
+                                              with their support levels, are:
+
+
+                                              * "Exact" Resources whose name...
                                             enum:
                                               - Exact
                                               - Prefix
                                               - RegularExpression
                                             type: string
                                           value:
+                                            description: Value of the resource to match against.
                                             type: string
                                         required:
                                           - type
                                           - value
                                         type: object
                                       operations:
+                                        description: >-
+                                          Operations specifies the set of
+                                          operations / verbs to allow for the
+                                          resource
+
+                                          under access control.
                                         items:
                                           enum:
                                             - Create
@@ -157,6 +187,7 @@ spec:
                                       - operations
                                       - type
                                     type: object
+                                  minItems: 1
                                   type: array
                               required:
                                 - resources

@@ -30,3 +30,4 @@ groups:
       - name: Notification
       - name: Group
       - name: GatewayClassParameters
+      - name: KafkaRoute
