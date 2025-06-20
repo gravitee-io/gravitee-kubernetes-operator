@@ -339,6 +339,16 @@ func buildServiceSpec(
 	}
 
 	svc.Spec.Type = *params.Spec.Kubernetes.Service.Type
+	svc.Spec.ExternalTrafficPolicy = params.Spec.Kubernetes.Service.ExternalTrafficPolicy
+	svc.Spec.LoadBalancerClass = params.Spec.Kubernetes.Service.LoadBalancerClass
+
+	for k, v := range params.Spec.Kubernetes.Service.Annotations {
+		svc.Annotations[k] = v
+	}
+
+	for k, v := range params.Spec.Kubernetes.Deployment.Labels {
+		svc.Labels[k] = v
+	}
 }
 
 func getServiceAccount(gw *gateway.Gateway) *coreV1.ServiceAccount {

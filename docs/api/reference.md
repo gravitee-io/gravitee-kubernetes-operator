@@ -24619,6 +24619,8 @@ vsphereVolume represents a vSphere volume attached and mounted on kubelets host 
         <td>
           ServiceExternalTrafficPolicy describes how nodes distribute service traffic they
 receive on one of...<br/>
+          <br/>
+            <i>Default</i>: Cluster<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -24640,6 +24642,8 @@ receive on one of...<br/>
         <td>string</td>
         <td>
           Service Type string describes ingress methods for a service<br/>
+          <br/>
+            <i>Default</i>: LoadBalancer<br/>
         </td>
         <td>false</td>
       </tr></tbody>

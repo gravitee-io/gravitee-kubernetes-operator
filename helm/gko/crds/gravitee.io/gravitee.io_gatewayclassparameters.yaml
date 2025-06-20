@@ -6626,6 +6626,7 @@ spec:
                             type: string
                           type: object
                         externalTrafficPolicy:
+                          default: Cluster
                           description: >-
                             ServiceExternalTrafficPolicy describes how nodes
                             distribute service traffic they
@@ -6639,6 +6640,7 @@ spec:
                         loadBalancerClass:
                           type: string
                         type:
+                          default: LoadBalancer
                           description: Service Type string describes ingress methods for a service
                           type: string
                       type: object
