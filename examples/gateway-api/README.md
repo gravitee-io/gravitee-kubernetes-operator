@@ -316,7 +316,7 @@ kubectl create -f 'https://strimzi.io/install/latest?namespace=default'
 > This will install the Strimzi kubernetes operator.
 
 ```sh
-kubectl apply -f https://strimzi.io/examples/latest/kafka/kraft/kafka-single-node.yaml
+kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/refs/tags/0.46.0/examples/kafka/kafka-single-node.yaml
 kubectl wait kafka/my-cluster --for=condition=Ready --timeout=300s
 ```
 > This will install a single node kafka cluster that will act as a backend for the Kafka route.

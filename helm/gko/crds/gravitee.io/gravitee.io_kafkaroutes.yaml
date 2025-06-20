@@ -103,48 +103,70 @@ spec:
                   items:
                     properties:
                       acl:
-                        items:
-                          properties:
-                            match:
+                        properties:
+                          rules:
+                            items:
                               properties:
-                                type:
-                                  enum:
-                                    - Exact
-                                    - Prefix
-                                    - RegularExpression
-                                  type: string
-                                value:
-                                  type: string
+                                options:
+                                  additionalProperties:
+                                    description: AnnotationValue is the value of an annotation in Gateway API.
+                                    maxLength: 4096
+                                    minLength: 0
+                                    type: string
+                                  maxProperties: 16
+                                  type: object
+                                resources:
+                                  items:
+                                    properties:
+                                      match:
+                                        properties:
+                                          type:
+                                            enum:
+                                              - Exact
+                                              - Prefix
+                                              - RegularExpression
+                                            type: string
+                                          value:
+                                            type: string
+                                        required:
+                                          - type
+                                          - value
+                                        type: object
+                                      operations:
+                                        items:
+                                          enum:
+                                            - Create
+                                            - Read
+                                            - Write
+                                            - Delete
+                                            - Alter
+                                            - AlterConfigs
+                                            - Describe
+                                            - DescribeConfigs
+                                            - ClusterAction
+                                          type: string
+                                        type: array
+                                      type:
+                                        enum:
+                                          - Topic
+                                          - Cluster
+                                          - Group
+                                          - TransactionalIdentifier
+                                        type: string
+                                    required:
+                                      - operations
+                                      - type
+                                    type: object
+                                  type: array
                               required:
-                                - type
-                                - value
+                                - resources
                               type: object
-                            operations:
-                              items:
-                                enum:
-                                  - Create
-                                  - Read
-                                  - Write
-                                  - Delete
-                                  - Alter
-                                  - AlterConfigs
-                                  - Describe
-                                  - DescribeConfigs
-                                  - ClusterAction
-                                type: string
-                              type: array
-                            type:
-                              enum:
-                                - Topic
-                                - Cluster
-                                - Group
-                                - TransactionalIdentifier
-                              type: string
-                          required:
-                            - operations
-                            - type
-                          type: object
-                        type: array
+                            maxItems: 16
+                            minItems: 1
+                            type: array
+                        required:
+                          - rules
+                        type: object
                       extensionRef:
                         description: >-
                           LocalObjectReference identifies an API object within

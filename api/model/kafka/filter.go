@@ -28,7 +28,7 @@ type KafkaRouteFilter struct {
 	// +kubebuilder:validation:Enum=ACL;ExtensionRef
 	Type KafkaRouteFilterType `json:"type"`
 	// +optional
-	ACL []KafkaAccessControl `json:"acl"`
+	ACL KafkaACLFilter `json:"acl"`
 	// +optional
 	ExtensionRef *gwAPIv1.LocalObjectReference `json:"extensionRef,omitempty"`
 }
