@@ -30,9 +30,16 @@ type Deployment struct {
 }
 
 type Service struct {
-	Labels                map[string]string                   `json:"labels,omitempty"`
-	Annotations           map[string]string                   `json:"annotations,omitempty"`
-	Type                  *coreV1.ServiceType                 `json:"type,omitempty"`
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
+	// +kubebuilder:validation:Optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=LoadBalancer
+	Type *coreV1.ServiceType `json:"type,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=Cluster
 	ExternalTrafficPolicy coreV1.ServiceExternalTrafficPolicy `json:"externalTrafficPolicy,omitempty"`
-	LoadBalancerClass     *string                             `json:"loadBalancerClass,omitempty"`
+	// +kubebuilder:validation:Optional
+	LoadBalancerClass *string `json:"loadBalancerClass,omitempty"`
 }
