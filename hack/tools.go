@@ -18,7 +18,7 @@
 package hack
 
 import (
-	_ "fybrik.io/crdoc"
+	_ "github.com/elastic/crd-ref-docs"
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "github.com/google/addlicense"
 	_ "github.com/onsi/ginkgo/v2/ginkgo"
