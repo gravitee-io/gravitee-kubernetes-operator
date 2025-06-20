@@ -44,6 +44,8 @@ spec:
             metadata:
               type: object
             spec:
+              description: GatewayClassParametersSpec defines the desired state of
+                GatewayClassParameters
               properties:
                 gravitee:
                   description: |-
