@@ -10,6 +10,11 @@ manifests: ## Generate CustomResourceDefinition objects.
 	@npx zx hack/scripts/annotate-crds.mjs
 	$(MAKE) add-license
 
+.PHONY: manifests-for-docs
+manifests-for-docs: ## Generate CustomResourceDefinition objects.
+	@mkdir -p docs/api/crd
+	$(CONTROLLER_GEN) crd paths="./api/..." output:crd:artifacts:config=docs/api/crd
+
 .PHONY: generate
 generate: ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/license.go.txt" paths="./..."

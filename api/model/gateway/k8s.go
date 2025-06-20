@@ -21,10 +21,19 @@ import (
 )
 
 type Deployment struct {
-	Labels      map[string]string         `json:"labels,omitempty"`
-	Annotations map[string]string         `json:"annotations,omitempty"`
-	Replicas    *int32                    `json:"replicas,omitempty"`
-	Strategy    *appV1.DeploymentStrategy `json:"strategy,omitempty"`
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
+	// +kubebuilder:validation:Optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=1
+	Replicas *int32 `json:"replicas,omitempty"`
+	// +kubebuilder:validation:Optional
+	Strategy *appV1.DeploymentStrategy `json:"strategy,omitempty"`
+	// The template.spec field uses the standard Kubernetes Pod template specification,
+	// and its contents will be merged using a
+	// [strategic merge patch](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/)
+	// with Gravitee's default deployment configuration.
 	// +kubebuilder:validation:Optional
 	Template *coreV1.PodTemplateSpec `json:"template,omitempty"`
 }

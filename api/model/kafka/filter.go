@@ -26,7 +26,9 @@ const (
 type KafkaRouteFilter struct {
 	// +unionDiscriminator
 	// +kubebuilder:validation:Enum=ACL;ExtensionRef
+	// Type identifies the type of filter to apply.
 	Type KafkaRouteFilterType `json:"type"`
+	// ACL defines a schema for a filter that enforce access controls on Kafka trafic.
 	// +optional
 	ACL KafkaACLFilter `json:"acl"`
 	// +optional
