@@ -46,8 +46,14 @@ spec:
             spec:
               properties:
                 backendRefs:
+                  description: BackendRefs defines the backend(s) where matching requests should
+                    be sent.
                   items:
-                    description: Leave room for backend security configuration.
+                    description: >-
+                      This currently wraps the code gateway API
+                      BackendObjectReference type,
+
+                      leaving room for e.g.
                     properties:
                       group:
                         default: ""
@@ -100,9 +106,13 @@ spec:
                   minItems: 1
                   type: array
                 filters:
+                  description: Filters define the filters that are applied to Kafka trafic
+                    matching this route.
                   items:
                     properties:
                       acl:
+                        description: ACL defines a schema for a filter that enforce access controls on
+                          Kafka trafic.
                         properties:
                           rules:
                             description: >-
@@ -228,6 +238,7 @@ spec:
                           - name
                         type: object
                       type:
+                        description: Type identifies the type of filter to apply.
                         enum:
                           - ACL
                           - ExtensionRef
@@ -238,8 +249,7 @@ spec:
                   maxItems: 16
                   type: array
                 hostname:
-                  description: We do not accept the route in our case if hostname is not set (for
-                    now)
+                  description: Hostname is used to uniquely route clients to this API.
                   maxLength: 253
                   minLength: 1
                   pattern: ^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
@@ -250,6 +260,11 @@ spec:
                     maxLength: 4096
                     minLength: 0
                     type: string
+                  description: >-
+                    Options are a list of key/value pairs to enable extended
+                    configuration specific
+
+                    to an
                   maxProperties: 16
                   type: object
                 parentRefs:

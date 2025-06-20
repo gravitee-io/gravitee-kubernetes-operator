@@ -46,10 +46,14 @@ spec:
             spec:
               properties:
                 gravitee:
+                  description: |-
+                    The gravitee section controls Gravitee specific features
+                    and allows you to configure and customize...
                   properties:
                     kafka:
                       default:
                         enabled: false
+                      description: Use this field to enable Kafka support in the Gateway.
                       properties:
                         enabled:
                           default: true
@@ -59,6 +63,7 @@ spec:
                           properties:
                             bootstrapDomainPattern:
                               default: "{apiHost}"
+                              description: You can find details about these configurations options in our...
                               type: string
                             brokerDomainPattern:
                               default: broker-{brokerId}-{apiHost}
@@ -66,11 +71,8 @@ spec:
                           type: object
                       type: object
                     licenseRef:
-                      description: >-
-                        SecretObjectReference identifies an API object including
-                        its namespace,
-
-                        defaulting to Secret.
+                      description: A reference to a Kubernetes Secret that contains your Gravitee
+                        license key.
                       properties:
                         group:
                           default: ""
@@ -101,12 +103,21 @@ spec:
                         - name
                       type: object
                     yaml:
+                      description: |-
+                        Use this field to provide custom gateway configuration,
+                        giving you control over additional...
                       type: object
                       x-kubernetes-preserve-unknown-fields: true
                   type: object
                 kubernetes:
+                  description: |-
+                    The kubernetes section of the GatewayClassParameters
+                    spec lets you customize core Kubernetes...
                   properties:
                     deployment:
+                      description: |-
+                        Use this field to modify pod labels and annotations,
+                        adjust the number of replicas to control...
                       properties:
                         annotations:
                           additionalProperties:
@@ -117,6 +128,7 @@ spec:
                             type: string
                           type: object
                         replicas:
+                          default: 1
                           format: int32
                           type: integer
                         strategy:
@@ -154,8 +166,7 @@ spec:
                               type: string
                           type: object
                         template:
-                          description: PodTemplateSpec describes the data a pod should have when created
-                            from a template
+                          description: The template.
                           properties:
                             metadata:
                               description: |-
@@ -6620,6 +6631,11 @@ spec:
                           type: object
                       type: object
                     service:
+                      description: >-
+                        Use this field to customize the Kubernetes Service that
+                        exposes the Gateway
+
+                        by adding labels and...
                       properties:
                         annotations:
                           additionalProperties:
