@@ -736,6 +736,8 @@ func mergePodTemplates(base, patch *coreV1.PodTemplateSpec) (*coreV1.PodTemplate
 		return base, nil
 	}
 
+	acceptUserConflictingChanges(base, patch)
+
 	baseBytes, err := json.Marshal(base)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal JSON for base %s: %w", base.Name, err)
@@ -757,6 +759,55 @@ func mergePodTemplates(base, patch *coreV1.PodTemplateSpec) (*coreV1.PodTemplate
 	}
 
 	return patchResult, nil
+}
+
+func acceptUserConflictingChanges(tmpl *coreV1.PodTemplateSpec, userTmpl *coreV1.PodTemplateSpec) {
+	if userTmpl == nil {
+		return
+	}
+
+	for i := range userTmpl.Spec.Containers {
+		uC := &userTmpl.Spec.Containers[i]
+		for j := range tmpl.Spec.Containers {
+			c := &tmpl.Spec.Containers[j]
+			if c.Name == uC.Name {
+				givePrecedenceToUserProbes(c, uC)
+			}
+		}
+	}
+}
+
+func givePrecedenceToUserProbes(container *coreV1.Container, userContainer *coreV1.Container) {
+	givePrecedenceToUserProbe(container.StartupProbe, userContainer.StartupProbe)
+	givePrecedenceToUserProbe(container.ReadinessProbe, userContainer.ReadinessProbe)
+	givePrecedenceToUserProbe(container.LivenessProbe, userContainer.LivenessProbe)
+}
+
+func givePrecedenceToUserProbe(probe *coreV1.Probe, userProbe *coreV1.Probe) {
+	switch {
+	case userProbe == nil || probe == nil:
+		return
+	case userProbe.Exec != nil:
+		probe.Exec = userProbe.Exec
+		probe.GRPC = nil
+		probe.HTTPGet = nil
+		probe.TCPSocket = nil
+	case userProbe.GRPC != nil:
+		probe.GRPC = userProbe.GRPC
+		probe.Exec = nil
+		probe.HTTPGet = nil
+		probe.TCPSocket = nil
+	case userProbe.HTTPGet != nil:
+		probe.HTTPGet = userProbe.HTTPGet
+		probe.Exec = nil
+		probe.GRPC = nil
+		probe.TCPSocket = nil
+	case userProbe.TCPSocket != nil:
+		probe.TCPSocket = userProbe.TCPSocket
+		probe.Exec = nil
+		probe.GRPC = nil
+		probe.HTTPGet = nil
+	}
 }
 
 func getGatewayConfigMapName(gwName string) string {
