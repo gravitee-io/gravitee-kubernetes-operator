@@ -215,7 +215,7 @@ jobs:
       - kubernetes/install_kubectl
       - helm/install_helm_client
       - run:
-          name: Install kind
+          name: Install Kind
           command: |
             curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
             chmod +x /tmp/kind
@@ -225,11 +225,11 @@ jobs:
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
-          name: Start Cluster
+          name: Start Kind cluster
           command: |
             make start-conformance-cluster
       - run:
-          name: Load master-latest Gateway Image
+          name: Load gateway image
           command: |
             docker pull graviteeio.azurecr.io/apim-gateway:master-latest 
             docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
@@ -248,7 +248,7 @@ jobs:
                 --set manager.image.tag=latest \
                 -f ./test/conformance/operator.values.yaml
       - run:
-          name: Apply GatewayClassParameters and GatewayClass custom resources
+          name: Apply `GatewayClassParameters` and `GatewayClass` custom resources
           command: |
             kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
             kubectl apply -f ./test/conformance/gateway-class.yaml

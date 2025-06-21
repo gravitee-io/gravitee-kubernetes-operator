@@ -23,10 +23,10 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-const defaultRequeueAfter = 5 * time.Second
+const defaultRequeueAfter = 1 * time.Second
 
 func RequeueError(err error) (ctrl.Result, error) {
-	return ctrl.Result{RequeueAfter: defaultRequeueAfter}, err
+	return ctrl.Result{RequeueAfter: defaultRequeueAfter}, nil
 }
 
 func CreateOrUpdate(ctx context.Context, obj client.Object, fns ...util.MutateFn) error {
