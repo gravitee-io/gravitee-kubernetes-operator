@@ -78,17 +78,6 @@ commands:
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
-  cmd-setup-azure-login:
-    steps:
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/login
-          var-name: AZURE_SP
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/custom_field/tenant
-          var-name: AZURE_TENANT
-      - keeper/env-export:
-          secret-url: keeper://UryantA7MvZe8fkWwcUt8g/field/password
-          var-name: AZURE_SP_PASSWORD
   cmd-setup-azure-login-e2e:
     steps:
       - keeper/env-export:
@@ -273,6 +262,11 @@ jobs:
           name: Shutdown Operator
           command: |
             kubectl scale deploy gko-controller-manager --replicas 0
+            while [ -n "$(kubectl get deployment gko-controller-manager -o jsonpath='{.status.readyReplicas}')" ]; do
+              echo "Waiting for deployment to scale down"
+              sleep 1
+            done
+            echo "Deployment scaled"
       - run: 
           name: Generate Coverage
           command: |
