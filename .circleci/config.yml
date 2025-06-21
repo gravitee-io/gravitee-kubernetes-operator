@@ -20,30 +20,30 @@ parameters:
     default: none
     enum:
       - test
-      - release
       - e2e
       - rollout-apim
+      - release
       - none
   apim-source-branch:
     type: string
     default: ""
     description: |
       The branch that triggered a rollout of APIM on our side. 
-      This commit comes from APIM repository.
+      This branch belongs to the APIM repository.
   apim-commit-hash:
     type: string
     default: ""
     description: |
       The commit hash that triggered a roullout of APIM on our side. 
-      This branch belongs to APIM repository.
+      This commit belongs to the APIM repository.
   release-version:
     type: string
     default: ""
-    description: "The version being released when using the release trigger"
+    description: "The version being released when the release trigger is used"
   latest:
     type: boolean
     default: false
-    description: Is this version the latest version available (when using the release trigger) ?
+    description: Is this version the latest version available when the release trigger is used ?
   dry-run:
     type: boolean
     default: true
@@ -237,11 +237,11 @@ jobs:
             docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
             kind load docker-image gateway:latest --name gravitee
       - run:
-          name: Run cloud-provider-kind
+          name: Run cloud-provider-kind loadbalancer
           command: |
             NET_MODE=host docker compose -f hack/kind/cloud-provider/compose.yaml up -d
       - run:
-          name: Helm Install the Operator
+          name: Build and install the operator
           command: |
             IMG=gko TAG=latest make docker-build-cover \
               && kind load docker-image gko:latest --name gravitee \
@@ -250,25 +250,25 @@ jobs:
                 --set manager.image.tag=latest \
                 -f ./test/conformance/operator.values.yaml
       - run:
-          name: Apply GatewayClassParameters and GatewayClass
+          name: Apply GatewayClassParameters and GatewayClass custom resources
           command: |
             kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
             kubectl apply -f ./test/conformance/gateway-class.yaml
       - run:
-          name: Run Gateway API Conformance Test
+          name: Run Gateway API conformance test suites
           command: |
             bin/gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
       - run:
-          name: Shutdown Operator
+          name: Shutdown operator
           command: |
             kubectl scale deploy gko-controller-manager --replicas 0
             while [ -n "$(kubectl get deployment gko-controller-manager -o jsonpath='{.status.readyReplicas}')" ]; do
-              echo "Waiting for deployment to scale down"
+              echo "Waiting for deployment to scale down to 0"
               sleep 1
             done
-            echo "Deployment scaled"
+            echo "Deployment scaled down to 0"
       - run: 
-          name: Generate Coverage
+          name: Generate coverage
           command: |
             mkdir -p /tmp/junit/reports
             go tool covdata textfmt  -i=/tmp/coverage -o /tmp/junit/reports/cover-conformance.out
