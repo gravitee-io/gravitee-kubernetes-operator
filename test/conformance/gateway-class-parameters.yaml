@@ -16,6 +16,7 @@ apiVersion: gravitee.io/v1alpha1
 kind: GatewayClassParameters
 metadata:
   name: gravitee-gateway
+  namespace: default
 spec:
   kubernetes:
     deployment:
@@ -27,3 +28,27 @@ spec:
           containers:
           - name: gateway
             image: gateway:latest
+            startupProbe:
+              failureThreshold: 100
+              initialDelaySeconds: 5
+              periodSeconds: 2
+              successThreshold: 1
+              timeoutSeconds: 1
+              tcpSocket:
+                port: 18082
+            readinessProbe:
+              failureThreshold: 100
+              initialDelaySeconds: 5
+              periodSeconds: 2
+              successThreshold: 1
+              timeoutSeconds: 1
+              tcpSocket:
+                port: 18082
+            livenessProbe:
+              failureThreshold: 100
+              initialDelaySeconds: 5
+              periodSeconds: 2
+              successThreshold: 1
+              timeoutSeconds: 1
+              tcpSocket:
+                port: 18082

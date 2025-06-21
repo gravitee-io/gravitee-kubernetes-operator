@@ -41,6 +41,7 @@ func TestGatewayAPIConformance(t *testing.T) {
 	flag.Parse()
 
 	opts := conformance.DefaultOptions(t)
+
 	opts.SupportedFeatures = sets.New(
 		features.GatewayFeature.Name,
 		features.HTTPRouteFeature.Name,
@@ -62,12 +63,13 @@ func TestGatewayAPIConformance(t *testing.T) {
 	// because of the conflict.
 	opts.SkipTests = append(opts.SkipTests, "HTTPRouteMatchingAcrossRoutes")
 
-	// We skip this test because it looks like there is an issue on the gateway
-	// side with WeightedRoundRobin under heavy trafic
-	// For that reason threads get blocked and we need to investigate.
-	opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
+	// We skip this test because for some reason
+	// threads get blocked on the gatway side when
+	// running it. Needs to investigate
+	// opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
 
-	// That one might be handled first because it looks like it sits in our code base.
+	// That one might be handled first because it looks like its half
+	// baked implementation from our side.
 	opts.SkipTests = append(opts.SkipTests, "HTTPRouteServiceTypes")
 
 	opts.CleanupBaseResources = false
@@ -76,8 +78,12 @@ func TestGatewayAPIConformance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error creating conformance test suite: %v", err)
 	}
+
 	cSuite.Setup(t, tests.ConformanceTests)
 	if err := cSuite.Run(t, tests.ConformanceTests); err != nil {
 		t.Fatalf("Error running conformance tests: %v", err)
 	}
+	// if _, err := cSuite.Report(); err != nil {
+	// 	t.Logf("Cannot generate report at path %s", opts.ReportOutputPath)
+	// }
 }
