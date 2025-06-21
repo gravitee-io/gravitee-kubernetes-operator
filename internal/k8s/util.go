@@ -337,7 +337,7 @@ func FindListenerIndexBySectionName(gw *gwAPIv1.Gateway, sectionName gwAPIv1.Sec
 }
 
 func HasHTTPListenerAtIndex(gw *gwAPIv1.Gateway, index int) bool {
-	if index < 0 {
+	if index < 0 || index >= len(gw.Status.Listeners) {
 		return false
 	}
 	lst := gw.Status.Listeners[index]

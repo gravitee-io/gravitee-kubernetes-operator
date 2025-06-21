@@ -16,6 +16,7 @@ kind: GatewayClass
 apiVersion: gateway.networking.k8s.io/v1
 metadata:
   name: gravitee-gateway
+  namespace: default
 spec:
   controllerName: apim.gravitee.io/gateway
   parametersRef:

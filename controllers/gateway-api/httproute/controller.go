@@ -61,6 +61,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 
 		return events.Record(event.Update, route, func() error {
+			internal.Init(dc)
+
 			if err := internal.Resolve(ctx, dc); err != nil {
 				return err
 			}
@@ -69,6 +71,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 				return err
 			}
 
+			// TODO: detect with merge conflict resolution
 			if err := internal.DetectConflicts(ctx, dc); err != nil {
 				return err
 			}
@@ -89,13 +92,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return k8s.RequeueError()
 	}
 
 	dc.Status.DeepCopyInto(&route.Status)
 	if err := k8s.UpdateStatus(ctx, route); err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return k8s.RequeueError()
 	}
 
 	log.InfoEndReconcile(ctx, route)

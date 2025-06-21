@@ -12,33 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8s
+package internal
 
 import (
-	"context"
-	"time"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-const defaultRequeueAfter = 1 * time.Second
-
-func RequeueError(err error) (ctrl.Result, error) {
-	return ctrl.Result{RequeueAfter: defaultRequeueAfter}, nil
-}
-
-func CreateOrUpdate(ctx context.Context, obj client.Object, fns ...util.MutateFn) error {
-	if _, err := util.CreateOrUpdate(ctx, GetClient(), obj, func() error {
-		for _, f := range fns {
-			if e := f(); e != nil {
-				return e
-			}
+func Init(route *gwAPIv1.HTTPRoute) {
+	parents := make([]gwAPIv1.RouteParentStatus, len(route.Spec.ParentRefs))
+	for i := range route.Spec.ParentRefs {
+		parents[i] = gwAPIv1.RouteParentStatus{
+			ParentRef:      route.Spec.ParentRefs[i],
+			ControllerName: core.GraviteeGatewayClassController,
 		}
-		return nil
-	}); err != nil {
-		return err
 	}
-	return nil
 }
