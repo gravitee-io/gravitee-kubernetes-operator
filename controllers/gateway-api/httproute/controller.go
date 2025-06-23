@@ -92,13 +92,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return k8s.RequeueError(ctx, err, route)
 	}
 
 	dc.Status.DeepCopyInto(&route.Status)
 	if err := k8s.UpdateStatus(ctx, route); err != nil {
-		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return k8s.RequeueError(ctx, err, route)
 	}
 
 	log.InfoEndReconcile(ctx, route)
