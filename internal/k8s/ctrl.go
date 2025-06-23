@@ -18,6 +18,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -25,8 +26,9 @@ import (
 
 const defaultRequeueAfter = 5 * time.Second
 
-func RequeueError(err error) (ctrl.Result, error) {
-	return ctrl.Result{RequeueAfter: defaultRequeueAfter}, err
+func RequeueError(ctx context.Context, err error, obj client.Object) (ctrl.Result, error) {
+	log.ErrorRequeuingReconcile(ctx, err, obj)
+	return ctrl.Result{RequeueAfter: defaultRequeueAfter}, nil
 }
 
 func CreateOrUpdate(ctx context.Context, obj client.Object, fns ...util.MutateFn) error {
