@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httproute
+package kafkaroute
 
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/kafkaroute/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -30,8 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 type Reconciler struct {
@@ -39,9 +37,8 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
-//nolint:gocognit // acceptable complexity
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	route := &gwAPIv1.HTTPRoute{}
+	route := &v1alpha1.KafkaRoute{}
 	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
@@ -50,39 +47,26 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := route.DeepCopy()
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), route, func() error {
-		util.AddFinalizer(route, core.HTTPRouteFinalizer)
+	err := k8s.CreateOrUpdate(ctx, route, func() error {
+		util.AddFinalizer(route, core.KafkaRouteFinalizer)
 
 		if !route.DeletionTimestamp.IsZero() {
 			return events.Record(event.Delete, route, func() error {
-				util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
+				util.RemoveFinalizer(route, core.KafkaRouteFinalizer)
 				return nil
 			})
 		}
 
 		return events.Record(event.Update, route, func() error {
-			internal.Init(dc)
-
 			if err := internal.Resolve(ctx, dc); err != nil {
 				return err
 			}
-
 			if err := internal.Accept(ctx, dc); err != nil {
 				return err
 			}
-
-			// TODO: detect with merge conflict resolution
-			if err := internal.DetectConflicts(ctx, dc); err != nil {
-				return err
+			if !internal.IsAccepted(ctx, dc) {
+				return nil
 			}
-
-			for i := range dc.Status.Parents {
-				parent := &dc.Status.Parents[i]
-				if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
-					return nil
-				}
-			}
-
 			if err := internal.Program(ctx, dc); err != nil {
 				return err
 			}
@@ -106,6 +90,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gwAPIv1.HTTPRoute{}).
+		For(&v1alpha1.KafkaRoute{}).
 		Complete(r)
 }

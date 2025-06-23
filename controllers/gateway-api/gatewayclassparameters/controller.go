@@ -12,26 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httproute
+package gatewayclassparameters
 
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclassparameters/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 type Reconciler struct {
@@ -39,73 +38,55 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
-//nolint:gocognit // acceptable complexity
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	route := &gwAPIv1.HTTPRoute{}
-	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
+	params := &v1alpha1.GatewayClassParameters{}
+
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, params); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	events := event.NewRecorder(r.Recorder)
 
-	dc := route.DeepCopy()
+	dc := params.DeepCopy()
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), route, func() error {
-		util.AddFinalizer(route, core.HTTPRouteFinalizer)
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), params, func() error {
+		util.AddFinalizer(params, core.GraviteeClassParametersFinalizer)
+		k8s.AddAnnotation(params, core.LastSpecHashAnnotation, hash.Calculate(&params.Spec))
 
-		if !route.DeletionTimestamp.IsZero() {
-			return events.Record(event.Delete, route, func() error {
-				util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
+		if !params.DeletionTimestamp.IsZero() {
+			return events.Record(event.Delete, params, func() error {
+				util.RemoveFinalizer(params, core.GraviteeClassParametersFinalizer)
 				return nil
 			})
 		}
 
-		return events.Record(event.Update, route, func() error {
+		return events.Record(event.Update, params, func() error {
 			internal.Init(dc)
-
 			if err := internal.Resolve(ctx, dc); err != nil {
 				return err
 			}
-
-			if err := internal.Accept(ctx, dc); err != nil {
-				return err
-			}
-
-			// TODO: detect with merge conflict resolution
-			if err := internal.DetectConflicts(ctx, dc); err != nil {
-				return err
-			}
-
-			for i := range dc.Status.Parents {
-				parent := &dc.Status.Parents[i]
-				if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
-					return nil
-				}
-			}
-
-			if err := internal.Program(ctx, dc); err != nil {
-				return err
-			}
+			internal.Accept(dc)
 			return nil
 		})
 	})
 
 	if err != nil {
-		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(ctx, err, route)
+		log.ErrorAbortingReconcile(ctx, err, params)
+		return ctrl.Result{}, err
 	}
 
-	dc.Status.DeepCopyInto(&route.Status)
-	if err := k8s.UpdateStatus(ctx, route); err != nil {
-		return k8s.RequeueError(ctx, err, route)
+	dc.Status.DeepCopyInto(&params.Status)
+	if err := k8s.UpdateStatus(ctx, params); client.IgnoreNotFound(err) != nil {
+		return k8s.RequeueError(ctx, err, params)
 	}
 
-	log.InfoEndReconcile(ctx, route)
-	return ctrl.Result{}, err
+	log.InfoEndReconcile(ctx, params)
+	return ctrl.Result{}, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gwAPIv1.HTTPRoute{}).
+		For(&v1alpha1.GatewayClassParameters{}).
+		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Complete(r)
 }

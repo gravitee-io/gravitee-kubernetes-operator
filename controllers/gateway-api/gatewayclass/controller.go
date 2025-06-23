@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httproute
+package gatewayclass
 
 import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -39,73 +40,54 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
-//nolint:gocognit // acceptable complexity
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	route := &gwAPIv1.HTTPRoute{}
-	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
+	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
+
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gwc.Object); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	controllerName := gwc.Object.Spec.ControllerName
+	if controllerName != core.GraviteeGatewayClassController {
+		log.Debug(ctx, "unknown controller name", log.KeyValues(gwc.Object, "controllerName", controllerName)...)
+		return ctrl.Result{}, nil
 	}
 
 	events := event.NewRecorder(r.Recorder)
 
-	dc := route.DeepCopy()
+	dc := gwc.DeepCopy()
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), route, func() error {
-		util.AddFinalizer(route, core.HTTPRouteFinalizer)
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), gwc.Object, func() error {
+		util.AddFinalizer(gwc.Object, core.GatewayClassFinalizer)
 
-		if !route.DeletionTimestamp.IsZero() {
-			return events.Record(event.Delete, route, func() error {
-				util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
+		if !gwc.Object.DeletionTimestamp.IsZero() {
+			return events.Record(event.Delete, gwc.Object, func() error {
+				util.RemoveFinalizer(gwc.Object, core.GatewayClassFinalizer)
 				return nil
 			})
 		}
 
-		return events.Record(event.Update, route, func() error {
-			internal.Init(dc)
-
-			if err := internal.Resolve(ctx, dc); err != nil {
-				return err
-			}
-
-			if err := internal.Accept(ctx, dc); err != nil {
-				return err
-			}
-
-			// TODO: detect with merge conflict resolution
-			if err := internal.DetectConflicts(ctx, dc); err != nil {
-				return err
-			}
-
-			for i := range dc.Status.Parents {
-				parent := &dc.Status.Parents[i]
-				if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
-					return nil
-				}
-			}
-
-			if err := internal.Program(ctx, dc); err != nil {
-				return err
-			}
-			return nil
+		return events.Record(event.Update, gwc.Object, func() error {
+			return internal.Accept(ctx, dc)
 		})
 	})
 
 	if err != nil {
-		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(ctx, err, route)
+		return k8s.RequeueError(ctx, err, gwc.Object)
 	}
 
-	dc.Status.DeepCopyInto(&route.Status)
-	if err := k8s.UpdateStatus(ctx, route); err != nil {
-		return k8s.RequeueError(ctx, err, route)
+	dc.Object.Status.DeepCopyInto(&gwc.Object.Status)
+	if err := k8s.GetClient().Status().Update(ctx, gwc.Object); err != nil {
+		return k8s.RequeueError(ctx, err, gwc.Object)
 	}
 
-	log.InfoEndReconcile(ctx, route)
+	log.InfoEndReconcile(ctx, gwc.Object)
 	return ctrl.Result{}, err
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gwAPIv1.HTTPRoute{}).
+		For(&gwAPIv1.GatewayClass{}).
+		Watches(&v1alpha1.GatewayClassParameters{}, internal.WatchGatewayClassParameters()).
 		Complete(r)
 }
