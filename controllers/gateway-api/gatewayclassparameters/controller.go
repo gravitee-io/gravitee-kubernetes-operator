@@ -77,7 +77,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc.Status.DeepCopyInto(&params.Status)
 	if err := k8s.UpdateStatus(ctx, params); client.IgnoreNotFound(err) != nil {
-		return k8s.RequeueError(ctx, err, params)
+		log.ErrorRequeuingReconcile(ctx, err, params)
+		return k8s.RequeueError(err)
 	}
 
 	log.InfoEndReconcile(ctx, params)
