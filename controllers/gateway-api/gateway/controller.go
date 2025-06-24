@@ -62,7 +62,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
 
 	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
-		return k8s.RequeueError(ctx, err, gw.Object)
+		return k8s.RequeueError(err)
 	} else if kErrors.IsNotFound(err) {
 		log.Debug(ctx, "ignoring gateway as gateway class name was not found")
 		return ctrl.Result{}, nil
@@ -95,7 +95,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	params := new(v1alpha1.GatewayClassParameters)
 
 	if err := k8s.GetClient().Get(ctx, key, params); client.IgnoreNotFound(err) != nil {
-		return k8s.RequeueError(ctx, err, gw.Object)
+		return k8s.RequeueError(err)
 	} else if kErrors.IsNotFound(err) {
 		log.Debug(ctx, "ignoring gateway as gateway class parameters were not found")
 		return ctrl.Result{}, nil
@@ -145,12 +145,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	})
 
 	if err != nil {
-		return k8s.RequeueError(ctx, err, gw.Object)
+		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
+		return k8s.RequeueError(err)
 	}
 
 	dc.Object.Status.DeepCopyInto(&gw.Object.Status)
 	if err := k8s.UpdateStatus(ctx, gw.Object); client.IgnoreNotFound(err) != nil {
-		return k8s.RequeueError(ctx, err, gw.Object)
+		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
+		return k8s.RequeueError(err)
 	}
 
 	log.InfoEndReconcile(ctx, gw.Object)

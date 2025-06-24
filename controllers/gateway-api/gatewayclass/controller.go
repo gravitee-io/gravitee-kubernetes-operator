@@ -73,12 +73,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	})
 
 	if err != nil {
-		return k8s.RequeueError(ctx, err, gwc.Object)
+		log.ErrorRequeuingReconcile(ctx, err, gwc.Object)
+		return k8s.RequeueError(err)
 	}
 
 	dc.Object.Status.DeepCopyInto(&gwc.Object.Status)
 	if err := k8s.GetClient().Status().Update(ctx, gwc.Object); err != nil {
-		return k8s.RequeueError(ctx, err, gwc.Object)
+		log.ErrorRequeuingReconcile(ctx, err, gwc.Object)
+		return k8s.RequeueError(err)
 	}
 
 	log.InfoEndReconcile(ctx, gwc.Object)
