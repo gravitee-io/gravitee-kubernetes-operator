@@ -240,10 +240,10 @@ jobs:
           command: |
             make start-conformance-cluster
       - run:
-          name: Load master-latest Gateway Image
+          name: Load Gateway Image
           command: |
-            docker pull graviteeio.azurecr.io/apim-gateway:master-latest 
-            docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
+            docker pull graviteeio.azurecr.io/apim-gateway:4.8.x-latest 
+            docker tag graviteeio.azurecr.io/apim-gateway:4.8.x-latest gateway:latest
             kind load docker-image gateway:latest --name gravitee
       - run:
           name: Run cloud-provider-kind
