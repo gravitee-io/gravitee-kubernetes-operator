@@ -112,7 +112,7 @@ func (api *ApiV4Definition) PopulateIDs(context core.ContextModel) {
 	api.Spec.ID = api.pickID(context)
 	api.Spec.CrossID = api.pickCrossID()
 	api.Spec.Pages = api.pickPageIDs()
-	api.Spec.Plans = api.pickPlanIDs()
+	api.Spec.Plans = api.pickPlanIDs(context)
 }
 
 func (api *ApiV4Definition) GetNotificationRefs() []core.ObjectRef {
@@ -166,7 +166,7 @@ func (api *ApiV4Definition) pickCrossID() string {
 	return uuid.FromStrings(namespacedName.String())
 }
 
-func (api *ApiV4Definition) pickPlanIDs() *map[string]*v4.Plan {
+func (api *ApiV4Definition) pickPlanIDs(mCtx core.ContextModel) *map[string]*v4.Plan {
 	if !api.HasPlans() {
 		return nil
 	}
@@ -177,8 +177,7 @@ func (api *ApiV4Definition) pickPlanIDs() *map[string]*v4.Plan {
 		if id, ok := api.Status.Plans[key]; ok {
 			p.ID = id
 		} else if plan.ID == "" {
-			namespacedName := api.GetNamespacedName()
-			p.ID = uuid.FromStrings(namespacedName.String(), key)
+			p.ID = uuid.FromStrings(api.pickID(mCtx), key)
 		}
 		plans[key] = p
 	}
