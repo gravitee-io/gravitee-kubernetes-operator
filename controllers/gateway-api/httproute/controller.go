@@ -50,7 +50,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := route.DeepCopy()
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), route, func() error {
+	err := k8s.CreateOrUpdate(ctx, route, func() error {
 		util.AddFinalizer(route, core.HTTPRouteFinalizer)
 
 		if !route.DeletionTimestamp.IsZero() {
@@ -92,13 +92,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, nil
 	}
 
 	dc.Status.DeepCopyInto(&route.Status)
-	if err := k8s.UpdateStatus(ctx, route); err != nil {
+	if err := k8s.UpdateStatus(ctx, route); client.IgnoreNotFound(err) != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, nil
 	}
 
 	log.InfoEndReconcile(ctx, route)

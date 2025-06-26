@@ -64,6 +64,10 @@ spec:
         {{- end }}
         {{- end }}
     spec:
+{{- with .Values.manager.pod.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
 {{- if .Values.manager.image.pullSecret }}
       imagePullSecrets:
 {{- if .Values.manager.image.pullSecret }}
@@ -101,8 +105,10 @@ spec:
           resources:
             {{- . | toYaml | nindent 12 }}
           {{- end }}
+          {{- with .Values.manager.container.securityContext }}
           securityContext:
-            allowPrivilegeEscalation: false
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
 {{- if .Values.manager.webhook.enabled }}
           volumeMounts:
             - mountPath: /tmp/webhook-server/certs/
@@ -131,8 +137,6 @@ spec:
             name: webhook
             protocol: TCP
           {{- end }}
-      securityContext:
-        runAsNonRoot: true
       hostNetwork: {{ .Values.manager.hostNetwork }}
       serviceAccountName: {{ template "rbac.serviceAccountName" . }}
 {{- if .Values.manager.webhook.enabled }}
