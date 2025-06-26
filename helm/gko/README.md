@@ -102,8 +102,8 @@ Configure the behavior of the ingress controller.
 
 When storing templates stored in config maps, the config map should contain a content key and a contentType key e.g.
 ```yaml
-content: '{ "message": "Not Found" }'
-contentType: application/json
+  content: '{ "message": "Not Found" }'
+  contentType: application/json
 ```
 
 | Name                              | Description                                                                      | Value            |
