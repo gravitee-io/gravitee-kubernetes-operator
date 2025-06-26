@@ -64,11 +64,9 @@ spec:
         {{- end }}
         {{- end }}
     spec:
-{{- if .Values.manager.image.pullSecret }}
+{{- with .Values.manager.image.pullSecret }}
       imagePullSecrets:
-{{- if .Values.manager.image.pullSecret }}
-        - {{ .Values.manager.image.pullSecret | toYaml }}
-{{- end }}
+        - {{ toYaml . }}
 {{- end }}
 {{- with .Values.manager.tolerations }}
       tolerations:
