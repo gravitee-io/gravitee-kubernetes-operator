@@ -50,6 +50,12 @@ manager:
     pullPolicy: IfNotPresent
     ## @param manager.image.pullSecret Specifies the secret holding the credentials used to pull image from the registry
     pullSecret: {}
+  pod:
+    ## @param manager.pod.securityContext Specifies the security context that will apply to all containers running within the pod
+    securityContext: {}
+  container:
+    ## @param manager.container.securityContext Specifies the security context that will apply to the controller manager container.
+    securityContext: {}
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
     ## 👎 This value is deprecated in benefit of manager.logs.format

@@ -28,7 +28,8 @@ import (
 )
 
 var lazyTimeoutConfig = config.TimeoutConfig{
-	TestIsolation:                      1 * time.Second,
+	TestIsolation:                      3 * time.Second,
+	GWCMustBeAccepted:                  300 * time.Second,
 	GatewayStatusMustHaveListeners:     180 * time.Second,
 	GatewayListenersMustHaveConditions: 180 * time.Second,
 	HTTPRouteMustNotHaveParents:        180 * time.Second,
@@ -72,8 +73,6 @@ func TestGatewayAPIConformance(t *testing.T) {
 	// baked implementation from our side.
 	opts.SkipTests = append(opts.SkipTests, "HTTPRouteServiceTypes")
 
-	opts.CleanupBaseResources = false
-
 	cSuite, err := suite.NewConformanceTestSuite(opts)
 	if err != nil {
 		t.Fatalf("Error creating conformance test suite: %v", err)
@@ -83,7 +82,4 @@ func TestGatewayAPIConformance(t *testing.T) {
 	if err := cSuite.Run(t, tests.ConformanceTests); err != nil {
 		t.Fatalf("Error running conformance tests: %v", err)
 	}
-	// if _, err := cSuite.Report(); err != nil {
-	// 	t.Logf("Cannot generate report at path %s", opts.ReportOutputPath)
-	// }
 }

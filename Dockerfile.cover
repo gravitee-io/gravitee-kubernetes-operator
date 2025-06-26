@@ -45,9 +45,9 @@ WORKDIR /
 
 COPY --from=builder /workspace/manager .
 
-ENV GOCOVERDIR=/tmp/coverage
+ENV GOCOVERDIR=/tmp/coverage/
 
-RUN mkdir /tmp/coverage
+RUN mkdir ${GOCOVERDIR} && chmod 777 -Rf ${GOCOVERDIR}
 
 USER 65532:65532
 
