@@ -78,10 +78,10 @@ func requestsFromService(ctx context.Context, obj client.Object) []reconcile.Req
 	if !ok {
 		return nil
 	}
-	if !k8s.IsGatewayComponent(svc) {
+	if !svc.DeletionTimestamp.IsZero() {
 		return nil
 	}
-	if !svc.DeletionTimestamp.IsZero() {
+	if !k8s.IsGatewayComponent(svc) {
 		return nil
 	}
 	listOpts := &client.ListOptions{
@@ -106,9 +106,7 @@ func requestsFromHTTPRoute(ctx context.Context, obj client.Object) []reconcile.R
 	if !ok {
 		return nil
 	}
-	listOpts := &client.ListOptions{
-		Namespace: httpRoute.Namespace,
-	}
+	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
 		return nil
@@ -129,9 +127,7 @@ func requestsFromKafkaRoute(ctx context.Context, obj client.Object) []reconcile.
 	if !ok {
 		return nil
 	}
-	listOpts := &client.ListOptions{
-		Namespace: kafkaRoute.Namespace,
-	}
+	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
 		return nil
@@ -150,6 +146,9 @@ func requestsFromKafkaRoute(ctx context.Context, obj client.Object) []reconcile.
 func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Request {
 	secret, ok := obj.(*coreV1.Secret)
 	if !ok {
+		return nil
+	}
+	if !secret.DeletionTimestamp.IsZero() {
 		return nil
 	}
 	listOpts := &client.ListOptions{

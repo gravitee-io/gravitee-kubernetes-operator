@@ -217,7 +217,7 @@ jobs:
       - run:
           name: Install kind
           command: |
-            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            curl -Lo /tmp/kind https://github.com/kubernetes-sigs/kind/releases/download/v0.29.0/kind-linux-amd64
             chmod +x /tmp/kind
             sudo mv /tmp/kind /usr/local/bin/
       - gravitee/docker-login:
@@ -225,11 +225,19 @@ jobs:
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
-          name: Start Cluster
+          name: Prepare coverage storage
+          command: |
+            mkdir -p /tmp/coverage
+            chown -R circleci:circleci /tmp/coverage
+      - run:
+          name: Start cluster
           command: |
             make start-conformance-cluster
       - run:
-          name: Load master-latest Gateway Image
+          name: Create coverage persistent volume
+          command:  kubectl apply -f ./test/conformance/coverage.yaml
+      - run:
+          name: Load gateway image
           command: |
             docker pull graviteeio.azurecr.io/apim-gateway:master-latest 
             docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
@@ -255,16 +263,16 @@ jobs:
       - run:
           name: Run Gateway API conformance test suites
           command: |
-            bin/gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
-      - run:
-          name: Shutdown operator
-          command: |
-            kubectl scale deploy gko-controller-manager --replicas 0
-            while [ -n "$(kubectl get deployment gko-controller-manager -o jsonpath='{.status.readyReplicas}')" ]; do
-              echo "Waiting for deployment to scale down to 0"
-              sleep 1
-            done
-            echo "Deployment scaled down to 0"
+            bin/gotestsum --format=testname --hide-summary=skipped --rerun-fails=3 --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+      # - run:
+      #     name: Shutdown operator
+      #     command: |
+      #       kubectl scale deploy gko-controller-manager --replicas 0
+      #       while [ -n "$(kubectl get deployment gko-controller-manager -o jsonpath='{.status.readyReplicas}')" ]; do
+      #         echo "Waiting for deployment to scale down to 0"
+      #         sleep 1
+      #       done
+      #       echo "Deployment scaled down to 0"
       - run: 
           name: Generate coverage
           command: |

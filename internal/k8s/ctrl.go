@@ -16,18 +16,10 @@ package k8s
 
 import (
 	"context"
-	"time"
 
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
-
-const defaultRequeueAfter = 5 * time.Second
-
-func RequeueError(err error) (ctrl.Result, error) {
-	return ctrl.Result{RequeueAfter: defaultRequeueAfter}, err
-}
 
 func CreateOrUpdate(ctx context.Context, obj client.Object, fns ...util.MutateFn) error {
 	if _, err := util.CreateOrUpdate(ctx, GetClient(), obj, func() error {

@@ -73,7 +73,6 @@ func DeployGateway(
 	}
 
 	configData := map[string]string{}
-	maps.Copy(configData, gatewayConfig.Data)
 
 	if HasGraviteeYAML(params) {
 		userConfig, err := getUserConfigMap(gw, params)
@@ -88,11 +87,12 @@ func DeployGateway(
 		maps.Copy(configData, userConfig.Data)
 	}
 
-	if deployment, err := getDeployment(gw, params, portMapping); err != nil {
+	maps.Copy(configData, gatewayConfig.Data)
+
+	if deployment, err := getDeployment(gw, params, portMapping, configData); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
-		AddAnnotation(deployment, "gravitee.io/config", hash.Calculate(configData))
-		return buildDeployment(gw, params, deployment, portMapping)
+		return buildDeployment(gw, params, deployment, portMapping, configData)
 	}); err != nil {
 		return err
 	}
@@ -235,6 +235,7 @@ func getDeployment(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
+	config map[string]string,
 ) (*appV1.Deployment, error) {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
@@ -245,7 +246,7 @@ func getDeployment(
 
 	setOwnerReference(gw.Object, deployment)
 
-	if err := buildDeployment(gw, params, deployment, portMapping); err != nil {
+	if err := buildDeployment(gw, params, deployment, portMapping, config); err != nil {
 		return nil, err
 	}
 
@@ -257,6 +258,7 @@ func buildDeployment(
 	params *v1alpha1.GatewayClassParameters,
 	deployment *appV1.Deployment,
 	portMapping map[gwAPIv1.PortNumber]int32,
+	config map[string]string,
 ) error {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 
@@ -291,13 +293,33 @@ func buildDeployment(
 		deployment.Spec.Strategy = *params.Spec.Kubernetes.Deployment.Strategy
 	}
 
+	if deployment.Annotations == nil {
+		deployment.Annotations = make(map[string]string)
+	}
+
+	if deployment.Spec.Template.Annotations == nil {
+		deployment.Spec.Template.Annotations = make(map[string]string)
+	}
+
+	if deployment.Labels == nil {
+		deployment.Labels = make(map[string]string)
+	}
+
+	if deployment.Spec.Template.Labels == nil {
+		deployment.Spec.Template.Labels = make(map[string]string)
+	}
+
 	for k, v := range params.Spec.Kubernetes.Deployment.Annotations {
 		deployment.Annotations[k] = v
+		deployment.Spec.Template.Annotations[k] = v
 	}
 
 	for k, v := range params.Spec.Kubernetes.Deployment.Labels {
 		deployment.Labels[k] = v
+		deployment.Spec.Template.Labels[k] = v
 	}
+
+	deployment.Spec.Template.Annotations["gravitee.io/config"] = hash.Calculate(config)
 
 	return nil
 }
