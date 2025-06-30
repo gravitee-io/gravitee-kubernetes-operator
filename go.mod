@@ -14,7 +14,7 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
-	gotest.tools/gotestsum v1.12.2
+	gotest.tools/gotestsum v1.12.3
 	k8s.io/apimachinery v0.33.1
 	k8s.io/client-go v0.33.1
 	sigs.k8s.io/controller-runtime v0.21.0
