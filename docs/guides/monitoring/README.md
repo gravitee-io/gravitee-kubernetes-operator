@@ -47,7 +47,7 @@ When metrics are enabled, the address of the prometheus endpoint is printed in t
 
 The data is available using the following prometheus datasource URL:
 
-`http://prometheus-operated.gravitee.svc:9000`
+`http://prometheus-operated.gravitee.svc:9090`
 
 ## Exploring metrics using Grafana
 
@@ -70,6 +70,6 @@ Once this is done, you can access the Grafana console at http://localhost:3000 a
 
 ### Adding the Operator prometheus instance as a datasource in Grafana.
 
-In the left side menu, select `Data Sources` and add a new prometheus datasource using http://prometheus-operated.gravitee.svc:9000 as a Prometheus server URL.
+In the left side menu, select `Data Sources` and add a new prometheus datasource using http://prometheus-operated.gravitee.svc:9090 as a Prometheus server URL.
 
 
