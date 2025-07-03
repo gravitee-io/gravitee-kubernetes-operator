@@ -67,6 +67,7 @@ async function getAPIMImageRegistry() {
   }
   return await APIM.getImageRegistry();
 }
+
 async function getAPIMImageTag() {
   if ($.env.APIM_IMAGE_TAG) {
     return $.env.APIM_IMAGE_TAG;
@@ -98,8 +99,11 @@ async function loadImages() {
   setNoQuoteEscape();
 
   for (const [image, tag] of IMAGES.entries()) {
+    LOG.blue(`pulling image ${image}`);
     await $`docker pull ${image}`;
+    LOG.blue(`tagging image ${image} with ${tag}`);
     await $`docker tag ${image} ${tag}`;
+    LOG.blue(`loading image tag ${tag}`);
     await $`kind load docker-image ${tag} --name gravitee`;
   }
 
