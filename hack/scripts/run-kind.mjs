@@ -53,7 +53,7 @@ const IMAGES = new Map([
     `${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`,
     `gravitee-apim-management-ui:dev`,
   ],
-  [`mongo:6.0.15-jammy`, `mongo:6.0.15-jammy`],
+  [`mongo:7.0.21-jammy`, `mongo:7.0.21-jammy`],
   [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
 ]);
 
@@ -97,23 +97,11 @@ async function createKindCluster() {
 async function loadImages() {
   setNoQuoteEscape();
 
-  await Promise.all(
-    Array.from(IMAGES.keys()).map(
-      (image) => $`docker pull ${image} ${REDIRECT}`,
-    ),
-  );
-
-  await Promise.all(
-    Array.from(IMAGES.entries()).map(
-      ([image, tag]) => $`docker tag ${image} ${tag} ${REDIRECT}`,
-    ),
-  );
-
-  await Promise.all(
-    Array.from(IMAGES.values()).map(
-      (tag) => $`kind load docker-image ${tag} --name gravitee ${REDIRECT}`,
-    ),
-  );
+  for (const [image, tag] of IMAGES.entries()) {
+    await $`docker pull ${image}`;
+    await $`docker tag ${image} ${tag}`;
+    await $`kind load docker-image ${tag} --name gravitee`;
+  }
 
   setQuoteEscape();
 }
