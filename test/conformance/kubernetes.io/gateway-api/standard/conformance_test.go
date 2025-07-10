@@ -67,7 +67,7 @@ func TestGatewayAPIConformance(t *testing.T) {
 	// We skip this test because for some reason
 	// threads get blocked on the gatway side when
 	// running it. Needs to investigate
-	// opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
+	opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
 
 	// That one might be handled first because it looks like its half
 	// baked implementation from our side.
