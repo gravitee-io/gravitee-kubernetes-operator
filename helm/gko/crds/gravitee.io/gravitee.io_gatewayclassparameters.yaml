@@ -18,7 +18,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.1
     gravitee.io/extends: gateway.networking.k8s.io
-    gravitee.io/operator.version: 4.8.1
+    gravitee.io/operator.version: 4.8.2
   name: gatewayclassparameters.gravitee.io
 spec:
   group: gravitee.io
@@ -6167,6 +6167,7 @@ spec:
                                                             description: >-
                                                               
                                                               
+
                                                               path is the relative
                                                               path of the file to
                                                               map the key to.
@@ -6219,6 +6220,7 @@ spec:
                                                             description: >-
                                                               
                                                               
+
                                                               Optional: mode bits
                                                               used to set
                                                               permissions on this
@@ -6236,6 +6238,7 @@ spec:
                                                             description: >-
                                                               
                                                               
+
                                                               Selects a resource
                                                               of the container:
                                                               only resources
@@ -6292,6 +6295,7 @@ spec:
                                                             description: >-
                                                               
                                                               
+
                                                               path is the relative
                                                               path of the file to
                                                               map the key to.
