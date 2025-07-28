@@ -2,7 +2,7 @@ module github.com/gravitee-io/gravitee-kubernetes-operator
 
 go 1.24.0
 
-toolchain go1.24.4
+toolchain go1.24.5
 
 require (
 	github.com/elastic/crd-ref-docs v0.1.0
