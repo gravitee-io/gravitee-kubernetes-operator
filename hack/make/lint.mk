@@ -14,7 +14,7 @@ lint-commits:  ## Run commitlint and fail on error
 .PHONY: lint-sources
 lint-sources: ## Run golangci-lint and fail on error
 	@echo "Linting go sources ..."
-	@$(GOLANGCILINT) --concurrency 2 run ./...
+	@$(GOLANGCILINT) --concurrency 4 run ./...
 	@npx --yes prettier --check hack/scripts
 
 .PHONY: lint-licenses
