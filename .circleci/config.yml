@@ -950,6 +950,7 @@ workflows:
           context: cicd-orchestrator
           ginkgo-filter: integration
           pre-steps:
+            - checkout
             - run:
                 name: Install GO tools
                 command: make install-go-tools
