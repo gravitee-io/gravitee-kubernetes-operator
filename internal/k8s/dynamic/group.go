@@ -30,7 +30,7 @@ func ResolveGroup(ctx context.Context, ref core.ObjectRef, namespace string) (*v
 	kind := ResourceFromKind(refKind)
 	switch kind {
 	case GroupGVR.Resource:
-		return resolveRef(ctx, ref, namespace, NotificationGVR, new(v1alpha1.Group))
+		return resolveRef(ctx, ref, namespace, GroupGVR, new(v1alpha1.Group))
 	default:
 		return nil, errors.NewSevere("Group kind is mandatory")
 	}
