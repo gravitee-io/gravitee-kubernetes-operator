@@ -314,36 +314,46 @@ jobs:
       - go/save-mod-cache
 
   job-e2e-tests:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>-node
-    environment:
-      APIM_GATEWAY: "https://apim-stable-gateway.team-gko.gravitee.dev"
+    machine:
+      image: ubuntu-2204:2024.01.2
+      docker_layer_caching: true
+    resource_class: medium
     steps:
       - checkout
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
       - kubernetes/install_kubectl
-      - azure-cli/install
-      - cmd-setup-azure-login-e2e
+      - helm/install_helm_client
       - run:
-          name: Run az job-azure-login-e2e
+          name: Install kind
           command: |
-            az login --service-principal -u $AZURE_APPLICATION_ID --tenant $AZURE_TENANT -p $AZURE_APPLICATION_SECRET
-            az aks get-credentials --admin --resource-group Devs-Gko-Hosted --name gravitee-devs-gko-aks-cluster
-      - keeper/env-export:
-          secret-url: keeper://FfBDDAniV6df_8i04UrvZA/field/password
-          var-name: APIM_AUTH
+            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
-          name: Create junit reports directory for e2e tests
-          command: mkdir -p "/tmp/junit/reports-e2e"
+          name: Start cluster
+          command: |
+            make start-cluster
+      - run:
+          name: Helm install GKO
+          command: |
+            IMG=gko TAG=latest make docker-build-cover \
+              && kind load docker-image gko:latest --name gravitee \
+              && helm upgrade --install gko helm/gko -n default \
+                --set manager.image.repository=gko \
+                --set manager.image.tag=latest
       - run:
           name: Install Chainsaw
           command: |
-            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@latest
+            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.12          
       - run:
           name: Run Chainsaw tests
           command: |
             bin/chainsaw test --config test/e2e/chainsaw/config.yaml
-      - store_test_results:
-          path: /tmp/junit/reports-e2e
 
   job-stage-helm-chart:
     docker:
@@ -869,6 +879,7 @@ workflows:
                       template: basic_success_1
                       branch_pattern: ".+"
 
+  
   e2e-test:
     when:
       equal:
@@ -878,6 +889,20 @@ workflows:
       - job-e2e-tests:
           name: Run end to end tests
           context: cicd-orchestrator
+          post-steps:
+            - when:
+                condition: << pipeline.parameters.notify >>
+                steps:
+                  - slack/notify:
+                      channel: C09865B3L65
+                      event: fail
+                      template: basic_fail_1
+                      branch_pattern: ".+"
+                  - slack/notify:
+                      channel: C09865B3L65
+                      event: pass
+                      template: basic_success_1
+                      branch_pattern: ".+"
 
   rollout-apim:
     when:
