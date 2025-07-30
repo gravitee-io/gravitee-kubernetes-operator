@@ -36,4 +36,4 @@ jobs:
       - name: "Trigger E2E pipeline"
         run: |
           echo "🧪 Triggering E2E test pipeline"
-          npx zx hack/scripts/trigger-e2e-test.mjs --pipeline-branch ${PIPELINE_BRANCH}
+          npx zx hack/scripts/trigger-e2e-test.mjs --notify true --pipeline-branch ${PIPELINE_BRANCH}
