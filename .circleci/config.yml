@@ -506,21 +506,40 @@ jobs:
             git fetch
             git switch $RELEASE_BRANCH 2>/dev/null || git switch -c $RELEASE_BRANCH
       - run:
+          name: Create docker context for buildx
+          command: |-
+            docker context create tls-env
+            docker buildx create tls-env --use
+      - run:
           name: Docker login
           command: docker login --username="${DOCKER_USERNAME}" -p="${DOCKER_TOKEN}"
-      - run:
-          name: Build Docker image for version << pipeline.parameters.release-version >>
-          command: |
-            docker build -t graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> .
       - when:
-          condition: << pipeline.parameters.latest >>
+          condition:
+            and:
+              - << pipeline.parameters.dry-run >>
+              - not: << pipeline.parameters.latest >>
           steps:
             - run:
-                name: Tag << pipeline.parameters.release-version >> image as latest
+                name: Build and tag << pipeline.parameters.release-version >> Docker image
                 command: |
-                  docker tag \
-                    graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> \
-                    graviteeio/kubernetes-operator:latest
+                  docker buildx build \
+                    --platform=linux/arm64,linux/amd64 \
+                    -t graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> \
+                    ./
+      - when:
+          condition:
+            and:
+              - << pipeline.parameters.dry-run >>
+              - << pipeline.parameters.latest >>
+          steps:
+            - run:
+                name: Build and tag << pipeline.parameters.release-version >> Docker image as latest
+                command: |
+                  docker buildx build \
+                    --platform=linux/arm64,linux/amd64 \
+                    -t graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> \
+                    -t graviteeio/kubernetes-operator:latest \
+                    ./
       - when:
           condition:
             and:
@@ -528,10 +547,13 @@ jobs:
               - << pipeline.parameters.latest >>
           steps:
             - run:
-                name: Push << pipeline.parameters.release-version >> Docker image as latest tag
+                name: Build and push << pipeline.parameters.release-version >> Docker image as latest
                 command: |
-                  docker push graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>
-                  docker push graviteeio/kubernetes-operator:latest
+                  docker buildx build --push \
+                    --platform=linux/arm64,linux/amd64 \
+                    -t graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> \
+                    -t graviteeio/kubernetes-operator:latest \
+                    ./
       - when:
           condition:
             and:
@@ -541,7 +563,10 @@ jobs:
             - run:
                 name: Push << pipeline.parameters.release-version >> Docker image tag
                 command: |
-                  docker push graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>
+                  docker buildx build --push \
+                    --platform=linux/arm64,linux/amd64 \
+                    -t graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >> \
+                    ./
       - when:
           condition: << pipeline.parameters.dry-run >>
           steps:
