@@ -78,6 +78,10 @@ func (s *ManagementContextStatus) IsFailed() bool {
 	return false
 }
 
+func (s *ManagementContextStatus) SetConditions(conditions []metav1.Condition) {
+	// Not implemented yet
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster

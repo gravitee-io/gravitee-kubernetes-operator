@@ -180,3 +180,7 @@ func (s *ApplicationStatus) SetProcessingStatus(status core.ProcessingStatus) {
 func (s *ApplicationStatus) IsFailed() bool {
 	return s.ProcessingStatus == core.ProcessingStatusFailed
 }
+
+func (s *ApplicationStatus) SetConditions(conditions []metav1.Condition) {
+	// Not implemented yet
+}

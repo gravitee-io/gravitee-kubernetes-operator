@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
@@ -305,6 +307,14 @@ func (api *ApiDefinition) getOrGenerateCrossID() string {
 	return uuid.FromStrings(api.GetNamespacedName().String())
 }
 
+func (api *ApiDefinition) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(api.Status.Conditions)
+}
+
+func (api *ApiDefinition) SetConditions(conditions []metav1.Condition) {
+	api.Status.Conditions = conditions
+}
+
 func (spec *ApiDefinitionV2Spec) Hash() string {
 	return hash.Calculate(spec)
 }
@@ -355,6 +365,10 @@ func (s *ApiDefinitionStatus) RemoveSubscription() {
 
 func (s *ApiDefinitionStatus) GetSubscriptionCount() uint {
 	return s.SubscriptionCount
+}
+
+func (s *ApiDefinitionStatus) SetConditions(conditions []metav1.Condition) {
+	s.Conditions = conditions
 }
 
 // ApiDefinitionList contains a list of ApiDefinition.
