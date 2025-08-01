@@ -515,7 +515,7 @@ jobs:
       - helm/install_helm_client
       - go/load-cache
       - helm/install_helm_plugin:
-          helm_plugin_url: https://github.com/quintush/helm-unittest
+          helm_plugin_url: https://github.com/helm-unittest/helm-unittest.git
       - run:
           name: Run Helm unit tests
           command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
