@@ -24,7 +24,7 @@ spec:
     - name: commandDir
       value: "../../../../commands"
     - name: gkoNamespace
-      value: gko-stable
+      value: default
 
   steps:
   - name: create-resource

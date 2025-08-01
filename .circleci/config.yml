@@ -820,7 +820,21 @@ workflows:
               ignore: /.*/
           requires:
             - Stage Docker image
-            - Stage Helm chart     
+            - Stage Helm chart 
+      - job-e2e-tests:
+          name: Run end to end tests
+          context: cicd-orchestrator
+          post-steps:
+              - slack/notify:
+                  channel: C098YUEDMGE
+                  event: fail
+                  template: basic_fail_1
+                  branch_pattern: ".+"
+              - slack/notify:
+                  channel: C098YUEDMGE
+                  event: pass
+                  template: basic_success_1
+                  branch_pattern: ".+"      
               
   release:
     when:
@@ -894,12 +908,12 @@ workflows:
                 condition: << pipeline.parameters.notify >>
                 steps:
                   - slack/notify:
-                      channel: C09865B3L65
+                      channel: C098YUEDMGE
                       event: fail
                       template: basic_fail_1
                       branch_pattern: ".+"
                   - slack/notify:
-                      channel: C09865B3L65
+                      channel: C098YUEDMGE
                       event: pass
                       template: basic_success_1
                       branch_pattern: ".+"

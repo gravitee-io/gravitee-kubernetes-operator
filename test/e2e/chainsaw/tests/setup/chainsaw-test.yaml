@@ -12,23 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/configuration-chainsaw-v1alpha2.json
-apiVersion: chainsaw.kyverno.io/v1alpha2
-kind: Configuration
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
 metadata:
-  name: chainsaw-e2e-tests
+  name: pre-test-setup
 spec:
-  discovery:
-    testFile: chainsaw-test
-  timeouts:
-    apply: 30s
-    assert: 30s
-    cleanup: 30s
-    delete: 30s
-    error: 30s
-    exec: 30s     
-# re-activate when reporting is fixed
-  # report:
-  #   format: XML
-  #   name: chainsaw-junit-reports
-  #   path: /tmp/junit/reports-e2e
+  concurrent: false            # Chainsaw always executes every non-concurrent test first
+  skipDelete: true           
+  steps:
+    - name: setup-management-context
+      try:
+      - apply:               
+          file: management-context-with-credentials.yml

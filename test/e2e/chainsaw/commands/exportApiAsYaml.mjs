@@ -15,28 +15,20 @@
  * limitations under the License.
  */
 
-
-await dotenv.config(`${__dirname}/../.env`);
-
-const { APIM_API, APIM_AUTH } = process.env;
-if (!APIM_API || !APIM_AUTH) {
-    console.error('Error: APIM_API or APIM_AUTH not set in .env file.');
-    process.exit(1);
-}
-
+const APIM_API = "http://localhost:30083";
 const apiId = argv.api_id;
 const apiVersion = argv.api_version;
 
 if (!apiId) {
     console.error('Error: --api_id parameter is not provided.');
     console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
-    process.exit(2);
+    process.exit(1);
 }
 
 if (!apiVersion || !['v2', 'v4'].includes(apiVersion)) {
     console.error('Error: --api_version parameter is not provided or is invalid. Must be v2 or v4.');
     console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
-    process.exit(3);
+    process.exit(1);
 }
 
 let url;
@@ -48,7 +40,7 @@ if (apiVersion === 'v2') {
 
 try {
     const headers = {
-        'Authorization': `Bearer ${APIM_AUTH}`,
+        'Authorization': 'Basic YWRtaW46YWRtaW4=',
         'Content-Type': 'application/yaml'
     };
 
@@ -68,7 +60,7 @@ try {
         if (errorBody) {
             console.error(`Response body:\n${errorBody}`);
         }
-        process.exit(4);
+        process.exit(1);
     }
 
     const responseBody = await response.text();
@@ -77,5 +69,5 @@ try {
 } catch (error) {
     console.error(`Error: Failed to fetch API CRD for ID: ${apiId}.`);
     console.error(error);
-    process.exit(5);
+    process.exit(1);
 }
