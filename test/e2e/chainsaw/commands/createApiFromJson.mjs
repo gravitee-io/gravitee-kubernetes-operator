@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-await dotenv.config(`${__dirname}/../.env`);
-
 const { jsonfile } = argv;
 if (!jsonfile) {
     console.error('Usage: createApiFromJson.mjs --jsonfile <JSON_FILE>');
@@ -30,12 +28,7 @@ try {
     process.exit(1);
 }
 
-const { APIM_API, APIM_AUTH } = process.env;
-if (!APIM_API || !APIM_AUTH) {
-    console.error('Error: APIM_API or APIM_AUTH not set in .env file.');
-    process.exit(1);
-}
-
+const APIM_API = "http://localhost:30083";
 const fileContent = fs.readFileSync(jsonfile, 'utf8');
 const apiDefinition = JSON.parse(fileContent);
 
@@ -55,7 +48,7 @@ if (apiDefinition.gravitee === '2.0.0') {
             method: 'POST',
             body: fileContent,
             headers: {
-                'Authorization': `Bearer ${APIM_AUTH}`,
+                'Authorization': 'Basic YWRtaW46YWRtaW4=',
                 'Content-Type': 'application/json'
             }
     });

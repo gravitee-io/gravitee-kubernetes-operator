@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-await dotenv.config(`${__dirname}/../.env`);
 const { endpoint: endpointPath, status: expectedStatusCode } = argv;
 
 if (!endpointPath || !expectedStatusCode) {
@@ -23,19 +22,11 @@ if (!endpointPath || !expectedStatusCode) {
     process.exit(1);
 }
 
-const apiGatewayBaseUrl = process.env.APIM_GATEWAY;
-if (!apiGatewayBaseUrl) {
-    console.error("Error: APIM_GATEWAY is not set.");
-    process.exit(1);
-}
-
-const base = new URL(apiGatewayBaseUrl);
-base.pathname = path.posix.join(base.pathname, endpointPath);
-const url = base.toString();
-
+const APIM_GATEWAY = "http://localhost:30082";
+const url = `${APIM_GATEWAY}/${endpointPath}`;
 console.log(`Testing connection to: ${url}`);
 
-const maxRetry = 20; 
+const maxRetry = 60; 
 const retryDelay = 500; // Delay in milliseconds between retries
 
 let attempt = 0;
