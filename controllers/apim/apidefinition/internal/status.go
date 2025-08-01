@@ -19,18 +19,27 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const ReconcileFailed = "ReconcileFailed"
+const ResolvedRef = "ResolvedRef"
 
 func UpdateStatusSuccess(ctx context.Context, api core.Object) error {
 	if !api.GetDeletionTimestamp().IsZero() {
 		return nil
 	}
+	acb := k8s.NewAcceptedConditionBuilder(api.GetGeneration()).Accept("Successfully reconciled").Build()
 
+	api.GetStatus().SetConditions([]metav1.Condition{*acb})
+	api.GetStatus().SetConditions()
+	// Deprecated
 	api.GetStatus().SetProcessingStatus(core.ProcessingStatusCompleted)
 	return k8s.GetClient().Status().Update(ctx, api)
 }
 
 func UpdateStatusFailure(ctx context.Context, api core.Object) error {
+	// Deprecated
 	api.GetStatus().SetProcessingStatus(core.ProcessingStatusFailed)
 	return k8s.GetClient().Status().Update(ctx, api)
 }

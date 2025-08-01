@@ -47,9 +47,10 @@ const objectIDCtxKey = ctxKey("gravitee.io/templating/objectId")
 const objectAnnotationKey = ctxKey("gravitee.io/templating/annotationKey")
 const totalReferenceKey = "gravitee.io/references"
 
-func Compile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) error {
+func Compile(ctx context.Context, obj client.Object, updateObjectMetadata bool) error {
 	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message("failed to convert object to unstructured").Build())
 		return err
 	}
 	return doCompile(
@@ -63,26 +64,28 @@ func Compile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool)
 	)
 }
 
-func doCompile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) error {
+func doCompile(ctx context.Context, obj client.Object, updateObjectMetadata bool) error {
 	c, err := traverse(ctx, obj, updateObjectMetadata)
 	if err != nil {
 		return err
 	}
 	objData, ok := c.(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("traverse returned %T instead of map[string]interface{}", c)
+		err := fmt.Errorf("traverse returned %T instead of map[string]interface{}", c)
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
+		return err
 	}
 
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(objData, obj)
 }
 
-func exec(ctx context.Context, text, ns string, parentResourceDeleted, updateObjectMetadata bool) (string, error) {
+func exec(ctx context.Context, obj client.Object, text, ns string, parentResourceDeleted, updateObjectMetadata bool) (string, error) {
 	funcMap := map[string]interface{}{
 		"configmap": func(name string) (string, error) {
-			return resolveConfigmap(ctx, ns, name, parentResourceDeleted, updateObjectMetadata)
+			return resolveConfigmap(ctx, obj, ns, name, parentResourceDeleted, updateObjectMetadata)
 		},
 		"secret": func(name string) (string, error) {
-			return resolveSecret(ctx, ns, name, parentResourceDeleted, updateObjectMetadata)
+			return resolveSecret(ctx, obj, ns, name, parentResourceDeleted, updateObjectMetadata)
 		},
 	}
 
@@ -105,15 +108,19 @@ func exec(ctx context.Context, text, ns string, parentResourceDeleted, updateObj
 	return buf.String(), nil
 }
 
-func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDeleted,
+func resolveConfigmap(ctx context.Context, obj client.Object, ns, name string, parentResourceDeleted,
 	updateObjectMetadata bool) (string, error) {
 	if name == "" {
-		return "", fmt.Errorf("empty configmap name")
+		err := fmt.Errorf("empty configmap name")
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
+		return "", err
 	}
 
 	sp := strings.Split(name, "/")
 	if len(sp) != ksPropertyLength {
-		return "", fmt.Errorf("wrong configmap name. Example my-configmap/key1")
+		err := fmt.Errorf("wrong configmap name. Example my-configmap/key1")
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
+		return "", err
 	}
 
 	name = sp[0]
@@ -123,7 +130,9 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 
 	err := cli.Get(ctx, nn, cm)
 	if kErrors.IsNotFound(err) {
-		return "", fmt.Errorf("configmap [%s/%s] not found", ns, name)
+		err := fmt.Errorf("configmap [%s/%s] not found", ns, name)
+		k8s.AddCondition(obj, k8s.NewResolvedRefsConditionBuilder(obj.GetGeneration()).Status(k8s.ConditionStatusFalse).Message(err.Error()).Build())
+		return "", err
 	}
 
 	if err != nil {
@@ -133,7 +142,9 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 	key := sp[1]
 	v := cm.Data[key]
 	if v == "" {
-		return "", fmt.Errorf("key [%s] not found in configmap [%s/%s]", key, ns, name)
+		err := fmt.Errorf("key [%s] not found in configmap [%s/%s]", key, ns, name)
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
+		return "", err
 	}
 	if !updateObjectMetadata {
 		return v, nil
@@ -154,15 +165,19 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 	return v, nil
 }
 
-func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
+func resolveSecret(ctx context.Context, obj client.Object, ns, name string, parentResourceDeleted,
 	updateObjectMetadata bool) (string, error) {
 	if name == "" {
-		return "", fmt.Errorf("empty secret name")
+		err := fmt.Errorf("empty secret name")
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
+		return "", err
 	}
 
 	sp := strings.Split(name, "/")
 	if len(sp) != ksPropertyLength {
-		return "", fmt.Errorf("wrong secret name. Example my-secret/key1")
+		err := fmt.Errorf("wrong secret name. Example my-secret/key1")
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
+		return "", err
 	}
 
 	name = sp[0]
@@ -172,7 +187,9 @@ func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
 
 	err := cli.Get(ctx, nn, sec)
 	if kErrors.IsNotFound(err) {
-		return "", fmt.Errorf("secret [%s/%s] not found", ns, name)
+		err := fmt.Errorf("secret [%s/%s] not found", ns, name)
+		k8s.AddCondition(obj, k8s.NewResolvedRefsConditionBuilder(obj.GetGeneration()).Status(k8s.ConditionStatusFalse).Message(err.Error()).Build())
+		return "", err
 	}
 
 	if err != nil {
@@ -182,7 +199,9 @@ func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
 	key := sp[1]
 	v := sec.Data[key]
 	if len(v) == 0 {
-		return "", fmt.Errorf("key [%s] not found in secret [%s/%s]", key, ns, name)
+		err := fmt.Errorf("key [%s] not found in secret [%s/%s]", key, ns, name)
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
+		return "", err
 	}
 
 	if !updateObjectMetadata {
@@ -191,12 +210,14 @@ func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
 
 	totalReference, updated, err := updateAnnotation(ctx, sec, parentResourceDeleted)
 	if err != nil {
+		k8s.AddCondition(obj, k8s.NewAcceptedConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
 		return "", err
 	}
 
 	if updated {
 		updateFinalizer(ctx, sec, parentResourceDeleted && totalReference == 0)
 		if err := k8s.Update(ctx, sec); err != nil {
+			k8s.AddCondition(obj, k8s.NewAcceptedConditionBuilder(obj.GetGeneration()).Message(err.Error()).Build())
 			return "", err
 		}
 	}

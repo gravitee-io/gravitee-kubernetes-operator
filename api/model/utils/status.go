@@ -12,24 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admission
+package utils
 
-import (
-	"context"
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-func CompileAndValidateTemplate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	cObj := obj.(client.Object)
-	err := template.Compile(ctx, cObj, false)
-
-	if err != nil {
-		return errors.NewSeveref("%s", err.Error())
+func MapConditions(conditionsSlice []metav1.Condition) map[string]metav1.Condition {
+	conditions := make(map[string]metav1.Condition)
+	for _, condition := range conditionsSlice {
+		conditions[condition.Type] = condition
 	}
-
-	return nil
+	return conditions
 }
