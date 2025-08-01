@@ -26,15 +26,9 @@ import (
 )
 
 var errRaw = fmt.Errorf("raw error")
-var errNotFound = xErrors.NewContextError(
-	xErrors.ServerError{StatusCode: 404},
-)
-var errBadRequest = xErrors.NewContextError(
-	xErrors.ServerError{StatusCode: 400},
-)
-var errUnauthorized = xErrors.NewContextError(
-	xErrors.ServerError{StatusCode: 401},
-)
+var errNotFound = xErrors.NewControlPlaneError(xErrors.ServerError{StatusCode: 404})
+var errBadRequest = xErrors.NewControlPlaneError(xErrors.ServerError{StatusCode: 400})
+var errUnauthorized = xErrors.NewControlPlaneError(xErrors.ServerError{StatusCode: 401})
 
 var _ = Describe("Errors", func() {
 	DescribeTable("recoverable errors",
@@ -49,13 +43,15 @@ var _ = Describe("Errors", func() {
 
 	DescribeTable("context error",
 		func(given error, expected bool) {
-			Expect(errors.Is(given, xErrors.NewContextError(nil))).To(Equal(expected))
+			Expect(errors.Is(given, xErrors.NewControlPlaneError(nil))).To(Equal(expected))
 		},
 		Entry("With raw error", errRaw, false),
 		Entry("With nil error", nil, false),
-		Entry("With context error", xErrors.NewContextError(nil), true),
-		Entry("With aggregate containing context error", kErrors.NewAggregate([]error{xErrors.NewContextError(nil)}), true),
-		Entry("With aggregate not containing any context error", kErrors.NewAggregate([]error{errRaw}), false),
+		Entry("With context error", xErrors.NewControlPlaneError(nil), true),
+		Entry("With aggregate containing context error",
+			kErrors.NewAggregate([]error{xErrors.NewControlPlaneError(nil)}), true),
+		Entry("With aggregate not containing any context error",
+			kErrors.NewAggregate([]error{errRaw}), false),
 		Entry("With empty aggregate", kErrors.NewAggregate([]error{}), false),
 	)
 })

@@ -17,7 +17,7 @@ package service
 import (
 	"strconv"
 
-	spg "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/policygroups"
+	spg "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"

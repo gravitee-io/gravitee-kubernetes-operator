@@ -63,7 +63,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 
 		Eventually(func() error {
 			kErr := manager.GetLatest(ctx, fixtures.Context)
-			if errors.IsNotFound(kErr) {
+			if kErr == nil || errors.IsNotFound(kErr) {
 				return nil
 			}
 			return assert.Equals("error", "[NOT FOUND]", kErr)

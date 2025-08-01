@@ -19,6 +19,7 @@ package managementcontext
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -91,17 +92,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
+	dc.SetConditions(utils.ToConditions(managementContext.GetConditions()))
 	if err := dc.GetStatus().DeepCopyTo(managementContext); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if err == nil {
 		log.InfoEndReconcile(ctx, managementContext)
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, internal.UpdateCondition(ctx, managementContext, err)
 	}
 
 	log.ErrorAbortingReconcile(ctx, err, managementContext)
-	return ctrl.Result{}, err
+	return ctrl.Result{}, internal.UpdateCondition(ctx, managementContext, err)
 }
 
 // SetupWithManager sets up the controller with the Manager.

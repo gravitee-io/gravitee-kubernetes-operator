@@ -45,6 +45,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("expecting application status to be completed")
 
 		Expect(assert.ApplicationCompleted(fixtures.Application)).To(Succeed())
+		Expect(assert.ApplicationAccepted(fixtures.Application)).To(Succeed())
 
 		By("calling rest API, expecting to find application")
 

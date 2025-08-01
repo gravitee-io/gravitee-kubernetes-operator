@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
 func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
@@ -34,7 +35,7 @@ func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
 
 	status, err := apim.Env.ImportGroup(spec.Type)
 	if err != nil {
-		return err
+		return gerrors.NewControlPlaneError(err)
 	}
 
 	group.Status.ID = status.ID

@@ -73,6 +73,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 				if err != nil {
 					return err
 				}
+
+				err = assert.ApiAccepted(fixtures.API)
+				if err != nil {
+					return err
+				}
+
 				return assert.ApiCompleted(fixtures.API)
 			}, timeout, interval).Should(Succeed())
 

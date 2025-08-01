@@ -50,6 +50,10 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 			return assert.SubscriptionCompleted(fixtures.Subscription)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
 
+		Eventually(func() error {
+			return assert.SubscriptionAccepted(fixtures.Subscription)
+		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
+
 		By("calling API endpoint without client auth, expecting status 401")
 
 		endpoint := constants.BuildAPIV4EndpointForTLS(fixtures.APIv4.Spec.Listeners[0])

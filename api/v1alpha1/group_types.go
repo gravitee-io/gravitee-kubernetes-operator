@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
@@ -29,6 +30,7 @@ import (
 var _ core.ContextAwareObject = &Group{}
 var _ core.Spec = &GroupSpec{}
 var _ core.Status = &GroupStatus{}
+var _ core.ConditionAware = &Group{}
 
 // +kubebuilder:object:generate=true
 type GroupSpec struct {
@@ -149,6 +151,14 @@ func (g *Group) pickID(mCtx core.ContextModel) string {
 	}
 
 	return string(g.UID)
+}
+
+func (g *Group) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(g.Status.Conditions)
+}
+
+func (g *Group) SetConditions(conditions []metav1.Condition) {
+	g.Status.Conditions = conditions
 }
 
 func init() {

@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +31,7 @@ import (
 var _ core.ApplicationObject = &Application{}
 var _ core.Spec = &ApplicationSpec{}
 var _ core.SubscribableStatus = &ApplicationStatus{}
+var _ core.ConditionAware = &Application{}
 
 // Application is the main resource handled by the Kubernetes Operator
 // +kubebuilder:object:generate=true
@@ -141,6 +143,14 @@ func (app *Application) GetRef() core.ObjectRef {
 		Name:      app.Name,
 		Namespace: app.Namespace,
 	}
+}
+
+func (app *Application) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(app.Status.Conditions)
+}
+
+func (app *Application) SetConditions(conditions []metav1.Condition) {
+	app.Status.Conditions = conditions
 }
 
 func (spec *ApplicationSpec) Hash() string {

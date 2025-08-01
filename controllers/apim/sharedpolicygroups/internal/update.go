@@ -18,20 +18,25 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
-func UpdateStatusSuccess(ctx context.Context, sharedPolicyGroup *v1alpha1.SharedPolicyGroup) error {
-	if sharedPolicyGroup.IsBeingDeleted() {
-		return nil
+func CreateOrUpdate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error {
+	spec := &spg.Spec
+
+	apim, err := apim.FromContextRef(ctx, spec.Context, spg.GetNamespace())
+	if err != nil {
+		return err
 	}
 
-	sharedPolicyGroup.Status.ProcessingStatus = core.ProcessingStatusCompleted
-	return k8s.GetClient().Status().Update(ctx, sharedPolicyGroup)
-}
+	spg.PopulateIDs(apim.Context)
 
-func UpdateStatusFailure(ctx context.Context, sharedPolicyGroup *v1alpha1.SharedPolicyGroup) error {
-	sharedPolicyGroup.Status.ProcessingStatus = core.ProcessingStatusFailed
-	return k8s.GetClient().Status().Update(ctx, sharedPolicyGroup)
+	status, mgmtErr := apim.SharedPolicyGroup.CreateOrUpdate(spec.SharedPolicyGroup)
+	if mgmtErr != nil {
+		return gerrors.NewControlPlaneError(mgmtErr)
+	}
+
+	status.DeepCopyInto(&spg.Status.Status)
+	return nil
 }

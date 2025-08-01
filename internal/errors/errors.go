@@ -25,16 +25,42 @@ import (
 	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
+type ErrorType string
+
+const (
+	CompileTemplateError ErrorType = "CompileTemplateError"
+	ControlPlaneError    ErrorType = "ControlPlaneError"
+	ResolveRefError      ErrorType = "ResolveRefError"
+	IllegalStateError    ErrorType = "IllegalStateError"
+)
+
+type ReconcileError struct {
+	error
+	Type ErrorType
+}
+
+func NewCompileTemplateError(err error) error {
+	return ReconcileError{err, CompileTemplateError}
+}
+
+func NewControlPlaneError(err error) error {
+	return ReconcileError{err, ControlPlaneError}
+}
+
+func NewResolveRefError(err error) error {
+	return ReconcileError{err, ResolveRefError}
+}
+
+func NewIllegalStateError(err error) error {
+	return ReconcileError{err, IllegalStateError}
+}
+
 type ServerError struct {
 	StatusCode int    `json:"status"`
 	URL        string `json:"url"`
 	Method     string `json:"method"`
 	Message    string `json:"message"`
 	Body       string `json:"body"`
-}
-
-type ContextError struct {
-	error
 }
 
 type UnrecoverableError struct {
@@ -162,16 +188,6 @@ func IgnoreNotFound(err error) error {
 	return err
 }
 
-// Redirects the behavior of Is to As
-// because Is is not implemented for k8s.io errors aggregate.
-func (e ContextError) Is(err error) bool {
-	return errors.As(err, new(ContextError))
-}
-
-func NewContextError(err error) error {
-	return ContextError{err}
-}
-
 func IsRecoverable(err error) bool {
 	errs := make([]error, 0)
 
@@ -192,15 +208,18 @@ func IsRecoverable(err error) bool {
 }
 
 func isRecoverable(err error) bool {
-	if errors.As(err, &UnrecoverableError{}) {
-		return false
-	}
-	contextError := &ContextError{}
-	if errors.As(err, contextError) {
-		cause := contextError.error
-		serverError := &ServerError{}
-		if errors.As(cause, serverError) {
-			return serverError.IsRecoverable()
+	e := &ReconcileError{}
+	if errors.As(err, e) {
+		switch e.Type {
+		case IllegalStateError, CompileTemplateError:
+			return false
+		case ControlPlaneError:
+			serverError := &ServerError{}
+			if errors.As(e.error, serverError) {
+				return serverError.IsRecoverable()
+			}
+		case ResolveRefError:
+			return true
 		}
 	}
 

@@ -19,7 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	spg "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -55,7 +55,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		uuid := uuid.NewV4String()
 		fixtures2.SharedPolicyGroup.Spec.CrossID = &uuid
 		fixtures2.SharedPolicyGroup.Spec.ApiType = "PROXY"
-		fixtures2.SharedPolicyGroup.Spec.Phase = (*policygroups.FlowPhase)(utils.ToReference("SUBSCRIBE"))
+		fixtures2.SharedPolicyGroup.Spec.Phase = (*sharedpolicygroups.FlowPhase)(utils.ToReference("SUBSCRIBE"))
 
 		Eventually(func() error {
 			_, err := admissionCtrl.ValidateCreate(ctx, fixtures2.SharedPolicyGroup)

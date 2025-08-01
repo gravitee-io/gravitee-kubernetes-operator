@@ -19,7 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
 func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
@@ -34,7 +34,7 @@ func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) erro
 
 	status, mgmtErr := apim.Applications.CreateOrUpdate(&spec.Application)
 	if mgmtErr != nil {
-		return errors.NewContextError(mgmtErr)
+		return gerrors.NewControlPlaneError(mgmtErr)
 	}
 
 	status.DeepCopyInto(&application.Status.Status)

@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package policygroups
+package sharedpolicygroups
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Status struct {
@@ -28,7 +29,19 @@ type Status struct {
 	CrossID string `json:"crossId,omitempty"`
 	// The ID is used to identify an SharedPolicyGroup which is unique in any environment.
 	ID string `json:"id,omitempty"`
-	// The processing status of the SharedPolicyGroup.
+	// Conditions describe the current conditions of the SharedPolicyGroup.
+	//
+	// Known condition types are:
+	// * "Accepted"
+	// * "ResolvedRefs"
+	//
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	// +kubebuilder:validation:MaxItems=8
+	// +kubebuilder:default={}
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	// The processing status of the SharedPolicyGroup. *** DEPRECATED ***
 	// The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 	// When SharedPolicyGroup has been created regardless of errors, this field is

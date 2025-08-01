@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/management"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,7 @@ var _ core.ContextObject = &ManagementContext{}
 var _ core.ContextModel = &ManagementContext{}
 var _ core.Spec = &ManagementContextSpec{}
 var _ core.Status = &ManagementContextStatus{}
+var _ core.ConditionAware = &ManagementContext{}
 
 // ManagementContext represents the configuration for a specific environment
 // +kubebuilder:object:generate=true
@@ -45,6 +47,7 @@ func (spec *ManagementContextSpec) Hash() string {
 
 // ManagementContextStatus defines the observed state of an API Context.
 type ManagementContextStatus struct {
+	management.Status `json:",inline"`
 }
 
 // DeepCopyFrom implements custom.Status.
@@ -187,4 +190,12 @@ func init() {
 
 func (ctx *ManagementContext) IsBeingDeleted() bool {
 	return !ctx.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (ctx *ManagementContext) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(ctx.Status.Conditions)
+}
+
+func (ctx *ManagementContext) SetConditions(conditions []metav1.Condition) {
+	ctx.Status.Conditions = conditions
 }

@@ -19,6 +19,7 @@ import (
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -108,7 +109,7 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) e
 	spg := new(v1alpha1.SharedPolicyGroup)
 
 	if err := k8s.GetClient().Get(ctx, client.ObjectKey{Namespace: ns.Namespace, Name: ns.Name}, spg); err != nil {
-		return err
+		return gerrors.NewResolveRefError(err)
 	}
 
 	if err := template.Compile(ctx, spg, true); err != nil {

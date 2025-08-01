@@ -9,8 +9,8 @@
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
 - [gravitee.io/v1alpha1/management](#graviteeiov1alpha1management)
 - [gravitee.io/v1alpha1/notification](#graviteeiov1alpha1notification)
-- [gravitee.io/v1alpha1/policygroups](#graviteeiov1alpha1policygroups)
 - [gravitee.io/v1alpha1/refs](#graviteeiov1alpha1refs)
+- [gravitee.io/v1alpha1/sharedpolicygroups](#graviteeiov1alpha1sharedpolicygroups)
 - [gravitee.io/v1alpha1/status](#graviteeiov1alpha1status)
 - [gravitee.io/v1alpha1/subscription](#graviteeiov1alpha1subscription)
 - [gravitee.io/v1alpha1/utils](#graviteeiov1alpha1utils)
@@ -73,7 +73,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
@@ -228,7 +229,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
@@ -298,7 +300,8 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `id` _string_ | The ID of the Application, if a management context has been defined to sync with an APIM instance |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application.<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -406,7 +409,8 @@ _Appears in:_
 | `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `members` _integer_ | The number of members added to this group |  |  |
 | `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -509,6 +513,9 @@ ManagementContextStatus defines the observed state of an API Context.
 _Appears in:_
 - [ManagementContext](#managementcontext)
 
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 
 
 #### Notification
@@ -612,7 +619,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `crossId` _string_ | The Cross ID is used to identify an SharedPolicyGroup that has been promoted from one environment to another. |  |  |
 | `id` _string_ | The ID is used to identify an SharedPolicyGroup which is unique in any environment. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the SharedPolicyGroup.<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the SharedPolicyGroup.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the SharedPolicyGroup. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `errors` _[Errors](#errors)_ | When SharedPolicyGroup has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
@@ -670,7 +678,8 @@ _Appears in:_
 | `id` _string_ | Subscription ID |  |  |
 | `startedAt` _string_ | When the subscription was started and made available |  |  |
 | `endingAt` _string_ | The expiry date for the subscription (no date means no expiry) |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | This value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Subscription.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED *** |  |  |
 
 
 
@@ -865,7 +874,8 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `id` _string_ | The ID of the Application, if a management context has been defined to sync with an APIM instance |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application.<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -1601,7 +1611,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
@@ -1830,7 +1841,8 @@ _Appears in:_
 | `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `members` _integer_ | The number of members added to this group |  |  |
 | `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -2124,6 +2136,22 @@ _Appears in:_
 | `cloud` _[Cloud](#cloud)_ | Cloud when set (token or secretRef) this context will target Gravitee Cloud.<br />BaseUrl will be defaulted from token data if not set,<br />Auth is defaulted to use the token (bearerToken),<br />OrgID is extracted from the token,<br />EnvID is defaulted when the token contains exactly one environment. |  |  |
 
 
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [ManagementContextStatus](#managementcontextstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+
+
 
 ## gravitee.io/v1alpha1/notification
 
@@ -2215,7 +2243,44 @@ _Appears in:_
 
 
 
-## gravitee.io/v1alpha1/policygroups
+## gravitee.io/v1alpha1/refs
+
+
+
+
+#### NamespacedName
+
+
+
+
+
+
+
+_Appears in:_
+- [ApiBase](#apibase)
+- [ApiDefinitionV2Spec](#apidefinitionv2spec)
+- [ApiRef](#apiref)
+- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [ApplicationSpec](#applicationspec)
+- [Auth](#auth)
+- [Cloud](#cloud)
+- [Console](#console)
+- [FlowStep](#flowstep)
+- [GroupSpec](#groupspec)
+- [ResourceOrRef](#resourceorref)
+- [SharedPolicyGroupSpec](#sharedpolicygroupspec)
+- [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ |  |  |  |
+| `namespace` _string_ |  |  | Optional: \{\} <br /> |
+| `kind` _string_ |  |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/sharedpolicygroups
 
 
 
@@ -2287,7 +2352,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `crossId` _string_ | The Cross ID is used to identify an SharedPolicyGroup that has been promoted from one environment to another. |  |  |
 | `id` _string_ | The ID is used to identify an SharedPolicyGroup which is unique in any environment. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the SharedPolicyGroup.<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the SharedPolicyGroup.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the SharedPolicyGroup. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `errors` _[Errors](#errors)_ | When SharedPolicyGroup has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
@@ -2310,43 +2376,6 @@ _Appears in:_
 | `description` _string_ | FlowStep description |  | Optional: \{\} <br /> |
 | `configuration` _[GenericStringMap](#genericstringmap)_ | FlowStep configuration is a map of arbitrary key-values |  | Optional: \{\} <br /> |
 | `condition` _string_ | FlowStep condition |  | Optional: \{\} <br /> |
-
-
-
-## gravitee.io/v1alpha1/refs
-
-
-
-
-#### NamespacedName
-
-
-
-
-
-
-
-_Appears in:_
-- [ApiBase](#apibase)
-- [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiRef](#apiref)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
-- [ApplicationSpec](#applicationspec)
-- [Auth](#auth)
-- [Cloud](#cloud)
-- [Console](#console)
-- [FlowStep](#flowstep)
-- [GroupSpec](#groupspec)
-- [ResourceOrRef](#resourceorref)
-- [SharedPolicyGroupSpec](#sharedpolicygroupspec)
-- [SubscriptionSpec](#subscriptionspec)
-- [Type](#type)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `name` _string_ |  |  |  |
-| `namespace` _string_ |  |  | Optional: \{\} <br /> |
-| `kind` _string_ |  |  | Optional: \{\} <br /> |
 
 
 

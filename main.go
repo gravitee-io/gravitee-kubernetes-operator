@@ -28,7 +28,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
 	parameters "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclassparameters"
@@ -292,7 +292,7 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 
-	if err := (&policygroups.Reconciler{
+	if err := (&sharedpolicygroups.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("sharedpolicygroups-controller"),

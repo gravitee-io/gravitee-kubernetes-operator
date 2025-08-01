@@ -96,6 +96,7 @@ type ConsoleNotificationSettingsObject interface {
 type ApiDefinitionObject interface {
 	ContextAwareObject
 	ApiDefinitionModel
+	ConditionAware
 	GetDefinition() ApiDefinitionModel
 	SetDefinitionContext(DefinitionContext)
 	GetDefinitionContext() DefinitionContext

@@ -17,27 +17,26 @@ package internal
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func UpdateStatusSuccess(ctx context.Context, api core.Object) error {
-	if !api.GetDeletionTimestamp().IsZero() {
+func UpdateStatusSuccess(ctx context.Context, sharedPolicyGroup *v1alpha1.SharedPolicyGroup) error {
+	if sharedPolicyGroup.IsBeingDeleted() {
 		return nil
 	}
 
-	k8s.AddCondition(api, k8s.NewAcceptedConditionBuilder(api.GetGeneration()).
+	k8s.AddCondition(sharedPolicyGroup, k8s.NewAcceptedConditionBuilder(sharedPolicyGroup.GetGeneration()).
 		Accept("Successfully reconciled").Build())
 
-	// Deprecated
-	api.GetStatus().SetProcessingStatus(core.ProcessingStatusCompleted)
-	return k8s.GetClient().Status().Update(ctx, api)
+	sharedPolicyGroup.Status.ProcessingStatus = core.ProcessingStatusCompleted
+	return k8s.GetClient().Status().Update(ctx, sharedPolicyGroup)
 }
 
-func UpdateStatusFailure(ctx context.Context, api core.Object, err error) error {
-	k8s.ErrorToCondition(api, err)
+func UpdateStatusFailure(ctx context.Context, sharedPolicyGroup *v1alpha1.SharedPolicyGroup, err error) error {
+	k8s.ErrorToCondition(sharedPolicyGroup, err)
 
-	// Deprecated
-	api.GetStatus().SetProcessingStatus(core.ProcessingStatusFailed)
-	return k8s.GetClient().Status().Update(ctx, api)
+	sharedPolicyGroup.Status.ProcessingStatus = core.ProcessingStatusFailed
+	return k8s.GetClient().Status().Update(ctx, sharedPolicyGroup)
 }

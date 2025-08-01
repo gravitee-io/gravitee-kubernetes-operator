@@ -15,6 +15,7 @@
 package gateway
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
@@ -29,7 +30,7 @@ func WrapGatewayClass(gwc *gwAPIv1.GatewayClass) *GatewayClass {
 }
 
 func (gwc *GatewayClass) GetConditions() map[string]metav1.Condition {
-	return mapConditions(gwc.Object.Status.Conditions)
+	return utils.MapConditions(gwc.Object.Status.Conditions)
 }
 
 func (gwc *GatewayClass) SetConditions(conditions []metav1.Condition) {
@@ -45,7 +46,7 @@ func WrapGateway(gateway *gwAPIv1.Gateway) *Gateway {
 }
 
 func (gw *Gateway) GetConditions() map[string]metav1.Condition {
-	return mapConditions(gw.Object.Status.Conditions)
+	return utils.MapConditions(gw.Object.Status.Conditions)
 }
 
 func (gw *Gateway) SetConditions(conditions []metav1.Condition) {
@@ -61,7 +62,7 @@ func WrapListenerStatus(lst *gwAPIv1.ListenerStatus) *ListenerStatus {
 }
 
 func (lst *ListenerStatus) GetConditions() map[string]metav1.Condition {
-	return mapConditions(lst.Object.Conditions)
+	return utils.MapConditions(lst.Object.Conditions)
 }
 
 func (lst *ListenerStatus) SetConditions(conditions []metav1.Condition) {
@@ -89,17 +90,9 @@ func WrapRouteParentStatus(status *gwAPIv1.RouteParentStatus) *RouteParentStatus
 }
 
 func (st *RouteParentStatus) GetConditions() map[string]metav1.Condition {
-	return mapConditions(st.Object.Conditions)
+	return utils.MapConditions(st.Object.Conditions)
 }
 
 func (st *RouteParentStatus) SetConditions(conditions []metav1.Condition) {
 	st.Object.Conditions = conditions
-}
-
-func mapConditions(conditionsSlice []metav1.Condition) map[string]metav1.Condition {
-	conditions := make(map[string]metav1.Condition)
-	for _, condition := range conditionsSlice {
-		conditions[condition.Type] = condition
-	}
-	return conditions
 }

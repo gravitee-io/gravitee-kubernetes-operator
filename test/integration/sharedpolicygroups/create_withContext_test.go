@@ -42,6 +42,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("expecting SPG status to be completed")
 
 		Expect(assert.SharedPolicyGroupCompleted(fixtures.SharedPolicyGroup)).To(Succeed())
+		Expect(assert.SharedPolicyGroupAccepted(fixtures.SharedPolicyGroup)).To(Succeed())
 
 		By("calling rest API, expecting SPG to match status cross ID")
 

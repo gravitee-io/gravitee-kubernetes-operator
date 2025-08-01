@@ -18,25 +18,16 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func CreateOrUpdate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error {
-	spec := &spg.Spec
-
-	apim, err := apim.FromContextRef(ctx, spec.Context, spg.GetNamespace())
+func UpdateCondition(ctx context.Context, mgtCtx *v1alpha1.ManagementContext, err error) error {
 	if err != nil {
-		return err
+		k8s.ErrorToCondition(mgtCtx, err)
+	} else {
+		k8s.AddCondition(mgtCtx, k8s.NewAcceptedConditionBuilder(mgtCtx.GetGeneration()).
+			Accept("Successfully reconciled").Build())
 	}
 
-	spg.PopulateIDs(apim.Context)
-
-	status, mgmtErr := apim.SharedPolicyGroup.CreateOrUpdate(spec.SharedPolicyGroup)
-	if mgmtErr != nil {
-		return errors.NewContextError(mgmtErr)
-	}
-
-	status.DeepCopyInto(&spg.Status.Status)
-	return nil
+	return k8s.GetClient().Status().Update(ctx, mgtCtx)
 }

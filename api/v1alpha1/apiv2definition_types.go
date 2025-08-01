@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
@@ -59,6 +61,7 @@ type ApiDefinitionStatus struct {
 }
 
 var _ core.ApiDefinitionObject = &ApiDefinition{}
+var _ core.ConditionAware = &ApiDefinition{}
 var _ core.SubscribableStatus = &ApiDefinitionStatus{}
 var _ core.Spec = &ApiDefinitionV2Spec{}
 
@@ -305,6 +308,14 @@ func (api *ApiDefinition) getOrGenerateCrossID() string {
 	return uuid.FromStrings(api.GetNamespacedName().String())
 }
 
+func (api *ApiDefinition) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(api.Status.Conditions)
+}
+
+func (api *ApiDefinition) SetConditions(conditions []metav1.Condition) {
+	api.Status.Conditions = conditions
+}
+
 func (spec *ApiDefinitionV2Spec) Hash() string {
 	return hash.Calculate(spec)
 }
@@ -334,8 +345,10 @@ func (s *ApiDefinitionStatus) DeepCopyTo(obj client.Object) error {
 	switch t := obj.(type) {
 	case *ApiDefinition:
 		subscriptionCount := t.Status.SubscriptionCount
+		conditions := t.Status.Conditions
 		s.DeepCopyInto(&t.Status)
 		t.Status.SubscriptionCount = subscriptionCount
+		t.Status.Conditions = conditions
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}

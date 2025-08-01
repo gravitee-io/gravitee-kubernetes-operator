@@ -73,6 +73,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 				if err != nil {
 					return err
 				}
+
+				err = assert.ApiV4Accepted(fixtures.APIv4)
+				if err != nil {
+					return err
+				}
+
 				return assert.ApiV4Completed(fixtures.APIv4)
 			}, timeout, interval).Should(Succeed())
 

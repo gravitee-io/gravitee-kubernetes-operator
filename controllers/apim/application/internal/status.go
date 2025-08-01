@@ -26,12 +26,15 @@ func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application)
 	if application.IsBeingDeleted() {
 		return nil
 	}
+	k8s.AddCondition(application, k8s.NewAcceptedConditionBuilder(application.GetGeneration()).
+		Accept("Successfully reconciled").Build())
 
 	application.Status.ProcessingStatus = core.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, application)
 }
 
-func UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application) error {
+func UpdateStatusFailure(ctx context.Context, application *v1alpha1.Application, err error) error {
+	k8s.ErrorToCondition(application, err)
 	application.Status.ProcessingStatus = core.ProcessingStatusFailed
 	return k8s.GetClient().Status().Update(ctx, application)
 }

@@ -16,23 +16,26 @@ package template
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type valMapper func(interface{}) (interface{}, error)
 
-func traverse(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) (interface{}, error) {
+func traverse(ctx context.Context, obj client.Object, updateObjectMetadata bool) (interface{}, error) {
 	inner, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
-		return obj, err
+		return obj, gerrors.NewCompileTemplateError(fmt.Errorf("failed to convert object to unstructured: %w", err))
 	}
 
 	cp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj.DeepCopyObject())
 	if err != nil {
-		return obj, err
+		return obj, gerrors.NewCompileTemplateError(fmt.Errorf("failed to convert object to unstructured: %w", err))
 	}
 
 	wrapper := unstructured.Unstructured{Object: inner}
@@ -44,7 +47,7 @@ func traverse(ctx context.Context, obj runtime.Object, updateObjectMetadata bool
 
 	isDeleted, err := isResourceDeleted(inner)
 	if err != nil {
-		return nil, err
+		return nil, gerrors.NewCompileTemplateError(fmt.Errorf("failed to check if resource is deleted: %w", err))
 	}
 	result, err := doTraverse(cp, func(val interface{}) (interface{}, error) {
 		if v, ok := val.(string); ok {
@@ -55,7 +58,10 @@ func traverse(ctx context.Context, obj runtime.Object, updateObjectMetadata bool
 	})
 
 	if err != nil {
-		return nil, err
+		if errors.As(err, new(gerrors.ReconcileError)) {
+			return nil, err
+		}
+		return nil, gerrors.NewCompileTemplateError(err)
 	}
 
 	resultMap, _ := result.(map[string]interface{})

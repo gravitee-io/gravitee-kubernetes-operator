@@ -17,6 +17,7 @@ package application
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Status struct {
@@ -26,7 +27,19 @@ type Status struct {
 	EnvID string `json:"environmentId,omitempty"`
 	// The ID of the Application, if a management context has been defined to sync with an APIM instance
 	ID string `json:"id,omitempty"`
-	// The processing status of the Application.
+	// Conditions describe the current conditions of the Application.
+	//
+	// Known condition types are:
+	// * "Accepted"
+	// * "ResolvedRefs"
+	//
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	// +kubebuilder:validation:MaxItems=8
+	// +kubebuilder:default={}
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	// The processing status of the Application. *** DEPRECATED ***
 	// The value is `Completed` if the sync with APIM succeeded, Failed otherwise.
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 	// The number of subscriptions that reference the application
