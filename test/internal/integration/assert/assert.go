@@ -22,6 +22,9 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -57,20 +60,55 @@ func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }
 
+func ApiAccepted(apiDefinition *v1alpha1.ApiDefinition) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func ApiRejected(apiDefinition *v1alpha1.ApiDefinition) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)
+}
+
 func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
+}
+
+func ApiV4Accepted(apiDefinition *v1alpha1.ApiV4Definition) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func ApiV4Rejected(apiDefinition *v1alpha1.ApiV4Definition) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)
 }
 
 func ApplicationCompleted(app *v1alpha1.Application) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, app.Status.ProcessingStatus)
 }
 
+func ApplicationAccepted(app *v1alpha1.Application) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(app.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func ApplicationFailed(app *v1alpha1.Application) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, app.Status.ProcessingStatus)
 }
 
+func ApplicationRejected(app *v1alpha1.Application) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(app.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)
+}
+
 func SubscriptionCompleted(sub *v1alpha1.Subscription) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, sub.Status.ProcessingStatus)
+}
+
+func SubscriptionAccepted(sub *v1alpha1.Subscription) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(sub.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
 func SubscriptionFailed(sub *v1alpha1.Subscription) error {
@@ -81,12 +119,22 @@ func SharedPolicyGroupCompleted(sub *v1alpha1.SharedPolicyGroup) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, sub.Status.ProcessingStatus)
 }
 
+func SharedPolicyGroupAccepted(sub *v1alpha1.SharedPolicyGroup) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(sub.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func SharedPolicyGroupFailed(sub *v1alpha1.SharedPolicyGroup) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, sub.Status.ProcessingStatus)
 }
 
 func GroupCompleted(group *v1alpha1.Group) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, group.Status.ProcessingStatus)
+}
+
+func GroupAccepted(group *v1alpha1.Group) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(group.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
 func GroupFailed(group *v1alpha1.Group) error {

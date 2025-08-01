@@ -52,6 +52,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 			By("expecting API status to be completed")
 
 			Expect(assert.ApiV4Completed(fixtures.APIv4)).To(Succeed())
+			Expect(assert.ApiV4Accepted(fixtures.APIv4)).To(Succeed())
 
 			By("expecting to find config map")
 

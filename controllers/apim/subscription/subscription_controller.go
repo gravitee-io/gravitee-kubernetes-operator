@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -89,6 +90,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
+	dc.SetConditions(utils.ToConditions(subscription.GetConditions()))
 	if err := dc.GetStatus().DeepCopyTo(subscription); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -99,7 +101,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, subscription); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, subscription, err); err != nil {
 		return ctrl.Result{}, err
 	}
 

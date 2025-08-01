@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 
@@ -84,7 +84,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		),
 		Entry("should throw errors with modified Phase",
 			func(spg *v1alpha1.SharedPolicyGroup) *v1alpha1.SharedPolicyGroup {
-				phase := policygroups.FlowPhase("INTERACT")
+				phase := sharedpolicygroups.FlowPhase("INTERACT")
 				spg.Spec.Phase = &phase
 				return spg
 			},

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	corev1 "k8s.io/api/core/v1"
 
@@ -108,6 +109,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
+	dc.SetConditions(utils.ToConditions(application.GetConditions()))
 	if err := dc.GetStatus().DeepCopyTo(application); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -120,7 +122,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, application); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, application, err); err != nil {
 		return ctrl.Result{}, err
 	}
 

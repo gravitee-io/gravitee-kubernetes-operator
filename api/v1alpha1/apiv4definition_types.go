@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -47,6 +49,7 @@ type ApiV4DefinitionStatus struct {
 
 var _ core.ApiDefinitionObject = &ApiV4Definition{}
 var _ core.SubscribableStatus = &ApiV4DefinitionStatus{}
+var _ core.ConditionAware = &ApiV4Definition{}
 var _ core.Spec = &ApiDefinitionV2Spec{}
 
 // ApiV4Definition is the Schema for the v4 apidefinitions API.
@@ -297,6 +300,14 @@ func (api *ApiV4Definition) SetGroups(groups []string) {
 	api.Spec.Groups = groups
 }
 
+func (api *ApiV4Definition) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(api.Status.Conditions)
+}
+
+func (api *ApiV4Definition) SetConditions(conditions []metav1.Condition) {
+	api.Status.Conditions = conditions
+}
+
 func (spec *ApiV4DefinitionSpec) Hash() string {
 	return hash.Calculate(spec)
 }
@@ -330,8 +341,10 @@ func (s *ApiV4DefinitionStatus) DeepCopyTo(api client.Object) error {
 	switch t := api.(type) {
 	case *ApiV4Definition:
 		subscriptionCount := t.Status.SubscriptionCount
+		conditions := t.Status.Conditions
 		s.DeepCopyInto(&t.Status)
 		t.Status.SubscriptionCount = subscriptionCount
+		t.Status.Conditions = conditions
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}

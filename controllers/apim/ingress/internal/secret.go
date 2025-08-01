@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
@@ -110,7 +111,7 @@ func deleteIngressTLSReference(
 		secret := &core.Secret{}
 		key := types.NamespacedName{Namespace: ingress.Namespace, Name: tls.SecretName}
 		if err := cli.Get(ctx, key, secret); err != nil {
-			return err
+			return gerrors.NewResolveRefError(err)
 		}
 
 		// It is possible that the same secret has been used in another ingress

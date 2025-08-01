@@ -12,27 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package admission
+// +kubebuilder:object:generate=true
+// +groupName=gravitee.io/v1alpha1
+package sharedpolicygroups
 
-import (
-	"context"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-func CompileAndValidateTemplate(ctx context.Context, obj runtime.Object) *errors.AdmissionError {
-	o, ok := obj.(client.Object)
-	if !ok {
-		return errors.NewSeveref("unexpected object type %T", obj)
-	}
-	err := template.Compile(ctx, o, false)
-
-	if err != nil {
-		return errors.NewSeveref("%s", err.Error())
-	}
-
-	return nil
-}
+// placeholder files for package level markers

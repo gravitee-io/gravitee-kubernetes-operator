@@ -12,26 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dynamic
+package utils
 
-import (
-	"context"
-	"fmt"
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-)
-
-func ResolveNotification(ctx context.Context, ref core.ObjectRef, namespace string) (*v1alpha1.Notification, error) {
-	refKind := ref.GetKind()
-	if ref.GetKind() == "" {
-		refKind = NotificationGVR.Resource
+func MapConditions(conditionsSlice []metav1.Condition) map[string]metav1.Condition {
+	conditions := make(map[string]metav1.Condition)
+	for _, condition := range conditionsSlice {
+		conditions[condition.Type] = condition
 	}
-	kind := ResourceFromKind(refKind)
-	switch kind {
-	case NotificationGVR.Resource:
-		return resolveRef(ctx, ref, namespace, NotificationGVR, new(v1alpha1.Notification))
-	default:
-		return nil, fmt.Errorf("notification kind is mandatory")
+	return conditions
+}
+
+func ToConditions(conditionsMap map[string]metav1.Condition) []metav1.Condition {
+	conditions := make([]metav1.Condition, 0)
+	for _, condition := range conditionsMap {
+		conditions = append(conditions, condition)
 	}
+	return conditions
 }

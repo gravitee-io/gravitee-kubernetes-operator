@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,6 +29,7 @@ import (
 var _ core.SubscriptionObject = &Subscription{}
 var _ core.Spec = &SubscriptionSpec{}
 var _ core.Status = &SubscriptionStatus{}
+var _ core.ConditionAware = &Subscription{}
 
 // +kubebuilder:object:generate=true
 type SubscriptionSpec struct {
@@ -45,7 +47,19 @@ type SubscriptionStatus struct {
 	StartedAt string `json:"startedAt,omitempty"`
 	// The expiry date for the subscription (no date means no expiry)
 	EndingAt string `json:"endingAt,omitempty"`
-	// This value is `Completed` if the sync with APIM succeeded, Failed otherwise.
+	// Conditions describe the current conditions of the Subscription.
+	//
+	// Known condition types are:
+	// * "Accepted"
+	// * "ResolvedRefs"
+	//
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	// +kubebuilder:validation:MaxItems=8
+	// +kubebuilder:default={}
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	// This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED ***
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 }
 
@@ -136,6 +150,14 @@ type SubscriptionList struct {
 
 func (s *Subscription) IsBeingDeleted() bool {
 	return !s.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (s *Subscription) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(s.Status.Conditions)
+}
+
+func (s *Subscription) SetConditions(conditions []metav1.Condition) {
+	s.Status.Conditions = conditions
 }
 
 func init() {

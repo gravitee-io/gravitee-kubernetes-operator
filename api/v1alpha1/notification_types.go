@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -30,6 +31,7 @@ import (
 )
 
 var _ core.ConsoleNotificationSettingsObject = &base.ConsoleNotificationConfiguration{}
+var _ core.ConditionAware = &Notification{}
 
 // Notification defines notification settings in Gravitee
 // +kubebuilder:object:root=true
@@ -63,6 +65,14 @@ func (res *Notification) GetRef() core.ObjectRef {
 		Namespace: res.Namespace,
 		Name:      res.Name,
 	}
+}
+
+func (res *Notification) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(*res.Status.Conditions)
+}
+
+func (res *Notification) SetConditions(conditions []metav1.Condition) {
+	res.Status.Conditions = &conditions
 }
 
 //+kubebuilder:object:root=true

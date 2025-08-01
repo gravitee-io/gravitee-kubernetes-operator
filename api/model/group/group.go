@@ -17,6 +17,7 @@ package group
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // +kubebuilder:validation:Enum=API;APPLICATION;INTEGRATION;
@@ -65,7 +66,19 @@ type Status struct {
 	// The environment ID defined in the management context
 	// +kubebuilder:validation:Optional
 	EnvID string `json:"environmentId,omitempty"`
-	// The processing status of the Group.
+	// Conditions describe the current conditions of the Group.
+	//
+	// Known condition types are:
+	// * "Accepted"
+	// * "ResolvedRefs"
+	//
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	// +kubebuilder:validation:MaxItems=8
+	// +kubebuilder:default={}
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+	// The processing status of the Group. *** DEPRECATED ***
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
 	// The number of members added to this group
 	Members uint `json:"members"`

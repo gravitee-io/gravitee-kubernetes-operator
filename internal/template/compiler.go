@@ -25,6 +25,7 @@ import (
 	"strings"
 	"text/template"
 
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -47,10 +48,10 @@ const objectIDCtxKey = ctxKey("gravitee.io/templating/objectId")
 const objectAnnotationKey = ctxKey("gravitee.io/templating/annotationKey")
 const totalReferenceKey = "gravitee.io/references"
 
-func Compile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) error {
+func Compile(ctx context.Context, obj client.Object, updateObjectMetadata bool) error {
 	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to convert object to unstructured: %w", err)
 	}
 	return doCompile(
 		context.WithValue(
@@ -63,20 +64,21 @@ func Compile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool)
 	)
 }
 
-func doCompile(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) error {
+func doCompile(ctx context.Context, obj client.Object, updateObjectMetadata bool) error {
 	c, err := traverse(ctx, obj, updateObjectMetadata)
 	if err != nil {
 		return err
 	}
 	objData, ok := c.(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("traverse returned %T instead of map[string]interface{}", c)
+		return fmt.Errorf("traverse returned %T instead of map[string]interface{}", obj)
 	}
 
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(objData, obj)
 }
 
-func exec(ctx context.Context, text, ns string, parentResourceDeleted, updateObjectMetadata bool) (string, error) {
+func exec(ctx context.Context, text, ns string, parentResourceDeleted,
+	updateObjectMetadata bool) (string, error) {
 	funcMap := map[string]interface{}{
 		"configmap": func(name string) (string, error) {
 			return resolveConfigmap(ctx, ns, name, parentResourceDeleted, updateObjectMetadata)
@@ -123,7 +125,7 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 
 	err := cli.Get(ctx, nn, cm)
 	if kErrors.IsNotFound(err) {
-		return "", fmt.Errorf("configmap [%s/%s] not found", ns, name)
+		return "", gerrors.NewResolveRefError(fmt.Errorf("configmap [%s/%s] not found", ns, name))
 	}
 
 	if err != nil {
@@ -172,7 +174,7 @@ func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
 
 	err := cli.Get(ctx, nn, sec)
 	if kErrors.IsNotFound(err) {
-		return "", fmt.Errorf("secret [%s/%s] not found", ns, name)
+		return "", gerrors.NewResolveRefError(fmt.Errorf("secret [%s/%s] not found", ns, name))
 	}
 
 	if err != nil {

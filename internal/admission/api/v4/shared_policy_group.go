@@ -17,7 +17,7 @@ package v4
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -94,7 +94,7 @@ func validateFlowSharedPolicyGroups(ctx context.Context, flows []*v4.Flow,
 }
 
 func validateSharedPolicyGroup(ctx context.Context, flowStep *v4.FlowStep, parentNS string,
-	phase policygroups.FlowPhase) *errors.AdmissionError {
+	phase sharedpolicygroups.FlowPhase) *errors.AdmissionError {
 	if flowStep.SharedPolicyGroup != nil {
 		spg, err := getSharePolicyGroup(ctx, flowStep.SharedPolicyGroup, parentNS)
 		if err != nil {

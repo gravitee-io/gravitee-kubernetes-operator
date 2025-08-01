@@ -15,12 +15,17 @@
 package k8s
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -43,6 +48,39 @@ const (
 
 type ConditionBuilder struct {
 	condition *metav1.Condition
+}
+
+func AddCondition(obj runtime.Object, condition *metav1.Condition) {
+	ca, ok := obj.(core.ConditionAware)
+	if ok {
+		conditions := ca.GetConditions()
+		conditions[condition.Type] = *condition
+		ca.SetConditions(utils.ToConditions(conditions))
+	}
+}
+
+func ErrorToCondition(obj client.Object, err error) {
+	condition := NewAcceptedConditionBuilder(obj.GetGeneration()).Reason("ReconcileFailed").Message(err.Error()).Build()
+
+	e := new(gerrors.ReconcileError)
+	if errors.As(err, e) {
+		switch e.Type {
+		case gerrors.CompileTemplateError:
+			condition = NewAcceptedConditionBuilder(obj.GetGeneration()).
+				Reason(string(gerrors.CompileTemplateError)).Message(e.Error()).Build()
+		case gerrors.ControlPlaneError:
+			condition = NewAcceptedConditionBuilder(obj.GetGeneration()).
+				Reason(string(gerrors.ControlPlaneError)).Message(e.Error()).Build()
+		case gerrors.ResolveRefError:
+			condition = NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+				Message(e.Error()).Status(ConditionStatusFalse).Build()
+		case gerrors.IllegalStateError:
+			condition = NewAcceptedConditionBuilder(obj.GetGeneration()).
+				Reason(string(gerrors.IllegalStateError)).Message(e.Error()).Build()
+		}
+	}
+
+	AddCondition(obj, condition)
 }
 
 func NewResolvedRefsConditionBuilder(generation int64) *ConditionBuilder {

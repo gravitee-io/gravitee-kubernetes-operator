@@ -20,12 +20,11 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
@@ -66,7 +65,8 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	if !apiDefinition.HasContext() {
 		if !spec.IsLocal {
-			return errors.NewUnrecoverableError("a context is required when setting local to false")
+			return gerrors.NewIllegalStateError(
+				gerrors.NewUnrecoverableError("a context is required when setting local to false"))
 		}
 		if err := updateConfigMap(ctx, cp); err != nil {
 			return err
@@ -85,7 +85,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	status, mgmtErr := apimClient.APIs.ImportV2(&spec.Api)
 	if mgmtErr != nil {
-		return errors.NewContextError(mgmtErr)
+		return gerrors.NewControlPlaneError(mgmtErr)
 	}
 
 	apiDefinition.Status = v1alpha1.ApiDefinitionStatus{
@@ -140,7 +140,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		status, err := apimClient.APIs.ImportV4(&spec.Api)
 
 		if err != nil {
-			return err
+			return gerrors.NewControlPlaneError(err)
 		}
 		apiDefinition.Status.Status = *status
 		log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)

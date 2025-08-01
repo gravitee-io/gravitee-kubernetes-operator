@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	v1 "k8s.io/api/core/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -33,7 +34,7 @@ func CreateOrUpdate(
 
 		nsn := getSecretRef(instance)
 		if err := k8s.GetClient().Get(ctx, nsn, secret); err != nil {
-			return err
+			return gerrors.NewResolveRefError(err)
 		}
 
 		if !util.ContainsFinalizer(secret, core.ManagementContextSecretFinalizer) {

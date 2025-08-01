@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package policygroups
+package sharedpolicygroups
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"

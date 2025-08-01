@@ -21,8 +21,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/policygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -31,11 +31,12 @@ import (
 )
 
 var _ core.ContextAwareObject = &SharedPolicyGroup{}
+var _ core.ConditionAware = &SharedPolicyGroup{}
 
 // SharedPolicyGroupSpec
 // +kubebuilder:object:generate=true
 type SharedPolicyGroupSpec struct {
-	*policygroups.SharedPolicyGroup `json:",inline"`
+	*sharedpolicygroups.SharedPolicyGroup `json:",inline"`
 	// +kubebuilder:validation:Required
 	Context *refs.NamespacedName `json:"contextRef"`
 }
@@ -47,7 +48,7 @@ func (spec *SharedPolicyGroupSpec) Hash() string {
 
 // SharedPolicyGroupSpecStatus defines the observed state of an API Context.
 type SharedPolicyGroupSpecStatus struct {
-	policygroups.Status `json:",inline"`
+	sharedpolicygroups.Status `json:",inline"`
 }
 
 // SharedPolicyGroup
@@ -124,6 +125,14 @@ func (s *SharedPolicyGroup) GetOrgID() string {
 
 func (s *SharedPolicyGroup) GetEnvID() string {
 	return s.Status.EnvID
+}
+
+func (s *SharedPolicyGroup) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(s.Status.Conditions)
+}
+
+func (s *SharedPolicyGroup) SetConditions(conditions []metav1.Condition) {
+	s.Status.Conditions = conditions
 }
 
 func (s *SharedPolicyGroupSpecStatus) SetProcessingStatus(status core.ProcessingStatus) {

@@ -17,7 +17,7 @@ package sharedpolicygroups
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/policygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	spg "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -47,7 +47,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		updated := *fixtures.SharedPolicyGroup
 		configuration := utils.NewGenericStringMap()
 		configuration.Put("key", "value")
-		updated.Spec.Steps = []*policygroups.Step{
+		updated.Spec.Steps = []*sharedpolicygroups.Step{
 			{
 				Enabled:       true,
 				Policy:        utils.ToReference("policy_throw_unexpected_policy_exception"),

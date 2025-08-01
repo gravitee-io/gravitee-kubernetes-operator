@@ -17,6 +17,7 @@ package group
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -78,6 +79,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
+	dc.SetConditions(utils.ToConditions(group.GetConditions()))
 	if err := dc.GetStatus().DeepCopyTo(group); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -88,7 +90,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, group); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, group, err); err != nil {
 		return ctrl.Result{}, err
 	}
 

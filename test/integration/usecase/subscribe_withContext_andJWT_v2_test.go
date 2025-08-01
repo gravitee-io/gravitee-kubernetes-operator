@@ -61,6 +61,10 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 			return assert.SubscriptionCompleted(fixtures.Subscription)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
 
+		Eventually(func() error {
+			return assert.SubscriptionAccepted(fixtures.Subscription)
+		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
+
 		By("calling API endpoint without token, expecting status 401")
 
 		httpClient := tHTTP.NewClient()

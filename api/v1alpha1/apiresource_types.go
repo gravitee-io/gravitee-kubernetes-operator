@@ -62,6 +62,15 @@ func (s *ApiResourceStatus) DeepCopyTo(obj client.Object) error {
 	return fmt.Errorf("unknown type %T", obj)
 }
 
+func (s *ApiResourceStatus) GetConditions() map[string]metav1.Condition {
+	// Not implemented yet
+	return make(map[string]metav1.Condition)
+}
+
+func (s *ApiResourceStatus) SetConditions(conditions []metav1.Condition) {
+	// Not implemented yet
+}
+
 // SetProcessingStatus implements core.Status.
 func (s *ApiResourceStatus) SetProcessingStatus(status core.ProcessingStatus) {
 }

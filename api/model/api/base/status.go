@@ -17,6 +17,7 @@ package base
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Status struct {
@@ -31,8 +32,22 @@ type Status struct {
 	ID string `json:"id,omitempty"`
 	// The Cross ID is used to identify an API that has been promoted from one environment to another.
 	CrossID string `json:"crossId,omitempty"`
-	// The processing status of the API definition.
+	// The processing status of the API definition. *** DEPRECATED ***
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
+
+	// Conditions describe the current conditions of the API.
+	//
+	// Known condition types are:
+	// * "Accepted"
+	// * "ResolvedRefs"
+	//
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	// +kubebuilder:validation:MaxItems=8
+	// +kubebuilder:default={}
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
 	// The state of the API. Can be either STARTED or STOPPED.
 	State ApiState `json:"state,omitempty"`
 	// This field is used to store the list of plans that have been created

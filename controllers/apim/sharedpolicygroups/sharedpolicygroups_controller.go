@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package policygroups
+package sharedpolicygroups
 
 import (
 	"context"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups/internal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups/internal"
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -96,6 +97,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
+	dc.SetConditions(utils.ToConditions(spg.GetConditions()))
 	if err := dc.GetStatus().DeepCopyTo(spg); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -106,7 +108,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, spg); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, spg, err); err != nil {
 		return ctrl.Result{}, err
 	}
 

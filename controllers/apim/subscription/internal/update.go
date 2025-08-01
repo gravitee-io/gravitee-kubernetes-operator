@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
@@ -70,7 +71,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 
 	status, err := apim.Subscription.Import(sub)
 	if err != nil {
-		return err
+		return gerrors.NewControlPlaneError(err)
 	}
 
 	startedAt, err := time.Parse(time.RFC3339, status.StartingAt)
