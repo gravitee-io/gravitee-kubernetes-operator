@@ -124,7 +124,7 @@ func reconcileApiDefinition(
 		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, apiDefinition)
 	}
 
-	if err := internal.UpdateStatusFailure(ctx, apiDefinition); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, apiDefinition, err); err != nil {
 		return ctrl.Result{}, err
 	}
 

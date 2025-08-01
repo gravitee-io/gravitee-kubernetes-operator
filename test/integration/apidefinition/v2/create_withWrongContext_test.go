@@ -44,6 +44,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			By("expecting API status to be failed")
 
 			Expect(assert.ApiFailed(fixtures.API)).To(Succeed(), fixtures.API.Name)
+			Expect(assert.ApiRejected(fixtures.API)).To(Succeed(), fixtures.API.Name)
 
 			By("expecting API events to have been emitted")
 
@@ -73,6 +74,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 				if err != nil {
 					return err
 				}
+
+				err = assert.ApiAccepted(fixtures.API)
+				if err != nil {
+					return err
+				}
+
 				return assert.ApiCompleted(fixtures.API)
 			}, timeout, interval).Should(Succeed())
 

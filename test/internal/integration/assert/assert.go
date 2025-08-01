@@ -22,6 +22,8 @@ import (
 	"slices"
 	"strings"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -57,8 +59,24 @@ func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }
 
+func ApiAccepted(apiDefinition *v1alpha1.ApiDefinition) error {
+	return Equals(reconcileCondition, true, apiDefinition.Status.Conditions[0].Status == metav1.ConditionTrue)
+}
+
+func ApiRejected(apiDefinition *v1alpha1.ApiDefinition) error {
+	return Equals(reconcileCondition, true, apiDefinition.Status.Conditions[0].Status == metav1.ConditionFalse)
+}
+
 func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
+}
+
+func ApiV4Accepted(apiDefinition *v1alpha1.ApiV4Definition) error {
+	return Equals(reconcileCondition, true, apiDefinition.Status.Conditions[0].Status == metav1.ConditionTrue)
+}
+
+func ApiV4Rejected(apiDefinition *v1alpha1.ApiV4Definition) error {
+	return Equals(reconcileCondition, true, apiDefinition.Status.Conditions[0].Status == metav1.ConditionFalse)
 }
 
 func ApplicationCompleted(app *v1alpha1.Application) error {
