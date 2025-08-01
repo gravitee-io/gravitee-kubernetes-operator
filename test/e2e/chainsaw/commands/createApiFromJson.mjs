@@ -27,13 +27,13 @@ try {
     await $`test -f ${jsonfile}`;
 } catch {
     console.error(`Error: File ${jsonfile} not found.`);
-    process.exit(1);
+    process.exit(2);
 }
 
 const { APIM_API, APIM_AUTH } = process.env;
 if (!APIM_API || !APIM_AUTH) {
     console.error('Error: APIM_API or APIM_AUTH not set in .env file.');
-    process.exit(1);
+    process.exit(3);
 }
 
 const fileContent = fs.readFileSync(jsonfile, 'utf8');
@@ -46,7 +46,7 @@ if (apiDefinition.gravitee === '2.0.0') {
     url = `${APIM_API}/management/v2/environments/DEFAULT/apis/_import/definition`;
 } else {
     console.error('Unknown API definition version');
-    process.exit(1);
+    process.exit(4);
 }
 
 
@@ -55,19 +55,19 @@ if (apiDefinition.gravitee === '2.0.0') {
             method: 'POST',
             body: fileContent,
             headers: {
-                'Authorization': `Bearer ${APIM_AUTH}`,
+                'Authorization': `${APIM_AUTH}`,
                 'Content-Type': 'application/json'
             }
     });
 
     if (!response.ok) {
         console.error(`Error during API import: HTTP ${response.status} ${response.statusText}`);
-        process.exit(1);
+        process.exit(5);
     }
 
     const responseData = await response.text();
     console.log(responseData);
 } catch (error) {
     console.error('Error during API import:', error);
-    process.exit(1);
+    process.exit(6);
 }

@@ -48,7 +48,7 @@ if (apiVersion === 'v2') {
 
 try {
     const headers = {
-        'Authorization': `Bearer ${APIM_AUTH}`,
+        'Authorization': `${APIM_AUTH}`,
         'Content-Type': 'application/yaml'
     };
 
