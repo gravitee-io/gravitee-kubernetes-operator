@@ -44,6 +44,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			By("expecting API V4 status to be failed")
 
 			Expect(assert.ApiV4Failed(fixtures.APIv4)).To(Succeed())
+			Expect(assert.ApiV4Rejected(fixtures.APIv4)).To(Succeed())
 
 			By("expecting API V4 events to have been emitted")
 
@@ -73,6 +74,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 				if err != nil {
 					return err
 				}
+
+				err = assert.ApiV4Accepted(fixtures.APIv4)
+				if err != nil {
+					return err
+				}
+
 				return assert.ApiV4Completed(fixtures.APIv4)
 			}, timeout, interval).Should(Succeed())
 

@@ -43,6 +43,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			By("expecting API status to be completed")
 
 			Expect(assert.ApiV4Completed(fixtures.APIv4)).To(Succeed())
+			Expect(assert.ApiV4Accepted(fixtures.APIv4)).To(Succeed())
 
 			By(fmt.Sprintf("calling gateway endpoint, expecting status %d", status))
 
