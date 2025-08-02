@@ -20,6 +20,7 @@ import { toggleVerbosity, LOG } from "./lib/index.mjs";
 
 const VERBOSE = argv.verbose;
 const PIPELINE_BRANCH = argv["pipeline-branch"];
+const NOTIFY = argv["notify"] === "true" || argv["notify"] === true;
 
 toggleVerbosity(VERBOSE);
 
@@ -27,6 +28,7 @@ LOG.blue(`Triggering E2E test pipeline`);
 
 const parameters = {
   trigger: "e2e",
+  notify: NOTIFY,
 };
 
 LOG.blue(`
