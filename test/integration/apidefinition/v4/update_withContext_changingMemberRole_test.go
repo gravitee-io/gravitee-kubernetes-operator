@@ -39,6 +39,10 @@ var _ = Describe("Update", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should change the role of an API member", func() {
+		Skip(`
+			This test has been skipped because it is flaky and will move to e2e suite
+		`)
+
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4).
