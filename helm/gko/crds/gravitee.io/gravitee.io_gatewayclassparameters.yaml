@@ -6166,10 +6166,10 @@ spec:
                                                           path:
                                                             description: >-
                                                               
-                                                              
-                                                              path is the relative
-                                                              path of the file to
-                                                              map the key to.
+                                                              path is the
+                                                              relative path of the
+                                                              file to map the key
+                                                              to.
 
                                                               May not be an
                                                               absolute path.
@@ -6218,9 +6218,8 @@ spec:
                                                           mode:
                                                             description: >-
                                                               
-                                                              
-                                                              Optional: mode bits
-                                                              used to set
+                                                              Optional: mode
+                                                              bits used to set
                                                               permissions on this
                                                               file, must be an
                                                               octal value
@@ -6234,7 +6233,6 @@ spec:
                                                             type: string
                                                           resourceFieldRef:
                                                             description: >-
-                                                              
                                                               
                                                               Selects a resource
                                                               of the container:
@@ -6291,10 +6289,10 @@ spec:
                                                           path:
                                                             description: >-
                                                               
-                                                              
-                                                              path is the relative
-                                                              path of the file to
-                                                              map the key to.
+                                                              path is the
+                                                              relative path of the
+                                                              file to map the key
+                                                              to.
 
                                                               May not be an
                                                               absolute path.
