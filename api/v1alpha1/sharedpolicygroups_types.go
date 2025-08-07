@@ -154,6 +154,10 @@ func (s *SharedPolicyGroupSpecStatus) DeepCopyTo(obj client.Object) error {
 	}
 }
 
+func (s *SharedPolicyGroupSpecStatus) SetConditions(conditions []metav1.Condition) {
+	// Not implemented yet
+}
+
 func init() {
 	SchemeBuilder.Register(&SharedPolicyGroup{}, &SharedPolicyGroupList{})
 }

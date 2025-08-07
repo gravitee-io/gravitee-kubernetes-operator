@@ -73,7 +73,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
@@ -228,7 +229,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
@@ -1601,7 +1603,8 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
-| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |

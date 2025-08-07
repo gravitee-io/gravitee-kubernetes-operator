@@ -73,6 +73,9 @@ func (s *GroupStatus) IsFailed() bool {
 func (s *GroupStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
 }
+func (s *GroupStatus) SetConditions(conditions []metav1.Condition) {
+	// Not implemented yet
+}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
