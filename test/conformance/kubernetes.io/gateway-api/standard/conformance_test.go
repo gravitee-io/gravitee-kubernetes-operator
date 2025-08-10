@@ -16,9 +16,12 @@ package standard
 
 import (
 	"flag"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/conformance/kubernetes.io/gateway-api/impl"
+	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/gateway-api/conformance"
 	"sigs.k8s.io/gateway-api/conformance/tests"
@@ -27,23 +30,37 @@ import (
 	"sigs.k8s.io/gateway-api/pkg/features"
 )
 
-const timeout = 180 * time.Second
+var lazyTimeoutConfig = config.TimeoutConfig{
+	TestIsolation:                      0 * time.Second,
+	GWCMustBeAccepted:                  300 * time.Second,
+	GatewayStatusMustHaveListeners:     300 * time.Second,
+	GatewayListenersMustHaveConditions: 300 * time.Second,
+	HTTPRouteMustNotHaveParents:        180 * time.Second,
+	HTTPRouteMustHaveCondition:         180 * time.Second,
+	TLSRouteMustHaveCondition:          180 * time.Second,
+	RouteMustHaveParents:               180 * time.Second,
+	GetTimeout:                         180 * time.Second,
+}
 
 func TestGatewayAPIConformance(t *testing.T) {
 	flag.Parse()
 
 	opts := conformance.DefaultOptions(t)
+
+	opts.Implementation = impl.Manifest
+	opts.ReportOutputPath = impl.GetReportOutputPath()
+
+	opts.ConformanceProfiles = sets.New(
+		suite.GatewayHTTPConformanceProfileName,
+	)
+
 	opts.SupportedFeatures = sets.New(
 		features.GatewayFeature.Name,
 		features.HTTPRouteFeature.Name,
-		// features.GRPCRouteFeature.Name,
-		// features.ReferenceGrantFeature.Name,
+		features.ReferenceGrantFeature.Name,
 	)
 
-	opts.TimeoutConfig = config.DefaultTimeoutConfig()
-	opts.TimeoutConfig.GatewayStatusMustHaveListeners = timeout
-	opts.TimeoutConfig.GatewayListenersMustHaveConditions = timeout
-	opts.TimeoutConfig.HTTPRouteMustHaveCondition = timeout
+	opts.TimeoutConfig = lazyTimeoutConfig
 	opts.RestConfig.QPS = -1
 
 	// Here you can specify test name for debug purpose
@@ -56,6 +73,7 @@ func TestGatewayAPIConformance(t *testing.T) {
 	//   HTTPRouteMatchingAcrossRoutes
 
 	opts.RunTest = ""
+	opts.CleanupBaseResources = false
 
 	opts.SkipTests = []string{}
 
@@ -82,5 +100,23 @@ func TestGatewayAPIConformance(t *testing.T) {
 	cSuite.Setup(t, tests.ConformanceTests)
 	if err := cSuite.Run(t, tests.ConformanceTests); err != nil {
 		t.Fatalf("Error running conformance tests: %v", err)
+	}
+
+	generateReport(t, cSuite, opts)
+}
+
+func generateReport(t *testing.T, cSuite *suite.ConformanceTestSuite, opts suite.ConformanceOptions) {
+	report, err := cSuite.Report()
+	if err != nil {
+		t.Fatalf("error generating conformance profile report: %v", err)
+	}
+
+	rawReport, err := yaml.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = os.WriteFile(opts.ReportOutputPath, rawReport, 0o600); err != nil {
+		t.Fatal(err)
 	}
 }

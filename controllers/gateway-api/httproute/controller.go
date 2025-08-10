@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,6 +33,7 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 type Reconciler struct {
@@ -50,52 +52,61 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := route.DeepCopy()
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), route, func() error {
-		util.AddFinalizer(route, core.HTTPRouteFinalizer)
-
-		if !route.DeletionTimestamp.IsZero() {
-			return events.Record(event.Delete, route, func() error {
-				util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
-				return nil
-			})
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		if err := k8s.GetClient().Get(ctx, req.NamespacedName, dc); client.IgnoreNotFound(err) != nil {
+			return err
 		}
 
-		return events.Record(event.Update, route, func() error {
-			if err := internal.Resolve(ctx, dc); err != nil {
-				return err
-			}
+		return k8s.CreateOrUpdate(ctx, route, func() error {
+			util.AddFinalizer(route, core.HTTPRouteFinalizer)
 
-			if err := internal.Accept(ctx, dc); err != nil {
-				return err
-			}
-
-			if err := internal.DetectConflicts(ctx, dc); err != nil {
-				return err
-			}
-
-			for i := range dc.Status.Parents {
-				parent := &dc.Status.Parents[i]
-				if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
+			if !route.DeletionTimestamp.IsZero() {
+				return events.Record(event.Delete, route, func() error {
+					util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
 					return nil
-				}
+				})
 			}
 
-			if err := internal.Program(ctx, dc); err != nil {
-				return err
-			}
-			return nil
+			return events.Record(event.Update, route, func() error {
+				internal.Init(dc)
+
+				if err := internal.Resolve(ctx, dc); err != nil {
+					return err
+				}
+
+				if err := internal.Accept(ctx, dc); err != nil {
+					return err
+				}
+
+				// TODO: detect with merge conflict resolution
+				if err := internal.DetectConflicts(ctx, dc); err != nil {
+					return err
+				}
+
+				for i := range dc.Status.Parents {
+					parent := &dc.Status.Parents[i]
+					if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
+						return nil
+					}
+				}
+
+				if err := internal.Program(ctx, dc); err != nil {
+					return err
+				}
+				return nil
+			})
 		})
 	})
 
 	if err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, nil
 	}
 
 	dc.Status.DeepCopyInto(&route.Status)
-	if err := k8s.UpdateStatus(ctx, route); err != nil {
+	if err := k8s.UpdateStatus(ctx, route); client.IgnoreNotFound(err) != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, err
 	}
 
 	log.InfoEndReconcile(ctx, route)
@@ -105,5 +116,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwAPIv1.HTTPRoute{}).
+		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
 		Complete(r)
 }

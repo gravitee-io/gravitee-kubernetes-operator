@@ -10,6 +10,7 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 GINKGO ?= $(LOCALBIN)/ginkgo
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
+CHAINSAW ?= $(LOCALBIN)/chainsaw
 
 .PHONY: clean-tools
 clean-tools: $(LOCALBIN) ## Cleans (delete) all binary tools

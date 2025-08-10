@@ -15,6 +15,7 @@
 package mapper
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -30,32 +31,35 @@ var (
 	defaultEndpointWeight int32 = 1
 )
 
-func buildEndpointGroups(route *gwAPIv1.HTTPRoute) []*v4.EndpointGroup {
+func buildEndpointGroups(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.EndpointGroup, error) {
 	groups := []*v4.EndpointGroup{}
 	for ruleIndex, rule := range route.Spec.Rules {
 		for matchIndex, match := range rule.Matches {
-			groups = append(
-				groups,
-				buildEndpointGroup(
-					rule,
-					ruleIndex,
-					match,
-					matchIndex,
-					route.Namespace,
-				),
+			epg, err := buildEndpointGroup(
+				ctx,
+				route,
+				rule,
+				ruleIndex,
+				match,
+				matchIndex,
 			)
+			if err != nil {
+				return nil, err
+			}
+			groups = append(groups, epg)
 		}
 	}
-	return groups
+	return groups, nil
 }
 
 func buildEndpointGroup(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
 	rule gwAPIv1.HTTPRouteRule,
 	ruleIndex int,
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
-	ns string,
-) *v4.EndpointGroup {
+) (*v4.EndpointGroup, error) {
 	endpointGroup := v4.NewHttpEndpointGroup(
 		buildEndpointGroupName(ruleIndex, matchIndex),
 	)
@@ -65,8 +69,12 @@ func buildEndpointGroup(
 	if len(backendRefs) > 1 {
 		endpointGroup.LoadBalancer = v4.NewLoadBalancer(v4.WeightedRoundRobin)
 	}
-	endpointGroup.Endpoints = buildEndpoints(match, matchIndex, backendRefs, ns)
-	return endpointGroup
+	eps, err := buildEndpoints(ctx, route, match, matchIndex, backendRefs)
+	if err != nil {
+		return nil, err
+	}
+	endpointGroup.Endpoints = eps
+	return endpointGroup, nil
 }
 
 func buildEndpointGroupName(ruleIndex, matchIndex int) string {
@@ -74,29 +82,42 @@ func buildEndpointGroupName(ruleIndex, matchIndex int) string {
 }
 
 func buildEndpoints(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
 	backendRefs []gwAPIv1.HTTPBackendRef,
-	namespace string,
-) []*v4.Endpoint {
+) ([]*v4.Endpoint, error) {
 	endpoints := []*v4.Endpoint{}
 	if len(backendRefs) == 0 {
 		// in case of HTTP redirect, there is no backend ref
-		return append(endpoints, buildDummyEndpoint())
+		return append(endpoints, buildDummyEndpoint()), nil
 	}
 	for backendIndex, backendRef := range backendRefs {
-		endpoints = append(
-			endpoints,
-			buildEndpoint(
-				backendRef,
-				backendIndex,
-				match,
-				matchIndex,
-				namespace,
-			),
-		)
+		objectRef := gwAPIv1.ObjectReference{
+			Name:      backendRef.Name,
+			Group:     *backendRef.Group,
+			Kind:      *backendRef.Kind,
+			Namespace: backendRef.Namespace,
+		}
+		if granted, err := k8s.IsGrantedReference(ctx, route, objectRef); err != nil {
+			return nil, err
+		} else if !granted {
+			endpoints = append(endpoints, buildDummyEndpoint())
+		} else {
+			endpoints = append(
+				endpoints,
+				buildEndpoint(
+					backendRef,
+					backendIndex,
+					match,
+					matchIndex,
+					k8s.GetRefNs(route, backendRef.Namespace),
+				),
+			)
+		}
 	}
-	return endpoints
+	return endpoints, nil
 }
 
 func buildDummyEndpoint() *v4.Endpoint {

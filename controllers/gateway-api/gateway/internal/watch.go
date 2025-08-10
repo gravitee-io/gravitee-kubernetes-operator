@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 func WatchGatewayClasses() handler.EventHandler {
@@ -46,6 +47,10 @@ func WatchServices() handler.EventHandler {
 
 func WatchSecrets() handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(requestsFromSecret)
+}
+
+func WatchReferenceGrants() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestFromReferenceGrant)
 }
 
 func requestsFromGatewayClass(ctx context.Context, obj client.Object) []reconcile.Request {
@@ -78,10 +83,10 @@ func requestsFromService(ctx context.Context, obj client.Object) []reconcile.Req
 	if !ok {
 		return nil
 	}
-	if !k8s.IsGatewayComponent(svc) {
+	if !svc.DeletionTimestamp.IsZero() {
 		return nil
 	}
-	if !svc.DeletionTimestamp.IsZero() {
+	if !k8s.IsGatewayComponent(svc) {
 		return nil
 	}
 	listOpts := &client.ListOptions{
@@ -106,9 +111,7 @@ func requestsFromHTTPRoute(ctx context.Context, obj client.Object) []reconcile.R
 	if !ok {
 		return nil
 	}
-	listOpts := &client.ListOptions{
-		Namespace: httpRoute.Namespace,
-	}
+	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
 		return nil
@@ -129,9 +132,7 @@ func requestsFromKafkaRoute(ctx context.Context, obj client.Object) []reconcile.
 	if !ok {
 		return nil
 	}
-	listOpts := &client.ListOptions{
-		Namespace: kafkaRoute.Namespace,
-	}
+	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
 		return nil
@@ -152,6 +153,9 @@ func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Requ
 	if !ok {
 		return nil
 	}
+	if !secret.DeletionTimestamp.IsZero() {
+		return nil
+	}
 	listOpts := &client.ListOptions{
 		Namespace: secret.Namespace,
 	}
@@ -166,6 +170,24 @@ func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Requ
 				reqs = append(reqs, buildRequest(gw))
 			}
 		}
+	}
+	return reqs
+}
+
+func requestFromReferenceGrant(ctx context.Context, obj client.Object) []reconcile.Request {
+	_, ok := obj.(*gwAPIv1beta1.ReferenceGrant)
+	if !ok {
+		return nil
+	}
+
+	listOpts := &client.ListOptions{}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+		return nil
+	}
+	reqs := make([]reconcile.Request, len(list.Items))
+	for i, gw := range list.Items {
+		reqs[i] = buildRequest(gw)
 	}
 	return reqs
 }
