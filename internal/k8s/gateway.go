@@ -23,6 +23,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/logback"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/yaml"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	appV1 "k8s.io/api/apps/v1"
@@ -73,7 +74,6 @@ func DeployGateway(
 	}
 
 	configData := map[string]string{}
-	maps.Copy(configData, gatewayConfig.Data)
 
 	if HasGraviteeYAML(params) {
 		userConfig, err := getUserConfigMap(gw, params)
@@ -88,11 +88,12 @@ func DeployGateway(
 		maps.Copy(configData, userConfig.Data)
 	}
 
-	if deployment, err := getDeployment(gw, params, portMapping); err != nil {
+	maps.Copy(configData, gatewayConfig.Data)
+
+	if deployment, err := getDeployment(gw, params, portMapping, configData); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
-		AddAnnotation(deployment, "gravitee.io/config", hash.Calculate(configData))
-		return buildDeployment(gw, params, deployment, portMapping)
+		return buildDeployment(gw, params, deployment, portMapping, configData)
 	}); err != nil {
 		return err
 	}
@@ -220,6 +221,9 @@ func buildOverridingGatewayConfigData(
 		return err
 	}
 	configMap.Data[DefaultConfigFileEntry] = string(yamlData)
+
+	configMap.Data[DefaultLogConfigFileEntry] = logback.Config
+
 	return nil
 }
 
@@ -235,6 +239,7 @@ func getDeployment(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
+	config map[string]string,
 ) (*appV1.Deployment, error) {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
@@ -245,7 +250,7 @@ func getDeployment(
 
 	setOwnerReference(gw.Object, deployment)
 
-	if err := buildDeployment(gw, params, deployment, portMapping); err != nil {
+	if err := buildDeployment(gw, params, deployment, portMapping, config); err != nil {
 		return nil, err
 	}
 
@@ -257,6 +262,7 @@ func buildDeployment(
 	params *v1alpha1.GatewayClassParameters,
 	deployment *appV1.Deployment,
 	portMapping map[gwAPIv1.PortNumber]int32,
+	config map[string]string,
 ) error {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 
@@ -291,13 +297,33 @@ func buildDeployment(
 		deployment.Spec.Strategy = *params.Spec.Kubernetes.Deployment.Strategy
 	}
 
+	if deployment.Annotations == nil {
+		deployment.Annotations = make(map[string]string)
+	}
+
+	if deployment.Spec.Template.Annotations == nil {
+		deployment.Spec.Template.Annotations = make(map[string]string)
+	}
+
+	if deployment.Labels == nil {
+		deployment.Labels = make(map[string]string)
+	}
+
+	if deployment.Spec.Template.Labels == nil {
+		deployment.Spec.Template.Labels = make(map[string]string)
+	}
+
 	for k, v := range params.Spec.Kubernetes.Deployment.Annotations {
 		deployment.Annotations[k] = v
+		deployment.Spec.Template.Annotations[k] = v
 	}
 
 	for k, v := range params.Spec.Kubernetes.Deployment.Labels {
 		deployment.Labels[k] = v
+		deployment.Spec.Template.Labels[k] = v
 	}
+
+	deployment.Spec.Template.Annotations["gravitee.io/config"] = hash.Calculate(config)
 
 	return nil
 }
@@ -472,7 +498,7 @@ func getVolumes(
 func getVolumeMounts(
 	params *v1alpha1.GatewayClassParameters,
 ) []coreV1.VolumeMount {
-	vm := []coreV1.VolumeMount{ConfigVolumeMount}
+	vm := []coreV1.VolumeMount{ConfigVolumeMount, LogConfigVolumeMount}
 
 	if HasGraviteeLicense(params) {
 		vm = append(vm, LicenseVolumeMount)
@@ -736,6 +762,8 @@ func mergePodTemplates(base, patch *coreV1.PodTemplateSpec) (*coreV1.PodTemplate
 		return base, nil
 	}
 
+	acceptUserConflictingChanges(base, patch)
+
 	baseBytes, err := json.Marshal(base)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal JSON for base %s: %w", base.Name, err)
@@ -757,6 +785,55 @@ func mergePodTemplates(base, patch *coreV1.PodTemplateSpec) (*coreV1.PodTemplate
 	}
 
 	return patchResult, nil
+}
+
+func acceptUserConflictingChanges(tmpl *coreV1.PodTemplateSpec, userTmpl *coreV1.PodTemplateSpec) {
+	if userTmpl == nil {
+		return
+	}
+
+	for i := range userTmpl.Spec.Containers {
+		uC := &userTmpl.Spec.Containers[i]
+		for j := range tmpl.Spec.Containers {
+			c := &tmpl.Spec.Containers[j]
+			if c.Name == uC.Name {
+				givePrecedenceToUserProbes(c, uC)
+			}
+		}
+	}
+}
+
+func givePrecedenceToUserProbes(container *coreV1.Container, userContainer *coreV1.Container) {
+	givePrecedenceToUserProbe(container.StartupProbe, userContainer.StartupProbe)
+	givePrecedenceToUserProbe(container.ReadinessProbe, userContainer.ReadinessProbe)
+	givePrecedenceToUserProbe(container.LivenessProbe, userContainer.LivenessProbe)
+}
+
+func givePrecedenceToUserProbe(probe *coreV1.Probe, userProbe *coreV1.Probe) {
+	switch {
+	case userProbe == nil || probe == nil:
+		return
+	case userProbe.Exec != nil:
+		probe.Exec = userProbe.Exec
+		probe.GRPC = nil
+		probe.HTTPGet = nil
+		probe.TCPSocket = nil
+	case userProbe.GRPC != nil:
+		probe.GRPC = userProbe.GRPC
+		probe.Exec = nil
+		probe.HTTPGet = nil
+		probe.TCPSocket = nil
+	case userProbe.HTTPGet != nil:
+		probe.HTTPGet = userProbe.HTTPGet
+		probe.Exec = nil
+		probe.GRPC = nil
+		probe.TCPSocket = nil
+	case userProbe.TCPSocket != nil:
+		probe.TCPSocket = userProbe.TCPSocket
+		probe.Exec = nil
+		probe.GRPC = nil
+		probe.HTTPGet = nil
+	}
 }
 
 func getGatewayConfigMapName(gwName string) string {

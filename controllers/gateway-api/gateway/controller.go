@@ -27,6 +27,7 @@ import (
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,6 +36,7 @@ import (
 
 	coreV1 "k8s.io/api/core/v1"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 type Reconciler struct {
@@ -62,7 +64,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
 
 	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, err
 	} else if kErrors.IsNotFound(err) {
 		log.Debug(ctx, "ignoring gateway as gateway class name was not found")
 		return ctrl.Result{}, nil
@@ -95,7 +97,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	params := new(v1alpha1.GatewayClassParameters)
 
 	if err := k8s.GetClient().Get(ctx, key, params); client.IgnoreNotFound(err) != nil {
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, err
 	} else if kErrors.IsNotFound(err) {
 		log.Debug(ctx, "ignoring gateway as gateway class parameters were not found")
 		return ctrl.Result{}, nil
@@ -103,55 +105,66 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := gw.DeepCopy()
 
-	err := k8s.CreateOrUpdate(ctx, gw.Object, func() error {
-		util.AddFinalizer(gw.Object, core.GatewayFinalizer)
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		if err := k8s.GetClient().Get(ctx, req.NamespacedName, dc.Object); client.IgnoreNotFound(err) != nil {
+			return err
+		}
 
-		if !gw.Object.DeletionTimestamp.IsZero() {
-			return events.Record(event.Delete, gw.Object, func() error {
-				util.RemoveFinalizer(gw.Object, core.GatewayFinalizer)
+		return k8s.CreateOrUpdate(ctx, gw.Object, func() error {
+			util.AddFinalizer(gw.Object, core.GatewayFinalizer)
+
+			if !gw.Object.DeletionTimestamp.IsZero() {
+				return events.Record(event.Delete, gw.Object, func() error {
+					util.RemoveFinalizer(gw.Object, core.GatewayFinalizer)
+					return nil
+				})
+			}
+
+			gwcAccepted := k8s.GetCondition(gwc, k8s.ConditionAccepted)
+
+			if gwcAccepted == nil {
+				log.Debug(ctx, "ignoring gateway as gateway class accepted condition is not set")
 				return nil
+			}
+
+			if gwcAccepted.Status == k8s.ConditionStatusFalse {
+				log.Debug(ctx, "ignoring gateway as gateway class is not accepted")
+				return nil
+			}
+
+			return events.Record(event.Update, gw.Object, func() error {
+				internal.Init(dc)
+
+				if err := internal.Resolve(ctx, dc, params); err != nil {
+					return err
+				}
+
+				internal.DetectConflicts(dc)
+
+				internal.Accept(dc)
+
+				if !k8s.IsAccepted(dc) {
+					return nil
+				}
+
+				return internal.Program(ctx, dc, params)
 			})
-		}
-
-		gwcAccepted := k8s.GetCondition(gwc, k8s.ConditionAccepted)
-
-		if gwcAccepted == nil {
-			log.Debug(ctx, "ignoring gateway as gateway class accepted condition is not set")
-			return nil
-		}
-
-		if gwcAccepted.Status == k8s.ConditionStatusFalse {
-			log.Debug(ctx, "ignoring gateway as gateway class is not accepted")
-			return nil
-		}
-
-		return events.Record(event.Update, gw.Object, func() error {
-			internal.Init(dc)
-			if err := internal.Resolve(ctx, dc, params); err != nil {
-				return err
-			}
-			internal.DetectConflicts(dc)
-			internal.Accept(dc)
-			if !k8s.IsAccepted(dc) {
-				return nil
-			}
-			return internal.Program(ctx, dc, params)
 		})
 	})
 
 	if err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, err
 	}
 
 	dc.Object.Status.DeepCopyInto(&gw.Object.Status)
 	if err := k8s.UpdateStatus(ctx, gw.Object); client.IgnoreNotFound(err) != nil {
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
-		return k8s.RequeueError(err)
+		return ctrl.Result{}, err
 	}
 
 	log.InfoEndReconcile(ctx, gw.Object)
-	return ctrl.Result{Requeue: false}, err
+	return ctrl.Result{}, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -162,5 +175,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&v1alpha1.KafkaRoute{}, internal.WatchKafkaRoutes()).
 		Watches(&coreV1.Service{}, internal.WatchServices()).
 		Watches(&coreV1.Secret{}, internal.WatchSecrets()).
+		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
 		Complete(r)
 }

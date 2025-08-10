@@ -15,6 +15,7 @@
 package k8s
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
@@ -24,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 const (
@@ -113,18 +115,22 @@ func HasHTTPRouteOwner(ownerRefs []metaV1.OwnerReference) bool {
 }
 
 func IsAttachedHTTPRoute(
+	ctx context.Context,
 	gw *gwAPIv1.Gateway,
 	listener gwAPIv1.Listener,
 	route gwAPIv1.HTTPRoute,
-) bool {
+) (bool, error) {
 	for i := range route.Status.Parents {
 		ref := route.Spec.ParentRefs[i]
 		if IsListenerRef(gw, listener, ref) {
-			status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
-			return IsAccepted(status)
+			if attached, err := SupportsRouteNamespace(ctx, gw, ref, &route); err != nil {
+				return false, err
+			} else if attached {
+				return true, nil
+			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 func IsAttachedKafkaRoute(
@@ -135,8 +141,7 @@ func IsAttachedKafkaRoute(
 	for i := range route.Status.Parents {
 		ref := route.Spec.ParentRefs[i]
 		if IsListenerRef(gw, listener, ref) {
-			status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
-			return IsAccepted(status)
+			return true
 		}
 	}
 	return false
@@ -337,7 +342,7 @@ func FindListenerIndexBySectionName(gw *gwAPIv1.Gateway, sectionName gwAPIv1.Sec
 }
 
 func HasHTTPListenerAtIndex(gw *gwAPIv1.Gateway, index int) bool {
-	if index < 0 {
+	if index < 0 || index >= len(gw.Status.Listeners) {
 		return false
 	}
 	lst := gw.Status.Listeners[index]
@@ -467,4 +472,140 @@ func intersectWithWildcard(hostname, wildcardHostname string) bool {
 
 	wildcardMatch := strings.TrimSuffix(hostname, strings.TrimPrefix(wildcardHostname, "*"))
 	return len(wildcardMatch) > 0
+}
+
+func IsGrantedReference(ctx context.Context, from client.Object, to gwAPIv1.ObjectReference) (bool, error) {
+	grantNs := GetRefNs(from, to.Namespace)
+
+	if from.GetNamespace() == grantNs {
+		return true, nil
+	}
+
+	grantList := &gwAPIv1beta1.ReferenceGrantList{}
+	opts := &client.ListOptions{Namespace: grantNs}
+	if err := GetClient().List(ctx, grantList, opts); err != nil {
+		return false, err
+	}
+	for _, grant := range grantList.Items {
+		if hasGrantedFrom(from, grant) && hasGrantedTo(to, grant) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func hasGrantedTo(to gwAPIv1.ObjectReference, grant gwAPIv1beta1.ReferenceGrant) bool {
+	for _, grantTo := range grant.Spec.To {
+		if isGrantedTo(to, grantTo) {
+			return true
+		}
+	}
+	return false
+}
+
+func isGrantedTo(to gwAPIv1.ObjectReference, grantTo gwAPIv1beta1.ReferenceGrantTo) bool {
+	switch {
+	case grantTo.Name != nil && to.Name != *grantTo.Name:
+		return false
+	case to.Kind != grantTo.Kind:
+		return false
+	case to.Group != grantTo.Group:
+		return false
+	default:
+		return true
+	}
+}
+
+func hasGrantedFrom(from client.Object, grant gwAPIv1beta1.ReferenceGrant) bool {
+	for _, grantFrom := range grant.Spec.From {
+		if isGrantedFrom(from, grantFrom) {
+			return true
+		}
+	}
+	return false
+}
+
+func isGrantedFrom(from client.Object, grantFrom gwAPIv1beta1.ReferenceGrantFrom) bool {
+	switch {
+	case from.GetNamespace() != string(grantFrom.Namespace):
+		return false
+	case from.GetObjectKind().GroupVersionKind().Group != string(grantFrom.Group):
+		return false
+	case from.GetObjectKind().GroupVersionKind().Kind != string(grantFrom.Kind):
+		return false
+	default:
+		return true
+	}
+}
+
+func GetRefNs(referencer client.Object, refNs *gwAPIv1.Namespace) string {
+	if refNs != nil {
+		return string(*refNs)
+	}
+	return referencer.GetNamespace()
+}
+
+func SupportsRouteNamespace(
+	ctx context.Context,
+	gw *gwAPIv1.Gateway,
+	ref gwAPIv1.ParentReference,
+	route *gwAPIv1.HTTPRoute,
+) (bool, error) {
+	if ref.SectionName != nil {
+		lIdx := FindListenerIndexBySectionName(gw, *ref.SectionName)
+		return supportsRouteNamespaceAtListenerIndex(
+			ctx, gw, ref, route, lIdx,
+		)
+	}
+	for i := range gw.Spec.Listeners {
+		if hasNsSupport, err := supportsRouteNamespaceAtListenerIndex(
+			ctx, gw, ref, route, i,
+		); err != nil {
+			return false, err
+		} else if hasNsSupport {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func supportsRouteNamespaceAtListenerIndex(
+	ctx context.Context,
+	gw *gwAPIv1.Gateway,
+	ref gwAPIv1.ParentReference,
+	route *gwAPIv1.HTTPRoute,
+	lIdx int,
+) (bool, error) {
+	listener := gw.Spec.Listeners[lIdx]
+	if *listener.AllowedRoutes.Namespaces.From == gwAPIv1.NamespacesFromAll {
+		return true, nil
+	}
+	if *listener.AllowedRoutes.Namespaces.From == gwAPIv1.NamespacesFromSame {
+		return ref.Namespace == nil || string(*ref.Namespace) == route.Namespace, nil
+	}
+	if *listener.AllowedRoutes.Namespaces.From == gwAPIv1.NamespacesFromSelector {
+		ns, err := resolveNS(ctx, route.Namespace)
+		if err != nil {
+			return false, err
+		}
+		nsLabels := ns.Labels
+		selectorLabels := listener.AllowedRoutes.Namespaces.Selector
+		for k := range selectorLabels.MatchLabels {
+			if nsLabels[k] != selectorLabels.MatchLabels[k] {
+				return false, nil
+			}
+		}
+		// For now we don't support label expressions
+		return true, nil
+	}
+	return false, nil
+}
+
+func resolveNS(ctx context.Context, name string) (*coreV1.Namespace, error) {
+	ns := &coreV1.Namespace{}
+	err := GetClient().Get(ctx, client.ObjectKey{Name: name}, ns)
+	if err != nil {
+		return nil, err
+	}
+	return ns, nil
 }
