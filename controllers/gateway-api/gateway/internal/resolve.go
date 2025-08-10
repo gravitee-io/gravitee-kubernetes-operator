@@ -128,6 +128,21 @@ func resolveTLSRef(
 		ns = &gwNs
 	}
 
+	objectRef := gwAPIv1.ObjectReference{
+		Name:      ref.Name,
+		Group:     *ref.Group,
+		Kind:      *ref.Kind,
+		Namespace: ref.Namespace,
+	}
+
+	if granted, err := k8s.IsGrantedReference(ctx, gw.Object, objectRef); err != nil {
+		return err
+	} else if !granted {
+		builder.RejectListenerRefNotPermitted(
+			"Illegal TLS certificate reference",
+		)
+	}
+
 	key := client.ObjectKey{Namespace: string(*ns), Name: string(ref.Name)}
 	secret := &coreV1.Secret{}
 	if err := k8s.GetClient().Get(ctx, key, secret); client.IgnoreNotFound(err) != nil {

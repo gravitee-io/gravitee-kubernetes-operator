@@ -234,6 +234,20 @@ func (b *ConditionBuilder) RejectInvalidCertificateRef(msg string) *ConditionBui
 		Message(msg)
 }
 
+func (b *ConditionBuilder) RejectBackendRefNotPermitted(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.RouteReasonRefNotPermitted)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectListenerRefNotPermitted(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.ListenerReasonRefNotPermitted)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
 func (b *ConditionBuilder) RejectInvalidParameters(msg string) *ConditionBuilder {
 	return b.
 		Reason(string(gwAPIv1.GatewayClassReasonInvalidParameters)).

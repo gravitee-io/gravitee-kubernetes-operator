@@ -46,8 +46,8 @@ func TestGatewayAPIConformance(t *testing.T) {
 	opts.SupportedFeatures = sets.New(
 		features.GatewayFeature.Name,
 		features.HTTPRouteFeature.Name,
+		features.ReferenceGrantFeature.Name,
 		// features.GRPCRouteFeature.Name,
-		// features.ReferenceGrantFeature.Name,
 	)
 
 	opts.TimeoutConfig = lazyTimeoutConfig
