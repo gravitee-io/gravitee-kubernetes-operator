@@ -15,6 +15,7 @@
 package k8s
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
@@ -24,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 const (
@@ -467,4 +469,75 @@ func intersectWithWildcard(hostname, wildcardHostname string) bool {
 
 	wildcardMatch := strings.TrimSuffix(hostname, strings.TrimPrefix(wildcardHostname, "*"))
 	return len(wildcardMatch) > 0
+}
+
+func IsGrantedReference(ctx context.Context, from client.Object, to gwAPIv1.ObjectReference) (bool, error) {
+	grantNs := GetObjectRefNS(from, to)
+
+	if from.GetNamespace() == grantNs {
+		return true, nil
+	}
+
+	grantList := &gwAPIv1beta1.ReferenceGrantList{}
+	opts := &client.ListOptions{Namespace: grantNs}
+	if err := GetClient().List(ctx, grantList, opts); err != nil {
+		return false, err
+	}
+	for _, grant := range grantList.Items {
+		if hasGrantedFrom(from, grant) && hasGrantedTo(to, grant) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func hasGrantedTo(to gwAPIv1.ObjectReference, grant gwAPIv1beta1.ReferenceGrant) bool {
+	for _, grantTo := range grant.Spec.To {
+		if isGrantedTo(to, grantTo) {
+			return true
+		}
+	}
+	return false
+}
+
+func isGrantedTo(to gwAPIv1.ObjectReference, grantTo gwAPIv1beta1.ReferenceGrantTo) bool {
+	switch {
+	case grantTo.Name != nil && to.Name != *grantTo.Name:
+		return false
+	case to.Kind != grantTo.Kind:
+		return false
+	case to.Group != grantTo.Group:
+		return false
+	default:
+		return true
+	}
+}
+
+func hasGrantedFrom(from client.Object, grant gwAPIv1beta1.ReferenceGrant) bool {
+	for _, grantFrom := range grant.Spec.From {
+		if isGrantedFrom(from, grantFrom) {
+			return true
+		}
+	}
+	return false
+}
+
+func isGrantedFrom(from client.Object, grantFrom gwAPIv1beta1.ReferenceGrantFrom) bool {
+	switch {
+	case from.GetNamespace() != string(grantFrom.Namespace):
+		return false
+	case from.GetObjectKind().GroupVersionKind().Group != string(grantFrom.Group):
+		return false
+	case from.GetObjectKind().GroupVersionKind().Kind != string(grantFrom.Kind):
+		return false
+	default:
+		return true
+	}
+}
+
+func GetObjectRefNS(referencer client.Object, ref gwAPIv1.ObjectReference) string {
+	if ref.Namespace != nil {
+		return string(*ref.Namespace)
+	}
+	return referencer.GetNamespace()
 }
