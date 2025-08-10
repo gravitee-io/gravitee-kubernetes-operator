@@ -135,6 +135,19 @@ func isResolvedBackend(
 		ns = &gwNs
 	}
 
+	objectRef := gwAPIv1.ObjectReference{
+		Name:      ref.Name,
+		Group:     *ref.Group,
+		Kind:      *ref.Kind,
+		Namespace: ref.Namespace,
+	}
+
+	if granted, err := k8s.HaveGrantedReference(ctx, route, objectRef); err != nil {
+		return false, err
+	} else if !granted {
+		return false, nil
+	}
+
 	key := client.ObjectKey{Namespace: string(*ns), Name: string(ref.Name)}
 	secret := &coreV1.Service{}
 
