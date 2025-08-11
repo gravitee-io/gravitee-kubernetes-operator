@@ -13,10 +13,9 @@
 # limitations under the License.
 
 name: Schedule Integration Test Suite
-
 on:
   schedule:
-    - cron: "00 05 * * 1-5"
+    - cron: 00 05 * * 1-5
 jobs:
   trigger-test-suite:
     runs-on: ubuntu-latest
@@ -27,17 +26,17 @@ jobs:
       fail-fast: false
       matrix:
         branch:
-          - 4.4.x
           - 4.5.x
           - 4.6.x
           - 4.7.x
+          - 4.8.x
           - master
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: "Trigger test pipeline and notify on failure"
+      - name: Trigger test pipeline and notify on failure
         run: |
           echo "🧪 Triggering test pipeline"
           npx zx hack/scripts/trigger-test.mjs --notify true --branch ${BRANCH}
