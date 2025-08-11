@@ -824,6 +824,10 @@ workflows:
       - job-e2e-tests:
           name: Run end to end tests
           context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - master
           post-steps:
               - slack/notify:
                   channel: C098YUEDMGE
