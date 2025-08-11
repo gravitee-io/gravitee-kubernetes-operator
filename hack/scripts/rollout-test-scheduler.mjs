@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { GH } from "./lib/github.mjs";
+import { rolloutTestScheduller } from "./lib/rollout-test-scheduler.mjs";
 
-export async function rolloutTestScheduller(version) {
-  GH.rolloutMatrix("schedule-test.yml", "trigger-test-suite", version);
-}
+const version = argv.version;
+
+await rolloutTestScheduller(version);

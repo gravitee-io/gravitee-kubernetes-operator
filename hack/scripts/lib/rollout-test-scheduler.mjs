@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { rolloutMergify } from "./lib/rollout-mergify.mjs";
+import { GH } from "./github.mjs";
 
-const version = argv.version;
-
-await rolloutMergify(version);
+export async function rolloutTestScheduller(version) {
+  GH.rolloutMatrix("schedule-test.yml", "trigger-test-suite", version);
+}
