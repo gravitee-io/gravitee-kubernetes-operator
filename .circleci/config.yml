@@ -848,6 +848,10 @@ workflows:
           context: cicd-orchestrator
           ginkgo-filter: integration
           pre-steps:
+            - checkout
+            - run:
+                name: Install GO tools
+                command: make install-go-tools
             - keeper/env-export:
                 secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
                 var-name: SLACK_ACCESS_TOKEN
