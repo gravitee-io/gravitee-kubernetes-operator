@@ -47,6 +47,7 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 		By("expecting API V4 status to be completed")
 
 		Expect(assert.ApiV4Completed(fixtures.APIv4)).To(Succeed())
+		Expect(assert.ApiV4Accepted(fixtures.APIv4)).To(Succeed())
 
 		By("calling API endpoint, expecting status 401")
 

@@ -116,6 +116,10 @@ func (s *NotificationStatus) SetProcessingStatus(core.ProcessingStatus) {
 	// unused
 }
 
+func (s *NotificationStatus) SetConditions(conditions []metav1.Condition) {
+	s.Conditions = &conditions
+}
+
 func (s *NotificationStatus) IsFailed() bool {
 	if s.Conditions != nil {
 		for _, condition := range *s.Conditions {
