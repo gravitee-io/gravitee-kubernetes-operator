@@ -1,3 +1,4 @@
+#!/usr/bin/env zx
 /**
  * Copyright (C) 2015 The Gravitee team (http://gravitee.io)
  *
@@ -15,13 +16,13 @@
  */
 
 
+import { mapiClient } from '../lib/mapiClient.mjs';
+
 const { name } = argv;
 if (!name) {
     console.error('Usage: createServiceAccount.mjs --name <SERVICE_ACCOUNT_NAME>');
     process.exit(1);
 }
-
-const API_URL = 'http://localhost:30083/management/organizations/DEFAULT/users';
 
 const newUser = {
   lastname: name,
@@ -29,19 +30,10 @@ const newUser = {
   service: true,
 };
 
-const res = await fetch(API_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Basic ' + btoa('admin:admin'),
-  },
-  body: JSON.stringify(newUser),
-});
-
-if (!res.ok) {
-  const err = await res.text();
-  throw new Error(`Failed to create service account user: ${res.status} ${err}`);
+try {
+    const createdUser = await mapiClient.post('/management/organizations/DEFAULT/users', newUser);
+    console.log(JSON.stringify(createdUser));
+} catch (e) {
+    console.error(`Failed to create service account user: ${e.message}`);
+    process.exit(1);
 }
-
-const createdUser = await res.json();
-console.log(JSON.stringify(createdUser));
