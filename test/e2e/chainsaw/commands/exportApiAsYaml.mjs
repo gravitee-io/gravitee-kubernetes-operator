@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-const APIM_API = "http://localhost:30083";
+import { mapiClient } from '../lib/mapiClient.mjs';
 const apiId = argv.api_id;
 const apiVersion = argv.api_version;
 
@@ -31,43 +31,18 @@ if (!apiVersion || !['v2', 'v4'].includes(apiVersion)) {
     process.exit(1);
 }
 
-let url;
+let apiCrdExportPath;
 if (apiVersion === 'v2') {
-    url = `${APIM_API}/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`;
+    apiCrdExportPath = `/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`;
 } else if (apiVersion === 'v4') {
-    url = `${APIM_API}/management/v2/environments/DEFAULT/apis/${apiId}/_export/crd`;
+    apiCrdExportPath = `/management/v2/environments/DEFAULT/apis/${apiId}/_export/crd`;
 }
 
 try {
-    const headers = {
-        'Authorization': 'Basic YWRtaW46YWRtaW4=',
-        'Content-Type': 'application/yaml'
-    };
-
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: headers,
-    });
-
-    if (!response.ok) {
-        let errorBody = '';
-        try {
-            errorBody = await response.text();
-        } catch (bodyError) {
-            errorBody = '(Could not read error response body)';
-        }
-        console.error(`Error: API request failed with status ${response.status} ${response.statusText}`);
-        if (errorBody) {
-            console.error(`Response body:\n${errorBody}`);
-        }
-        process.exit(1);
-    }
-
-    const responseBody = await response.text();
-    console.log(responseBody);
-
+    const crdExport = await mapiClient.get(apiCrdExportPath);
+    console.log(crdExport);
 } catch (error) {
-    console.error(`Error: Failed to fetch API CRD for ID: ${apiId}.`);
-    console.error(error);
+    console.error(`Error: Failed to fetch CRD for API ID: ${apiId}.`);
+    console.error(error.message);
     process.exit(1);
 }

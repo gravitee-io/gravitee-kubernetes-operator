@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+import { mapiClient } from '../lib/mapiClient.mjs';
+
 const { jsonfile } = argv;
 if (!jsonfile) {
     console.error('Usage: createApiFromJson.mjs --jsonfile <JSON_FILE>');
@@ -28,39 +30,23 @@ try {
     process.exit(1);
 }
 
-const APIM_API = "http://localhost:30083";
-const fileContent = fs.readFileSync(jsonfile, 'utf8');
+const fileContent = await fs.promises.readFile(jsonfile, 'utf8');
 const apiDefinition = JSON.parse(fileContent);
 
-let url;
+let apiImportPath;
 if (apiDefinition.gravitee === '2.0.0') {
-    url = `${APIM_API}/management/organizations/DEFAULT/environments/DEFAULT/apis/import`;
+    apiImportPath = `/management/organizations/DEFAULT/environments/DEFAULT/apis/import`;
 } else if (apiDefinition.api && apiDefinition.api.definitionVersion === 'V4') {
-    url = `${APIM_API}/management/v2/environments/DEFAULT/apis/_import/definition`;
+    apiImportPath = `/management/v2/environments/DEFAULT/apis/_import/definition`;
 } else {
     console.error('Unknown API definition version');
     process.exit(1);
 }
 
-
-  try {
-        const response = await fetch(url, {
-            method: 'POST',
-            body: fileContent,
-            headers: {
-                'Authorization': 'Basic YWRtaW46YWRtaW4=',
-                'Content-Type': 'application/json'
-            }
-    });
-
-    if (!response.ok) {
-        console.error(`Error during API import: HTTP ${response.status} ${response.statusText}`);
-        process.exit(1);
-    }
-
-    const responseData = await response.text();
-    console.log(responseData);
+try {
+    const createdApi = await mapiClient.post(apiImportPath, apiDefinition);
+    console.log(JSON.stringify(createdApi));
 } catch (error) {
-    console.error('Error during API import:', error);
+    console.error('Error during API import:', error.message);
     process.exit(1);
 }
