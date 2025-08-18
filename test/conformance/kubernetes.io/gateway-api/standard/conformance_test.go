@@ -28,7 +28,7 @@ import (
 )
 
 var lazyTimeoutConfig = config.TimeoutConfig{
-	TestIsolation:                      3 * time.Second,
+	TestIsolation:                      0 * time.Second,
 	GWCMustBeAccepted:                  300 * time.Second,
 	GatewayStatusMustHaveListeners:     180 * time.Second,
 	GatewayListenersMustHaveConditions: 180 * time.Second,
@@ -55,6 +55,7 @@ func TestGatewayAPIConformance(t *testing.T) {
 
 	// Here you can specify test name for debug purpose
 	opts.RunTest = ""
+	opts.CleanupBaseResources = false
 
 	opts.SkipTests = []string{}
 
