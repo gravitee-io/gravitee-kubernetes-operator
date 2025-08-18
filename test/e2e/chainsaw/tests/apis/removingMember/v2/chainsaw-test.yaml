@@ -1,0 +1,118 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: v2-removing-member
+spec:
+  bindings:
+    - name: apiName
+      value: remove-member-test-v2
+    - name: service_account_name
+      value: service-account-for-remove-member-test-v2
+    - name: commandDir
+      value: "../../../../commands"
+    - name: gkoNamespace
+      value: default
+    - name: exportedApiYaml
+      value: exportedApi.yaml  
+
+  steps:
+  - name: remove-pre-existing-service-account
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: SERVICE_ACCOUNT_NAME
+              value: ($service_account_name)
+          content: |
+            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"
+
+  - name: create-new-service-account
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: SERVICE_ACCOUNT_NAME
+              value: ($service_account_name)
+          content: |
+            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
+          check:
+              ($error): ~
+              (contains($stdout, '@graviteesource.com')): true
+    catch:
+      - podLogs:
+          selector: "app.kubernetes.io/component=api"
+          namespace: ($gkoNamespace)
+  
+  - name: create-api-with-new-member
+    try:
+      - apply:
+          file: v2-api-with-member.yaml
+      - assert:
+          resource:
+            apiVersion: gravitee.io/v1alpha1
+            kind: ApiDefinition
+            metadata:
+              name: ($apiName)
+            spec:
+              members:
+                - source: gravitee
+                  sourceId: ($service_account_name)
+                  role: REVIEWER
+            status:
+              processingStatus: Completed
+    catch:
+      - events: {}
+
+  - name: update-api-with-removed-member
+    try:
+      - apply:
+          file: v2-api-without-member.yaml
+    catch:
+      - events: {}
+
+  - name: export-api-as-yaml
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+          content: |
+            API_ID=$(kubectl get apidefinitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
+            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version v2 > $EXPORTED_API_YAML
+
+  - name: assert-export-for-removed-member
+    try:
+      - script:
+          env:
+            - name: SERVICE_ACCOUNT_NAME
+              value: ($service_account_name)
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+          content: |
+            echo "MEMBER_COUNT=$(yq '.spec.members | length' "$EXPORTED_API_YAML")"
+            rm -f "$EXPORTED_API_YAML"
+          check:
+            (contains($stdout, 'MEMBER_COUNT=0')): true
