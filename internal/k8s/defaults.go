@@ -25,25 +25,27 @@ import (
 )
 
 const (
-	DefaultCPURequest        = "200m"
-	DefaultCPULimit          = "500m"
-	DefaultMemRequest        = "256Mi"
-	DefaultMemLimit          = "512Mi"
-	DefaultConfigVolumeName  = "config"
-	UserConfigVolumeName     = "user-config"
-	DefaultLicenseVolumeName = "license"
-	DefaultConfigFileEntry   = "gravitee.yml"
-	UserConfigFileEntry      = "user.yml"
-	DefaultProbePort         = 18082
+	DefaultCPURequest         = "200m"
+	DefaultCPULimit           = "500m"
+	DefaultMemRequest         = "256Mi"
+	DefaultMemLimit           = "512Mi"
+	DefaultConfigVolumeName   = "config"
+	UserConfigVolumeName      = "user-config"
+	DefaultLicenseVolumeName  = "license"
+	DefaultConfigFileEntry    = "gravitee.yml"
+	DefaultLogConfigFileEntry = "logback.xml"
+	UserConfigFileEntry       = "user.yml"
+	DefaultProbePort          = 18082
 
 	GatewayConfigMapPrefix     = "gio-gw-config-"
 	PEMRegistryConfigMapPrefix = "gio-pem-registry-"
 
-	GatewayContainerName     = "gateway"
-	DefaultGatewayImage      = "graviteeio/apim-gateway"
-	DefaultGatewayConfigPath = "/opt/graviteeio-gateway/config/"
-	DefaultGatewayConfigFile = DefaultGatewayConfigPath + "gravitee.yml"
-	UserGatewayConfigFile    = DefaultGatewayConfigPath + "user.yml"
+	GatewayContainerName        = "gateway"
+	DefaultGatewayImage         = "graviteeio/apim-gateway"
+	DefaultGatewayConfigPath    = "/opt/graviteeio-gateway/config/"
+	DefaultGatewayLogConfigFile = DefaultGatewayConfigPath + DefaultLogConfigFileEntry
+	DefaultGatewayConfigFile    = DefaultGatewayConfigPath + DefaultConfigFileEntry
+	UserGatewayConfigFile       = DefaultGatewayConfigPath + "user.yml"
 
 	DefaultLicenseMountPath = "/opt/graviteeio-gateway/license"
 
@@ -132,6 +134,13 @@ var UserConfigVolumeMount = coreV1.VolumeMount{
 	Name:      UserConfigVolumeName,
 	MountPath: UserGatewayConfigFile,
 	SubPath:   UserConfigFileEntry,
+	ReadOnly:  true,
+}
+
+var LogConfigVolumeMount = coreV1.VolumeMount{
+	Name:      DefaultConfigVolumeName,
+	MountPath: DefaultGatewayLogConfigFile,
+	SubPath:   DefaultLogConfigFileEntry,
 	ReadOnly:  true,
 }
 

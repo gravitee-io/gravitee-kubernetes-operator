@@ -23,6 +23,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/logback"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/yaml"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	appV1 "k8s.io/api/apps/v1"
@@ -220,6 +221,9 @@ func buildOverridingGatewayConfigData(
 		return err
 	}
 	configMap.Data[DefaultConfigFileEntry] = string(yamlData)
+
+	configMap.Data[DefaultLogConfigFileEntry] = logback.Config
+
 	return nil
 }
 
@@ -494,7 +498,7 @@ func getVolumes(
 func getVolumeMounts(
 	params *v1alpha1.GatewayClassParameters,
 ) []coreV1.VolumeMount {
-	vm := []coreV1.VolumeMount{ConfigVolumeMount}
+	vm := []coreV1.VolumeMount{ConfigVolumeMount, LogConfigVolumeMount}
 
 	if HasGraviteeLicense(params) {
 		vm = append(vm, LicenseVolumeMount)
