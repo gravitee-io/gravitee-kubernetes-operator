@@ -53,7 +53,25 @@ async function get(path) {
   return res.text();
 }
 
+async function del(path) {
+  const url = new URL(path, BASE_URL_API).toString();
+  const res = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': AUTH_HEADER,
+    },
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error(`Failed request to ${url}: ${res.status} ${err}`);
+  }
+
+  return res.text().catch(() => '');
+}
+
 export const mapiClient = {
   post,
   get,
+  del,
 };
