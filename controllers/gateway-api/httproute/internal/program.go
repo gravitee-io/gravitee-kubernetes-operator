@@ -20,6 +20,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal/mapper"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/retry"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -28,14 +30,20 @@ func Program(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 	if err != nil {
 		return err
 	}
-	api.SetOwnerReferences(getOwnerReferences(route))
-	return k8s.CreateOrUpdate(ctx, api, func() error {
-		spec, err := mapper.MapSpec(ctx, route)
-		if err != nil {
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		if err := k8s.GetClient().Get(ctx, client.ObjectKeyFromObject(api), api); client.IgnoreNotFound(err) != nil {
 			return err
 		}
-		api.Spec = spec
-		return nil
+
+		return k8s.CreateOrUpdate(ctx, api, func() error {
+			api.SetOwnerReferences(getOwnerReferences(route))
+			spec, err := mapper.MapSpec(ctx, route)
+			if err != nil {
+				return err
+			}
+			api.Spec = spec
+			return nil
+		})
 	})
 }
 
