@@ -241,7 +241,7 @@ jobs:
       - run:
           name: Run Gateway API conformance test suites
           command: |
-            bin/gotestsum --format=testname --hide-summary=skipped --rerun-fails=5 --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+            bin/gotestsum --format=testname --hide-summary=skipped --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
       - run: 
           name: Generate coverage
           command: |
