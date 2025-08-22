@@ -39,6 +39,9 @@ var _ = Describe("Update", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should remove an API member", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4).
