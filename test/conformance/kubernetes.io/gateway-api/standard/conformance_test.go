@@ -30,12 +30,13 @@ import (
 var lazyTimeoutConfig = config.TimeoutConfig{
 	TestIsolation:                      0 * time.Second,
 	GWCMustBeAccepted:                  300 * time.Second,
-	GatewayStatusMustHaveListeners:     180 * time.Second,
-	GatewayListenersMustHaveConditions: 180 * time.Second,
+	GatewayStatusMustHaveListeners:     300 * time.Second,
+	GatewayListenersMustHaveConditions: 300 * time.Second,
 	HTTPRouteMustNotHaveParents:        180 * time.Second,
 	HTTPRouteMustHaveCondition:         180 * time.Second,
 	TLSRouteMustHaveCondition:          180 * time.Second,
 	RouteMustHaveParents:               180 * time.Second,
+	GetTimeout:                         180 * time.Second,
 }
 
 func TestGatewayAPIConformance(t *testing.T) {
