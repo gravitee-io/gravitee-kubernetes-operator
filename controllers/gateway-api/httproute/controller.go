@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -51,43 +52,49 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	dc := route.DeepCopy()
 
-	err := k8s.CreateOrUpdate(ctx, route, func() error {
-		util.AddFinalizer(route, core.HTTPRouteFinalizer)
-
-		if !route.DeletionTimestamp.IsZero() {
-			return events.Record(event.Delete, route, func() error {
-				util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
-				return nil
-			})
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		if err := k8s.GetClient().Get(ctx, req.NamespacedName, dc); client.IgnoreNotFound(err) != nil {
+			return err
 		}
 
-		return events.Record(event.Update, route, func() error {
-			internal.Init(dc)
+		return k8s.CreateOrUpdate(ctx, route, func() error {
+			util.AddFinalizer(route, core.HTTPRouteFinalizer)
 
-			if err := internal.Resolve(ctx, dc); err != nil {
-				return err
-			}
-
-			if err := internal.Accept(ctx, dc); err != nil {
-				return err
-			}
-
-			// TODO: detect with merge conflict resolution
-			if err := internal.DetectConflicts(ctx, dc); err != nil {
-				return err
-			}
-
-			for i := range dc.Status.Parents {
-				parent := &dc.Status.Parents[i]
-				if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
+			if !route.DeletionTimestamp.IsZero() {
+				return events.Record(event.Delete, route, func() error {
+					util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
 					return nil
-				}
+				})
 			}
 
-			if err := internal.Program(ctx, dc); err != nil {
-				return err
-			}
-			return nil
+			return events.Record(event.Update, route, func() error {
+				internal.Init(dc)
+
+				if err := internal.Resolve(ctx, dc); err != nil {
+					return err
+				}
+
+				if err := internal.Accept(ctx, dc); err != nil {
+					return err
+				}
+
+				// TODO: detect with merge conflict resolution
+				if err := internal.DetectConflicts(ctx, dc); err != nil {
+					return err
+				}
+
+				for i := range dc.Status.Parents {
+					parent := &dc.Status.Parents[i]
+					if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
+						return nil
+					}
+				}
+
+				if err := internal.Program(ctx, dc); err != nil {
+					return err
+				}
+				return nil
+			})
 		})
 	})
 

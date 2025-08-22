@@ -229,7 +229,9 @@ func countAttachedHTTPRoutes(
 		return 0, err
 	}
 	for _, route := range routesList.Items {
-		if k8s.IsAttachedHTTPRoute(gw, listener, route) {
+		if attached, err := k8s.IsAttachedHTTPRoute(ctx, gw, listener, route); err != nil {
+			return 0, err
+		} else if attached {
 			count += 1
 		}
 	}
