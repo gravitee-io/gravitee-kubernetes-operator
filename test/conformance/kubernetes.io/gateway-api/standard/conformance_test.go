@@ -16,9 +16,12 @@ package standard
 
 import (
 	"flag"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/conformance/kubernetes.io/gateway-api/impl"
+	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/gateway-api/conformance"
 	"sigs.k8s.io/gateway-api/conformance/tests"
@@ -44,11 +47,17 @@ func TestGatewayAPIConformance(t *testing.T) {
 
 	opts := conformance.DefaultOptions(t)
 
+	opts.Implementation = impl.Manifest
+	opts.ReportOutputPath = impl.GetReportOutputPath()
+
+	opts.ConformanceProfiles = sets.New(
+		suite.GatewayHTTPConformanceProfileName,
+	)
+
 	opts.SupportedFeatures = sets.New(
 		features.GatewayFeature.Name,
 		features.HTTPRouteFeature.Name,
 		features.ReferenceGrantFeature.Name,
-		// features.GRPCRouteFeature.Name,
 	)
 
 	opts.TimeoutConfig = lazyTimeoutConfig
@@ -83,5 +92,23 @@ func TestGatewayAPIConformance(t *testing.T) {
 	cSuite.Setup(t, tests.ConformanceTests)
 	if err := cSuite.Run(t, tests.ConformanceTests); err != nil {
 		t.Fatalf("Error running conformance tests: %v", err)
+	}
+
+	generateReport(t, cSuite, opts)
+}
+
+func generateReport(t *testing.T, cSuite *suite.ConformanceTestSuite, opts suite.ConformanceOptions) {
+	report, err := cSuite.Report()
+	if err != nil {
+		t.Fatalf("error generating conformance profile report: %v", err)
+	}
+
+	rawReport, err := yaml.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = os.WriteFile(opts.ReportOutputPath, rawReport, 0o600); err != nil {
+		t.Fatal(err)
 	}
 }
