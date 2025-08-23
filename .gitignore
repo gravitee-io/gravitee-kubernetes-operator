@@ -50,3 +50,6 @@ license.key
 examples/gateway-api/kafka_2.*
 kafka.ca.crt
 https.ca.crt
+
+# Kubernetes Gateway API report
+test/conformance/kubernetes.io/gateway-api/standard/standard-4.8.0-default-report.yaml
