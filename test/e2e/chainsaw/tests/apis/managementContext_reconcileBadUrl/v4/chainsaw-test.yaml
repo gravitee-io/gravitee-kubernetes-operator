@@ -1,0 +1,60 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: management-context-bad-url-test-v4
+spec:
+  bindings:
+    - name: apiName
+      value: management-context-bad-url-test-v4
+    - name: commandDir
+      value: "../../../../commands"
+    - name: gkoNamespace
+      value: default
+  steps:
+  - name: Warning when creating Management Context due to bad url
+    try:
+      - script:
+          content: |
+            kubectl delete -f context-bad-url.yaml 2>/dev/null || echo "No previous context to delete. Applying new context..."
+            kubectl apply -f context-bad-url.yaml 2>&1 \
+              | grep -F 'Warning: unable to reach APIM, [http://localhost:8083] is not available'
+
+  - name: Fail to create API due to bad URL in context
+    try:
+      - create:
+          file: api-with-bad-url-ctx.yaml
+          expect:
+            - check:
+                "(contains($error, 'admission webhook \"v1alpha1.gravitee.io.apiv4definition\" denied the request: unable to perform request'))": true
+                "(contains($error, 'connection refused'))": true
+
+  - name: call-api-endpoint
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+          content: |
+            npx zx $COMMAND_DIR/callGateway.mjs --endpoint $API_NAME --status 404
+    catch:
+      - podLogs:
+          selector: "app.kubernetes.io/component=gateway"
+          namespace: ($gkoNamespace)
+          
