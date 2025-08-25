@@ -79,6 +79,10 @@ func (s *SubscriptionStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
 }
 
+func (s *SubscriptionStatus) SetConditions(conditions []metav1.Condition) {
+	// Not implemented yet
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Started at",type=string,JSONPath=`.status.startedAt`,description="The date from when the subscription starts"

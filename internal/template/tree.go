@@ -18,20 +18,24 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type valMapper func(interface{}) (interface{}, error)
 
-func traverse(ctx context.Context, obj runtime.Object, updateObjectMetadata bool) (interface{}, error) {
+func traverse(ctx context.Context, obj client.Object, updateObjectMetadata bool) (interface{}, error) {
 	inner, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message("failed to convert object to unstructured").Build())
 		return obj, err
 	}
 
 	cp, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj.DeepCopyObject())
 	if err != nil {
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message("failed to convert object to unstructured").Build())
 		return obj, err
 	}
 
@@ -44,11 +48,12 @@ func traverse(ctx context.Context, obj runtime.Object, updateObjectMetadata bool
 
 	isDeleted, err := isResourceDeleted(inner)
 	if err != nil {
+		k8s.AddCondition(obj, k8s.NewCompileConditionBuilder(obj.GetGeneration()).Message("resource is deleted").Build())
 		return nil, err
 	}
 	result, err := doTraverse(cp, func(val interface{}) (interface{}, error) {
 		if v, ok := val.(string); ok {
-			return exec(ctx, v, ns, isDeleted, updateObjectMetadata)
+			return exec(ctx, obj, v, ns, isDeleted, updateObjectMetadata)
 		}
 
 		return val, nil

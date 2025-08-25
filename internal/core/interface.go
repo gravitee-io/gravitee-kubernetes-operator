@@ -131,6 +131,8 @@ type Spec interface {
 // +k8s:deepcopy-gen=false
 type Status interface {
 	SetProcessingStatus(status ProcessingStatus)
+	GetConditions() map[string]metav1.Condition
+	SetConditions(conditions []metav1.Condition)
 	IsFailed() bool
 	DeepCopyFrom(obj client.Object) error
 	DeepCopyTo(obj client.Object) error

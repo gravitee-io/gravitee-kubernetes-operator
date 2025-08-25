@@ -21,10 +21,12 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 const (
+	ConditionCompiled     = "Compiled"
 	ConditionAccepted     = "Accepted"
 	ConditionProgrammed   = "Programmed"
 	ConditionConflicted   = "Conflicted"
@@ -43,6 +45,26 @@ const (
 
 type ConditionBuilder struct {
 	condition *metav1.Condition
+}
+
+func AddCondition(obj runtime.Object, condition *metav1.Condition) {
+	// Todo: implement core.ConditionAware interface for all CRDs
+	ca, ok := obj.(core.ConditionAware)
+	if ok {
+		conditionsMap := ca.GetConditions()
+		conditionsMap[condition.Type] = *condition
+		var conditions []metav1.Condition
+		for _, v := range conditionsMap {
+			conditions = append(conditions, v)
+		}
+		ca.SetConditions(conditions)
+	}
+}
+
+func NewCompileConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionCompiled).
+		ObservedGeneration(generation).
+		Status(ConditionStatusFalse)
 }
 
 func NewResolvedRefsConditionBuilder(generation int64) *ConditionBuilder {

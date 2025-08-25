@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -297,6 +299,14 @@ func (api *ApiV4Definition) SetGroups(groups []string) {
 	api.Spec.Groups = groups
 }
 
+func (api *ApiV4Definition) GetConditions() map[string]metav1.Condition {
+	return utils.MapConditions(api.Status.Conditions)
+}
+
+func (api *ApiV4Definition) SetConditions(conditions []metav1.Condition) {
+	api.Status.Conditions = conditions
+}
+
 func (spec *ApiV4DefinitionSpec) Hash() string {
 	return hash.Calculate(spec)
 }
@@ -353,6 +363,15 @@ func (s *ApiV4DefinitionStatus) RemoveSubscription() {
 	if s.SubscriptionCount > 0 {
 		s.SubscriptionCount -= 1
 	}
+}
+
+func (s *ApiV4DefinitionStatus) GetConditions() map[string]metav1.Condition {
+	// Not implemented yet
+	return make(map[string]metav1.Condition)
+}
+
+func (s *ApiV4DefinitionStatus) SetConditions(conditions []metav1.Condition) {
+	s.Status.Conditions = conditions
 }
 
 // ApiV4DefinitionList contains a list of ApiV4Definition.
