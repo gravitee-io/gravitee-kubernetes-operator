@@ -66,6 +66,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -318,6 +319,7 @@ func registerControllers(mgr manager.Manager) {
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
 	runtimeUtil.Must(gwAPIv1.SchemeBuilder.AddToScheme(scheme))
+	runtimeUtil.Must(gwAPIv1beta1.SchemeBuilder.AddToScheme(scheme))
 
 	if err := (&parameters.Reconciler{
 		Scheme:   mgr.GetScheme(),

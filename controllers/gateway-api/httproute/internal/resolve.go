@@ -32,6 +32,7 @@ func Resolve(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 	if err := resolveParents(ctx, route); err != nil {
 		return err
 	}
+
 	if err := resolveBackendRefs(ctx, route); err != nil {
 		return err
 	}
@@ -94,12 +95,27 @@ func resolveBackendRefs(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 
 	for i, rule := range route.Spec.Rules {
 		for j, ref := range rule.BackendRefs {
+			objectRef := gwAPIv1.ObjectReference{
+				Name:      ref.Name,
+				Group:     *ref.Group,
+				Kind:      *ref.Kind,
+				Namespace: ref.Namespace,
+			}
+
+			if granted, err := k8s.IsGrantedReference(ctx, route, objectRef); err != nil {
+				return err
+			} else if !granted {
+				resolvedBuilder.RejectBackendRefNotPermitted("Invalid backend reference")
+				continue
+			}
+
 			if !k8s.IsServiceKind(ref.BackendRef.BackendObjectReference) {
 				resolvedBuilder.RejectInvalidBackendKind(
 					fmt.Sprintf("backend %d of rule %d is not of Service kind", i, j),
 				)
-				break
+				continue
 			}
+
 			if resolved, err := isResolvedBackend(ctx, route, ref); err != nil {
 				return err
 			} else if !resolved {

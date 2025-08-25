@@ -34,11 +34,9 @@ var Config = `
     </appender>
 
     <logger name="io.gravitee" level="INFO" />
-    <logger name="io.gravitee.gateway.reactive.handlers.api" level="DEBUG" />
     <logger name="org.reflections" level="WARN" />
     <logger name="org.springframework" level="WARN" />
     <logger name="org.eclipse.jetty" level="WARN" />
-    <logger name="com.graviteesource.reactor.nativekafka" level="DEBUG" />
 
     <root level="ERROR">
         <appender-ref ref="async-console" />

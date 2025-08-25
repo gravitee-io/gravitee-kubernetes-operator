@@ -53,7 +53,11 @@ func MapSpec(ctx context.Context, route *gwAPIv1.HTTPRoute) (v1alpha1.ApiV4Defin
 		return v1alpha1.ApiV4DefinitionSpec{}, err
 	}
 	spec.Listeners = listeners
-	spec.EndpointGroups = buildEndpointGroups(route)
+	endpointGroups, err := buildEndpointGroups(ctx, route)
+	if err != nil {
+		return v1alpha1.ApiV4DefinitionSpec{}, err
+	}
+	spec.EndpointGroups = endpointGroups
 	spec.Flows = buildFlows(route)
 	spec.Tags = buildTags(route)
 	return spec, nil

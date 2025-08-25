@@ -36,6 +36,7 @@ import (
 
 	coreV1 "k8s.io/api/core/v1"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 type Reconciler struct {
@@ -174,5 +175,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&v1alpha1.KafkaRoute{}, internal.WatchKafkaRoutes()).
 		Watches(&coreV1.Service{}, internal.WatchServices()).
 		Watches(&coreV1.Secret{}, internal.WatchSecrets()).
+		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
 		Complete(r)
 }
