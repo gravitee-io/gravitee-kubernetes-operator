@@ -39,6 +39,10 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 	DescribeTable("with wrong management context",
 		func(builder *fixture.FSBuilder) {
+			Skip(`
+				This test was migrated and moved to e2e test suite
+			`)
+
 			fixtures := builder.Build().Apply()
 
 			By("expecting API V4 status to be failed")
