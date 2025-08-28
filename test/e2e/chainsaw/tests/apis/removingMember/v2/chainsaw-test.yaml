@@ -17,6 +17,8 @@ apiVersion: chainsaw.kyverno.io/v1alpha1
 kind: Test
 metadata:
   name: v2-removing-member
+  labels:
+    focus: "true"
 spec:
   bindings:
     - name: apiName
@@ -84,6 +86,19 @@ spec:
     try:
       - apply:
           file: v2-api-without-member.yaml
+      - assert:
+          resource:
+            apiVersion: gravitee.io/v1alpha1
+            kind: ApiDefinition
+            metadata:
+              name: ($apiName)
+            spec:
+              version: "update"
+              members: []
+            status:
+              processingStatus: Completed
+      - sleep:
+          duration: 10s
     catch:
       - events: {}
 

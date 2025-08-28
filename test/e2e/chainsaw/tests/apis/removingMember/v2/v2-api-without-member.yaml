@@ -21,7 +21,7 @@ spec:
   contextRef:
     name: dev-ctx
   name: "remove-member-test-v2"
-  version: "updated"
+  version: "update"
   description: "API with groups and members Gravitee Kubernetes Operator sample"
   plans:
     - name: "KEY_LESS"
