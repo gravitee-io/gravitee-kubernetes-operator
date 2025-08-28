@@ -39,6 +39,9 @@ var _ = Describe("Start", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should start API", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.Builder().
 			WithAPI(constants.ApiWithStateStopped).
 			WithContext(constants.ContextWithSecretFile).
