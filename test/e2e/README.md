@@ -16,15 +16,13 @@ Install and have in PATH:
 
 A local kind cluster is used (created by provided make target).
 
-## 2. Install Chainsaw binary
+## 2. Install Go / helper tooling
 
-Install the Chainsaw test runner locally into the repository `bin/` directory:
+This installs required Go-based tools into `bin/` at repo root.
 
 ```sh
-GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.13
+make install-go-tools
 ```
-
-
 
 ## 3. Start a local cluster with APIM 
 
@@ -133,8 +131,8 @@ Recreate via section 3 when needed.
 ## 10. Summary of core commands
 
 ```sh
-# Install Chainsaw
-GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.13
+# Install tools
+make install-go-tools
 
 # Start cluster + APIM
 APIM_IMAGE_REGISTRY=graviteeio.azurecr.io APIM_IMAGE_TAG=master-latest make start-cluster

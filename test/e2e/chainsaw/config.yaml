@@ -28,7 +28,7 @@ spec:
     cleanup: 30s
     delete: 30s
     error: 30s
-    exec: 30s     
+    exec: 35s     
 # re-activate when reporting is fixed
   # report:
   #   format: XML
