@@ -16,10 +16,25 @@ apiVersion: chainsaw.kyverno.io/v1alpha1
 kind: Test
 metadata:
   name: pre-test-setup
+  labels:
+    focus: "true"
 spec:
   concurrent: false            # Chainsaw always executes every non-concurrent test first
-  skipDelete: true           
+  skipDelete: true
+  bindings:
+    - name: gkoNamespace
+      value: default     
   steps:
+    - name: Verify a running operator
+      try:
+      - assert:
+          resource:
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              namespace: ($gkoNamespace)
+              labels:
+                control-plane: controller-manager
     - name: setup-management-context
       try:
       - apply:               
