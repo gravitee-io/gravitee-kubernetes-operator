@@ -84,6 +84,19 @@ spec:
     try:
       - apply:
           file: v4-api-without-member.yaml
+      - assert:
+          resource:
+            apiVersion: gravitee.io/v1alpha1
+            kind: ApiV4Definition
+            metadata:
+              name: ($apiName)
+            spec:
+              version: "update"
+              members: []
+            status:
+              processingStatus: Completed
+      - sleep:
+          duration: 10s
     catch:
       - events: {}
 

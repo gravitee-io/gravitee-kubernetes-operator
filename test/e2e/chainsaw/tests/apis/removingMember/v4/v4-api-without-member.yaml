@@ -23,7 +23,7 @@ spec:
     namespace: "default"
   name: "remove-member-test-v4"
   description: "V4 API  with members managed by Gravitee Kubernetes Operator"
-  version: "updated"
+  version: "update"
   type: PROXY
   state: STARTED
   definitionContext:
