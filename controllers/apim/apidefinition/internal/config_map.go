@@ -31,14 +31,13 @@ import (
 )
 
 const (
-	definitionVersionKey = "definitionVersion"
-	definitionKey        = "definition"
-	managedByKey         = "managed-by"
-	gioTypeKey           = "gio-type"
-	orgKey               = "organizationId"
-	envKey               = "environmentId"
-	defaultEnvID         = "DEFAULT"
-	defaultOrgID         = "DEFAULT"
+	definitionKey = "definition"
+	managedByKey  = "managed-by"
+	gioTypeKey    = "gio-type"
+	orgKey        = "organizationId"
+	envKey        = "environmentId"
+	defaultEnvID  = "DEFAULT"
+	defaultOrgID  = "DEFAULT"
 )
 
 func updateConfigMap(
@@ -88,9 +87,7 @@ func saveConfigMap(
 		gioTypeKey:   core.CRDApiDefinitionResource + "." + core.CRDGroup,
 	}
 
-	cm.Data = map[string]string{
-		definitionVersionKey: apiDefinition.GetResourceVersion(),
-	}
+	cm.Data = map[string]string{}
 
 	if apiDefinition.GetOrgID() != "" {
 		cm.Data[orgKey] = apiDefinition.GetOrgID()
@@ -134,6 +131,7 @@ func saveConfigMap(
 		return err
 	}
 
+<<<<<<< HEAD
 	// Only update the config map if resource version has changed (means api definition has changed).
 	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.GetResourceVersion() {
 		log.FromContext(ctx).Info("Updating ConfigMap", "name", apiDefinition.GetName())
@@ -142,6 +140,10 @@ func saveConfigMap(
 
 	log.FromContext(ctx).Info("No change detected on API. Skipped.", "name", apiDefinition.GetName())
 	return nil
+=======
+	log.Debug(ctx, "Updating config map", log.KeyValues(apiDefinition)...)
+	return k8s.GetClient().Update(ctx, cm)
+>>>>>>> 8c49515 (fix: remove unnecessary resource version in the configmap data)
 }
 
 func deleteConfigMap(ctx context.Context, api client.Object) error {
