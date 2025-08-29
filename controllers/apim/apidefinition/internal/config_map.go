@@ -30,14 +30,13 @@ import (
 )
 
 const (
-	definitionVersionKey = "definitionVersion"
-	definitionKey        = "definition"
-	managedByKey         = "managed-by"
-	gioTypeKey           = "gio-type"
-	orgKey               = "organizationId"
-	envKey               = "environmentId"
-	defaultEnvID         = "DEFAULT"
-	defaultOrgID         = "DEFAULT"
+	definitionKey = "definition"
+	managedByKey  = "managed-by"
+	gioTypeKey    = "gio-type"
+	orgKey        = "organizationId"
+	envKey        = "environmentId"
+	defaultEnvID  = "DEFAULT"
+	defaultOrgID  = "DEFAULT"
 )
 
 func updateConfigMap(
@@ -87,9 +86,7 @@ func saveConfigMap(
 		gioTypeKey:   core.CRDApiDefinitionResource + "." + core.CRDGroup,
 	}
 
-	cm.Data = map[string]string{
-		definitionVersionKey: apiDefinition.GetResourceVersion(),
-	}
+	cm.Data = map[string]string{}
 
 	if apiDefinition.GetOrgID() != "" {
 		cm.Data[orgKey] = apiDefinition.GetOrgID()
@@ -130,12 +127,8 @@ func saveConfigMap(
 		return err
 	}
 
-	if currentApiDefinition.Data[definitionVersionKey] != apiDefinition.GetResourceVersion() {
-		log.Debug(ctx, "Updating config map", log.KeyValues(apiDefinition)...)
-		return k8s.GetClient().Update(ctx, cm)
-	}
-
-	return nil
+	log.Debug(ctx, "Updating config map", log.KeyValues(apiDefinition)...)
+	return k8s.GetClient().Update(ctx, cm)
 }
 
 func deleteConfigMap(ctx context.Context, api client.Object) error {
