@@ -17,26 +17,22 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func UpdateStatusSuccess(ctx context.Context, api core.Object) error {
-	if api.IsBeingDeleted() {
+func UpdateStatusSuccess(ctx context.Context, notification *v1alpha1.Notification) error {
+	if notification.IsBeingDeleted() {
 		return nil
 	}
 
-	k8s.AddSuccessfulConditions(api)
+	k8s.AddSuccessfulConditions(notification)
 
-	// Deprecated
-	api.GetStatus().SetProcessingStatus(core.ProcessingStatusCompleted)
-	return k8s.GetClient().Status().Update(ctx, api)
+	return k8s.GetClient().Status().Update(ctx, notification)
 }
 
-func UpdateStatusFailure(ctx context.Context, api core.Object, err error) error {
-	k8s.ErrorToCondition(api, err)
+func UpdateStatusFailure(ctx context.Context, notification *v1alpha1.Notification, err error) error {
+	k8s.ErrorToCondition(notification, err)
 
-	// Deprecated
-	api.GetStatus().SetProcessingStatus(core.ProcessingStatusFailed)
-	return k8s.GetClient().Status().Update(ctx, api)
+	return k8s.GetClient().Status().Update(ctx, notification)
 }

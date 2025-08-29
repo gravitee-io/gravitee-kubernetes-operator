@@ -20,11 +20,9 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
@@ -50,37 +48,47 @@ type ConditionBuilder struct {
 	condition *metav1.Condition
 }
 
-func AddCondition(obj runtime.Object, condition *metav1.Condition) {
+func SetConditions(obj client.Object, conditions []metav1.Condition) {
 	ca, ok := obj.(core.ConditionAware)
 	if ok {
-		conditions := ca.GetConditions()
-		conditions[condition.Type] = *condition
-		ca.SetConditions(utils.ToConditions(conditions))
+		ca.SetConditions(conditions)
 	}
 }
 
+func AddSuccessfulConditions(obj client.Object) {
+	ac := NewAcceptedConditionBuilder(obj.GetGeneration()).Accept("Successfully reconciled").Build()
+	refs := NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+		ResolveRefs("All References successfully resolved").Build()
+	conditions := []metav1.Condition{*ac, *refs}
+
+	SetConditions(obj, conditions)
+}
+
 func ErrorToCondition(obj client.Object, err error) {
-	condition := NewAcceptedConditionBuilder(obj.GetGeneration()).Reason("ReconcileFailed").Message(err.Error()).Build()
+	ac := NewAcceptedConditionBuilder(obj.GetGeneration()).Reason("ReconcileFailed").Message(err.Error()).Build()
+	refs := NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+		ResolveRefs("All References successfully resolved").Build()
 
 	e := new(gerrors.ReconcileError)
 	if errors.As(err, e) {
 		switch e.Type {
 		case gerrors.CompileTemplateError:
-			condition = NewAcceptedConditionBuilder(obj.GetGeneration()).
+			ac = NewAcceptedConditionBuilder(obj.GetGeneration()).
 				Reason(string(gerrors.CompileTemplateError)).Message(e.Error()).Build()
 		case gerrors.ControlPlaneError:
-			condition = NewAcceptedConditionBuilder(obj.GetGeneration()).
+			ac = NewAcceptedConditionBuilder(obj.GetGeneration()).
 				Reason(string(gerrors.ControlPlaneError)).Message(e.Error()).Build()
 		case gerrors.ResolveRefError:
-			condition = NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+			ac.Message = "ReconcileFailed"
+			refs = NewResolvedRefsConditionBuilder(obj.GetGeneration()).
 				Message(e.Error()).Status(ConditionStatusFalse).Build()
 		case gerrors.IllegalStateError:
-			condition = NewAcceptedConditionBuilder(obj.GetGeneration()).
+			ac = NewAcceptedConditionBuilder(obj.GetGeneration()).
 				Reason(string(gerrors.IllegalStateError)).Message(e.Error()).Build()
 		}
 	}
-
-	AddCondition(obj, condition)
+	conditions := []metav1.Condition{*ac, *refs}
+	SetConditions(obj, conditions)
 }
 
 func NewResolvedRefsConditionBuilder(generation int64) *ConditionBuilder {
