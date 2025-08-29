@@ -27,8 +27,7 @@ func UpdateStatusSuccess(ctx context.Context, group *v1alpha1.Group) error {
 		return nil
 	}
 
-	k8s.AddCondition(group, k8s.NewAcceptedConditionBuilder(group.GetGeneration()).
-		Accept("Successfully reconciled").Build())
+	k8s.AddSuccessfulConditions(group)
 
 	group.Status.ProcessingStatus = core.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, group)

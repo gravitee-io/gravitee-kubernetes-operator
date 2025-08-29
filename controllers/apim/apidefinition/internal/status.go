@@ -22,12 +22,11 @@ import (
 )
 
 func UpdateStatusSuccess(ctx context.Context, api core.Object) error {
-	if !api.GetDeletionTimestamp().IsZero() {
+	if api.IsBeingDeleted() {
 		return nil
 	}
 
-	k8s.AddCondition(api, k8s.NewAcceptedConditionBuilder(api.GetGeneration()).
-		Accept("Successfully reconciled").Build())
+	k8s.AddSuccessfulConditions(api)
 
 	// Deprecated
 	api.GetStatus().SetProcessingStatus(core.ProcessingStatusCompleted)

@@ -22,11 +22,14 @@ import (
 )
 
 func UpdateCondition(ctx context.Context, mgtCtx *v1alpha1.ManagementContext, err error) error {
+	if mgtCtx.IsBeingDeleted() {
+		return nil
+	}
+
 	if err != nil {
 		k8s.ErrorToCondition(mgtCtx, err)
 	} else {
-		k8s.AddCondition(mgtCtx, k8s.NewAcceptedConditionBuilder(mgtCtx.GetGeneration()).
-			Accept("Successfully reconciled").Build())
+		k8s.AddSuccessfulConditions(mgtCtx)
 	}
 
 	return k8s.GetClient().Status().Update(ctx, mgtCtx)

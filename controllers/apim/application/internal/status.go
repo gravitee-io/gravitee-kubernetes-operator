@@ -26,8 +26,8 @@ func UpdateStatusSuccess(ctx context.Context, application *v1alpha1.Application)
 	if application.IsBeingDeleted() {
 		return nil
 	}
-	k8s.AddCondition(application, k8s.NewAcceptedConditionBuilder(application.GetGeneration()).
-		Accept("Successfully reconciled").Build())
+
+	k8s.AddSuccessfulConditions(application)
 
 	application.Status.ProcessingStatus = core.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, application)
