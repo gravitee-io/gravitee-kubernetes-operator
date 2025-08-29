@@ -19,7 +19,6 @@ package managementcontext
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -92,7 +91,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
-	dc.SetConditions(utils.ToConditions(managementContext.GetConditions()))
 	if err := dc.GetStatus().DeepCopyTo(managementContext); err != nil {
 		return ctrl.Result{}, err
 	}

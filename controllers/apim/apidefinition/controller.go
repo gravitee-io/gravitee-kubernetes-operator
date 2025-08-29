@@ -20,7 +20,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"k8s.io/client-go/tools/record"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -116,7 +115,6 @@ func reconcileApiDefinition(
 		return err
 	})
 
-	dc.SetConditions(utils.ToConditions(apiDefinition.GetConditions()))
 	if err := dc.GetStatus().DeepCopyTo(apiDefinition); err != nil {
 		return ctrl.Result{}, err
 	}

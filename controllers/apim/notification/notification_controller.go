@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
@@ -63,7 +64,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := event.NewRecorder(r.Recorder)
 
-	deepCopy := notification.DeepCopy()
+	dc := notification.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, notification, func() error {
 		util.AddFinalizer(notification, core.NotificationFinalizer)
@@ -72,7 +73,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		var err error
 		if notification.IsBeingDeleted() {
 			err = events.Record(event.Delete, notification, func() error {
-				if err := internal.Delete(ctx, deepCopy); err != nil {
+				if err := internal.Delete(ctx, dc); err != nil {
 					return err
 				}
 				util.RemoveFinalizer(notification, core.NotificationFinalizer)
@@ -86,24 +87,22 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
-	if !notification.IsBeingDeleted() && err != nil {
-		if err := internal.SetGroupRefsConditions(ctx, r.Client, err, notification); err != nil {
-			return ctrl.Result{}, err
-		}
+	if err == nil {
+		log.InfoEndReconcile(ctx, notification)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, notification)
 	}
 
-	// in any case of error
-	if err != nil {
+	// An error occurred during the reconcile
+	if err := internal.UpdateStatusFailure(ctx, notification, err); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	// update status
-	if err := internal.SetAcceptedCondition(ctx, r.Client, notification); err != nil {
+	if errors.IsRecoverable(err) {
+		log.ErrorRequeuingReconcile(ctx, err, notification)
 		return ctrl.Result{}, err
 	}
 
-	// no error, we are done
-	log.InfoEndReconcile(ctx, notification)
+	log.ErrorAbortingReconcile(ctx, err, notification)
 	return ctrl.Result{}, nil
 }
 

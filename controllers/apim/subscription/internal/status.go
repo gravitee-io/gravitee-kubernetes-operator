@@ -27,8 +27,7 @@ func UpdateStatusSuccess(ctx context.Context, subscription *v1alpha1.Subscriptio
 		return nil
 	}
 
-	k8s.AddCondition(subscription, k8s.NewAcceptedConditionBuilder(subscription.GetGeneration()).
-		Accept("Successfully reconciled").Build())
+	k8s.AddSuccessfulConditions(subscription)
 
 	subscription.Status.ProcessingStatus = core.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, subscription)
