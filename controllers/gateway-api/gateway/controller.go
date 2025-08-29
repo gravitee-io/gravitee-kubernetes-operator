@@ -64,7 +64,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
 
 	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	} else if kErrors.IsNotFound(err) {
 		log.Debug(ctx, "ignoring gateway as gateway class name was not found")
 		return ctrl.Result{}, nil
