@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  gravitee: gravitee-io/gravitee@4.14.1
+  gravitee: gravitee-io/gravitee@4.15.0
   kubernetes: circleci/kubernetes@2.0.0
   helm: circleci/helm@3.2.0
   go: circleci/go@3.0.3
@@ -9,6 +9,7 @@ orbs:
   slack: circleci/slack@5.0.0
   gh: circleci/github-cli@2.7.0
   azure-cli: circleci/azure-cli@1.3.2
+  aquasec: gravitee-io/aquasec@1.0.5
 
 parameters:
   go-version:
@@ -57,17 +58,26 @@ executors:
     resource_class: small
 
 commands:
-  cmd-setup-azure-login-e2e:
+  cmd-setup-aqua-scan:
     steps:
       - keeper/env-export:
-          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_APPLICATION_ID
-          var-name: AZURE_APPLICATION_ID
+          secret-url: keeper://QeHHkvALPob4pgs1hMd9Gw/custom_field/API Key
+          var-name: AQUA_KEY
       - keeper/env-export:
-          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_TENANT
-          var-name: AZURE_TENANT
+          secret-url: keeper://QeHHkvALPob4pgs1hMd9Gw/custom_field/Secret
+          var-name: AQUA_SECRET
       - keeper/env-export:
-          secret-url: keeper://ekjb4UzzzML0k3Qv_W8yqg/custom_field/AZURE_APPLICATION_SECRET
-          var-name: AZURE_APPLICATION_SECRET
+          secret-url: keeper://LYg-wdlM5UDzSqFFH6Kyig/field/login
+          var-name: AQUA_USERNAME
+      - keeper/env-export:
+          secret-url: keeper://LYg-wdlM5UDzSqFFH6Kyig/field/password
+          var-name: AQUA_PASSWORD
+      - keeper/env-export:
+          secret-url: keeper://QeHHkvALPob4pgs1hMd9Gw/custom_field/ScannerToken
+          var-name: SCANNER_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
 jobs:
   job-install-go-tools:
     docker:
@@ -779,12 +789,32 @@ workflows:
             - Run IT with context
             - Run IT without context
             - Run Conformance Test
+      - aquasec/fs_scan:
+          context: cicd-orchestrator
+          pre-steps:
+            - cmd-setup-aqua-scan
+          requires:
+            - Run IT with context
+            - Run IT without context
   post-merge:
     when:
       equal:
         - none
         - << pipeline.parameters.trigger >>
     jobs:
+      - aquasec/fs_scan:
+          name: Scan code repository
+          context: cicd-orchestrator
+          pre-steps:
+            - cmd-setup-aqua-scan
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+                - ci-stage-helm-chart
+            tags:
+              ignore: /.*/
       - job-stage-image:
           name: Stage Docker image
           context: cicd-orchestrator
@@ -839,7 +869,62 @@ workflows:
                   event: pass
                   template: basic_success_1
                   branch_pattern: ".+"      
-              
+
+      - aquasec/register_artifact:
+          name: Register staged image for scanning
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+                - ci-stage-helm-chart
+            tags:
+              ignore: /.*/
+          requires:
+            - Stage Docker image
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - checkout
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: |
+                  export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
+                  echo "graviteeio.azurecr.io/kubernetes-operator:${VERSION}" > /tmp/docker-image.txt
+      - aquasec/docker_image_scan:
+          name: Scan staged image
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - /^[0-9]+\.[0-9]+\.x$/
+                - master
+                - ci-stage-helm-chart
+            tags:
+              ignore: /.*/
+          requires:
+            - Register staged image for scanning
+          scanner_url: https://82fb8f75da.cloud.aquasec.com
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - checkout
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: |
+                  export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
+                  echo "graviteeio.azurecr.io/kubernetes-operator:${VERSION}" > /tmp/docker-image.txt
+            - gravitee/docker-login:
+                registry: graviteeio.azurecr.io
+                username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+                password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+            - run:
+                name: Pull Docker image
+                command: |
+                  export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
+                  docker pull "graviteeio.azurecr.io/kubernetes-operator:${VERSION}"
+             
   release:
     when:
       equal:
@@ -863,6 +948,40 @@ workflows:
               ignore: /.*/
             tags:
               only: /\d+\.\d+\.\d+/
+      - aquasec/register_artifact:
+          name: Register artifact
+          context: cicd-orchestrator
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /\d+\.\d+\.\d+/
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+      - aquasec/docker_image_scan:
+          name: Scan docker image
+          context: cicd-orchestrator
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /\d+\.\d+\.\d+/
+          requires:
+            - Register artifact
+          scanner_url: https://82fb8f75da.cloud.aquasec.com
+          built_docker_image_file: /tmp/docker-image.txt
+          pre-steps:
+            - cmd-setup-aqua-scan
+            - run:
+                name: Store docker image version
+                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+            - run:
+                name: Pull docker image
+                command: docker pull "graviteeio/kubernetes-operator:${CIRCLE_TAG}"
 
   test:
     when:
