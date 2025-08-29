@@ -82,11 +82,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	dc.Status.DeepCopyInto(&route.Status)
 	if err := k8s.UpdateStatus(ctx, route); err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, err
 	}
 
 	log.InfoEndReconcile(ctx, route)
-	return ctrl.Result{}, err
+	return ctrl.Result{}, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
