@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -75,8 +76,12 @@ func FindConflictingPath(ctx context.Context, api core.ApiDefinitionObject) (Con
 
 func getExistingPaths(ctx context.Context, api core.ApiDefinitionObject) ([]Conflict, error) {
 	existingPaths := make([]Conflict, 0)
+	lookupNs := api.GetNamespace()
+	if env.Config.CheckApiContextPathConflictInCluster {
+		lookupNs = ""
+	}
 	apis, err := dynamic.GetAPIs(ctx, dynamic.ListOptions{
-		Namespace: api.GetNamespace(),
+		Namespace: lookupNs,
 		Excluded: []core.ObjectRef{
 			api.GetRef(),
 		},
