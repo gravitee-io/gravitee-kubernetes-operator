@@ -27,8 +27,7 @@ func UpdateStatusSuccess(ctx context.Context, sharedPolicyGroup *v1alpha1.Shared
 		return nil
 	}
 
-	k8s.AddCondition(sharedPolicyGroup, k8s.NewAcceptedConditionBuilder(sharedPolicyGroup.GetGeneration()).
-		Accept("Successfully reconciled").Build())
+	k8s.AddSuccessfulConditions(sharedPolicyGroup)
 
 	sharedPolicyGroup.Status.ProcessingStatus = core.ProcessingStatusCompleted
 	return k8s.GetClient().Status().Update(ctx, sharedPolicyGroup)
