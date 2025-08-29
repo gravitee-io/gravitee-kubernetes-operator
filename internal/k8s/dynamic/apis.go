@@ -19,7 +19,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -118,9 +117,6 @@ func isExcluded(item unstructured.Unstructured, opts ListOptions) bool {
 }
 
 func getAPIsResource(gvr schema.GroupVersionResource, ns string) dynamic.ResourceInterface {
-	if env.Config.CheckApiContextPathConflictInCluster {
-		return getResource(gvr, "")
-	}
 	return getResource(gvr, ns)
 }
 
