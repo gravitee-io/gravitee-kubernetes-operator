@@ -231,9 +231,9 @@ jobs:
             docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
             kind load docker-image gateway:latest --name gravitee
       - run:
-          name: Run cloud-provider-kind loadbalancer
+          name: Run cloud LB
           command: |
-            NET_MODE=host docker compose -f hack/kind/cloud-provider/compose.yaml up -d
+            make cloud-lb
       - run:
           name: Build and install the operator
           command: |

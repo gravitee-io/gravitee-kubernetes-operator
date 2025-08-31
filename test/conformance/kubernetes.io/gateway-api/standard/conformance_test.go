@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/conformance/kubernetes.io/gateway-api/impl"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -75,10 +76,12 @@ func TestGatewayAPIConformance(t *testing.T) {
 	// because of the conflict.
 	opts.SkipTests = append(opts.SkipTests, "HTTPRouteMatchingAcrossRoutes")
 
-	// We skip this test because for some reason
+	// We skip this test in circle ci because for some reason
 	// threads get blocked on the gatway side when
-	// running it. Needs to investigate
-	opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
+	// running it. Needs to investigate (possibly how java Atomic are handled by the underlying system)
+	if os.Getenv("CIRCLECI") == env.TrueString {
+		opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
+	}
 
 	// That one might be handled first because it looks like its half
 	// baked implementation from our side.
