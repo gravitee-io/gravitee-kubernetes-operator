@@ -11,6 +11,8 @@ GINKGO ?= $(LOCALBIN)/ginkgo
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
 CHAINSAW ?= $(LOCALBIN)/chainsaw
+GOTESTSUM ?= $(LOCALBIN)/gotestsum
+CLOUD_LB ?= $(LOCALBIN)/cloud-provider-kind
 
 .PHONY: clean-tools
 clean-tools: $(LOCALBIN) ## Cleans (delete) all binary tools

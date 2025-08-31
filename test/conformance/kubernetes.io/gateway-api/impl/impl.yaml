@@ -15,6 +15,6 @@
 organization: gravitee.io
 project: gravitee-kubernetes-operator
 url: https://github.com/gravitee-io/gravitee-kubernetes-operator
-version: 4.8.0
+version: 4.8.5
 contact:
-- team-gko@graviteesource.com
+- team-devex@graviteesource.com

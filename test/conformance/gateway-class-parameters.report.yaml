@@ -27,7 +27,7 @@ spec:
         spec:
           containers:
           - name: gateway
-            image: graviteeio/apim-gateway:4.8.4
+            image: graviteeio/apim-gateway:4.8.5
             imagePullPolicy: IfNotPresent
             startupProbe:
               failureThreshold: 100
