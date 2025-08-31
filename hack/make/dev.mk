@@ -43,4 +43,12 @@ uninstall-gateway-api: ## Install gateway-api CRDs into the current cluster
 
 .PHONY: run
 run: ## Run a controller from your host
-	@go run ./main.go
+	@APPLY_CRDS=true ENABLE_GATEWAY_API=true go run ./main.go
+
+.PHONY: cloud-provider-kind
+cloud-lb: install-go-tools ## Run a local cloud load balancer service (cloud-provider-kind)
+ifeq ($(shell uname),Darwin)
+	@sudo $(CLOUD_LB)
+else
+	NET_MODE=host docker compose -f hack/kind/cloud-provider/compose.yaml up -d
+endif

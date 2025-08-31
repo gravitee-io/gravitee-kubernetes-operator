@@ -16,6 +16,7 @@ package impl
 
 import (
 	_ "embed"
+	"path"
 
 	"gopkg.in/yaml.v2"
 	v1 "sigs.k8s.io/gateway-api/conformance/apis/v1"
@@ -26,7 +27,7 @@ var manifest []byte
 var Manifest v1.Implementation
 
 func GetReportOutputPath() string {
-	return "standard-" + Manifest.Version + "-default-report.yaml"
+	return path.Join("..", "report", "standard-"+Manifest.Version+"-default-report.yaml")
 }
 
 func init() {

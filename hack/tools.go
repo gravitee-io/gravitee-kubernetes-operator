@@ -23,5 +23,6 @@ import (
 	_ "github.com/google/addlicense"
 	_ "github.com/onsi/ginkgo/v2/ginkgo"
 	_ "gotest.tools/gotestsum"
+	_ "sigs.k8s.io/cloud-provider-kind"
 	_ "sigs.k8s.io/controller-tools/cmd/controller-gen"
 )
