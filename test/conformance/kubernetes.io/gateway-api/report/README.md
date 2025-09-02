@@ -6,17 +6,18 @@
 |--------------|-------------------------------------------|---------|--------------------------------------------------------|
 | standard     | [version-4.8.5](https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/4.8.5) | default | [version-4.8.5 report](./standard-4.8.5-default-report.yaml) |
 
+> The Gravitee Kubernetes Operator provides partial conformance for Gateway - HTTP features in version 4.8.5. It does not support matching rules across routes or defining services of a type other than Kubernetes Core v1 services. These features will be introduced in a future release.
 
 ## Prerequisites
 
-The following binaries are assumed to be present on your devide
+The following binaries are assumed to be installed on your device
   
   - [docker](https://docs.docker.com/get-started/get-docker/)
   - [kubectl](https://kubernetes.io/docs/tasks/tools/)
   - [kind](https://github.com/kubernetes-sigs/kind)
   - [go](https://go.dev/learn/)
 
-The reproducer as been tested on macOS and Linux only.
+The reproducer has been tested on macOS and Linux only.
 
 ## Reproducer
 
@@ -26,21 +27,21 @@ The reproducer as been tested on macOS and Linux only.
 git clone --depth 1 --branch 4.8.5 https://github.com/gravitee-io/gravitee-kubernetes-operator.git
 ```
 
-2. Start a kind cluster
+2. Start the Kubernetes cluster
 
 ```bash
 make start-conformance-cluster
 ```
 
-3. Run a local load balancer service
+3. Run a local Load Balancer Service
 
-> The make target runs [cloud-provider-kind](https://kind.sigs.k8s.io/docs/user/loadbalancer). If you are reproducing on a macOS device, the binary requires sudo privileges and your password will be asked. For Linux devices, cloud-provider-kind will be run using Docker compose.
+> The make target runs [cloud-provider-kind](https://kind.sigs.k8s.io/docs/user/loadbalancer). If you are reproducing on a macOS device, the binary requires `sudo` privileges and you will be prompted for a password. For Linux devices, cloud-provider-kind will be run using Docker compose.
 
 ```bash
 make cloud-lb
 ```
 
-1. Run the operator
+4. Run the operator
 
 ```bash
 make run
@@ -58,7 +59,7 @@ kubectl apply -f ./test/conformance/gateway-class-parameters.report.yaml -f ./te
 make conformance
 ```
 
-6. Print report
+7. Print report
 
 ```bash
 cat test/conformance/kubernetes.io/gateway-api/report/standard-4.8.5-default-report.yaml
