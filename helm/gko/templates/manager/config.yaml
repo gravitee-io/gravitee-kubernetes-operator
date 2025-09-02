@@ -81,3 +81,8 @@ data:
   CHECK_API_CONTEXT_PATH_CONFLICT_IN_CLUSTER: "true"
   {{- end }}
   {{- end }}
+  {{- if .Values.manager.templating.enabled }}
+  ENABLE_TEMPLATING: "true"
+  {{- else }}
+  ENABLE_TEMPLATING: "false"
+  {{- end }}

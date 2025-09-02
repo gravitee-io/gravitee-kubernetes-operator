@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -59,12 +60,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.ApiDefinition{}).
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ApiContextField)).
-		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(indexer.ApiResourceField)).
-		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("apidefinitions")).
-		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("apidefinitions")).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Complete(r)
+		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(indexer.ApiResourceField))
+	if env.Config.EnableTemplating {
+		newController = newController.
+			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("apidefinitions")).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("apidefinitions"))
+	}
+	return newController.Complete(r)
 }

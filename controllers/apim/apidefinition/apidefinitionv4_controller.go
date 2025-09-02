@@ -21,6 +21,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -57,13 +58,17 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 }
 
 func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.ApiV4Definition{}).
+		WithEventFilter(predicate.LastSpecHashPredicate{}).
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(indexer.ApiV4ContextField)).
 		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(indexer.ApiV4ResourceField)).
-		Watches(&v1alpha1.SharedPolicyGroup{}, r.Watcher.WatchSharedPolicyGroups(indexer.ApiV4SharedPolicyGroupsField)).
-		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("apiv4definitions")).
-		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("apiv4definitions")).
-		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Complete(r)
+		Watches(&v1alpha1.SharedPolicyGroup{}, r.Watcher.WatchSharedPolicyGroups(indexer.ApiV4SharedPolicyGroupsField))
+	if env.Config.EnableTemplating {
+		newController.
+			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("apiv4definitions")).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("apiv4definitions"))
+	}
+
+	return newController.Complete(r)
 }
