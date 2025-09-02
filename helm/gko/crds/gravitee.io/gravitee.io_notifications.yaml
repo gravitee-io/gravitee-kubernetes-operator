@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.3
-    gravitee.io/operator.version: 4.8.5
+    gravitee.io/operator.version: 4.8.6
   name: notifications.gravitee.io
 spec:
   group: gravitee.io

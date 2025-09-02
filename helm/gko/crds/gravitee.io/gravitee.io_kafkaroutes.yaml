@@ -18,7 +18,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.17.3
     gravitee.io/extends: gateway.networking.k8s.io
-    gravitee.io/operator.version: 4.8.5
+    gravitee.io/operator.version: 4.8.6
   name: kafkaroutes.gravitee.io
 spec:
   group: gravitee.io
