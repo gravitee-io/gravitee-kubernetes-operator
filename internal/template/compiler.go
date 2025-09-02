@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -49,6 +50,9 @@ const objectAnnotationKey = ctxKey("gravitee.io/templating/annotationKey")
 const totalReferenceKey = "gravitee.io/references"
 
 func Compile(ctx context.Context, obj client.Object, updateObjectMetadata bool) error {
+	if !env.Config.EnableTemplating {
+		return nil
+	}
 	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
 	if err != nil {
 		return fmt.Errorf("failed to convert object to unstructured: %w", err)

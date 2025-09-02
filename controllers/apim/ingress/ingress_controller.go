@@ -147,13 +147,16 @@ func (r *Reconciler) ingressClassEventFilter() predicate.Predicate {
 
 // SetupWithManager initializes ingress controller manager.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&netV1.Ingress{}).
 		Owns(&v1alpha1.ApiDefinition{}).
 		Watches(&v1alpha1.ApiDefinition{}, r.Watcher.WatchApiTemplate()).
-		Watches(&corev1.Secret{}, r.Watcher.WatchTLSSecret()).
-		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("ingresses")).
-		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("ingresses")).
 		WithEventFilter(r.ingressClassEventFilter()).
-		Complete(r)
+		Watches(&corev1.Secret{}, r.Watcher.WatchTLSSecret())
+	if env.Config.EnableTemplating {
+		newController.
+			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("ingresses")).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("ingresses"))
+	}
+	return newController.Complete(r)
 }
