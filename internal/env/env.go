@@ -47,6 +47,7 @@ const (
 	HttpCLientInsecureSkipCertVerify     = "HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY"
 	HttpClientTimeoutSeconds             = "HTTP_CLIENT_TIMEOUT_SECONDS"
 	TrueString                           = "true"
+	FalseString                          = "false"
 	IngressClasses                       = "INGRESS_CLASSES"
 	CheckApiContextPathConflictInCluster = "CHECK_API_CONTEXT_PATH_CONFLICT_IN_CLUSTER"
 	LogsFormat                           = "LOGS_FORMAT"
@@ -54,6 +55,7 @@ const (
 	LogsLevelCase                        = "LOGS_LEVEL_CASE"
 	LogsTimestampField                   = "LOGS_TIMESTAMP_FIELD"
 	LogsTimestampFormat                  = "LOGS_TIMESTAMP_FORMAT"
+	EnableTemplating                     = "ENABLE_TEMPLATING"
 
 	// This default are applied when running the app locally.
 	defaultWebhookPort       = 9443
@@ -95,6 +97,7 @@ var Config = struct {
 	LogsTimestampField                   string
 	LogsTimestampFormat                  string
 	ReconcileStrategy                    string
+	EnableTemplating                     bool
 }{}
 
 func init() {
@@ -132,6 +135,7 @@ func init() {
 	Config.LogsTimestampField = os.Getenv(LogsTimestampField)
 	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
 	Config.ReconcileStrategy = os.Getenv(ReconcileStrategy)
+	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString // this will allow it to be enabled by default
 }
 
 func GetMetricsAddr() string {

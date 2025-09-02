@@ -18,18 +18,20 @@ import (
 	"context"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/policygroups/internal"
 
 	"github.com/go-logr/logr"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -120,11 +122,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.SharedPolicyGroup{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.SPGContextField)).
-		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("sharedpolicygroups")).
-		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("sharedpolicygroups")).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Complete(r)
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.SPGContextField))
+	if env.Config.EnableTemplating {
+		newController.Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("sharedpolicygroups")).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("sharedpolicygroups"))
+	}
+	return newController.Complete(r)
 }
