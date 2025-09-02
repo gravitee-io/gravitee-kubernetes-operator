@@ -159,6 +159,10 @@ manager:
     admission:
       ## @param manager.webhook.admission.checkApiContextPathConflictInCluster check if the same API context path exists in the whole cluster.
       checkApiContextPathConflictInCluster: false
+  templating:
+    ## @param manager.templating.enabled If `false` string [templating](https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/guides/templating) is not evaluated on resources and template markers will remain untouched.
+    enabled: true
+
 ## @section ingress
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.

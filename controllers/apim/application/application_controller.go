@@ -24,6 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	corev1 "k8s.io/api/core/v1"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -134,11 +135,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Application{}).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.AppContextField)).
-		Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("applications")).
-		Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("applications")).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Complete(r)
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.AppContextField))
+
+	if env.Config.EnableTemplating {
+		newController.Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("applications")).
+			Watches(&corev1.ConfigMap{}, r.Watcher.WatchTemplatingSource("applications"))
+	}
+	return newController.Complete(r)
 }
