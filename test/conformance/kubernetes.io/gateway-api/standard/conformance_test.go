@@ -22,13 +22,13 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/conformance/kubernetes.io/gateway-api/impl"
-	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/gateway-api/conformance"
 	"sigs.k8s.io/gateway-api/conformance/tests"
 	"sigs.k8s.io/gateway-api/conformance/utils/config"
 	"sigs.k8s.io/gateway-api/conformance/utils/suite"
 	"sigs.k8s.io/gateway-api/pkg/features"
+	"sigs.k8s.io/yaml"
 )
 
 var lazyTimeoutConfig = config.TimeoutConfig{
@@ -60,6 +60,8 @@ func TestGatewayAPIConformance(t *testing.T) {
 		features.HTTPRouteFeature.Name,
 		features.ReferenceGrantFeature.Name,
 	)
+
+	opts.Mode = "default"
 
 	opts.TimeoutConfig = lazyTimeoutConfig
 	opts.RestConfig.QPS = -1
