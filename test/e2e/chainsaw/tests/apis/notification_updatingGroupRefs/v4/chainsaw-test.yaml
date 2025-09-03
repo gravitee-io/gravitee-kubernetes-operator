@@ -1,0 +1,136 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: v4-update-notification-grouprefs
+spec:
+  bindings:
+    - name: apiName
+      value: v4-update-notification-grouprefs-test-api
+    - name: groupName
+      value: v4-update-notification-grouprefs-group
+    - name: service_account_name
+      value: service-account-for-v4-update-notification-grouprefs-test
+    - name: commandDir
+      value: "../../../../commands"
+    - name: gkoNamespace
+      value: default
+    - name: exportedApiYaml
+      value: exportedApi.yaml  
+
+  steps:
+  - name: Create a new service account
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: SERVICE_ACCOUNT_NAME
+              value: ($service_account_name)
+          content: |
+            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
+            sleep 2
+          check:
+              ($error): ~
+              (contains($stdout, '@graviteesource.com')): true
+    catch:
+      - podLogs:
+          selector: "app.kubernetes.io/component=api"
+          namespace: ($gkoNamespace)
+      
+  - name: Create a new Group resource
+    try:
+      - create:
+          file: group.yaml
+      - sleep:
+          duration: 2s
+
+  - name: Create a new Notification resource
+    try:
+      - create:
+          file: notification-with-groups.yml
+      - sleep:
+          duration: 2s
+          
+  - name: Create API with notifications and groups
+    try:
+      - create:
+          file: api-v4-with-notifications-and-groups.yml
+      - sleep:
+          duration: 2s
+
+  - name: Update the Notification resource
+    try:
+      - apply:
+          file: notification-with-groups-update.yml
+      - sleep:
+          duration: 2s
+
+  - name: Export and assert Notification settings
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+            - name: GROUP_NAME
+              value: ($groupName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+          content: |
+            set -e
+            API_ID=$(kubectl get apiv4definitions.gravitee.io -n $RESOURCE_NAMESPACE "$API_NAME" -o jsonpath='{.status.id}')
+            GROUP_ID=$(kubectl get groups.gravitee.io -n $RESOURCE_NAMESPACE "$GROUP_NAME" -o jsonpath='{.status.id}')
+            ALL_API_NOTIFICATIONS=$(npx zx $COMMAND_DIR/getApiNotifications.mjs --api_id $API_ID)
+
+            # Extract the PORTAL notification object from the output
+            PORTAL_NOTIFICATION=$(echo "$ALL_API_NOTIFICATIONS" | jq -c '.[] | select(.config_type=="PORTAL")')
+
+            # Emit a single JSON object so Chainsaw can json_parse($stdout) once
+            echo "{\"apiId\":\"$API_ID\",\"groupId\":\"$GROUP_ID\",\"notification\":$PORTAL_NOTIFICATION}"
+            # npx zx $COMMAND_DIR/checkApiNotificationHooks.mjs --api_id $API_ID --expect name="Console Notification" --expect-array-equals hooks=API_STARTED,API_STOPPED
+          outputs:
+            - name: notification
+              value: (json_parse($stdout).notification)
+            - name: api_id
+              value: (json_parse($stdout).apiId)
+            - name: group_id
+              value: (json_parse($stdout).groupId)
+      - assert:
+          resource:
+            ($notification):
+              referenceType: API
+              referenceId: ($api_id)
+              hooks:
+                - API_STARTED
+                - API_STOPPED
+                - APIKEY_EXPIRED
+              groups: []
+              origin: KUBERNETES
+              config_type: PORTAL
+
+  - name: Cleanup - Remove service account
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: SERVICE_ACCOUNT_NAME
+              value: ($service_account_name)
+          content: |
+            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"
