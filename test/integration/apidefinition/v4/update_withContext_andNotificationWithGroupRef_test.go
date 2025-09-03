@@ -49,6 +49,9 @@ var _ = Describe("Update", labels.WithContext, func() {
 	})
 
 	It("should update notification events after creation", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 
 		fixtures.Notification.Spec.Console.APIEvents = []notification.ApiEvent{"API_STARTED", "API_STOPPED", "APIKEY_EXPIRED"}
 		Expect(manager.UpdateSafely(ctx, fixtures.Notification)).To(Succeed())
@@ -79,6 +82,9 @@ var _ = Describe("Update", labels.WithContext, func() {
 	})
 
 	It("should update notification groups after creation", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 
 		fixtures.Notification.Spec.Console.GroupRefs = make([]refs.NamespacedName, 0)
 
@@ -107,6 +113,9 @@ var _ = Describe("Update", labels.WithContext, func() {
 	})
 
 	It("should delete notification after creation", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 
 		fixtures.APIv4.Spec.NotificationsRefs = make([]refs.NamespacedName, 0)
 
