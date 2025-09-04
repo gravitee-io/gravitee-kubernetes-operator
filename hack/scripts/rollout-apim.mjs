@@ -22,6 +22,7 @@ import {
   time,
   isEmptyString,
 } from "./lib/index.mjs";
+import { STABLE } from "./lib/stable.mjs";
 
 const WORKING_DIR = path.join(os.tmpdir(), CONFIG.repoName);
 const VERBOSE = argv.verbose;
