@@ -44,10 +44,29 @@ func ResolveConsoleNotificationRefs(ctx context.Context, api core.ApiDefinitionO
 		// validation webhook takes care of checking that beforehand
 		if notif.Spec.EventType == notification.EventTypeAPI &&
 			notif.Spec.Target == notification.TargetConsole {
-			api.SetConsoleNotification(base.ToAPIConsoleNotificationSettings(notif.Spec.Console))
+			if settings, err := mapNotificationSettings(ctx, api, notif); err != nil {
+				return err
+			} else {
+				api.SetConsoleNotification(settings)
+			}
 			break
 		}
 	}
 
 	return nil
+}
+
+func mapNotificationSettings(
+	ctx context.Context,
+	api core.ApiDefinitionObject,
+	notif *v1alpha1.Notification,
+) (*base.ConsoleNotificationConfiguration, error) {
+	console := notif.Spec.Console
+	settings := base.ToAPIConsoleNotificationSettings(console)
+	if groups, err := ResolveGroupRefs(ctx, api, console.GetGroupRefs()); err != nil {
+		return nil, err
+	} else {
+		settings.Groups = append(settings.Groups, groups...)
+	}
+	return settings, nil
 }

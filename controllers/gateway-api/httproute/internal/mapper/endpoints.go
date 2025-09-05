@@ -112,7 +112,7 @@ func buildEndpoints(
 					backendIndex,
 					match,
 					matchIndex,
-					k8s.GetRefNs(route, backendRef.Namespace),
+					k8s.GetRefNs(route, k8s.NsPtrToStr(backendRef.Namespace)),
 				),
 			)
 		}

@@ -65,6 +65,20 @@ func (res *Notification) GetRef() core.ObjectRef {
 	}
 }
 
+<<<<<<< HEAD
+=======
+func (res *Notification) GetConditions() map[string]metav1.Condition {
+	if res.Status.Conditions == nil {
+		return map[string]metav1.Condition{}
+	}
+	return utils.MapConditions(*res.Status.Conditions)
+}
+
+func (res *Notification) SetConditions(conditions []metav1.Condition) {
+	res.Status.Conditions = &conditions
+}
+
+>>>>>>> 28d59ae (refactor: do not mutate notificaction spec on updates)
 //+kubebuilder:object:root=true
 
 type NotificationList struct {

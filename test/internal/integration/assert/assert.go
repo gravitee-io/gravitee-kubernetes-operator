@@ -57,6 +57,40 @@ func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }
 
+<<<<<<< HEAD
+=======
+func IsAccepted(obj core.ConditionAwareObject) error {
+	if !k8s.IsAccepted(obj) {
+		return newAssertEqualError("Accepted condition", "True", "False")
+	}
+	return nil
+}
+
+func IsResolved(obj core.ConditionAwareObject) error {
+	if !k8s.IsResolved(obj) {
+		return newAssertEqualError("ResolvedRefs condition", "True", "False")
+	}
+	return nil
+}
+
+func IsUnresolved(obj core.ConditionAwareObject) error {
+	if k8s.IsResolved(obj) {
+		return newAssertEqualError("ResolvedRefs condition", "False", "True")
+	}
+	return nil
+}
+
+func ApiAccepted(apiDefinition *v1alpha1.ApiDefinition) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func ApiRejected(apiDefinition *v1alpha1.ApiDefinition) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)
+}
+
+>>>>>>> 28d59ae (refactor: do not mutate notificaction spec on updates)
 func ApiV4Completed(apiDefinition *v1alpha1.ApiV4Definition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }

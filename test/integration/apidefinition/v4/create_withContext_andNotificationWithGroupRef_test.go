@@ -48,28 +48,33 @@ var _ = Describe("Create", labels.WithContext, func() {
 			WithAPIv4(constants.ApiV4WithNotificationsAndGroups).
 			WithNotification(constants.NotificationWithGroupFile).
 			Build()
+
 		apiFixture.APIv4.Spec.Context = &refs.NamespacedName{
 			Name:      groupFixture.Context.Name,
 			Namespace: constants.Namespace,
 		}
+
 		apiFixture.APIv4.Spec.GroupRefs = []refs.NamespacedName{
 			{
 				Name:      groupFixture.Group.Name,
 				Namespace: constants.Namespace,
 			},
 		}
+
 		apiFixture.APIv4.Spec.NotificationsRefs = []refs.NamespacedName{
 			{
 				Name:      apiFixture.Notification.Name,
 				Namespace: constants.Namespace,
 			},
 		}
+
 		apiFixture.Notification.Spec.Console.GroupRefs = []refs.NamespacedName{
 			{
 				Name:      groupFixture.Group.Name,
 				Namespace: constants.Namespace,
 			},
 		}
+
 		apiFixture = apiFixture.Apply()
 
 		client := apim.NewClient(ctx)

@@ -37,6 +37,8 @@ const (
 	ParamsReasonLicenseNotFound = "LicenseNotFound"
 	ReasonNoConflict            = "NoConflicts"
 
+	ReasonGroupNotFound = "GroupNotFound"
+
 	ConditionStatusTrue  = "True"
 	ConditionStatusFalse = "False"
 )
@@ -45,6 +47,59 @@ type ConditionBuilder struct {
 	condition *metav1.Condition
 }
 
+<<<<<<< HEAD
+=======
+func SetConditions(obj client.Object, conditions []metav1.Condition) {
+	ca, ok := obj.(core.ConditionAware)
+	if ok {
+		ca.SetConditions(conditions)
+	}
+}
+
+func AddSuccessfulConditions(obj core.ConditionAwareObject) {
+	SetCondition(
+		obj,
+		NewAcceptedConditionBuilder(obj.GetGeneration()).
+			Accept("Successfully reconciled").Build(),
+	)
+
+	if !HasUnresolvedRefs(obj) {
+		SetCondition(
+			obj,
+			NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+				ResolveRefs("All References successfully resolved").Build(),
+		)
+	}
+}
+
+func ErrorToCondition(obj client.Object, err error) {
+	ac := NewAcceptedConditionBuilder(obj.GetGeneration()).Reason("ReconcileFailed").Message(err.Error()).Build()
+	refs := NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+		ResolveRefs("All References successfully resolved").Build()
+
+	e := new(gerrors.ReconcileError)
+	if errors.As(err, e) {
+		switch e.Type {
+		case gerrors.CompileTemplateError:
+			ac = NewAcceptedConditionBuilder(obj.GetGeneration()).
+				Reason(string(gerrors.CompileTemplateError)).Message(e.Error()).Build()
+		case gerrors.ControlPlaneError:
+			ac = NewAcceptedConditionBuilder(obj.GetGeneration()).
+				Reason(string(gerrors.ControlPlaneError)).Message(e.Error()).Build()
+		case gerrors.ResolveRefError:
+			ac.Message = "ReconcileFailed"
+			refs = NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+				Message(e.Error()).Status(ConditionStatusFalse).Build()
+		case gerrors.IllegalStateError:
+			ac = NewAcceptedConditionBuilder(obj.GetGeneration()).
+				Reason(string(gerrors.IllegalStateError)).Message(e.Error()).Build()
+		}
+	}
+	conditions := []metav1.Condition{*ac, *refs}
+	SetConditions(obj, conditions)
+}
+
+>>>>>>> 28d59ae (refactor: do not mutate notificaction spec on updates)
 func NewResolvedRefsConditionBuilder(generation int64) *ConditionBuilder {
 	return NewConditionBuilder(ConditionResolvedRefs).
 		ObservedGeneration(generation).
@@ -153,6 +208,13 @@ func (b *ConditionBuilder) RejectNoMatchingListenerHostname(msg string) *Conditi
 func (b *ConditionBuilder) RejectInvalidBackendKind(msg string) *ConditionBuilder {
 	return b.
 		Reason(string(gwAPIv1.RouteReasonInvalidKind)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectGroupNotFound(msg string) *ConditionBuilder {
+	return b.
+		Reason(ReasonGroupNotFound).
 		Status(metav1.ConditionFalse).
 		Message(msg)
 }

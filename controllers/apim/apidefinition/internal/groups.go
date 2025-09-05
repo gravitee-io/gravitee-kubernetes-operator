@@ -26,28 +26,33 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ResolveGroupRefs(ctx context.Context, api core.ApiDefinitionObject) error {
-	groupRefs := api.GetGroupRefs()
+func ResolveGroupRefs(ctx context.Context, referer core.ConditionAwareObject, refs []core.ObjectRef) ([]string, error) {
+	groups := []string{}
 
-	if groupRefs == nil || reflect.ValueOf(groupRefs).IsNil() {
-		return nil
+	if refs == nil || reflect.ValueOf(refs).IsNil() {
+		return groups, nil
 	}
 
-	groups := api.GetGroups()
-	for _, ref := range groupRefs {
+	for _, ref := range refs {
 		group := new(v1alpha1.Group)
-		nsn := getNamespacedName(ref, api.GetNamespace())
+		nsn := getNamespacedName(ref, referer.GetNamespace())
 		err := k8s.GetClient().Get(ctx, nsn, group)
 		if client.IgnoreNotFound(err) != nil {
-			return err
+			return groups, err
 		} else if err != nil {
-			log.Debug(ctx, "Skipping group reference "+ref.String()+" as it does not exist")
+			log.Debug(ctx, "Skipping group reference "+nsn.String()+" as it does not exist")
+			k8s.SetCondition(
+				referer,
+				k8s.
+					NewResolvedRefsConditionBuilder(referer.GetGeneration()).
+					RejectGroupNotFound("Group "+nsn.String()+" could not be found").
+					Build(),
+			)
 			continue
 		}
 		if !slices.Contains(groups, group.Spec.Name) {
 			groups = append(groups, group.Spec.Name)
 		}
 	}
-	api.SetGroups(groups)
-	return nil
+	return groups, nil
 }
