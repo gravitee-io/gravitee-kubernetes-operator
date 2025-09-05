@@ -40,6 +40,8 @@ const (
 	ParamsReasonLicenseNotFound = "LicenseNotFound"
 	ReasonNoConflict            = "NoConflicts"
 
+	ReasonGroupNotFound = "GroupNotFound"
+
 	ConditionStatusTrue  = "True"
 	ConditionStatusFalse = "False"
 )
@@ -55,13 +57,20 @@ func SetConditions(obj client.Object, conditions []metav1.Condition) {
 	}
 }
 
-func AddSuccessfulConditions(obj client.Object) {
-	ac := NewAcceptedConditionBuilder(obj.GetGeneration()).Accept("Successfully reconciled").Build()
-	refs := NewResolvedRefsConditionBuilder(obj.GetGeneration()).
-		ResolveRefs("All References successfully resolved").Build()
-	conditions := []metav1.Condition{*ac, *refs}
+func AddSuccessfulConditions(obj core.ConditionAwareObject) {
+	SetCondition(
+		obj,
+		NewAcceptedConditionBuilder(obj.GetGeneration()).
+			Accept("Successfully reconciled").Build(),
+	)
 
-	SetConditions(obj, conditions)
+	if !HasUnresolvedRefs(obj) {
+		SetCondition(
+			obj,
+			NewResolvedRefsConditionBuilder(obj.GetGeneration()).
+				ResolveRefs("All References successfully resolved").Build(),
+		)
+	}
 }
 
 func ErrorToCondition(obj client.Object, err error) {
@@ -199,6 +208,13 @@ func (b *ConditionBuilder) RejectNoMatchingListenerHostname(msg string) *Conditi
 func (b *ConditionBuilder) RejectInvalidBackendKind(msg string) *ConditionBuilder {
 	return b.
 		Reason(string(gwAPIv1.RouteReasonInvalidKind)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
+func (b *ConditionBuilder) RejectGroupNotFound(msg string) *ConditionBuilder {
+	return b.
+		Reason(ReasonGroupNotFound).
 		Status(metav1.ConditionFalse).
 		Message(msg)
 }

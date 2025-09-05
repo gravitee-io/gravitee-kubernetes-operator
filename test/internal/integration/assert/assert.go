@@ -60,6 +60,27 @@ func ApiCompleted(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileStatus, core.ProcessingStatusCompleted, apiDefinition.Status.ProcessingStatus)
 }
 
+func IsAccepted(obj core.ConditionAwareObject) error {
+	if !k8s.IsAccepted(obj) {
+		return newAssertEqualError("Accepted condition", "True", "False")
+	}
+	return nil
+}
+
+func IsResolved(obj core.ConditionAwareObject) error {
+	if !k8s.IsResolved(obj) {
+		return newAssertEqualError("ResolvedRefs condition", "True", "False")
+	}
+	return nil
+}
+
+func IsUnresolved(obj core.ConditionAwareObject) error {
+	if k8s.IsResolved(obj) {
+		return newAssertEqualError("ResolvedRefs condition", "False", "True")
+	}
+	return nil
+}
+
 func ApiAccepted(apiDefinition *v1alpha1.ApiDefinition) error {
 	return Equals(reconcileCondition, true,
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
