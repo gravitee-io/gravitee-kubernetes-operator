@@ -68,6 +68,9 @@ func (res *Notification) GetRef() core.ObjectRef {
 }
 
 func (res *Notification) GetConditions() map[string]metav1.Condition {
+	if res.Status.Conditions == nil {
+		return map[string]metav1.Condition{}
+	}
 	return utils.MapConditions(*res.Status.Conditions)
 }
 

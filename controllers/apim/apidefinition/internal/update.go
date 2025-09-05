@@ -52,8 +52,10 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return err
 	}
 
-	if err := ResolveGroupRefs(ctx, cp); err != nil {
+	if groups, err := ResolveGroupRefs(ctx, cp, cp.GetGroupRefs()); err != nil {
 		return err
+	} else {
+		spec.Groups = append(spec.Groups, groups...)
 	}
 
 	cp.PopulateIDs(nil)
@@ -118,8 +120,10 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		return err
 	}
 
-	if err := ResolveGroupRefs(ctx, cp); err != nil {
+	if groups, err := ResolveGroupRefs(ctx, cp, spec.GetGroupRefs()); err != nil {
 		return err
+	} else {
+		spec.Groups = append(spec.Groups, groups...)
 	}
 
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)

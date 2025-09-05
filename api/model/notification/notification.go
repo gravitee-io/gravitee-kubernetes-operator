@@ -14,7 +14,10 @@
 
 package notification
 
-import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+)
 
 const TargetConsole Target = "console"
 const EventTypeAPI EventType = "api"
@@ -74,4 +77,12 @@ func (c *Console) APIEventsAsString() []string {
 		result = append(result, string(event))
 	}
 	return result
+}
+
+func (c *Console) GetGroupRefs() []core.ObjectRef {
+	refs := make([]core.ObjectRef, 0)
+	for i := range c.GroupRefs {
+		refs = append(refs, &c.GroupRefs[i])
+	}
+	return refs
 }

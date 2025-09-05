@@ -21,7 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func UpdateStatusSuccess(ctx context.Context, api core.Object) error {
+func UpdateStatusSuccess(ctx context.Context, api core.ConditionAwareObject) error {
 	if api.IsBeingDeleted() {
 		return nil
 	}
