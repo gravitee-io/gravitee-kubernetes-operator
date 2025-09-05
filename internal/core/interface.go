@@ -247,3 +247,8 @@ type ConditionAware interface {
 	GetConditions() map[string]metav1.Condition
 	SetConditions([]metav1.Condition)
 }
+
+type ConditionAwareObject interface {
+	ConditionAware
+	Object
+}

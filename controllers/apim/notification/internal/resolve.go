@@ -17,7 +17,6 @@ package internal
 import (
 	"context"
 	"reflect"
-	"slices"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -28,17 +27,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ResolveGroupRefs(ctx context.Context, notif *notification.Type, namespace string) error {
-	if notif.Target != notification.TargetConsole {
+func ResolveGroupRefs(ctx context.Context, notif *v1alpha1.Notification, namespace string) error {
+	spec := notif.Spec
+	if spec.Target != notification.TargetConsole {
 		return nil
 	}
 
-	if notif.Console.GroupRefs == nil || reflect.ValueOf(notif.Console.GroupRefs).IsNil() {
+	if spec.Console.GroupRefs == nil || reflect.ValueOf(spec.Console.GroupRefs).IsNil() {
 		return nil
 	}
 
-	groups := make([]string, 0)
-	for _, ref := range notif.Console.GroupRefs {
+	for _, ref := range spec.Console.GroupRefs {
 		group := new(v1alpha1.Group)
 		r := ref
 		nsn := getNamespacedName(&r, namespace)
@@ -46,14 +45,17 @@ func ResolveGroupRefs(ctx context.Context, notif *notification.Type, namespace s
 		if client.IgnoreNotFound(err) != nil {
 			return err
 		} else if err != nil {
-			log.Info(ctx, "Skipping group reference "+ref.String()+" as it does not exist")
+			log.Debug(ctx, "Skipping group reference "+nsn.String()+" as it does not exist")
+			k8s.SetCondition(
+				notif,
+				k8s.
+					NewResolvedRefsConditionBuilder(notif.Generation).
+					RejectGroupNotFound("Group "+nsn.String()+" could not  be found").
+					Build(),
+			)
 			continue
 		}
-		if !slices.Contains(groups, group.Status.ID) {
-			groups = append(groups, group.Status.ID)
-		}
 	}
-	notif.Console.Groups = groups
 	return nil
 }
 

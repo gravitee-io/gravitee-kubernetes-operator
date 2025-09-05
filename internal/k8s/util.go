@@ -475,7 +475,7 @@ func intersectWithWildcard(hostname, wildcardHostname string) bool {
 }
 
 func IsGrantedReference(ctx context.Context, from client.Object, to gwAPIv1.ObjectReference) (bool, error) {
-	grantNs := GetRefNs(from, to.Namespace)
+	grantNs := GetRefNs(from, NsPtrToStr(to.Namespace))
 
 	if from.GetNamespace() == grantNs {
 		return true, nil
@@ -538,11 +538,18 @@ func isGrantedFrom(from client.Object, grantFrom gwAPIv1beta1.ReferenceGrantFrom
 	}
 }
 
-func GetRefNs(referencer client.Object, refNs *gwAPIv1.Namespace) string {
-	if refNs != nil {
-		return string(*refNs)
+func NsPtrToStr(ns *gwAPIv1.Namespace) string {
+	if ns == nil {
+		return ""
 	}
-	return referencer.GetNamespace()
+	return string(*ns)
+}
+
+func GetRefNs(referer client.Object, ns string) string {
+	if len(ns) > 0 {
+		return ns
+	}
+	return referer.GetNamespace()
 }
 
 func SupportsRouteNamespace(

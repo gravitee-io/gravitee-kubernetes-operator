@@ -15,10 +15,10 @@
 package notification
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -27,55 +27,31 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
-var _ = Describe("Delete", labels.WithContext, func() {
+var _ = Describe("Create", labels.WithContext, func() {
+
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	ctx := context.Background()
 
-	When("deleting referenced API notification", func() {
-
-		DescribeTable("should not delete notification when referenced by", func(builder *fixture.FSBuilder) {
-
-			fixtures := builder.
+	When("creating a notification with an unresolved group", func() {
+		It("should be accepted and unresolved", func() {
+			fixtures := fixture.Builder().
 				WithContext(constants.ContextWithCredentialsFile).
-				WithNotification(constants.NotificationNoGroupFile).
+				WithNotification(constants.NotificationWithGroupFile).
 				Build().
 				Apply()
 
-			By("deleting Notification")
-
-			Expect(manager.Client().Delete(ctx, fixtures.Notification)).To(Succeed())
-
-			By("expecting to still find Notification")
-
-			checkUntil := constants.ConsistentTimeout
-			Consistently(func() error {
-				return manager.GetLatest(ctx, fixtures.Notification)
-			}, checkUntil, interval).Should(Succeed())
-
-			By("deleting the API")
-
-			if fixtures.API != nil {
-				Expect(manager.Client().Delete(ctx, fixtures.API)).To(Succeed())
-			} else if fixtures.APIv4 != nil {
-				Expect(manager.Client().Delete(ctx, fixtures.APIv4)).To(Succeed())
-			}
-
-			By("expecting notification to have been deleted")
-
 			Eventually(func() error {
-				return assert.Deleted(ctx, "Notification", fixtures.Notification)
-			}, timeout, interval).Should(Succeed())
-		},
-			Entry(
-				"v2 API",
-				fixture.Builder().WithAPI(constants.ApiWithContextFile),
-			),
-			Entry(
-				"v4 API",
-				fixture.Builder().WithAPIv4(constants.ApiV4WithContextFile),
-			),
-		)
-	})
+				if err := manager.GetLatest(ctx, fixtures.Notification); err != nil {
+					return err
+				}
 
+				if err := assert.IsAccepted(fixtures.Notification); err != nil {
+					return err
+				}
+
+				return assert.IsUnresolved(fixtures.Notification)
+			}, timeout, interval).Should(Succeed())
+		})
+	})
 })
