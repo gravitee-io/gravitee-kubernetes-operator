@@ -63,6 +63,8 @@ manager:
   pod:
     ## @param manager.pod.securityContext Specifies the security context that will apply to all containers running within the pod
     securityContext: {}
+    ## @param manager.pod.nodeSelector Specifies a set of labels to be used to select on which node the manager pod should be scheduled.
+    nodeSelector: {}
   container:
     ## @param manager.container.securityContext Specifies the security context that will apply to the controller manager container.
     securityContext: {}

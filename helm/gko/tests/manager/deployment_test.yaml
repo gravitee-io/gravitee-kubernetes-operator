@@ -55,3 +55,14 @@ tests:
           value: test
 
 
+  - it: Should set node selector
+    template: "manager/deployment.yaml"
+    set:
+      manager:
+        pod:
+          nodeSelector:
+            gravitee.io/scope: test
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector['gravitee.io/scope']
+          value: test
