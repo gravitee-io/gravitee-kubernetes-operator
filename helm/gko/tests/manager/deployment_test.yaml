@@ -116,6 +116,27 @@ tests:
           path: spec.template.spec.imagePullSecrets
           count: 2
       - equal:
+<<<<<<< HEAD
           path: spec.template.spec.imagePullSecrets[*]
           value:
             name: hush-hush
+=======
+          path: metadata.labels['gravitee.io/scope']
+          value: test
+      - equal:
+          path: metadata.annotations['gravitee.io/scope']
+          value: test
+
+
+  - it: Should set node selector
+    template: "manager/deployment.yaml"
+    set:
+      manager:
+        pod:
+          nodeSelector:
+            gravitee.io/scope: test
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector['gravitee.io/scope']
+          value: test
+>>>>>>> 5cf8a69 (feat: allow to set node selector through helm values)
