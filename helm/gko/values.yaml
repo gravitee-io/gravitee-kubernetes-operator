@@ -163,7 +163,7 @@ manager:
     ## @param manager.templating.enabled If `false` string [templating](https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/guides/templating) is not evaluated on resources and template markers will remain untouched.
     enabled: true
 
-## @section ingress
+## @section Ingress Controller
 ## @descriptionStart
 ## Configure the behavior of the ingress controller.
 ## 
@@ -187,6 +187,11 @@ ingress:
       ## @param ingress.templates.404.namespace Namespace of the config map storing the HTTP 404 ingress response template.     
       namespace: ""
 
+## @section Gateway API
+## @descriptionStart
+## Configure Kubernetes Gateway API support.
+## 
+## @descriptionEnd
 gatewayAPI:
   controller:
     ## @param gatewayAPI.controller.enabled Set to true to enable experimental gateway api support.
