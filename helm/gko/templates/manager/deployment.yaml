@@ -64,7 +64,19 @@ spec:
         {{- end }}
         {{- end }}
     spec:
+<<<<<<< HEAD
 {{- if or .Values.manager.image.pullSecret .Values.rbacProxy.image.pullSecret }}
+=======
+{{- with .Values.manager.pod.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.manager.pod.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- if .Values.manager.image.pullSecret }}
+>>>>>>> 5cf8a69 (feat: allow to set node selector through helm values)
       imagePullSecrets:
 {{- if .Values.manager.image.pullSecret }}
         - {{ .Values.manager.image.pullSecret | toYaml }}
