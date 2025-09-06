@@ -88,6 +88,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
 {{- end }}
+{{- with .Values.manager.pod.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
 {{- if .Values.manager.image.pullSecret }}
       imagePullSecrets:
 {{- if .Values.manager.image.pullSecret }}
