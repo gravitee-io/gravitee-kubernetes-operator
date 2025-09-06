@@ -81,11 +81,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		} else {
 			err = events.Record(event.Update, notification, func() error {
-				return internal.ResolveGroupRefs(ctx, notification.Spec.Type, notification.Namespace)
+				return internal.ResolveGroupRefs(ctx, dc, notification.Namespace)
 			})
 		}
 		return err
 	})
+
+	if err := dc.GetStatus().DeepCopyTo(notification); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if err == nil {
 		log.InfoEndReconcile(ctx, notification)

@@ -48,7 +48,8 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		// no events
 		builder.Notification.Spec.Console.APIEvents = make([]notification.ApiEvent, 0)
-		builder.Apply()
+
+		notifFixtures := builder.Apply()
 
 		fixtures := fixture.
 			Builder().
@@ -66,18 +67,17 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 				return err
 			}
 
-			// as defined in the file
-			missingGroup := refs.NamespacedName{Name: "developers", Namespace: constants.Namespace}
+			missingGroup := notifFixtures.Notification.Spec.Console.GroupRefs[0].Name
 			return assert.Equals(
 				"warning",
 				admission.Warnings{
 					fmt.Sprintf(
-						"api references notification [%s] configured withouut any API events",
+						"api references notification [%s] configured without any API events",
 						fixtures.APIv4.Spec.NotificationsRefs[0].String()),
 					fmt.Sprintf(
-						"api references notification [%s] configured with group [%s] that does not exist in the cluster",
+						"api references notification [%s] configured with group [default/%s] that does not exist in the cluster",
 						fixtures.APIv4.Spec.NotificationsRefs[0].String(),
-						missingGroup.String()),
+						missingGroup),
 				},
 				warnings,
 			)

@@ -62,7 +62,7 @@ func checkConsoleNotification(
 	ref core.ObjectRef,
 	errs *errors.AdmissionErrors) {
 	if len(notif.Spec.Console.APIEvents) == 0 {
-		errs.AddWarningf("api references notification [%s] configured withouut any API events", ref)
+		errs.AddWarningf("api references notification [%s] configured without any API events", ref)
 	}
 	if len(notif.Spec.Console.GroupRefs) > 0 {
 		for _, groupRef := range notif.Spec.Console.GroupRefs {

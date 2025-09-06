@@ -18,7 +18,6 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
 var _ = Describe("Create", labels.WithContext, func() {
@@ -34,48 +34,30 @@ var _ = Describe("Create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 
-	When("creating a notification", func() {
-		It("should have conditions to true", func() {
-			fixtures := fixture.Builder().WithNotification(constants.NotificationNoGroupFile).Build().Apply()
-			Eventually(func() error {
-				return assert.HasFinalizer(fixtures.Notification, core.NotificationFinalizer)
-			})
-		})
-	})
-	When("creating a notification with groups", func() {
-
-		It("should have only have known group ids", func() {
-			objects := fixture.Builder().
+	When("creating a notification with a resolved group", func() {
+		It("should be accepted and resolved", func() {
+			fixtures := fixture.Builder().
 				WithContext(constants.ContextWithCredentialsFile).
 				WithGroup(constants.GroupFile).
 				WithNotification(constants.NotificationWithGroupFile).
-				// there will be two groups reference because Build() leaves the
-				// existing one untouched and add the existing group to the notification
 				Build().
 				Apply()
 
 			Eventually(func() error {
-
-				err := manager.GetLatest(ctx, objects.Notification)
-				if err != nil {
+				if err := manager.GetLatest(ctx, fixtures.Notification); err != nil {
 					return err
 				}
 
-				if err := assert.Equals("GroupRefs", 2, len(objects.Notification.Spec.Console.GroupRefs)); err != nil {
+				if err := assert.HasFinalizer(fixtures.Notification, core.NotificationFinalizer); err != nil {
 					return err
 				}
-				if err := assert.Equals("Groups", 1, len(objects.Notification.Spec.Console.Groups)); err != nil {
-					return err
-				}
-				if err := assert.Equals("Groups[0]",
-					objects.Group.Status.ID,
-					objects.Notification.Spec.Console.Groups[0]); err != nil {
-					return err
-				}
-				return nil
 
+				if err := assert.IsAccepted(fixtures.Notification); err != nil {
+					return err
+				}
+
+				return assert.IsResolved(fixtures.Notification)
 			}, timeout, interval).Should(Succeed())
-
 		})
 	})
 })

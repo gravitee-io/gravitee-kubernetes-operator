@@ -25,3 +25,5 @@ spec:
       - API_STOPPED
     groupRefs:
       - name: developers
+    groups: 
+      - product

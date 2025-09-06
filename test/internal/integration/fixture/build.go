@@ -83,18 +83,12 @@ func (b *FSBuilder) Build() *Objects {
 		setupSubscription(obj, sub, suffix)
 	}
 
-	if sub := decodeIfDefined(f.SharedPolicyGroups, &v1alpha1.SharedPolicyGroup{}, sharedPolicyGroupsKind); sub != nil {
-		setupSharedPolicyGroup(obj, sub, suffix)
+	if spg := decodeIfDefined(f.SharedPolicyGroups, &v1alpha1.SharedPolicyGroup{}, sharedPolicyGroupsKind); spg != nil {
+		setupSharedPolicyGroup(obj, spg, suffix)
 	}
 
 	if group := decodeIfDefined(f.Group, &v1alpha1.Group{}, groupKind); group != nil {
 		setUpGroup(obj, group, suffix)
-	}
-
-	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
-		setupMgmtContext(obj, ctx, suffix)
-	} else {
-		ensureNilContexts(obj)
 	}
 
 	if rsc := decodeIfDefined(f.Resource, &v1alpha1.ApiResource{}, rscKind); rsc != nil {
@@ -109,6 +103,12 @@ func (b *FSBuilder) Build() *Objects {
 		setupNotification(obj, notif, suffix)
 	}
 
+	if ctx := decodeIfDefined(f.Context, &v1alpha1.ManagementContext{}, ctxKind); ctx != nil {
+		setupMgmtContext(obj, ctx, suffix)
+	} else {
+		ensureNilContexts(obj)
+	}
+
 	return obj
 }
 
@@ -117,11 +117,9 @@ func setupNotification(obj *Objects, notif **v1alpha1.Notification, suffix strin
 	obj.Notification.Name += suffix
 	obj.Notification.Namespace = constants.Namespace
 
-	if obj.Group != nil && len(obj.Notification.Spec.Console.GroupRefs) > 0 {
-		obj.Notification.Spec.Console.GroupRefs = append(obj.Notification.Spec.Console.GroupRefs, refs.NamespacedName{
-			Name:      obj.Group.Name,
-			Namespace: constants.Namespace,
-		})
+	for i := range obj.Notification.Spec.Console.GroupRefs {
+		groupRef := &obj.Notification.Spec.Console.GroupRefs[i]
+		groupRef.Name += suffix
 	}
 
 	if obj.API != nil {
@@ -160,6 +158,7 @@ func setupAPIResource(obj *Objects, rsc **v1alpha1.ApiResource, suffix string) {
 	obj.Resource = *rsc
 	obj.Resource.Name += suffix
 	obj.Resource.Namespace = constants.Namespace
+
 	if obj.API != nil {
 		obj.API.Spec.Resources = []*base.ResourceOrRef{
 			{
@@ -170,6 +169,7 @@ func setupAPIResource(obj *Objects, rsc **v1alpha1.ApiResource, suffix string) {
 			},
 		}
 	}
+
 	if obj.APIv4 != nil {
 		obj.APIv4.Spec.Resources = []*base.ResourceOrRef{
 			{
@@ -227,6 +227,16 @@ func setupAPIv4(obj *Objects, apiV4 **v1alpha1.ApiV4Definition, suffix string) {
 	obj.APIv4.Namespace = constants.Namespace
 	obj.APIv4.Spec.Name = obj.APIv4.Name
 
+	for i := range obj.APIv4.Spec.NotificationsRefs {
+		ref := &obj.APIv4.Spec.NotificationsRefs[i]
+		ref.Name += suffix
+	}
+
+	for i := range obj.APIv4.Spec.GroupRefs {
+		ref := &obj.APIv4.Spec.GroupRefs[i]
+		ref.Name += suffix
+	}
+
 	randomizeAPIv4Paths(obj.APIv4, suffix)
 }
 
@@ -235,6 +245,16 @@ func setupAPI(obj *Objects, api **v1alpha1.ApiDefinition, suffix string) {
 	obj.API.Name += suffix
 	obj.API.Namespace = constants.Namespace
 	obj.API.Spec.Name = obj.API.Name
+
+	for i := range obj.API.Spec.NotificationsRefs {
+		ref := &obj.API.Spec.NotificationsRefs[i]
+		ref.Name += suffix
+	}
+
+	for i := range obj.API.Spec.GroupRefs {
+		ref := &obj.API.Spec.GroupRefs[i]
+		ref.Name += suffix
+	}
 
 	randomizeAPIPaths(obj.API, suffix)
 }
