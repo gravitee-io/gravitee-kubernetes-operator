@@ -24,6 +24,16 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- if .Values.manager.labels}}
+    {{- range $key, $value := .Values.manager.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.common.labels}}
+    {{- range $key, $value := .Values.common.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
@@ -31,6 +41,11 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     checksum/config: '{{ include (print $.Template.BasePath "/manager/config.yaml") . | sha256sum }}'
+    {{- if .Values.common.annotations}}
+    {{- range $key, $value := .Values.common.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
 spec:
   replicas: 1
   selector:
@@ -42,8 +57,28 @@ spec:
         checksum/config: '{{ include (print $.Template.BasePath "/manager/config.yaml") .
           | sha256sum }}'
         kubectl.kubernetes.io/default-container: manager
+        {{- if .Values.manager.annotations}}
+        {{- range $key, $value := .Values.manager.annotations }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.common.annotations}}
+        {{- range $key, $value := .Values.common.annotations }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
       labels:
         control-plane: controller-manager
+        {{- if .Values.manager.labels}}
+        {{- range $key, $value := .Values.manager.labels }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.common.labels}}
+        {{- range $key, $value := .Values.common.labels }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
     spec:
       containers:
         - name: manager

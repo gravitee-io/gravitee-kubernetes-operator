@@ -38,3 +38,20 @@ tests:
           value: 
             name: hush-hush
 
+  - it: Should have common annotations and labels
+    template: "manager/deployment.yaml"
+    set:
+      common:
+        annotations:
+          gravitee.io/scope: test
+        labels:
+          gravitee.io/scope: test
+    asserts:
+      - equal:
+          path: metadata.labels['gravitee.io/scope']
+          value: test
+      - equal:
+          path: metadata.annotations['gravitee.io/scope']
+          value: test
+
+
