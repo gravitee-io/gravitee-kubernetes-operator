@@ -36,6 +36,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should create an API with a single category", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.
 			Builder().
 			WithAPI(constants.Api).
