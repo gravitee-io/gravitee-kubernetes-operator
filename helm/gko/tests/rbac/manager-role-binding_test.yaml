@@ -75,3 +75,21 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
+  - it: Should have common annotations and labels
+    set:
+      manager:
+        scope:
+          cluster: false
+      common:
+        annotations:
+          gravitee.io/scope: test
+        labels:
+          gravitee.io/scope: test
+    asserts:
+      - equal:
+          path: metadata.labels['gravitee.io/scope']
+          value: test
+      - equal:
+          path: metadata.annotations['gravitee.io/scope']
+          value: test
