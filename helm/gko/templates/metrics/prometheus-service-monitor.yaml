@@ -21,11 +21,21 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
+    {{- if .Values.common.labels}}
+    {{- range $key, $value := .Values.common.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Values.common.annotations}}
+    {{- range $key, $value := .Values.common.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
   name: gko-metrics-monitor
 spec:
   endpoints:
