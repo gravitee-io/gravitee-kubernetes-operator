@@ -98,6 +98,7 @@ tests:
           value: 
             name: hush-hush
 
+<<<<<<< HEAD
   - it: Should have both image pull secrets
     template: "manager/deployment.yaml"
     set:
@@ -119,3 +120,22 @@ tests:
           path: spec.template.spec.imagePullSecrets[*]
           value:
             name: hush-hush
+=======
+  - it: Should have common annotations and labels
+    template: "manager/deployment.yaml"
+    set:
+      common:
+        annotations:
+          gravitee.io/scope: test
+        labels:
+          gravitee.io/scope: test
+    asserts:
+      - equal:
+          path: metadata.labels['gravitee.io/scope']
+          value: test
+      - equal:
+          path: metadata.annotations['gravitee.io/scope']
+          value: test
+
+
+>>>>>>> ca0bd11 (feat: allow to set common labels and annotations)

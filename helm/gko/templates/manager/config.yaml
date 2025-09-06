@@ -22,9 +22,19 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    {{- if .Values.common.labels}}
+    {{- range $key, $value := .Values.common.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
     meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    {{- if .Values.common.annotations}}
+    {{- range $key, $value := .Values.common.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
 data:
   {{- if not .Values.manager.scope.cluster }}
   NAMESPACE: {{ .Release.Namespace }}
@@ -81,3 +91,11 @@ data:
   CHECK_API_CONTEXT_PATH_CONFLICT_IN_CLUSTER: "true"
   {{- end }}
   {{- end }}
+<<<<<<< HEAD
+=======
+  {{- if .Values.manager.templating.enabled }}
+  ENABLE_TEMPLATING: "true"
+  {{- else }}
+  ENABLE_TEMPLATING: "false"
+  {{- end }}
+>>>>>>> ca0bd11 (feat: allow to set common labels and annotations)
