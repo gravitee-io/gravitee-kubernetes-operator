@@ -26,6 +26,15 @@ Kubernetes: `>=1.16.0-0`
 
 ## Parameters
 
+### Common
+
+Allows to set meta data on all Kubernetes resources applied by the Helm release.
+
+| Name                 | Description                                                                                | Value |
+| -------------------- | ------------------------------------------------------------------------------------------ | ----- |
+| `common.annotations` | Specifies custom annotations to be added to the all resources applied by the Helm release. | `{}`  |
+| `common.labels`      | Specifies custom labels to be added to the all resources applied by the Helm release.      | `{}`  |
+
 ### RBAC
 
 Required RBAC resources are created by default for all components involved in the release.
