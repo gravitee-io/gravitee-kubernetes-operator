@@ -25,6 +25,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/name: {{ template "helm.name" . }}
+<<<<<<< HEAD:helm/gko/templates/rbac/rbac-proxy-cluster-role.yaml
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
   annotations:
     meta.helm.sh/release-name: {{ .Release.Name }}
@@ -45,4 +46,43 @@ rules:
 {{- end }}
 {{- end }}
 {{- end }}
+=======
+    {{- if .Values.common.labels}}
+    {{- range $key, $value := .Values.common.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
+  annotations:
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+    app.kubernetes.io/name: {{ template "helm.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Values.common.annotations}}
+    {{- range $key, $value := .Values.common.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
+  name: gko-prometheus-instance
+
+spec:
+  image: quay.io/prometheus/prometheus:v2.32.1
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicas: 1
+  resources:
+    requests:
+      memory: 400Mi
+  ruleSelector: {}
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: {{ template "rbac.serviceAccountName" . }}
+  serviceMonitorNamespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: {{ .Release.Namespace }}
+  serviceMonitorSelector: {}
+
+  version: 2.32.1
+>>>>>>> ca0bd11 (feat: allow to set common labels and annotations):helm/gko/templates/metrics/prometheus-instance.yaml
 {{- end }}
