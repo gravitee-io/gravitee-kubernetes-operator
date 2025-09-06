@@ -64,6 +64,17 @@ spec:
         {{- end }}
         {{- end }}
     spec:
+<<<<<<< HEAD
+=======
+{{- with .Values.manager.pod.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.manager.pod.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+>>>>>>> 5cf8a69 (feat: allow to set node selector through helm values)
 {{- if .Values.manager.image.pullSecret }}
       imagePullSecrets:
 {{- if .Values.manager.image.pullSecret }}
