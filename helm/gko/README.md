@@ -91,7 +91,7 @@ This is where you can configure the deployment itself and the way the operator w
 | `manager.webhook.admission.checkApiContextPathConflictInCluster` | check if the same API context path exists in the whole cluster.                                                                                                                                                                                                                                                 | `false`                                 |
 | `manager.templating.enabled`                                     | If `false` string [templating](https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/guides/templating) is not evaluated on resources and template markers will remain untouched.                                                                                                                  | `true`                                  |
 
-### ingress
+### Ingress Controller
 
 Configure the behavior of the ingress controller.
 
@@ -107,7 +107,15 @@ When storing templates stored in config maps, the config map should contain a co
 | `ingress.ingressClasses`          | list of ingress classes that the gateway will handle.                            | `["graviteeio"]` |
 | `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`             |
 | `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`             |
-| `gatewayAPI.controller.enabled`   | Set to true to enable experimental gateway api support.                          | `false`          |
+
+### Gateway API
+
+Configure Kubernetes Gateway API support.
+
+
+| Name                            | Description                                             | Value   |
+| ------------------------------- | ------------------------------------------------------- | ------- |
+| `gatewayAPI.controller.enabled` | Set to true to enable experimental gateway api support. | `false` |
 
 ### HTTP Client
 
