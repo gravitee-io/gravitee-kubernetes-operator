@@ -78,6 +78,7 @@ commands:
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
+
 jobs:
   job-install-go-tools:
     docker:
@@ -93,6 +94,7 @@ jobs:
           key: gotools-{{ checksum "go.sum" }}
           paths:
             - /home/circleci/project/bin
+
   job-lint-sources:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -679,6 +681,39 @@ jobs:
               ]
             }
 
+  job-prepare-next-release:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - setup_remote_docker
+      - helm/install_helm_client
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - run:
+          name: Install GO tools
+          command: make install-go-tools
+      - run:
+          name: Prepare next release
+          command: |
+            npx zx hack/scripts/prepare-next-release.mjs
+
   job-helm-lint:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -942,6 +977,14 @@ workflows:
     jobs:
       - job-notify-release-slack:
           name: Notify gravitee-release-alerts slack channel
+          context: cicd-orchestrator
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /\d+\.\d+\.\d+/
+      - job-prepare-next-release:
+          name: Prepare next release
           context: cicd-orchestrator
           filters:
             branches:
