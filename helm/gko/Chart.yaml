@@ -15,7 +15,7 @@
 apiVersion: v2
 appVersion: 4.9.0-rc
 version: 4.9.0-rc
-kubeVersion: ">=1.14.0-0"
+kubeVersion: ">=1.32.0-0"
 type: application
 name: gko
 description: The Gravitee Kubernetes Operator Helm Chart

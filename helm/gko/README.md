@@ -1,14 +1,14 @@
 # G.K.O.
 
-The Gravitee Kubernetes Operator Helm Chart
+The [Gravitee Kubernetes Operator](https://github.com/gravitee-io/gravitee-kubernetes-operator/) Helm Chart.
 
 ## Installing the Chart
 
 To install the chart with the release name `gko`
 
 ```console
-$ helm repo add graviteeio https://helm.gravitee.io
-$ helm install gko graviteeio/gko
+helm repo add graviteeio https://helm.gravitee.io
+helm install gko graviteeio/gko
 ```
 
 ## Upgrading the Operator
@@ -16,13 +16,13 @@ $ helm install gko graviteeio/gko
 Assuming that the repository as been aliased as graviteeio and that the release name is `gko`
 
 ```console
-$ helm repo update graviteeio
-$ helm upgrade --install gko graviteeio/gko
+helm repo update graviteeio
+helm upgrade --install gko graviteeio/gko
 ```
 
 ## Requirements
 
-Kubernetes: `>=1.16.0-0`
+Kubernetes: `>=1.32.0-0`
 
 ## Parameters
 
