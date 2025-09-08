@@ -68,14 +68,11 @@ func (res *Notification) GetRef() core.ObjectRef {
 <<<<<<< HEAD
 =======
 func (res *Notification) GetConditions() map[string]metav1.Condition {
-	if res.Status.Conditions == nil {
-		return map[string]metav1.Condition{}
-	}
-	return utils.MapConditions(*res.Status.Conditions)
+	return utils.MapConditions(res.Status.Conditions)
 }
 
 func (res *Notification) SetConditions(conditions []metav1.Condition) {
-	res.Status.Conditions = &conditions
+	res.Status.Conditions = conditions
 }
 
 >>>>>>> 28d59ae (refactor: do not mutate notificaction spec on updates)
@@ -104,7 +101,8 @@ type NotificationStatus struct {
 	// Conditions are the condition that must be met by the Notification
 	// "Accepted" condition is used to indicate if the `Notification` can be used by another resource.
 	// "ResolveRef" condition is used to indicate if an error occurred while resolving console groups.
-	Conditions *[]metav1.Condition `json:"conditions"`
+	// +kubebuilder:default={}
+	Conditions []metav1.Condition `json:"conditions"`
 }
 
 // DeepCopyFrom implements core.Status.
@@ -132,7 +130,7 @@ func (s *NotificationStatus) SetProcessingStatus(core.ProcessingStatus) {
 
 func (s *NotificationStatus) IsFailed() bool {
 	if s.Conditions != nil {
-		for _, condition := range *s.Conditions {
+		for _, condition := range s.Conditions {
 			if condition.Status == metav1.ConditionFalse {
 				return true
 			}

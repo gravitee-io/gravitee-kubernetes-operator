@@ -141,6 +141,7 @@ spec:
               description: NotificationStatus defines the observed state of the Notification.
               properties:
                 conditions:
+                  default: []
                   description: >-
                     Conditions are the condition that must be met by the
                     Notification

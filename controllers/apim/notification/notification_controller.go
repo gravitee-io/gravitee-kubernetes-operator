@@ -55,7 +55,7 @@ type Reconciler struct {
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	notification := &v1alpha1.Notification{}
 	conditions := make([]v1.Condition, 0)
-	notification.Status.Conditions = &conditions
+	notification.Status.Conditions = conditions
 
 	if err := r.Get(ctx, req.NamespacedName, notification); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
