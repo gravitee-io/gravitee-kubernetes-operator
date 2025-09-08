@@ -40,6 +40,10 @@ var _ = Describe("Create", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should not create a config map and sync from management API", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
+
 		fixtures := fixture.Builder().
 			WithAPI(constants.ApiWithSyncFromAPIM).
 			WithContext(constants.ContextWithSecretFile).
