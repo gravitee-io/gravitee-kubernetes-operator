@@ -2,7 +2,7 @@ module github.com/gravitee-io/gravitee-kubernetes-operator
 
 go 1.24.2
 
-toolchain go1.24.6
+toolchain go1.25.1
 
 require (
 	github.com/elastic/crd-ref-docs v0.1.0
@@ -19,6 +19,7 @@ require (
 	gotest.tools/gotestsum v1.12.3
 	k8s.io/apimachinery v0.33.4
 	k8s.io/client-go v0.33.4
+	sigs.k8s.io/cloud-provider-kind v0.7.0
 	sigs.k8s.io/controller-runtime v0.21.0
 	sigs.k8s.io/controller-tools v0.18.0
 )
@@ -317,7 +318,6 @@ require (
 	mvdan.cc/gofumpt v0.7.0 // indirect
 	mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.31.2 // indirect
-	sigs.k8s.io/cloud-provider-kind v0.7.0 // indirect
 	sigs.k8s.io/kind v0.29.0 // indirect
 	sigs.k8s.io/kubectl-validate v0.0.5-0.20241223122011-eb064d2f92d5 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
