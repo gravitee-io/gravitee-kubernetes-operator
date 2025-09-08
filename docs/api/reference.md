@@ -564,7 +564,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta)_ | Conditions are the condition that must be met by the Notification<br />"Accepted" condition is used to indicate if the `Notification` can be used by another resource.<br />"ResolveRef" condition is used to indicate if an error occurred while resolving console groups. |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions are the condition that must be met by the Notification<br />"Accepted" condition is used to indicate if the `Notification` can be used by another resource.<br />"ResolveRef" condition is used to indicate if an error occurred while resolving console groups. | \{  \} |  |
 
 
 #### SharedPolicyGroup
