@@ -38,6 +38,10 @@ var _ = Describe("Update", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should create a v4 API with multiple groups and then remove one group", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
+
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4).
