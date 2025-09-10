@@ -19,11 +19,14 @@ import (
 
 	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Validate create", labels.WithoutContext, func() {
@@ -35,6 +38,16 @@ var _ = Describe("Validate create", labels.WithoutContext, func() {
 			Builder().
 			WithAPIv4(constants.ApiV4WithTemplatingFile).
 			Build()
+
+		Eventually(ctx, func() error {
+			secret := &v1.Secret{}
+			lookupKey := types.NamespacedName{Name: "graviteeio-templating", Namespace: fixtures.APIv4.Namespace}
+			err := k8s.GetClient().Get(ctx, lookupKey, secret)
+			if err != nil {
+				return err
+			}
+			return nil
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
 
 		By("updating plan security")
 
