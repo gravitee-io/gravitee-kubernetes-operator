@@ -16,18 +16,33 @@
 
 import { HELM, LOG } from "./lib/index.mjs";
 import { Version } from "./lib/version.mjs";
-import { rolloutMergify } from "./rollout-mergify.mjs";
-import { rolloutTestScheduller } from "./rollout-test-scheduler.mjs";
+import { rolloutMergify } from "./lib/rollout-mergify.mjs";
+import { rolloutTestScheduller } from "./lib/rollout-test-scheduler.mjs";
+import { prepareDocs } from "./lib/prepare-docs.mjs";
 
 const releasedVersion = new Version(await HELM.getChartVersion());
-const candidateVersion = releasedVersion.nextPatch().rc().toString();
+const nextPatchVersion = releasedVersion.nextPatch();
+const patchCandidateVersion = nextPatchVersion.rc();
 
 LOG.blue(`
-    ⎈ Moving helm chart version from ${releasedVersion} to ${candidateVersion}`);
+    🚧 Switching to ${releasedVersion.branch()} branch`);
 
-HELM.setChartVersion(candidateVersion.toString());
+await $`git switch ${releasedVersion.branch()}`;
+
+LOG.blue(`
+    ⎈ Moving helm chart version from ${releasedVersion} to ${patchCandidateVersion}`);
+
+await HELM.setChartVersion(patchCandidateVersion.toString());
+
+await $`git add helm/gko/Chart.yaml`;
 
 if (releasedVersion.isPatch()) {
+  LOG.blue(`
+    🚧 Committing changes to branch ${releasedVersion.branch()}`);
+
+  await $`git commit -m "chore: prepare for ${nextPatchVersion}"`;
+  await $`git push -u origin ${releasedVersion.branch()}`;
+
   process.exit(0);
 }
 
@@ -37,6 +52,44 @@ LOG.blue(`
 await rolloutMergify(releasedVersion.toString());
 
 LOG.blue(`
+    🚧 Committing changes to branch ${releasedVersion.branch()}`);
+
+await $`git commit -m "chore: prepare for ${nextPatchVersion}"`;
+await $`git push -u origin ${releasedVersion.branch()}`;
+
+const nextMinorVersion = releasedVersion.nextMinor();
+const minorCandidateVersion = nextMinorVersion.rc();
+
+LOG.blue(`
+    🚧 Switching to master branch`);
+
+await $`git switch master`;
+
+LOG.blue(`
+    ⎈ Moving helm chart version from to ${minorCandidateVersion}`);
+
+await HELM.setChartVersion(minorCandidateVersion.toString());
+
+await $`git add helm/gko/Chart.yaml`;
+
+LOG.blue(`
+    🚧 Rolling out mergify config`);
+
+await rolloutMergify(releasedVersion.toString());
+
+await $`git add .mergify.yml`;
+
+LOG.blue(`
     🚧 Rolling out test scheduler`);
 
 await rolloutTestScheduller(releasedVersion.toString());
+
+await $`git add .github/workflows/schedule-test.yml `;
+
+await $`git commit -m "chore: prepare for ${nextMinorVersion}"`;
+await $`git push -u origin master`;
+
+LOG.blue(`
+    🚧 Preparing documentation for ${nextMinorVersion}`);
+
+await prepareDocs(releasedVersion.toString());
