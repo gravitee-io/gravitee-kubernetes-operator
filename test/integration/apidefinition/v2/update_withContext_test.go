@@ -39,6 +39,10 @@ var _ = Describe("Update", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should update api definition", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
+
 		fixtures := fixture.Builder().
 			WithAPI(constants.Api).
 			WithContext(constants.ContextWithSecretFile).
