@@ -27,7 +27,7 @@ import { STABLE } from "./lib/stable.mjs";
 const WORKING_DIR = path.join(os.tmpdir(), CONFIG.repoName);
 const VERBOSE = argv.verbose;
 const COMMIT_HASH = argv.srcSha;
-const SOURCE_BRANCH = argv.srcBRanch;
+const SOURCE_BRANCH = argv.srcBranch;
 
 toggleVerbosity(VERBOSE);
 
