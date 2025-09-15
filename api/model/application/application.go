@@ -98,7 +98,9 @@ func (in *Setting) IsSimple() bool {
 func (in *Setting) GetClientID() string {
 	if in.App != nil {
 		clientID := in.App.ClientID
-		return *clientID
+		if clientID != nil {
+			return *clientID
+		}
 	}
 	return ""
 }
