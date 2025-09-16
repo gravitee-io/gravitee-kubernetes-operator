@@ -38,7 +38,7 @@ tests:
     set:
       manager:
         logs:
-            json: false
+          json: false
     asserts:
       - hasDocuments:
           count: 1
@@ -50,7 +50,7 @@ tests:
     set:
       manager:
         metrics:
-            enabled: true
+          enabled: true
     asserts:
       - hasDocuments:
           count: 1
@@ -62,7 +62,7 @@ tests:
     set:
       manager:
         metrics:
-            enabled: false
+          enabled: false
     asserts:
       - hasDocuments:
           count: 1
@@ -73,7 +73,7 @@ tests:
     set:
       manager:
         scope:
-            cluster: false
+          cluster: false
     asserts:
       - hasDocuments:
           count: 1
@@ -93,7 +93,7 @@ tests:
     set:
       manager:
         configMap:
-            name: gko-test
+          name: gko-test
     asserts:
       - hasDocuments:
           count: 1
@@ -104,3 +104,41 @@ tests:
       - equal:
           path: metadata.name
           value: gko-test
+
+  - it: Should have HTTP client proxy enabled
+    set:
+      manager:
+        httpClient:
+          proxy:
+            enabled: true
+            url: "http://localhost:8080"
+            username: "test"
+            password: "test"
+    asserts:
+      - equal:
+          path: data.HTTP_CLIENT_PROXY_ENABLED
+          value: "true"
+      - equal:
+          path: data.HTTP_CLIENT_PROXY_URL
+          value: "http://localhost:8080"
+      - equal:
+          path: data.HTTP_CLIENT_PROXY_USERNAME
+          value: "test"
+      - equal:
+          path: data.HTTP_CLIENT_PROXY_PASSWORD
+          value: "test"
+
+  - it: Should have HTTP client proxy enabled using system proxy
+    set:
+      manager:
+        httpClient:
+          proxy:
+            enabled: true
+            useSystemProxy: true
+    asserts:
+      - equal:
+          path: data.HTTP_CLIENT_PROXY_ENABLED
+          value: "true"
+      - equal:
+          path: data.HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY
+          value: "true"
