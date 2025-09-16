@@ -73,6 +73,15 @@ data:
   HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY: "true"
   {{- end }}
   HTTP_CLIENT_TIMEOUT_SECONDS: {{ quote .Values.manager.httpClient.timeoutSeconds }}
+  {{- if .Values.manager.httpClient.proxy.enabled }}
+  HTTP_CLIENT_PROXY_ENABLED: "true"
+  {{ if .Values.manager.httpClient.proxy.useSystemProxy }}
+  HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY: "true"
+  {{- end }}
+  HTTP_CLIENT_PROXY_URL: {{.Values.manager.httpClient.proxy.url }}
+  HTTP_CLIENT_PROXY_USERNAME: {{.Values.manager.httpClient.proxy.username }}
+  HTTP_CLIENT_PROXY_PASSWORD: {{.Values.manager.httpClient.proxy.password }}
+  {{- end }}
   {{- if .Values.manager.webhook.enabled }}
   ENABLE_WEBHOOK: "true"
   WEBHOOK_CERT_SECRET_NAME: {{ .Values.manager.webhook.cert.secret.name }}
