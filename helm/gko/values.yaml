@@ -123,8 +123,19 @@ manager:
   httpClient:
     ## @param manager.httpClient.insecureSkipCertVerify If true, the manager HTTP client will not verify the certificate used by the Management API.
     insecureSkipCertVerify: false
-    ## @param manager.httpClient.timeoutSeconds he timeout (in seconds) used when issuing request to the Management API.
+    ## @param manager.httpClient.timeoutSeconds the timeout (in seconds) used when issuing request to the Management API.
     timeoutSeconds: 5
+    proxy:
+      ## @param manager.httpClient.proxy.enabled If true, GKO will use your proxy when making any external call
+      enabled: false
+      ## @param manager.httpClient.proxy.useSystemProxy If true, GKO will use your pre-defined env HTTP_PROXY, HTTPS_PROXY and NO_PROXY (or the lowercase versions)
+      useSystemProxy: false
+      ## @param manager.httpClient.proxy.url The proxy url eg: http://localhost:8080 or socks5://localhost:1080
+      url: ""
+      ## @param manager.httpClient.proxy.username The proxy username if authentication is needed
+      username: ""
+      ## @param manager.httpClient.proxy.password The proxy password if authentication is needed
+      password: ""
   webhook:
     ## @param manager.webhook.enabled If true, the manager will register a webhook server operating on custom resources.
     enabled: true
