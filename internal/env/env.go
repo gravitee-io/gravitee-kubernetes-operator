@@ -45,6 +45,11 @@ const (
 	WebhookMutatingConfigurationName     = "WEBHOOK_MUTATING_CONFIGURATION_NAME"
 	HttpCLientInsecureSkipCertVerify     = "HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY"
 	HttpClientTimeoutSeconds             = "HTTP_CLIENT_TIMEOUT_SECONDS"
+	HttpClientProxyEnabled               = "HTTP_CLIENT_PROXY_ENABLED"
+	HttpClientUseSystemProxy             = "HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY"
+	HttpClientProxyURL                   = "HTTP_CLIENT_PROXY_URL"
+	HttpClientProxyUsername              = "HTTP_CLIENT_PROXY_USERNAME"
+	HttpClientProxyPassword              = "HTTP_CLIENT_PROXY_PASSWORD" //nolint:gosec // This is not a hardcoded secret
 	TrueString                           = "true"
 	FalseString                          = "false"
 	IngressClasses                       = "INGRESS_CLASSES"
@@ -62,6 +67,14 @@ const (
 	defaultProbesPort        = 8081
 	defaultHttpClientTimeout = 5
 )
+
+type HttpProxy struct {
+	Enabled        bool
+	UseSystemProxy bool
+	URL            string
+	Username       string
+	Password       string
+}
 
 var Config = struct {
 	NS                                   string
@@ -85,6 +98,7 @@ var Config = struct {
 	CMTemplate404NS                      string
 	HTTPClientInsecureSkipVerify         bool
 	HTTPClientTimeoutSeconds             int
+	HttpProxy                            HttpProxy
 	IngressClasses                       []string
 	CheckApiContextPathConflictInCluster bool
 	LogsFormat                           string
@@ -103,6 +117,21 @@ func init() {
 	Config.CMTemplate404Name = os.Getenv(CMTemplate404Name)
 	Config.CMTemplate404NS = os.Getenv(CMTemplate404NS)
 	Config.HTTPClientInsecureSkipVerify = os.Getenv(HttpCLientInsecureSkipCertVerify) == TrueString
+	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
+
+	httpProxy := HttpProxy{
+		Enabled:        os.Getenv(HttpClientProxyEnabled) == TrueString,
+		UseSystemProxy: os.Getenv(HttpClientUseSystemProxy) == TrueString,
+		URL:            os.Getenv(HttpClientProxyURL),
+		Username:       os.Getenv(HttpClientProxyUsername),
+		Password:       os.Getenv(HttpClientProxyPassword),
+	}
+	Config.HttpProxy = httpProxy
+
+	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
+	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
+	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
+	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.EnableMetrics = os.Getenv(EnableMetrics) == TrueString
 	Config.SecureMetrics = os.Getenv(SecureMetrics) == TrueString

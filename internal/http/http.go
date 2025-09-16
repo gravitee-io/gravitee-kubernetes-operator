@@ -18,9 +18,12 @@ import (
 	"context"
 	"crypto/tls"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -192,6 +195,24 @@ func NewNoAuthClient(ctx context.Context) *Client {
 func NewClient(ctx context.Context, auth *Auth) *Client {
 	defaultTransport, _ := http.DefaultTransport.(*http.Transport)
 	transport := defaultTransport.Clone()
+	if env.Config.HttpProxy.Enabled { //nolint:nestif // normal complexity
+		if env.Config.HttpProxy.UseSystemProxy {
+			transport.Proxy = http.ProxyFromEnvironment
+		} else {
+			index := strings.Index(env.Config.HttpProxy.URL, "://")
+			rawUrl := env.Config.HttpProxy.URL
+			username := env.Config.HttpProxy.Username
+			password := env.Config.HttpProxy.Password
+			if username != "" {
+				rawUrl = rawUrl[:index+3] + username + ":" + password + "@" + rawUrl[index+3:]
+			}
+			proxyURL, err := url.Parse(rawUrl)
+			if err != nil {
+				log.Error(ctx, err, "Could not parse proxy URL")
+			}
+			transport.Proxy = http.ProxyURL(proxyURL)
+		}
+	}
 	transport.TLSClientConfig = &tls.Config{
 		// #nosec G402
 		InsecureSkipVerify: true,
