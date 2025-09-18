@@ -32,40 +32,17 @@ spec:
 
   steps:
   - name: Create a new service account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
-          check:
-              ($error): ~
-              (contains($stdout, $service_account_name)): true
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
-    cleanup:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"
+    use:
+      template: ../../../../../stepTemplates/createServiceAccount.yaml
 
   - name: Create Groups with newly created member
     try:
       - create:
-          file: group1.yml
+          file: group1.yaml
       - create:
-          file: group2.yml
+          file: group2.yaml
       - create:
-          file: group3.yml
+          file: group3.yaml
       - wait:
           apiVersion: gravitee.io/v1alpha1
           kind: Group
@@ -76,17 +53,12 @@ spec:
               value: "True"
 
   - name: Create API with newly created groups
-    try:
-      - create:
-          file: v4-api-with-multiple-groups.yml
-      - wait:
-          apiVersion: gravitee.io/v1alpha1
-          kind: ApiV4Definition
-          name: ($apiName)
-          for:
-            condition:
-              name: Accepted          
-              value: "True"
+    use:
+      template: ../../../../../stepTemplates/createV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v4-api-with-multiple-groups.yaml
 
   - name: Export API as YAML
     try:
@@ -125,18 +97,13 @@ spec:
             rm $EXPORTED_API_YAML
 
   - name: Update API with removing one group
-    try:
-      - apply:
-          file: v4-api-with-multiple-groups-update.yml
-      - wait:
-          apiVersion: gravitee.io/v1alpha1
-          kind: ApiV4Definition
-          name: ($apiName)
-          for:
-            condition:
-              name: Accepted          
-              value: "True"
-            
+    use:
+      template: ../../../../../stepTemplates/updateV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v4-api-with-one-removed-group.yaml
+
   - name: Export API again after update
     try:
       - script:

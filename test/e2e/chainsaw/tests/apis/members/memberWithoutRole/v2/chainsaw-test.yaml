@@ -16,13 +16,13 @@
 apiVersion: chainsaw.kyverno.io/v1alpha1
 kind: Test
 metadata:
-  name: member-without-role-v4
+  name: member-without-role-v2
 spec:
   bindings:
     - name: apiName
-      value: member-without-role-v4
+      value: member-without-role-v2
     - name: service_account_name
-      value: service-account-for-member-without-role-test-v4
+      value: service-account-for-member-without-role-v2
     - name: commandDir
       value: "../../../../../commands"
     - name: gkoNamespace
@@ -31,53 +31,25 @@ spec:
       value: exportedApi.yaml  
 
   steps:
-  - name: remove-pre-existing-service-account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"
+  - name: Create a new service account
+    use:
+      template: ../../../../../stepTemplates/createServiceAccount.yaml
 
-  - name: create-new-service-account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
-          check:
-              ($error): ~
-              (contains($stdout, '@graviteesource.com')): true
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
-  
-  - name: create-api-with-new-member-without-role
-    try:
-      - apply:
-          file: member-without-role-v4.yaml
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
+  - name: Create API with member without role
+    use:
+      template: ../../../../../stepTemplates/createV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-api-with-member-without-role.yaml
 
-  - name: verify-api-has-default-member-role
+  - name: Verify API has default member role
     try:
       - assert:
           file: assert-default-member-role.yaml
 
-  - name: export-api-as-yaml
+  - name: Export API as YAML
     try:
-      - sleep:
-          duration: 5s
       - script:
           env:
             - name: COMMAND_DIR
@@ -89,14 +61,14 @@ spec:
             - name: EXPORTED_API_YAML
               value: ($exportedApiYaml)
           content: |
-            API_ID=$(kubectl get apiv4definitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
-            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version v4 > $EXPORTED_API_YAML
+            API_ID=$(kubectl get apidefinitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
+            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version v2 > $EXPORTED_API_YAML
     catch:
       - podLogs:
           selector: "app.kubernetes.io/component=api"
           namespace: ($gkoNamespace)
 
-  - name: assert-export-for-removed-member
+  - name: Assert export for default member role
     try:
       - script:
           env:

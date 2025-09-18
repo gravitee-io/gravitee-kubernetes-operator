@@ -34,7 +34,7 @@ spec:
       value: v2-api-config-rich
 
   steps:
-    - name: create-v2-api-by-json-import
+    - name: Create API from JSON file
       try:
         - script:
             env:
@@ -51,7 +51,7 @@ spec:
             selector: "app.kubernetes.io/component=api"
             namespace: ($gkoNamespace)
 
-    - name: export-api-as-yaml
+    - name: Export API as YAML
       try:
         - script:
             env:
@@ -75,7 +75,7 @@ spec:
             content: |
               cat $CREATED_API_JSON
 
-    - name: add-contextRef-to-export
+    - name: Add contextRef to exported YAML
       try:
       - script:
           env:
@@ -89,25 +89,15 @@ spec:
             cat "$EXPORTED_API_YAML" | \
             yq -e ".spec.contextRef = {\"name\": \"dev-ctx\", \"namespace\": \"$GKO_NAMESPACE\"}" > $MODIFIED_YAML_EXPORT
 
-    - name: deploy-modified-export
-      try:
-        - apply:
-            file: ($modifiedYamlExport)
-        - assert:
-            resource:
-              apiVersion: gravitee.io/v1alpha1
-              kind: ApiDefinition
-              metadata:
-                name: ($apiName)
-              status:
-                state: STOPPED
-                processingStatus: Completed
-      catch:
-        - podLogs:
-            selector: "control-plane=controller-manager"
-            namespace: ($gkoNamespace)
+    - name: Deploy modified YAML export
+      use:
+        template: ../../../../../stepTemplates/updateV2Api.yaml
+        with:
+          bindings:
+            - name: file
+              value: ($modifiedYamlExport)
 
-    - name: update-api-resource
+    - name: Update API to STARTED state
       try:
         - patch:
             resource:
@@ -144,4 +134,3 @@ spec:
             content: |
               echo "Cleaning up generated files..."
               rm -f "$EXPORTED_API_YAML" "$MODIFIED_YAML_EXPORT" "$CREATED_API_JSON"
-

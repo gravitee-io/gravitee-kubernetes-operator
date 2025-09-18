@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,27 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: remove-member-test-v4
+  name: v4-changing-member-role
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "remove-member-test-v4"
-  description: "Removing member - Created by Chainsaw E2E test"
-  version: "update"
+  name: v4-changing-member-role
+  description: "Changing member role in v4 API - Created by Chainsaw E2E test"
+  version: "1.0"
   type: PROXY
-  state: STARTED
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
   listeners:
     - type: HTTP
       paths:
-        - path: "/remove-member-test-v4"
+        - path: /v4-changing-member-role
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -55,4 +50,7 @@ spec:
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
-  members: []
+  members:
+    - source: gravitee
+      sourceId: service-account-for-v4-changing-member-role-test
+      role: USER

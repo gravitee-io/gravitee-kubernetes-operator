@@ -20,9 +20,9 @@ metadata:
 spec:
   bindings:
     - name: apiName
-      value: (concat('v2-changing-member-role-', random('[a-z0-9]{5}')))
+      value: v2-changing-member-role
     - name: service_account_name
-      value: (concat('service-account-', random('[a-z0-9]{5}')))
+      value: service-account-for-v2-changing-member-role-test
     - name: commandDir
       value: "../../../../../commands"
     - name: gkoNamespace
@@ -31,87 +31,28 @@ spec:
       value: exportedApi.yaml  
 
   steps:
-  - name: create-new-user
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
-          check:
-              ($error): ~
-              (contains($stdout, '@graviteesource.com')): true
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
+  - name: Create a new service account
+    use:
+      template: ../../../../../stepTemplates/createServiceAccount.yaml
   
-  - name: create-api-with-new-member
-    try:
-      - apply:
-          resource:
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
-            metadata:
-              name: ($apiName)
-            spec:
-              name: ($apiName)
-              version: "1"
-              description: "V2 API with groups and members Gravitee Kubernetes Operator sample"
-              state: STARTED
-              contextRef:
-                name: "dev-ctx"
-                namespace: "default"
-              plans:
-                - name: "KEY_LESS"
-                  description: "FREE"
-                  security: "KEY_LESS"
-              proxy:
-                virtual_hosts:
-                  - path: (concat('/', $apiName))
-                groups:
-                  - endpoints:
-                      - name: "Default"
-                        target: "https://api.gravitee.io/echo"
-              local: false
-              notifyMembers: false
-              members:
-                - source: gravitee
-                  sourceId: ($service_account_name)
-                  role: USER
-      - assert:
-          resource:
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
-            metadata:
-              name: ($apiName)
-            spec:
-              members:
-                - source: gravitee
-                  sourceId: ($service_account_name)
-                  role: USER
-            status:
-              processingStatus: Completed
-    catch:
-      - events: {}
+  - name: Create API with one member
+    use:
+      template: ../../../../../stepTemplates/createV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-api-with-one-member.yaml
 
-  - name: update-member-role
+  - name: Update member role in API
+    use:
+      template: ../../../../../stepTemplates/updateV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-api-with-updated-member-role.yaml
+
+  - name: Assert member role has been changed in K8s
     try:
-      - patch:
-          resource:
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
-            metadata:
-              name: ($apiName)
-            spec:
-              version: "update"
-              members:
-                - source: gravitee
-                  sourceId: ($service_account_name)
-                  role: "REVIEWER"
       - assert:
           resource:
             apiVersion: gravitee.io/v1alpha1
@@ -125,12 +66,8 @@ spec:
                   role: "REVIEWER"
             status:
               processingStatus: Completed
-      - sleep:
-          duration: 10s
-    catch:
-      - events: {}
     
-  - name: export-api-as-yaml
+  - name: Export API as YAML
     try:
       - script:
           env:
@@ -146,7 +83,7 @@ spec:
             API_ID=$(kubectl get apidefinitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
             npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version v2 > "$EXPORTED_API_YAML"
 
-  - name: assert-exported-changed-member-role
+  - name: Assert member role has been changed in APIM
     try:
       - script:
           env:
