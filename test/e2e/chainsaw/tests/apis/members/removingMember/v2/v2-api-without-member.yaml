@@ -22,7 +22,7 @@ spec:
     name: dev-ctx
   name: "remove-member-test-v2"
   version: "update"
-  description: "API with groups and members Gravitee Kubernetes Operator sample"
+  description: "Removing member - Created by Chainsaw E2E test"
   plans:
     - name: "KEY_LESS"
       description: "FREE"

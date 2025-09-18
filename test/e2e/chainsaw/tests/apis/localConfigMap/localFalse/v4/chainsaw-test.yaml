@@ -27,18 +27,13 @@ spec:
       value: default
 
   steps:
-  - name: Create API with local=false
-    try:
-      - create:
-          file: v4-api-with-local-false.yml
-      - wait:
-          apiVersion: gravitee.io/v1alpha1
-          kind: ApiV4Definition
-          name: ($apiName)
-          for:
-            condition:
-              name: Accepted
-              value: "True"
+  - name: Create API with syncFrom=MANAGEMENT
+    use:
+      template: ../../../../../stepTemplates/createV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v4-api-with-local-false.yaml
 
   - name: Config Map should not exist
     try:

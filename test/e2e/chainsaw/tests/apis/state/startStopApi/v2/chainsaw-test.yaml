@@ -27,12 +27,13 @@ spec:
       value: default
 
   steps: 
-  - name: Deploy a started API
-    try:
-      - create:
-          file: v2-started-api.yaml
-    catch:
-      - events: {}
+  - name: Create API as started
+    use:
+      template: ../../../../../stepTemplates/createV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-started-api.yaml
 
   - name: Call started API and expect 200
     try:
@@ -50,11 +51,12 @@ spec:
             namespace: ($gkoNamespace)
 
   - name: Update as stopped API
-    try:
-      - apply:
-          file: v2-stopped-api.yaml
-    catch:
-      - events: {}
+    use:
+      template: ../../../../../stepTemplates/updateV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-stopped-api.yaml
 
   - name: Call stopped API and expect 404
     try:
@@ -72,11 +74,12 @@ spec:
             namespace: ($gkoNamespace)
 
   - name: Update a stopped API to started
-    try:
-      - apply:
-          file: v2-started-api.yaml
-    catch:
-      - events: {}
+    use:
+      template: ../../../../../stepTemplates/updateV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-started-api.yaml
 
   - name: Call re-started API and expect 200
     try:

@@ -16,23 +16,19 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: remove-member-test-v4
+  name: chainsaw-keyless-v4
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "remove-member-test-v4"
-  description: "Removing member - Created by Chainsaw E2E test"
+  name: "chainsaw-keyless-v4"
+  description: "keyless v4 API - Created by Chainsaw E2E test"
   version: "update"
   type: PROXY
-  state: STARTED
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
   listeners:
     - type: HTTP
       paths:
-        - path: "/remove-member-test-v4"
+        - path: "/chainsaw-keyless-v4-updated-path"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -55,4 +51,3 @@ spec:
       description: "This plan does not require any authentication"
       security:
         type: "KEY_LESS"
-  members: []

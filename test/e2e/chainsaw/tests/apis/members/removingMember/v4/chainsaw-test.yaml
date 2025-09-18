@@ -31,76 +31,27 @@ spec:
       value: exportedApi.yaml  
 
   steps:
-  - name: remove-pre-existing-service-account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"
-
-  - name: create-new-service-account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
-          check:
-              ($error): ~
-              (contains($stdout, '@graviteesource.com')): true
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
+  - name: Create a new service account
+    use:
+      template: ../../../../../stepTemplates/createServiceAccount.yaml
   
-  - name: create-api-with-new-member
-    try:
-      - apply:
-          file: v4-api-with-member.yaml
-      - assert:
-          resource:
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiV4Definition
-            metadata:
-              name: ($apiName)
-            spec:
-              members:
-                - source: gravitee
-                  sourceId: ($service_account_name)
-                  role: REVIEWER
-            status:
-              processingStatus: Completed
-    catch:
-      - events: {}
+  - name: Create API with new member
+    use:
+      template: ../../../../../stepTemplates/createV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v4-api-with-member.yaml
 
-  - name: update-api-with-removed-member
-    try:
-      - apply:
-          file: v4-api-without-member.yaml
-      - assert:
-          resource:
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiV4Definition
-            metadata:
-              name: ($apiName)
-            spec:
-              version: "update"
-              members: []
-            status:
-              processingStatus: Completed
-      - sleep:
-          duration: 10s
-    catch:
-      - events: {}
+  - name: Update API removing member
+    use:
+      template: ../../../../../stepTemplates/updateV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v4-api-without-member.yaml
 
-  - name: export-api-as-yaml
+  - name: Export API as YAML
     try:
       - script:
           env:
@@ -116,7 +67,7 @@ spec:
             API_ID=$(kubectl get apiv4definitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
             npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version v4 > $EXPORTED_API_YAML
 
-  - name: assert-export-for-removed-member
+  - name: Assert export for removed member
     try:
       - script:
           env:

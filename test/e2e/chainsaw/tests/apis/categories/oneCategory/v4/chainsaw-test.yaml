@@ -34,37 +34,19 @@ spec:
 
   steps:
   - name: Create a new category
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: CATEGORY_NAME
-              value: ($categoryName)
-          content: |
-            npx zx $COMMAND_DIR/createCategory.mjs --name $CATEGORY_NAME
-          outputs:
-            - name: CATEGORY_ID
-              value: (json_parse($stdout).id)
-    cleanup:
-      - script:
-          env:
-            - name: CATEGORY_ID
-              value: ($CATEGORY_ID)
-            - name: COMMAND_DIR
-              value: ($commandDir)
-          content: |
-            npx zx $COMMAND_DIR/deleteCategory.mjs --categoryId $CATEGORY_ID
+    use:
+      template: ../../../../../stepTemplates/createCategory.yaml
 
   - name: Create API with newly created category
-    try:
-      - create:
-          file: v4-api-with-one-category.yml
+    use:
+      template: ../../../../../stepTemplates/createV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v4-api-with-one-category.yaml
 
   - name: Export API as YAML
     try:
-      - sleep:
-          duration: 10s
       - script:
           env:
             - name: COMMAND_DIR
