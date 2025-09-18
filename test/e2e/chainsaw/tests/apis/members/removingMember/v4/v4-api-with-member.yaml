@@ -22,7 +22,7 @@ spec:
     name: "dev-ctx"
     namespace: "default"
   name: "remove-member-test-v4"
-  description: "V4 API  with members managed by Gravitee Kubernetes Operator"
+  description: "Removing member - Created by Chainsaw E2E test"
   version: "1.0"
   type: PROXY
   state: STARTED

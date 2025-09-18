@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,34 +11,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: remove-member-test-v2
+  name: v2-changing-member-role
 spec:
+  name: v2-changing-member-role
+  version: "update"
+  description: "Changing member role - Created by Chainsaw E2E test"
+  state: STARTED
   contextRef:
-    name: dev-ctx
-    namespace: default
-  name: "remove-member-test-v2"
-  version: "1.1"
-  description: "Removing member - Created by Chainsaw E2E test"
+    name: "dev-ctx"
+    namespace: "default"
   plans:
     - name: "KEY_LESS"
       description: "FREE"
       security: "KEY_LESS"
   proxy:
     virtual_hosts:
-      - path: "/remove-member-test-v2"
+      - path: /v2-changing-member-role
     groups:
       - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
-  local: true
-  groups:
-    - developers
+  local: false
+  notifyMembers: false
   members:
     - source: gravitee
-      sourceId: service-account-for-remove-member-test-v2
+      sourceId: service-account-for-v2-changing-member-role-test
       role: REVIEWER
-  notifyMembers: false

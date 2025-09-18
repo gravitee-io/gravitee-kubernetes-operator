@@ -16,15 +16,15 @@
 apiVersion: chainsaw.kyverno.io/v1alpha1
 kind: Test
 metadata:
-  name: v4-update-notification-grouprefs
+  name: v4-update-notification-events-test
 spec:
   bindings:
     - name: apiName
-      value: v4-update-notification-grouprefs-test-api
+      value: v4-update-notification-events-test
     - name: groupName
-      value: v4-update-notification-grouprefs-group
+      value: v4-update-notification-events-group
     - name: service_account_name
-      value: service-account-for-v4-update-notification-grouprefs-test
+      value: service-account-for-v4-update-notification-events-test
     - name: commandDir
       value: "../../../../../commands"
     - name: gkoNamespace
@@ -34,51 +34,31 @@ spec:
 
   steps:
   - name: Create a new service account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
-            sleep 2
-          check:
-              ($error): ~
-              (contains($stdout, '@graviteesource.com')): true
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
+    use:
+      template: ../../../../../stepTemplates/createServiceAccount.yaml
       
   - name: Create a new Group resource
     try:
       - create:
           file: group.yaml
-      - sleep:
-          duration: 2s
 
   - name: Create a new Notification resource
     try:
       - create:
-          file: notification-with-groups.yml
-      - sleep:
-          duration: 2s
+          file: notification-with-groups.yaml
           
   - name: Create API with notifications and groups
-    try:
-      - create:
-          file: api-v4-with-notifications-and-groups.yml
-      - sleep:
-          duration: 2s
+    use:
+      template: ../../../../../stepTemplates/createV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: api-v4-with-notifications-and-groups.yaml
 
-  - name: Update the Notification resource
+  - name: Update Notification resource
     try:
       - apply:
-          file: notification-with-groups-update.yml
-      - sleep:
-          duration: 2s
+          file: notification-with-groups-and-added-event.yaml
 
   - name: Export and assert Notification settings
     try:
@@ -94,8 +74,8 @@ spec:
               value: ($namespace)
           content: |
             set -e
-            API_ID=$(kubectl get apiv4definitions.gravitee.io -n $RESOURCE_NAMESPACE "$API_NAME" -o jsonpath='{.status.id}')
-            GROUP_ID=$(kubectl get groups.gravitee.io -n $RESOURCE_NAMESPACE "$GROUP_NAME" -o jsonpath='{.status.id}')
+            API_ID=$(kubectl get apiv4definitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
+            GROUP_ID=$(kubectl get groups.gravitee.io -n $RESOURCE_NAMESPACE $GROUP_NAME -o jsonpath='{.status.id}')
             ALL_API_NOTIFICATIONS=$(npx zx $COMMAND_DIR/getApiNotifications.mjs --api_id $API_ID)
 
             # Extract the PORTAL notification object from the output
@@ -120,17 +100,7 @@ spec:
                 - API_STARTED
                 - API_STOPPED
                 - APIKEY_EXPIRED
-              groups: []
+              groups:
+                - ($group_id)
               origin: KUBERNETES
               config_type: PORTAL
-
-  - name: Cleanup - Remove service account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"

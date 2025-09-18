@@ -31,33 +31,22 @@ spec:
       value: exportedApi.yaml  
 
   steps:
-  - name: create-new-service-account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
-          check:
-              ($error): ~
-              (contains($stdout, '@graviteesource.com')): true
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
+  - name: Create a new service account
+    use:
+      template: ../../../../../stepTemplates/createServiceAccount.yaml
 
   - name: Create Group with newly created member
     try:
       - create:
-          file: group.yml
+          file: group.yaml
 
   - name: Create API with newly created group
-    try:
-      - create:
-          file: v2-api-with-one-group.yml
+    use:
+      template: ../../../../../stepTemplates/createV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-api-with-one-group.yaml
 
   - name: Export API as YAML
     try:
@@ -91,13 +80,3 @@ spec:
               exit 1
             fi
             rm $EXPORTED_API_YAML
-  - name: Remove service account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"
