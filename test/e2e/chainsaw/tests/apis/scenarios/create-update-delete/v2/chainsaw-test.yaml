@@ -27,26 +27,15 @@ spec:
       value: default
 
   steps:
-  - name: create-resource
-    try:
-      - apply:
-          file: keyless-v2.yaml
-      - assert:
-          resource: 
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
-            metadata:
-              name: ($apiName)
-            status:
-              state: STARTED 
-              processingStatus: Completed
-    catch:
-      - podLogs:
-          selector: "control-plane=controller-manager"
-          namespace: ($gkoNamespace)
-          container: manager
+  - name: Create an API
+    use:
+      template: ../../../../../stepTemplates/createV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: keyless-v2.yaml
 
-  - name: call-api-endpoint
+  - name: Call API endpoint
     try:
       - script:
           env:
@@ -61,42 +50,28 @@ spec:
           selector: "app.kubernetes.io/component=gateway"
           namespace: ($gkoNamespace)
 
-  - name: update-api-resource
-    try:
-      - patch:
-          resource:
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
-            metadata:
-              name: ($apiName)
-            spec:
-              version: "update"
-              proxy:
-                virtual_hosts:
-                  - path: "/cs-v2-updated-path"
-      - assert:
-          resource:
-            apiVersion: gravitee.io/v1alpha1
-            kind: ApiDefinition
-            metadata:
-              name: ($apiName)
-            status:
-              processingStatus: Completed
+  - name: Update API
+    use:
+      template: ../../../../../stepTemplates/updateV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: keyless-v2-update-path.yaml
 
-  - name: call-new-api-endpoint
+  - name: Call updated API endpoint
     try:
       - script:
           env:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            npx zx $COMMAND_DIR/callGateway.mjs --endpoint cs-v2-updated-path --status 200
+            npx zx $COMMAND_DIR/callGateway.mjs --endpoint chainsaw-keyless-v2-updated-path --status 200
     catch:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"
           namespace: ($gkoNamespace)
 
-  - name: call-old-api-endpoint
+  - name: Call old API endpoint
     try:
       - script:
           env:
@@ -107,7 +82,7 @@ spec:
           content: |
             npx zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 404   
 
-  - name: delete-api
+  - name: Delete API
     try:
       - delete:
           ref:
@@ -127,14 +102,14 @@ spec:
           namespace: ($gkoNamespace)
           container: manager
 
-  - name: call-api-endpoint-after-deletion
+  - name: Call deleted API endpoint
     try:
         - script:
             env:
             - name: COMMAND_DIR
               value: ($commandDir)
             content: |
-              npx zx $COMMAND_DIR/callGateway.mjs --endpoint cs-v2-updated-path --status 404
+              npx zx $COMMAND_DIR/callGateway.mjs --endpoint chainsaw-keyless-v2-updated-path --status 404
     catch:
         - podLogs:
             selector: "app.kubernetes.io/component=gateway"

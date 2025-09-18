@@ -33,63 +33,35 @@ spec:
       value: exportedApi.yaml  
 
   steps:
-  - name: Remove pre-existingservice account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"
-
   - name: Create a new service account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/createServiceAccount.mjs --name $SERVICE_ACCOUNT_NAME
-            sleep 2
-          check:
-              ($error): ~
-              (contains($stdout, '@graviteesource.com')): true
-    catch:
-      - podLogs:
-          selector: "app.kubernetes.io/component=api"
-          namespace: ($gkoNamespace)
+    use:
+      template: ../../../../../stepTemplates/createServiceAccount.yaml
       
   - name: Create a new Group resource
     try:
       - create:
           file: group.yaml
-      - sleep:
-          duration: 2s
 
   - name: Create a new Notification resource
     try:
       - create:
-          file: notification-with-groups.yml
-      - sleep:
-          duration: 2s
+          file: notification-with-groups.yaml
           
   - name: Create API with notifications and groups
-    try:
-      - create:
-          file: api-v4-with-notifications-and-groups.yml
-      - sleep:
-          duration: 2s
+    use:
+      template: ../../../../../stepTemplates/createV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: api-v4-with-notifications-and-groups.yaml
 
   - name: Remove notifications from the API
-    try:
-      - apply:
-          file: api-v4-with-notifications-and-groups-update.yml
-      - sleep:
-          duration: 2s
+    use:
+      template: ../../../../../stepTemplates/updateV4Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: api-v4-with-removed-notificationsref.yaml
 
   - name: Export and assert Notification settings
     try:
@@ -130,14 +102,3 @@ spec:
               hooks: []
               groups: []
               config_type: PORTAL
-
-  - name: Cleanup - Remove service account
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-          content: |
-            npx zx $COMMAND_DIR/deleteServiceAccount.mjs --name "$SERVICE_ACCOUNT_NAME"

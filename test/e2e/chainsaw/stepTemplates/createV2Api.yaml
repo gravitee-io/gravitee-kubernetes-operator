@@ -12,27 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/configuration-chainsaw-v1alpha2.json
-apiVersion: chainsaw.kyverno.io/v1alpha2
-kind: Configuration
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/steptemplate-chainsaw-v1alpha1.json
+
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: StepTemplate
 metadata:
-  name: chainsaw-e2e-tests
+  name: create-v2-api
 spec:
-  discovery:
-    testFile: chainsaw-test
-  cleanup:
-    delayBeforeCleanup: 5s
-  timeouts:
-    apply: 30s
-    assert: 30s
-    cleanup: 30s
-    delete: 30s
-    error: 30s
-    exec: 35s     
-  execution:
-    failFast: true
-# re-activate when reporting is fixed
-  # report:
-  #   format: XML
-  #   name: chainsaw-junit-reports
-  #   path: /tmp/junit/reports-e2e
+    try:
+      - create:
+          file: ($file)
+      - wait:
+          apiVersion: gravitee.io/v1alpha1
+          kind: ApiDefinition
+          name: ($apiName)
+          for:
+            condition:
+              name: Accepted
+              value: "True"
+    catch:
+      - events: {}
+      - podLogs:
+          selector: "app.kubernetes.io/component=gateway"
+          namespace: ($gkoNamespace)

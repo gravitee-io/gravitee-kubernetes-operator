@@ -30,86 +30,36 @@ spec:
 
   steps:
   - name: Create category 1
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: CATEGORY_NAME
-              value: category1-for-v2-api-with-multiple-categories-delete-one-test
-          content: |
-            npx zx $COMMAND_DIR/createCategory.mjs --name $CATEGORY_NAME
-          outputs:
-            - name: CATEGORY_ID
-              value: (json_parse($stdout).id)
-    cleanup:
-      - script:
-          env:
-            - name: CATEGORY_ID
-              value: ($CATEGORY_ID)
-            - name: COMMAND_DIR
-              value: ($commandDir)
-          content: |
-            npx zx $COMMAND_DIR/deleteCategory.mjs --categoryId $CATEGORY_ID
-            
+    use:
+      template: ../../../../../stepTemplates/createCategory.yaml
+      with:
+        bindings:
+          - name: categoryName
+            value: category1-for-v2-api-with-multiple-categories-delete-one-test
+
   - name: Create category 2
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: CATEGORY_NAME
-              value: category2-for-v2-api-with-multiple-categories-delete-one-test
-          content: |
-            npx zx $COMMAND_DIR/createCategory.mjs --name $CATEGORY_NAME
-          outputs:
-            - name: CATEGORY_ID
-              value: (json_parse($stdout).id)
-    cleanup:
-      - script:
-          env:
-            - name: CATEGORY_ID
-              value: ($CATEGORY_ID)
-            - name: COMMAND_DIR
-              value: ($commandDir)
-          content: |
-            npx zx $COMMAND_DIR/deleteCategory.mjs --categoryId $CATEGORY_ID
+    use:
+      template: ../../../../../stepTemplates/createCategory.yaml
+      with:
+        bindings:
+          - name: categoryName
+            value: category2-for-v2-api-with-multiple-categories-delete-one-test
 
   - name: Create category 3
-    try:
-      - script:
-          env:              
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: CATEGORY_NAME
-              value: category3-for-v2-api-with-multiple-categories-delete-one-test
-          content: |
-            npx zx $COMMAND_DIR/createCategory.mjs --name $CATEGORY_NAME
-          outputs:
-            - name: CATEGORY_ID
-              value: (json_parse($stdout).id)
-    cleanup:
-      - script:
-          env:
-            - name: CATEGORY_ID
-              value: ($CATEGORY_ID)
-            - name: COMMAND_DIR
-              value: ($commandDir)
-          content: |
-            npx zx $COMMAND_DIR/deleteCategory.mjs --categoryId $CATEGORY_ID
+    use:
+      template: ../../../../../stepTemplates/createCategory.yaml
+      with:
+        bindings:
+          - name: categoryName
+            value: category3-for-v2-api-with-multiple-categories-delete-one-test
 
   - name: Create API with newly created categories
-    try:
-      - create:
-          file: v2-api-with-multiple-categories-delete-one.yml
-      - wait:
-          apiVersion: gravitee.io/v1alpha1
-          kind: ApiDefinition
-          name: ($apiName)
-          for:
-            condition:
-              name: Accepted          
-              value: "True"
+    use:
+      template: ../../../../../stepTemplates/createV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-api-with-multiple-categories.yaml
 
   - name: Export API as YAML
     try:
@@ -146,27 +96,12 @@ spec:
             rm $EXPORTED_API_YAML
 
   - name: Update API with one removed category
-    try:
-      - apply:
-          file: v2-api-with-multiple-categories-delete-one-update.yml
-      - wait:
-          apiVersion: gravitee.io/v1alpha1
-          kind: ApiDefinition
-          name: ($apiName)
-          for:
-            condition:
-              name: Accepted          
-              value: "True"
-    catch:
-      - script:
-          env:
-            - name: RESOURCE_NAMESPACE
-              value: ($namespace)
-            - name: API_NAME
-              value: ($apiName)
-          content: |
-            echo "Failed to update API, displaying API resource:"
-            kubectl get apidefinitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o yaml
+    use:
+      template: ../../../../../stepTemplates/updateV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-api-with-removed-category.yaml
           
   - name: Export API as YAML
     try:

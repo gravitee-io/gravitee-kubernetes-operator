@@ -28,17 +28,12 @@ spec:
 
   steps:
   - name: Create API with local=false
-    try:
-      - create:
-          file: v2-api-with-local-false.yml
-      - wait:
-          apiVersion: gravitee.io/v1alpha1
-          kind: ApiDefinition
-          name: ($apiName)
-          for:
-            condition:
-              name: Accepted
-              value: "True"
+    use:
+      template: ../../../../../stepTemplates/createV2Api.yaml
+      with:
+        bindings:
+          - name: file
+            value: v2-api-with-local-false.yaml
 
   - name: Config Map should not exist
     try:
