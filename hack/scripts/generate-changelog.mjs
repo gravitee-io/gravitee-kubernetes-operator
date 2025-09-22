@@ -74,11 +74,16 @@ async function getJiraVersion(versionName) {
 }
 
 async function getJiraIssues(versionId) {
-  const query = `jql=project=${JIRA_PROJECT} AND fixVersion=${versionId}`;
-
-  const issues = await fetch(`${JIRA_BASE}/search?${query}`, {
-    method: "GET",
-    headers: JIRA_HEADERS,
+  const issues = await fetch("${JIRA_BASE}/search/jql", {
+    method: "POST",
+    headers: {
+      ...JIRA_HEADERS,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      jql: `project = ${JIRA_PROJECT} AND fixVersion = "${versionId}"`,
+      fields: ["issuetype", "summary", "components", "customfield_10115"],
+    }),
   })
     .then((response) => response.json())
     .then((body) => body.issues);
