@@ -16,6 +16,8 @@ package internal
 
 import (
 	"context"
+	"regexp"
+	"strings"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -27,6 +29,31 @@ func UpdateStatusSuccess(ctx context.Context, api core.ConditionAwareObject) err
 	}
 
 	k8s.AddSuccessfulConditions(api)
+
+	// Sometimes we may just set warnings instead of rejecting the API
+	// This part of the code tries to set the condition for missing groups
+	errors := api.GetStatus().GetErrors()
+	if errors.Warning != nil {
+		groupNotFoundErrorMessage := make([]string, 0)
+		for i := 0; i < len(errors.Warning); i++ {
+			w := errors.Warning[i]
+			if strings.HasPrefix(w, "Group [") {
+				re := regexp.MustCompile(`^Group \[.*] could not be found in environment \[.*]$`)
+				if re.MatchString(w) {
+					groupNotFoundErrorMessage = append(groupNotFoundErrorMessage, w)
+				}
+			}
+		}
+		if len(groupNotFoundErrorMessage) != 0 {
+			k8s.SetCondition(
+				api.(core.ConditionAware), //nolint:errcheck // api is ConditionAware
+				k8s.
+					NewResolvedRefsConditionBuilder(api.GetGeneration()).
+					RejectGroupNotFound(strings.Join(groupNotFoundErrorMessage, ", ")).
+					Build(),
+			)
+		}
+	}
 
 	// Deprecated
 	api.GetStatus().SetProcessingStatus(core.ProcessingStatusCompleted)

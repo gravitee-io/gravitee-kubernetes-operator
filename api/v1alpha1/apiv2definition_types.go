@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
@@ -368,6 +369,10 @@ func (s *ApiDefinitionStatus) RemoveSubscription() {
 
 func (s *ApiDefinitionStatus) GetSubscriptionCount() uint {
 	return s.SubscriptionCount
+}
+
+func (s *ApiDefinitionStatus) GetErrors() status.Errors {
+	return s.Errors
 }
 
 // ApiDefinitionList contains a list of ApiDefinition.

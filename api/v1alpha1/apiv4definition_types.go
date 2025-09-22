@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
@@ -359,6 +360,10 @@ func (s *ApiV4DefinitionStatus) AddSubscription() {
 // GetSubscriptionCount implements core.SubscribableStatus.
 func (s *ApiV4DefinitionStatus) GetSubscriptionCount() uint {
 	return s.SubscriptionCount
+}
+
+func (s *ApiV4DefinitionStatus) GetErrors() status.Errors {
+	return s.Errors
 }
 
 // RemoveSubscription implements core.SubscribableStatus.

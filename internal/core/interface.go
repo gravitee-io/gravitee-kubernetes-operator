@@ -17,6 +17,7 @@ package core
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -135,6 +136,7 @@ type Status interface {
 	IsFailed() bool
 	DeepCopyFrom(obj client.Object) error
 	DeepCopyTo(obj client.Object) error
+	GetErrors() status.Errors
 }
 
 type SubscribableStatus interface {

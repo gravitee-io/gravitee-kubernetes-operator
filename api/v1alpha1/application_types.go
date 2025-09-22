@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -185,6 +186,10 @@ func (s *ApplicationStatus) DeepCopyTo(obj client.Object) error {
 
 func (s *ApplicationStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.Status.ProcessingStatus = status
+}
+
+func (s *ApplicationStatus) GetErrors() status.Errors {
+	return s.Errors
 }
 
 func (s *ApplicationStatus) IsFailed() bool {

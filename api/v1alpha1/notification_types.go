@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
@@ -136,6 +137,10 @@ func (s *NotificationStatus) IsFailed() bool {
 		}
 	}
 	return false
+}
+
+func (s *NotificationStatus) GetErrors() status.Errors {
+	return status.Errors{}
 }
 
 func init() {

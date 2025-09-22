@@ -19,6 +19,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -74,6 +75,10 @@ func (s *GroupStatus) IsFailed() bool {
 
 func (s *GroupStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
+}
+
+func (s *GroupStatus) GetErrors() status.Errors {
+	return s.Errors
 }
 
 // +kubebuilder:object:root=true

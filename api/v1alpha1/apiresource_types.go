@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -77,6 +78,10 @@ func (s *ApiResourceStatus) SetProcessingStatus(status core.ProcessingStatus) {
 
 func (s *ApiResourceStatus) IsFailed() bool {
 	return false
+}
+
+func (s *ApiResourceStatus) GetErrors() status.Errors {
+	return status.Errors{}
 }
 
 //+kubebuilder:object:root=true

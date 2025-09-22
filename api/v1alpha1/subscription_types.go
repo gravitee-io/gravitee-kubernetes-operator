@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -91,6 +92,10 @@ func (s *SubscriptionStatus) IsFailed() bool {
 
 func (s *SubscriptionStatus) SetProcessingStatus(status core.ProcessingStatus) {
 	s.ProcessingStatus = status
+}
+
+func (s *SubscriptionStatus) GetErrors() status.Errors {
+	return status.Errors{}
 }
 
 // +kubebuilder:object:root=true

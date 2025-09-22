@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -161,6 +162,10 @@ func (s *SharedPolicyGroupSpecStatus) DeepCopyTo(obj client.Object) error {
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}
+}
+
+func (s *SharedPolicyGroupSpecStatus) GetErrors() status.Errors {
+	return s.Errors
 }
 
 func init() {
