@@ -20,11 +20,9 @@ import (
 )
 
 func validateApiType(oldApi, newAPI core.ApiDefinitionObject) *errors.AdmissionError {
-	if nativeAPI == oldApi.GetType() && oldApi.GetType() != newAPI.GetType() {
-		return errors.NewSeveref("it is not possible to change the API type 'NATIVE' "+
-			"to something else [%s]", newAPI.GetType())
-	} else if nativeAPI != oldApi.GetType() && nativeAPI == newAPI.GetType() {
-		return errors.NewSevere("it is not possible to convert a none NATIVE API to a NATIVE API")
+	if newAPI.GetType() != oldApi.GetType() {
+		return errors.NewSeveref("it is not possible to change API Type. Old type '%s', "+
+			"new type '%s'", oldApi.GetType(), newAPI.GetType())
 	}
 
 	return nil
