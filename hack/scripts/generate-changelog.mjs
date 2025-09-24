@@ -40,6 +40,12 @@ const JIRA_HEADERS = {
   Accept: "application/json",
 };
 
+const LOG_COMPONENTS = new Map([
+  ["GKO", { label: "GKO", order: 0 }],
+  ["APIM", { label: "APIM", order: 1 }],
+  ["Others", { label: "Others", order: 2 }],
+]);
+
 const LOG_TYPES = new Map([
   ["Public Bug", { label: "Bug fixes", order: 0 }],
   ["Public Improvement", { label: "Improvements", order: 1 }],
@@ -74,14 +80,14 @@ async function getJiraVersion(versionName) {
 }
 
 async function getJiraIssues(versionId) {
-  const issues = await fetch("${JIRA_BASE}/search/jql", {
+  const issues = await fetch(`${JIRA_BASE}/search/jql`, {
     method: "POST",
     headers: {
       ...JIRA_HEADERS,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      jql: `project = ${JIRA_PROJECT} AND fixVersion = "${versionId}"`,
+      jql: `project = '${JIRA_PROJECT}' AND fixVersion = '${versionId}'`,
       fields: ["issuetype", "summary", "components", "customfield_10115"],
     }),
   })
@@ -95,23 +101,51 @@ async function getJiraIssues(versionId) {
       githubIssue: issue.fields.customfield_10115,
       summary: issue.fields.summary,
       type: issue.fields.issuetype.name,
+      component: findComponent(issue),
     }));
 }
 
+function findComponent(issue) {
+  return (
+    [...LOG_COMPONENTS.keys()].find((component) =>
+      issue.fields.components.some((c) => c.name === component),
+    ) || "Others"
+  );
+}
+
+function groupByTypeAndComponent(issues) {
+  return groupByType(issues).map(([type, issues]) => [
+    type,
+    groupByComponent(issues),
+  ]);
+}
+
 function groupByType(issues) {
-  const groups = [...groupBy(issues, (issue) => issue.type).entries()];
-  return groups.sort(
+  return [...groupBy(issues, (issue) => issue.type).entries()].sort(
     ([t1], [t2]) => LOG_TYPES.get(t1).order - LOG_TYPES.get(t2).order,
   );
 }
 
-function buildTypeLogs([type, issues]) {
+function groupByComponent(issues) {
+  return [...groupBy(issues, (issue) => issue.component).entries()].sort(
+    ([c1], [c2]) => LOG_COMPONENTS.get(c1).order - LOG_COMPONENTS.get(c2).order,
+  );
+}
+
+function buildLogs([type, componentToIssues]) {
   return `
 <details>
 <summary>${LOG_TYPES.get(type).label}</summary>
 
-${issues.map(buildSummary).join(EOL)}
+${componentToIssues.map(buildComponentLogs).join(EOL)}
 </details>
+`;
+}
+
+function buildComponentLogs([component, issues]) {
+  return `${TAB}**${LOG_COMPONENTS.get(component).label}**
+
+${issues.map(buildSummary).join(EOL)}
 `;
 }
 
@@ -149,6 +183,6 @@ if (jiraIssues.length === 0) {
   echo(noChangeMessage);
 } else {
   echo(`${releaseChangelogHeader}
-    ${groupByType(jiraIssues).map(buildTypeLogs).join(EOL)}
+    ${groupByTypeAndComponent(jiraIssues).map(buildLogs).join(EOL)}
 `);
 }
