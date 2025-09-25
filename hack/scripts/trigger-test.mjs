@@ -18,9 +18,32 @@ import { triggerPipeline } from "./lib/circleci.mjs";
 
 import { toggleVerbosity, LOG } from "./lib/index.mjs";
 
+import { Version } from "./lib/version.mjs";
+
 const VERBOSE = argv.verbose;
 const BRANCH = argv["branch"];
 const NOTIFY = argv["notify"] === "true" || argv["notify"] === true;
+const APIM_VERSION = argv["apimVersion"];
+
+const apimVersion = new Version(APIM_VERSION);
+const gkoVersion = new Version(BRANCH);
+
+if (apimVersion !== "master-latest") {
+  if (apimVersion.majorDigit < gkoVersion.majorDigit) {
+    LOG.blue(
+      `Skipping test because we don't support forward compatibility between major versions`,
+    );
+    process.exit(0);
+  }
+  
+  if (apimVersion.minorDigit < gkoVersion.minorDigit) {
+    LOG.blue(
+      `Skipping test because we don't support forward compatibility between minor versions`,
+    );
+    process.exit(0);
+  }
+}
+
 
 toggleVerbosity(VERBOSE);
 
@@ -28,6 +51,7 @@ LOG.blue(`Triggering test pipeline`);
 
 const parameters = {
   trigger: "test",
+  "apim-version": APIM_VERSION,
   notify: NOTIFY,
 };
 

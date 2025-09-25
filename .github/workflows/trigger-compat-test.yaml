@@ -1,0 +1,52 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Trigger Compatibility Test
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - gko-1348-apim-compatibility
+jobs:
+  trigger-test-suite:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH: ${{ matrix.branch }}
+      APIM_VERSION: ${{ matrix.apim-version }}
+      CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        branch:
+          - 4.5.x
+          - 4.6.x
+          - 4.7.x
+          - 4.8.x
+          - 4.9.x
+        apim-version:
+          - 4.5.x-latest
+          - 4.6.x-latest
+          - 4.7.x-latest
+          - 4.8.x-latest
+          - 4.9.x-latest
+          - master-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Trigger test pipeline and notify on failure
+        run: |
+          echo "🧪 Triggering test pipeline"
+          npx zx hack/scripts/trigger-test.mjs --notify true --branch ${BRANCH} --apimVersion ${APIM_VERSION}
