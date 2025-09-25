@@ -24,6 +24,10 @@ parameters:
       - rollout-apim
       - release
       - none
+  apim-version:
+    type: string
+    default: ""
+    description: "The version of APIM to use when we run a test suite. Leave empty to use the version defined in the hack/apim.yaml file."
   apim-source-branch:
     type: string
     default: ""
@@ -310,7 +314,8 @@ jobs:
                 command: echo 'export APIM_VALUES=values-dbless.yaml' >> $BASH_ENV
       - run:
           name: Start cluster
-          command: make start-cluster
+          command: |
+            APIM_IMAGE_TAG=<< pipeline.parameters.apim-version >> make start-cluster 
       - run:
           name: Run IT with filter << parameters.ginkgo-filter >>
           command: |
@@ -1033,7 +1038,7 @@ workflows:
         - << pipeline.parameters.trigger >>
     jobs:
       - job-integration-test:
-          name: Run all integration tests
+          name: Run integration tests with APIM version << pipeline.parameters.apim-version >>
           context: cicd-orchestrator
           ginkgo-filter: integration
           pre-steps:
