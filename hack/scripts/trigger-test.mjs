@@ -21,6 +21,7 @@ import { toggleVerbosity, LOG } from "./lib/index.mjs";
 const VERBOSE = argv.verbose;
 const BRANCH = argv["branch"];
 const NOTIFY = argv["notify"] === "true" || argv["notify"] === true;
+const APIM_VERSION = argv["apimVersion"];
 
 toggleVerbosity(VERBOSE);
 
@@ -28,6 +29,7 @@ LOG.blue(`Triggering test pipeline`);
 
 const parameters = {
   trigger: "test",
+  apimVersion: APIM_VERSION,
   notify: NOTIFY,
 };
 
