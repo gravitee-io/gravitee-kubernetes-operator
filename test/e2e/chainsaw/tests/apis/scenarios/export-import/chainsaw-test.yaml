@@ -22,27 +22,27 @@ spec:
   # Workaround is to hardcode the value for Kind and add a second test to cover both v2 and v4.
   # Remove second test and use the apiKind binding once the bug is fixed.
   scenarios:
-    # - bindings:
-    #     - name: apiVersion
-    #       value: v2
-    #     - name: apiVersionK8s
-    #       value: apidefinitions.gravitee.io
-    #     - name: apiKind
-    #       value: ApiDefinition
     - bindings:
         - name: apiVersion
-          value: v4
+          value: v2
         - name: apiVersionK8s
-          value: apiv4definitions.gravitee.io
+          value: apidefinitions.gravitee.io
         - name: apiKind
-          value: ApiV4Definition
+          value: ApiDefinition
+    # - bindings:
+    #     - name: apiVersion
+    #       value: v4
+    #     - name: apiVersionK8s
+    #       value: apiv4definitions.gravitee.io
+    #     - name: apiKind
+    #       value: ApiV4Definition
   bindings:
     - name: apiName
       value: (join('-', [$apiVersion, 'api-config-rich']))
     - name: apiCrdFile
-      value: (join('', ['../resources/', $apiName,'.yaml']))
+      value: (join('', ['resources/', $apiName,'.yaml']))
     - name: commandDir
-      value: "../../../../../commands"
+      value: "../../../../commands"
     - name: gkoNamespace
       value: default
     - name: exportedApiYaml
@@ -66,7 +66,7 @@ spec:
               - name: API_NAME
                 value: ($apiName)
             content: |
-              npx zx $COMMAND_DIR/createApiFromJson.mjs --jsonfile ../resources/$API_NAME.json > $CREATED_API_JSON
+              npx zx $COMMAND_DIR/createApiFromJson.mjs --jsonfile resources/$API_NAME.json > $CREATED_API_JSON
       catch:
         - podLogs:
             selector: "app.kubernetes.io/component=api"
@@ -114,7 +114,7 @@ spec:
 
     - name: Deploy modified YAML export
       use:
-        template: ../../../../../stepTemplates/updateApi.yaml
+        template: ../../../../stepTemplates/updateApi.yaml
         with:
           bindings:
             - name: apiCrdFile
@@ -125,7 +125,7 @@ spec:
         - patch:
             resource:
               apiVersion: gravitee.io/v1alpha1
-              kind: ApiV4Definition
+              kind: ApiDefinition
               metadata:
                 name: ($apiName)
               spec:
@@ -133,7 +133,7 @@ spec:
         - assert:
             resource:
               apiVersion: gravitee.io/v1alpha1
-              kind: ApiV4Definition
+              kind: ApiDefinition
               metadata:
                 name: ($apiName)
               status:
