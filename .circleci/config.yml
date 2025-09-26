@@ -723,7 +723,7 @@ workflows:
         - << pipeline.parameters.trigger >>
     jobs:
       - job-integration-test:
-          name: Run all integration tests
+          name:  Run integration tests with APIM version << pipeline.parameters.apim-version >>
           context: cicd-orchestrator
           ginkgo-filter: integration
           pre-steps:
