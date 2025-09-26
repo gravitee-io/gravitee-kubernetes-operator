@@ -22,6 +22,22 @@ parameters:
       - test
       - release
       - none
+  apim-version:
+    type: string
+    default: ""
+    description: "The version of APIM to use when we run a test suite. Leave empty to use the version defined in the hack/apim.yaml file."
+  apim-source-branch:
+    type: string
+    default: ""
+    description: |
+      The branch that triggered a rollout of APIM on our side. 
+      This branch belongs to the APIM repository.
+  apim-commit-hash:
+    type: string
+    default: ""
+    description: |
+      The commit hash that triggered a roullout of APIM on our side. 
+      This commit belongs to the APIM repository.
   release-version:
     type: string
     default: ""
