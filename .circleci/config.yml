@@ -24,6 +24,10 @@ parameters:
       - e2e
       - rollout-apim
       - none
+  apim-version:
+    type: string
+    default: ""
+    description: "The version of APIM to use when we run a test suite. Leave empty to use the version defined in the hack/apim.yaml file."
   apim-source-branch:
     type: string
     default: ""
