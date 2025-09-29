@@ -300,7 +300,6 @@ spec:
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             tenants:
-                              default: []
                               description: List of endpoint tenants
                               items:
                                 type: string
@@ -327,51 +326,47 @@ spec:
                         description: Endpoint group http client options
                         properties:
                           clearTextUpgrade:
-                            default: true
-                            description: Should HTTP/2 clear text upgrade be used or not ?
+                            description: Should HTTP/2 clear text upgrade be used or not ? (default=true)
                             type: boolean
                           connectTimeout:
                             description: Connection timeout of the http connection
                             format: int64
                             type: integer
                           followRedirects:
-                            default: false
-                            description: Should HTTP redirects be followed or not ?
+                            description: Should HTTP redirects be followed or not ? (default=false)
                             type: boolean
                           idleTimeout:
                             description: " Idle Timeout for the http connection"
                             format: int64
                             type: integer
                           keepAlive:
-                            default: true
+                            description: Keep alive the connection (default = true)
                             type: boolean
                           keepAliveTimeout:
-                            default: 30000
-                            description: Should keep alive be used for the HTTP connection ?
+                            description: Should keep alive be used for the HTTP connection ? (default =
+                              30000)
                             format: int64
                             type: integer
                           maxConcurrentConnections:
                             description: HTTP max concurrent connections
                             type: integer
                           pipelining:
-                            default: false
-                            description: Should HTTP/1.1 pipelining be used for the connection or not ?
+                            description: Should HTTP/1.1 pipelining be used for the connection or not?
+                              (default = false)
                             type: boolean
                           propagateClientAcceptEncoding:
-                            default: false
-                            description: Propagate Client Accept-Encoding header
+                            description: Propagate Client Accept-Encoding header (default=false)
                             type: boolean
                           readTimeout:
                             description: Read timeout
                             format: int64
                             type: integer
                           useCompression:
-                            default: false
-                            description: Should compression be used or not ?
+                            description: Should compression be used or not ? (default = false)
                             type: boolean
                           version:
-                            default: HTTP_1_1
-                            description: HTTP Protocol Version (Possible values Http1 or Http2)
+                            description: HTTP Protocol Version (Possible values Http1 or Http2,
+                              default=HTTP_1_1)
                             enum:
                               - HTTP_1_1
                               - HTTP_2
@@ -599,8 +594,7 @@ spec:
                               description: FlowStep description
                               type: string
                             enabled:
-                              default: true
-                              description: Indicate if this FlowStep is enabled or not
+                              description: Indicate if this FlowStep is enabled or not (default = true)
                               type: boolean
                             messageCondition:
                               description: The message condition (supports EL expressions)
@@ -623,8 +617,6 @@ spec:
                               required:
                                 - name
                               type: object
-                          required:
-                            - enabled
                           type: object
                         type: array
                       enabled:
@@ -653,8 +645,7 @@ spec:
                               description: FlowStep description
                               type: string
                             enabled:
-                              default: true
-                              description: Indicate if this FlowStep is enabled or not
+                              description: Indicate if this FlowStep is enabled or not (default = true)
                               type: boolean
                             messageCondition:
                               description: The message condition (supports EL expressions)
@@ -677,8 +668,6 @@ spec:
                               required:
                                 - name
                               type: object
-                          required:
-                            - enabled
                           type: object
                         type: array
                       name:
@@ -699,8 +688,7 @@ spec:
                               description: FlowStep description
                               type: string
                             enabled:
-                              default: true
-                              description: Indicate if this FlowStep is enabled or not
+                              description: Indicate if this FlowStep is enabled or not (default = true)
                               type: boolean
                             messageCondition:
                               description: The message condition (supports EL expressions)
@@ -723,8 +711,6 @@ spec:
                               required:
                                 - name
                               type: object
-                          required:
-                            - enabled
                           type: object
                         type: array
                       request:
@@ -742,8 +728,7 @@ spec:
                               description: FlowStep description
                               type: string
                             enabled:
-                              default: true
-                              description: Indicate if this FlowStep is enabled or not
+                              description: Indicate if this FlowStep is enabled or not (default = true)
                               type: boolean
                             messageCondition:
                               description: The message condition (supports EL expressions)
@@ -766,8 +751,6 @@ spec:
                               required:
                                 - name
                               type: object
-                          required:
-                            - enabled
                           type: object
                         type: array
                       response:
@@ -785,8 +768,7 @@ spec:
                               description: FlowStep description
                               type: string
                             enabled:
-                              default: true
-                              description: Indicate if this FlowStep is enabled or not
+                              description: Indicate if this FlowStep is enabled or not (default = true)
                               type: boolean
                             messageCondition:
                               description: The message condition (supports EL expressions)
@@ -809,8 +791,6 @@ spec:
                               required:
                                 - name
                               type: object
-                          required:
-                            - enabled
                           type: object
                         type: array
                       selectors:
@@ -834,8 +814,7 @@ spec:
                               description: FlowStep description
                               type: string
                             enabled:
-                              default: true
-                              description: Indicate if this FlowStep is enabled or not
+                              description: Indicate if this FlowStep is enabled or not (default = true)
                               type: boolean
                             messageCondition:
                               description: The message condition (supports EL expressions)
@@ -858,8 +837,6 @@ spec:
                               required:
                                 - name
                               type: object
-                          required:
-                            - enabled
                           type: object
                         type: array
                       tags:
@@ -1135,8 +1112,7 @@ spec:
                                     description: FlowStep description
                                     type: string
                                   enabled:
-                                    default: true
-                                    description: Indicate if this FlowStep is enabled or not
+                                    description: Indicate if this FlowStep is enabled or not (default = true)
                                     type: boolean
                                   messageCondition:
                                     description: The message condition (supports EL expressions)
@@ -1159,8 +1135,6 @@ spec:
                                     required:
                                       - name
                                     type: object
-                                required:
-                                  - enabled
                                 type: object
                               type: array
                             enabled:
@@ -1189,8 +1163,7 @@ spec:
                                     description: FlowStep description
                                     type: string
                                   enabled:
-                                    default: true
-                                    description: Indicate if this FlowStep is enabled or not
+                                    description: Indicate if this FlowStep is enabled or not (default = true)
                                     type: boolean
                                   messageCondition:
                                     description: The message condition (supports EL expressions)
@@ -1213,8 +1186,6 @@ spec:
                                     required:
                                       - name
                                     type: object
-                                required:
-                                  - enabled
                                 type: object
                               type: array
                             name:
@@ -1235,8 +1206,7 @@ spec:
                                     description: FlowStep description
                                     type: string
                                   enabled:
-                                    default: true
-                                    description: Indicate if this FlowStep is enabled or not
+                                    description: Indicate if this FlowStep is enabled or not (default = true)
                                     type: boolean
                                   messageCondition:
                                     description: The message condition (supports EL expressions)
@@ -1259,8 +1229,6 @@ spec:
                                     required:
                                       - name
                                     type: object
-                                required:
-                                  - enabled
                                 type: object
                               type: array
                             request:
@@ -1278,8 +1246,7 @@ spec:
                                     description: FlowStep description
                                     type: string
                                   enabled:
-                                    default: true
-                                    description: Indicate if this FlowStep is enabled or not
+                                    description: Indicate if this FlowStep is enabled or not (default = true)
                                     type: boolean
                                   messageCondition:
                                     description: The message condition (supports EL expressions)
@@ -1302,8 +1269,6 @@ spec:
                                     required:
                                       - name
                                     type: object
-                                required:
-                                  - enabled
                                 type: object
                               type: array
                             response:
@@ -1321,8 +1286,7 @@ spec:
                                     description: FlowStep description
                                     type: string
                                   enabled:
-                                    default: true
-                                    description: Indicate if this FlowStep is enabled or not
+                                    description: Indicate if this FlowStep is enabled or not (default = true)
                                     type: boolean
                                   messageCondition:
                                     description: The message condition (supports EL expressions)
@@ -1345,8 +1309,6 @@ spec:
                                     required:
                                       - name
                                     type: object
-                                required:
-                                  - enabled
                                 type: object
                               type: array
                             selectors:
@@ -1370,8 +1332,7 @@ spec:
                                     description: FlowStep description
                                     type: string
                                   enabled:
-                                    default: true
-                                    description: Indicate if this FlowStep is enabled or not
+                                    description: Indicate if this FlowStep is enabled or not (default = true)
                                     type: boolean
                                   messageCondition:
                                     description: The message condition (supports EL expressions)
@@ -1394,8 +1355,6 @@ spec:
                                     required:
                                       - name
                                     type: object
-                                required:
-                                  - enabled
                                 type: object
                               type: array
                             tags:
@@ -1451,29 +1410,25 @@ spec:
                         description: Plan selection rule
                         type: string
                       status:
-                        default: PUBLISHED
-                        description: The plan status
+                        description: The plan status (default = PUBLISHED)
                         enum:
                           - PUBLISHED
                           - DEPRECATED
                           - STAGING
                         type: string
                       tags:
-                        default: []
                         description: List of plan tags
                         items:
                           type: string
                         type: array
                       type:
-                        default: API
-                        description: Plan type
+                        description: Plan type (default = API)
                         enum:
                           - API
                           - CATALOG
                         type: string
                       validation:
-                        default: AUTO
-                        description: Plan validation strategy
+                        description: Plan validation strategy (default=AUTO)
                         enum:
                           - AUTO
                           - MANUAL
@@ -1523,7 +1478,6 @@ spec:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       enabled:
-                        default: true
                         description: Is resource enabled or not?
                         type: boolean
                       name:

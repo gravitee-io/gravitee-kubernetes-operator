@@ -504,12 +504,12 @@ func (in *Failover) DeepCopyInto(out *Failover) {
 	}
 	if in.SlowCallDuration != nil {
 		in, out := &in.SlowCallDuration, &out.SlowCallDuration
-		*out = new(int64)
+		*out = new(uint64)
 		**out = **in
 	}
 	if in.OpenStateDuration != nil {
 		in, out := &in.OpenStateDuration, &out.OpenStateDuration
-		*out = new(int64)
+		*out = new(uint64)
 		**out = **in
 	}
 	if in.MaxFailures != nil {

@@ -15,6 +15,8 @@
 package v2
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 )
 
@@ -40,7 +42,6 @@ type Endpoint struct {
 	Backup *bool `json:"backup,omitempty"`
 	// The endpoint tenants
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Tenants []string `json:"tenants"`
 	// The type of endpoint (HttpEndpointType or GrpcEndpointType)
 	Type EndpointType `json:"type,omitempty"`
@@ -55,10 +56,62 @@ type Endpoint struct {
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
 	// List of headers for this endpoint
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Headers []base.HttpHeader `json:"headers"`
 	// Specify EndpointHealthCheck service settings
 	HealthCheck *EndpointHealthCheckService `json:"healthcheck,omitempty"`
+}
+
+func (e *Endpoint) MarshalJSON() ([]byte, error) { //nolint:dupl // accepted duplication
+	type Alias Endpoint
+	aux := struct {
+		*Alias
+	}{
+		Alias: (*Alias)(e),
+	}
+
+	defaultTrue := true
+	defaultFalse := false
+	keepAliveTimeout := uint64(30000)
+	protocolVersion := base.ProtocolVersion("HTTP_1_1")
+	if e.HttpClientOptions == nil {
+		e.HttpClientOptions = &base.HttpClientOptions{
+			KeepAlive:                     &defaultTrue,
+			KeepAliveTimeout:              &keepAliveTimeout,
+			Pipelining:                    &defaultFalse,
+			UseCompression:                &defaultFalse,
+			PropagateClientAcceptEncoding: &defaultFalse,
+			FollowRedirects:               &defaultFalse,
+			ClearTextUpgrade:              &defaultTrue,
+			ProtocolVersion:               &protocolVersion,
+		}
+	}
+	// Set default if zero value
+	if e.HttpClientOptions.KeepAlive == nil {
+		e.HttpClientOptions.KeepAlive = &defaultTrue
+	}
+	if e.HttpClientOptions.KeepAliveTimeout == nil {
+		e.HttpClientOptions.KeepAliveTimeout = &keepAliveTimeout
+	}
+	if e.HttpClientOptions.Pipelining == nil {
+		e.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if e.HttpClientOptions.UseCompression == nil {
+		e.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if e.HttpClientOptions.PropagateClientAcceptEncoding == nil {
+		e.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if e.HttpClientOptions.FollowRedirects == nil {
+		e.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if e.HttpClientOptions.ClearTextUpgrade == nil {
+		e.HttpClientOptions.Pipelining = &defaultTrue
+	}
+	if e.HttpClientOptions.ProtocolVersion == nil {
+		e.HttpClientOptions.ProtocolVersion = &protocolVersion
+	}
+
+	return json.Marshal(aux)
 }
 
 func NewHttpEndpoint(name string) *Endpoint {
@@ -110,6 +163,59 @@ type EndpointGroup struct {
 	Headers *map[string]string `json:"headers,omitempty"`
 }
 
+func (eg *EndpointGroup) MarshalJSON() ([]byte, error) { //nolint:dupl // accepted duplication
+	type Alias EndpointGroup
+	aux := struct {
+		*Alias
+	}{
+		Alias: (*Alias)(eg),
+	}
+
+	defaultTrue := true
+	defaultFalse := false
+	keepAliveTimeout := uint64(30000)
+	protocolVersion := base.ProtocolVersion("HTTP_1_1")
+	if eg.HttpClientOptions == nil {
+		eg.HttpClientOptions = &base.HttpClientOptions{
+			KeepAlive:                     &defaultTrue,
+			KeepAliveTimeout:              &keepAliveTimeout,
+			Pipelining:                    &defaultFalse,
+			UseCompression:                &defaultFalse,
+			PropagateClientAcceptEncoding: &defaultFalse,
+			FollowRedirects:               &defaultFalse,
+			ClearTextUpgrade:              &defaultTrue,
+			ProtocolVersion:               &protocolVersion,
+		}
+	}
+	// Set default if zero value
+	if eg.HttpClientOptions.KeepAlive == nil {
+		eg.HttpClientOptions.KeepAlive = &defaultTrue
+	}
+	if eg.HttpClientOptions.KeepAliveTimeout == nil {
+		eg.HttpClientOptions.KeepAliveTimeout = &keepAliveTimeout
+	}
+	if eg.HttpClientOptions.Pipelining == nil {
+		eg.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if eg.HttpClientOptions.UseCompression == nil {
+		eg.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if eg.HttpClientOptions.PropagateClientAcceptEncoding == nil {
+		eg.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if eg.HttpClientOptions.FollowRedirects == nil {
+		eg.HttpClientOptions.Pipelining = &defaultFalse
+	}
+	if eg.HttpClientOptions.ClearTextUpgrade == nil {
+		eg.HttpClientOptions.Pipelining = &defaultTrue
+	}
+	if eg.HttpClientOptions.ProtocolVersion == nil {
+		eg.HttpClientOptions.ProtocolVersion = &protocolVersion
+	}
+
+	return json.Marshal(aux)
+}
+
 func NewHttpEndpointGroup(name string) *EndpointGroup {
 	return &EndpointGroup{
 		Name:      &name,
@@ -126,7 +232,7 @@ type Failover struct {
 	MaxAttempts *int `json:"maxAttempts,omitempty"`
 	// Retry timeout
 	// +kubebuilder:validation:Optional
-	RetryTimeout *int64 `json:"retryTimeout,omitempty"`
+	RetryTimeout *uint64 `json:"retryTimeout,omitempty"`
 	// List of Failover cases
 	// +kubebuilder:validation:Optional
 	Cases []FailoverCase `json:"cases"`

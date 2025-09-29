@@ -35,9 +35,11 @@ const (
 )
 
 func buildHeaderTransformer(filter gwAPIv1.HTTPHeaderFilter) *v4.FlowStep {
+	enabled := true
+
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:        &transformHeadersPolicyName,
-		Enabled:       true,
+		Enabled:       &enabled,
 		Configuration: buildHeaderTransformerConfig(filter),
 	})
 }

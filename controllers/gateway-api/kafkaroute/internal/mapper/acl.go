@@ -51,9 +51,11 @@ var (
 )
 
 func buildACL(acl kafka.KafkaACLFilter) *v4.FlowStep {
+	enabled := true
+
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &kafkaACLPolicyName,
-		Enabled: true,
+		Enabled: &enabled,
 		Configuration: utils.NewGenericStringMap().
 			Put("authorizations", mapKafkaAccessControlRules(acl)),
 	})

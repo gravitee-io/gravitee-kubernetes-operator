@@ -69,7 +69,8 @@ var _ = Describe("Update", labels.WithContext, func() {
 			By("disabling the resource")
 
 			updated := fixtures.Resource.DeepCopy()
-			updated.Spec.Enabled = false
+			defaultFalse := false
+			updated.Spec.Enabled = &defaultFalse
 
 			Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 

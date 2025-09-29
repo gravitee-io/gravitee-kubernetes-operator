@@ -15,6 +15,8 @@
 package v4
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -70,6 +72,35 @@ type Plan struct {
 	GeneralConditions *string `json:"generalConditions,omitempty"`
 }
 
+func (plan *Plan) MarshalJSON() ([]byte, error) {
+	type Alias Plan
+	aux := struct {
+		*Alias
+	}{
+		Alias: (*Alias)(plan),
+	}
+
+	if plan.Plan == nil {
+		plan.Plan = &base.Plan{}
+	}
+
+	// Set default if zero value
+	if plan.Plan.Status == nil {
+		defaultStatus := base.PublishedPlanStatus
+		plan.Status = &defaultStatus
+	}
+	if plan.Plan.Validation == nil {
+		defaultValidation := base.PlanValidation("AUTO")
+		plan.Validation = &defaultValidation
+	}
+	if plan.Plan.Type == nil {
+		defaultPlanType := base.PlanType("API")
+		plan.Type = &defaultPlanType
+	}
+
+	return json.Marshal(aux)
+}
+
 type GatewayDefinitionPlan struct {
 	*Plan `json:",inline"`
 	Name  string `json:"name"`
@@ -96,7 +127,8 @@ func (plan *Plan) ToGatewayDefinition(name string) *GatewayDefinitionPlan {
 		def.Security.Type = Enum(plan.Security.Type).ToGatewayDefinition()
 	}
 	def.Mode = PlanMode(Enum(plan.Mode).ToGatewayDefinition())
-	def.Status = base.PlanStatus(Enum(plan.Status).ToGatewayDefinition())
+	planStatus := base.PlanStatus(Enum(*plan.Status).ToGatewayDefinition())
+	def.Status = &planStatus
 	flows := make([]*Flow, len(plan.Flows))
 	for i := range def.Flows {
 		flows[i] = def.Flows[i].ToGatewayDefinition()

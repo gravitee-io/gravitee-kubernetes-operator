@@ -65,38 +65,31 @@ type HttpClientOptions struct {
 	// +kubebuilder:validation:Optional
 	ConnectTimeout *uint64 `json:"connectTimeout,omitempty"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
-	KeepAlive bool `json:"keepAlive"`
+	// Keep alive the connection (default = true)
+	KeepAlive *bool `json:"keepAlive"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=30000
-	// Should keep alive be used for the HTTP connection ?
-	KeepAliveTimeout uint64 `json:"keepAliveTimeout"`
+	// Should keep alive be used for the HTTP connection ? (default = 30000)
+	KeepAliveTimeout *uint64 `json:"keepAliveTimeout"`
 	// Read timeout
 	// +kubebuilder:validation:Optional
 	ReadTimeout *uint64 `json:"readTimeout,omitempty"`
-	// +kubebuilder:default:=false
-	// Should HTTP/1.1 pipelining be used for the connection or not ?
-	Pipelining bool `json:"pipelining"`
+	// Should HTTP/1.1 pipelining be used for the connection or not? (default = false)
+	Pipelining *bool `json:"pipelining"`
 	// HTTP max concurrent connections
 	// +kubebuilder:validation:Optional
 	MaxConcurrentConnections *int `json:"maxConcurrentConnections,omitempty"`
-	// +kubebuilder:default:=false
-	// Should compression be used or not ?
-	UseCompression bool `json:"useCompression"`
+	// Should compression be used or not ? (default = false)
+	UseCompression *bool `json:"useCompression"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
-	// Propagate Client Accept-Encoding header
-	PropagateClientAcceptEncoding bool `json:"propagateClientAcceptEncoding"`
-	// +kubebuilder:default:=false
-	// Should HTTP redirects be followed or not ?
-	FollowRedirects bool `json:"followRedirects"`
+	// Propagate Client Accept-Encoding header (default=false)
+	PropagateClientAcceptEncoding *bool `json:"propagateClientAcceptEncoding"`
+	// Should HTTP redirects be followed or not ? (default=false)
+	FollowRedirects *bool `json:"followRedirects"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
-	// Should HTTP/2 clear text upgrade be used or not ?
-	ClearTextUpgrade bool `json:"clearTextUpgrade"`
-	// +kubebuilder:default:=HTTP_1_1
-	// HTTP Protocol Version (Possible values Http1 or Http2)
-	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
+	// Should HTTP/2 clear text upgrade be used or not ? (default=true)
+	ClearTextUpgrade *bool `json:"clearTextUpgrade"`
+	// HTTP Protocol Version (Possible values Http1 or Http2, default=HTTP_1_1)
+	ProtocolVersion *ProtocolVersion `json:"version,omitempty"`
 }
 
 type HttpClientSslOptions struct {

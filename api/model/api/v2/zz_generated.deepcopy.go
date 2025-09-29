@@ -437,7 +437,7 @@ func (in *Failover) DeepCopyInto(out *Failover) {
 	}
 	if in.RetryTimeout != nil {
 		in, out := &in.RetryTimeout, &out.RetryTimeout
-		*out = new(int64)
+		*out = new(uint64)
 		**out = **in
 	}
 	if in.Cases != nil {

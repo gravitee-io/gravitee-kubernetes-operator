@@ -43,9 +43,11 @@ var (
 )
 
 func buildHTTPRedirect(filter gwAPIv1.HTTPRequestRedirectFilter) *v4.FlowStep {
+	enabled := true
+
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:        &httpRedirectPolicyName,
-		Enabled:       true,
+		Enabled:       &enabled,
 		Configuration: buildHTTPRedirectConfig(filter),
 	})
 }

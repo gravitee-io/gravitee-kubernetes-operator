@@ -191,9 +191,11 @@ func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 
 func buildRoutingStep(ruleIndex, matchIndex int) *v4.FlowStep {
 	policyName := routingPolicyName
+	enabled := true
+
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &policyName,
-		Enabled: true,
+		Enabled: &enabled,
 		Configuration: utils.NewGenericStringMap().
 			Put(routingRulesKey, buildRoutingRule(ruleIndex, matchIndex)),
 	})

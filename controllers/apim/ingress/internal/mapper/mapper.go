@@ -217,10 +217,11 @@ func (m *Mapper) storeCondition(condition el.Expression) *string {
 }
 
 func buildRoutingStep(path *indexedPath) base.FlowStep {
+	enabled := true
 	return base.FlowStep{
 		Name:    toPointer(routingStepName),
 		Policy:  toPointer(routingPolicyName),
-		Enabled: true,
+		Enabled: &enabled,
 		Configuration: utils.NewGenericStringMap().
 			Put(routingRulesKey, buildRoutingRules(path)),
 	}
@@ -264,11 +265,12 @@ func (m *Mapper) buildNotFoundFlow() v2.Flow {
 
 func (m *Mapper) buildNotFoundStep() base.FlowStep {
 	template := m.opts.Templates[http.StatusNotFound]
+	enabled := true
 
 	return base.FlowStep{
 		Name:    toPointer(mockStepName),
 		Policy:  toPointer(mockPolicyName),
-		Enabled: true,
+		Enabled: &enabled,
 		Configuration: &utils.GenericStringMap{
 			Unstructured: unstructured.Unstructured{
 				Object: map[string]interface{}{

@@ -105,9 +105,9 @@ _Appears in:_
 | `flow_mode` _[FlowMode](#flowmode)_ | The flow mode of the API. The value is either `DEFAULT` or `BEST_MATCH`. | DEFAULT | Enum: [DEFAULT BEST_MATCH] <br /> |
 | `proxy` _[Proxy](#proxy)_ | The proxy of the API that specifies its VirtualHosts and Groups. |  |  |
 | `services` _[Services](#services)_ | Contains different services for the API (EndpointDiscovery, HealthCheck ...) |  |  |
-| `flows` _[Flow](#flow) array_ | The flow of the API | \{  \} | Optional: \{\} <br /> |
+| `flows` _[Flow](#flow) array_ | The flow of the API |  | Optional: \{\} <br /> |
 | `path_mappings` _string array_ | API Path mapping |  | Optional: \{\} <br /> |
-| `plans` _[Plan](#plan) array_ | API plans | \{  \} | Optional: \{\} <br /> |
+| `plans` _[Plan](#plan) array_ | API plans |  | Optional: \{\} <br /> |
 | `response_templates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API |  | Optional: \{\} <br /> |
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
@@ -1071,7 +1071,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `enabled` _boolean_ | Indicate if this FlowStep is enabled or not | true |  |
+| `enabled` _boolean_ | Indicate if this FlowStep is enabled or not (default = true) |  |  |
 | `policy` _string_ | FlowStep policy |  | Optional: \{\} <br /> |
 | `name` _string_ | FlowStep name |  | Optional: \{\} <br /> |
 | `description` _string_ | FlowStep description |  | Optional: \{\} <br /> |
@@ -1096,16 +1096,16 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `idleTimeout` _integer_ |  Idle Timeout for the http connection |  | Optional: \{\} <br /> |
 | `connectTimeout` _integer_ | Connection timeout of the http connection |  | Optional: \{\} <br /> |
-| `keepAlive` _boolean_ |  | true | Optional: \{\} <br /> |
-| `keepAliveTimeout` _integer_ | Should keep alive be used for the HTTP connection ? | 30000 | Optional: \{\} <br /> |
+| `keepAlive` _boolean_ | Keep alive the connection (default = true) |  | Optional: \{\} <br /> |
+| `keepAliveTimeout` _integer_ | Should keep alive be used for the HTTP connection ? (default = 30000) |  | Optional: \{\} <br /> |
 | `readTimeout` _integer_ | Read timeout |  | Optional: \{\} <br /> |
-| `pipelining` _boolean_ | Should HTTP/1.1 pipelining be used for the connection or not ? | false |  |
+| `pipelining` _boolean_ | Should HTTP/1.1 pipelining be used for the connection or not? (default = false) |  |  |
 | `maxConcurrentConnections` _integer_ | HTTP max concurrent connections |  | Optional: \{\} <br /> |
-| `useCompression` _boolean_ | Should compression be used or not ? | false |  |
-| `propagateClientAcceptEncoding` _boolean_ | Propagate Client Accept-Encoding header | false | Optional: \{\} <br /> |
-| `followRedirects` _boolean_ | Should HTTP redirects be followed or not ? | false |  |
-| `clearTextUpgrade` _boolean_ | Should HTTP/2 clear text upgrade be used or not ? | true | Optional: \{\} <br /> |
-| `version` _[ProtocolVersion](#protocolversion)_ | HTTP Protocol Version (Possible values Http1 or Http2) | HTTP_1_1 | Enum: [HTTP_1_1 HTTP_2] <br /> |
+| `useCompression` _boolean_ | Should compression be used or not ? (default = false) |  |  |
+| `propagateClientAcceptEncoding` _boolean_ | Propagate Client Accept-Encoding header (default=false) |  | Optional: \{\} <br /> |
+| `followRedirects` _boolean_ | Should HTTP redirects be followed or not ? (default=false) |  |  |
+| `clearTextUpgrade` _boolean_ | Should HTTP/2 clear text upgrade be used or not ? (default=true) |  | Optional: \{\} <br /> |
+| `version` _[ProtocolVersion](#protocolversion)_ | HTTP Protocol Version (Possible values Http1 or Http2, default=HTTP_1_1) |  | Enum: [HTTP_1_1 HTTP_2] <br /> |
 
 
 #### HttpClientSslOptions
@@ -1409,13 +1409,13 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `id` _string_ | Plan ID |  |  |
 | `crossId` _string_ | The plan Cross ID.<br />This field is used to identify plans defined for an API<br />that has been promoted between different environments. |  |  |
-| `tags` _string array_ | List of plan tags | \{  \} | Optional: \{\} <br /> |
-| `status` _[PlanStatus](#planstatus)_ | The plan status | PUBLISHED | Enum: [PUBLISHED DEPRECATED STAGING] <br />Optional: \{\} <br /> |
+| `tags` _string array_ | List of plan tags |  | Optional: \{\} <br /> |
+| `status` _[PlanStatus](#planstatus)_ | The plan status (default = PUBLISHED) |  | Enum: [PUBLISHED DEPRECATED STAGING] <br />Optional: \{\} <br /> |
 | `characteristics` _string array_ | List of plan characteristics |  | Optional: \{\} <br /> |
-| `validation` _[PlanValidation](#planvalidation)_ | Plan validation strategy | AUTO | Enum: [AUTO MANUAL] <br /> |
+| `validation` _[PlanValidation](#planvalidation)_ | Plan validation strategy (default=AUTO) |  | Enum: [AUTO MANUAL] <br /> |
 | `comment_required` _boolean_ | Indicate of comment is required for this plan or not |  | Optional: \{\} <br /> |
 | `order` _integer_ | Plan order |  | Optional: \{\} <br /> |
-| `type` _[PlanType](#plantype)_ | Plan type | API | Enum: [API CATALOG] <br /> |
+| `type` _[PlanType](#plantype)_ | Plan type (default = API) |  | Enum: [API CATALOG] <br /> |
 
 
 #### PlanStatus
@@ -1546,7 +1546,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `enabled` _boolean_ | Is resource enabled or not? | true | Optional: \{\} <br /> |
+| `enabled` _boolean_ | Is resource enabled or not? |  |  |
 | `name` _string_ | Resource Name |  | Optional: \{\} <br /> |
 | `type` _string_ | Resource Type |  | Optional: \{\} <br /> |
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Resource Configuration, arbitrary map of key-values |  | Optional: \{\} <br /> |
@@ -2505,9 +2505,9 @@ _Appears in:_
 | `flow_mode` _[FlowMode](#flowmode)_ | The flow mode of the API. The value is either `DEFAULT` or `BEST_MATCH`. | DEFAULT | Enum: [DEFAULT BEST_MATCH] <br /> |
 | `proxy` _[Proxy](#proxy)_ | The proxy of the API that specifies its VirtualHosts and Groups. |  |  |
 | `services` _[Services](#services)_ | Contains different services for the API (EndpointDiscovery, HealthCheck ...) |  |  |
-| `flows` _[Flow](#flow) array_ | The flow of the API | \{  \} | Optional: \{\} <br /> |
+| `flows` _[Flow](#flow) array_ | The flow of the API |  | Optional: \{\} <br /> |
 | `path_mappings` _string array_ | API Path mapping |  | Optional: \{\} <br /> |
-| `plans` _[Plan](#plan) array_ | API plans | \{  \} | Optional: \{\} <br /> |
+| `plans` _[Plan](#plan) array_ | API plans |  | Optional: \{\} <br /> |
 | `response_templates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API |  | Optional: \{\} <br /> |
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
@@ -2614,13 +2614,13 @@ _Appears in:_
 | `target` _string_ | The end target of this endpoint (backend) |  | Optional: \{\} <br /> |
 | `weight` _integer_ | Endpoint weight used for load-balancing |  | Optional: \{\} <br /> |
 | `backup` _boolean_ | Indicate that this ia a back-end endpoint |  | Optional: \{\} <br /> |
-| `tenants` _string array_ | The endpoint tenants | \{  \} | Optional: \{\} <br /> |
+| `tenants` _string array_ | The endpoint tenants |  | Optional: \{\} <br /> |
 | `type` _[EndpointType](#endpointtype)_ | The type of endpoint (HttpEndpointType or GrpcEndpointType) |  |  |
 | `inherit` _boolean_ | Is endpoint inherited or not |  | Optional: \{\} <br /> |
 | `proxy` _[HttpProxy](#httpproxy)_ | Configure the HTTP Proxy settings to reach target if needed |  |  |
 | `http` _[HttpClientOptions](#httpclientoptions)_ | Custom HTTP client options used for this endpoint |  |  |
 | `ssl` _[HttpClientSslOptions](#httpclientssloptions)_ | Custom HTTP SSL client options used for this endpoint |  |  |
-| `headers` _[HttpHeader](#httpheader) array_ | List of headers for this endpoint | \{  \} | Optional: \{\} <br /> |
+| `headers` _[HttpHeader](#httpheader) array_ | List of headers for this endpoint |  | Optional: \{\} <br /> |
 | `healthcheck` _[EndpointHealthCheckService](#endpointhealthcheckservice)_ | Specify EndpointHealthCheck service settings |  |  |
 
 
@@ -2640,7 +2640,7 @@ _Appears in:_
 | `provider` _string_ | Provider name |  | Optional: \{\} <br /> |
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Configuration, arbitrary map of key-values |  | Optional: \{\} <br /> |
 | `secondary` _boolean_ | Is it secondary or not? |  | Optional: \{\} <br /> |
-| `tenants` _string array_ | List of tenants | \{  \} | Optional: \{\} <br /> |
+| `tenants` _string array_ | List of tenants |  | Optional: \{\} <br /> |
 
 
 #### EndpointGroup
@@ -2748,12 +2748,12 @@ _Appears in:_
 | `id` _string_ | Flow ID |  |  |
 | `name` _string_ | Flow name |  | Optional: \{\} <br /> |
 | `path-operator` _[PathOperator](#pathoperator)_ | List of path operators |  |  |
-| `pre` _[FlowStep](#flowstep) array_ | Flow pre step | \{  \} | Optional: \{\} <br /> |
-| `post` _[FlowStep](#flowstep) array_ | Flow post step | \{  \} | Optional: \{\} <br /> |
+| `pre` _[FlowStep](#flowstep) array_ | Flow pre step |  | Optional: \{\} <br /> |
+| `post` _[FlowStep](#flowstep) array_ | Flow post step |  | Optional: \{\} <br /> |
 | `enabled` _boolean_ | Indicate if this flow is enabled or disabled | true |  |
-| `methods` _[HttpMethod](#httpmethod) array_ | A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER) | \{  \} | Optional: \{\} <br /> |
+| `methods` _[HttpMethod](#httpmethod) array_ | A list of methods  for this flow (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER) |  | Optional: \{\} <br /> |
 | `condition` _string_ | Flow condition |  | Optional: \{\} <br /> |
-| `consumers` _[Consumer](#consumer) array_ | List of the consumers of this Flow | \{  \} | Optional: \{\} <br /> |
+| `consumers` _[Consumer](#consumer) array_ | List of the consumers of this Flow |  | Optional: \{\} <br /> |
 
 
 #### FlowMode
@@ -2786,7 +2786,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `path` _string_ | The path of the endpoint handling the health check request |  | Optional: \{\} <br /> |
 | `method` _[HttpMethod](#httpmethod)_ | The HTTP method to use when issuing the health check request |  | Enum: [GET POST PUT PATCH DELETE OPTIONS HEAD CONNECT TRACE OTHER] <br /> |
-| `headers` _[HttpHeader](#httpheader) array_ | List of HTTP headers to include in the health check request | \{  \} | Optional: \{\} <br /> |
+| `headers` _[HttpHeader](#httpheader) array_ | List of HTTP headers to include in the health check request |  | Optional: \{\} <br /> |
 | `body` _string_ | Health Check Request Body |  | Optional: \{\} <br /> |
 | `fromRoot` _boolean_ | If true, the health check request will be issued without prepending the context path of the API. |  |  |
 
@@ -2821,7 +2821,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `steps` _[HealthCheckStep](#healthcheckstep) array_ | List of health check steps | \{  \} | Optional: \{\} <br /> |
+| `steps` _[HealthCheckStep](#healthcheckstep) array_ | List of health check steps |  | Optional: \{\} <br /> |
 
 
 #### HealthCheckStep
@@ -2997,8 +2997,8 @@ _Appears in:_
 | `paths` _[map[string][]Rule](#map[string][]rule)_ | A map of different paths (alongside their Rules) for this Plan |  | Optional: \{\} <br /> |
 | `api` _string_ | Specify the API associated with this plan |  | Optional: \{\} <br /> |
 | `selection_rule` _string_ | Plan selection rule |  | Optional: \{\} <br /> |
-| `flows` _[Flow](#flow) array_ | List of different flows for this Plan | \{  \} | Optional: \{\} <br /> |
-| `excluded_groups` _string array_ | List of excluded groups for this plan | \{  \} | Optional: \{\} <br /> |
+| `flows` _[Flow](#flow) array_ | List of different flows for this Plan |  | Optional: \{\} <br /> |
+| `excluded_groups` _string array_ | List of excluded groups for this plan |  | Optional: \{\} <br /> |
 
 
 #### Policy
@@ -3033,7 +3033,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `virtual_hosts` _[VirtualHost](#virtualhost) array_ | list of Virtual hosts fot the proxy |  | Optional: \{\} <br /> |
-| `groups` _[EndpointGroup](#endpointgroup) array_ | List of endpoint groups of the proxy | \{  \} | Optional: \{\} <br /> |
+| `groups` _[EndpointGroup](#endpointgroup) array_ | List of endpoint groups of the proxy |  | Optional: \{\} <br /> |
 | `failover` _[Failover](#failover)_ | Proxy Failover |  |  |
 | `cors` _[Cors](#cors)_ | Proxy Cors |  |  |
 | `logging` _[Logging](#logging)_ | Logging |  |  |
@@ -3383,7 +3383,7 @@ _Appears in:_
 | `sharedConfigurationOverride` _[GenericStringMap](#genericstringmap)_ | Endpoint Configuration Override, arbitrary map of key-values |  | Optional: \{\} <br /> |
 | `services` _[EndpointServices](#endpointservices)_ | Endpoint Services |  |  |
 | `secondary` _boolean_ | Endpoint is secondary or not? |  |  |
-| `tenants` _string array_ | List of endpoint tenants | \{  \} | Optional: \{\} <br /> |
+| `tenants` _string array_ | List of endpoint tenants |  |  |
 
 
 #### EndpointGroup
@@ -3576,7 +3576,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `enabled` _boolean_ | Indicate if this FlowStep is enabled or not | true |  |
+| `enabled` _boolean_ | Indicate if this FlowStep is enabled or not (default = true) |  |  |
 | `policy` _string_ | FlowStep policy |  | Optional: \{\} <br /> |
 | `name` _string_ | FlowStep name |  | Optional: \{\} <br /> |
 | `description` _string_ | FlowStep description |  | Optional: \{\} <br /> |

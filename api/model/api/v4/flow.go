@@ -15,6 +15,8 @@
 package v4
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
@@ -97,15 +99,32 @@ type FlowStep struct {
 	MessageCondition *string `json:"messageCondition,omitempty"`
 }
 
+func (fs *FlowStep) MarshalJSON() ([]byte, error) {
+	type Alias FlowStep
+	aux := struct {
+		*Alias
+	}{
+		Alias: (*Alias)(fs),
+	}
+
+	// Set default if zero value
+	if fs.FlowStep.Enabled == nil {
+		defaultVal := true
+		fs.FlowStep.Enabled = &defaultVal
+	}
+
+	return json.Marshal(aux)
+}
+
 func NewFlowStep(base base.FlowStep) *FlowStep {
 	return &FlowStep{
 		FlowStep: base,
 	}
 }
 
-func (step *FlowStep) WithMessageCondition(messageCondition string) *FlowStep {
-	step.MessageCondition = &messageCondition
-	return step
+func (fs *FlowStep) WithMessageCondition(messageCondition string) *FlowStep {
+	fs.MessageCondition = &messageCondition
+	return fs
 }
 
 type FlowMode string

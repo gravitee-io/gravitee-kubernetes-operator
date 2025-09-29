@@ -102,7 +102,8 @@ func buildAPIName(route *gwAPIv1.HTTPRoute) string {
 
 func newKeyLessPlan() *v4.Plan {
 	plan := v4.NewPlan().WithSecurity(&keyLessSecurity)
-	plan.Status = base.PublishedPlanStatus
+	planStatus := base.PublishedPlanStatus
+	plan.Status = &planStatus
 	return plan
 }
 

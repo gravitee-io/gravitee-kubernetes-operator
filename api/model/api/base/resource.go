@@ -15,6 +15,8 @@
 package base
 
 import (
+	"encoding/json"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -24,10 +26,8 @@ var _ core.ResourceModel = &Resource{}
 var _ core.ObjectOrRef[core.ResourceModel] = &ResourceOrRef{}
 
 type Resource struct {
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
 	// Is resource enabled or not?
-	Enabled bool `json:"enabled"`
+	Enabled *bool `json:"enabled,omitempty"`
 	// Resource Name
 	// +kubebuilder:validation:Optional
 	Name *string `json:"name,omitempty"`
@@ -64,6 +64,28 @@ type ResourceOrRef struct {
 	*Resource `json:",omitempty,inline"`
 	// Reference to a resource
 	Ref *refs.NamespacedName `json:"ref,omitempty"`
+}
+
+func (r *ResourceOrRef) MarshalJSON() ([]byte, error) {
+	type Alias ResourceOrRef
+	aux := struct {
+		*Alias
+	}{
+		Alias: (*Alias)(r),
+	}
+	// Set default if zero value
+	defaultTrue := true
+	if r.Resource == nil {
+		aux.Resource = &Resource{
+			Enabled: &defaultTrue,
+		}
+	}
+
+	if r.Resource.Enabled == nil {
+		aux.Resource.Enabled = &defaultTrue
+	}
+
+	return json.Marshal(aux)
 }
 
 func (r *ResourceOrRef) IsRef() bool {
