@@ -155,7 +155,6 @@ spec:
                     - BEST_MATCH
                   type: string
                 flows:
-                  default: []
                   description: The flow of the API
                   items:
                     properties:
@@ -163,7 +162,6 @@ spec:
                         description: Flow condition
                         type: string
                       consumers:
-                        default: []
                         description: List of the consumers of this Flow
                         items:
                           properties:
@@ -183,7 +181,6 @@ spec:
                         description: Flow ID
                         type: string
                       methods:
-                        default: []
                         description: A list of methods  for this flow
                           (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
                         items:
@@ -218,7 +215,6 @@ spec:
                             type: string
                         type: object
                       post:
-                        default: []
                         description: Flow post step
                         items:
                           properties:
@@ -247,7 +243,6 @@ spec:
                           type: object
                         type: array
                       pre:
-                        default: []
                         description: Flow pre step
                         items:
                           properties:
@@ -538,7 +533,6 @@ spec:
                     type: string
                   type: array
                 plans:
-                  default: []
                   description: API plans
                   items:
                     properties:
@@ -560,13 +554,11 @@ spec:
                         description: Plan Description
                         type: string
                       excluded_groups:
-                        default: []
                         description: List of excluded groups for this plan
                         items:
                           type: string
                         type: array
                       flows:
-                        default: []
                         description: List of different flows for this Plan
                         items:
                           properties:
@@ -574,7 +566,6 @@ spec:
                               description: Flow condition
                               type: string
                             consumers:
-                              default: []
                               description: List of the consumers of this Flow
                               items:
                                 properties:
@@ -594,7 +585,6 @@ spec:
                               description: Flow ID
                               type: string
                             methods:
-                              default: []
                               description: A list of methods  for this flow
                                 (GET;POST;PUT;PATCH;DELETE;OPTIONS;HEAD;CONNECT;TRACE;OTHER)
                               items:
@@ -629,7 +619,6 @@ spec:
                                   type: string
                               type: object
                             post:
-                              default: []
                               description: Flow post step
                               items:
                                 properties:
@@ -658,7 +647,6 @@ spec:
                                 type: object
                               type: array
                             pre:
-                              default: []
                               description: Flow pre step
                               items:
                                 properties:
@@ -759,7 +747,6 @@ spec:
                           - STAGING
                         type: string
                       tags:
-                        default: []
                         description: List of plan tags
                         items:
                           type: string
@@ -871,7 +858,6 @@ spec:
                           type: integer
                       type: object
                     groups:
-                      default: []
                       description: List of endpoint groups of the proxy
                       items:
                         properties:
@@ -883,7 +869,6 @@ spec:
                                   description: Indicate that this ia a back-end endpoint
                                   type: boolean
                                 headers:
-                                  default: []
                                   description: List of headers for this endpoint
                                   items:
                                     properties:
@@ -911,7 +896,6 @@ spec:
                                     schedule:
                                       type: string
                                     steps:
-                                      default: []
                                       description: List of health check steps
                                       items:
                                         properties:
@@ -929,7 +913,6 @@ spec:
                                                   the context path of the API.
                                                 type: boolean
                                               headers:
-                                                default: []
                                                 description: List of HTTP headers to include in the health check request
                                                 items:
                                                   properties:
@@ -1152,7 +1135,6 @@ spec:
                                   description: The end target of this endpoint (backend)
                                   type: string
                                 tenants:
-                                  default: []
                                   description: The endpoint tenants
                                   items:
                                     type: string
@@ -1291,7 +1273,6 @@ spec:
                                     description: Is it secondary or not?
                                     type: boolean
                                   tenants:
-                                    default: []
                                     description: List of tenants
                                     items:
                                       type: string
@@ -1331,7 +1312,6 @@ spec:
                                   schedule:
                                     type: string
                                   steps:
-                                    default: []
                                     description: List of health check steps
                                     items:
                                       properties:
@@ -1349,7 +1329,6 @@ spec:
                                                 the context path of the API.
                                               type: boolean
                                             headers:
-                                              default: []
                                               description: List of HTTP headers to include in the health check request
                                               items:
                                                 properties:
@@ -1613,7 +1592,6 @@ spec:
                           description: Is it secondary or not?
                           type: boolean
                         tenants:
-                          default: []
                           description: List of tenants
                           items:
                             type: string
@@ -1653,7 +1631,6 @@ spec:
                         schedule:
                           type: string
                         steps:
-                          default: []
                           description: List of health check steps
                           items:
                             properties:
@@ -1671,7 +1648,6 @@ spec:
                                       the context path of the API.
                                     type: boolean
                                   headers:
-                                    default: []
                                     description: List of HTTP headers to include in the health check request
                                     items:
                                       properties:

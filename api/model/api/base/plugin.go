@@ -45,7 +45,7 @@ type PluginRevision struct {
 	PluginReference *PluginReference `json:"pluginReference,omitempty"`
 	// Plugin Generation
 	// +kubebuilder:validation:Optional
-	Generation *int64 `json:"generation,omitempty"`
+	Generation *uint64 `json:"generation,omitempty"`
 	// Plugin
 	Plugin *Plugin `json:"plugin,omitempty"`
 	// Plugin Revision Hash code

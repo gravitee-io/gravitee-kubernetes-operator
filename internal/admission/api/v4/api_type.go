@@ -21,8 +21,8 @@ import (
 
 func validateApiType(oldApi, newAPI core.ApiDefinitionObject) *errors.AdmissionError {
 	if newAPI.GetType() != oldApi.GetType() {
-		return errors.NewSeveref("it is not possible to change API Type. Old type '%s', "+
-			"new type '%s'", oldApi.GetType(), newAPI.GetType())
+		return errors.NewSeveref("it is not possible to change the API Type. Current API type '%s', "+
+			"new API type '%s'", oldApi.GetType(), newAPI.GetType())
 	}
 
 	return nil

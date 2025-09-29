@@ -44,4 +44,4 @@ COPY --from=builder /workspace/helm/gko/crds/ helm/gko/crds/
 COPY --from=builder /go/bin/dlv dlv
 COPY --from=builder /workspace/manager .
 
-ENTRYPOINT [ "/dlv" , "--listen=:32767", "--headless=true", "--continue", "--api-version=2", "--accept-multiclient", "exec", "/manager"]
+ENTRYPOINT [ "/dlv" , "--listen=:32767", "--headless=true", "--wait", "--api-version=2", "--accept-multiclient", "exec", "/manager"]

@@ -633,7 +633,7 @@ func (in *PluginRevision) DeepCopyInto(out *PluginRevision) {
 	}
 	if in.Generation != nil {
 		in, out := &in.Generation, &out.Generation
-		*out = new(int64)
+		*out = new(uint64)
 		**out = **in
 	}
 	if in.Plugin != nil {

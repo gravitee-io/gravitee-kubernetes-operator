@@ -58,9 +58,7 @@ type Endpoint struct {
 	Secondary bool `json:"secondary"`
 
 	// List of endpoint tenants
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
-	Tenants []string `json:"tenants"`
+	Tenants []string `json:"tenants,omitempty"`
 }
 
 func NewHttpEndpoint(name string) *Endpoint {

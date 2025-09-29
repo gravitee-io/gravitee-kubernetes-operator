@@ -300,7 +300,6 @@ spec:
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             tenants:
-                              default: []
                               description: List of endpoint tenants
                               items:
                                 type: string
@@ -1459,7 +1458,6 @@ spec:
                           - STAGING
                         type: string
                       tags:
-                        default: []
                         description: List of plan tags
                         items:
                           type: string
