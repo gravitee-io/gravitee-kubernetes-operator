@@ -30,7 +30,7 @@ spec:
     error: 30s
     exec: 35s     
   execution:
-    failFast: true
+    failFast: false
 # re-activate when reporting is fixed
   # report:
   #   format: XML
