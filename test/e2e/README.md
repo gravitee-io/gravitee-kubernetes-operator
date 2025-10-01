@@ -55,17 +55,38 @@ IMG=gko TAG=dev make docker-build \
 ## 5. Directory layout (simplified)
 
 ```
-test/
-    ├── e2e/
-        ├── chainsaw/
-            ├── commands/
-            ├── tests/
-                ├── apis/
-                    ├── startApi/
-                        ├── v2/
-                        |   ├── chainsaw-test.yaml
-                        ├── v4/
-                            ├── chainsaw-test.yaml
+test/e2e/chainsaw
+├─ config.yaml          # Global Chainsaw config (timeouts, reports, parallelism)
+├─ stepTemplates/       # Reusable StepTemplate CRs (create/update/wait/cleanup)
+├─ commands/            # Node (.mjs) helpers used from `script` steps
+├─ lib/                 # Shared code (e.g., MAPI client) used by commands
+└── tests
+     ├── apis
+     │   ├── categories
+     │   │   ├── multipleCategoriesDeleteOne
+     │   │   │   ├── chainsaw-test.yaml
+     │   │   │   └── resources
+     │   │   │       ├── v2-api-with-multiple-categories.yaml
+     │   │   │       ├── v2-api-with-removed-category.yaml
+     │   │   │       ├── v4-api-with-multiple-categories.yaml
+     │   │   │       └── v4-api-with-removed-category.yaml
+     │   │   └── oneCategory
+     │   │       ├── chainsaw-test.yaml
+     │   │       └── resources
+     │   │           ├── v2-api-with-one-category.yaml
+     │   │           └── v4-api-with-one-category.yaml
+     │   ├── groups
+     │   │   ├── multipleGroupsDeleteGroup
+     │   │   │   ├── chainsaw-test.yaml
+     │   │   │   └── resources
+     │   │   │       └── [...]
+     │   │   └── oneGroup
+     │   │       ├── chainsaw-test.yaml
+     │   │       └── resources
+     │   │           └── [...]
+     │   ├── members
+     │   │   ├── changingMemberRole
+[...]
 ```
 
 Each test folder contains a `chainsaw-test.yaml` manifest describing test steps (create resources, run scripts, capture pod logs, etc.).
