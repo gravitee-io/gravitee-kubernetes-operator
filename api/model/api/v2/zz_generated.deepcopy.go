@@ -363,7 +363,11 @@ func (in *EndpointGroup) DeepCopyInto(out *EndpointGroup) {
 			}
 		}
 	}
-	out.LoadBalancer = in.LoadBalancer
+	if in.LoadBalancer != nil {
+		in, out := &in.LoadBalancer, &out.LoadBalancer
+		*out = new(LoadBalancer)
+		**out = **in
+	}
 	if in.Services != nil {
 		in, out := &in.Services, &out.Services
 		*out = new(Services)
@@ -483,6 +487,11 @@ func (in *Flow) DeepCopyInto(out *Flow) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Enabled != nil {
+		in, out := &in.Enabled, &out.Enabled
+		*out = new(bool)
+		**out = **in
 	}
 	if in.Methods != nil {
 		in, out := &in.Methods, &out.Methods
@@ -970,6 +979,11 @@ func (in *Service) DeepCopyInto(out *Service) {
 	if in.Name != nil {
 		in, out := &in.Name, &out.Name
 		*out = new(string)
+		**out = **in
+	}
+	if in.Enabled != nil {
+		in, out := &in.Enabled, &out.Enabled
+		*out = new(bool)
 		**out = **in
 	}
 }

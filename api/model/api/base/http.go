@@ -64,48 +64,38 @@ type HttpClientOptions struct {
 	// Connection timeout of the http connection
 	// +kubebuilder:validation:Optional
 	ConnectTimeout *uint64 `json:"connectTimeout,omitempty"`
+	// +kubebuilder:validation:Optional (default: true)
+	KeepAlive *bool `json:"keepAlive"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
-	KeepAlive bool `json:"keepAlive"`
-	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=30000
-	// Should keep alive be used for the HTTP connection ?
-	KeepAliveTimeout uint64 `json:"keepAliveTimeout"`
+	// Should keep alive be used for the HTTP connection ? (default: 30000)
+	KeepAliveTimeout *uint64 `json:"keepAliveTimeout"`
 	// Read timeout
 	// +kubebuilder:validation:Optional
 	ReadTimeout *uint64 `json:"readTimeout,omitempty"`
-	// +kubebuilder:default:=false
-	// Should HTTP/1.1 pipelining be used for the connection or not ?
-	Pipelining bool `json:"pipelining"`
+	// Should HTTP/1.1 pipelining be used for the connection or not ? (default: false)
+	Pipelining *bool `json:"pipelining"`
 	// HTTP max concurrent connections
 	// +kubebuilder:validation:Optional
 	MaxConcurrentConnections *int `json:"maxConcurrentConnections,omitempty"`
-	// +kubebuilder:default:=false
-	// Should compression be used or not ?
-	UseCompression bool `json:"useCompression"`
+	// Should compression be used or not ? (default: false)
+	UseCompression *bool `json:"useCompression"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=false
-	// Propagate Client Accept-Encoding header
-	PropagateClientAcceptEncoding bool `json:"propagateClientAcceptEncoding"`
-	// +kubebuilder:default:=false
+	// Propagate Client Accept-Encoding header (default: false)
+	PropagateClientAcceptEncoding *bool `json:"propagateClientAcceptEncoding"`
 	// Should HTTP redirects be followed or not ?
-	FollowRedirects bool `json:"followRedirects"`
+	FollowRedirects *bool `json:"followRedirects"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
-	// Should HTTP/2 clear text upgrade be used or not ?
-	ClearTextUpgrade bool `json:"clearTextUpgrade"`
-	// +kubebuilder:default:=HTTP_1_1
-	// HTTP Protocol Version (Possible values Http1 or Http2)
-	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
+	// Should HTTP/2 clear text upgrade be used or not ? (default: true)
+	ClearTextUpgrade *bool `json:"clearTextUpgrade"`
+	// HTTP Protocol Version (Possible values Http1 or Http2) (default: HTTP_1_1)
+	ProtocolVersion *ProtocolVersion `json:"version,omitempty"`
 }
 
 type HttpClientSslOptions struct {
-	// +kubebuilder:default:=false
-	// Whether to trust all issuers or not
-	TrustAll bool `json:"trustAll"`
-	// +kubebuilder:default:=true
+	// Whether to trust all issuers or not (default: false)
+	TrustAll *bool `json:"trustAll,omitempty"`
 	// Verify Hostname when establishing connection
-	HostnameVerifier bool `json:"hostnameVerifier"`
+	HostnameVerifier *bool `json:"hostnameVerifier,omitempty"`
 	// TrustStore type (possible values PEM, PKCS12, JKS)
 	TrustStore *TrustStore `json:"trustStore,omitempty"`
 	// KeyStore type (possible values PEM, PKCS12, JKS)
@@ -115,12 +105,10 @@ type HttpClientSslOptions struct {
 }
 
 type HttpProxy struct {
-	// +kubebuilder:default:=false
-	// Specifies that the HTTP connection will be established through a proxy
-	Enabled bool `json:"enabled,omitempty"`
-	// +kubebuilder:default:=false
-	// If true, the proxy defined at the system level will be used
-	UseSystemProxy bool `json:"useSystemProxy,omitempty"`
+	// Specifies that the HTTP connection will be established through a proxy (default: false)
+	Enabled *bool `json:"enabled,omitempty"`
+	// If true, the proxy defined at the system level will be used (default: false)
+	UseSystemProxy *bool `json:"useSystemProxy,omitempty"`
 	// Proxy host name
 	// +kubebuilder:validation:Optional
 	Host *string `json:"host,omitempty"`

@@ -25,9 +25,8 @@ var _ core.ObjectOrRef[core.ResourceModel] = &ResourceOrRef{}
 
 type Resource struct {
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=true
-	// Is resource enabled or not?
-	Enabled bool `json:"enabled"`
+	// Is resource enabled or not? (default: true)
+	Enabled *bool `json:"enabled"`
 	// Resource Name
 	// +kubebuilder:validation:Optional
 	Name *string `json:"name,omitempty"`

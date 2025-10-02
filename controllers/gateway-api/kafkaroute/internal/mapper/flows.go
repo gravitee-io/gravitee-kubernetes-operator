@@ -18,6 +18,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/kafka"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"k8s.io/utils/ptr"
 )
 
 var (
@@ -40,7 +41,7 @@ func buildFlow(
 	return &v4.Flow{
 		Name:     &kafkaFlowName,
 		Interact: buildInteract(route.Spec.Filters),
-		Enabled:  true,
+		Enabled:  ptr.To(true),
 	}
 }
 

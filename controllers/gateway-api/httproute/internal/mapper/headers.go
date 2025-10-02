@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"k8s.io/utils/ptr"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -37,7 +38,7 @@ const (
 func buildHeaderTransformer(filter gwAPIv1.HTTPHeaderFilter) *v4.FlowStep {
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:        &transformHeadersPolicyName,
-		Enabled:       true,
+		Enabled:       ptr.To(true),
 		Configuration: buildHeaderTransformerConfig(filter),
 	})
 }

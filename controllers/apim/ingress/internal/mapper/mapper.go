@@ -29,6 +29,7 @@ import (
 	v1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -162,7 +163,7 @@ func (m *Mapper) buildPathFlows(rule v1.IngressRule, ruleIndex int) []v2.Flow {
 // the condition will check that none of the host we have processed matches the Host header
 // of the incoming request.
 func (m *Mapper) buildRoutingFlow(rule v1.IngressRule, path *indexedPath) v2.Flow {
-	flow := v2.Flow{Enabled: true}
+	flow := v2.Flow{Enabled: ptr.To(true)}
 	name := fmt.Sprintf("%s%s", rule.Host, path.Path)
 	flow.Name = &name
 	flow.PathOperator = buildPathOperator(path)
@@ -220,7 +221,7 @@ func buildRoutingStep(path *indexedPath) base.FlowStep {
 	return base.FlowStep{
 		Name:    toPointer(routingStepName),
 		Policy:  toPointer(routingPolicyName),
-		Enabled: true,
+		Enabled: ptr.To(true),
 		Configuration: utils.NewGenericStringMap().
 			Put(routingRulesKey, buildRoutingRules(path)),
 	}
@@ -244,7 +245,7 @@ func (m *Mapper) buildNotFoundFlow() v2.Flow {
 	flow := v2.Flow{
 		Name:    toPointer(mockStepName),
 		Pre:     []base.FlowStep{m.buildNotFoundStep()},
-		Enabled: true,
+		Enabled: ptr.To(true),
 		PathOperator: &v2.PathOperator{
 			Operator: base.StartWithOperator,
 			Path:     toPointer(rootPath),
@@ -268,7 +269,7 @@ func (m *Mapper) buildNotFoundStep() base.FlowStep {
 	return base.FlowStep{
 		Name:    toPointer(mockStepName),
 		Policy:  toPointer(mockPolicyName),
-		Enabled: true,
+		Enabled: ptr.To(true),
 		Configuration: &utils.GenericStringMap{
 			Unstructured: unstructured.Unstructured{
 				Object: map[string]interface{}{

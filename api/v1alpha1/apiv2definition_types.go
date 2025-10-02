@@ -240,6 +240,10 @@ func (api *ApiDefinition) generateEmptyPlanIDs() {
 	plans := api.Spec.Plans
 
 	for _, plan := range plans {
+		if plan.Plan == nil {
+			plan.Plan = base.NewPlan()
+		}
+
 		if plan.CrossID == "" {
 			plan.CrossID = uuid.FromStrings(api.Spec.ID, separator, plan.Name)
 		}

@@ -17,11 +17,11 @@
 apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
-  name: "with-generic-oauth2-resource"
+  name: "with-generic-oauth2-resource-ref"
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "with-generic-oauth2-resource"
+  name: "with-generic-oauth2-resource-ref"
   version: "1"
   description: "With Generic OAUTH2 resource"
   visibility: "PRIVATE"

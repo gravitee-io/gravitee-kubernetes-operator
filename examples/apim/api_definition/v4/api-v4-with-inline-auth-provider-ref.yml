@@ -16,11 +16,11 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: with-inline-auth-provider-v4
+  name: with-inline-auth-provider-ref-v4
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "api-v4-with-inline-auth-provider"
+  name: "api-v4-with-inline-auth-provider-ref"
   description: "API v4 With Inline Auth Provider"
   version: "1.0"
   type: PROXY

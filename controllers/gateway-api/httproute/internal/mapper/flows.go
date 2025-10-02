@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/el"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"k8s.io/utils/ptr"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -135,7 +136,7 @@ func buildRoutingFlow(
 		Name:      &flowName,
 		Request:   buildRequestFlow(rule, ruleIndex, matchIndex),
 		Response:  buildResponseFlow(rule),
-		Enabled:   true,
+		Enabled:   ptr.To(true),
 		Selectors: buildFlowSelectors(match, conditionsExpressions),
 	}
 }
@@ -223,7 +224,7 @@ func buildRoutingStep(ruleIndex, matchIndex int) *v4.FlowStep {
 	policyName := routingPolicyName
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &policyName,
-		Enabled: true,
+		Enabled: ptr.To(true),
 		Configuration: utils.NewGenericStringMap().
 			Put(routingRulesKey, buildRoutingRule(ruleIndex, matchIndex)),
 	})
@@ -252,7 +253,7 @@ func buildRuleErrorFlow(
 	return &v4.Flow{
 		Name:      &description,
 		Request:   buildMockErrorFlow(description),
-		Enabled:   true,
+		Enabled:   ptr.To(true),
 		Selectors: buildFlowSelectors(match, conditionsExpressions),
 	}
 }
@@ -270,7 +271,7 @@ func buildMockErrorFlow(description string) []*v4.FlowStep {
 			Name:          &stepName,
 			Description:   &description,
 			Policy:        &policyName,
-			Enabled:       true,
+			Enabled:       ptr.To(true),
 			Configuration: configuration,
 		}),
 	}

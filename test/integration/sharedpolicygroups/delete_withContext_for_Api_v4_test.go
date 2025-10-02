@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/ptr"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -51,7 +52,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		fixtures2.APIv4.Spec.Context = fixtures1.Context.GetNamespacedName()
 		fixtures2.APIv4.Spec.Flows = []*v4.Flow{
 			{
-				Enabled: true,
+				Enabled: ptr.To(true),
 				Request: []*v4.FlowStep{
 					{
 						SharedPolicyGroup: &refs.NamespacedName{

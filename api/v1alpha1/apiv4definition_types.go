@@ -176,6 +176,9 @@ func (api *ApiV4Definition) pickPlanIDs(mCtx core.ContextModel) *map[string]*v4.
 
 	plans := make(map[string]*v4.Plan, len(*api.Spec.Plans))
 	for key, plan := range *api.Spec.Plans {
+		if plan.Plan == nil {
+			plan.Plan = base.NewPlan()
+		}
 		p := plan.DeepCopy()
 		if id, ok := api.Status.Plans[key]; ok {
 			p.ID = id

@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"k8s.io/utils/ptr"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -45,7 +46,7 @@ var (
 func buildHTTPRedirect(filter gwAPIv1.HTTPRequestRedirectFilter) *v4.FlowStep {
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:        &httpRedirectPolicyName,
-		Enabled:       true,
+		Enabled:       ptr.To(true),
 		Configuration: buildHTTPRedirectConfig(filter),
 	})
 }

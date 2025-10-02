@@ -14,6 +14,8 @@
 
 package base
 
+import "k8s.io/utils/ptr"
+
 // +kubebuilder:validation:Enum=API;CATALOG;
 type PlanType string
 
@@ -39,27 +41,23 @@ type Plan struct {
 	CrossID string `json:"crossId,omitempty"`
 	// List of plan tags
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Tags []string `json:"tags"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:=PUBLISHED
-	// The plan status
-	Status PlanStatus `json:"status,omitempty"`
+	// The plan status (default: PUBLISHED)
+	Status *PlanStatus `json:"status,omitempty"`
 	// List of plan characteristics
 	// +kubebuilder:validation:Optional
 	Characteristics []string `json:"characteristics"`
-	// +kubebuilder:default:=AUTO
-	// Plan validation strategy
-	Validation PlanValidation `json:"validation,omitempty"`
+	// Plan validation strategy (default: AUTO)
+	Validation *PlanValidation `json:"validation,omitempty"`
 	// Indicate of comment is required for this plan or not
 	// +kubebuilder:validation:Optional
 	CommentRequired *bool `json:"comment_required,omitempty"`
 	// Plan order
 	// +kubebuilder:validation:Optional
 	Order *int `json:"order,omitempty"`
-	// +kubebuilder:default:=API
-	// Plan type
-	Type PlanType `json:"type,omitempty"`
+	// Plan type (default: API)
+	Type *PlanType `json:"type,omitempty"`
 }
 
 func NewPlan() *Plan {
@@ -70,7 +68,7 @@ func NewPlan() *Plan {
 }
 
 func (plan *Plan) WithStatus(status PlanStatus) *Plan {
-	plan.Status = status
+	plan.Status = ptr.To(status)
 	return plan
 }
 

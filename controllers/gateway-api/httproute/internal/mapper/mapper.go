@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"k8s.io/utils/ptr"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
@@ -106,7 +107,7 @@ func buildAPIName(route *gwAPIv1.HTTPRoute) string {
 
 func newKeyLessPlan() *v4.Plan {
 	plan := v4.NewPlan().WithSecurity(&keyLessSecurity)
-	plan.Status = base.PublishedPlanStatus
+	plan.Status = ptr.To(base.PublishedPlanStatus)
 	return plan
 }
 

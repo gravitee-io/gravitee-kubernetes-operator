@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/adapter"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
@@ -99,11 +100,11 @@ func saveConfigMap(
 	var payload any
 	switch t := apiDefinition.(type) {
 	case *v1alpha1.ApiDefinition:
-		spec := &(t.Spec)
-		payload = spec
+		payload = adapter.NewApiV2(t.Spec.Api)
 	case *v1alpha1.ApiV4Definition:
 		cm.Data["apiDefinitionVersion"] = "4.0.0"
-		payload = t.ToGatewayDefinition()
+		api := adapter.NewApiV4(t.Spec.Api)
+		payload = api.ToGatewayDefinition()
 	}
 
 	jsonSpec, err := json.Marshal(payload)

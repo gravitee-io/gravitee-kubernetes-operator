@@ -20,6 +20,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/ptr"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
@@ -69,7 +70,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			By("disabling the resource")
 
 			updated := fixtures.Resource.DeepCopy()
-			updated.Spec.Enabled = false
+			updated.Spec.Enabled = ptr.To(false)
 
 			Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
@@ -83,7 +84,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 				if err := assert.NotEmptySlice("resource", api.Resources); err != nil {
 					return err
 				}
-				return assert.Equals("enabled", false, api.Resources[0].Enabled)
+				return assert.Equals("enabled", false, *api.Resources[0].Enabled)
 			}, timeout, interval).Should(Succeed(), fixtures.APIv4.Name)
 
 			By("expecting API event to have been emitted")

@@ -40,7 +40,6 @@ type Endpoint struct {
 	Backup *bool `json:"backup,omitempty"`
 	// The endpoint tenants
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Tenants []string `json:"tenants"`
 	// The type of endpoint (HttpEndpointType or GrpcEndpointType)
 	Type EndpointType `json:"type,omitempty"`
@@ -55,7 +54,6 @@ type Endpoint struct {
 	HttpClientSslOptions *base.HttpClientSslOptions `json:"ssl,omitempty"`
 	// List of headers for this endpoint
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Headers []base.HttpHeader `json:"headers"`
 	// Specify EndpointHealthCheck service settings
 	HealthCheck *EndpointHealthCheckService `json:"healthcheck,omitempty"`
@@ -96,7 +94,7 @@ type EndpointGroup struct {
 	// +kubebuilder:validation:Optional
 	Endpoints []*Endpoint `json:"endpoints"`
 	// The LoadBalancer Type
-	LoadBalancer LoadBalancer `json:"load_balancing,omitempty"`
+	LoadBalancer *LoadBalancer `json:"load_balancing,omitempty"`
 	// Specify different Endpoint Services
 	Services *Services `json:"services,omitempty"`
 	// Configure the HTTP Proxy settings for this EndpointGroup if needed

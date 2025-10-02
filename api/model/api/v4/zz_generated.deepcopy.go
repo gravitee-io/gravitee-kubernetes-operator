@@ -504,12 +504,12 @@ func (in *Failover) DeepCopyInto(out *Failover) {
 	}
 	if in.SlowCallDuration != nil {
 		in, out := &in.SlowCallDuration, &out.SlowCallDuration
-		*out = new(int64)
+		*out = new(uint64)
 		**out = **in
 	}
 	if in.OpenStateDuration != nil {
 		in, out := &in.OpenStateDuration, &out.OpenStateDuration
-		*out = new(int64)
+		*out = new(uint64)
 		**out = **in
 	}
 	if in.MaxFailures != nil {
@@ -540,6 +540,11 @@ func (in *Flow) DeepCopyInto(out *Flow) {
 	if in.Name != nil {
 		in, out := &in.Name, &out.Name
 		*out = new(string)
+		**out = **in
+	}
+	if in.Enabled != nil {
+		in, out := &in.Enabled, &out.Enabled
+		*out = new(bool)
 		**out = **in
 	}
 	if in.Selectors != nil {
@@ -968,6 +973,11 @@ func (in *Plan) DeepCopyInto(out *Plan) {
 	if in.Description != nil {
 		in, out := &in.Description, &out.Description
 		*out = new(string)
+		**out = **in
+	}
+	if in.DefinitionVersion != nil {
+		in, out := &in.DefinitionVersion, &out.DefinitionVersion
+		*out = new(DefinitionVersion)
 		**out = **in
 	}
 	if in.Security != nil {

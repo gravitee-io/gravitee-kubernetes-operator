@@ -16,7 +16,7 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: with-keycloak-adapter-v4
+  name: with-keycloak-adapter-ref-v4
 spec:
   contextRef:
     name: "dev-ctx"

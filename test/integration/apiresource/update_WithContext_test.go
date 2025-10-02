@@ -20,6 +20,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/ptr"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
@@ -69,7 +70,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			By("disabling the resource")
 
 			updated := fixtures.Resource.DeepCopy()
-			updated.Spec.Enabled = false
+			updated.Spec.Enabled = ptr.To(false)
 
 			Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 

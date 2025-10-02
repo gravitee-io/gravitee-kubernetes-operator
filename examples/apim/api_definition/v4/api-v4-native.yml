@@ -27,7 +27,7 @@ spec:
   state: STARTED
   listeners:
     - type: KAFKA
-      host: "kafka.local"
+      host: "kafka.local.1"
       port: 9092
       entrypoints:
         - type: native-kafka

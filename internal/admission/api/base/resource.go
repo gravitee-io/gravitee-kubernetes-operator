@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"k8s.io/utils/ptr"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -49,7 +50,7 @@ func toResourceOrRef(r core.ResourceModel) core.ResourceModel {
 	rn := r.GetResourceName()
 	t := r.GetType()
 	return &base.Resource{
-		Enabled:       true,
+		Enabled:       ptr.To(true),
 		Name:          &rn,
 		Type:          &t,
 		Configuration: r.GetConfig(),
