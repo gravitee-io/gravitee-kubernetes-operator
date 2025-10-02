@@ -18,6 +18,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"k8s.io/utils/ptr"
 )
 
 // +kubebuilder:validation:Enum=STANDARD;PUSH;
@@ -42,9 +43,8 @@ type Plan struct {
 	// +kubebuilder:validation:Optional
 	Description *string `json:"description,omitempty"`
 
-	// Plan definition version
-	// +kubebuilder:default:=`V4`
-	DefinitionVersion DefinitionVersion `json:"definitionVersion,omitempty"`
+	// Plan definition version (default: V4)
+	DefinitionVersion *DefinitionVersion `json:"definitionVersion,omitempty"`
 
 	// Plan security
 	Security *PlanSecurity `json:"security,omitempty"`
@@ -59,7 +59,6 @@ type Plan struct {
 	// +kubebuilder:validation:Optional
 	SelectionRule *string `json:"selectionRule,omitempty"`
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	// List of plan flows
 	Flows []*Flow `json:"flows"`
 	// +kubebuilder:validation:Optional
@@ -96,7 +95,10 @@ func (plan *Plan) ToGatewayDefinition(name string) *GatewayDefinitionPlan {
 		def.Security.Type = Enum(plan.Security.Type).ToGatewayDefinition()
 	}
 	def.Mode = PlanMode(Enum(plan.Mode).ToGatewayDefinition())
-	def.Status = base.PlanStatus(Enum(plan.Status).ToGatewayDefinition())
+	if plan.Status == nil {
+		plan.Status = ptr.To(base.PublishedPlanStatus)
+	}
+	def.Status = ptr.To(base.PlanStatus(Enum(*plan.Status).ToGatewayDefinition()))
 	flows := make([]*Flow, len(plan.Flows))
 	for i := range def.Flows {
 		flows[i] = def.Flows[i].ToGatewayDefinition()

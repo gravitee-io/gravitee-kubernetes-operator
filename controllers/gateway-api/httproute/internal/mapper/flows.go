@@ -21,6 +21,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/el"
+	"k8s.io/utils/ptr"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -105,7 +106,7 @@ func buildFlow(
 		Name:      &flowName,
 		Request:   buildRequestFlow(rule, ruleIndex, matchIndex),
 		Response:  buildResponseFlow(rule),
-		Enabled:   true,
+		Enabled:   ptr.To(true),
 		Selectors: buildFlowSelectors(match, conditionsExpressions),
 	}
 }
