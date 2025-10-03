@@ -17,11 +17,11 @@
 apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
-  name: "with-ldap-auth-provider"
+  name: "with-ldap-auth-provider-ref"
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "with-ldap-auth-provider"
+  name: "with-ldap-auth-provider-ref"
   version: "1"
   description: "With LDAP Auth Provider"
   visibility: "PRIVATE"

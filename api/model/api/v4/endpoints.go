@@ -59,7 +59,6 @@ type Endpoint struct {
 
 	// List of endpoint tenants
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Tenants []string `json:"tenants"`
 }
 
@@ -119,7 +118,6 @@ type EndpointGroup struct {
 	SharedConfig *utils.GenericStringMap `json:"sharedConfiguration,omitempty"`
 	// List of endpoint for the group
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Endpoints []*Endpoint `json:"endpoints"`
 	// Endpoint group services
 	Services *EndpointGroupServices `json:"services,omitempty"`

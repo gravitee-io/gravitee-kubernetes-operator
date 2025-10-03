@@ -50,8 +50,7 @@ spec:
                   type: object
                   x-kubernetes-preserve-unknown-fields: true
                 enabled:
-                  default: true
-                  description: Is resource enabled or not?
+                  description: "Is resource enabled or not? (default: true)"
                   type: boolean
                 name:
                   description: Resource Name
