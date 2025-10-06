@@ -37,6 +37,6 @@ func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) erro
 		return gerrors.NewControlPlaneError(mgmtErr)
 	}
 
-	status.DeepCopyInto(&application.Status.Status)
+	status.DeepCopyTo(&application.Status.Status)
 	return nil
 }
