@@ -48,3 +48,9 @@ type Status struct {
 	// used to persist the error message encountered during admission
 	Errors status.Errors `json:"errors,omitempty"`
 }
+
+func (s *Status) DeepCopyTo(out *Status) {
+	conditions := out.Conditions
+	s.DeepCopyInto(out)
+	out.Conditions = conditions
+}
