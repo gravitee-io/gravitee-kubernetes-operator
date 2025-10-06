@@ -44,23 +44,22 @@ func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 }
 
 func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition) error {
-	cp := apiDefinition.DeepCopy()
-	spec := &cp.Spec
+	spec := &apiDefinition.Spec
 	spec.EnsureDefinitionContext()
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
 		return err
 	}
 
-	if groups, err := ResolveGroupRefs(ctx, cp, cp.GetGroupRefs()); err != nil {
+	if groups, err := ResolveGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs()); err != nil {
 		return err
 	} else {
 		spec.Groups = append(spec.Groups, groups...)
 	}
 
-	cp.PopulateIDs(nil)
+	apiDefinition.PopulateIDs(nil)
 
-	err := ResolveConsoleNotificationRefs(ctx, cp)
+	err := ResolveConsoleNotificationRefs(ctx, apiDefinition)
 	if err != nil {
 		return err
 	}
@@ -70,7 +69,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 			return gerrors.NewIllegalStateError(
 				gerrors.NewUnrecoverableError("a context is required when setting local to false"))
 		}
-		if err := updateConfigMap(ctx, cp); err != nil {
+		if err := updateConfigMap(ctx, apiDefinition); err != nil {
 			return err
 		}
 		apiDefinition.Status.State = spec.State
@@ -90,13 +89,11 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		return gerrors.NewControlPlaneError(mgmtErr)
 	}
 
-	apiDefinition.Status = v1alpha1.ApiDefinitionStatus{
-		Status: *status,
-	}
+	status.DeepCopyTo(&apiDefinition.Status.Status)
 
 	if spec.IsLocal {
 		retrieveMgmtPlanIds(spec, status)
-		return updateConfigMap(ctx, cp)
+		return updateConfigMap(ctx, apiDefinition)
 	}
 
 	log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
@@ -105,10 +102,9 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 }
 
 func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
-	cp := apiDefinition.DeepCopy()
 	nsCtx := context.WithValue(ctx, nsKey, apiDefinition.Namespace)
 
-	spec := &cp.Spec
+	spec := &apiDefinition.Spec
 
 	if err := resolveResources(ctx, spec.Resources); err != nil {
 		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
@@ -120,7 +116,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		return err
 	}
 
-	if groups, err := ResolveGroupRefs(ctx, cp, spec.GetGroupRefs()); err != nil {
+	if groups, err := ResolveGroupRefs(ctx, apiDefinition, spec.GetGroupRefs()); err != nil {
 		return err
 	} else {
 		spec.Groups = append(spec.Groups, groups...)
@@ -134,9 +130,9 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		if err != nil {
 			return err
 		}
-		cp.PopulateIDs(apimClient.Context)
+		apiDefinition.PopulateIDs(apimClient.Context)
 
-		err = ResolveConsoleNotificationRefs(ctx, cp)
+		err = ResolveConsoleNotificationRefs(ctx, apiDefinition)
 		if err != nil {
 			return err
 		}
@@ -146,14 +142,15 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		if err != nil {
 			return gerrors.NewControlPlaneError(err)
 		}
-		apiDefinition.Status.Status = *status
+
+		status.DeepCopyTo(&apiDefinition.Status.Status)
 		log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
 	} else {
-		cp.PopulateIDs(nil)
+		apiDefinition.PopulateIDs(nil)
 	}
 
 	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {
-		return updateConfigMap(ctx, cp)
+		return updateConfigMap(ctx, apiDefinition)
 	}
 
 	return nil

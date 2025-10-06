@@ -341,10 +341,8 @@ func (s *ApiV4DefinitionStatus) DeepCopyTo(api client.Object) error {
 	switch t := api.(type) {
 	case *ApiV4Definition:
 		subscriptionCount := t.Status.SubscriptionCount
-		conditions := t.Status.Conditions
 		s.DeepCopyInto(&t.Status)
 		t.Status.SubscriptionCount = subscriptionCount
-		t.Status.Conditions = conditions
 	default:
 		return fmt.Errorf("unknown type %T", t)
 	}

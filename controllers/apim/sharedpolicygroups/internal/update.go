@@ -37,6 +37,6 @@ func CreateOrUpdate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error 
 		return gerrors.NewControlPlaneError(mgmtErr)
 	}
 
-	status.DeepCopyInto(&spg.Status.Status)
+	status.DeepCopyTo(&spg.Status.Status)
 	return nil
 }
