@@ -23,6 +23,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -80,6 +81,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
+	application.SetConditions([]metav1.Condition{})
 	dc := application.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, application, func() error {

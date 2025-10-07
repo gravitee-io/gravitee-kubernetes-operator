@@ -36,7 +36,9 @@ const (
 	SecretRefField               IndexField = "secretRef"
 	ApiResourceField             IndexField = "resource"
 	ApiNotificationRefsField     IndexField = "api-notificationRefs"
+	ApiGroupField                IndexField = "api-group"
 	ApiV4NotificationRefsField   IndexField = "api-v4-notificationRefs"
+	ApiV4GroupField              IndexField = "api-v4-group"
 	ApiV4ResourceField           IndexField = "api-v4-resource"
 	ApiV4SharedPolicyGroupsField IndexField = "api-v4-spg"
 	ApiTemplateField             IndexField = "api-template"
@@ -59,98 +61,84 @@ type Indexer struct {
 func InitCache(ctx context.Context, cache cache.Cache) error {
 	errs := make([]error, 0)
 
-	contextIndexer := newIndexer(ApiContextField, indexManagementContexts)
-	if err := cache.IndexField(ctx, &v1alpha1.ApiDefinition{}, contextIndexer.Field, contextIndexer.Func); err != nil {
+	err := newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiContextField, indexManagementContexts)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	apiV4ContextIndexer := newIndexer(ApiV4ContextField, indexApiV4ManagementContexts)
-	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4ContextIndexer.Field,
-		apiV4ContextIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4ContextField, indexApiV4ManagementContexts)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	resourceIndexer := newIndexer(ApiResourceField, indexApiResourceRefs)
-	if err := cache.IndexField(ctx, &v1alpha1.ApiDefinition{}, resourceIndexer.Field, resourceIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiResourceField, indexApiResourceRefs)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	apiV4ResourceIndexer := newIndexer(ApiV4ResourceField, indexApiV4ResourceRefs)
-	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4ResourceIndexer.Field,
-		apiV4ResourceIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4ResourceField, indexApiV4ResourceRefs)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	notificationIndexer := newIndexer(ApiNotificationRefsField, indexNotificationRefs)
-	if err := cache.IndexField(ctx,
-		&v1alpha1.ApiDefinition{},
-		notificationIndexer.Field,
-		notificationIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiNotificationRefsField, indexNotificationRefs)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	apiV4NotificationIndexer := newIndexer(ApiV4NotificationRefsField, indexApiV4NotificationRefs)
-	if err := cache.IndexField(ctx,
-		&v1alpha1.ApiV4Definition{},
-		apiV4NotificationIndexer.Field,
-		apiV4NotificationIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4NotificationRefsField, indexApiV4NotificationRefs)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	apiV4SharedPolicyGroupsIndexer := newIndexer(ApiV4SharedPolicyGroupsField, indexApiV4FlowsSharedPolicyGroupsRefs)
-	if err := cache.IndexField(ctx, &v1alpha1.ApiV4Definition{}, apiV4SharedPolicyGroupsIndexer.Field,
-		apiV4SharedPolicyGroupsIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiGroupField, indexApiGroupsRefs)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	secretRefIndexer := newIndexer(SecretRefField, indexManagementContextSecrets)
-	if err := cache.IndexField(
-		ctx,
-		&v1alpha1.ManagementContext{},
-		secretRefIndexer.Field,
-		secretRefIndexer.Func,
-	); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4GroupField, indexApiV4GroupsRefs)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	apiTemplateIndexer := newIndexer(ApiTemplateField, indexApiTemplate)
-	if err := cache.IndexField(ctx, &v1.Ingress{}, apiTemplateIndexer.Field, apiTemplateIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4SharedPolicyGroupsField,
+		indexApiV4FlowsSharedPolicyGroupsRefs)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	tlsSecretIndexer := newIndexer(TLSSecretField, indexTLSSecret)
-	if err := cache.IndexField(ctx, &v1.Ingress{}, tlsSecretIndexer.Field, tlsSecretIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.ManagementContext{}, SecretRefField, indexManagementContextSecrets)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	appContextIndexer := newIndexer(AppContextField, indexApplicationManagementContexts)
-	if err := cache.IndexField(ctx, &v1alpha1.Application{}, appContextIndexer.Field, appContextIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1.Ingress{}, ApiTemplateField, indexApiTemplate)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	apiV2SubscriptionIndexer := newIndexer(ApiV2SubsField, indexAPIv2Subscriptions)
-	if err := cache.IndexField(
-		ctx,
-		&v1alpha1.Subscription{},
-		apiV2SubscriptionIndexer.Field,
-		apiV2SubscriptionIndexer.Func,
-	); err != nil {
+	err = newIndexer(ctx, cache, &v1.Ingress{}, TLSSecretField, indexTLSSecret)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	apiV4SubscriptionIndexer := newIndexer(ApiV4SubsField, indexAPIv4Subscriptions)
-	if err := cache.IndexField(
-		ctx,
-		&v1alpha1.Subscription{},
-		apiV4SubscriptionIndexer.Field,
-		apiV4SubscriptionIndexer.Func,
-	); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.Application{}, AppContextField, indexApplicationManagementContexts)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
-	spgContextIndexer := newIndexer(SPGContextField, indexSharedPolicyGroupManagementContexts)
-	if err := cache.IndexField(ctx, &v1alpha1.SharedPolicyGroup{}, spgContextIndexer.Field,
-		spgContextIndexer.Func); err != nil {
+	err = newIndexer(ctx, cache, &v1alpha1.Subscription{}, ApiV2SubsField, indexAPIv2Subscriptions)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	err = newIndexer(ctx, cache, &v1alpha1.Subscription{}, ApiV4SubsField, indexAPIv4Subscriptions)
+	if err != nil {
+		errs = append(errs, err)
+	}
+
+	err = newIndexer(ctx, cache, &v1alpha1.SharedPolicyGroup{}, SPGContextField, indexSharedPolicyGroupManagementContexts)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
@@ -172,11 +160,21 @@ func createIndexerFunc[T client.Object](doIndex func(T, *[]string)) client.Index
 	}
 }
 
-func newIndexer[T client.Object](field IndexField, doIndex func(T, *[]string)) Indexer {
-	return Indexer{
-		Field: string(field),
+func newIndexer[T client.Object](ctx context.Context, cache cache.Cache, obj client.Object,
+	indexField IndexField, doIndex func(T, *[]string)) error {
+	indexer := Indexer{
+		Field: string(indexField),
 		Func:  createIndexerFunc(doIndex),
 	}
+
+	if err := cache.IndexField(ctx,
+		obj,
+		indexer.Field,
+		indexer.Func); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func indexManagementContexts(api *v1alpha1.ApiDefinition, fields *[]string) {
@@ -255,6 +253,18 @@ func indexApiV4NotificationRefs(api *v1alpha1.ApiV4Definition, fields *[]string)
 func indexApiV4FlowsSharedPolicyGroupsRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
 	for _, sharedPolicyGroup := range api.Spec.GetAllSharedPolicyGroups() {
 		*fields = append(*fields, ensureNamespacedRef(api, sharedPolicyGroup))
+	}
+}
+
+func indexApiGroupsRefs(api *v1alpha1.ApiDefinition, fields *[]string) {
+	for i := 0; i < len(api.Spec.GroupRefs); i++ {
+		*fields = append(*fields, ensureNamespacedRef(api, &api.Spec.GroupRefs[i]))
+	}
+}
+
+func indexApiV4GroupsRefs(api *v1alpha1.ApiV4Definition, fields *[]string) {
+	for i := 0; i < len(api.Spec.GroupRefs); i++ {
+		*fields = append(*fields, ensureNamespacedRef(api, &api.Spec.GroupRefs[i]))
 	}
 }
 

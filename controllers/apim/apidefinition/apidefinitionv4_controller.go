@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -56,6 +57,7 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	apiDefinition.SetConditions([]metav1.Condition{})
 	return Reconcile(ctx, apiDefinition, r.Recorder)
 }
 
@@ -66,7 +68,8 @@ func (r *V4Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.ApiV4ContextField)).
 		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(search.ApiV4ResourceField)).
 		Watches(&v1alpha1.SharedPolicyGroup{}, r.Watcher.WatchSharedPolicyGroups(search.ApiV4SharedPolicyGroupsField)).
-		Watches(&v1alpha1.Notification{}, r.Watcher.WatchNotifications(search.ApiV4NotificationRefsField))
+		Watches(&v1alpha1.Notification{}, r.Watcher.WatchNotifications(search.ApiV4NotificationRefsField)).
+		Watches(&v1alpha1.Group{}, r.Watcher.WatchGroups(search.ApiV4GroupField))
 
 	if env.Config.EnableTemplating {
 		newController.

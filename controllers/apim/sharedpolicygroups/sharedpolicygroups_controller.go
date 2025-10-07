@@ -19,6 +19,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups/internal"
 
@@ -69,6 +70,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := event.NewRecorder(r.Recorder)
 
+	spg.SetConditions([]metav1.Condition{})
 	dc := spg.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, spg, func() error {
