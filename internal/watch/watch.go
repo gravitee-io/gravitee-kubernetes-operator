@@ -48,6 +48,7 @@ type Interface interface {
 	WatchTLSSecret() *handler.Funcs
 	WatchSharedPolicyGroups(index search.IndexField) *handler.Funcs
 	WatchNotifications(index search.IndexField) *handler.Funcs
+	WatchGroups(index search.IndexField) *handler.Funcs
 	WatchTemplatingSource(objKind string) *handler.Funcs
 }
 
@@ -152,6 +153,13 @@ func (w *Type) WatchSharedPolicyGroups(index search.IndexField) *handler.Funcs {
 }
 
 func (w *Type) WatchNotifications(index search.IndexField) *handler.Funcs {
+	return &handler.Funcs{
+		CreateFunc: w.CreateFromLookup(index),
+		UpdateFunc: w.UpdateFromLookup(index),
+	}
+}
+
+func (w *Type) WatchGroups(index search.IndexField) *handler.Funcs {
 	return &handler.Funcs{
 		CreateFunc: w.CreateFromLookup(index),
 		UpdateFunc: w.UpdateFromLookup(index),

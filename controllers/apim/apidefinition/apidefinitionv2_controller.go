@@ -67,7 +67,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.ApiContextField)).
 		Watches(&v1alpha1.ApiResource{}, r.Watcher.WatchResources(search.ApiResourceField)).
 		Watches(&v1alpha1.Notification{}, r.Watcher.WatchNotifications(search.ApiNotificationRefsField)).
-		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.ApiContextField))
+		Watches(&v1alpha1.Group{}, r.Watcher.WatchGroups(search.ApiGroupField))
 	if env.Config.EnableTemplating {
 		newController = newController.
 			Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("apidefinitions")).
