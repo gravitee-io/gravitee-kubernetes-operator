@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { mapiClient } from '../lib/mapiClient.mjs';
+import { mapiClient } from '../gravitee/mapi/client.mjs';
 const apiId = argv.api_id;
 const apiVersion = argv.api_version;
 

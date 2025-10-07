@@ -15,25 +15,22 @@
  * limitations under the License.
  */
 
+import { mapiClient } from '../gravitee/mapi/client.mjs';
 
-import { mapiClient } from '../lib/mapiClient.mjs';
-
-const { name } = argv;
-if (!name) {
-    console.error('Usage: createServiceAccount.mjs --name <SERVICE_ACCOUNT_NAME>');
+const { name, description, orgId = 'DEFAULT', envId = 'DEFAULT' } = argv;
+if (!name || typeof name !== 'string' || name.length < 1) {
+    console.error('Usage: createCategory.mjs --name <CATEGORY_NAME> [--description <DESCRIPTION>] [--orgId <ORG_ID>] [--envId <ENV_ID>]');
     process.exit(1);
 }
 
-const newUser = {
-  lastname: name,
-  email: `${name}@graviteesource.com`,
-  service: true,
-};
+const body = { name };
+
+const endpoint = `/management/organizations/${orgId}/environments/${envId}/configuration/categories`;
 
 try {
-    const createdUser = await mapiClient.post('/management/organizations/DEFAULT/users', newUser);
-    console.log(JSON.stringify(createdUser));
+    const createdCategory = await mapiClient.post(endpoint, body);
+    console.log(JSON.stringify(createdCategory));
 } catch (e) {
-    console.error(`Failed to create service account user: ${e.message}`);
+    console.error(`Failed to create category: ${e.message}`);
     process.exit(1);
 }

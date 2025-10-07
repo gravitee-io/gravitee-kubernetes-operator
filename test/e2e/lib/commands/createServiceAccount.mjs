@@ -15,20 +15,25 @@
  * limitations under the License.
  */
 
-import { mapiClient } from '../lib/mapiClient.mjs';
 
-const { categoryId, orgId = 'DEFAULT', envId = 'DEFAULT' } = argv;
-if (!categoryId) {
-    console.error('Usage: deleteCategory.mjs --categoryId <CATEGORY_ID> [--orgId <ORG_ID>] [--envId <ENV_ID>]');
+import { mapiClient } from '../gravitee/mapi/client.mjs';
+
+const { name } = argv;
+if (!name) {
+    console.error('Usage: createServiceAccount.mjs --name <SERVICE_ACCOUNT_NAME>');
     process.exit(1);
 }
 
-const endpoint = `/management/organizations/${orgId}/environments/${envId}/configuration/categories/${categoryId}`;
+const newUser = {
+  lastname: name,
+  email: `${name}@graviteesource.com`,
+  service: true,
+};
 
 try {
-    await mapiClient.del(endpoint);
-    console.log(`Category '${categoryId}' deleted successfully.`);
+    const createdUser = await mapiClient.post('/management/organizations/DEFAULT/users', newUser);
+    console.log(JSON.stringify(createdUser));
 } catch (e) {
-    console.error(`Failed to delete category: ${e.message}`);
+    console.error(`Failed to create service account user: ${e.message}`);
     process.exit(1);
 }
