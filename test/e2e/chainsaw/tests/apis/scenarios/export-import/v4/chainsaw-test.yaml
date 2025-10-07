@@ -42,7 +42,7 @@ spec:
     - name: apiCrdFile
       value: (join('', ['../resources/', $apiName,'.yaml']))
     - name: commandDir
-      value: "../../../../../commands"
+      value: "../../../../../../lib/commands"
     - name: gkoNamespace
       value: default
     - name: exportedApiYaml

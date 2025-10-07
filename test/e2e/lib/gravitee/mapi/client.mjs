@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-const BASE_URL_API = 'http://localhost:30083';
-const AUTH_HEADER = 'Basic ' + btoa('admin:admin');
+import { httpClient } from "../../http/client.mjs";
 
 async function post(path, body) {
-  const url = new URL(path, BASE_URL_API).toString();
+  const url = new URL(path, httpClient.BASE_URL_API).toString();
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': AUTH_HEADER,
+      'Authorization': httpClient.AUTH_HEADER,
     },
     body: JSON.stringify(body),
   });
@@ -37,11 +36,11 @@ async function post(path, body) {
 }
 
 async function get(path) {
-  const url = new URL(path, BASE_URL_API).toString();
+  const url = new URL(path, httpClient.BASE_URL_API).toString();
   const res = await fetch(url, {
     method: 'GET',
     headers: {
-      'Authorization': AUTH_HEADER,
+      'Authorization': httpClient.AUTH_HEADER,
     },
   });
 
@@ -54,11 +53,11 @@ async function get(path) {
 }
 
 async function del(path) {
-  const url = new URL(path, BASE_URL_API).toString();
+  const url = new URL(path, httpClient.BASE_URL_API).toString();
   const res = await fetch(url, {
     method: 'DELETE',
     headers: {
-      'Authorization': AUTH_HEADER,
+      'Authorization': httpClient.AUTH_HEADER,
     },
   });
 

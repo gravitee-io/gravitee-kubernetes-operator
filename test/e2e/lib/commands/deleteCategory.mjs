@@ -15,22 +15,20 @@
  * limitations under the License.
  */
 
-import { mapiClient } from '../lib/mapiClient.mjs';
+import { mapiClient } from '../gravitee/mapi/client.mjs';
 
-const { name, description, orgId = 'DEFAULT', envId = 'DEFAULT' } = argv;
-if (!name || typeof name !== 'string' || name.length < 1) {
-    console.error('Usage: createCategory.mjs --name <CATEGORY_NAME> [--description <DESCRIPTION>] [--orgId <ORG_ID>] [--envId <ENV_ID>]');
+const { categoryId, orgId = 'DEFAULT', envId = 'DEFAULT' } = argv;
+if (!categoryId) {
+    console.error('Usage: deleteCategory.mjs --categoryId <CATEGORY_ID> [--orgId <ORG_ID>] [--envId <ENV_ID>]');
     process.exit(1);
 }
 
-const body = { name };
-
-const endpoint = `/management/organizations/${orgId}/environments/${envId}/configuration/categories`;
+const endpoint = `/management/organizations/${orgId}/environments/${envId}/configuration/categories/${categoryId}`;
 
 try {
-    const createdCategory = await mapiClient.post(endpoint, body);
-    console.log(JSON.stringify(createdCategory));
+    await mapiClient.del(endpoint);
+    console.log(`Category '${categoryId}' deleted successfully.`);
 } catch (e) {
-    console.error(`Failed to create category: ${e.message}`);
+    console.error(`Failed to delete category: ${e.message}`);
     process.exit(1);
 }
