@@ -18,6 +18,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"k8s.io/utils/ptr"
 )
 
 type Flow struct {
@@ -30,9 +31,8 @@ type Flow struct {
 	// +kubebuilder:validation:Optional
 	Name *string `json:"name,omitempty"`
 
-	// +kubebuilder:default:=true
-	// Is flow enabled or not?
-	Enabled bool `json:"enabled"`
+	// Is flow enabled or not? (default: true)
+	Enabled *bool `json:"enabled,omitempty"`
 
 	// List of Flow selectors
 	// +kubebuilder:validation:Optional
@@ -70,7 +70,7 @@ type Flow struct {
 func NewFlow(name string) *Flow {
 	return &Flow{
 		Name:      &name,
-		Enabled:   true,
+		Enabled:   ptr.To(true),
 		Selectors: []*FlowSelector{},
 		Request:   []*FlowStep{},
 		Response:  []*FlowStep{},

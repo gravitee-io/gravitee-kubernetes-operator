@@ -16,7 +16,7 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: api-v4-with-context
+  name: api-v4-with-shared-policy-group
 spec:
   contextRef:
     name: "dev-ctx"

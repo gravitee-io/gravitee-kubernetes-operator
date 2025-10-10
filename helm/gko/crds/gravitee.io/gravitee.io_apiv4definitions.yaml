@@ -254,7 +254,6 @@ spec:
                   items:
                     properties:
                       endpoints:
-                        default: []
                         description: List of endpoint for the group
                         items:
                           properties:
@@ -300,7 +299,6 @@ spec:
                               type: object
                               x-kubernetes-preserve-unknown-fields: true
                             tenants:
-                              default: []
                               description: List of endpoint tenants
                               items:
                                 type: string
@@ -327,15 +325,13 @@ spec:
                         description: Endpoint group http client options
                         properties:
                           clearTextUpgrade:
-                            default: true
-                            description: Should HTTP/2 clear text upgrade be used or not ?
+                            description: "Should HTTP/2 clear text upgrade be used or not ? (default: true)"
                             type: boolean
                           connectTimeout:
                             description: Connection timeout of the http connection
                             format: int64
                             type: integer
                           followRedirects:
-                            default: false
                             description: Should HTTP redirects be followed or not ?
                             type: boolean
                           idleTimeout:
@@ -343,41 +339,39 @@ spec:
                             format: int64
                             type: integer
                           keepAlive:
-                            default: true
                             type: boolean
                           keepAliveTimeout:
-                            default: 30000
-                            description: Should keep alive be used for the HTTP connection ?
+                            description: "Should keep alive be used for the HTTP connection ? (default:
+                              30000)"
                             format: int64
                             type: integer
                           maxConcurrentConnections:
                             description: HTTP max concurrent connections
                             type: integer
                           pipelining:
-                            default: false
-                            description: Should HTTP/1.1 pipelining be used for the connection or not ?
+                            description: "Should HTTP/1.1 pipelining be used for the connection or not ?
+                              (default: false)"
                             type: boolean
                           propagateClientAcceptEncoding:
-                            default: false
-                            description: Propagate Client Accept-Encoding header
+                            description: "Propagate Client Accept-Encoding header (default: false)"
                             type: boolean
                           readTimeout:
                             description: Read timeout
                             format: int64
                             type: integer
                           useCompression:
-                            default: false
-                            description: Should compression be used or not ?
+                            description: "Should compression be used or not ? (default: false)"
                             type: boolean
                           version:
-                            default: HTTP_1_1
-                            description: HTTP Protocol Version (Possible values Http1 or Http2)
+                            description: "HTTP Protocol Version (Possible values Http1 or Http2) (default:
+                              HTTP_1_1)"
                             enum:
                               - HTTP_1_1
                               - HTTP_2
                             type: string
                         required:
                           - followRedirects
+                          - keepAlive
                           - pipelining
                           - useCompression
                         type: object
@@ -462,7 +456,6 @@ spec:
                               type: object
                             type: array
                           hostnameVerifier:
-                            default: true
                             description: Verify Hostname when establishing connection
                             type: boolean
                           keyStore:
@@ -502,8 +495,7 @@ spec:
                                 type: string
                             type: object
                           trustAll:
-                            default: false
-                            description: Whether to trust all issuers or not
+                            description: "Whether to trust all issuers or not (default: false)"
                             type: boolean
                           trustStore:
                             description: TrustStore type (possible values PEM, PKCS12, JKS)
@@ -525,9 +517,6 @@ spec:
                                   - JKS
                                 type: string
                             type: object
-                        required:
-                          - hostnameVerifier
-                          - trustAll
                         type: object
                       type:
                         description: Endpoint group type
@@ -628,8 +617,7 @@ spec:
                           type: object
                         type: array
                       enabled:
-                        default: true
-                        description: Is flow enabled or not?
+                        description: "Is flow enabled or not? (default: true)"
                         type: boolean
                       id:
                         description: >-
@@ -867,8 +855,6 @@ spec:
                         items:
                           type: string
                         type: array
-                    required:
-                      - enabled
                     type: object
                   type: array
                 groupRefs:
@@ -1104,8 +1090,7 @@ spec:
                         description: The plan Cross ID.
                         type: string
                       definitionVersion:
-                        default: V4
-                        description: Plan definition version
+                        description: "Plan definition version (default: V4)"
                         type: string
                       description:
                         description: Plan Description
@@ -1116,7 +1101,6 @@ spec:
                           type: string
                         type: array
                       flows:
-                        default: []
                         description: List of plan flows
                         items:
                           properties:
@@ -1164,8 +1148,7 @@ spec:
                                 type: object
                               type: array
                             enabled:
-                              default: true
-                              description: Is flow enabled or not?
+                              description: "Is flow enabled or not? (default: true)"
                               type: boolean
                             id:
                               description: >-
@@ -1403,8 +1386,6 @@ spec:
                               items:
                                 type: string
                               type: array
-                          required:
-                            - enabled
                           type: object
                         type: array
                       generalConditions:
@@ -1451,29 +1432,25 @@ spec:
                         description: Plan selection rule
                         type: string
                       status:
-                        default: PUBLISHED
-                        description: The plan status
+                        description: "The plan status (default: PUBLISHED)"
                         enum:
                           - PUBLISHED
                           - DEPRECATED
                           - STAGING
                         type: string
                       tags:
-                        default: []
                         description: List of plan tags
                         items:
                           type: string
                         type: array
                       type:
-                        default: API
-                        description: Plan type
+                        description: "Plan type (default: API)"
                         enum:
                           - API
                           - CATALOG
                         type: string
                       validation:
-                        default: AUTO
-                        description: Plan validation strategy
+                        description: "Plan validation strategy (default: AUTO)"
                         enum:
                           - AUTO
                           - MANUAL
@@ -1523,8 +1500,7 @@ spec:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       enabled:
-                        default: true
-                        description: Is resource enabled or not?
+                        description: "Is resource enabled or not? (default: true)"
                         type: boolean
                       name:
                         description: Resource Name
