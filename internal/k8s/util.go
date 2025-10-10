@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	coreV1 "k8s.io/api/core/v1"
+	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -615,4 +616,54 @@ func resolveNS(ctx context.Context, name string) (*coreV1.Namespace, error) {
 		return nil, err
 	}
 	return ns, nil
+}
+
+// IsResolvedBackend checks if a backend reference can be resolved to an existing Service.
+func IsResolvedBackend(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	ref gwAPIv1.HTTPBackendRef,
+) (bool, error) {
+	ns := ref.Namespace
+	if ns == nil {
+		gwNs := gwAPIv1.Namespace(route.Namespace)
+		ns = &gwNs
+	}
+
+	key := client.ObjectKey{Namespace: string(*ns), Name: string(ref.Name)}
+	service := &coreV1.Service{}
+
+	if err := GetClient().Get(ctx, key, service); client.IgnoreNotFound(err) != nil {
+		return false, err
+	} else if kErrors.IsNotFound(err) {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// HasUnresolvedBackend checks if a route has any unresolved backend references.
+func HasUnresolvedBackend(ctx context.Context, route *gwAPIv1.HTTPRoute) (bool, error) {
+	for _, rule := range route.Spec.Rules {
+		for _, ref := range rule.BackendRefs {
+			if resolved, err := IsResolvedBackend(ctx, route, ref); err != nil {
+				return false, err
+			} else if !resolved {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+// HasInvalidBackendKinds checks if a route has any backend references with invalid kinds.
+func HasInvalidBackendKinds(route *gwAPIv1.HTTPRoute) bool {
+	for _, rule := range route.Spec.Rules {
+		for _, ref := range rule.BackendRefs {
+			if !IsServiceKind(ref.BackendRef.BackendObjectReference) {
+				return true
+			}
+		}
+	}
+	return false
 }
