@@ -15,24 +15,25 @@
 package mapper
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/el"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 const (
 	contextPathEqualsCondition = el.Expression("#request.contextPath eq '%s'")
-	// hostHeaderWithoutPortEqualsCondition = el.Expression("#request.host.replaceAll(':(.*)$', '') eq '%s'").
-	pathInfoEqualsCondition  = el.Expression("#request.pathInfo eq '%s'")
-	pathInfoMatchesCondition = el.Expression("#request.pathInfo matches '%s'")
-	headerEqualsCondition    = el.Expression("#request.headers['%s'][0] eq '%s'")
-	headerMatchesCondition   = el.Expression("#request.headers['%s'][0] matches '%s'")
-	paramEqualsCondition     = el.Expression("#request.params['%s'] eq '%s'")
-	paramMatchesCondition    = el.Expression("#request.params['%s'] matches '%s'")
+	pathInfoEqualsCondition    = el.Expression("#request.pathInfo eq '%s'")
+	pathInfoMatchesCondition   = el.Expression("#request.pathInfo matches '%s'")
+	headerEqualsCondition      = el.Expression("#request.headers['%s'][0] eq '%s'")
+	headerMatchesCondition     = el.Expression("#request.headers['%s'][0] matches '%s'")
+	paramEqualsCondition       = el.Expression("#request.params['%s'] eq '%s'")
+	paramMatchesCondition      = el.Expression("#request.params['%s'] matches '%s'")
 
 	routingPolicyName = "dynamic-routing"
 	routingRulesKey   = "rules"
@@ -48,24 +49,23 @@ type weightedFlow struct {
 	Weight int
 }
 
-func buildFlows(route *gwAPIv1.HTTPRoute) []*v4.Flow {
+func buildFlows(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.Flow, error) {
 	weightedFlows := make([]weightedFlow, 0)
 
 	for ruleIndex, rule := range route.Spec.Rules {
 		for matchIndex, match := range rule.Matches {
 			conditionsExpressions := buildFlowConditionExpressions(match)
-			weightedFlows = append(
-				weightedFlows,
-				weightedFlow{
-					Flow: buildFlow(
-						rule, ruleIndex, match, matchIndex, conditionsExpressions,
-					),
-					Weight: len(conditionsExpressions),
-				},
-			)
+
+			if flow, err := createRuleMatchFlow(
+				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions,
+			); err != nil {
+				return nil, err
+			} else {
+				weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: len(conditionsExpressions)})
+			}
 		}
 	}
-	return sortFlows(weightedFlows)
+	return sortFlows(weightedFlows), nil
 }
 
 // must appear first in the list and in the same order as defined.
@@ -93,7 +93,37 @@ func getMaxWeight(weightedFlows []weightedFlow) int {
 	return maxWeight
 }
 
-func buildFlow(
+func createRuleMatchFlow(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	rule gwAPIv1.HTTPRouteRule,
+	ruleIndex int,
+	match gwAPIv1.HTTPRouteMatch,
+	matchIndex int,
+	conditionsExpressions []el.Expression,
+) (*v4.Flow, error) {
+	hasUnresolvedBackend, err := hasUnresolvedBackendForRule(ctx, route, rule)
+	if err != nil {
+		return nil, err
+	}
+	hasInvalidGrants, err := hasInvalidValidGrantForRule(ctx, route, rule)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case hasInvalidBackendKindForRule(rule):
+		return buildRuleErrorFlow("Invalid backend reference kind", match, conditionsExpressions), nil
+	case hasUnresolvedBackend:
+		return buildRuleErrorFlow("Unresolved backend reference", match, conditionsExpressions), nil
+	case hasInvalidGrants:
+		return buildRuleErrorFlow("Invalid reference grant", match, conditionsExpressions), nil
+	default:
+		return buildRoutingFlow(rule, ruleIndex, match, matchIndex, conditionsExpressions), nil
+	}
+}
+
+func buildRoutingFlow(
 	rule gwAPIv1.HTTPRouteRule,
 	ruleIndex int,
 	match gwAPIv1.HTTPRouteMatch,
@@ -212,4 +242,82 @@ func buildRoutingTarget(ruleIndex, matchIndex int) string {
 	return fmt.Sprintf(
 		endpointMatcherPattern, buildEndpointGroupName(ruleIndex, matchIndex),
 	)
+}
+
+func buildRuleErrorFlow(
+	description string,
+	match gwAPIv1.HTTPRouteMatch,
+	conditionsExpressions []el.Expression,
+) *v4.Flow {
+	return &v4.Flow{
+		Name:      &description,
+		Request:   buildMockErrorFlow(description),
+		Enabled:   true,
+		Selectors: buildFlowSelectors(match, conditionsExpressions),
+	}
+}
+
+func buildMockErrorFlow(description string) []*v4.FlowStep {
+	policyName := "mock"
+	stepName := "Return error"
+
+	configuration := utils.NewGenericStringMap().
+		Put("headers", []interface{}{}).
+		Put("status", "500")
+
+	return []*v4.FlowStep{
+		v4.NewFlowStep(base.FlowStep{
+			Name:          &stepName,
+			Description:   &description,
+			Policy:        &policyName,
+			Enabled:       true,
+			Configuration: configuration,
+		}),
+	}
+}
+
+func hasInvalidBackendKindForRule(rule gwAPIv1.HTTPRouteRule) bool {
+	for _, ref := range rule.BackendRefs {
+		if !k8s.IsServiceKind(ref.BackendRef.BackendObjectReference) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasUnresolvedBackendForRule(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	rule gwAPIv1.HTTPRouteRule,
+) (bool, error) {
+	for _, ref := range rule.BackendRefs {
+		if resolved, err := k8s.IsResolvedBackend(ctx, route, ref); err != nil {
+			return false, err
+		} else if !resolved {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func hasInvalidValidGrantForRule(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	rule gwAPIv1.HTTPRouteRule,
+) (bool, error) {
+	for _, ref := range rule.BackendRefs {
+		objectRef := gwAPIv1.ObjectReference{
+			Name:      ref.Name,
+			Group:     *ref.Group,
+			Kind:      *ref.Kind,
+			Namespace: ref.Namespace,
+		}
+
+		if granted, err := k8s.IsGrantedReference(ctx, route, objectRef); err != nil {
+			return true, err
+		} else if !granted {
+			return true, nil
+		}
+	}
+	return false, nil
 }

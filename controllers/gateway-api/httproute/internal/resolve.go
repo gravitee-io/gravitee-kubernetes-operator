@@ -21,7 +21,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	coreV1 "k8s.io/api/core/v1"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -158,7 +157,7 @@ func resolveBackendRefs(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 				continue
 			}
 
-			if resolved, err := isResolvedBackend(ctx, route, ref); err != nil {
+			if resolved, err := k8s.IsResolvedBackend(ctx, route, ref); err != nil {
 				return err
 			} else if !resolved {
 				resolvedBuilder.RejectBackendNotFound(
@@ -180,27 +179,4 @@ func resolveBackendRefs(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 	}
 
 	return nil
-}
-
-func isResolvedBackend(
-	ctx context.Context,
-	route *gwAPIv1.HTTPRoute,
-	ref gwAPIv1.HTTPBackendRef,
-) (bool, error) {
-	ns := ref.Namespace
-	if ns == nil {
-		gwNs := gwAPIv1.Namespace(route.Namespace)
-		ns = &gwNs
-	}
-
-	key := client.ObjectKey{Namespace: string(*ns), Name: string(ref.Name)}
-	secret := &coreV1.Service{}
-
-	if err := k8s.GetClient().Get(ctx, key, secret); client.IgnoreNotFound(err) != nil {
-		return false, err
-	} else if kErrors.IsNotFound(err) {
-		return false, nil
-	}
-
-	return true, nil
 }
