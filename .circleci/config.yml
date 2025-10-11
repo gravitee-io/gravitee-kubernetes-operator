@@ -758,7 +758,7 @@ jobs:
           var-name: SONAR_TOKEN
       - run:
           name: Run Sonarcloud analysis
-          command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
+          command: sonar-scanner -Dsonar.projectVersion=$(npx zx hack/scripts/get-chart-version.mjs)
 workflows:
   pull-request:
     when:
