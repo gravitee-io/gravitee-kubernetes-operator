@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { btoa } from 'buffer';
+
 const BASE_URL_API = 'http://localhost:30083';
 const AUTH_HEADER = 'Basic ' + btoa('admin:admin');
 

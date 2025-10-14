@@ -22,19 +22,18 @@ const orgId = argv.org_id || 'DEFAULT';
 const envId = argv.env_id || 'DEFAULT';
 
 if (!apiId) {
-	console.error('Error: --api_id parameter is not provided.');
-	console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID [--org_id ORG_ID] [--env_id ENV_ID]`);
-	process.exit(1);
+  console.error('Error: --api_id parameter is not provided.');
+  console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID [--org_id ORG_ID] [--env_id ENV_ID]`);
+  process.exit(1);
 }
 
 const notificationsPath = `/management/organizations/${orgId}/environments/${envId}/apis/${apiId}/notificationsettings`;
 
 try {
-	const notifications = await mapiClient.get(notificationsPath);
-	console.log(notifications);
+  const notifications = await mapiClient.get(notificationsPath);
+  console.log(notifications);
 } catch (error) {
-	console.error(`Error: Failed to fetch notification settings for API ID: ${apiId}.`);
-	console.error(error.message);
-	process.exit(1);
+  console.error(`Error: Failed to fetch notification settings for API ID: ${apiId}.`);
+  console.error(error.message);
+  process.exit(1);
 }
-

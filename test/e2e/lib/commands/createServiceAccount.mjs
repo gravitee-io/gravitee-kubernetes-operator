@@ -15,13 +15,12 @@
  * limitations under the License.
  */
 
-
 import { mapiClient } from '../gravitee/mapi/client.mjs';
 
 const { name } = argv;
 if (!name) {
-    console.error('Usage: createServiceAccount.mjs --name <SERVICE_ACCOUNT_NAME>');
-    process.exit(1);
+  console.error('Usage: createServiceAccount.mjs --name <SERVICE_ACCOUNT_NAME>');
+  process.exit(1);
 }
 
 const newUser = {
@@ -31,9 +30,9 @@ const newUser = {
 };
 
 try {
-    const createdUser = await mapiClient.post('/management/organizations/DEFAULT/users', newUser);
-    console.log(JSON.stringify(createdUser));
+  const createdUser = await mapiClient.post('/management/organizations/DEFAULT/users', newUser);
+  console.log(JSON.stringify(createdUser));
 } catch (e) {
-    console.error(`Failed to create service account user: ${e.message}`);
-    process.exit(1);
+  console.error(`Failed to create service account user: ${e.message}`);
+  process.exit(1);
 }

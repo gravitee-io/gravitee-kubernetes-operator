@@ -1,0 +1,23 @@
+{
+  "name": "lib",
+  "packageManager": "yarn@4.10.3",
+  "devDependencies": {
+    "@eslint/js": "9.37.0",
+    "eslint": "9.37.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.6.2"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "phelp": "prettier --check --help"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 140,
+    "tabWidth": 2,
+    "trailingComma": "all"
+  }
+}

@@ -19,16 +19,16 @@ import { mapiClient } from '../gravitee/mapi/client.mjs';
 
 const { categoryId, orgId = 'DEFAULT', envId = 'DEFAULT' } = argv;
 if (!categoryId) {
-    console.error('Usage: deleteCategory.mjs --categoryId <CATEGORY_ID> [--orgId <ORG_ID>] [--envId <ENV_ID>]');
-    process.exit(1);
+  console.error('Usage: deleteCategory.mjs --categoryId <CATEGORY_ID> [--orgId <ORG_ID>] [--envId <ENV_ID>]');
+  process.exit(1);
 }
 
 const endpoint = `/management/organizations/${orgId}/environments/${envId}/configuration/categories/${categoryId}`;
 
 try {
-    await mapiClient.del(endpoint);
-    console.log(`Category '${categoryId}' deleted successfully.`);
+  await mapiClient.del(endpoint);
+  console.log(`Category '${categoryId}' deleted successfully.`);
 } catch (e) {
-    console.error(`Failed to delete category: ${e.message}`);
-    process.exit(1);
+  console.error(`Failed to delete category: ${e.message}`);
+  process.exit(1);
 }

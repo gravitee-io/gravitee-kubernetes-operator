@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { httpClient } from "../../http/client.mjs";
+import { httpClient } from '../../http/client.mjs';
 
 async function post(path, body) {
   const url = new URL(path, httpClient.BASE_URL_API).toString();
@@ -22,7 +22,7 @@ async function post(path, body) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': httpClient.AUTH_HEADER,
+      Authorization: httpClient.AUTH_HEADER,
     },
     body: JSON.stringify(body),
   });
@@ -40,7 +40,7 @@ async function get(path) {
   const res = await fetch(url, {
     method: 'GET',
     headers: {
-      'Authorization': httpClient.AUTH_HEADER,
+      Authorization: httpClient.AUTH_HEADER,
     },
   });
 
@@ -57,7 +57,7 @@ async function del(path) {
   const res = await fetch(url, {
     method: 'DELETE',
     headers: {
-      'Authorization': httpClient.AUTH_HEADER,
+      Authorization: httpClient.AUTH_HEADER,
     },
   });
 
