@@ -17,10 +17,10 @@
 
 import { mapiClient } from '../gravitee/mapi/client.mjs';
 
-const { name, description, orgId = 'DEFAULT', envId = 'DEFAULT' } = argv;
+const { name, orgId = 'DEFAULT', envId = 'DEFAULT' } = argv;
 if (!name || typeof name !== 'string' || name.length < 1) {
-    console.error('Usage: createCategory.mjs --name <CATEGORY_NAME> [--description <DESCRIPTION>] [--orgId <ORG_ID>] [--envId <ENV_ID>]');
-    process.exit(1);
+  console.error('Usage: createCategory.mjs --name <CATEGORY_NAME> [--orgId <ORG_ID>] [--envId <ENV_ID>]');
+  process.exit(1);
 }
 
 const body = { name };
@@ -28,9 +28,9 @@ const body = { name };
 const endpoint = `/management/organizations/${orgId}/environments/${envId}/configuration/categories`;
 
 try {
-    const createdCategory = await mapiClient.post(endpoint, body);
-    console.log(JSON.stringify(createdCategory));
+  const createdCategory = await mapiClient.post(endpoint, body);
+  console.log(JSON.stringify(createdCategory));
 } catch (e) {
-    console.error(`Failed to create category: ${e.message}`);
-    process.exit(1);
+  console.error(`Failed to create category: ${e.message}`);
+  process.exit(1);
 }

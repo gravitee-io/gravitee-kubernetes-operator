@@ -20,29 +20,29 @@ const apiId = argv.api_id;
 const apiVersion = argv.api_version;
 
 if (!apiId) {
-    console.error('Error: --api_id parameter is not provided.');
-    console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
-    process.exit(1);
+  console.error('Error: --api_id parameter is not provided.');
+  console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
+  process.exit(1);
 }
 
 if (!apiVersion || !['v2', 'v4'].includes(apiVersion)) {
-    console.error('Error: --api_version parameter is not provided or is invalid. Must be v2 or v4.');
-    console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
-    process.exit(1);
+  console.error('Error: --api_version parameter is not provided or is invalid. Must be v2 or v4.');
+  console.error(`Usage: ${path.basename(process.argv[1])} --api_id API_ID --api_version v2|v4`);
+  process.exit(1);
 }
 
 let apiCrdExportPath;
 if (apiVersion === 'v2') {
-    apiCrdExportPath = `/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`;
+  apiCrdExportPath = `/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`;
 } else if (apiVersion === 'v4') {
-    apiCrdExportPath = `/management/v2/environments/DEFAULT/apis/${apiId}/_export/crd`;
+  apiCrdExportPath = `/management/v2/environments/DEFAULT/apis/${apiId}/_export/crd`;
 }
 
 try {
-    const crdExport = await mapiClient.get(apiCrdExportPath);
-    console.log(crdExport);
+  const crdExport = await mapiClient.get(apiCrdExportPath);
+  console.log(crdExport);
 } catch (error) {
-    console.error(`Error: Failed to fetch CRD for API ID: ${apiId}.`);
-    console.error(error.message);
-    process.exit(1);
+  console.error(`Error: Failed to fetch CRD for API ID: ${apiId}.`);
+  console.error(error.message);
+  process.exit(1);
 }

@@ -31,14 +31,14 @@ try {
   try {
     users = JSON.parse(resText);
   } catch (parseErr) {
-    throw new Error(`Unexpected response while searching users (not JSON).`);
+    throw new Error(`Unexpected response while searching users (not JSON): ${parseErr}`);
   }
 
   if (!Array.isArray(users)) {
     throw new Error('Unexpected response format: expected an array of users.');
   }
 
-const foundUser = users.find((u) => u && u.lastname === name);
+  const foundUser = users.find((u) => u && u.lastname === name);
   if (!foundUser) {
     console.error(`No user found with lastname exactly '${name}'.`);
     process.exit(0);

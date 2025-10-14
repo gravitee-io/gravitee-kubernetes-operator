@@ -19,15 +19,15 @@ import { mapiClient } from '../gravitee/mapi/client.mjs';
 
 const { jsonfile } = argv;
 if (!jsonfile) {
-    console.error('Usage: createApiFromJson.mjs --jsonfile <JSON_FILE>');
-    process.exit(1);
+  console.error('Usage: createApiFromJson.mjs --jsonfile <JSON_FILE>');
+  process.exit(1);
 }
 
 try {
-    await $`test -f ${jsonfile}`;
+  await $`test -f ${jsonfile}`;
 } catch {
-    console.error(`Error: File ${jsonfile} not found.`);
-    process.exit(1);
+  console.error(`Error: File ${jsonfile} not found.`);
+  process.exit(1);
 }
 
 const fileContent = await fs.promises.readFile(jsonfile, 'utf8');
@@ -35,18 +35,18 @@ const apiDefinition = JSON.parse(fileContent);
 
 let apiImportPath;
 if (apiDefinition.gravitee === '2.0.0') {
-    apiImportPath = `/management/organizations/DEFAULT/environments/DEFAULT/apis/import`;
+  apiImportPath = `/management/organizations/DEFAULT/environments/DEFAULT/apis/import`;
 } else if (apiDefinition.api && apiDefinition.api.definitionVersion === 'V4') {
-    apiImportPath = `/management/v2/environments/DEFAULT/apis/_import/definition`;
+  apiImportPath = `/management/v2/environments/DEFAULT/apis/_import/definition`;
 } else {
-    console.error('Unknown API definition version');
-    process.exit(1);
+  console.error('Unknown API definition version');
+  process.exit(1);
 }
 
 try {
-    const createdApi = await mapiClient.post(apiImportPath, apiDefinition);
-    console.log(JSON.stringify(createdApi));
+  const createdApi = await mapiClient.post(apiImportPath, apiDefinition);
+  console.log(JSON.stringify(createdApi));
 } catch (error) {
-    console.error('Error during API import:', error.message);
-    process.exit(1);
+  console.error('Error during API import:', error.message);
+  process.exit(1);
 }
