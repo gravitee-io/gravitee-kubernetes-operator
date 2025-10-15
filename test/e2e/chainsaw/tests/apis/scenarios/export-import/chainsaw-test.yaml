@@ -71,6 +71,13 @@ spec:
         - podLogs:
             selector: "app.kubernetes.io/component=api"
             namespace: ($gkoNamespace)
+      cleanup:
+        - script:
+            env:
+              - name: CREATED_API_JSON
+                value: ($createdApiJson)
+            content: |
+              rm -f $CREATED_API_JSON
 
     - name: Export API as YAML
       try:
@@ -97,6 +104,13 @@ spec:
                 value: ($createdApiJson)
             content: |
               cat $CREATED_API_JSON
+      cleanup:
+        - script:
+            env:
+              - name: EXPORTED_API_YAML
+                value: ($exportedApiYaml)
+            content: |
+              rm -f $EXPORTED_API_YAML
 
     - name: Add contextRef to exported YAML
       try:
@@ -111,6 +125,13 @@ spec:
           content: |
             cat "$EXPORTED_API_YAML" | \
             yq -e ".spec.contextRef = {\"name\": \"dev-ctx\", \"namespace\": \"$GKO_NAMESPACE\"}" > $MODIFIED_YAML_EXPORT
+      cleanup:
+        - script:
+            env:
+              - name: MODIFIED_YAML_EXPORT
+                value: ($modifiedYamlExport)
+            content: |
+              rm -f $MODIFIED_YAML_EXPORT
 
     - name: Deploy modified YAML export
       use:
@@ -143,17 +164,4 @@ spec:
         - podLogs:
             selector: "control-plane=controller-manager"
             namespace: ($gkoNamespace)
-          
-    - name: cleanup-generated-files
-      try:
-        - script:
-            env:
-              - name: EXPORTED_API_YAML
-                value: ($exportedApiYaml)
-              - name: MODIFIED_YAML_EXPORT
-                value: ($modifiedYamlExport)
-              - name: CREATED_API_JSON
-                value: ($createdApiJson)
-            content: |
-              echo "Cleaning up generated files..."
-              rm -f "$EXPORTED_API_YAML" "$MODIFIED_YAML_EXPORT" "$CREATED_API_JSON"
+    
