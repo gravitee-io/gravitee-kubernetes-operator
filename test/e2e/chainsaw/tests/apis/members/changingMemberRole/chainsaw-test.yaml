@@ -61,6 +61,18 @@ spec:
           - name: apiCrdFile
             value: (join('', ['resources/', $apiVersion, '-api-with-one-member.yaml']))
 
+  # only v4 APIs need a wait between creation and update, v2 APIs are ready immediately
+  - name: wait only for v4 APIs
+    try:
+      - script:
+          env:
+            - name: API_VERSION
+              value: ($apiVersion)
+          content: |
+            if [ "${API_VERSION}" = "v4" ]; then
+              sleep 8s
+            fi
+
   - name: Update member role in API
     use:
       template: ../../../../stepTemplates/updateApi.yaml
