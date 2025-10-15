@@ -19,5 +19,8 @@
     "printWidth": 140,
     "tabWidth": 2,
     "trailingComma": "all"
+  },
+  "engines": {
+    "node": "^20.11"
   }
 }

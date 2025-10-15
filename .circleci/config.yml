@@ -142,6 +142,21 @@ jobs:
               -x @commitlint/config-conventional \
               --from $(git describe --tags --abbrev=0)
 
+  job-lint-e2e-lib:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - run:
+          name: Install libs
+          command: cd test/e2e/lib && yarn
+      - run:
+          name: Check e2e library format
+          command: cd test/e2e/lib && yarn format:check
+      - run:
+          name: Lint e2e library
+          command: cd test/e2e/lib && yarn lint
+
   job-lint-resources:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -778,6 +793,8 @@ workflows:
             - Install GO tools
       - job-lint-commits:
           name: Lint commits
+      - job-lint-e2e-lib:
+          name: Lint E2E library
       - job-lint-resources:
           name: Lint resources
           requires:
@@ -794,6 +811,7 @@ workflows:
             - Lint licenses
             - Lint commits
             - Lint resources
+            - Lint E2E library
             - Run unit tests
           ginkgo-filter: withContext
       - job-integration-test:
@@ -804,6 +822,7 @@ workflows:
             - Lint licenses
             - Lint commits
             - Lint resources
+            - Lint E2E library
             - Run unit tests
           ginkgo-filter: withoutContext
       - job-conformance-test:
@@ -815,6 +834,7 @@ workflows:
             - Lint commits
             - Lint resources
             - Run unit tests
+            - Lint E2E library
       - job-helm-lint:
           name: Lint Helm chart
       - job-helm-test:

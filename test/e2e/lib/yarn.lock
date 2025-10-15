@@ -69,7 +69,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/js@npm:9.37.0, @eslint/js@npm:^9.37.0":
+"@eslint/js@npm:9.37.0":
   version: 9.37.0
   resolution: "@eslint/js@npm:9.37.0"
   checksum: 10c0/84f98a6213522fc76ea104bd910f606136200bd918544e056a7a22442d3f9d5c3c5cd7f4cdf2499d49b1fa140155b87d597a1f16d01644920f05c228e9ca0378
@@ -278,7 +278,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^10.1.8":
+"eslint-config-prettier@npm:10.1.8":
   version: 10.1.8
   resolution: "eslint-config-prettier@npm:10.1.8"
   peerDependencies:
@@ -313,7 +313,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^9.37.0":
+"eslint@npm:9.37.0":
   version: 9.37.0
   resolution: "eslint@npm:9.37.0"
   dependencies:
@@ -588,10 +588,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "lib@workspace:."
   dependencies:
-    "@eslint/js": "npm:^9.37.0"
-    eslint: "npm:^9.37.0"
-    eslint-config-prettier: "npm:^10.1.8"
-    prettier: "npm:^3.6.2"
+    "@eslint/js": "npm:9.37.0"
+    eslint: "npm:9.37.0"
+    eslint-config-prettier: "npm:10.1.8"
+    prettier: "npm:3.6.2"
   languageName: unknown
   linkType: soft
 
@@ -696,7 +696,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.6.2":
+"prettier@npm:3.6.2":
   version: 3.6.2
   resolution: "prettier@npm:3.6.2"
   bin:
