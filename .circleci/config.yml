@@ -273,6 +273,11 @@ jobs:
           name: Run Gateway API conformance test suites
           command: |
             bin/gotestsum --format=testname --hide-summary=skipped --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+      - run:
+          name: Scale down operator manager.image.repository
+          command: |
+            kubectl scale deployment gko-controller-manager -n default --replicas=0
+            kubectl wait --for=delete pod -l control-plane=controller-manager
       - run: 
           name: Generate coverage
           command: |

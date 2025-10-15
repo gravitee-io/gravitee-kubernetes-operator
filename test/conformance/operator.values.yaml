@@ -28,9 +28,9 @@ manager:
       format: iso-8601
   pod:
     securityContext:
-      fsGroup: 2000
+      fsGroup: 1000
       runAsUser: 1000
-      runAsGroup: 2000
+      runAsGroup: 1000
   resources:
     limits:
       cpu: 1
