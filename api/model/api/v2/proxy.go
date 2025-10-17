@@ -43,7 +43,6 @@ type Proxy struct {
 	VirtualHosts []*VirtualHost `json:"virtual_hosts"`
 	// List of endpoint groups of the proxy
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:default:={}
 	Groups []*EndpointGroup `json:"groups"`
 	// Proxy Failover
 	Failover *Failover `json:"failover,omitempty"`

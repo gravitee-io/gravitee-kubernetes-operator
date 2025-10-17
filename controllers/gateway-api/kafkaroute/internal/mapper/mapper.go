@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -110,6 +111,6 @@ func buildTag(route *v1alpha1.KafkaRoute, ref gwAPIv1.ParentReference) string {
 
 func newKeyLessPlan() *v4.Plan {
 	plan := v4.NewPlan().WithSecurity(&keyLessSecurity)
-	plan.Status = base.PublishedPlanStatus
+	plan.Status = ptr.To(base.PublishedPlanStatus)
 	return plan
 }

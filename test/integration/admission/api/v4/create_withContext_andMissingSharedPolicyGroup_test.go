@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/utils/ptr"
 )
 
 var _ = Describe("Validate create", labels.WithContext, func() {
@@ -42,7 +43,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 		fixtures.APIv4.Spec.Flows = []*v4.Flow{
 			{
-				Enabled: true,
+				Enabled: ptr.To(true),
 				Request: []*v4.FlowStep{
 					{
 						SharedPolicyGroup: &refs.NamespacedName{
