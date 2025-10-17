@@ -31,16 +31,15 @@ if (!apiId) {
 const apiPath = `/management/organizations/${orgId}/environments/${envId}/apis/${apiId}`;
 
 try {
-  // mapiClient.get returns response text and throws on non-2xx with message containing status.
-  const resText = await mapiClient.get(apiPath);
-  const actualStatus = 200; // success path
+  // mapiClient.get returns status/body and throws on non-2xx with message containing status.
+  const { body, status: actualStatus } = await mapiClient.get(apiPath);
   if (expectedStatus !== undefined) {
     if (actualStatus !== expectedStatus) {
       console.error(`Expected HTTP status ${expectedStatus} but got ${actualStatus}.`);
       process.exit(1);
     }
   }
-  console.log(resText);
+  console.log(body);
 } catch (error) {
   // If status checking is requested, verify it against error message.
   const match = /\b(\d{3})\b/.exec(error.message);

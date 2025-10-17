@@ -39,8 +39,8 @@ if (apiVersion === 'v2') {
 }
 
 try {
-  const crdExport = await mapiClient.get(apiCrdExportPath);
-  console.log(crdExport);
+  const { body } = await mapiClient.get(apiCrdExportPath);
+  console.log(body);
 } catch (error) {
   console.error(`Error: Failed to fetch CRD for API ID: ${apiId}.`);
   console.error(error.message);
