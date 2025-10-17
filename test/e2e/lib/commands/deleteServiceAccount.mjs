@@ -25,11 +25,11 @@ if (!name) {
 
 try {
   const searchPath = `/management/organizations/DEFAULT/search/users?q=${encodeURIComponent(name)}`;
-  const resText = await mapiClient.get(searchPath);
+  const { body } = await mapiClient.get(searchPath);
 
   let users;
   try {
-    users = JSON.parse(resText);
+    users = JSON.parse(body);
   } catch (parseErr) {
     throw new Error(`Unexpected response while searching users (not JSON): ${parseErr}`);
   }
