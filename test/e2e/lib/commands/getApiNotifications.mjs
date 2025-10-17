@@ -30,8 +30,8 @@ if (!apiId) {
 const notificationsPath = `/management/organizations/${orgId}/environments/${envId}/apis/${apiId}/notificationsettings`;
 
 try {
-  const notifications = await mapiClient.get(notificationsPath);
-  console.log(notifications);
+  const { body } = await mapiClient.get(notificationsPath);
+  console.log(body);
 } catch (error) {
   console.error(`Error: Failed to fetch notification settings for API ID: ${apiId}.`);
   console.error(error.message);

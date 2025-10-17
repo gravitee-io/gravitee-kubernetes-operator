@@ -49,7 +49,11 @@ async function get(path) {
     throw new Error(`Failed request to ${url}: ${res.status} ${err}`);
   }
 
-  return res.text();
+  const body = await res.text();
+  return {
+    status: res.status,
+    body,
+  };
 }
 
 async function del(path) {
