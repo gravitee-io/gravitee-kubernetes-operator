@@ -25,9 +25,8 @@ const (
 )
 
 type FlowStep struct {
-	// +kubebuilder:default:=true
-	// Indicate if this FlowStep is enabled or not
-	Enabled bool `json:"enabled"`
+	// Indicate if this FlowStep is enabled or not (default: true)
+	Enabled *bool `json:"enabled,omitempty"`
 	// FlowStep policy
 	// +kubebuilder:validation:Optional
 	Policy *string `json:"policy,omitempty"`

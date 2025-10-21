@@ -177,10 +177,10 @@ type Failover struct {
 	MaxRetries *int `json:"maxRetries,omitempty"`
 	// API Failover slow call duration
 	// +kubebuilder:default:=2000
-	SlowCallDuration *int64 `json:"slowCallDuration,omitempty"`
+	SlowCallDuration *uint64 `json:"slowCallDuration,omitempty"`
 	// API Failover  open state duration
 	// +kubebuilder:default:=10000
-	OpenStateDuration *int64 `json:"openStateDuration,omitempty"`
+	OpenStateDuration *uint64 `json:"openStateDuration,omitempty"`
 	// API Failover max failures
 	// +kubebuilder:default:=5
 	MaxFailures *int `json:"maxFailures,omitempty"`

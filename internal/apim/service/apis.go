@@ -18,6 +18,7 @@ import (
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/adapter"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
@@ -97,7 +98,8 @@ func (svc *APIs) importV2(spec *v2.Api, dryRun bool) (*base.Status, error) {
 	url := svc.EnvV1Target("apis/import-crd").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
 	status := new(base.Status)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	apiV2 := adapter.NewApiV2(*spec)
+	if err := svc.HTTP.Put(url.String(), apiV2, status); err != nil {
 		return nil, err
 	}
 
@@ -116,7 +118,8 @@ func (svc *APIs) importV4(spec *v4.Api, dryRun bool) (*base.Status, error) {
 	url := svc.EnvV2Target("apis/_import/crd").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
 	status := new(base.Status)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	apiV4 := adapter.NewApiV4(*spec)
+	if err := svc.HTTP.Put(url.String(), apiV4, status); err != nil {
 		return nil, err
 	}
 
