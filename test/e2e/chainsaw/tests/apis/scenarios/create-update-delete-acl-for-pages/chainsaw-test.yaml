@@ -1,0 +1,186 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: api-with-create-update-delete-acl-for-pages
+spec:
+  scenarios:
+    - bindings:
+        - name: apiVersion
+          value: v2
+        - name: apiVersionK8s
+          value: apidefinitions.gravitee.io
+        - name: apiKind
+          value: ApiDefinition
+    # ACL for Pages is not yet supported in v4 APIs, uncomment when supported
+    # - bindings:
+    #     - name: apiVersion
+    #       value: v4
+    #     - name: apiVersionK8s
+    #       value: apiv4definitions.gravitee.io
+    #     - name: apiKind
+    #       value: ApiV4Definition
+  bindings:
+    - name: apiName
+      value: (join('-', [$apiVersion, $test.metadata.name]))
+    - name: commandDir
+      value: "../../../../../lib/commands"
+    - name: gkoNamespace
+      value: default
+    - name: exportedApiYaml
+      value: (concat($apiVersion, '-exportedApi.yaml'))
+    - name: group1Name
+      value: (concat('group1-for-', $apiName))
+    - name: group2Name
+      value: (concat('group2-for-', $apiName))
+
+
+  steps: 
+  - name: Create a Group  
+    use:
+      template: ../../../../stepTemplates/createGroup.yaml
+      with:
+        bindings:
+          - name: groupName
+            value: ($group1Name)
+
+  - name: Create another Group  
+    use:
+      template: ../../../../stepTemplates/createGroup.yaml
+      with:
+        bindings:
+          - name: groupName
+            value: ($group2Name)
+
+  - name: Create API with Group1 and ACL for Pages
+    use:
+      template: ../../../../stepTemplates/createApi.yaml
+      with:
+        bindings:
+          - name: apiCrdFile
+            value: (join('', ['resources/', $apiName,'.yaml']))
+
+  - name: Export API as YAML
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+            - name: API_VERSION
+              value: ($apiVersion)
+            - name: API_VERSION_K8S
+              value: ($apiVersionK8s)
+          content: |
+            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
+            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
+
+  - name: Assert exported Pages ACL contains Group1
+    try:
+      - script:
+          env:
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+          content: |
+            echo "ACL_MATCH_COUNT=$(yq '.spec.pages."hello-markdown".accessControls | map(select(.referenceId == "group1-for-v2-api-with-create-update-delete-acl-for-pages" and .referenceType == "GROUP")) | length' "$EXPORTED_API_YAML")"
+          check:
+            (contains($stdout, 'ACL_MATCH_COUNT=1')): true
+
+  - name: Update API with new Group for Page ACL
+    use:
+      template: ../../../../stepTemplates/updateApi.yaml
+      with:
+        bindings:
+          - name: apiCrdFile
+            value: (join('', ['resources/', $apiVersion, '-api-update1-with-new-group-in-acl.yaml']))
+
+  - name: Export API as YAML
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+            - name: API_VERSION
+              value: ($apiVersion)
+            - name: API_VERSION_K8S
+              value: ($apiVersionK8s)
+          content: |
+            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
+            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
+
+  - name: Assert exported Pages ACL contains Group2
+    try:
+      - script:
+          env:
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+          content: |
+            echo "ACL_MATCH_COUNT=$(yq '.spec.pages."hello-markdown".accessControls | map(select(.referenceId == "group2-for-v2-api-with-create-update-delete-acl-for-pages" and .referenceType == "GROUP")) | length' "$EXPORTED_API_YAML")"
+          check:
+            (contains($stdout, 'ACL_MATCH_COUNT=1')): true
+
+  - name: Update API deleting ACL from Pages
+    use:
+      template: ../../../../stepTemplates/updateApi.yaml
+      with:
+        bindings:
+          - name: apiCrdFile
+            value: (join('', ['resources/', $apiVersion, '-api-update2-with-removed-acl.yaml']))
+
+  - name: Export API as YAML
+    try:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+            - name: API_VERSION
+              value: ($apiVersion)
+            - name: API_VERSION_K8S
+              value: ($apiVersionK8s)
+          content: |
+            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
+            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
+
+  - name: Assert exported Pages has no ACL
+    try:
+      - script:
+          env:
+            - name: EXPORTED_API_YAML
+              value: ($exportedApiYaml)
+          content: |
+            echo "ACL_MATCH_COUNT=$(yq '.spec.pages."hello-markdown".accessControls | length' "$EXPORTED_API_YAML")"
+            rm -f "$EXPORTED_API_YAML"
+          check:
+            (contains($stdout, 'ACL_MATCH_COUNT=0')): true
+  
