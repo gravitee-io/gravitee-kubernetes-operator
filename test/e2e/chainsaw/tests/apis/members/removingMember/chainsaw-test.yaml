@@ -38,15 +38,10 @@ spec:
   bindings:
     - name: apiName
       value: (join('-', [$apiVersion, $test.metadata.name]))
-    # - name: apiCrdFile
-    #   value: (join('', ['resources/', $apiName, '.yaml']))
     - name: commandDir
       value: "../../../../../lib/commands"
     - name: gkoNamespace
       value: default
-    - name: exportedApiYaml
-      value: (concat($apiVersion, '-exportedApi.yaml'))
-
     - name: service_account_name
       value: (concat('service-account-for-', $apiName))
 
@@ -71,7 +66,7 @@ spec:
           - name: apiCrdFile
             value: (join('', ['resources/', $apiVersion, '-api-without-member.yaml']))
 
-  - name: Export API as YAML
+  - name: Assert export for removed member
     try:
       - script:
           env:
@@ -81,26 +76,48 @@ spec:
               value: ($apiName)
             - name: RESOURCE_NAMESPACE
               value: ($namespace)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
             - name: API_VERSION
               value: ($apiVersion)
             - name: API_VERSION_K8S
               value: ($apiVersionK8s)
           content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
-            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
-
-  - name: Assert export for removed member
-    try:
+            echo "=== API Resource ==="
+            kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o yaml
       - script:
           env:
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+            - name: API_VERSION
+              value: ($apiVersion)
+            - name: API_VERSION_K8S
+              value: ($apiVersionK8s)
           content: |
-            echo "MEMBER_COUNT=$(yq '.spec.members | length' "$EXPORTED_API_YAML")"
-            rm -f "$EXPORTED_API_YAML"
-          check:
-            (contains($stdout, 'MEMBER_COUNT=0')): true
+            yarn dlx zx "$COMMAND_DIR/exportAndAssertApi.mjs" \
+              --api_version "$API_VERSION" \
+              --api_resource "$API_VERSION_K8S" \
+              --api_name "$API_NAME" \
+              --namespace "$RESOURCE_NAMESPACE" \
+              --assert spec.members.length:0
+    catch:
+      - script:
+          env:
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_NAME
+              value: ($apiName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+            - name: API_VERSION
+              value: ($apiVersion)
+            - name: API_VERSION_K8S
+              value: ($apiVersionK8s)
+          content: |
+            echo "=== API Resource ==="
+            kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o yaml
+            echo "=== Service Account Resource ==="
+            kubectl get serviceaccount -n $RESOURCE_NAMESPACE $service_account_name -o yaml
+            exit 1
