@@ -38,7 +38,7 @@ var _ = Describe("Create", labels.WithoutContext, func() {
 
 	ctx := context.Background()
 
-	httpCli := xhttp.NewNoAuthClient(ctx)
+	httpCli, _ := xhttp.NewNoAuthClient(ctx)
 
 	It("should expose backend service", func() {
 		fixtures := fixture.Builder().
