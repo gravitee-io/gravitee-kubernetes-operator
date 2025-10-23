@@ -88,9 +88,18 @@ data:
   {{ if .Values.manager.httpClient.proxy.useSystemProxy }}
   HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY: "true"
   {{- end }}
+  {{ if .Values.manager.httpClient.proxy.url }}
   HTTP_CLIENT_PROXY_URL: {{.Values.manager.httpClient.proxy.url }}
+  {{- end }}
+  {{- if .Values.manager.httpClient.proxy.username }}
   HTTP_CLIENT_PROXY_USERNAME: {{.Values.manager.httpClient.proxy.username }}
+  {{- end }}
+  {{- if .Values.manager.httpClient.proxy.password }}
   HTTP_CLIENT_PROXY_PASSWORD: {{.Values.manager.httpClient.proxy.password }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.manager.httpClient.trustStore.path }}
+  HTTP_CLIENT_TRUSTSTORE_PATH: {{.Values.manager.httpClient.trustStore.path }}
   {{- end }}
   {{- if .Values.manager.webhook.enabled }}
   ENABLE_WEBHOOK: "true"
