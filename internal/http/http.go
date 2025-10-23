@@ -17,14 +17,15 @@ package http
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
 
@@ -188,11 +189,11 @@ func (client *Client) newJSONRequest(method, url string, entity any) (*http.Requ
 	return req, nil
 }
 
-func NewNoAuthClient(ctx context.Context) *Client {
+func NewNoAuthClient(ctx context.Context) (*Client, error) {
 	return NewClient(ctx, nil)
 }
 
-func NewClient(ctx context.Context, auth *Auth) *Client {
+func NewClient(ctx context.Context, auth *Auth) (*Client, error) {
 	defaultTransport, _ := http.DefaultTransport.(*http.Transport)
 	transport := defaultTransport.Clone()
 	if env.Config.HttpProxy.Enabled { //nolint:nestif // normal complexity
@@ -208,14 +209,34 @@ func NewClient(ctx context.Context, auth *Auth) *Client {
 			}
 			proxyURL, err := url.Parse(rawUrl)
 			if err != nil {
-				log.Error(ctx, err, "Could not parse proxy URL")
+				return nil, err
 			}
 			transport.Proxy = http.ProxyURL(proxyURL)
 		}
 	}
+
 	transport.TLSClientConfig = &tls.Config{
 		// #nosec G402
 		InsecureSkipVerify: env.Config.HTTPClientInsecureSkipVerify,
+	}
+
+	// Load your trust store (CA certificates)
+	if env.Config.HttpClientTrustStorePath != "" {
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+
+		caCert, err := os.ReadFile(env.Config.HttpClientTrustStorePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read trust store file %s: %w", env.Config.HttpClientTrustStorePath, err)
+		}
+
+		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
+			return nil, fmt.Errorf("failed to append CA certs from %s to pool", env.Config.HttpClientTrustStorePath)
+		}
+
+		transport.TLSClientConfig.RootCAs = rootCAs
 	}
 
 	timeout := time.Duration(env.Config.HTTPClientTimeoutSeconds) * time.Second
@@ -226,5 +247,5 @@ func NewClient(ctx context.Context, auth *Auth) *Client {
 		httpClient.Transport = authRoundTripper
 	}
 
-	return &Client{ctx, httpClient}
+	return &Client{ctx, httpClient}, nil
 }
