@@ -158,6 +158,9 @@ manager:
       username: ""
       ## @param manager.httpClient.proxy.password The proxy password if authentication is needed
       password: ""
+    trustStore:
+      ## @param manager.httpClient.trustStore.path The path to the mounted truststore (in pem format), if you mount your certificate inside the default "/etc/ssl/certs" folder then you don't need to set this parameter
+      path: ""
   webhook:
     ## @param manager.webhook.enabled If true, the manager will register a webhook server operating on custom resources.
     enabled: true

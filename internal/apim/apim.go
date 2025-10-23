@@ -64,17 +64,22 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		return nil, err
 	}
 
-	client := &client.Client{
-		HTTP: http.NewClient(ctx, toHttpAuth(context)),
+	newClient, err := http.NewClient(ctx, toHttpAuth(context))
+	if err != nil {
+		return nil, err
+	}
+
+	c := &client.Client{
+		HTTP: newClient,
 		URLs: urls,
 	}
 
 	return &APIM{
-		APIs:              service.NewAPIs(client),
-		Applications:      service.NewApplications(client),
-		Subscription:      service.NewSubscriptions(client),
-		SharedPolicyGroup: service.NewSharedPolicyGroup(client),
-		Env:               service.NewEnv(client),
+		APIs:              service.NewAPIs(c),
+		Applications:      service.NewApplications(c),
+		Subscription:      service.NewSubscriptions(c),
+		SharedPolicyGroup: service.NewSharedPolicyGroup(c),
+		Env:               service.NewEnv(c),
 		Context:           context,
 	}, nil
 }
