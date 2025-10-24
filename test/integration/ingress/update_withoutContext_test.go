@@ -37,7 +37,7 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 
 	ctx := context.Background()
 
-	httpCli := xhttp.NewNoAuthClient(ctx)
+	httpCli, _ := xhttp.NewNoAuthClient(ctx)
 
 	It("should update backing api definition", func() {
 		fixtures := fixture.Builder().

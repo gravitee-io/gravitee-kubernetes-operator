@@ -51,6 +51,7 @@ const (
 	HttpClientProxyURL                   = "HTTP_CLIENT_PROXY_URL"
 	HttpClientProxyUsername              = "HTTP_CLIENT_PROXY_USERNAME"
 	HttpClientProxyPassword              = "HTTP_CLIENT_PROXY_PASSWORD" //nolint:gosec // This is not a hardcoded secret
+	HttpClientTruststorePath             = "HTTP_CLIENT_TRUSTSTORE_PATH"
 	TrueString                           = "true"
 	FalseString                          = "false"
 	IngressClasses                       = "INGRESS_CLASSES"
@@ -103,6 +104,7 @@ var Config = struct {
 	HTTPClientInsecureSkipVerify         bool
 	HTTPClientTimeoutSeconds             int
 	HttpProxy                            HttpProxy
+	HttpClientTrustStorePath             string
 	IngressClasses                       []string
 	CheckApiContextPathConflictInCluster bool
 	LogsFormat                           string
@@ -132,6 +134,8 @@ func init() {
 		Password:       os.Getenv(HttpClientProxyPassword),
 	}
 	Config.HttpProxy = httpProxy
+
+	Config.HttpClientTrustStorePath = os.Getenv(HttpClientTruststorePath)
 
 	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
 	Config.HTTPClientTimeoutSeconds = parseInt(HttpClientTimeoutSeconds, defaultHttpClientTimeout)
