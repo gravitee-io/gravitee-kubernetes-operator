@@ -49,6 +49,7 @@ export default [
         path: 'readonly',
         setTimeout: 'readonly',
         URL: 'readonly',
+        sleep: 'readonly',
       },
     },
     rules: {

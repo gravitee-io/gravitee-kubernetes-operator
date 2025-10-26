@@ -42,9 +42,6 @@ spec:
       value: "../../../../../lib/commands"
     - name: gkoNamespace
       value: default
-    - name: exportedApiYaml
-      value: (concat($apiVersion, '-exportedApi.yaml'))
-      
     - name: categoryName
       value: (concat('category-for-', $apiName))
 
@@ -57,37 +54,11 @@ spec:
     use:
       template: ../../../../stepTemplates/createApi.yaml
 
-  - name: Export API as YAML
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: API_NAME
-              value: ($apiName)
-            - name: RESOURCE_NAMESPACE
-              value: ($namespace)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-            - name: API_VERSION
-              value: ($apiVersion)
-            - name: API_VERSION_K8S
-              value: ($apiVersionK8s)
-          content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
-            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
-
   - name: Assert exported API for created category
-    try:
-      - script:
-          env:
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-            - name: CATEGORY_NAME
-              value: ($categoryName)
-          content: |
-            if ! yq -e '.spec.categories[]' "$EXPORTED_API_YAML" | grep -Fxq "$CATEGORY_NAME"; then
-              echo "category \"$CATEGORY_NAME\"not found in exported API"
-              exit 1
-            fi
-            rm "$EXPORTED_API_YAML"
+    use:
+      template: ../../../../stepTemplates/exportApiAndAssert.yaml
+      with:
+        bindings:
+          - name: assertArgs
+            value:
+              - (concat('--assert spec.categories:', $categoryName))

@@ -42,9 +42,6 @@ spec:
       value: "../../../../../lib/commands"
     - name: gkoNamespace
       value: default
-    - name: exportedApiYaml
-      value: (concat($apiVersion, '-exportedApi.yaml'))
-      
     - name: service_account_name
       value: (concat('service-account-for-', $apiName))
     - name: group1Name
@@ -80,41 +77,16 @@ spec:
     use:
       template: ../../../../stepTemplates/createApi.yaml
 
-  - name: Export API as YAML
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: API_NAME
-              value: ($apiName)
-            - name: RESOURCE_NAMESPACE
-              value: ($namespace)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-            - name: API_VERSION
-              value: ($apiVersion)
-            - name: API_VERSION_K8S
-              value: ($apiVersionK8s)
-          content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
-            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
-
   - name: Assert exported API for created groups
-    try:
-      - script:
-          env:
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-          content: |
-            for group in $group1Name $group2Name $group3Name; do
-              if ! yq -e ".spec.groups[] | select(. == \"$group\")" $EXPORTED_API_YAML; then
-                echo "Group $group not found in exported API"
-                exit 1
-              fi
-            done
+    use:
+      template: ../../../../stepTemplates/exportApiAndAssert.yaml
+      with:
+        bindings:
+          - name: assertArgs
+            value:
+              - (concat('--assert spec.groups:', $group1Name))
+              - (concat('--assert spec.groups:', $group2Name))
+              - (concat('--assert spec.groups:', $group3Name))
 
   - name: Update API with removing one group
     use:
@@ -124,43 +96,12 @@ spec:
           - name: apiCrdFile
             value: (join('', ['resources/', $apiVersion, '-api-with-one-removed-group.yaml']))
             
-  - name: Export API as YAML
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: API_NAME
-              value: ($apiName)
-            - name: RESOURCE_NAMESPACE
-              value: ($namespace)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-            - name: API_VERSION
-              value: ($apiVersion)
-            - name: API_VERSION_K8S
-              value: ($apiVersionK8s)
-          content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
-            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
-
   - name: Assert exported API for removed group
-    try:
-      - script:
-          env:
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-            - name: GROUP1_NAME
-              value: ($group1Name)
-            - name: GROUP3_NAME
-              value: ($group3Name)
-          content: |
-            for group in $GROUP1_NAME $GROUP3_NAME; do
-              if ! yq -e ".spec.groups[] | select(. == \"$group\")" $EXPORTED_API_YAML; then
-                echo "Group $group not found in exported API"
-                exit 1
-              fi
-            done
-            rm $EXPORTED_API_YAML
+    use:
+      template: ../../../../stepTemplates/exportApiAndAssert.yaml
+      with:
+        bindings:
+          - name: assertArgs
+            value:
+              - (concat('--assert spec.groups:', $group1Name))
+              - (concat('--assert spec.groups:', $group3Name))

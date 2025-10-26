@@ -42,11 +42,10 @@ spec:
       value: "../../../../../lib/commands"
     - name: gkoNamespace
       value: default
-    - name: exportedApiYaml
-      value: (concat($apiVersion, '-exportedApi.yaml'))
- 
     - name: service_account_name
       value: (concat('service-account-for-', $apiName))
+    - name: memberExpectation
+      value: (join('', ['{"source":"gravitee","sourceId":"', $service_account_name, '","role":"REVIEWER"}']))
 
   steps:
   - name: Create a new service account
@@ -97,38 +96,11 @@ spec:
             status:
               processingStatus: Completed
     
-  - name: Export API as YAML
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: API_NAME
-              value: ($apiName)
-            - name: RESOURCE_NAMESPACE
-              value: ($namespace)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-            - name: API_VERSION
-              value: ($apiVersion)
-            - name: API_VERSION_K8S
-              value: ($apiVersionK8s)
-          content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
-            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
-
   - name: Assert member role has been changed in APIM
-    try:
-      - script:
-          env:
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-          content: |
-            echo "MEMBER_COUNT=$(yq '.spec.members | length' "$EXPORTED_API_YAML")"
-            echo "ROLE=$(yq -r ".spec.members[] | select(.source==\"gravitee\" and .sourceId==\"$SERVICE_ACCOUNT_NAME\") | .role" "$EXPORTED_API_YAML")"
-            rm -f "$EXPORTED_API_YAML"
-          check:
-            (contains($stdout, 'MEMBER_COUNT=1')): true
-            (contains($stdout, 'ROLE=REVIEWER')): true
+    use:
+      template: ../../../../stepTemplates/exportApiAndAssert.yaml
+      with:
+        bindings:
+          - name: assertArgs
+            value:
+              - (concat('--assert spec.members:', $memberExpectation))

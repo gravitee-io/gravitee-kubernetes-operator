@@ -81,10 +81,7 @@ for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const exportedYaml = await exportApiAsYaml(apiId, apiVersion);
     const exportedObject = await parseYaml(exportedYaml);
 
-    const errors = [
-      ...checkRules(exportedObject, mustHave, false),
-      ...checkRules(exportedObject, mustNotHave, true),
-    ];
+    const errors = [...checkRules(exportedObject, mustHave, false), ...checkRules(exportedObject, mustNotHave, true)];
 
     if (!errors.length) {
       console.log(`Assertions satisfied (attempt ${attempt}).`);
@@ -169,14 +166,18 @@ function checkRules(exportedObject, assertions, negate) {
     const actual = getByPath(exportedObject, assertion.path);
     const matches = valueMatches(actual, assertion.value);
     if (!negate && !matches) {
-      issues.push(assertion.value === undefined
-        ? `Expected ${assertion.path} to exist.`
-        : `Expected ${assertion.path} to contain ${display(assertion.value)} but saw ${display(actual)}.`);
+      issues.push(
+        assertion.value === undefined
+          ? `Expected ${assertion.path} to exist.`
+          : `Expected ${assertion.path} to contain ${display(assertion.value)} but saw ${display(actual)}.`,
+      );
     }
     if (negate && matches) {
-      issues.push(assertion.value === undefined
-        ? `Expected ${assertion.path} to be absent.`
-        : `Expected ${assertion.path} to not contain ${display(assertion.value)}.`);
+      issues.push(
+        assertion.value === undefined
+          ? `Expected ${assertion.path} to be absent.`
+          : `Expected ${assertion.path} to not contain ${display(assertion.value)}.`,
+      );
     }
   }
   return issues;
@@ -284,9 +285,10 @@ async function resolveApiId(resource, resourceNamespace, name) {
 }
 
 async function exportApiAsYaml(apiId, version) {
-  const path = version === 'v2'
-    ? `/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`
-    : `/management/v2/environments/DEFAULT/apis/${apiId}/_export/crd`;
+  const path =
+    version === 'v2'
+      ? `/management/organizations/DEFAULT/environments/DEFAULT/apis/${apiId}/crd`
+      : `/management/v2/environments/DEFAULT/apis/${apiId}/_export/crd`;
   const { body } = await mapiClient.get(path);
   return body;
 }
