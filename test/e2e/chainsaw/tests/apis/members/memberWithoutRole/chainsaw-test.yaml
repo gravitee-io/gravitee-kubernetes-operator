@@ -42,9 +42,6 @@ spec:
       value: "../../../../../lib/commands"
     - name: gkoNamespace
       value: default
-    - name: exportedApiYaml
-      value: (concat($apiVersion, '-exportedApi.yaml'))
-  
     - name: service_account_name
       value: (concat('service-account-for-', $apiName))
 
@@ -62,36 +59,13 @@ spec:
       - assert:
           file: resources/assert-default-member-role.yaml
 
-  - name: Export API as YAML
-    try:
-      - script:
-          env:
-            - name: COMMAND_DIR
-              value: ($commandDir)
-            - name: API_NAME
-              value: ($apiName)
-            - name: RESOURCE_NAMESPACE
-              value: ($namespace)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-            - name: API_VERSION
-              value: ($apiVersion)
-            - name: API_VERSION_K8S
-              value: ($apiVersionK8s)
-          content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
-            npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
-
   - name: Assert export for default member role
-    try:
-      - script:
-          env:
-            - name: SERVICE_ACCOUNT_NAME
-              value: ($service_account_name)
-            - name: EXPORTED_API_YAML
-              value: ($exportedApiYaml)
-          content: |
-            echo "MEMBER_ROLE=$(yq '.spec.members[0].role' "$EXPORTED_API_YAML")"
-            rm -f "$EXPORTED_API_YAML"
-          check:
-            (contains($stdout, 'MEMBER_ROLE=USER')): true
+    use:
+      template: ../../../../stepTemplates/exportApiAndAssert.yaml
+      with:
+        bindings:
+          - name: assertArgs
+            value:
+              - --assert spec.members.length:1
+              - --assert spec.members[0].role:USER
+              - (concat('--assert spec.members[0].sourceId:', $service_account_name))
