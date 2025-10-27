@@ -14,7 +14,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.37.0
 	github.com/zeebo/xxh3 v1.0.2
-	golang.org/x/exp v0.0.0-20251017212417-90e834f514db
+	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/gotestsum v1.12.3
 	k8s.io/apimachinery v0.33.4
