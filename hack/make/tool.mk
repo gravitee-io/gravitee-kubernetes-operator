@@ -27,7 +27,15 @@ download: ## Download all project dependencies
 .PHONY: install-go-tools
 install-go-tools: download ## Installs all required GO tools
 	@echo "Installing GO tools"
-	@cat hack/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -I % sh -c 'GOBIN=$(LOCALBIN) go install %'
+	@cd ./hack/tools && \
+	find . -mindepth 1 -type d -print0 | \
+	while IFS= read -r -d '' item ; do \
+		pushd $${item} > /dev/null; \
+		TOOL=$$(grep -e '^tool ' go.mod | sed -e s'/tool //'); \
+		echo "Installing tool $${TOOL}"; \
+		GOBIN=$(LOCALBIN) go install $${TOOL}; \
+		popd > /dev/null; \
+	done
 
 .PHONY: install-tools
 install-tools: install-go-tools ## Installs all required tools
