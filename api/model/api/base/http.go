@@ -97,6 +97,12 @@ type HttpClientOptions struct {
 	// +kubebuilder:default:=HTTP_1_1
 	// HTTP Protocol Version (Possible values Http1 or Http2)
 	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
+	// Maximum size of HTTP headers
+	// +kubebuilder:validation:Optional
+	MaxHeaderSize *int `json:"maxHeaderSize,omitempty"`
+	// Maximum size of HTTP chunks
+	// +kubebuilder:validation:Optional
+	MaxChunkSize *int `json:"maxChunkSize,omitempty"`
 }
 
 type HttpClientSslOptions struct {

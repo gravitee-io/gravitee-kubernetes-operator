@@ -1106,6 +1106,8 @@ _Appears in:_
 | `followRedirects` _boolean_ | Should HTTP redirects be followed or not ? | false |  |
 | `clearTextUpgrade` _boolean_ | Should HTTP/2 clear text upgrade be used or not ? | true | Optional: \{\} <br /> |
 | `version` _[ProtocolVersion](#protocolversion)_ | HTTP Protocol Version (Possible values Http1 or Http2) | HTTP_1_1 | Enum: [HTTP_1_1 HTTP_2] <br /> |
+| `maxHeaderSize` _integer_ | Maximum size of HTTP headers |  | Optional: \{\} <br /> |
+| `maxChunkSize` _integer_ | Maximum size of HTTP chunks |  | Optional: \{\} <br /> |
 
 
 #### HttpClientSslOptions
