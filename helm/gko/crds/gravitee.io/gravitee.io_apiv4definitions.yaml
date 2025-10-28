@@ -350,8 +350,14 @@ spec:
                             description: Should keep alive be used for the HTTP connection ?
                             format: int64
                             type: integer
+                          maxChunkSize:
+                            description: Maximum size of HTTP chunks
+                            type: integer
                           maxConcurrentConnections:
                             description: HTTP max concurrent connections
+                            type: integer
+                          maxHeaderSize:
+                            description: Maximum size of HTTP headers
                             type: integer
                           pipelining:
                             default: false
