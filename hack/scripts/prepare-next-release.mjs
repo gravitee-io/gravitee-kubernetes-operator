@@ -37,7 +37,7 @@ await HELM.setChartVersion(patchCandidateVersion.toString());
 await $`make add-license`;
 await $`make manifests`;
 
-await $`git add helm/gko/Chart.yaml`;
+await $`git add helm/gko`;
 
 if (releasedVersion.isPatch()) {
   LOG.blue(`
