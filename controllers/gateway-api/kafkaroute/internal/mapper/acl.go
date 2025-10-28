@@ -19,6 +19,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/kafka"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"k8s.io/utils/ptr"
 )
 
 var (
@@ -53,7 +54,7 @@ var (
 func buildACL(acl kafka.KafkaACLFilter) *v4.FlowStep {
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &kafkaACLPolicyName,
-		Enabled: true,
+		Enabled: ptr.To(true),
 		Configuration: utils.NewGenericStringMap().
 			Put("authorizations", mapKafkaAccessControlRules(acl)),
 	})
