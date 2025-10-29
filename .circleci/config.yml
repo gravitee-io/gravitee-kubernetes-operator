@@ -89,13 +89,25 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - run:
+          name: Download go modules
+          command: go mod download
       - run:
           name: Install GO tools
           command: make install-go-tools
-      - go/save-mod-cache
+      - go/save-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/save-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - save_cache:
-          key: gotools-{{ checksum "go.sum" }}
+          key: gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
           paths:
             - /home/circleci/project/bin
 
@@ -104,25 +116,37 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-golangci-lint-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
-      - go/load-golangci-lint-cache
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Lint sources
           command: make lint-sources
-      - go/save-golangci-lint-cache
+      - go/save-golangci-lint-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
   job-lint-licenses:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-golangci-lint-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Lint licenses
           command: make lint-licenses
@@ -163,10 +187,16 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-golangci-lint-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Check that `make generate` has been executed
           command: |
@@ -193,10 +223,16 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-golangci-lint-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Run unit tests
           command: |
@@ -218,10 +254,16 @@ jobs:
       - checkout
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-golangci-lint-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - kubernetes/install_kubectl
       - helm/install_helm_client
       - run:
@@ -287,7 +329,6 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-conformance.out
-      - go/save-mod-cache
 
   job-integration-test:
     machine:
@@ -347,7 +388,6 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-<< parameters.ginkgo-filter >>.out
-      - go/save-mod-cache
 
   job-e2e-tests:
     machine:
@@ -358,6 +398,12 @@ jobs:
       - checkout
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - kubernetes/install_kubectl
       - helm/install_helm_client
       - run:
@@ -382,10 +428,6 @@ jobs:
               && helm upgrade --install gko helm/gko -n default \
                 --set manager.image.repository=gko \
                 --set manager.image.tag=latest
-      - run:
-          name: Install Chainsaw
-          command: |
-            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.12          
       - run:
           name: Run Chainsaw tests
           command: |
@@ -491,6 +533,12 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client
       - keeper/env-export:
@@ -520,9 +568,6 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
-      - run:
-          name: Install GO tools
-          command: make install-go-tools
       - run:
           name: Switch to release branch
           command: |
@@ -710,6 +755,12 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client
       - keeper/env-export:
@@ -730,9 +781,6 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
-      - run:
-          name: Install GO tools
-          command: make install-go-tools
       - run:
           name: Prepare next release
           command: |
@@ -756,13 +804,18 @@ jobs:
     steps:
       - checkout
       - helm/install_helm_client
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - helm/install_helm_plugin:
           helm_plugin_url: https://github.com/helm-unittest/helm-unittest.git
       - run:
           name: Run Helm unit tests
           command: make helm-test
-      - go/save-mod-cache
 
   job-sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
@@ -1068,8 +1121,11 @@ workflows:
           pre-steps:
             - checkout
             - run:
-                name: Install GO tools
-                command: make install-go-tools
+                name: Generate cache keys for Go tools
+                command: find . -name go.mod -exec md5sum {} \; > /tmp/gomod_checksum.md5
+            - restore_cache:
+                keys:
+                  - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
             - keeper/env-export:
                 secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
                 var-name: SLACK_ACCESS_TOKEN
