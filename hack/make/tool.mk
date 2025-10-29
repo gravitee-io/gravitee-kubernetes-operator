@@ -28,14 +28,14 @@ download: ## Download all project dependencies
 install-go-tools: download ## Installs all required GO tools
 	@echo "Installing GO tools"
 	@cd ./hack/tools && \
-	find . -mindepth 1 -type d -print0 | \
-	while IFS= read -r -d '' item ; do \
+	for item in $$(find . -mindepth 1 -type d); do \
 		pushd $${item} > /dev/null; \
 		TOOL=$$(grep -e '^tool ' go.mod | sed -e s'/tool //'); \
 		echo "Installing tool $${TOOL}"; \
-		GOBIN=$(LOCALBIN) go install $${TOOL}; \
+		GOBIN=$(LOCALBIN) go install $${TOOL} & \
 		popd > /dev/null; \
-	done
+	done; \
+	wait
 
 .PHONY: install-tools
 install-tools: install-go-tools ## Installs all required tools
