@@ -86,7 +86,7 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            npx zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 200
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 200
     catch:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"
@@ -109,7 +109,7 @@ spec:
             - name: API_VERSION
               value: ($apiVersion)
           content: |
-            npx zx $COMMAND_DIR/callGateway.mjs --endpoint ${API_VERSION}-create-update-delete-updated-path --status 200
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint ${API_VERSION}-create-update-delete-updated-path --status 200
     catch:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"
@@ -124,7 +124,7 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            npx zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 404   
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 404   
 
   - name: Delete API
     try:
@@ -146,7 +146,7 @@ spec:
             - name: API_VERSION
               value: ($apiVersion)
           content: |
-            npx zx $COMMAND_DIR/callGateway.mjs --endpoint ${API_VERSION}-create-update-delete-updated-path --status 404
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint ${API_VERSION}-create-update-delete-updated-path --status 404
     catch:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"
@@ -166,4 +166,4 @@ spec:
               value: ($apiIdFile)
           content: |
             API_ID=$(cat $API_ID_FILE)
-            npx zx $COMMAND_DIR/getApiById.mjs --api_id $API_ID --status 404
+            npx --yes --quiet zx $COMMAND_DIR/getApiById.mjs --api_id $API_ID --status 404

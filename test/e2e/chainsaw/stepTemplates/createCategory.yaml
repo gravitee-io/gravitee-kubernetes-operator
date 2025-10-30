@@ -27,7 +27,7 @@ spec:
             - name: CATEGORY_NAME
               value: ($categoryName)
           content: |
-            npx zx $COMMAND_DIR/createCategory.mjs --name $CATEGORY_NAME
+            npx --yes --quiet zx $COMMAND_DIR/createCategory.mjs --name $CATEGORY_NAME
           outputs:
             - name: CATEGORY_ID
               value: (json_parse($stdout).id)
@@ -39,4 +39,4 @@ spec:
             - name: COMMAND_DIR
               value: ($commandDir)
           content: |
-            npx zx $COMMAND_DIR/deleteCategory.mjs --categoryId $CATEGORY_ID
+            npx --yes --quiet zx $COMMAND_DIR/deleteCategory.mjs --categoryId $CATEGORY_ID

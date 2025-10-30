@@ -445,6 +445,13 @@ jobs:
                 --set manager.image.repository=gko \
                 --set manager.image.tag=latest
       - run:
+          name: Install libs
+          command: yarn --cwd test/e2e/lib install
+      - run:
+          name: Install Chainsaw
+          command: |
+            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.12          
+      - run:
           name: Run Chainsaw tests
           command: |
             bin/chainsaw test --config test/e2e/chainsaw/config.yaml

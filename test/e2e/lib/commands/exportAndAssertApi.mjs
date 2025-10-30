@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Usage (npx zx exportAndAssertApi.mjs [options]):
+ * Usage (npx --yes --quiet zx exportAndAssertApi.mjs [options]):
  *   --api_version     v2 or v4 (required)
  *   --api_id          API id (optional if --api_resource + --api_name provided)
  *   --api_resource    Kubernetes resource name (e.g. apidefinitions.gravitee.io)
@@ -30,7 +30,7 @@
  * Values can be primitives (true, 42, text) or JSON objects/arrays.
  *
  * Example:
- *   npx zx exportAndAssertApi.mjs \
+ *   npx --yes --quiet zx exportAndAssertApi.mjs \
  *     --api_version v2 \
  *     --api_resource apidefinitions.gravitee.io \
  *     --api_name my-api \
