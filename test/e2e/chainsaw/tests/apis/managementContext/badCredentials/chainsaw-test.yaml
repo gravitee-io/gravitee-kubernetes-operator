@@ -73,7 +73,7 @@ spec:
             - name: API_NAME
               value: ($apiName)
           content: |
-            npx zx $COMMAND_DIR/callGateway.mjs --endpoint $API_NAME --status 404
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint $API_NAME --status 404
     catch:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"

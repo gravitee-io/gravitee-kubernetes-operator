@@ -137,8 +137,19 @@ The `e2e-focus` target filters tests by the label `focus=true`.
 - Prefer small, single-purpose test directories (one test per folder)
 - Use descriptive test `metadata.name`
 - Leverage `try` / `catch` blocks to capture events or pod logs for troubleshooting
-- Keep helper scripts in `test/e2e/commands` (invoked via `npx zx ...`)
+- Keep helper scripts in `test/e2e/commands` (invoked via `npx --yes --quiet zx ...`)
 - Use environment bindings (`bindings:`) in Chainsaw to avoid hardcoding values
+
+### zx invocation policy
+
+- Do: invoke helper scripts with `npx --yes --quiet zx <path-to-script.mjs> [args]`.
+- Don’t: use `yarn dlx zx ...` or `yarn run zx ...` in Chainsaw steps.
+
+This avoids Yarn v1 falling back to `yarn run` in the current test folder (which has no package.json) and emitting errors like:
+
+```
+error Couldn't find a package.json file in "/home/circleci/project/test/e2e/chainsaw/tests/..."
+```
 
 
 ## 9. Clean up

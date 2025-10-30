@@ -96,14 +96,14 @@ spec:
             set -e
             API_ID=$(kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}')
             GROUP_ID=$(kubectl get groups.gravitee.io -n $RESOURCE_NAMESPACE $GROUP_NAME -o jsonpath='{.status.id}')
-            ALL_API_NOTIFICATIONS=$(npx zx $COMMAND_DIR/getApiNotifications.mjs --api_id $API_ID)
+            ALL_API_NOTIFICATIONS=$(npx --yes --quiet zx $COMMAND_DIR/getApiNotifications.mjs --api_id $API_ID)
 
             # Extract the PORTAL notification object from the output
             PORTAL_NOTIFICATION=$(echo "$ALL_API_NOTIFICATIONS" | jq -c '.[] | select(.config_type=="PORTAL")')
 
             # Emit a single JSON object so Chainsaw can json_parse($stdout) once
             echo "{\"apiId\":\"$API_ID\",\"groupId\":\"$GROUP_ID\",\"notification\":$PORTAL_NOTIFICATION}"
-            # npx zx $COMMAND_DIR/checkApiNotificationHooks.mjs --api_id $API_ID --expect name="Console Notification" --expect-array-equals hooks=API_STARTED,API_STOPPED
+            # npx --yes --quiet zx $COMMAND_DIR/checkApiNotificationHooks.mjs --api_id $API_ID --expect name="Console Notification" --expect-array-equals hooks=API_STARTED,API_STOPPED
           outputs:
             - name: notification
               value: (json_parse($stdout).notification)

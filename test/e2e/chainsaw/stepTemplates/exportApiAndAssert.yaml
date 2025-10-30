@@ -35,7 +35,7 @@ spec:
           - name: ASSERT_ARGS
             value: (join(' ', $assertArgs))
         content: |
-          yarn dlx --quiet zx "$COMMAND_DIR/exportAndAssertApi.mjs" \
+          npx --yes --quiet zx "$COMMAND_DIR/exportAndAssertApi.mjs" \
             --api_version "$API_VERSION" \
             --api_resource "$API_VERSION_K8S" \
             --api_name "$API_NAME" \

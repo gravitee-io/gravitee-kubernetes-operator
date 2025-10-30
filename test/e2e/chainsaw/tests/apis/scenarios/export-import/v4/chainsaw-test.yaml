@@ -66,7 +66,7 @@ spec:
               - name: API_NAME
                 value: ($apiName)
             content: |
-              npx zx $COMMAND_DIR/createApiFromJson.mjs --jsonfile ../resources/$API_NAME.json > $CREATED_API_JSON
+              npx --yes --quiet zx $COMMAND_DIR/createApiFromJson.mjs --jsonfile ../resources/$API_NAME.json > $CREATED_API_JSON
       catch:
         - podLogs:
             selector: "app.kubernetes.io/component=api"
@@ -93,7 +93,7 @@ spec:
                 value: ($apiVersion)
             content: |
               API_ID=$(cat $CREATED_API_JSON | jq -r '.id')
-              npx zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
+              npx --yes --quiet zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $EXPORTED_API_YAML
       catch:
         - podLogs:
             selector: "app.kubernetes.io/component=api"
