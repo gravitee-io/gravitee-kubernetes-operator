@@ -1,0 +1,83 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: delete-markdown-page
+spec:
+  scenarios:
+    - bindings:
+        - name: apiVersion
+          value: v2
+        - name: apiVersionK8s
+          value: apidefinitions.gravitee.io
+        - name: apiKind
+          value: ApiDefinition
+    - bindings:
+        - name: apiVersion
+          value: v4
+        - name: apiVersionK8s
+          value: apiv4definitions.gravitee.io
+        - name: apiKind
+          value: ApiV4Definition
+  bindings:
+    - name: apiName
+      value: (join('-', [$apiVersion, $test.metadata.name]))
+    - name: commandDir
+      value: "../../../../../lib/commands"
+    - name: gkoNamespace
+      value: default
+
+  steps:
+    - name: Create API with markdown page
+      use:
+        template: ../../../../stepTemplates/createApi.yaml
+        with:
+          bindings:
+            - name: apiCrdFile
+              value: (join('', ['resources/', $apiVersion, '-api-with-page-markdown.yaml']))
+    
+    - name: Assert exported API contains markdown page
+      use:
+        template: ../../../../stepTemplates/exportApiAndAssert.yaml
+        with:
+          bindings:
+            - name: assertArgs
+              value:
+                - '--assert spec.pages.markdown-page.name:markdown-page'
+                - '--assert spec.pages.markdown-page.type:MARKDOWN'
+                - '--assert spec.pages.markdown-page.parentId'
+                - '--assert spec.pages.markdown-folder.type:FOLDER'
+                - '--assert spec.pages.markdown-folder.name:markdown-folder'
+
+    - name: Update API removing markdown page
+      use:
+        template: ../../../../stepTemplates/updateApi.yaml
+        with:
+          bindings:
+            - name: apiCrdFile
+              value: (join('', ['resources/', $apiVersion, '-api-without-page-markdown.yaml']))
+
+    - name: Assert exported API removed markdown page
+      use:
+        template: ../../../../stepTemplates/exportApiAndAssert.yaml
+        with:
+          bindings:
+            - name: assertArgs
+              value:
+                - '--assert_not spec.pages.markdown-page'
+                - '--assert spec.pages.markdown-folder.type:FOLDER'
+                - '--assert spec.pages.markdown-folder.name:markdown-folder'
