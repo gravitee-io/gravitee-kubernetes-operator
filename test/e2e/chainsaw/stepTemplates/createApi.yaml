@@ -20,8 +20,14 @@ metadata:
   name: create-api
 spec:
     try:
-      - create:
-          file: ($apiCrdFile)
+      - script:
+          env:
+            - name: API_CRD_FILE
+              value: ($apiCrdFile)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+          content: |
+            kubectl apply -f "$API_CRD_FILE" -n "$RESOURCE_NAMESPACE"
       - wait:
           apiVersion: gravitee.io/v1alpha1
           kind: ($apiKind)
@@ -35,3 +41,6 @@ spec:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"
           namespace: ($gkoNamespace)
+    cleanup:
+      - delete:
+          file: ($apiCrdFile)

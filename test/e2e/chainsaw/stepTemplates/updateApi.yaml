@@ -20,8 +20,14 @@ metadata:
   name: update-api
 spec:
     try:
-      - apply:
-          file: ($apiCrdFile)
+      - script:
+          env:
+            - name: API_CRD_FILE
+              value: ($apiCrdFile)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+          content: |
+            kubectl apply -f "$API_CRD_FILE" -n "$RESOURCE_NAMESPACE"
       - wait:
           apiVersion: gravitee.io/v1alpha1
           kind: ($apiKind)
@@ -41,3 +47,8 @@ spec:
           content: |
             echo "Failed to update API, displaying API resource:"
             kubectl get apidefinitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o yaml
+            echo "--- Managed fields (json) ---"
+            kubectl get apidefinitions.gravitee.io -n $RESOURCE_NAMESPACE $API_NAME -o json --show-managed-fields | jq '.metadata.managedFields'
+    cleanup:
+      - delete:
+          file: ($apiCrdFile)
