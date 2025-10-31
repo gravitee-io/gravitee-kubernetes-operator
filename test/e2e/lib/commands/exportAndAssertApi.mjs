@@ -22,8 +22,8 @@
  *   --namespace       Namespace for the lookup (default: default)
  *   --assert          Assertion, repeatable. Format: path[:expectedValue]
  *   --assert_not      Negated assertion. Format: path[:unexpectedValue]
- *   --max_attempts    Retry attempts before failing (default: 10)
- *   --delay_ms        Delay between retries in milliseconds (default: 3000)
+ *   --max_attempts    Retry attempts before failing (default: 30)
+ *   --delay_ms        Delay between retries in milliseconds (default: 1000)
  *
  * Paths support dot/bracket notation (e.g. spec.pages.hello.accessControls[0].referenceId),
  * and values are optional. When omitted, the script only checks that the path exists/does not exist.
