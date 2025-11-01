@@ -20,6 +20,7 @@ metadata:
 spec:
   contextRef:
     name: dev-ctx
+    namespace: default
   name: "v2-removing-member"
   version: "update"
   description: "Removing member - Created by Chainsaw E2E test"
