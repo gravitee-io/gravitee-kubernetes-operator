@@ -16,24 +16,40 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:
-  name: v2-removing-member
+  name: v2-delete-markdown-page
 spec:
   contextRef:
     name: dev-ctx
     namespace: default
-  name: "v2-removing-member"
-  version: "update"
-  description: "Removing member - Created by Chainsaw E2E test"
+  name: "v2-delete-markdown-page"
+  version: "1.0"
+  description: "Chainsaw E2E test API with markdown page to delete"
   plans:
     - name: "KEY_LESS"
       description: "FREE"
       security: "KEY_LESS"
+    - name: "API_KEY"
+      description: "FREE"
+      security: "API_KEY"
   proxy:
     virtual_hosts:
-      - path: "/v2-removing-member"
+      - path: "/v2-delete-markdown-page"
     groups:
       - endpoints:
           - name: "Default"
             target: "https://api.gravitee.io/echo"
-  local: true
-  members: []
+  lifecycle_state: PUBLISHED
+  pages:
+    markdown-folder:
+      name: markdown-folder
+      type: FOLDER
+      published: true
+    markdown-page:
+      name: markdown-page
+      type: MARKDOWN
+      parent: markdown-folder
+      published: true
+      content: |
+        Hello world!
+        --
+        This is markdown.
