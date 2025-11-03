@@ -35,6 +35,9 @@ var _ = Describe("Update", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should delete markdown page in APIM", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.
 			Builder().
 			WithAPI(constants.ApiWithMarkdownPage).

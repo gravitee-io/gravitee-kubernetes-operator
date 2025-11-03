@@ -34,6 +34,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should import inline markdown in APIM", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.
 			Builder().
 			WithAPI(constants.ApiWithMarkdownPage).
