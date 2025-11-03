@@ -76,7 +76,7 @@ const mustContain = collectAssertionsFromList(rawAssertionArgs.assert_contains, 
 const mustNotContain = collectAssertionsFromList(rawAssertionArgs.assert_not_contains, 'not_contains');
 
 if (!mustHave.length && !mustNotHave.length && !mustContain.length && !mustNotContain.length) {
-  console.error('Nothing to check. Add at least one --assert or --assert_not rule.');
+  console.error('Nothing to check. Add at least one --assert, --assert_not, --assert_contains, or --assert_not_contains rule.');
   process.exit(1);
 }
 
