@@ -28,6 +28,9 @@
  * Paths support dot/bracket notation (e.g. spec.pages.hello.accessControls[0].referenceId),
  * and values are optional. When omitted, the script only checks that the path exists/does not exist.
  * Values can be primitives (true, 42, text) or JSON objects/arrays.
+ * Values containing spaces are supported without quoting; everything after the first ':'
+ * until the next option flag is treated as the value. You may also wrap the value in
+ * single or double quotes (they will be stripped automatically).
  *
  * Example:
  *   npx --yes --quiet zx exportAndAssertApi.mjs \
@@ -36,7 +39,9 @@
  *     --api_name my-api \
  *     --namespace default \
  *     --assert spec.pages.overview.accessControls:'{"referenceId":"team-a","referenceType":"GROUP"}' \
- *     --assert_not spec.categories:deprecated
+ *     --assert_not spec.categories:deprecated \
+ *     --assert_contains spec.pages.overview.content:This is an update \
+ *     --assert_contains spec.pages.overview.content:"Another sentence with spaces"
  */
 
 import { isDeepStrictEqual } from 'node:util';
@@ -59,13 +64,18 @@ if (!providedApiId && (!apiResource || !apiName)) {
   process.exit(1);
 }
 
-const maxAttempts = Number(argv['max_attempts']) || 30;
+const maxAttempts = Number(argv['max_attempts']) || 10;
 const delayMs = Number(argv['delay_ms']) || 1000;
 
-const mustHave = collectAssertions('assert');
-const mustNotHave = collectAssertions('assert_not');
+// Parse assertion flags from raw argv tokens to preserve values containing spaces
+const rawAssertionArgs = parseAssertionArgs(process.argv.slice(2));
 
-if (!mustHave.length && !mustNotHave.length) {
+const mustHave = collectAssertionsFromList(rawAssertionArgs.assert, undefined);
+const mustNotHave = collectAssertionsFromList(rawAssertionArgs.assert_not, undefined);
+const mustContain = collectAssertionsFromList(rawAssertionArgs.assert_contains, 'contains');
+const mustNotContain = collectAssertionsFromList(rawAssertionArgs.assert_not_contains, 'not_contains');
+
+if (!mustHave.length && !mustNotHave.length && !mustContain.length && !mustNotContain.length) {
   console.error('Nothing to check. Add at least one --assert or --assert_not rule.');
   process.exit(1);
 }
@@ -81,7 +91,12 @@ for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const exportedYaml = await exportApiAsYaml(apiId, apiVersion);
     const exportedObject = await parseYaml(exportedYaml);
 
-    const errors = [...checkRules(exportedObject, mustHave, false), ...checkRules(exportedObject, mustNotHave, true)];
+    const errors = [
+      ...checkRules(exportedObject, mustHave, false),
+      ...checkRules(exportedObject, mustNotHave, true),
+      ...checkContains(exportedObject, mustContain, false),
+      ...checkContains(exportedObject, mustNotContain, true),
+    ];
 
     if (!errors.length) {
       console.log(`Assertions satisfied (attempt ${attempt}).`);
@@ -102,18 +117,48 @@ for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
 console.error('Assertions were not met before the timeout.');
 process.exit(1);
 
-function collectAssertions(key) {
-  if (!Object.prototype.hasOwnProperty.call(argv, key) || argv[key] === undefined) {
-    return [];
-  }
-
-  const value = argv[key];
-  const entries = Array.isArray(value) ? value : [value];
-
+function collectAssertionsFromList(list, mode) {
+  const entries = Array.isArray(list) ? list : list ? [list] : [];
   return entries
     .map((entry) => entry && entry.toString().trim())
     .filter(Boolean)
-    .map(parseAssertion);
+    .map((text) => ({ ...parseAssertion(text), mode }));
+}
+
+function parseAssertionArgs(tokens) {
+  const result = {
+    assert: [],
+    assert_not: [],
+    assert_contains: [],
+    assert_not_contains: [],
+  };
+
+  const keys = new Set(['--assert', '--assert_not', '--assert_contains', '--assert_not_contains']);
+
+  for (let i = 0; i < tokens.length; i += 1) {
+    const t = tokens[i];
+    if (!keys.has(t)) {
+      continue;
+    }
+
+    const key = t.replace(/^--/, '');
+    // Consume subsequent tokens that belong to this assertion until the next option (starts with --) or end
+    let value = '';
+    if (i + 1 < tokens.length) {
+      i += 1;
+      value = tokens[i] ?? '';
+      while (i + 1 < tokens.length && !String(tokens[i + 1]).startsWith('--')) {
+        i += 1;
+        value += ` ${tokens[i]}`;
+      }
+    }
+
+    if (value) {
+      result[key].push(value);
+    }
+  }
+
+  return result;
 }
 
 function parseAssertion(text) {
@@ -131,33 +176,42 @@ function parseAssertion(text) {
 }
 
 function parseValue(raw) {
-  if (raw === '') {
+  // Strip matching surrounding quotes to allow values containing spaces
+  let processed = raw;
+  if (
+    typeof processed === 'string' &&
+    processed.length >= 2 &&
+    ((processed.startsWith('"') && processed.endsWith('"')) || (processed.startsWith("'") && processed.endsWith("'")))
+  ) {
+    processed = processed.slice(1, -1);
+  }
+  if (processed === '') {
     return '';
   }
-  if (raw === 'true') {
+  if (processed === 'true') {
     return true;
   }
-  if (raw === 'false') {
+  if (processed === 'false') {
     return false;
   }
-  if (raw === 'null') {
+  if (processed === 'null') {
     return null;
   }
 
-  const numericValue = Number(raw);
+  const numericValue = Number(processed);
   if (!Number.isNaN(numericValue)) {
     return numericValue;
   }
 
-  if ((raw.startsWith('{') && raw.endsWith('}')) || (raw.startsWith('[') && raw.endsWith(']'))) {
+  if ((processed.startsWith('{') && processed.endsWith('}')) || (processed.startsWith('[') && processed.endsWith(']'))) {
     try {
-      return JSON.parse(raw);
+      return JSON.parse(processed);
     } catch {
-      return raw;
+      return processed;
     }
   }
 
-  return raw;
+  return processed;
 }
 
 function checkRules(exportedObject, assertions, negate) {
@@ -181,6 +235,35 @@ function checkRules(exportedObject, assertions, negate) {
     }
   }
   return issues;
+}
+
+function checkContains(exportedObject, assertions, negate) {
+  const issues = [];
+  for (const assertion of assertions) {
+    const actual = getByPath(exportedObject, assertion.path);
+    const expected = assertion.value;
+    const ok = containsMatch(actual, expected);
+    if (!negate && !ok) {
+      issues.push(`Expected ${assertion.path} to contain substring ${display(expected)} but saw ${display(actual)}.`);
+    }
+    if (negate && ok) {
+      issues.push(`Expected ${assertion.path} to not contain substring ${display(expected)}.`);
+    }
+  }
+  return issues;
+}
+
+function containsMatch(actual, expected) {
+  if (expected === undefined) {
+    return false;
+  }
+  if (actual === undefined || actual === null) {
+    return false;
+  }
+  if (typeof actual !== 'string') {
+    return false;
+  }
+  return actual.includes(String(expected));
 }
 
 function valueMatches(actual, expected) {
