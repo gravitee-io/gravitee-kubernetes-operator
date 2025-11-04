@@ -363,7 +363,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - kubernetes/install_kubectl
       - helm/install_helm_client
       - run:
