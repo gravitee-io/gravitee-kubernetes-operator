@@ -64,7 +64,7 @@ if (!providedApiId && (!apiResource || !apiName)) {
   process.exit(1);
 }
 
-const maxAttempts = Number(argv['max_attempts']) || 10;
+const maxAttempts = Number(argv['max_attempts']) || 30;
 const delayMs = Number(argv['delay_ms']) || 1000;
 
 // Parse assertion flags from raw argv tokens to preserve values containing spaces
@@ -113,6 +113,13 @@ for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     await sleep(delayMs);
   }
 }
+
+// Final debug export on failure to help troubleshooting
+await printDebugExport(apiId, apiVersion, {
+  apiName,
+  apiResource,
+  namespace,
+});
 
 console.error('Assertions were not met before the timeout.');
 process.exit(1);
@@ -405,4 +412,31 @@ function display(value) {
 function logAttempt(attempt, maxAttempts, errors) {
   console.error(`Attempt ${attempt}/${maxAttempts} failed:`);
   errors.forEach((err) => console.error(` - ${err}`));
+}
+
+async function printDebugExport(currentApiId, version, ctx) {
+  try {
+    let id = currentApiId;
+    if (!id && ctx.apiResource && ctx.apiName) {
+      try {
+        id = await resolveApiId(ctx.apiResource, ctx.namespace ?? 'default', ctx.apiName);
+      } catch {
+        // ignore; we'll just skip export if we still don't have an id
+      }
+    }
+
+    if (!id) {
+      console.error('EXPORT: (skipped) Unable to resolve API id for debug export.');
+      return;
+    }
+
+    const yaml = await exportApiAsYaml(id, version);
+    const headerName = ctx.apiName ?? '(unknown-name)';
+    console.error(`== Exported YAML for ${headerName} (id=${id}, version=${version}) ==`);
+    for (const line of String(yaml).split('\n')) {
+      console.error(`EXPORT: ${line}`);
+    }
+  } catch (e) {
+    console.error(`EXPORT: (failed) Could not export API YAML for debug: ${e?.message ?? String(e)}`);
+  }
 }
