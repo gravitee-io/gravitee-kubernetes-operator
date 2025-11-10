@@ -2,7 +2,7 @@ module github.com/gravitee-io/gravitee-kubernetes-operator
 
 go 1.24.2
 
-toolchain go1.25.3
+toolchain go1.25.4
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.2
