@@ -37,5 +37,4 @@ spec:
   local: true
   groupRefs:
     - name: group-for-v2-api-with-one-group-ref
-      namespace: default
   notifyMembers: false
