@@ -65,6 +65,7 @@ spec:
         type: "http-fetcher"
         configuration:
           url: https://petstore.swagger.io/v2/swagger.json
+          useSystemProxy: false
           autoFetch: true
           fetchCron: "*/10 * * * * *"
       published: true
