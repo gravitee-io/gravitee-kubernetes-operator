@@ -22,7 +22,7 @@ helm upgrade --install gko graviteeio/gko
 
 ## Requirements
 
-Kubernetes: `>=1.32.0-0`
+Kubernetes: `>=1.18.0-0"`
 
 ## Parameters
 
