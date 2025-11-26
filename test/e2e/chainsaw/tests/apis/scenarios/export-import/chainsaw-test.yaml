@@ -165,3 +165,14 @@ spec:
             selector: "control-plane=controller-manager"
             namespace: ($gkoNamespace)
     
+    - name: Assert exported plans keep logical identifiers
+      use:
+        template: ../../../../stepTemplates/exportApiAndAssert.yaml
+        with:
+          bindings:
+            - name: assertArgs
+              value:
+                - --assert spec.plans.myOauth2Plan.name:myOauth2Plan
+                - --assert spec.plans.myApiKeyPlan.name:myApiKeyPlan
+                - --assert spec.plans.myJwtPlan.name:myJwtPlan
+                - --assert spec.plans.myKeylessPlan.name:myKeylessPlan
