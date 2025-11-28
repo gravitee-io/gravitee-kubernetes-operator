@@ -1,0 +1,153 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/test-chainsaw-v1alpha1.json
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: delete-when-missing-in-apim
+spec:
+  scenarios:
+    - bindings:
+        - name: apiVersion
+          value: v2
+        - name: apiVersionK8s
+          value: apidefinitions.gravitee.io
+        - name: apiKind
+          value: ApiDefinition
+    - bindings:
+        - name: apiVersion
+          value: v4
+        - name: apiVersionK8s
+          value: apiv4definitions.gravitee.io
+        - name: apiKind
+          value: ApiV4Definition
+  bindings:
+    - name: apiName
+      value: (join('-', [$apiVersion, $test.metadata.name]))
+    - name: apiCrdFile
+      value: (join('', ['resources/', $apiName, '.yaml']))
+    - name: commandDir
+      value: "../../../../../lib/commands"
+    - name: gkoNamespace
+      value: default
+    - name: apiIdFile
+      value: (concat($apiName, '-id.txt'))
+
+  steps:
+  - name: Create API resource
+    use:
+      template: ../../../../stepTemplates/createApi.yaml
+
+  - name: Store API identifier
+    try:
+      - script:
+          env:
+            - name: API_NAME
+              value: ($apiName)
+            - name: RESOURCE_NAMESPACE
+              value: ($namespace)
+            - name: API_ID_FILE
+              value: ($apiIdFile)
+            - name: API_VERSION_K8S
+              value: ($apiVersionK8s)
+          content: |
+            kubectl get $API_VERSION_K8S -n $RESOURCE_NAMESPACE $API_NAME -o jsonpath='{.status.id}' > $API_ID_FILE
+    cleanup:
+      - script:
+          env:
+            - name: API_ID_FILE
+              value: ($apiIdFile)
+          content: |
+            rm -f $API_ID_FILE
+
+  - name: Gateway should reach API endpoint
+    try:
+      - script:
+          env:
+            - name: ENDPOINT
+              value: ($apiName)
+            - name: COMMAND_DIR
+              value: ($commandDir)
+          content: |
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 200
+    catch:
+      - podLogs:
+          selector: "app.kubernetes.io/component=gateway"
+          namespace: ($gkoNamespace)
+
+  - name: Remove API directly from APIM
+    try:
+      - script:
+          env:
+            - name: API_ID_FILE
+              value: ($apiIdFile)
+            - name: COMMAND_DIR
+              value: ($commandDir)
+            - name: API_VERSION
+              value: ($apiVersion)
+          content: |
+            API_ID=$(cat "$API_ID_FILE")
+            npx --yes --quiet zx $COMMAND_DIR/deleteApiFromApim.mjs --api_id "$API_ID" --api_version $API_VERSION
+
+  - name: API still reachable from Gateway
+    try:
+      - script:
+          env:
+            - name: ENDPOINT
+              value: ($apiName)
+            - name: COMMAND_DIR
+              value: ($commandDir)
+          content: |
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 200
+    catch:
+      - podLogs:
+          selector: "app.kubernetes.io/component=gateway"
+          namespace: ($gkoNamespace)
+
+  - name: Delete API definition from cluster
+    try:
+      - delete:
+          file: ($apiCrdFile)
+    catch:
+      - events: {}
+      - podLogs:
+          selector: "control-plane=controller-manager"
+          namespace: ($gkoNamespace)
+          container: manager
+
+  - name: Config Map should not exist anymore
+    try:
+      - error:
+          resource:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: ($apiName)
+              namespace: ($namespace)
+
+  - name: Gateway no longer serves traffic
+    try:
+      - script:
+          env:
+            - name: ENDPOINT
+              value: ($apiName)
+            - name: COMMAND_DIR
+              value: ($commandDir)
+          content: |
+            npx --yes --quiet zx $COMMAND_DIR/callGateway.mjs --endpoint $ENDPOINT --status 404
+    catch:
+      - podLogs:
+          selector: "app.kubernetes.io/component=gateway"
+          namespace: ($gkoNamespace)
