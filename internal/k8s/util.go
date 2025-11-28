@@ -304,6 +304,10 @@ func IsKafkaRouteKind(routeKind gwAPIv1.RouteGroupKind) bool {
 
 func HasGatewayClassParameters(gw *gwAPIv1.GatewayClass, params *v1alpha1.GatewayClassParameters) bool {
 	paramsRef := gw.Spec.ParametersRef
+	if paramsRef == nil {
+		return false
+	}
+
 	switch {
 	case paramsRef.Group != "gravitee.io":
 		return false
