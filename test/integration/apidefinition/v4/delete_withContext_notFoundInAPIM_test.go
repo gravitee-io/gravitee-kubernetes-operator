@@ -43,6 +43,9 @@ var _ = Describe("Delete", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should delete API V4 in cluster when not found in APIM", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithSecretFile).
 			WithAPIv4(constants.ApiV4WithContextFile).
