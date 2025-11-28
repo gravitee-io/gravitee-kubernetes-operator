@@ -42,6 +42,8 @@ spec:
       value: "../../../../../lib/commands"
     - name: gkoNamespace
       value: default
+    - name: namespace
+      value: ($gkoNamespace)
     - name: apiIdFile
       value: (concat($apiName, '-id.txt'))
 
@@ -86,7 +88,7 @@ spec:
       - podLogs:
           selector: "app.kubernetes.io/component=gateway"
           namespace: ($gkoNamespace)
-
+          
   - name: Remove API directly from APIM
     try:
       - script:

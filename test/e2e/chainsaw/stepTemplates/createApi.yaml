@@ -32,6 +32,7 @@ spec:
           apiVersion: gravitee.io/v1alpha1
           kind: ($apiKind)
           name: ($apiName)
+          namespace: ($namespace)
           for:
             condition:
               name: Accepted

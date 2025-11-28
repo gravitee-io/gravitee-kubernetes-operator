@@ -17,6 +17,7 @@ apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
   name: v4-delete-when-missing-in-apim
+  namespace: default
 spec:
   contextRef:
     name: dev-ctx
