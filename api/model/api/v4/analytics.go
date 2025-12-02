@@ -118,13 +118,15 @@ func NewAnalytics() *Analytics {
 	}
 }
 
+// SamplingType strategy to sample messages when reporting analytics
+// +kubebuilder:validation:Enum=PROBABILITY;TEMPORAL;COUNT;WINDOWED_COUNT
 type SamplingType string
 
 const (
 	ProbabilitySamplingType = SamplingType("PROBABILITY")
 	TemporalSamplingType    = SamplingType("TEMPORAL")
 	CountSamplingType       = SamplingType("COUNT")
-	QuerySamplingType       = SamplingType("QUERY")
+	QuerySamplingType       = SamplingType("WINDOWED_COUNT")
 )
 
 type Sampling struct {
