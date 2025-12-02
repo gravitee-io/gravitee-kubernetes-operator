@@ -147,6 +147,11 @@ spec:
                       properties:
                         type:
                           description: The sampling type to use
+                          enum:
+                            - PROBABILITY
+                            - TEMPORAL
+                            - COUNT
+                            - WINDOWED_COUNT
                           type: string
                         value:
                           description: Sampling Value
