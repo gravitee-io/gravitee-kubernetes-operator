@@ -126,7 +126,7 @@ const (
 	ProbabilitySamplingType = SamplingType("PROBABILITY")
 	TemporalSamplingType    = SamplingType("TEMPORAL")
 	CountSamplingType       = SamplingType("COUNT")
-	QuerySamplingType       = SamplingType("WINDOWED_COUNT")
+	WindowedSamplingType    = SamplingType("WINDOWED_COUNT")
 )
 
 type Sampling struct {
