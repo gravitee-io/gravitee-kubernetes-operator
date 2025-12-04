@@ -35,7 +35,13 @@ spec:
               namespace: ($gkoNamespace)
               labels:
                 control-plane: controller-manager
-    - name: setup-management-context
+
+    - name: Deploy Management Context with Credentials
       try:
       - apply:               
-          file: management-context-with-credentials.yml
+          file: 'resources/management-context-with-credentials.yaml'
+    
+    - name: Deploy Cluster Role for ConfigMaps
+      try:
+      - apply:
+          file: 'resources/apim-cluster-role.yaml'
