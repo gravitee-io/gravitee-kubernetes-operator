@@ -164,3 +164,13 @@ spec:
         - podLogs:
             selector: "control-plane=controller-manager"
             namespace: ($gkoNamespace)
+
+    - name: Assert exported plans keep logical identifiers
+      use:
+        template: ../../../../../stepTemplates/exportApiAndAssert.yaml
+        with:
+          bindings:
+            - name: assertArgs
+              value:
+                - '--assert spec.plans.Default Keyless (UNSECURED).name:Default Keyless (UNSECURED)'
+                - --assert spec.plans.myApiKeyPlan.name:myApiKeyPlan
