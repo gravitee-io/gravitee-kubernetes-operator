@@ -3871,7 +3871,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _[SamplingType](#samplingtype)_ | The sampling type to use |  |  |
+| `type` _[SamplingType](#samplingtype)_ | The sampling type to use |  | Enum: [PROBABILITY TEMPORAL COUNT WINDOWED_COUNT] <br /> |
 | `value` _string_ | Sampling Value |  |  |
 
 
@@ -3879,9 +3879,10 @@ _Appears in:_
 
 _Underlying type:_ _string_
 
+SamplingType strategy to sample messages when reporting analytics
 
-
-
+_Validation:_
+- Enum: [PROBABILITY TEMPORAL COUNT WINDOWED_COUNT]
 
 _Appears in:_
 - [Sampling](#sampling)
