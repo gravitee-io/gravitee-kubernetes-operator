@@ -450,11 +450,11 @@ jobs:
       - run:
           name: Install Chainsaw
           command: |
-            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.12          
+            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.14
       - run:
           name: Run Chainsaw tests
           command: |
-            bin/chainsaw test --config test/e2e/chainsaw/config.yaml
+            bin/chainsaw test --quiet --config test/e2e/chainsaw/config.yaml
 
   job-stage-helm-chart:
     docker:
