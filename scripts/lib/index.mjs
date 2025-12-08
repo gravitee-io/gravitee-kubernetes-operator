@@ -101,6 +101,8 @@ const releaseBranch = "gh-pages";
 
 const releaseVersionAnnotation = "gravitee.io/operator.version";
 
+export const PROJECT_DIR = path.join(__dirname, "..");
+
 export const HELM = {
   chartDir,
   crdDir,
