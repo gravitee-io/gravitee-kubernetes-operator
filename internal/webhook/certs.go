@@ -15,6 +15,7 @@
 package webhook
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -27,7 +28,6 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
-	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
