@@ -824,7 +824,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsondiffpatch@npm:^0.7.3":
+"jsondiffpatch@npm:0.7.3":
   version: 0.7.3
   resolution: "jsondiffpatch@npm:0.7.3"
   dependencies:
@@ -874,8 +874,8 @@ __metadata:
     "@eslint/js": "npm:9.37.0"
     eslint: "npm:9.37.0"
     eslint-config-prettier: "npm:10.1.8"
-    jsondiffpatch: "npm:^0.7.3"
-    lodash-es: "npm:^4.17.21"
+    jsondiffpatch: "npm:0.7.3"
+    lodash-es: "npm:4.17.21"
     prettier: "npm:3.6.2"
     yaml: "npm:2.8.1"
     zx: "npm:7.2.3"
@@ -891,7 +891,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash-es@npm:^4.17.21":
+"lodash-es@npm:4.17.21":
   version: 4.17.21
   resolution: "lodash-es@npm:4.17.21"
   checksum: 10c0/fb407355f7e6cd523a9383e76e6b455321f0f153a6c9625e21a8827d10c54c2a2341bd2ae8d034358b60e07325e1330c14c224ff582d04612a46a4f0479ff2f2
