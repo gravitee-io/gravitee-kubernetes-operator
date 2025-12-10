@@ -47,6 +47,8 @@ spec:
       value: default
     - name: exportedApiYaml
       value: (concat($apiVersion, '-exportedApi.yaml'))
+    - name: reExportedApiYaml
+      value: (concat($apiVersion, '-re-exportedApi.yaml'))
 
     - name: createdApiJson
       value: createdApi.json
@@ -114,17 +116,17 @@ spec:
 
     - name: Add contextRef to exported YAML
       try:
-      - script:
-          env:
-          - name: EXPORTED_API_YAML
-            value: ($exportedApiYaml)
-          - name: MODIFIED_YAML_EXPORT
-            value: modifiedExport.yaml
-          - name: GKO_NAMESPACE
-            value: ($gkoNamespace)
-          content: |
-            cat "$EXPORTED_API_YAML" | \
-            yq -e ".spec.contextRef = {\"name\": \"dev-ctx\", \"namespace\": \"$GKO_NAMESPACE\"}" > $MODIFIED_YAML_EXPORT
+        - script:
+            env:
+              - name: EXPORTED_API_YAML
+                value: ($exportedApiYaml)
+              - name: MODIFIED_YAML_EXPORT
+                value: modifiedExport.yaml
+              - name: GKO_NAMESPACE
+                value: ($gkoNamespace)
+            content: |
+              cat "$EXPORTED_API_YAML" | \
+              yq -e ".spec.contextRef = {\"name\": \"dev-ctx\", \"namespace\": \"$GKO_NAMESPACE\"}" > $MODIFIED_YAML_EXPORT
       cleanup:
         - script:
             env:
@@ -165,12 +167,75 @@ spec:
             selector: "control-plane=controller-manager"
             namespace: ($gkoNamespace)
 
-    - name: Assert exported plans keep logical identifiers
+    - name: Assert STATE and PLANS in exported API
       use:
         template: ../../../../../stepTemplates/exportApiAndAssert.yaml
         with:
           bindings:
             - name: assertArgs
               value:
+                - '--assert spec.state:STARTED'              
                 - '--assert spec.plans.Default Keyless (UNSECURED).name:Default Keyless (UNSECURED)'
                 - --assert spec.plans.myApiKeyPlan.name:myApiKeyPlan
+
+    - name: Re-export API after import
+      try:
+        - script:
+            env:
+              - name: COMMAND_DIR
+                value: ($commandDir)
+              - name: CREATED_API_JSON
+                value: ($createdApiJson)
+              - name: REEXPORTED_API_YAML
+                value: ($reExportedApiYaml)
+              - name: API_VERSION
+                value: ($apiVersion)
+            content: |
+              API_ID=$(cat $CREATED_API_JSON | jq -r '.id')
+              npx --yes --quiet zx $COMMAND_DIR/exportApiAsYaml.mjs --api_id $API_ID --api_version $API_VERSION > $REEXPORTED_API_YAML
+      catch:
+        - podLogs:
+            selector: "app.kubernetes.io/component=api"
+            namespace: ($gkoNamespace)
+        - script:
+            env:
+              - name: CREATED_API_JSON
+                value: ($createdApiJson)
+            content: |
+              cat $CREATED_API_JSON
+      cleanup:
+        - script:
+            env:
+              - name: REEXPORTED_API_YAML
+                value: ($reExportedApiYaml)
+            content: |
+              rm -f $REEXPORTED_API_YAML
+
+    - name: Compare exported APIs
+      try:
+        - script:
+            env:
+              - name: COMMAND_DIR
+                value: ($commandDir)
+              - name: FIRST_EXPORT
+                value: ($exportedApiYaml)
+              - name: SECOND_EXPORT
+                value: ($reExportedApiYaml)
+            content: |
+              # Remove ignore flags regarding crossIds once https://github.com/gravitee-io/gravitee-api-management/pull/14544 is merged
+              npx --yes --quiet zx $COMMAND_DIR/compareYamlFiles.mjs --first $FIRST_EXPORT --second $SECOND_EXPORT \
+                --ignore $.spec.state \
+                --ignore $.spec.pages.Aside.crossId \
+                --ignore $.spec.pages.markdown_test.crossId
+      catch:
+        - script:
+            env:
+              - name: FIRST_EXPORT
+                value: ($exportedApiYaml)
+              - name: SECOND_EXPORT
+                value: ($reExportedApiYaml)
+            content: |
+              echo "--- First export ---"
+              cat "$FIRST_EXPORT"
+              echo "--- Second export ---"
+              cat "$SECOND_EXPORT"
