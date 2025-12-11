@@ -76,7 +76,8 @@ func requestsFromGateway(ctx context.Context, obj client.Object) []reconcile.Req
 	}
 
 	var reqs []reconcile.Request
-	for _, route := range list.Items {
+	for i := range list.Items {
+		route := list.Items[i]
 		if referencesGateway(&route, gw) {
 			reqs = append(reqs, buildRequest(route))
 		}
