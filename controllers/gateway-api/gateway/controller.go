@@ -55,59 +55,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	events := event.NewRecorder(r.Recorder)
 
-	gwcName := string(gw.Object.Spec.GatewayClassName)
-
-	if gwcName == "" {
-		log.Debug(ctx, "ignoring gateway as no gateway class name is defined")
-		return ctrl.Result{}, nil
-	}
-
-	gwcKey := client.ObjectKey{Name: gwcName}
-	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
-
-	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
+	gwc, params, skip, err := r.validateGatewayClass(ctx, gw)
+	if err != nil {
 		return ctrl.Result{}, err
-	} else if kErrors.IsNotFound(err) {
-		log.Debug(ctx, "ignoring gateway as gateway class name was not found")
-		return ctrl.Result{}, nil
 	}
-
-	if gwc.Object.Spec.ControllerName != core.GraviteeGatewayClassController {
-		log.Debug(ctx, "ignoring gateway as controller name does not match")
-		return ctrl.Result{}, nil
-	}
-
-	paramRef := gwc.Object.Spec.ParametersRef
-
-	if paramRef == nil {
-		return ctrl.Result{}, nil
-	}
-
-	if paramRef.Group != gwAPIv1.Group(v1alpha1.GroupVersion.Group) {
-		return ctrl.Result{}, nil
-	}
-
-	if paramRef.Kind != "GatewayClassParameters" {
-		return ctrl.Result{}, nil
-	}
-
-	key := client.ObjectKey{
-		Name:      paramRef.Name,
-		Namespace: string(*paramRef.Namespace),
-	}
-
-	params := new(v1alpha1.GatewayClassParameters)
-
-	if err := k8s.GetClient().Get(ctx, key, params); client.IgnoreNotFound(err) != nil {
-		return ctrl.Result{}, err
-	} else if kErrors.IsNotFound(err) {
-		log.Debug(ctx, "ignoring gateway as gateway class parameters were not found")
+	if skip != nil && *skip {
 		return ctrl.Result{}, nil
 	}
 
 	var dc *gateway.Gateway
 
-	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
 		freshGw := &gwAPIv1.Gateway{}
 		if err := k8s.GetClient().Get(ctx, req.NamespacedName, freshGw); err != nil {
 			if kErrors.IsNotFound(err) {
@@ -118,6 +76,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 		dc = gateway.WrapGateway(freshGw)
 
+		gwcKey := client.ObjectKey{Name: gwc.Object.Name}
 		if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
 			return err
 		} else if kErrors.IsNotFound(err) {
@@ -196,34 +155,133 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	log.Debug(ctx, "Looking for service address ...")
-	programmed := k8s.GetCondition(gw, k8s.ConditionProgrammed)
-	if programmed != nil && programmed.Status == k8s.ConditionStatusTrue && len(gw.Object.Status.Addresses) == 0 {
-		svcList := &coreV1.ServiceList{}
-		if err := k8s.GetClient().List(
-			ctx,
-			svcList,
-			&client.ListOptions{
-				Namespace:     gw.Object.Namespace,
-				LabelSelector: labels.SelectorFromSet(k8s.GwAPIv1GatewayLabels(gw.Object.Name)),
-			},
-		); err == nil {
-			for i := range svcList.Items {
-				svc := &svcList.Items[i]
-				if k8s.IsGatewayDependent(gw, svc) {
-					if svc.Spec.Type == coreV1.ServiceTypeLoadBalancer {
-						if len(svc.Status.LoadBalancer.Ingress) == 0 {
-							log.Debug(ctx, "LoadBalancer service has no IP assigned yet, requeuing gateway")
-							return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
-						}
-					}
-					break
-				}
-			}
-		}
+	if result, shouldRequeue := checkLoadBalancerAddress(ctx, gw); shouldRequeue {
+		return result, nil
 	}
 
 	log.InfoEndReconcile(ctx, gw.Object)
 	return ctrl.Result{}, nil
+}
+
+func checkLoadBalancerAddress(ctx context.Context, gw *gateway.Gateway) (ctrl.Result, bool) {
+	programmed := k8s.GetCondition(gw, k8s.ConditionProgrammed)
+	if programmed == nil {
+		return ctrl.Result{}, false
+	}
+	if programmed.Status != k8s.ConditionStatusTrue {
+		return ctrl.Result{}, false
+	}
+	if len(gw.Object.Status.Addresses) > 0 {
+		return ctrl.Result{}, false
+	}
+
+	svcList := &coreV1.ServiceList{}
+	if err := k8s.GetClient().List(
+		ctx,
+		svcList,
+		&client.ListOptions{
+			Namespace:     gw.Object.Namespace,
+			LabelSelector: labels.SelectorFromSet(k8s.GwAPIv1GatewayLabels(gw.Object.Name)),
+		},
+	); err != nil {
+		return ctrl.Result{}, false
+	}
+
+	for i := range svcList.Items {
+		svc := &svcList.Items[i]
+		if !k8s.IsGatewayDependent(gw, svc) {
+			continue
+		}
+
+		if svc.Spec.Type == coreV1.ServiceTypeLoadBalancer {
+			if len(svc.Status.LoadBalancer.Ingress) == 0 {
+				log.Debug(ctx, "LoadBalancer service has no IP assigned yet, requeuing gateway")
+				return ctrl.Result{RequeueAfter: 5 * time.Second}, true
+			}
+		}
+		break
+	}
+
+	return ctrl.Result{}, false
+}
+
+func (r *Reconciler) validateGatewayClass(
+	ctx context.Context,
+	gw *gateway.Gateway,
+) (*gateway.GatewayClass, *v1alpha1.GatewayClassParameters, *bool, error) {
+	gwcName := string(gw.Object.Spec.GatewayClassName)
+
+	if gwcName == "" {
+		log.Debug(ctx, "ignoring gateway as no gateway class name is defined")
+		skip := true
+		return nil, nil, &skip, nil
+	}
+
+	gwcKey := client.ObjectKey{Name: gwcName}
+	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
+
+	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
+		return nil, nil, nil, err
+	} else if kErrors.IsNotFound(err) {
+		log.Debug(ctx, "ignoring gateway as gateway class name was not found")
+		skip := true
+		return nil, nil, &skip, nil
+	}
+
+	if gwc.Object.Spec.ControllerName != core.GraviteeGatewayClassController {
+		log.Debug(ctx, "ignoring gateway as controller name does not match")
+		skip := true
+		return nil, nil, &skip, nil
+	}
+
+	params, skip, err := r.validateGatewayClassParameters(ctx, gwc)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if skip != nil && *skip {
+		return nil, nil, skip, nil
+	}
+
+	return gwc, params, nil, nil
+}
+
+func (r *Reconciler) validateGatewayClassParameters(
+	ctx context.Context,
+	gwc *gateway.GatewayClass,
+) (*v1alpha1.GatewayClassParameters, *bool, error) {
+	paramRef := gwc.Object.Spec.ParametersRef
+
+	if paramRef == nil {
+		skip := true
+		return nil, &skip, nil
+	}
+
+	if paramRef.Group != gwAPIv1.Group(v1alpha1.GroupVersion.Group) {
+		skip := true
+		return nil, &skip, nil
+	}
+
+	if paramRef.Kind != "GatewayClassParameters" {
+		skip := true
+		return nil, &skip, nil
+	}
+
+	key := client.ObjectKey{
+		Name:      paramRef.Name,
+		Namespace: string(*paramRef.Namespace),
+	}
+
+	params := new(v1alpha1.GatewayClassParameters)
+
+	if err := k8s.GetClient().Get(ctx, key, params); client.IgnoreNotFound(err) != nil {
+		return nil, nil, err
+	} else if kErrors.IsNotFound(err) {
+		log.Debug(ctx, "ignoring gateway as gateway class parameters were not found")
+		skip := true
+		return nil, &skip, nil
+	}
+
+	return params, nil, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
