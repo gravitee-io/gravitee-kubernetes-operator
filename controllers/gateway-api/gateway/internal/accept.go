@@ -21,8 +21,16 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
-func Accept(gw *gateway.Gateway) {
-	acceptListeners(gw)
+func Accept(gw *gateway.Gateway) error {
+	specLen := len(gw.Object.Spec.Listeners)
+	statusLen := len(gw.Object.Status.Listeners)
+	if statusLen != specLen {
+		return fmt.Errorf("listener status array length (%d) does not match spec listeners length (%d)", statusLen, specLen)
+	}
+
+	if err := acceptListeners(gw); err != nil {
+		return err
+	}
 
 	accepted := k8s.NewAcceptedConditionBuilder(gw.Object.Generation).Accept("gateway is accepted")
 	for i := range gw.Object.Status.Listeners {
@@ -39,9 +47,16 @@ func Accept(gw *gateway.Gateway) {
 	}
 
 	k8s.SetCondition(gw, accepted.Build())
+	return nil
 }
 
-func acceptListeners(gw *gateway.Gateway) {
+func acceptListeners(gw *gateway.Gateway) error {
+	specLen := len(gw.Object.Spec.Listeners)
+	statusLen := len(gw.Object.Status.Listeners)
+	if statusLen != specLen {
+		return fmt.Errorf("listener status array length (%d) does not match spec listeners length (%d)", statusLen, specLen)
+	}
+
 	for i, l := range gw.Object.Spec.Listeners {
 		listenerStatus := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
 		condition := k8s.NewAcceptedConditionBuilder(gw.Object.Generation)
@@ -57,4 +72,5 @@ func acceptListeners(gw *gateway.Gateway) {
 		}
 		k8s.SetCondition(listenerStatus, condition.Build())
 	}
+	return nil
 }

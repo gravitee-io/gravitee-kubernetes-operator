@@ -15,12 +15,20 @@
 package internal
 
 import (
+	"fmt"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func DetectConflicts(gw *gateway.Gateway) {
+func DetectConflicts(gw *gateway.Gateway) error {
+	specLen := len(gw.Object.Spec.Listeners)
+	statusLen := len(gw.Object.Status.Listeners)
+	if statusLen != specLen {
+		return fmt.Errorf("listener status array length (%d) does not match spec listeners length (%d)", statusLen, specLen)
+	}
+
 	for i, l1 := range gw.Object.Spec.Listeners {
 		for j, l2 := range gw.Object.Spec.Listeners {
 			if i == j {
@@ -46,4 +54,5 @@ func DetectConflicts(gw *gateway.Gateway) {
 			k8s.SetCondition(&gateway.ListenerStatus{Object: &listenerStatus}, condition.Build())
 		}
 	}
+	return nil
 }
