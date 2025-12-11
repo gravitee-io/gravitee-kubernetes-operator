@@ -16,6 +16,7 @@ package gateway
 
 import (
 	"context"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -25,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
@@ -161,6 +163,33 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err := k8s.UpdateStatus(ctx, gw.Object); client.IgnoreNotFound(err) != nil {
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
 		return ctrl.Result{}, err
+	}
+
+	log.Debug(ctx, "Looking for service address ...")
+	programmed := k8s.GetCondition(gw, k8s.ConditionProgrammed)
+	if programmed != nil && programmed.Status == k8s.ConditionStatusTrue && len(gw.Object.Status.Addresses) == 0 {
+		svcList := &coreV1.ServiceList{}
+		if err := k8s.GetClient().List(
+			ctx,
+			svcList,
+			&client.ListOptions{
+				Namespace:     gw.Object.Namespace,
+				LabelSelector: labels.SelectorFromSet(k8s.GwAPIv1GatewayLabels(gw.Object.Name)),
+			},
+		); err == nil {
+			for i := range svcList.Items {
+				svc := &svcList.Items[i]
+				if k8s.IsGatewayDependent(gw, svc) {
+					if svc.Spec.Type == coreV1.ServiceTypeLoadBalancer {
+						if len(svc.Status.LoadBalancer.Ingress) == 0 {
+							log.Debug(ctx, "LoadBalancer service has no IP assigned yet, requeuing gateway")
+							return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
+						}
+					}
+					break
+				}
+			}
+		}
 	}
 
 	log.InfoEndReconcile(ctx, gw.Object)
