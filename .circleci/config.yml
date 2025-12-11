@@ -304,9 +304,9 @@ jobs:
             docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
             kind load docker-image gateway:latest --name gravitee
       - run:
-          name: Run cloud LB
+          name: Install MetalLB
           command: |
-            make cloud-lb
+            npx zx ./hack/scripts/install-metallb.mjs
       - run:
           name: Build and install the operator
           command: |
