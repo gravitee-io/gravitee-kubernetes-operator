@@ -133,7 +133,8 @@ func supportsHTTP(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) (bool, error
 
 	if !statusReady {
 		for i := range gw.Spec.Listeners {
-			if gw.Spec.Listeners[i].Protocol == gwAPIv1.HTTPProtocolType || gw.Spec.Listeners[i].Protocol == gwAPIv1.HTTPSProtocolType {
+			protocol := gw.Spec.Listeners[i].Protocol
+			if protocol == gwAPIv1.HTTPProtocolType || protocol == gwAPIv1.HTTPSProtocolType {
 				return false, ErrGatewayNotReady
 			}
 		}
