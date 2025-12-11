@@ -69,7 +69,12 @@ func acceptParent(
 	}
 
 	if ref.SectionName != nil {
-		if k8s.FindListenerIndexBySectionName(gw, *ref.SectionName) == -1 {
+		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
+		if lIdx == -1 {
+			specIdx := k8s.FindListenerIndexBySectionNameInSpec(gw, *ref.SectionName)
+			if specIdx != -1 && !k8s.IsGatewayStatusReady(gw) {
+				return nil, ErrGatewayNotReady
+			}
 			accepted.RejectNoMatchingParent("section name does not exist")
 			return accepted.Build(), nil
 		}
