@@ -16,6 +16,8 @@ package httproute
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal"
@@ -97,6 +99,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			})
 		})
 	})
+
+	if err != nil && errors.Is(err, internal.ErrGatewayNotReady) {
+		log.Debug(ctx, "Gateway status not ready, requeuing HTTPRoute", "route", req.NamespacedName)
+		return ctrl.Result{RequeueAfter: 2 * time.Second}, nil
+	}
 
 	if err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, route)

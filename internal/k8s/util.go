@@ -346,6 +346,19 @@ func FindListenerIndexBySectionName(gw *gwAPIv1.Gateway, sectionName gwAPIv1.Sec
 	return -1
 }
 
+func FindListenerIndexBySectionNameInSpec(gw *gwAPIv1.Gateway, sectionName gwAPIv1.SectionName) int {
+	for i := range gw.Spec.Listeners {
+		if gw.Spec.Listeners[i].Name == sectionName {
+			return i
+		}
+	}
+	return -1
+}
+
+func IsGatewayStatusReady(gw *gwAPIv1.Gateway) bool {
+	return len(gw.Status.Listeners) == len(gw.Spec.Listeners)
+}
+
 func HasHTTPListenerAtIndex(gw *gwAPIv1.Gateway, index int) bool {
 	if index < 0 || index >= len(gw.Status.Listeners) {
 		return false
