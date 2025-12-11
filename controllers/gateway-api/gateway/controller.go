@@ -105,12 +105,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	dc := gw.DeepCopy()
+	var dc *gateway.Gateway
 
 	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		if err := k8s.GetClient().Get(ctx, req.NamespacedName, dc.Object); client.IgnoreNotFound(err) != nil {
+		freshGw := &gwAPIv1.Gateway{}
+		if err := k8s.GetClient().Get(ctx, req.NamespacedName, freshGw); err != nil {
+			if kErrors.IsNotFound(err) {
+				return nil
+			}
 			return err
 		}
+
+		dc = gateway.WrapGateway(freshGw)
 
 		if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
 			return err
@@ -164,6 +170,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
 		return ctrl.Result{}, err
+	}
+
+	if dc == nil {
+		// Gateway was deleted during reconciliation, no need to update status
+		return ctrl.Result{}, nil
 	}
 
 	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gw.Object); client.IgnoreNotFound(err) != nil {
