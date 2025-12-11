@@ -137,5 +137,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwAPIv1.HTTPRoute{}).
 		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
+		Watches(&gwAPIv1.Gateway{}, internal.WatchGateways()).
 		Complete(r)
 }
