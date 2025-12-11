@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
@@ -106,6 +107,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if err != nil {
+		log.ErrorRequeuingReconcile(ctx, err, route)
+		return ctrl.Result{}, err
+	}
+
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
+		if kErrors.IsNotFound(err) {
+			log.Debug(ctx, "Looks like the HTTPRoute was deleted during reconciliation, no need to update status")
+			return ctrl.Result{}, nil
+		}
 		log.ErrorRequeuingReconcile(ctx, err, route)
 		return ctrl.Result{}, err
 	}
