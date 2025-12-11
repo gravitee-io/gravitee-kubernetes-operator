@@ -29,30 +29,59 @@ func DetectConflicts(gw *gateway.Gateway) error {
 		return fmt.Errorf("listener status array length (%d) does not match spec listeners length (%d)", statusLen, specLen)
 	}
 
+	conflicts := make(map[int]string)
+
 	for i, l1 := range gw.Object.Spec.Listeners {
 		for j, l2 := range gw.Object.Spec.Listeners {
 			if i == j {
 				continue
 			}
-			condition := k8s.NewListenerConflictedConditionBuilder(gw.Object.Generation)
+
 			if l1.Port == l2.Port && l1.Protocol != l2.Protocol {
-				condition.Status(k8s.ConditionStatusTrue)
-				condition.Reason(string(gwAPIv1.ListenerReasonProtocolConflict))
-				break
+				if _, exists := conflicts[i]; !exists {
+					conflicts[i] = string(gwAPIv1.ListenerReasonProtocolConflict)
+				}
+				if _, exists := conflicts[j]; !exists {
+					conflicts[j] = string(gwAPIv1.ListenerReasonProtocolConflict)
+				}
+				continue
 			}
+
 			if l1.Hostname != nil && l2.Hostname != nil && *l1.Hostname == *l2.Hostname {
-				condition.Status(k8s.ConditionStatusTrue)
-				condition.Reason(string(gwAPIv1.ListenerReasonHostnameConflict))
-				break
+				if _, exists := conflicts[i]; !exists {
+					conflicts[i] = string(gwAPIv1.ListenerReasonHostnameConflict)
+				}
+				if _, exists := conflicts[j]; !exists {
+					conflicts[j] = string(gwAPIv1.ListenerReasonHostnameConflict)
+				}
+				continue
 			}
+
 			if k8s.IsKafkaListener(l1) && k8s.IsKafkaListener(l2) {
-				condition.Status(k8s.ConditionStatusTrue)
-				condition.Reason(k8s.ListenerReasonKafkaConflict)
-				break
+				if _, exists := conflicts[i]; !exists {
+					conflicts[i] = k8s.ListenerReasonKafkaConflict
+				}
+				if _, exists := conflicts[j]; !exists {
+					conflicts[j] = k8s.ListenerReasonKafkaConflict
+				}
+				continue
 			}
-			listenerStatus := gw.Object.Status.Listeners[i]
-			k8s.SetCondition(&gateway.ListenerStatus{Object: &listenerStatus}, condition.Build())
 		}
 	}
+
+	for i := range gw.Object.Spec.Listeners {
+		listenerStatus := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
+		condition := k8s.NewListenerConflictedConditionBuilder(gw.Object.Generation)
+
+		if reason, hasConflict := conflicts[i]; hasConflict {
+			condition.Status(k8s.ConditionStatusTrue)
+			condition.Reason(reason)
+		} else {
+			condition.Status(k8s.ConditionStatusFalse)
+		}
+
+		k8s.SetCondition(listenerStatus, condition.Build())
+	}
+
 	return nil
 }
