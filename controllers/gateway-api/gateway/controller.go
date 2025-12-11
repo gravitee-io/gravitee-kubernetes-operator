@@ -166,6 +166,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, gw.Object); client.IgnoreNotFound(err) != nil {
+		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
+		return ctrl.Result{}, err
+	} else if kErrors.IsNotFound(err) {
+		// Gateway was deleted, no need to update status
+		return ctrl.Result{}, nil
+	}
+
 	dc.Object.Status.DeepCopyInto(&gw.Object.Status)
 	if err := k8s.UpdateStatus(ctx, gw.Object); client.IgnoreNotFound(err) != nil {
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
