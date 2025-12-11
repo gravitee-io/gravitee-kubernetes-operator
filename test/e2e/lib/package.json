@@ -7,6 +7,8 @@
     "@eslint/js": "9.37.0",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.8",
+    "jsondiffpatch": "0.7.3",
+    "lodash-es": "4.17.21",
     "prettier": "3.6.2",
     "yaml": "2.8.1",
     "zx": "7.2.3"
