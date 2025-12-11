@@ -16,6 +16,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
@@ -25,6 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
+
+var ErrGatewayNotReady = errors.New("gateway status not ready, requeue required")
 
 func Resolve(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 	route.Status.Parents = make([]gwAPIv1.RouteParentStatus, len(route.Spec.ParentRefs))
@@ -76,6 +79,11 @@ func resolveParent(
 	if ref.SectionName != nil {
 		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
 		if lIdx == -1 {
+			specIdx := k8s.FindListenerIndexBySectionNameInSpec(gw, *ref.SectionName)
+			if specIdx != -1 && !k8s.IsGatewayStatusReady(gw) {
+				// Gateway exists and has the listener in spec, but status is not ready yet
+				return nil, ErrGatewayNotReady
+			}
 			conditionBuilder.RejectNoMatchingParent("unable to resolve parent section name")
 			return conditionBuilder.Build(), nil
 		}
