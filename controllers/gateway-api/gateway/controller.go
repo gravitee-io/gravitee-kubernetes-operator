@@ -136,7 +136,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	if dc == nil {
-		// Gateway was deleted during reconciliation, no need to update status
 		return ctrl.Result{}, nil
 	}
 
@@ -144,12 +143,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
 		return ctrl.Result{}, err
 	} else if kErrors.IsNotFound(err) {
-		// Gateway was deleted, no need to update status
+		log.Debug(ctx, "Looks like the Gateway was deleted during reconciliation, no need to update status")
 		return ctrl.Result{}, nil
 	}
 
 	dc.Object.Status.DeepCopyInto(&gw.Object.Status)
 	if err := k8s.UpdateStatus(ctx, gw.Object); client.IgnoreNotFound(err) != nil {
+		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
+		return ctrl.Result{}, err
+	}
+
+	log.Debug(ctx, "Re-checking and updating addresses after status update")
+	if err := updateGatewayAddressesIfNeeded(ctx, gw); err != nil {
 		log.ErrorRequeuingReconcile(ctx, err, gw.Object)
 		return ctrl.Result{}, err
 	}
@@ -203,6 +208,37 @@ func checkLoadBalancerAddress(ctx context.Context, gw *gateway.Gateway) (ctrl.Re
 	}
 
 	return ctrl.Result{}, false
+}
+
+func updateGatewayAddressesIfNeeded(ctx context.Context, gw *gateway.Gateway) error {
+	programmed := k8s.GetCondition(gw, k8s.ConditionProgrammed)
+	if programmed == nil || programmed.Status != k8s.ConditionStatusTrue {
+		return nil
+	}
+
+	// Re-check addresses to ensure they're up-to-date after status update
+	oldAddresses := gw.Object.Status.Addresses
+	if err := internal.UpdateGatewayAddresses(ctx, gw); err != nil {
+		return err
+	}
+
+	if !addressesEqual(oldAddresses, gw.Object.Status.Addresses) {
+		return k8s.UpdateStatus(ctx, gw.Object)
+	}
+
+	return nil
+}
+
+func addressesEqual(a1, a2 []gwAPIv1.GatewayStatusAddress) bool {
+	if len(a1) != len(a2) {
+		return false
+	}
+	for i := range a1 {
+		if a1[i].Value != a2[i].Value {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *Reconciler) validateGatewayClass(
