@@ -66,6 +66,12 @@ func programListeners(gw *gateway.Gateway) {
 }
 
 func setGatewayAddresses(ctx context.Context, gw *gateway.Gateway) error {
+	return UpdateGatewayAddresses(ctx, gw)
+}
+
+// UpdateGatewayAddresses updates the gateway addresses from the associated service.
+// This can be called after status update to ensure addresses are current.
+func UpdateGatewayAddresses(ctx context.Context, gw *gateway.Gateway) error {
 	svcList := &coreV1.ServiceList{}
 	if err := k8s.GetClient().List(
 		ctx,
