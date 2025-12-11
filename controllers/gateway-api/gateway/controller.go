@@ -112,6 +112,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			return err
 		}
 
+		if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
+			return err
+		} else if kErrors.IsNotFound(err) {
+			log.Debug(ctx, "ignoring gateway as gateway class was deleted")
+			return nil
+		}
+
 		return k8s.CreateOrUpdate(ctx, gw.Object, func() error {
 			util.AddFinalizer(gw.Object, core.GatewayFinalizer)
 
