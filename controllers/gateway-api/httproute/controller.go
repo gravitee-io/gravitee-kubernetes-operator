@@ -73,11 +73,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			return events.Record(event.Update, route, func() error {
 				internal.Init(dc)
 
-				if err := internal.Resolve(ctx, dc); err != nil {
+				// Create a shared gateway cache to ensure both Resolve and Accept use the same gateway versions
+				cache := make(internal.GatewayCache)
+
+				if err := internal.ResolveWithCache(ctx, dc, cache); err != nil {
 					return err
 				}
 
-				if err := internal.Accept(ctx, dc); err != nil {
+				if err := internal.AcceptWithCache(ctx, dc, cache); err != nil {
 					return err
 				}
 
