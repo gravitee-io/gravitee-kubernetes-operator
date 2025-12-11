@@ -34,6 +34,12 @@ func Resolve(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 ) error {
+	specLen := len(gw.Object.Spec.Listeners)
+	statusLen := len(gw.Object.Status.Listeners)
+	if statusLen != specLen {
+		return fmt.Errorf("listener status array length (%d) does not match spec listeners length (%d)", statusLen, specLen)
+	}
+
 	for i, listener := range gw.Object.Spec.Listeners {
 		conditionBuilder := k8s.NewResolvedRefsConditionBuilder(gw.Object.Generation)
 
