@@ -154,9 +154,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 					return err
 				}
 
-				internal.DetectConflicts(dc)
+				if err := internal.DetectConflicts(dc); err != nil {
+					return err
+				}
 
-				internal.Accept(dc)
+				if err := internal.Accept(dc); err != nil {
+					return err
+				}
 
 				if !k8s.IsAccepted(dc) {
 					return nil
