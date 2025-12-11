@@ -16,6 +16,8 @@ package httproute
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal"
@@ -23,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
@@ -70,11 +73,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			return events.Record(event.Update, route, func() error {
 				internal.Init(dc)
 
-				if err := internal.Resolve(ctx, dc); err != nil {
+				// Create a shared gateway cache to ensure both Resolve and Accept use the same gateway versions
+				cache := make(internal.GatewayCache)
+
+				if err := internal.ResolveWithCache(ctx, dc, cache); err != nil {
 					return err
 				}
 
-				if err := internal.Accept(ctx, dc); err != nil {
+				if err := internal.AcceptWithCache(ctx, dc, cache); err != nil {
 					return err
 				}
 
@@ -98,7 +104,21 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		})
 	})
 
+	if err != nil && errors.Is(err, internal.ErrGatewayNotReady) {
+		log.Debug(ctx, "Gateway status not ready, requeuing HTTPRoute", "route", req.NamespacedName)
+		return ctrl.Result{RequeueAfter: 2 * time.Second}, nil
+	}
+
 	if err != nil {
+		log.ErrorRequeuingReconcile(ctx, err, route)
+		return ctrl.Result{}, err
+	}
+
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
+		if kErrors.IsNotFound(err) {
+			log.Debug(ctx, "Looks like the HTTPRoute was deleted during reconciliation, no need to update status")
+			return ctrl.Result{}, nil
+		}
 		log.ErrorRequeuingReconcile(ctx, err, route)
 		return ctrl.Result{}, err
 	}
@@ -117,5 +137,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwAPIv1.HTTPRoute{}).
 		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
+		Watches(&gwAPIv1.Gateway{}, internal.WatchGateways()).
 		Complete(r)
 }

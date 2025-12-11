@@ -16,6 +16,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
@@ -26,9 +27,35 @@ import (
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
+var ErrGatewayNotReady = errors.New("gateway status not ready, requeue required")
+
+// GatewayCache stores fetched gateways keyed by a unique string representation of the parent reference.
+type GatewayCache map[string]*gwAPIv1.Gateway
+
+// gatewayKey creates a unique key from a parent reference.
+func gatewayKey(routeMeta metaV1.ObjectMeta, ref gwAPIv1.ParentReference) string {
+	ns := ref.Namespace
+	if ns == nil {
+		routeNS := gwAPIv1.Namespace(routeMeta.Namespace)
+		ns = &routeNS
+	}
+	key := string(*ns) + "/" + string(ref.Name)
+	if ref.SectionName != nil {
+		key += "/" + string(*ref.SectionName)
+	}
+	if ref.Port != nil {
+		key += "/" + fmt.Sprintf("%d", *ref.Port)
+	}
+	return key
+}
+
 func Resolve(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
+	return ResolveWithCache(ctx, route, make(GatewayCache))
+}
+
+func ResolveWithCache(ctx context.Context, route *gwAPIv1.HTTPRoute, cache GatewayCache) error {
 	route.Status.Parents = make([]gwAPIv1.RouteParentStatus, len(route.Spec.ParentRefs))
-	if err := resolveParents(ctx, route); err != nil {
+	if err := resolveParents(ctx, route, cache); err != nil {
 		return err
 	}
 
@@ -38,9 +65,9 @@ func Resolve(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
 	return nil
 }
 
-func resolveParents(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
+func resolveParents(ctx context.Context, route *gwAPIv1.HTTPRoute, cache GatewayCache) error {
 	for i, ref := range route.Spec.ParentRefs {
-		if resolved, err := resolveParent(ctx, route, ref); err != nil {
+		if resolved, err := resolveParent(ctx, route, ref, cache); err != nil {
 			return err
 		} else {
 			status := gateway.InitRouteParentStatus(ref)
@@ -55,6 +82,7 @@ func resolveParent(
 	ctx context.Context,
 	route *gwAPIv1.HTTPRoute,
 	ref gwAPIv1.ParentReference,
+	cache GatewayCache,
 ) (*metaV1.Condition, error) {
 	conditionBuilder := k8s.NewResolvedRefsConditionBuilder(route.Generation)
 
@@ -63,19 +91,33 @@ func resolveParent(
 		return conditionBuilder.Build(), nil
 	}
 
-	gw, err := k8s.ResolveGateway(ctx, route.ObjectMeta, ref)
-	if client.IgnoreNotFound(err) != nil {
-		return nil, err
-	}
+	// Check cache first, then fetch if not cached
+	key := gatewayKey(route.ObjectMeta, ref)
+	gw, cached := cache[key]
+	if !cached {
+		var err error
+		gw, err = k8s.ResolveGateway(ctx, route.ObjectMeta, ref)
+		if client.IgnoreNotFound(err) != nil {
+			return nil, err
+		}
 
-	if kErrors.IsNotFound(err) {
-		conditionBuilder.RejectNoMatchingParent("unable to resolve parent reference")
-		return conditionBuilder.Build(), nil
+		if kErrors.IsNotFound(err) {
+			conditionBuilder.RejectNoMatchingParent("unable to resolve parent reference")
+			return conditionBuilder.Build(), nil
+		}
+
+		// Cache the gateway for reuse in Accept
+		cache[key] = gw
 	}
 
 	if ref.SectionName != nil {
 		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
 		if lIdx == -1 {
+			specIdx := k8s.FindListenerIndexBySectionNameInSpec(gw, *ref.SectionName)
+			if specIdx != -1 && !k8s.IsGatewayStatusReady(gw) {
+				// Gateway exists and has the listener in spec, but status is not ready yet
+				return nil, ErrGatewayNotReady
+			}
 			conditionBuilder.RejectNoMatchingParent("unable to resolve parent section name")
 			return conditionBuilder.Build(), nil
 		}

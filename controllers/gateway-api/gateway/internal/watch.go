@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -66,7 +67,8 @@ func requestsFromGatewayClass(ctx context.Context, obj client.Object) []reconcil
 	}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching gateway class")
+		return []reconcile.Request{}
 	}
 	reqs := make([]reconcile.Request, len(list.Items))
 	for i := range list.Items {
@@ -94,7 +96,8 @@ func requestsFromService(ctx context.Context, obj client.Object) []reconcile.Req
 	}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching service")
+		return []reconcile.Request{}
 	}
 	reqs := make([]reconcile.Request, len(list.Items))
 	for i := range list.Items {
@@ -111,16 +114,25 @@ func requestsFromHTTPRoute(ctx context.Context, obj client.Object) []reconcile.R
 	if !ok {
 		return nil
 	}
-	listOpts := &client.ListOptions{}
-	list := &gwAPIv1.GatewayList{}
-	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
-	}
+
+	// Optimize: Filter gateways by namespace(s) referenced in parentRefs
+	namespaces := getReferencedNamespaces(httpRoute.Namespace, httpRoute.Spec.ParentRefs)
+
 	var reqs []reconcile.Request
-	for _, gw := range list.Items {
-		for _, ref := range httpRoute.Spec.ParentRefs {
-			if isParent(gw, ref) {
-				reqs = append(reqs, buildRequest(gw))
+	for _, ns := range namespaces {
+		listOpts := &client.ListOptions{
+			Namespace: ns,
+		}
+		list := &gwAPIv1.GatewayList{}
+		if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+			log.Error(ctx, err, "failed to list gateways when watching HTTP route")
+			continue
+		}
+		for _, gw := range list.Items {
+			for _, ref := range httpRoute.Spec.ParentRefs {
+				if isParent(gw, ref) {
+					reqs = append(reqs, buildRequest(gw))
+				}
 			}
 		}
 	}
@@ -132,16 +144,25 @@ func requestsFromKafkaRoute(ctx context.Context, obj client.Object) []reconcile.
 	if !ok {
 		return nil
 	}
-	listOpts := &client.ListOptions{}
-	list := &gwAPIv1.GatewayList{}
-	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
-	}
+
+	// Optimize: Filter gateways by namespace(s) referenced in parentRefs
+	namespaces := getReferencedNamespaces(kafkaRoute.Namespace, kafkaRoute.Spec.ParentRefs)
+
 	var reqs []reconcile.Request
-	for _, gw := range list.Items {
-		for _, ref := range kafkaRoute.Spec.ParentRefs {
-			if isParent(gw, ref) {
-				reqs = append(reqs, buildRequest(gw))
+	for _, ns := range namespaces {
+		listOpts := &client.ListOptions{
+			Namespace: ns,
+		}
+		list := &gwAPIv1.GatewayList{}
+		if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+			log.Error(ctx, err, "failed to list gateways when watching Kafka route")
+			continue
+		}
+		for _, gw := range list.Items {
+			for _, ref := range kafkaRoute.Spec.ParentRefs {
+				if isParent(gw, ref) {
+					reqs = append(reqs, buildRequest(gw))
+				}
 			}
 		}
 	}
@@ -161,7 +182,8 @@ func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Requ
 	}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching secret")
+		return []reconcile.Request{}
 	}
 	var reqs []reconcile.Request
 	for _, gw := range list.Items {
@@ -183,7 +205,8 @@ func requestFromReferenceGrant(ctx context.Context, obj client.Object) []reconci
 	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching reference grant")
+		return []reconcile.Request{}
 	}
 	reqs := make([]reconcile.Request, len(list.Items))
 	for i, gw := range list.Items {
@@ -218,4 +241,22 @@ func buildRequest(gateway gwAPIv1.Gateway) reconcile.Request {
 
 func isParent(gw gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
 	return k8s.IsGatewayKind(ref) && gw.Name == string(ref.Name)
+}
+
+func getReferencedNamespaces(routeNamespace string, parentRefs []gwAPIv1.ParentReference) []string {
+	namespaces := make(map[string]bool)
+
+	namespaces[routeNamespace] = true
+
+	for _, ref := range parentRefs {
+		if ref.Namespace != nil && string(*ref.Namespace) != routeNamespace {
+			namespaces[string(*ref.Namespace)] = true
+		}
+	}
+
+	result := make([]string, 0, len(namespaces))
+	for ns := range namespaces {
+		result = append(result, ns)
+	}
+	return result
 }
