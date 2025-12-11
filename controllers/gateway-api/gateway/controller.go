@@ -237,6 +237,12 @@ func addressesEqual(a1, a2 []gwAPIv1.GatewayStatusAddress) bool {
 		if a1[i].Value != a2[i].Value {
 			return false
 		}
+		if (a1[i].Type == nil) != (a2[i].Type == nil) {
+			return false
+		}
+		if a1[i].Type != nil && a2[i].Type != nil && *a1[i].Type != *a2[i].Type {
+			return false
+		}
 	}
 	return true
 }
