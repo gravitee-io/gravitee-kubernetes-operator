@@ -52,3 +52,7 @@ ifeq ($(shell uname),Darwin)
 else
 	NET_MODE=host docker compose -f hack/kind/cloud-provider/compose.yaml up -d
 endif
+
+.PHONY: metallb
+metallb: ## Install MetalLB load balancer in the kind cluster
+	@npx zx ./hack/scripts/install-metallb.mjs
