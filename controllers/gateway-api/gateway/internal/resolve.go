@@ -229,7 +229,7 @@ func countAttachedHTTPRoutes(
 		return 0, nil
 	}
 
-	opts := &client.ListOptions{}
+	opts := buildRouteListOptions(gw, listener)
 	routesList := &gwAPIv1.HTTPRouteList{}
 	if err := k8s.GetClient().List(ctx, routesList, opts); err != nil {
 		return 0, err
@@ -255,7 +255,7 @@ func countAttachedKafkaRoutes(
 		return 0, nil
 	}
 
-	opts := &client.ListOptions{}
+	opts := buildRouteListOptions(gw, listener)
 	routesList := &v1alpha1.KafkaRouteList{}
 	if err := k8s.GetClient().List(ctx, routesList, opts); err != nil {
 		return 0, err
@@ -304,4 +304,23 @@ func isMalformedSecret(secret *coreV1.Secret) bool {
 		return true
 	}
 	return false
+}
+
+func buildRouteListOptions(gw *gwAPIv1.Gateway, listener gwAPIv1.Listener) *client.ListOptions {
+	opts := &client.ListOptions{}
+
+	if listener.AllowedRoutes == nil || listener.AllowedRoutes.Namespaces == nil {
+		return opts
+	}
+
+	if listener.AllowedRoutes.Namespaces.From == nil {
+		return opts
+	}
+
+	if *listener.AllowedRoutes.Namespaces.From == gwAPIv1.NamespacesFromSame {
+		opts.Namespace = gw.Namespace
+		return opts
+	}
+
+	return opts
 }
