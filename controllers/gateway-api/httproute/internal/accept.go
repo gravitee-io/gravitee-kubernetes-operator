@@ -63,7 +63,6 @@ func acceptParent(
 		}
 	}
 
-	// Check cache first, then fetch if not cached
 	key := gatewayKey(route.ObjectMeta, status.Object.ParentRef)
 	gw, cached := cache[key]
 	if !cached {
@@ -78,7 +77,6 @@ func acceptParent(
 			return accepted.Build(), nil
 		}
 
-		// Cache the gateway for potential reuse
 		cache[key] = gw
 	}
 
@@ -94,7 +92,11 @@ func acceptParent(
 		}
 	}
 
-	if !supportsHTTP(gw, ref) {
+	supports, err := supportsHTTP(gw, ref)
+	if err != nil {
+		return nil, err
+	}
+	if !supports {
 		accepted.RejectNoMatchingParent("parent ref does not support HTTP routes")
 		return accepted.Build(), nil
 	}
@@ -114,15 +116,34 @@ func acceptParent(
 	return accepted.Build(), nil
 }
 
-func supportsHTTP(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
+func supportsHTTP(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) (bool, error) {
+	statusReady := k8s.IsGatewayStatusReady(gw)
+
 	if ref.SectionName != nil {
 		lIdx := k8s.FindListenerIndexBySectionName(gw, *ref.SectionName)
-		return k8s.HasHTTPListenerAtIndex(gw, lIdx)
+		if lIdx == -1 && !statusReady {
+			specIdx := k8s.FindListenerIndexBySectionNameInSpec(gw, *ref.SectionName)
+			if specIdx != -1 {
+				return false, ErrGatewayNotReady
+			}
+			return false, nil
+		}
+		return k8s.HasHTTPListenerAtIndex(gw, lIdx), nil
 	}
+
+	if !statusReady {
+		for i := range gw.Spec.Listeners {
+			if gw.Spec.Listeners[i].Protocol == gwAPIv1.HTTPProtocolType || gw.Spec.Listeners[i].Protocol == gwAPIv1.HTTPSProtocolType {
+				return false, ErrGatewayNotReady
+			}
+		}
+		return false, nil
+	}
+
 	for i := range gw.Status.Listeners {
 		if k8s.HasHTTPListenerAtIndex(gw, i) {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
