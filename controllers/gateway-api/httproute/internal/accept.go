@@ -26,13 +26,17 @@ import (
 )
 
 func Accept(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
-	return acceptParents(ctx, route)
+	return AcceptWithCache(ctx, route, make(GatewayCache))
 }
 
-func acceptParents(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
+func AcceptWithCache(ctx context.Context, route *gwAPIv1.HTTPRoute, cache GatewayCache) error {
+	return acceptParents(ctx, route, cache)
+}
+
+func acceptParents(ctx context.Context, route *gwAPIv1.HTTPRoute, cache GatewayCache) error {
 	for i, ref := range route.Spec.ParentRefs {
 		status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
-		if accepted, err := acceptParent(ctx, route, ref, status); err != nil {
+		if accepted, err := acceptParent(ctx, route, ref, status, cache); err != nil {
 			return err
 		} else {
 			k8s.SetCondition(status, accepted)
@@ -47,6 +51,7 @@ func acceptParent(
 	route *gwAPIv1.HTTPRoute,
 	ref gwAPIv1.ParentReference,
 	status *gateway.RouteParentStatus,
+	cache GatewayCache,
 ) (*metaV1.Condition, error) {
 	accepted := k8s.NewAcceptedConditionBuilder(route.Generation).Accept("route is accepted")
 
@@ -58,14 +63,23 @@ func acceptParent(
 		}
 	}
 
-	gw, err := k8s.ResolveGateway(ctx, route.ObjectMeta, status.Object.ParentRef)
-	if client.IgnoreNotFound(err) != nil {
-		return nil, err
-	}
+	// Check cache first, then fetch if not cached
+	key := gatewayKey(route.ObjectMeta, status.Object.ParentRef)
+	gw, cached := cache[key]
+	if !cached {
+		var err error
+		gw, err = k8s.ResolveGateway(ctx, route.ObjectMeta, status.Object.ParentRef)
+		if client.IgnoreNotFound(err) != nil {
+			return nil, err
+		}
 
-	if kErrors.IsNotFound(err) {
-		accepted.RejectNoMatchingParent("unable to resolve parent reference")
-		return accepted.Build(), nil
+		if kErrors.IsNotFound(err) {
+			accepted.RejectNoMatchingParent("unable to resolve parent reference")
+			return accepted.Build(), nil
+		}
+
+		// Cache the gateway for potential reuse
+		cache[key] = gw
 	}
 
 	if ref.SectionName != nil {
