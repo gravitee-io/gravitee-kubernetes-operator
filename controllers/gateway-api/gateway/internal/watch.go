@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -66,7 +67,8 @@ func requestsFromGatewayClass(ctx context.Context, obj client.Object) []reconcil
 	}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching gateway class")
+		return []reconcile.Request{}
 	}
 	reqs := make([]reconcile.Request, len(list.Items))
 	for i := range list.Items {
@@ -94,7 +96,8 @@ func requestsFromService(ctx context.Context, obj client.Object) []reconcile.Req
 	}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching service")
+		return []reconcile.Request{}
 	}
 	reqs := make([]reconcile.Request, len(list.Items))
 	for i := range list.Items {
@@ -114,7 +117,8 @@ func requestsFromHTTPRoute(ctx context.Context, obj client.Object) []reconcile.R
 	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching HTTP route")
+		return []reconcile.Request{}
 	}
 	var reqs []reconcile.Request
 	for _, gw := range list.Items {
@@ -135,7 +139,8 @@ func requestsFromKafkaRoute(ctx context.Context, obj client.Object) []reconcile.
 	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching Kafka route")
+		return []reconcile.Request{}
 	}
 	var reqs []reconcile.Request
 	for _, gw := range list.Items {
@@ -161,7 +166,8 @@ func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Requ
 	}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching secret")
+		return []reconcile.Request{}
 	}
 	var reqs []reconcile.Request
 	for _, gw := range list.Items {
@@ -183,7 +189,8 @@ func requestFromReferenceGrant(ctx context.Context, obj client.Object) []reconci
 	listOpts := &client.ListOptions{}
 	list := &gwAPIv1.GatewayList{}
 	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
-		return nil
+		log.Error(ctx, err, "failed to list gateways when watching reference grant")
+		return []reconcile.Request{}
 	}
 	reqs := make([]reconcile.Request, len(list.Items))
 	for i, gw := range list.Items {
