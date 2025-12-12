@@ -34,6 +34,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should import swagger in APIM using http-fetcher", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.ApiV4WithSwaggerHTTPFetcher).
