@@ -860,7 +860,8 @@ jobs:
       - image: sonarsource/sonar-scanner-cli:11.3
     resource_class: small
     steps:
-      - checkout
+      - checkout:
+          method: full
       - attach_workspace:
           at: /tmp/junit/reports
       - keeper/env-export:
@@ -868,7 +869,9 @@ jobs:
           var-name: SONAR_TOKEN
       - run:
           name: Run Sonarcloud analysis
-          command: sonar-scanner -Dsonar.projectVersion=$(npx zx hack/scripts/get-chart-version.mjs)
+          command: |
+            sonar-scanner \
+              -Dsonar.projectVersion=$(npx zx hack/scripts/get-chart-version.mjs)
 workflows:
   pull-request:
     when:
