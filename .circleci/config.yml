@@ -724,13 +724,11 @@ jobs:
   job-sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
     docker:
-      - image: sonarsource/sonar-scanner-cli:5.0.1
+      - image: sonarsource/sonar-scanner-cli:11.3
     resource_class: small
     steps:
-      - run:
-          name: Add SSH tool
-          command: apk add --no-cache openssh
-      - checkout
+      - checkout:
+          method: full
       - attach_workspace:
           at: /tmp/junit/reports
       - keeper/env-export:
@@ -738,7 +736,9 @@ jobs:
           var-name: SONAR_TOKEN
       - run:
           name: Run Sonarcloud analysis
-          command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
+          command: |
+            sonar-scanner \
+              -Dsonar.projectVersion=$(npx zx hack/scripts/get-chart-version.mjs)
 workflows:
   pull-request:
     when:
@@ -868,7 +868,7 @@ workflows:
               ignore: /.*/
           requires:
             - Stage Docker image
-            - Stage Helm chart     
+            - Stage Helm chart
       - aquasec/register_artifact:
           name: Register staged image for scanning
           context: cicd-orchestrator
@@ -923,7 +923,7 @@ workflows:
                 command: |
                   export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
                   docker pull "graviteeio.azurecr.io/kubernetes-operator:${VERSION}"
-              
+
   release:
     when:
       equal:
