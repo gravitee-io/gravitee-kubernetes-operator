@@ -539,13 +539,11 @@ jobs:
   job-sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
     docker:
-      - image: sonarsource/sonar-scanner-cli:5.0.1
+      - image: sonarsource/sonar-scanner-cli:11.3
     resource_class: small
     steps:
-      - run:
-          name: Add SSH tool
-          command: apk add --no-cache openssh
-      - checkout
+      - checkout:
+          method: full
       - attach_workspace:
           at: /tmp/junit/reports
       - keeper/env-export:
@@ -553,14 +551,9 @@ jobs:
           var-name: SONAR_TOKEN
       - run:
           name: Run Sonarcloud analysis
-          command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
-  job-fail:
-    description: This is a test job for slack notifications
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>
-    steps:
-      - run:
-          command: exit 1
+          command: |
+            sonar-scanner \
+              -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
 workflows:
   pull-request:
     when:
