@@ -278,7 +278,7 @@ jobs:
           name: Run Gateway API Conformance Test
           command: |
             bin/gotestsum --format testname ./test/conformance/kubernetes.io/gateway-api/standard/... --gateway-class=gravitee-gateway
-      - run: 
+      - run:
           name: Generate coverage
           command: |
             mkdir -p /tmp/junit/reports
@@ -383,7 +383,7 @@ jobs:
 
   job-stage-helm-chart:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>-node 
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
       - setup_remote_docker
@@ -475,7 +475,7 @@ jobs:
             npx zx hack/scripts/rollout-apim.mjs --verbose \
               --srcBranch=<< parameters.apim-source-branch >> \
               --srcSha=<< parameters.apim-commit-hash >>
-       
+
   job-release:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -725,13 +725,11 @@ jobs:
   job-sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
     docker:
-      - image: sonarsource/sonar-scanner-cli:5.0.1
+      - image: sonarsource/sonar-scanner-cli:11.3
     resource_class: small
     steps:
-      - run:
-          name: Add SSH tool
-          command: apk add --no-cache openssh
-      - checkout
+      - checkout:
+          method: full
       - attach_workspace:
           at: /tmp/junit/reports
       - keeper/env-export:
@@ -739,7 +737,9 @@ jobs:
           var-name: SONAR_TOKEN
       - run:
           name: Run Sonarcloud analysis
-          command: sonar-scanner -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
+          command: |
+            sonar-scanner \
+              -Dsonar.projectVersion=$(git describe --tags --abbrev=0)
 workflows:
   pull-request:
     when:
@@ -869,7 +869,7 @@ workflows:
               ignore: /.*/
           requires:
             - Stage Docker image
-            - Stage Helm chart     
+            - Stage Helm chart
       - aquasec/register_artifact:
           name: Register staged image for scanning
           context: cicd-orchestrator
@@ -924,7 +924,7 @@ workflows:
                 command: |
                   export VERSION="$(npx zx hack/scripts/get-chart-version.mjs)"
                   docker pull "graviteeio.azurecr.io/kubernetes-operator:${VERSION}"
-              
+
   release:
     when:
       equal:
