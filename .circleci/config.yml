@@ -15,6 +15,9 @@ parameters:
   go-version:
     type: string
     default: "1.23.1"
+  helm-version:
+    type: string
+    default: "v3.19.4"
   trigger:
     type: enum
     default: none
@@ -271,7 +274,8 @@ jobs:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - kubernetes/install_kubectl
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Install kind
           command: |
@@ -365,7 +369,8 @@ jobs:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - kubernetes/install_kubectl
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Install kind
           command: |
@@ -421,7 +426,8 @@ jobs:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - kubernetes/install_kubectl
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Install kind
           command: |
@@ -462,7 +468,8 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - azure-cli/install
       - gravitee/docker-login:
           registry: graviteeio.azurecr.io
@@ -563,7 +570,8 @@ jobs:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
@@ -785,7 +793,8 @@ jobs:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
@@ -815,7 +824,8 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
@@ -826,7 +836,8 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Generate cache keys for Go tools
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
@@ -836,6 +847,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - helm/install_helm_plugin:
           helm_plugin_url: https://github.com/helm-unittest/helm-unittest.git
+          plugin_version: "1.0.2"
       - run:
           name: Run Helm unit tests
           command: make helm-test
