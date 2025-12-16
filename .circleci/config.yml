@@ -15,6 +15,9 @@ parameters:
   go-version:
     type: string
     default: "1.23.1"
+  helm-version:
+    type: string
+    default: "v3.19.4"
   trigger:
     type: enum
     default: none
@@ -180,6 +183,99 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-unit.out
+<<<<<<< HEAD
+=======
+      - go/save-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+
+  job-conformance-test:
+    machine:
+      image: ubuntu-2204:2024.01.2
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - checkout
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - kubernetes/install_kubectl
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - run:
+          name: Install kind
+          command: |
+            curl -Lo /tmp/kind https://github.com/kubernetes-sigs/kind/releases/download/v0.29.0/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      - run:
+          name: Start cluster
+          command: |
+            make start-conformance-cluster
+      - run:
+          name: Prepare coverage storage
+          command: |
+            sudo chmod -R 777 /tmp/coverage
+      - run:
+          name: Create coverage persistent volume
+          command:  kubectl apply -f ./test/conformance/coverage.yaml
+      - run:
+          name: Load gateway image
+          command: |
+            docker pull graviteeio.azurecr.io/apim-gateway:master-latest 
+            docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
+            kind load docker-image gateway:latest --name gravitee
+      - run:
+          name: Run cloud LB
+          command: |
+            make cloud-lb
+      - run:
+          name: Build and install the operator
+          command: |
+            IMG=gko TAG=latest make docker-build-cover \
+              && kind load docker-image gko:latest --name gravitee \
+              && helm upgrade --install gko helm/gko -n default \
+                --set manager.image.repository=gko \
+                --set manager.image.tag=latest \
+                -f ./test/conformance/operator.values.yaml
+      - run:
+          name: Apply GatewayClassParameters and GatewayClass custom resources
+          command: |
+            kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
+            kubectl apply -f ./test/conformance/gateway-class.yaml
+      - run:
+          name: Run Gateway API conformance test suites
+          command: |
+            bin/gotestsum --format=testname --hide-summary=skipped --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+      - run:
+          name: Scale down operator manager.image.repository
+          command: |
+            kubectl scale deployment gko-controller-manager -n default --replicas=0
+            kubectl wait --for=delete pod -l control-plane=controller-manager
+      - run: 
+          name: Generate coverage
+          command: |
+            mkdir -p /tmp/junit/reports
+            go tool covdata textfmt  -i=/tmp/coverage -o /tmp/junit/reports/cover-conformance.out
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover-conformance.out
+      - go/save-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
 
   job-integration-test:
     machine:
@@ -197,9 +293,25 @@ jobs:
       - checkout
       - go/install:
           version: "<< pipeline.parameters.go-version >>"
+<<<<<<< HEAD
       - go/load-cache
       - kubernetes/install-kubectl
       - helm/install_helm_client
+=======
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - kubernetes/install_kubectl
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
       - run:
           name: Install kind
           command: |
@@ -242,7 +354,81 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-<< parameters.ginkgo-filter >>.out
+<<<<<<< HEAD
       - go/save-cache
+=======
+      - go/save-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+
+  job-e2e-tests:
+    machine:
+      image: ubuntu-2204:2024.01.2
+      docker_layer_caching: true
+    resource_class: medium
+    steps:
+      - checkout
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - kubernetes/install_kubectl
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - run:
+          name: Install kind
+          command: |
+            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      - run:
+          name: Start cluster
+          command: |
+            make start-cluster
+      - run:
+          name: Helm install GKO
+          command: |
+            IMG=gko TAG=latest make docker-build-cover \
+              && kind load docker-image gko:latest --name gravitee \
+              && helm upgrade --install gko helm/gko -n default \
+                --set manager.image.repository=gko \
+                --set manager.image.tag=latest
+      - run:
+          name: Install libs
+          command: yarn --cwd test/e2e/lib install
+      - run:
+          name: Install Chainsaw
+          command: |
+            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.14
+      - run:
+          name: Run Chainsaw tests
+          command: |
+            bin/chainsaw test --quiet --config test/e2e/chainsaw/config.yaml
+
+  job-stage-helm-chart:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node 
+    steps:
+      - checkout
+      - setup_remote_docker
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - azure-cli/install
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      - run:
+          name: Stage Helm Chart
+          command: npx zx hack/scripts/stage-helm-chart.mjs
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
 
   job-stage-image:
     docker:
@@ -326,6 +512,11 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+<<<<<<< HEAD
+=======
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
@@ -511,13 +702,54 @@ jobs:
               ]
             }
 
+<<<<<<< HEAD
+=======
+  job-prepare-next-release:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - setup_remote_docker
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - run:
+          name: Prepare next release
+          command: |
+            npx zx hack/scripts/prepare-next-release.mjs
+
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
   job-helm-lint:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     steps:
       - checkout
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
@@ -528,10 +760,23 @@ jobs:
     resource_class: small
     steps:
       - checkout
+<<<<<<< HEAD
       - helm/install_helm_client
       - go/load-cache
+=======
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
       - helm/install_helm_plugin:
           helm_plugin_url: https://github.com/helm-unittest/helm-unittest.git
+          plugin_version: "1.0.2"
       - run:
           name: Run Helm unit tests
           command: cd helm && helm unittest -f 'tests/**/*.yaml' gko
