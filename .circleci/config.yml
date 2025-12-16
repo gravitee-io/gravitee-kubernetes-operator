@@ -15,6 +15,9 @@ parameters:
   go-version:
     type: string
     default: "1.23.1"
+  helm-version:
+    type: string
+    default: "v3.19.4"
   trigger:
     type: enum
     default: none
@@ -228,7 +231,8 @@ jobs:
           keys:
             - gotools-{{ checksum "go.sum" }}
       - kubernetes/install_kubectl
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Install kind
           command: |
@@ -310,7 +314,8 @@ jobs:
           keys:
             - gotools-{{ checksum "go.sum" }}
       - kubernetes/install_kubectl
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Install kind
           command: |
@@ -357,8 +362,13 @@ jobs:
     steps:
       - checkout
       - kubernetes/install_kubectl
+<<<<<<< HEAD
       - azure-cli/install
       - cmd-setup-azure-login-e2e
+=======
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
       - run:
           name: Run az job-azure-login-e2e
           command: |
@@ -387,7 +397,8 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - azure-cli/install
       - gravitee/docker-login:
           registry: graviteeio.azurecr.io
@@ -482,7 +493,8 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
@@ -695,13 +707,54 @@ jobs:
               ]
             }
 
+<<<<<<< HEAD
+=======
+  job-prepare-next-release:
+    docker:
+      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+    steps:
+      - checkout
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - restore_cache:
+          keys:
+            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - setup_remote_docker
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - run:
+          name: Prepare next release
+          command: |
+            npx zx hack/scripts/prepare-next-release.mjs
+
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
   job-helm-lint:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     resource_class: small
     steps:
       - checkout
-      - helm/install_helm_client
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
       - run:
           name: Lint Helm chart
           command: helm lint helm/gko
@@ -712,10 +765,23 @@ jobs:
     resource_class: small
     steps:
       - checkout
+<<<<<<< HEAD
       - helm/install_helm_client
       - go/load-mod-cache
+=======
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+>>>>>>> 4cf2ff2 (ci: pin helm unit-test version)
       - helm/install_helm_plugin:
           helm_plugin_url: https://github.com/helm-unittest/helm-unittest.git
+          plugin_version: "1.0.2"
       - run:
           name: Run Helm unit tests
           command: make helm-test
