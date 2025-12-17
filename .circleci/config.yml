@@ -840,21 +840,13 @@ jobs:
       - checkout
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
-      - run:
-          name: Generate cache keys for Go tools
-          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - go/load-mod-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - go/load-build-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - helm/install_helm_plugin:
           helm_plugin_url: https://github.com/helm-unittest/helm-unittest.git
           plugin_version: "1.0.2"
       - run:
           name: Run Helm unit tests
           command: make helm-test
-      - go/save-build-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+
 
   job-sonarcloud-analysis:
     description: A job that run Sonarcloud analysis
@@ -938,7 +930,6 @@ workflows:
           name: Test Helm chart
           requires:
             - Lint Helm chart
-            - Install GO tools
       - job-sonarcloud-analysis:
           name: Sonarcloud analysis
           context: cicd-orchestrator
