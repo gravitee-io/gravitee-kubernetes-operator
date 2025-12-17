@@ -183,7 +183,7 @@ manager:
         ## @param manager.webhook.cert.secret.name The name of the secret storing the webhook server certificate.
         name: gko-webhook-cert
     admission:
-      ## @param manager.webhook.admission.checkApiContextPathConflictInCluster check if the same API context path exists in the whole cluster.
+      ## @param manager.webhook.admission.checkApiContextPathConflictInCluster If true, the admission controller will check in the whole cluster if an API exists with the same context path and reject the request if it does. If false, the admission controller will only check in the namespace of the API being validated.
       checkApiContextPathConflictInCluster: false
   templating:
     ## @param manager.templating.enabled If `false` string [templating](https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/guides/templating) is not evaluated on resources and template markers will remain untouched.
