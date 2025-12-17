@@ -899,31 +899,19 @@ workflows:
           name: Run IT with context
           context: cicd-orchestrator
           requires:
-            - Lint sources
-            - Lint licenses
-            - Lint commits
-            - Lint resources
-            - Run unit tests
+            - Install GO tools
           ginkgo-filter: withContext
       - job-integration-test:
           name: Run IT without context
           context: cicd-orchestrator
           requires:
-            - Lint sources
-            - Lint licenses
-            - Lint commits
-            - Lint resources
-            - Run unit tests
+            - Install GO tools
           ginkgo-filter: withoutContext
       - job-conformance-test:
           name: Run Conformance Test
           context: cicd-orchestrator
           requires:
-            - Lint sources
-            - Lint licenses
-            - Lint commits
-            - Lint resources
-            - Run unit tests
+            - Install GO tools
       - job-helm-lint:
           name: Lint Helm chart
       - job-helm-test:
@@ -941,9 +929,6 @@ workflows:
           context: cicd-orchestrator
           pre-steps:
             - cmd-setup-aqua-scan
-          requires:
-            - Run IT with context
-            - Run IT without context
   post-merge:
     when:
       equal:
