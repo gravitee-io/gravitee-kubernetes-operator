@@ -16,6 +16,7 @@ package gateway
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
@@ -41,6 +42,8 @@ import (
 	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
+var errSkipObject = errors.New("object should be skipped and this error should not be returned to the user")
+
 type Reconciler struct {
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
@@ -55,12 +58,20 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 	events := event.NewRecorder(r.Recorder)
 
-	gwc, params, skip, err := r.validateGatewayClass(ctx, gw)
+	gwc, err := r.validateGatewayClass(ctx, gw)
 	if err != nil {
+		if errors.Is(err, errSkipObject) {
+			return ctrl.Result{}, nil
+		}
 		return ctrl.Result{}, err
 	}
-	if skip != nil && *skip {
-		return ctrl.Result{}, nil
+
+	params, err := r.validateGatewayClassParameters(ctx, gwc)
+	if err != nil {
+		if errors.Is(err, errSkipObject) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
 	}
 
 	var dc *gateway.Gateway
@@ -250,62 +261,48 @@ func addressesEqual(a1, a2 []gwAPIv1.GatewayStatusAddress) bool {
 func (r *Reconciler) validateGatewayClass(
 	ctx context.Context,
 	gw *gateway.Gateway,
-) (*gateway.GatewayClass, *v1alpha1.GatewayClassParameters, *bool, error) {
+) (*gateway.GatewayClass, error) {
 	gwcName := string(gw.Object.Spec.GatewayClassName)
 
 	if gwcName == "" {
 		log.Debug(ctx, "ignoring gateway as no gateway class name is defined")
-		skip := true
-		return nil, nil, &skip, nil
+		return nil, errSkipObject
 	}
 
 	gwcKey := client.ObjectKey{Name: gwcName}
 	gwc := gateway.WrapGatewayClass(&gwAPIv1.GatewayClass{})
 
 	if err := k8s.GetClient().Get(ctx, gwcKey, gwc.Object); client.IgnoreNotFound(err) != nil {
-		return nil, nil, nil, err
+		return nil, err
 	} else if kErrors.IsNotFound(err) {
 		log.Debug(ctx, "ignoring gateway as gateway class name was not found")
-		skip := true
-		return nil, nil, &skip, nil
+		return nil, errSkipObject
 	}
 
 	if gwc.Object.Spec.ControllerName != core.GraviteeGatewayClassController {
 		log.Debug(ctx, "ignoring gateway as controller name does not match")
-		skip := true
-		return nil, nil, &skip, nil
+		return nil, errSkipObject
 	}
 
-	params, skip, err := r.validateGatewayClassParameters(ctx, gwc)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	if skip != nil && *skip {
-		return nil, nil, skip, nil
-	}
-
-	return gwc, params, nil, nil
+	return gwc, nil
 }
 
 func (r *Reconciler) validateGatewayClassParameters(
 	ctx context.Context,
 	gwc *gateway.GatewayClass,
-) (*v1alpha1.GatewayClassParameters, *bool, error) {
+) (*v1alpha1.GatewayClassParameters, error) {
 	paramRef := gwc.Object.Spec.ParametersRef
 
 	if paramRef == nil {
-		skip := true
-		return nil, &skip, nil
+		return nil, errSkipObject
 	}
 
 	if paramRef.Group != gwAPIv1.Group(v1alpha1.GroupVersion.Group) {
-		skip := true
-		return nil, &skip, nil
+		return nil, errSkipObject
 	}
 
 	if paramRef.Kind != "GatewayClassParameters" {
-		skip := true
-		return nil, &skip, nil
+		return nil, errSkipObject
 	}
 
 	key := client.ObjectKey{
@@ -316,14 +313,13 @@ func (r *Reconciler) validateGatewayClassParameters(
 	params := new(v1alpha1.GatewayClassParameters)
 
 	if err := k8s.GetClient().Get(ctx, key, params); client.IgnoreNotFound(err) != nil {
-		return nil, nil, err
+		return nil, err
 	} else if kErrors.IsNotFound(err) {
 		log.Debug(ctx, "ignoring gateway as gateway class parameters were not found")
-		skip := true
-		return nil, &skip, nil
+		return nil, errSkipObject
 	}
 
-	return params, nil, nil
+	return params, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
