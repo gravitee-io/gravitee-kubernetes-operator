@@ -925,6 +925,7 @@ workflows:
             - Run IT with context
             - Run IT without context
             - Run Conformance Test
+            - Run unit tests
       - aquasec/fs_scan:
           context: cicd-orchestrator
           pre-steps:
