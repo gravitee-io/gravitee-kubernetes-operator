@@ -173,18 +173,20 @@ jobs:
 
   job-lint-e2e-lib:
     docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>-node
+      - image: cimg/node:24.12.0
+    working_directory: ~/project/test/e2e/lib
     steps:
-      - checkout
+      - checkout:
+          path: ~/project      
       - run:
-          name: Install libs
-          command: cd test/e2e/lib && yarn
+          name: Install dependencies
+          command: corepack yarn@4.10.3 install --immutable
       - run:
           name: Check e2e library format
-          command: cd test/e2e/lib && yarn format:check
+          command: corepack yarn@4.10.3 format:check
       - run:
           name: Lint e2e library
-          command: cd test/e2e/lib && yarn lint
+          command: corepack yarn@4.10.3 lint
 
   job-lint-resources:
     docker:
@@ -909,7 +911,6 @@ workflows:
             - Lint licenses
             - Lint commits
             - Lint resources
-            - Lint E2E library
             - Run unit tests
           ginkgo-filter: withContext
       - job-integration-test:
@@ -920,7 +921,6 @@ workflows:
             - Lint licenses
             - Lint commits
             - Lint resources
-            - Lint E2E library
             - Run unit tests
           ginkgo-filter: withoutContext
       - job-conformance-test:
@@ -932,7 +932,6 @@ workflows:
             - Lint commits
             - Lint resources
             - Run unit tests
-            - Lint E2E library
       - job-helm-lint:
           name: Lint Helm chart
       - job-helm-test:
