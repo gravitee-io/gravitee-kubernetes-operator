@@ -856,6 +856,11 @@ jobs:
     steps:
       - checkout:
           method: full
+      - run:
+          name: Fetch tags
+          command: |
+            echo "Fetching tags"
+            git fetch --tags
       - attach_workspace:
           at: /tmp/junit/reports
       - keeper/env-export:
