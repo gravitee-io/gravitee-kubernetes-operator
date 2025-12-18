@@ -17,6 +17,7 @@ package application
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -51,9 +52,10 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("calling rest API, expecting to find application")
 
 		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.Application).HRID()
 
 		Eventually(func() error {
-			app, appErr := apim.Applications.GetByID(fixtures.Application.Status.ID)
+			app, appErr := apim.Applications.GetByHRID(hrid)
 			if appErr != nil {
 				return appErr
 			}
@@ -67,7 +69,7 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("calling rest API, expecting not to find application")
 
 		Eventually(func() error {
-			app, appErr := apim.Applications.GetByID(fixtures.Application.Status.ID)
+			app, appErr := apim.Applications.GetByHRID(hrid)
 			if appErr != nil {
 				return appErr
 			}

@@ -96,8 +96,8 @@ var _ = Describe("Create", labels.WithContext, func() {
 				return err
 			}
 
-			if len(api.Status.Conditions) != 2 {
-				return errors.New("expected exactly two conditions")
+			if len(api.Status.Conditions) < 2 {
+				return errors.New("expected at least two conditions")
 			}
 
 			for _, condition := range api.Status.Conditions {
@@ -124,8 +124,8 @@ var _ = Describe("Create", labels.WithContext, func() {
 				return err
 			}
 
-			if len(api.Status.Conditions) != 2 {
-				return errors.New("expected exactly two conditions")
+			if len(api.Status.Conditions) < 2 {
+				return errors.New("expected at least two conditions")
 			}
 
 			for _, condition := range api.Status.Conditions {

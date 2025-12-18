@@ -35,9 +35,10 @@ type Client struct {
 
 // URLs contains URLs targeting the organization and environment of the client.
 type URLs struct {
-	Org   *http.URL
-	EnvV1 *http.URL
-	EnvV2 *http.URL
+	Org        *http.URL
+	EnvV1      *http.URL
+	EnvV2      *http.URL
+	Automation *http.URL
 }
 
 // EnvV1Target returns a new URL with the given path appended to the environment URL.
@@ -55,20 +56,26 @@ func (client *Client) OrgTarget(path string) *http.URL {
 	return client.URLs.Org.WithPath(path)
 }
 
+// AutomationTarget returns a new URL with the given path appended to the environment URL.
+func (client *Client) AutomationTarget(path string) *http.URL {
+	return client.URLs.Automation.WithPath(path)
+}
+
 // NewURLs returns a new URLs instance for the given base URL
 // with Org path initialized from the given orgID and Env path initialized from the given envID.
-func NewURLs(baseUrl, basePath string, orgID, envID string) (*URLs, error) {
+func NewURLs(baseUrl, managementPath, automationPath string, orgID, envID string) (*URLs, error) {
 	base, err := http.NewURL(baseUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	root := base.WithPath(basePath)
-
+	root := base.WithPath(managementPath)
 	org := root.WithPath(orgPath, orgID)
 
 	envV1 := org.WithPath(envPath, envID)
 	envV2 := root.WithPath("v2").WithPath(orgPath, orgID).WithPath(envPath, envID)
 
-	return &URLs{org, envV1, envV2}, nil
+	auto := base.WithPath(automationPath).WithPath(orgPath, orgID).WithPath(envPath, envID)
+
+	return &URLs{org, envV1, envV2, auto}, nil
 }

@@ -27,7 +27,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -61,7 +60,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := event.NewRecorder(r.Recorder)
 
-	subscription.SetConditions([]metav1.Condition{})
+	k8s.ResetConditionsExceptAutomationAPI(subscription)
 	dc := subscription.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, subscription, func() error {

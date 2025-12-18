@@ -62,3 +62,5 @@ CLAUDE.md
 prompts
 plans
 /.claude/settings.local.json
+/test/platform-test/playwright-results/results.xml
+/package-lock.json

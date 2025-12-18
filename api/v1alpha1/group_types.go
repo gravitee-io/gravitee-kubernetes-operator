@@ -133,7 +133,7 @@ func (g *Group) GetOrgID() string {
 	return g.Status.OrgID
 }
 
-func (g *Group) PopulateIDs(mCtx core.ContextModel) {
+func (g *Group) PopulateIDs(mCtx core.ContextModel, _ bool) {
 	g.Spec.ID = g.pickID(mCtx)
 }
 

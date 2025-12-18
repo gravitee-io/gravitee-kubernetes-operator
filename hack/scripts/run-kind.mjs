@@ -100,6 +100,12 @@ async function getAPIMChartVersion() {
 
 async function createKindCluster() {
   setNoQuoteEscape();
+  const clusters = await $`kind get clusters`.quiet();
+  if (clusters.toString().split("\n").includes("gravitee")) {
+    LOG.blue(`Kind cluster 'gravitee' already exists. Skipping creation...`);
+    setQuoteEscape();
+    return;
+  }
   await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml ${REDIRECT}`;
   setQuoteEscape();
 }
@@ -132,17 +138,17 @@ async function pullAndTag([image, tag]) {
 }
 
 async function createGraviteeNamespace() {
-  await $`kubectl create ns gravitee`;
+  await $`kubectl create ns gravitee --dry-run=client -o yaml | kubectl apply -f -`;
 }
 
 async function createTLSSecret() {
-  await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key`;
+  await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key --dry-run=client -o yaml | kubectl apply -f -`;
 }
 
 async function helmInstallAPIM() {
   await $`helm repo add graviteeio https://helm.gravitee.io`;
   await $`helm repo update graviteeio`;
-  await $`helm install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --version ${APIM_CHART_VERSION}`;
+  await $`helm upgrade --install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --version ${APIM_CHART_VERSION}`;
 }
 
 async function deployHTTPBin() {

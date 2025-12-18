@@ -21,10 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
@@ -32,8 +28,10 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -81,7 +79,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
-	application.SetConditions([]metav1.Condition{})
+	k8s.ResetConditionsExceptAutomationAPI(application)
 	dc := application.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, application, func() error {

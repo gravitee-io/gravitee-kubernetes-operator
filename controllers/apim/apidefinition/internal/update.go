@@ -20,6 +20,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -57,7 +58,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 		spec.Groups = append(spec.Groups, groups...)
 	}
 
-	apiDefinition.PopulateIDs(nil)
+	apiDefinition.PopulateIDs(nil, false)
 
 	err := ResolveConsoleNotificationRefs(ctx, apiDefinition)
 	if err != nil {
@@ -130,14 +131,14 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		if err != nil {
 			return err
 		}
-		apiDefinition.PopulateIDs(apimClient.Context)
+		apiDefinition.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(apiDefinition))
 
 		err = ResolveConsoleNotificationRefs(ctx, apiDefinition)
 		if err != nil {
 			return err
 		}
 
-		status, err := apimClient.APIs.ImportV4(&spec.Api)
+		status, err := apimClient.APIs.ImportV4(apiDefinition)
 
 		if err != nil {
 			return gerrors.NewControlPlaneError(err)
@@ -146,7 +147,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 		status.DeepCopyTo(&apiDefinition.Status.Status)
 		log.Debug(ctx, "API successfully synced with control plane", log.KeyValues(apiDefinition)...)
 	} else {
-		apiDefinition.PopulateIDs(nil)
+		apiDefinition.PopulateIDs(nil, k8s.IsAutomationAPIManaged(apiDefinition))
 	}
 
 	if spec.DefinitionContext.SyncFrom == v4.OriginKubernetes {

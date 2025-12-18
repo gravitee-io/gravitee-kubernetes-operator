@@ -122,6 +122,7 @@ type ApplicationModel interface {
 // +k8s:deepcopy-gen=false
 type ApplicationObject interface {
 	ContextAwareObject
+	ConditionAwareObject
 	GetModel() ApplicationModel
 }
 
@@ -151,7 +152,7 @@ type ContextAwareObject interface {
 	ContextRef() ObjectRef
 	HasContext() bool
 	GetID() string
-	PopulateIDs(context ContextModel)
+	PopulateIDs(context ContextModel, automationAPIManaged bool)
 	GetOrgID() string
 	GetEnvID() string
 }

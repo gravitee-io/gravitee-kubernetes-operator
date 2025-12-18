@@ -14,6 +14,8 @@
 
 package model
 
+import "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
+
 type SubscriptionResponse struct {
 	ID string `json:"id"`
 }
@@ -38,4 +40,17 @@ type SubscriptionStatus struct {
 	ID         string `json:"id,omitempty"`
 	StartingAt string `json:"startingAt,omitempty"`
 	EndingAt   string `json:"endingAt,omitempty"`
+}
+
+func (s *Subscription) ToAutomation() subscription.AutomationSubscription {
+	return subscription.AutomationSubscription{
+		HRID:            s.ID,
+		ApiHrid:         s.ApiID,
+		ApplicationHrid: s.AppID,
+		PlanHrid:        s.PlanID,
+		Status:          s.Status,
+		StartingAt:      s.StartingAt,
+		EndingAt:        s.EndingAt,
+		Metadata:        s.Metadata,
+	}
 }

@@ -905,6 +905,8 @@ spec:
                   items:
                     type: string
                   type: array
+                hrid:
+                  type: string
                 id:
                   description: >-
                     The API ID. If empty, this field will take the value of the
@@ -1037,6 +1039,8 @@ spec:
                         description: If true, this page will be displayed as the homepage of your API
                           documentation.
                         type: boolean
+                      hrid:
+                        type: string
                       id:
                         description: The ID of the page.
                         type: string
@@ -1053,6 +1057,8 @@ spec:
                           the map key associated to the
 
                           folder entry...
+                        type: string
+                      parentHrid:
                         type: string
                       parentId:
                         description: The parent ID of the page.
@@ -1422,6 +1428,10 @@ spec:
                         type: array
                       generalConditions:
                         description: The general conditions defined to use this plan
+                        type: string
+                      generalConditionsHrid:
+                        type: string
+                      hrid:
                         type: string
                       id:
                         description: Plan ID

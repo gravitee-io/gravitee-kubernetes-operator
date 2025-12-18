@@ -28,6 +28,7 @@ import (
 )
 
 const (
+	AutomationAPIManaged     = "AutomationAPIManaged"
 	ConditionAccepted        = "Accepted"
 	ConditionProgrammed      = "Programmed"
 	ConditionConflicted      = "Conflicted"
@@ -77,6 +78,25 @@ func AddSuccessfulConditions(obj core.ConditionAwareObject) {
 				ResolveRefs("All References successfully resolved").Build(),
 		)
 	}
+}
+
+// AddAutomationAPIManagedCondition adds a predefined "AutomationAPIManaged" condition to a ConditionAwareObject.
+func AddAutomationAPIManagedCondition(obj core.ConditionAwareObject) {
+	SetCondition(
+		obj,
+		NewAutomationAPIManagedBuilder(obj.GetGeneration()).Build(),
+	)
+}
+
+// ResetConditionsExceptAutomationAPI resets all conditions except the "AutomationAPIManaged" condition.
+func ResetConditionsExceptAutomationAPI(obj core.ConditionAwareObject) {
+	empty := make([]metav1.Condition, 0)
+	if toKeep := GetCondition(obj, AutomationAPIManaged); toKeep != nil {
+		SetConditions(obj, empty)
+		SetCondition(obj, toKeep)
+		return
+	}
+	obj.SetConditions(empty)
 }
 
 func ErrorToCondition(obj client.Object, err error) {
@@ -159,6 +179,13 @@ func NewPDBSyncConditionBuilder(generation int64) *ConditionBuilder {
 		ObservedGeneration(generation).
 		Status(ConditionStatusTrue).
 		Reason(ReasonSynced)
+}
+
+func NewAutomationAPIManagedBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(AutomationAPIManaged).
+		ObservedGeneration(generation).
+		Status(ConditionStatusTrue).
+		Reason(AutomationAPIManaged)
 }
 
 func NewConditionBuilder(cType string) *ConditionBuilder {
@@ -368,6 +395,11 @@ func IsResolved(obj core.ConditionAware) bool {
 func IsAccepted(obj core.ConditionAware) bool {
 	accepted := GetCondition(obj, ConditionAccepted)
 	return accepted != nil && accepted.Status == ConditionStatusTrue
+}
+
+func IsAutomationAPIManaged(obj core.ConditionAware) bool {
+	automationAPIManaged := GetCondition(obj, AutomationAPIManaged)
+	return automationAPIManaged != nil && automationAPIManaged.Status == ConditionStatusTrue
 }
 
 func HasUnresolvedRefs(obj core.ConditionAware) bool {

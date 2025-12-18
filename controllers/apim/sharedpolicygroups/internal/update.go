@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func CreateOrUpdate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error {
@@ -30,9 +31,9 @@ func CreateOrUpdate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error 
 		return err
 	}
 
-	spg.PopulateIDs(apim.Context)
+	spg.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(spg))
 
-	status, mgmtErr := apim.SharedPolicyGroup.CreateOrUpdate(spec.SharedPolicyGroup)
+	status, mgmtErr := apim.SharedPolicyGroup.CreateOrUpdate(spg)
 	if mgmtErr != nil {
 		return gerrors.NewControlPlaneError(mgmtErr)
 	}

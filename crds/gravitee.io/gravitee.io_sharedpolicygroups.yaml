@@ -82,6 +82,8 @@ spec:
                 description:
                   description: SharedPolicyGroup description
                   type: string
+                hrid:
+                  type: string
                 name:
                   description: SharedPolicyGroup name
                   type: string

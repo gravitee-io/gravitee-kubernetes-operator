@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package usecase
+package subscription
 
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -30,7 +31,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/random"
 )
 
-var _ = Describe("Usecase", labels.WithContext, func() {
+var _ = Describe("Subscription metadata management with v2 API", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	ctx := context.Background()
@@ -65,14 +66,15 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 			return assert.SubscriptionAccepted(fixtures.Subscription)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
 
-		By("calling management API, expecting metadata to be saved")
+		By("calling automation API, expecting metadata to be saved")
 
 		client := apim.NewClient(ctx)
 
 		Eventually(func() error {
-			sub, err := client.Subscriptions.GetByID(
+			subHrid := refs.NewNamespacedNameFromObject(fixtures.Subscription).HRID()
+			sub, err := client.Subscriptions.GetByHRIDWithLegacyAPI(
 				fixtures.API.Status.ID,
-				fixtures.Subscription.Status.ID,
+				subHrid,
 			)
 			if err != nil {
 				return err
@@ -84,28 +86,27 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 			return assert.Equals("metadata", expectedMetadata, sub.Metadata)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
 
-		By("updating metadata and expecting it to be updated in management API")
+		By("updating metadata and expecting it to be updated in automation API")
 
 		fixtures.Subscription.Spec.Metadata = map[string]string{
-			"team":        "platform-v2",
-			"cost-center": "engineering",
-			"env":         "staging",
+			"team": "platform-v2",
+			"env":  "staging",
 		}
 
 		Expect(manager.UpdateSafely(ctx, fixtures.Subscription)).To(Succeed())
 
 		Eventually(func() error {
-			sub, err := client.Subscriptions.GetByID(
+			subHrid := refs.NewNamespacedNameFromObject(fixtures.Subscription).HRID()
+			sub, err := client.Subscriptions.GetByHRIDWithLegacyAPI(
 				fixtures.API.Status.ID,
-				fixtures.Subscription.Status.ID,
+				subHrid,
 			)
 			if err != nil {
 				return err
 			}
 			expectedMetadata := map[string]string{
-				"team":        "platform-v2",
-				"cost-center": "engineering",
-				"env":         "staging",
+				"team": "platform-v2",
+				"env":  "staging",
 			}
 			return assert.Equals("metadata", expectedMetadata, sub.Metadata)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)

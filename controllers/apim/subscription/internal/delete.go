@@ -19,7 +19,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -52,12 +51,9 @@ func Delete(
 		return err
 	}
 
-	api.PopulateIDs(apim.Context)
+	api.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(api))
 
-	err = apim.Subscription.Delete(&model.Subscription{
-		ApiID: api.GetID(),
-		ID:    subscription.Status.ID,
-	})
+	err = apim.Subscription.Delete(api, subscription)
 
 	if err != nil {
 		return err
