@@ -32,8 +32,10 @@ type ApiV4LifecycleState string
 
 var _ core.ApiDefinitionModel = &Api{}
 
-type Api struct {
+type V4BaseApi struct {
 	*base.ApiBase `json:",inline"`
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 	// API description
 	// +kubebuilder:validation:Optional
 	Description *string `json:"description,omitempty"`
@@ -60,11 +62,6 @@ type Api struct {
 	// +kubebuilder:validation:MinItems:=1
 	// List of Endpoint groups
 	EndpointGroups []*EndpointGroup `json:"endpointGroups"`
-	// A map of plan identifiers to plan
-	// Keys uniquely identify plans and are used to keep them in sync
-	// when using a management context.
-	// +kubebuilder:validation:Optional
-	Plans *map[string]*Plan `json:"plans,omitempty"`
 	// API Flow Execution (Not applicable for Native API)
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -81,6 +78,12 @@ type Api struct {
 	// List of members associated with the API
 	// +kubebuilder:validation:Optional
 	Members []*base.Member `json:"members,omitempty"`
+	// API Failover
+	Failover *Failover `json:"failover,omitempty"`
+}
+
+type Api struct {
+	*V4BaseApi `json:",inline"`
 	// +kubebuilder:validation:Optional
 	// A map of pages objects.
 	//
@@ -90,8 +93,43 @@ type Api struct {
 	// Renaming a key is the equivalent of deleting the page and recreating
 	// it holding a new ID in APIM.
 	Pages *map[string]*Page `json:"pages"`
-	// API Failover
-	Failover *Failover `json:"failover,omitempty"`
+	// A map of plan identifiers to plan
+	// Keys uniquely identify plans and are used to keep them in sync
+	// when using a management context.
+	// +kubebuilder:validation:Optional
+	Plans *map[string]*Plan `json:"plans,omitempty"`
+}
+
+type AutomationApi struct {
+	*V4BaseApi `json:",inline"`
+	Pages      []*Page `json:"pages"`
+	Plans      []*Plan `json:"plans"`
+}
+
+func (api *Api) ToAutomation() AutomationApi {
+
+	autoAPI := AutomationApi{
+		V4BaseApi: api.V4BaseApi,
+	}
+
+	if api.Pages != nil {
+		autoAPI.Pages = make([]*Page, 0)
+		for _, page := range *api.Pages {
+			autoAPI.Pages = append(autoAPI.Pages, page)
+		}
+	}
+
+	if api.Plans != nil {
+		autoAPI.Plans = make([]*Plan, 0)
+		for _, plan := range *api.Plans {
+			autoAPI.Plans = append(autoAPI.Plans, plan)
+		}
+	}
+	return autoAPI
+}
+
+func (api *Api) GetHRID() string {
+	return api.HRID
 }
 
 func (api *Api) GetType() string {

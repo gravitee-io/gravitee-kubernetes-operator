@@ -15,6 +15,8 @@
 package service
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"strconv"
 
 	spg "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
@@ -72,10 +74,28 @@ func (svc *SharedPolicyGroup) createOrUpdate(spec *spg.SharedPolicyGroup, dryRun
 		return nil, err
 	}
 
+	// If managed with HRID, we don't IDs
+	if spec.HRID != "" {
+		status.UseHRID = true
+	}
 	return status, nil
 }
 
-func (svc *SharedPolicyGroup) Delete(id string) error {
-	url := svc.EnvV2Target(sharedPolicyGroupsPath).WithPath(id)
+func (svc *SharedPolicyGroup) Delete(sharedPolicyGroup *v1alpha1.SharedPolicyGroup) error {
+	id, legacy := getSPGID(sharedPolicyGroup)
+	url := svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(id).WithQueryParam("legacy", strconv.FormatBool(legacy))
 	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func getSPGID(sharedPolicyGroup *v1alpha1.SharedPolicyGroup) (string, bool) {
+	var id string
+	var legacy bool
+	if sharedPolicyGroup.GetID() == "" {
+		id = refs.NewNamespacedNameFromObject(sharedPolicyGroup).HRID()
+		legacy = false
+	} else {
+		id = sharedPolicyGroup.GetID()
+		legacy = true
+	}
+	return id, legacy
 }

@@ -16,6 +16,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -92,27 +93,39 @@ func (svc *Applications) DryRunCreateOrUpdate(spec *application.Application) (*a
 }
 
 func (svc *Applications) createOrUpdate(spec *application.Application, dryRun bool) (*application.Status, error) {
-	url := svc.EnvV2Target(applicationsPath).
-		WithPath("/_import/crd").
+
+	url := svc.AutomationTarget(applicationsPath).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
 	status := new(application.Status)
-	apimApp := struct {
-		*application.Application
-		Origin string `json:"origin"`
-	}{
-		Application: spec,
-		Origin:      "kubernetes",
+
+	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+		return nil, err
 	}
 
-	if err := svc.HTTP.Put(url.String(), apimApp, status); err != nil {
-		return nil, err
+	// If managed with HRID, we don't IDs
+	if spec.HRID != "" {
+		status.UseHRID = true
 	}
 
 	return status, nil
 }
 
-func (svc *Applications) Delete(appID string) error {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
+func (svc *Applications) Delete(app *v1alpha1.Application) error {
+	appID, legacy := getAppID(app)
+	url := svc.AutomationTarget(applicationsPath).WithPath(appID).WithQueryParam("legacy", strconv.FormatBool(legacy))
 	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func getAppID(application *v1alpha1.Application) (string, bool) {
+	var id string
+	var legacy bool
+	if application.GetID() == "" {
+		id = application.GetHRID()
+		legacy = false
+	} else {
+		id = application.GetID()
+		legacy = true
+	}
+	return id, legacy
 }

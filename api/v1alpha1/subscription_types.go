@@ -133,6 +133,10 @@ func (s *Subscription) GetStatus() core.Status {
 	return &s.Status
 }
 
+func (s *Subscription) GetID() string {
+	return s.Status.ID
+}
+
 func (s *Subscription) SetApiKind(kind string) {
 	s.Spec.SetApiKind(kind)
 }

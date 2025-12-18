@@ -15,6 +15,7 @@
 package service
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
@@ -105,22 +106,30 @@ func (svc *APIs) importV2(spec *v2.Api, dryRun bool) (*base.Status, error) {
 }
 
 func (svc *APIs) ImportV4(spec *v4.Api) (*base.Status, error) {
-	return svc.importV4(spec, false)
+	return svc.applyV4(spec, false)
 }
 
 func (svc *APIs) DryRunImportV4(spec *v4.Api) (*base.Status, error) {
-	return svc.importV4(spec, true)
+	return svc.applyV4(spec, true)
 }
 
-func (svc *APIs) importV4(spec *v4.Api, dryRun bool) (*base.Status, error) {
-	url := svc.EnvV2Target("apis/_import/crd").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
+func (svc *APIs) applyV4(spec *v4.Api, dryRun bool) (*base.Status, error) {
+	url := svc.AutomationTarget("apis").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	status := new(base.Status)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	status := new(v4.AutomationStatus)
+	if err := svc.HTTP.Put(url.String(), spec.ToAutomation(), status); err != nil {
 		return nil, err
 	}
 
-	return status, nil
+	// If managed with HRID, we don't need IDs
+	if spec.HRID != "" {
+		status.UseHRID = true
+	}
+
+	return &base.Status{
+		ApiStatus: status.ApiStatus,
+		Plans:     status.PlansToMap(),
+	}, nil
 }
 
 func (svc *APIs) UpdateState(apiID string, action model.Action) error {
@@ -133,8 +142,9 @@ func (svc *APIs) DeleteV2(apiID string) error {
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *APIs) DeleteV4(apiID string) error {
-	url := svc.EnvV2Target("apis").WithPath(apiID).WithQueryParams(deleteParams)
+func (svc *APIs) DeleteV4(api core.ApiDefinitionObject) error {
+	apiID, legacy := getApiID(api)
+	url := svc.AutomationTarget("apis").WithPath(apiID).WithQueryParam("legacy", strconv.FormatBool(legacy))
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
@@ -146,4 +156,17 @@ func (svc *APIs) SetKubernetesContext(apiID string) error {
 func (svc *APIs) Deploy(id string) error {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("deploy")
 	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
+}
+
+func getApiID(api core.ApiDefinitionObject) (string, bool) {
+	var id string
+	var legacy bool
+	if api.GetID() == "" {
+		id = api.GetHRID()
+		legacy = false
+	} else {
+		id = api.GetID()
+		legacy = true
+	}
+	return id, legacy
 }

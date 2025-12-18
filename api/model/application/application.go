@@ -148,6 +148,8 @@ type Application struct {
 	// io.gravitee.definition.model.Application
 	// Application ID
 	ID string `json:"id,omitempty"`
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 	// The base64 encoded background to use for this application when displaying it on the portal
 	// +kubebuilder:validation:Optional
 	Background *string `json:"background,omitempty"`

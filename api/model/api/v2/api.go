@@ -81,6 +81,10 @@ type Api struct {
 	ExecutionMode string `json:"execution_mode,omitempty"`
 }
 
+func (api *Api) GetHRID() string {
+	return ""
+}
+
 func (api *Api) GetType() string {
 	return ""
 }
