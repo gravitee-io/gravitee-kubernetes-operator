@@ -65,6 +65,7 @@ rules:
       - grpcroutes.gateway.networking.k8s.io
       - httproutes.gateway.networking.k8s.io
       - referencegrants.gateway.networking.k8s.io
+      - backendtlspolicies.gateway.networking.k8s.io
 {{- end }}
     resources:
       - customresourcedefinitions

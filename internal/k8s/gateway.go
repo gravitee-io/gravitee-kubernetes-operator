@@ -601,7 +601,7 @@ func setServicePorts(
 	servicePorts := make([]coreV1.ServicePort, 0)
 	knownPortNumbers := sets.New[int32]()
 	for _, listener := range listeners {
-		portNumber := int32(listener.Port)
+		portNumber := listener.Port
 		if knownPortNumbers.Has(portNumber) {
 			continue
 		}
@@ -859,7 +859,7 @@ func mapPorts(gw *gwAPIv1.Gateway) map[gwAPIv1.PortNumber]int32 {
 func getListenerPorts(gw *gwAPIv1.Gateway) sets.Set[int32] {
 	ports := sets.New[int32]()
 	for _, l := range gw.Spec.Listeners {
-		ports.Insert(int32(l.Port))
+		ports.Insert(l.Port)
 	}
 	return ports
 }
@@ -867,11 +867,10 @@ func getListenerPorts(gw *gwAPIv1.Gateway) sets.Set[int32] {
 func ensureBindablePort(
 	gw *gwAPIv1.Gateway, port gwAPIv1.PortNumber,
 ) int32 {
-	val := int32(port)
-	if val > portMin {
-		return val
+	if port > portMin {
+		return port
 	}
-	return ensureBindableWithNoConflict(val, getListenerPorts(gw))
+	return ensureBindableWithNoConflict(port, getListenerPorts(gw))
 }
 
 func ensureBindableWithNoConflict(
