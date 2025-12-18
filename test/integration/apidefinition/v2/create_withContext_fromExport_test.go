@@ -39,6 +39,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 	httpClient := tHTTP.NewClient()
 
 	It("should update existing api in management API", func() {
+		Skip(`
+			This test was migrated and moved to e2e test suite
+		`)
 		fixtures := fixture.Builder().
 			WithContext(constants.ContextWithSecretFile).
 			WithAPI(constants.ApiWithIDs).
