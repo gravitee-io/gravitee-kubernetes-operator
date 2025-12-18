@@ -23,8 +23,23 @@ mongodb:
     tag: 7.0.25-jammy
   architecture: standalone
   persistence:
+    type: emptyDir
+    medium: Memory
+    sizeLimit: 1Gi
     mountPath: /data/db
-
+  extraFlags:
+    - "--nojournal"
+    - "--wiredTigerCacheSizeGB=0.5"
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  auth:
+    enabled: false
+    
 elasticsearch:
   enabled: false
 
