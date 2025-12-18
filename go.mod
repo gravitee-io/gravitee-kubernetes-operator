@@ -12,7 +12,11 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.34.3
 	k8s.io/client-go v0.34.3
+<<<<<<< HEAD
 	sigs.k8s.io/controller-runtime v0.22.4
+=======
+	sigs.k8s.io/controller-runtime v0.22.1
+>>>>>>> f0c3ac7 (chore: update gateway API to 1.4.1)
 )
 
 require (
@@ -64,6 +68,10 @@ require (
 	go.opentelemetry.io/otel/sdk v1.37.0 // indirect
 	go.opentelemetry.io/otel/trace v1.37.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
+<<<<<<< HEAD
+=======
+	go.uber.org/automaxprocs v1.6.0 // indirect
+>>>>>>> f0c3ac7 (chore: update gateway API to 1.4.1)
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.31.0 // indirect

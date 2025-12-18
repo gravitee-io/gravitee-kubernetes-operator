@@ -358,7 +358,11 @@ rules:
     verbs:
       - update
   - apiGroups:
+<<<<<<< HEAD
       - gateway.networking.k8s.io
+=======
+      - backendtlspolicies.networking.k8s.io
+>>>>>>> f0c3ac7 (chore: update gateway API to 1.4.1)
     resources:
       - backendtlspolicies/status
     verbs:
