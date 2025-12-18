@@ -215,6 +215,7 @@ type ObjectRef interface {
 	HasNameSpace() bool
 	IsMissingNamespace() bool
 	SetNamespace(ns string)
+	HRID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -241,6 +242,7 @@ type SubscriptionModel interface {
 	SetApiKind(string)
 	GetPlan() string
 	GetEndingAt() *string
+	GetID() string
 }
 
 type ConditionAware interface {

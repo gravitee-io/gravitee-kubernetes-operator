@@ -467,6 +467,8 @@ spec:
                         description: If true, this page will be displayed as the homepage of your API
                           documentation.
                         type: boolean
+                      hrid:
+                        type: string
                       id:
                         description: The ID of the page.
                         type: string
@@ -483,6 +485,8 @@ spec:
                           the map key associated to the
 
                           folder entry...
+                        type: string
+                      parentHrid:
                         type: string
                       parentId:
                         description: The parent ID of the page.
@@ -1873,6 +1877,13 @@ spec:
                 subscriptions:
                   description: The number of subscriptions that reference the API
                   type: integer
+                useHrid:
+                  description: |-
+                    UseHRID In an ideal world, tests should never use IDs
+                    But at the moment it is using IDs to fetch...
+                  type: boolean
+              required:
+                - useHrid
               type: object
           type: object
       served: true

@@ -107,7 +107,12 @@ func (s *SharedPolicyGroup) GetID() string {
 	return s.Status.CrossID
 }
 
-func (s *SharedPolicyGroup) PopulateIDs(_ core.ContextModel) {
+func (s *SharedPolicyGroup) PopulateIDs(core.ContextModel) {
+	if s.GetID() == "" || s.Status.UseHRID {
+		s.Spec.HRID = refs.NewNamespacedNameFromObject(s).HRID()
+		return
+	}
+
 	if s.Spec.CrossID != nil {
 		return
 	}

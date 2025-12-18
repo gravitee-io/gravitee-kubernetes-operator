@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -42,7 +43,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return err
 	}
 
-	apim, err := apim.FromContextRef(ctx, api.ContextRef(), ns)
+	apimClient, err := apim.FromContextRef(ctx, api.ContextRef(), ns)
 	if err != nil {
 		return err
 	}
@@ -51,25 +52,19 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return fmt.Errorf("plan %s not found", subscription.Spec.Plan)
 	}
 
-	api.PopulateIDs(apim.Context)
+	api.PopulateIDs(apimClient.Context)
 
-	appID := app.GetID()
-	apiID := api.GetID()
-	planID := api.GetPlan(subscription.Spec.Plan).GetID()
-	subscriptionID := string(subscription.UID)
+	sub := &model.Subscription{}
 
-	sub := &model.Subscription{
-		ID:     subscriptionID,
-		AppID:  appID,
-		ApiID:  apiID,
-		PlanID: planID,
-	}
+	legacySubscriptionID := setSubscriptionID(subscription, sub)
+	legacyApiID := setApiID(api, sub, spec)
+	legacyAppID := setApplicationID(app, sub)
 
 	if spec.EndingAt != nil {
 		sub.EndingAt = *spec.EndingAt
 	}
 
-	status, err := apim.Subscription.Import(sub)
+	status, err := apimClient.Subscription.Import(*sub, legacySubscriptionID, legacyApiID, legacyAppID)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
@@ -82,6 +77,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	subscription.Status.StartedAt = startedAt.Format(time.RFC3339)
 	subscription.Status.EndingAt = status.EndingAt
 	subscription.Status.ID = status.ID
+	subscription.Status.UseHRID = status.UseHRID
 
 	appStatus, _ := app.GetStatus().(core.SubscribableStatus)
 	apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
@@ -98,4 +94,36 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	}
 
 	return nil
+}
+
+func setApiID(api core.ApiDefinitionObject, sub *model.Subscription, spec v1alpha1.SubscriptionSpec) bool {
+	if v4, ok := api.(*v1alpha1.ApiV4Definition); api.GetID() == "" || (ok && v4.Status.UseHRID) {
+		sub.ApiID = refs.NewNamespacedNameFromObject(api).HRID()
+		sub.PlanID = spec.Plan
+		return false
+	} else {
+		sub.ApiID = api.GetID()
+		sub.PlanID = api.GetPlan(spec.Plan).GetID()
+		return true
+	}
+}
+
+func setSubscriptionID(subscription *v1alpha1.Subscription, sub *model.Subscription) bool {
+	if subscription.Status.ID == "" || subscription.Status.UseHRID {
+		sub.ID = refs.NewNamespacedNameFromObject(subscription).HRID()
+		return false
+	} else {
+		sub.ID = string(subscription.UID)
+		return true
+	}
+}
+
+func setApplicationID(app core.ApplicationObject, sub *model.Subscription) bool {
+	if app, _ := app.(*v1alpha1.Application); app.GetID() == "" || app.Status.UseHRID {
+		sub.AppID = refs.NewNamespacedNameFromObject(app).HRID()
+		return false
+	} else {
+		sub.AppID = app.GetID()
+		return true
+	}
 }

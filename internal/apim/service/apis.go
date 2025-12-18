@@ -15,6 +15,10 @@
 package service
 
 import (
+	"fmt"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
@@ -104,23 +108,41 @@ func (svc *APIs) importV2(spec *v2.Api, dryRun bool) (*base.Status, error) {
 	return status, nil
 }
 
-func (svc *APIs) ImportV4(spec *v4.Api) (*base.Status, error) {
-	return svc.importV4(spec, false)
+func (svc *APIs) ImportV4(api *v1alpha1.ApiV4Definition) (*base.Status, error) {
+	return svc.applyV4(api, false)
 }
 
-func (svc *APIs) DryRunImportV4(spec *v4.Api) (*base.Status, error) {
-	return svc.importV4(spec, true)
+func (svc *APIs) DryRunImportV4(api *v1alpha1.ApiV4Definition) (*base.Status, error) {
+	return svc.applyV4(api, true)
 }
 
-func (svc *APIs) importV4(spec *v4.Api, dryRun bool) (*base.Status, error) {
-	url := svc.EnvV2Target("apis/_import/crd").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
+func (svc *APIs) applyV4(api *v1alpha1.ApiV4Definition, dryRun bool) (*base.Status, error) {
+	url := svc.AutomationTarget("apis").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	status := new(base.Status)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	usesHRID := api.Spec.HRID != ""
+
+	automation := api.Spec.ToAutomation()
+
+	// even if the resource was created with a previous version,
+	// Automation API still need an HRID, so one is set.
+	// API ignores it because an ID is set in that case see PopulateIDs().
+	if !usesHRID {
+		automation.HRID = api.GetID()
+		url = url.WithQueryParam("legacyID", strconv.FormatBool(true))
+	}
+
+	status := new(v4.AutomationStatus)
+	if err := svc.HTTP.Put(url.String(), automation, status); err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
-	return status, nil
+	status.UseHRID = usesHRID
+
+	return &base.Status{
+		ApiStatus: status.ApiStatus,
+		Plans:     status.PlansAsMap(),
+	}, nil
 }
 
 func (svc *APIs) UpdateState(apiID string, action model.Action) error {
@@ -133,8 +155,9 @@ func (svc *APIs) DeleteV2(apiID string) error {
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *APIs) DeleteV4(apiID string) error {
-	url := svc.EnvV2Target("apis").WithPath(apiID).WithQueryParams(deleteParams)
+func (svc *APIs) DeleteV4(api core.ApiDefinitionObject) error {
+	apiID, legacy := getApiID(api)
+	url := svc.AutomationTarget("apis").WithPath(apiID).WithQueryParam("legacy", strconv.FormatBool(legacy))
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
@@ -146,4 +169,11 @@ func (svc *APIs) SetKubernetesContext(apiID string) error {
 func (svc *APIs) Deploy(id string) error {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("deploy")
 	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
+}
+
+func getApiID(api core.ApiDefinitionObject) (string, bool) {
+	if apiV4, ok := api.(*v1alpha1.ApiDefinition); ok && apiV4.Status.UseHRID {
+		return refs.NewNamespacedNameFromObject(api).HRID(), false
+	}
+	return api.GetID(), true
 }

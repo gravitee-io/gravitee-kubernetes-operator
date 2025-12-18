@@ -15,9 +15,11 @@
 package service
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"strconv"
 
-	spg "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
@@ -25,7 +27,7 @@ import (
 )
 
 const (
-	sharedPolicyGroupsPath = "/shared-policy-groups"
+	spgsPath = "/shared-policy-groups"
 )
 
 // SharedPolicyGroup brings support for managing gravitee.io APIM SharedPolicyGroups.
@@ -43,7 +45,7 @@ func (svc *SharedPolicyGroup) GetByID(id string) (*model.SharedPolicyGroup, erro
 		return nil, errors.NewNotFoundError()
 	}
 
-	url := svc.EnvV2Target(sharedPolicyGroupsPath).WithPath(id)
+	url := svc.EnvV2Target(spgsPath).WithPath(id)
 	sg := new(model.SharedPolicyGroup)
 
 	if err := svc.HTTP.Get(url.String(), sg); err != nil {
@@ -53,29 +55,54 @@ func (svc *SharedPolicyGroup) GetByID(id string) (*model.SharedPolicyGroup, erro
 	return sg, nil
 }
 
-func (svc *SharedPolicyGroup) CreateOrUpdate(spec *spg.SharedPolicyGroup) (*spg.Status, error) {
-	return svc.createOrUpdate(spec, false)
+func (svc *SharedPolicyGroup) CreateOrUpdate(spg *v1alpha1.SharedPolicyGroup) (*sharedpolicygroups.Status, error) {
+	return svc.createOrUpdate(spg, false)
 }
 
-func (svc *SharedPolicyGroup) DryRunCreateOrUpdate(spec *spg.SharedPolicyGroup) (*spg.Status, error) {
-	return svc.createOrUpdate(spec, true)
+func (svc *SharedPolicyGroup) DryRunCreateOrUpdate(spg *v1alpha1.SharedPolicyGroup) (*sharedpolicygroups.Status, error) {
+	return svc.createOrUpdate(spg, true)
 }
 
-func (svc *SharedPolicyGroup) createOrUpdate(spec *spg.SharedPolicyGroup, dryRun bool) (*spg.Status, error) {
-	url := svc.EnvV2Target(sharedPolicyGroupsPath).
-		WithPath("_import/crd").
+func (svc *SharedPolicyGroup) createOrUpdate(spg *v1alpha1.SharedPolicyGroup, dryRun bool) (*sharedpolicygroups.Status, error) {
+	url := svc.AutomationTarget(spgsPath).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	status := new(spg.Status)
+	usesHRID := spg.Spec.HRID != "" && spg.Status.CrossID == ""
 
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	status := new(sharedpolicygroups.Status)
+
+	// even if the resource was created with a previous version,
+	// Automation API still need an HRID, so one is set.
+	// API ignores it because a CrossID is set in that case see PopulateIDs().
+	if !usesHRID {
+		spg.Spec.HRID = spg.GetID()
+		url = url.WithQueryParam("legacyID", strconv.FormatBool(true))
+	}
+
+	if err := svc.HTTP.Put(url.String(), spg.Spec, status); err != nil {
 		return nil, err
 	}
+
+	status.UseHRID = usesHRID
 
 	return status, nil
 }
 
-func (svc *SharedPolicyGroup) Delete(id string) error {
-	url := svc.EnvV2Target(sharedPolicyGroupsPath).WithPath(id)
+func (svc *SharedPolicyGroup) Delete(spg *v1alpha1.SharedPolicyGroup) error {
+	id, legacy := getSPGID(spg)
+	url := svc.AutomationTarget(spgsPath).WithPath(id).WithQueryParam("legacy", strconv.FormatBool(legacy))
 	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func getSPGID(spg *v1alpha1.SharedPolicyGroup) (string, bool) {
+	var id string
+	var legacy bool
+	if spg.Status.UseHRID {
+		id = refs.NewNamespacedNameFromObject(spg).HRID()
+		legacy = false
+	} else {
+		id = spg.GetID()
+		legacy = true
+	}
+	return id, legacy
 }

@@ -37,4 +37,9 @@ type SubscriptionStatus struct {
 	ID         string `json:"id,omitempty"`
 	StartingAt string `json:"startingAt,omitempty"`
 	EndingAt   string `json:"endingAt,omitempty"`
+	UseHRID    bool
+}
+
+func (s *SubscriptionStatus) CleanIDs() {
+	s.ID = ""
 }

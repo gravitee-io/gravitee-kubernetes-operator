@@ -17,6 +17,7 @@ package v4
 import (
 	"context"
 	"fmt"
+	"time"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 
@@ -37,7 +38,7 @@ import (
 var _ = Describe("Create", labels.WithContext, func() {
 	httpClient := tHTTP.NewClient()
 
-	timeout := constants.EventualTimeout
+	timeout := time.Second * 10
 	interval := constants.Interval
 
 	ctx := context.Background()

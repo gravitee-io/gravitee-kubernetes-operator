@@ -18,10 +18,8 @@ package v1alpha1
 
 import (
 	"fmt"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 
@@ -111,11 +109,17 @@ func (api *ApiV4Definition) IsSyncFromManagement() bool {
 	return defCtx == nil || defCtx.SyncFrom == v4.OriginManagement
 }
 
-func (api *ApiV4Definition) PopulateIDs(context core.ContextModel) {
-	api.Spec.ID = api.pickID(context)
-	api.Spec.CrossID = api.pickCrossID()
-	api.Spec.Pages = api.pickPageIDs()
-	api.Spec.Plans = api.pickPlanIDs(context)
+func (api *ApiV4Definition) PopulateIDs(core.ContextModel) {
+	if api.GetID() == "" || api.Status.UseHRID {
+		api.Spec.HRID = api.GetNamespacedName().HRID()
+		api.Spec.Pages = api.pickPageHRIDs()
+		api.Spec.Plans = api.pickPlanHRIDs()
+	} else {
+		api.Spec.ID = api.pickID()
+		api.Spec.CrossID = api.pickCrossID()
+		api.Spec.Pages = api.pickPageIDs()
+		api.Spec.Plans = api.pickPlanIDs()
+	}
 }
 
 func (api *ApiV4Definition) GetNotificationRefs() []core.ObjectRef {
@@ -135,25 +139,42 @@ func (api *ApiV4Definition) SetConsoleNotification(consoleNotification core.Cons
 	}
 }
 
-// pickID returns the ID of the API definition, when a context has been defined at the spec level.
-// The ID might be returned from the API status, meaning that the API is already known.
-// If the API is unknown, the ID is either given from the spec if given,
-// or generated from the API UID and the context key to ensure uniqueness
-// in case the API is replicated on a same APIM instance.
-func (api *ApiV4Definition) pickID(mCtx core.ContextModel) string {
-	if api.Status.ID != "" {
-		return api.Status.ID
+func (api *ApiV4Definition) pickPlanHRIDs() *map[string]*v4.Plan {
+	if !api.HasPlans() {
+		return nil
 	}
 
-	if api.Spec.ID != "" {
-		return api.Spec.ID
+	plans := make(map[string]*v4.Plan, len(*api.Spec.Plans))
+	for key, plan := range *api.Spec.Plans {
+		p := plan.DeepCopy()
+		p.HRID = key
+		plans[key] = p
 	}
+	return &plans
+}
 
-	if mCtx != nil {
-		return uuid.FromStrings(api.pickCrossID(), mCtx.GetOrgID(), mCtx.GetEnvID())
+func (api *ApiV4Definition) pickPageHRIDs() *map[string]*v4.Page {
+	if api.Spec.Pages == nil {
+		return nil
 	}
+	pages := make(map[string]*v4.Page, len(*api.Spec.Pages))
+	for key, page := range *api.Spec.Pages {
+		p := page.DeepCopy()
 
-	return string(api.UID)
+		p.API = &api.Spec.HRID
+		p.HRID = key
+		p.ParentHRID = page.Parent
+
+		pages[p.HRID] = p
+	}
+	return &pages
+}
+
+func (api *ApiV4Definition) pickID() string {
+	if api.GetID() != "" {
+		return api.GetID()
+	}
+	panic(fmt.Sprintf("API %s/%s has no ID", api.Namespace, api.Name))
 }
 
 func (api *ApiV4Definition) pickCrossID() string {
@@ -169,7 +190,7 @@ func (api *ApiV4Definition) pickCrossID() string {
 	return uuid.FromStrings(namespacedName.String())
 }
 
-func (api *ApiV4Definition) pickPlanIDs(mCtx core.ContextModel) *map[string]*v4.Plan {
+func (api *ApiV4Definition) pickPlanIDs() *map[string]*v4.Plan {
 	if !api.HasPlans() {
 		return nil
 	}
@@ -179,8 +200,8 @@ func (api *ApiV4Definition) pickPlanIDs(mCtx core.ContextModel) *map[string]*v4.
 		p := plan.DeepCopy()
 		if id, ok := api.Status.Plans[key]; ok {
 			p.ID = id
-		} else if plan.ID == "" {
-			p.ID = uuid.FromStrings(api.pickID(mCtx), key)
+		} else {
+			p.ID = uuid.FromStrings(api.pickID(), key)
 		}
 		plans[key] = p
 	}

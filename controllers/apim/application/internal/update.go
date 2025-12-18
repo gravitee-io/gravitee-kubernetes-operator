@@ -32,7 +32,7 @@ func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) erro
 
 	application.PopulateIDs(apim.Context)
 
-	status, mgmtErr := apim.Applications.CreateOrUpdate(&spec.Application)
+	status, mgmtErr := apim.Applications.CreateOrUpdate(application)
 	if mgmtErr != nil {
 		return gerrors.NewControlPlaneError(mgmtErr)
 	}

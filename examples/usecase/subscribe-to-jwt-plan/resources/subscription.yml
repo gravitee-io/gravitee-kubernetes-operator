@@ -22,3 +22,4 @@ spec:
   application:
     name: echo-client
   plan: JWT
+  endingAt: "2025-12-31T00:00:00Z"

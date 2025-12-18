@@ -17,6 +17,7 @@ package application
 import (
 	"context"
 	"encoding/pem"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 
@@ -146,7 +147,7 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 		errs.AddSeveref("unable to call dry run (unknown type %T)", impl)
 	}
 
-	status, err := apim.Applications.DryRunCreateOrUpdate(impl)
+	status, err := apim.Applications.DryRunCreateOrUpdate(cp.(*v1alpha1.Application))
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

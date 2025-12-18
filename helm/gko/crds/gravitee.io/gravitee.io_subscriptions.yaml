@@ -154,6 +154,8 @@ spec:
                 startedAt:
                   description: When the subscription was started and made available
                   type: string
+                useHRID:
+                  type: boolean
               type: object
           type: object
       served: true

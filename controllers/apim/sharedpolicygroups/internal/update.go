@@ -32,7 +32,7 @@ func CreateOrUpdate(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error 
 
 	spg.PopulateIDs(apim.Context)
 
-	status, mgmtErr := apim.SharedPolicyGroup.CreateOrUpdate(spec.SharedPolicyGroup)
+	status, mgmtErr := apim.SharedPolicyGroup.CreateOrUpdate(spg)
 	if mgmtErr != nil {
 		return gerrors.NewControlPlaneError(mgmtErr)
 	}

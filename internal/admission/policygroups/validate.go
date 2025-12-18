@@ -122,7 +122,7 @@ func validateDryRun(ctx context.Context, spg runtime.Object) *errors.AdmissionEr
 
 	cp.PopulateIDs(apim.Context)
 
-	status, err := apim.SharedPolicyGroup.DryRunCreateOrUpdate(cp.Spec.SharedPolicyGroup)
+	status, err := apim.SharedPolicyGroup.DryRunCreateOrUpdate(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

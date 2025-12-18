@@ -173,6 +173,10 @@ func (api *ApiDefinition) GetTags() []string {
 	return api.Spec.Tags
 }
 
+func (api *ApiDefinition) GetHRID() string {
+	return ""
+}
+
 func (api *ApiDefinition) GetPlan(name string) core.PlanModel {
 	return api.Spec.GetPlan(name)
 }

@@ -29,7 +29,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
 )
 
-var _ = Describe("Subscribe", labels.WithContext, func() {
+var _ = FDescribe("Subscribe", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 

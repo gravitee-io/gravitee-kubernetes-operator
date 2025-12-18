@@ -25,7 +25,7 @@ spec:
   name: "jwt-demo"
   version: "1"
   type: "PROXY"
-  description: "JWT subscription demo API"
+  description: "JWT subscription demo API (update)"
   listeners:
     - type: HTTP
       paths:

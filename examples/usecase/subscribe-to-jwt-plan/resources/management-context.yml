@@ -16,7 +16,8 @@ kind: ManagementContext
 metadata:
   name: dev-ctx
 spec:
-  baseUrl: http://localhost:30083
+  baseUrl: http://localhost:8083
+  #baseUrl: http://apim-apim3-api:83
   environmentId: DEFAULT
   organizationId: DEFAULT
   auth:

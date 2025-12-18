@@ -16,6 +16,7 @@ package refs
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -61,6 +62,9 @@ func (n *NamespacedName) HasNameSpace() bool {
 func NewNamespacedName(namespace, name string) NamespacedName {
 	return NamespacedName{Namespace: namespace, Name: name}
 }
+func NewNamespacedNameFromObject(object v1.Object) *NamespacedName {
+	return &NamespacedName{Namespace: object.GetNamespace(), Name: object.GetName()}
+}
 
 func (n *NamespacedName) NamespacedName() types.NamespacedName {
 	return types.NamespacedName{Namespace: n.Namespace, Name: n.Name}
@@ -68,4 +72,8 @@ func (n *NamespacedName) NamespacedName() types.NamespacedName {
 
 func (n *NamespacedName) String() string {
 	return n.Namespace + "/" + n.Name
+}
+
+func (n *NamespacedName) HRID() string {
+	return n.Namespace + "-" + n.Name
 }

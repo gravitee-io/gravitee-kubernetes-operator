@@ -16,6 +16,8 @@ package service
 
 import (
 	"fmt"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -83,36 +85,54 @@ func (svc *Applications) GetMetadataByApplicationID(appID string) (*[]model.Appl
 	return app, nil
 }
 
-func (svc *Applications) CreateOrUpdate(spec *application.Application) (*application.Status, error) {
-	return svc.createOrUpdate(spec, false)
+func (svc *Applications) CreateOrUpdate(app *v1alpha1.Application) (*application.Status, error) {
+	return svc.createOrUpdate(app, false)
 }
 
-func (svc *Applications) DryRunCreateOrUpdate(spec *application.Application) (*application.Status, error) {
-	return svc.createOrUpdate(spec, true)
+func (svc *Applications) DryRunCreateOrUpdate(app *v1alpha1.Application) (*application.Status, error) {
+	return svc.createOrUpdate(app, true)
 }
 
-func (svc *Applications) createOrUpdate(spec *application.Application, dryRun bool) (*application.Status, error) {
-	url := svc.EnvV2Target(applicationsPath).
-		WithPath("/_import/crd").
+func (svc *Applications) createOrUpdate(app *v1alpha1.Application, dryRun bool) (*application.Status, error) {
+
+	url := svc.AutomationTarget(applicationsPath).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	status := new(application.Status)
-	apimApp := struct {
-		*application.Application
-		Origin string `json:"origin"`
-	}{
-		Application: spec,
-		Origin:      "kubernetes",
-	}
+	usesHRID := app.Spec.HRID != ""
 
-	if err := svc.HTTP.Put(url.String(), apimApp, status); err != nil {
+	// even if the resource was created with a previous version,
+	// Automation API still need an HRID, so one is set.
+	// API ignores it because an ID is set in that case see PopulateIDs().
+	if !usesHRID {
+		app.Spec.HRID = app.GetID()
+		url = url.WithQueryParam("legacyID", strconv.FormatBool(true))
+	}
+	status := new(application.Status)
+
+	if err := svc.HTTP.Put(url.String(), app.Spec, status); err != nil {
 		return nil, err
 	}
+
+	status.UseHRID = usesHRID
 
 	return status, nil
 }
 
-func (svc *Applications) Delete(appID string) error {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
+func (svc *Applications) Delete(app *v1alpha1.Application) error {
+	appID, legacy := getAppID(app)
+	url := svc.AutomationTarget(applicationsPath).WithPath(appID).WithQueryParam("legacy", strconv.FormatBool(legacy))
 	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func getAppID(application *v1alpha1.Application) (string, bool) {
+	var id string
+	var legacy bool
+	if application.Status.UseHRID {
+		id = refs.NewNamespacedNameFromObject(application).HRID()
+		legacy = false
+	} else {
+		id = application.GetID()
+		legacy = true
+	}
+	return id, legacy
 }

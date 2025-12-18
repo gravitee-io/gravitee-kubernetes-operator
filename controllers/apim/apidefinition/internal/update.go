@@ -137,7 +137,7 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 			return err
 		}
 
-		status, err := apimClient.APIs.ImportV4(&spec.Api)
+		status, err := apimClient.APIs.ImportV4(apiDefinition)
 
 		if err != nil {
 			return gerrors.NewControlPlaneError(err)

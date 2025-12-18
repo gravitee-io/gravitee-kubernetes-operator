@@ -21,7 +21,7 @@ spec:
   contextRef:
     name: "dev-ctx"
   name: "echo-client"
-  description: "echo API client"
+  description: "echo API client (update)"
   settings:
     app:
       type: WEB

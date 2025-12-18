@@ -61,6 +61,7 @@ type SubscriptionStatus struct {
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 	// This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED ***
 	ProcessingStatus core.ProcessingStatus `json:"processingStatus,omitempty"`
+	UseHRID          bool                  `json:"useHRID,omitempty"`
 }
 
 func (s *SubscriptionStatus) DeepCopyFrom(obj client.Object) error {
@@ -131,6 +132,10 @@ func (s *Subscription) GetSpec() core.Spec {
 
 func (s *Subscription) GetStatus() core.Status {
 	return &s.Status
+}
+
+func (s *Subscription) GetID() string {
+	return s.Status.ID
 }
 
 func (s *Subscription) SetApiKind(kind string) {
