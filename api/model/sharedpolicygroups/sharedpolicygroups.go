@@ -25,6 +25,8 @@ type ApiType string
 type FlowPhase string
 
 type SharedPolicyGroup struct {
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 	// CrossID to export SharedPolicyGroup into different environments
 	CrossID *string `json:"crossId,omitempty"`
 	// SharedPolicyGroup name

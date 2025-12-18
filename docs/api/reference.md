@@ -76,9 +76,9 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
-| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 
 
 #### ApiDefinitionV2Spec
@@ -193,22 +193,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `description` _string_ | API description |  | Optional: \{\} <br /> |
-| `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
-| `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
-| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED] <br />Optional: \{\} <br /> |
-| `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY] <br />Required: \{\} <br /> |
-| `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
-| `flowExecution` _[FlowExecution](#flowexecution)_ | API Flow Execution (Not applicable for Native API) |  |  |
-| `flows` _[Flow](#flow) array_ | List of flows for the API | \{  \} | Optional: \{\} <br /> |
-| `analytics` _[Analytics](#analytics)_ | API Analytics (Not applicable for Native API) |  |  |
-| `services` _[ApiServices](#apiservices)_ | API Services (Not applicable for Native API) |  |  |
-| `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
-| `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
-| `failover` _[Failover](#failover)_ | API Failover |  |  |
+| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ |  |  |  |
 
 
@@ -232,9 +218,9 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
-| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 
 
 #### Application
@@ -272,6 +258,7 @@ _Appears in:_
 | `name` _string_ | Application name |  | Required: \{\} <br /> |
 | `description` _string_ | Application Description |  | Required: \{\} <br /> |
 | `id` _string_ | io.gravitee.definition.model.Application<br />Application ID |  |  |
+| `hrid` _string_ |  |  |  |
 | `background` _string_ | The base64 encoded background to use for this application when displaying it on the portal |  | Optional: \{\} <br /> |
 | `domain` _string_ | Application domain |  | Optional: \{\} <br /> |
 | `groups` _string array_ | Application groups |  | Optional: \{\} <br /> |
@@ -706,6 +693,7 @@ _Appears in:_
 | `name` _string_ | Application name |  | Required: \{\} <br /> |
 | `description` _string_ | Application Description |  | Required: \{\} <br /> |
 | `id` _string_ | io.gravitee.definition.model.Application<br />Application ID |  |  |
+| `hrid` _string_ |  |  |  |
 | `background` _string_ | The base64 encoded background to use for this application when displaying it on the portal |  | Optional: \{\} <br /> |
 | `domain` _string_ | Application domain |  | Optional: \{\} <br /> |
 | `groups` _string array_ | Application groups |  | Optional: \{\} <br /> |
@@ -974,9 +962,8 @@ _Appears in:_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1011,13 +998,42 @@ _Validation:_
 _Appears in:_
 - [ApiBase](#apibase)
 - [ApiDefinitionStatus](#apidefinitionstatus)
+- [ApiStatus](#apistatus)
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
+- [AutomationStatus](#automationstatus)
 - [Status](#status)
 
 | Field | Description |
 | --- | --- |
 | `STARTED` |  |
 | `STOPPED` |  |
+
+
+#### ApiStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [ApiDefinitionStatus](#apidefinitionstatus)
+- [ApiV4DefinitionStatus](#apiv4definitionstatus)
+- [AutomationStatus](#automationstatus)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `organizationId` _string_ | The organization ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
+| `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
+| `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
+| `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
+| `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### ApiVisibility
@@ -1089,9 +1105,8 @@ _Underlying type:_ _string_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description |
 | --- | --- |
@@ -1313,9 +1328,8 @@ _Appears in:_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1417,9 +1431,11 @@ _Appears in:_
 | `homepage` _boolean_ | If true, this page will be displayed as the homepage of your API documentation. | false | Optional: \{\} <br /> |
 | `parent` _string_ | If your page contains a folder, setting this field to the map key associated to the<br />folder entry will be reflected into APIM by making the page a child of this folder. |  | Optional: \{\} <br /> |
 | `parentId` _string_ | The parent ID of the page. This field is mostly required when you are applying<br />an API exported from APIM to make the operator take control over it. Use `Parent`<br />in any other case. |  | Optional: \{\} <br /> |
+| `parentHrid` _string_ |  |  |  |
 | `api` _string_ | The API of the page. If empty, will be set automatically to the generated ID of the API. |  | Optional: \{\} <br /> |
 | `source` _[PageSource](#pagesource)_ | Source allow you to fetch pages from various external sources, overriding page content<br />each time the source is fetched. |  | Optional: \{\} <br /> |
 | `configuration` _map[string]string_ | Custom page configuration (e.g. page rendering can be changed to use Redoc instead of Swagger ui) |  | Optional: \{\} <br /> |
+| `hrid` _string_ |  |  |  |
 
 
 #### PageSource
@@ -1625,9 +1641,8 @@ _Appears in:_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1660,9 +1675,9 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
-| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 
 
 #### TrustStore
@@ -2413,6 +2428,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
+| `hrid` _string_ |  |  |  |
 | `crossId` _string_ | CrossID to export SharedPolicyGroup into different environments |  |  |
 | `name` _string_ | SharedPolicyGroup name |  | Required: \{\} <br /> |
 | `description` _string_ | SharedPolicyGroup description |  |  |
@@ -2481,8 +2497,10 @@ _Appears in:_
 
 _Appears in:_
 - [ApiDefinitionStatus](#apidefinitionstatus)
+- [ApiStatus](#apistatus)
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
+- [AutomationStatus](#automationstatus)
 - [GroupStatus](#groupstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
 - [Status](#status)
@@ -2498,6 +2516,8 @@ _Appears in:_
 
 
 ## gravitee.io/v1alpha1/subscription
+
+
 
 
 
@@ -3288,8 +3308,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3313,22 +3332,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `description` _string_ | API description |  | Optional: \{\} <br /> |
-| `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
-| `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
-| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED] <br />Optional: \{\} <br /> |
-| `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY] <br />Required: \{\} <br /> |
-| `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
-| `flowExecution` _[FlowExecution](#flowexecution)_ | API Flow Execution (Not applicable for Native API) |  |  |
-| `flows` _[Flow](#flow) array_ | List of flows for the API | \{  \} | Optional: \{\} <br /> |
-| `analytics` _[Analytics](#analytics)_ | API Analytics (Not applicable for Native API) |  |  |
-| `services` _[ApiServices](#apiservices)_ | API Services (Not applicable for Native API) |  |  |
-| `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
-| `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
-| `failover` _[Failover](#failover)_ | API Failover |  |  |
+| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
 
 
 #### ApiServices
@@ -3340,8 +3345,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3358,8 +3362,7 @@ _Validation:_
 - Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY]
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 
 
@@ -3373,8 +3376,11 @@ _Validation:_
 - Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED]
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
+
+
+
+
 
 
 
@@ -3405,8 +3411,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3483,8 +3488,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3566,8 +3570,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3588,9 +3591,8 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
 - [Plan](#plan)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3616,8 +3618,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3701,8 +3702,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 
 
@@ -3853,6 +3853,7 @@ _Appears in:_
 _Appears in:_
 - [Api](#api)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [AutomationApi](#automationapi)
 
 
 
@@ -3884,6 +3885,8 @@ _Appears in:_
 _Appears in:_
 - [Api](#api)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [AutomationApi](#automationapi)
+- [AutomationStatus](#automationstatus)
 - [GatewayDefinitionPlan](#gatewaydefinitionplan)
 
 | Field | Description | Default | Validation |
@@ -3897,6 +3900,8 @@ _Appears in:_
 | `flows` _[Flow](#flow) array_ | List of plan flows | \{  \} | Optional: \{\} <br /> |
 | `excludedGroups` _string array_ |  | \{  \} | Optional: \{\} <br /> |
 | `generalConditions` _string_ | The general conditions defined to use this plan |  | Optional: \{\} <br /> |
+| `generalConditionsHrid` _string_ |  |  |  |
+| `hrid` _string_ |  |  |  |
 
 
 #### PlanMode
@@ -4015,5 +4020,37 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Specify if Tracing is Enabled or not |  |  |
 | `verbose` _boolean_ | Specify if Tracing is Verbose or not |  |  |
+
+
+#### V4BaseApi
+
+
+
+
+
+
+
+_Appears in:_
+- [Api](#api)
+- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [AutomationApi](#automationapi)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `hrid` _string_ |  |  |  |
+| `description` _string_ | API description |  | Optional: \{\} <br /> |
+| `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
+| `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
+| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED] <br />Optional: \{\} <br /> |
+| `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY] <br />Required: \{\} <br /> |
+| `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
+| `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
+| `flowExecution` _[FlowExecution](#flowexecution)_ | API Flow Execution (Not applicable for Native API) |  |  |
+| `flows` _[Flow](#flow) array_ | List of flows for the API | \{  \} | Optional: \{\} <br /> |
+| `analytics` _[Analytics](#analytics)_ | API Analytics (Not applicable for Native API) |  |  |
+| `services` _[ApiServices](#apiservices)_ | API Services (Not applicable for Native API) |  |  |
+| `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
+| `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
+| `failover` _[Failover](#failover)_ | API Failover |  |  |
 
 

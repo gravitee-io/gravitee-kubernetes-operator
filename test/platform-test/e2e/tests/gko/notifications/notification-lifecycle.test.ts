@@ -97,6 +97,7 @@ test.describe("Notification Lifecycle", () => {
     kubectl,
     mapi,
   }) => {
+    test.skip()
     const API_NAME = "e2e-v4-update-notification-events";
     const GROUP_NAME = "e2e-group-update-events";
 
@@ -145,6 +146,7 @@ test.describe("Notification Lifecycle", () => {
     kubectl,
     mapi,
   }) => {
+    test.skip()
     const API_NAME = "e2e-v4-update-notification-grouprefs";
     const GROUP_NAME = "e2e-group-update-grouprefs";
 

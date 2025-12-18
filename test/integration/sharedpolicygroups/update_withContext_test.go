@@ -17,6 +17,7 @@ package sharedpolicygroups
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -53,8 +54,9 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("calling rest API, expecting SPG to have been updated")
 
 		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.SharedPolicyGroup).HRID()
 		Eventually(func() error {
-			spg, cliErr := apim.SharedPolicyGroup.GetByID(fixtures.SharedPolicyGroup.Status.ID)
+			spg, cliErr := apim.SharedPolicyGroup.GetByHRID(hrid)
 			if cliErr != nil {
 				return cliErr
 			}

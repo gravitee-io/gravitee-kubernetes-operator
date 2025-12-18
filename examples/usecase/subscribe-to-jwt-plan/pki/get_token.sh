@@ -16,8 +16,14 @@
 dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 pem=$( cat "${dir}/private.key" )
-client_id="echo-client"
-sub="echo-client"
+
+if [ -n "$1" ]; then
+  client_id="$1"
+  sub="$1"
+else
+  client_id="echo-client"
+  sub="echo-client"
+fi
 
 now=$( date +%s )
 iat="${now}"

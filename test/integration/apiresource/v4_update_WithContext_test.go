@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -57,9 +58,10 @@ var _ = Describe("Update", labels.WithContext, func() {
 			By("calling rest API, expecting to find resources in API")
 
 			apim := apim.NewClient(ctx)
+			hrid := refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID()
 
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetV4ByID(fixtures.APIv4.Status.ID)
+				api, apiErr := apim.APIs.GetV4ByHRID(hrid)
 				if apiErr != nil {
 					return apiErr
 				}
@@ -76,7 +78,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			By("calling rest API, expecting resource to be updated")
 
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetV4ByID(fixtures.APIv4.Status.ID)
+				api, apiErr := apim.APIs.GetV4ByHRID(hrid)
 				if apiErr != nil {
 					return apiErr
 				}

@@ -20,6 +20,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
@@ -31,7 +32,7 @@ func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
 		return err
 	}
 
-	group.PopulateIDs(apim.Context)
+	group.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
 
 	status, err := apim.Env.ImportGroup(spec.Type)
 	if err != nil {

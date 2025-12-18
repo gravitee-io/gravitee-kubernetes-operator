@@ -15,8 +15,15 @@
 package service
 
 import (
+	"strconv"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 // Subscriptions brings support for managing gravitee.io APIM support for subscriptions.
@@ -29,21 +36,33 @@ func NewSubscriptions(client *client.Client) *Subscriptions {
 	return &Subscriptions{Client: client}
 }
 
-func (svc *Subscriptions) Import(spec *model.Subscription) (*model.SubscriptionStatus, error) {
-	url := svc.EnvV2Target("apis").WithPath(spec.ApiID).
-		WithPath("subscriptions").WithPath("spec").
-		WithPath("_import")
+func (svc *Subscriptions) Import(spec model.Subscription,
+	conditionAware core.ConditionAwareObject,
+	setHridWithUUID bool,
+	setHridWithApiUUID bool,
+	setHridWithAppUUID bool) (model.SubscriptionStatus, error) {
+	url := svc.AutomationTarget("apis").WithPath(spec.ApiID).
+		WithPath("subscriptions").
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(setHridWithUUID)).
+		WithQueryParam("hridContainsApiUUID", strconv.FormatBool(setHridWithApiUUID)).
+		WithQueryParam("hridContainsAppUUID", strconv.FormatBool(setHridWithAppUUID))
 
 	status := new(model.SubscriptionStatus)
 
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
-		return nil, err
+	automation := spec.ToAutomation()
+
+	if err := svc.HTTP.Put(url.String(), automation, status); err != nil {
+		return model.SubscriptionStatus{}, err
 	}
 
-	return status, nil
+	if !setHridWithUUID {
+		k8s.AddAutomationAPIManagedCondition(conditionAware)
+	}
+
+	return *status, nil
 }
 
-// TODO: replace this import 👆
+// Subscribe For tests purposes only.
 func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.SubscriptionResponse, error) {
 	url := svc.EnvV2Target("apis").WithPath(apiID).WithPath("subscriptions")
 
@@ -61,6 +80,36 @@ func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.Subscri
 	return response, nil
 }
 
+// GetByHRID For tests purposes only.
+func (svc *Subscriptions) GetByHRID(apiHRID, subscriptionHRID string) (*subscription.AutomationSubscription, error) {
+	url := svc.AutomationTarget("apis").WithPath(apiHRID).
+		WithPath("subscriptions").WithPath(subscriptionHRID)
+
+	sub := new(subscription.AutomationSubscription)
+
+	if err := svc.HTTP.Get(url.String(), sub); err != nil {
+		return nil, err
+	}
+
+	return sub, nil
+}
+
+// GetByHRIDWithLegacyAPI For tests purposes only.
+func (svc *Subscriptions) GetByHRIDWithLegacyAPI(
+	apiUUID, subscriptionHRID string) (*subscription.AutomationSubscription, error) {
+	url := svc.AutomationTarget("apis").WithPath(apiUUID).
+		WithPath("subscriptions").WithPath(subscriptionHRID).WithQueryParam("hridContainsApiUUID", "true")
+
+	sub := new(subscription.AutomationSubscription)
+
+	if err := svc.HTTP.Get(url.String(), sub); err != nil {
+		return nil, err
+	}
+
+	return sub, nil
+}
+
+// GetByID For tests purposes only.
 func (svc *Subscriptions) GetByID(apiID, subscriptionID string) (*model.Subscription, error) {
 	url := svc.EnvV2Target("apis").WithPath(apiID).
 		WithPath("subscriptions").WithPath(subscriptionID)
@@ -74,13 +123,21 @@ func (svc *Subscriptions) GetByID(apiID, subscriptionID string) (*model.Subscrip
 	return sub, nil
 }
 
-func (svc *Subscriptions) Delete(spec *model.Subscription) error {
-	url := svc.EnvV2Target("apis").WithPath(spec.ApiID).
-		WithPath("subscriptions").WithPath("spec").WithPath(spec.ID)
+func (svc *Subscriptions) Delete(api core.ApiDefinitionObject, subscription *v1alpha1.Subscription) error {
+	subID, setHridWithUUID := getSubID(subscription)
+	apiID, apisetHridWithUUID := getApiID(api)
+
+	url := svc.AutomationTarget("apis").
+		WithPath(apiID).
+		WithPath("subscriptions").
+		WithPath(subID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(setHridWithUUID)).
+		WithQueryParam("hridContainsApiUUID", strconv.FormatBool(apisetHridWithUUID))
 
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
+// GetApiKeys For tests purposes only.
 func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiKeyEntity, error) {
 	url := svc.EnvV1Target("apis").WithPath(apiID).
 		WithPath("subscriptions").WithPath(subscriptionID).
@@ -93,4 +150,13 @@ func (svc *Subscriptions) GetApiKeys(apiID, subscriptionID string) ([]model.ApiK
 	}
 
 	return *apiKeys, nil
+}
+
+func getSubID(subscription *v1alpha1.Subscription) (string, bool) {
+	if k8s.IsAutomationAPIManaged(subscription) {
+		return refs.NewNamespacedNameFromObject(subscription).HRID(), false
+	}
+	// Legacy mode => managed by UUIDs
+	// Generated GKO side
+	return subscription.Status.ID, true
 }

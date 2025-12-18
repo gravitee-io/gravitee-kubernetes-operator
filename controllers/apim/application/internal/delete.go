@@ -32,14 +32,10 @@ func Delete(
 		return nil
 	}
 
-	apim, apimErr := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
+	apimClient, apimErr := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
 	if apimErr != nil {
 		return apimErr
 	}
 
-	if err := apim.Applications.Delete(application.Status.ID); errors.IgnoreNotFound(err) != nil {
-		return err
-	}
-
-	return nil
+	return errors.IgnoreNotFound(apimClient.Applications.Delete(application))
 }

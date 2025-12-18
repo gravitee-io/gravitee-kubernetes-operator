@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -72,8 +73,9 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		apim := apim.NewClient(ctx)
 		Expect(err).ToNot(HaveOccurred())
 
+		hrid := refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID()
 		Eventually(func() error {
-			_, apiErr := apim.APIs.GetV4ByID(fixtures.APIv4.Status.ID)
+			_, apiErr := apim.APIs.GetV4ByHRID(hrid)
 			return assert.NotFoundError(apiErr)
 		}, timeout, interval).Should(Succeed())
 

@@ -100,6 +100,11 @@ func ApiV4Accepted(apiDefinition *v1alpha1.ApiV4Definition) error {
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
+func ManagedByAutomationAPI(conditionAware core.ConditionAwareObject) error {
+	return Equals(reconcileCondition, true,
+		conditionAware.GetConditions()[k8s.AutomationAPIManaged].Status == metav1.ConditionTrue)
+}
+
 func ApiV4Rejected(apiDefinition *v1alpha1.ApiV4Definition) error {
 	return Equals(reconcileCondition, true,
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)

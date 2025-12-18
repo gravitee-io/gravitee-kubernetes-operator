@@ -74,3 +74,14 @@ func (t *Type) GetMetadata() map[string]string {
 	}
 	return metadataCopy
 }
+
+type AutomationSubscription struct {
+	HRID            string            `json:"hrid"`
+	ApplicationHrid string            `json:"applicationHrid"`
+	PlanHrid        string            `json:"planHrid"`
+	ApiHrid         string            `json:"apiHrid"`
+	Status          string            `json:"status"`
+	StartingAt      string            `json:"startingAt"`
+	EndingAt        string            `json:"endingAt"`
+	Metadata        map[string]string `json:"metadata,omitempty"`
+}

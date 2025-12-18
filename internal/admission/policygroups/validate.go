@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
@@ -120,9 +121,9 @@ func validateDryRun(ctx context.Context, spg runtime.Object) *errors.AdmissionEr
 		errs.AddSevere(err.Error())
 	}
 
-	cp.PopulateIDs(apim.Context)
+	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(cp))
 
-	status, err := apim.SharedPolicyGroup.DryRunCreateOrUpdate(cp.Spec.SharedPolicyGroup)
+	status, err := apim.SharedPolicyGroup.DryRunCreateOrUpdate(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

@@ -17,6 +17,7 @@ package application
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -50,9 +51,10 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("calling rest API, expecting to find application")
 
 		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.Application).HRID()
 
 		Eventually(func() error {
-			app, appErr := apim.Applications.GetByID(fixtures.Application.Status.ID)
+			app, appErr := apim.Applications.GetByHRID(hrid)
 			if appErr != nil {
 				return appErr
 			}
@@ -60,8 +62,12 @@ var _ = Describe("Update", labels.WithContext, func() {
 		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
 
 		By("calling rest API, expecting to find application metadata")
+
+		appFromAPIM, err := apim.Applications.GetByHRID(hrid)
+		Expect(err).ToNot(HaveOccurred())
+
 		Eventually(func() error {
-			metadata, appErr := apim.Applications.GetMetadataByApplicationID(fixtures.Application.Status.ID)
+			metadata, appErr := apim.Applications.GetMetadataByApplicationID(appFromAPIM.ID)
 			if appErr != nil {
 				return appErr
 			}
@@ -79,7 +85,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("calling rest API, expecting application to be up to date")
 
 		Eventually(func() error {
-			app, appErr := apim.Applications.GetByID(fixtures.Application.Status.ID)
+			app, appErr := apim.Applications.GetByHRID(hrid)
 			if appErr != nil {
 				return appErr
 			}
@@ -87,8 +93,12 @@ var _ = Describe("Update", labels.WithContext, func() {
 		}, timeout, interval).Should(Succeed(), fixtures.Application.Name)
 
 		By("calling rest API, expecting to find updated application metadata")
+
+		appFromAPIM, err = apim.Applications.GetByHRID(hrid)
+		Expect(err).ToNot(HaveOccurred())
+
 		Eventually(func() error {
-			metadata, appErr := apim.Applications.GetMetadataByApplicationID(fixtures.Application.Status.ID)
+			metadata, appErr := apim.Applications.GetMetadataByApplicationID(appFromAPIM.ID)
 			if appErr != nil {
 				return appErr
 			}

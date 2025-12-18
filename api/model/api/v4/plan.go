@@ -68,6 +68,10 @@ type Plan struct {
 	// The general conditions defined to use this plan
 	// +kubebuilder:validation:Optional
 	GeneralConditions *string `json:"generalConditions,omitempty"`
+	// +kubebuilder:skipversion
+	GeneralConditionsHRID *string `json:"generalConditionsHrid,omitempty"`
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 }
 
 type GatewayDefinitionPlan struct {

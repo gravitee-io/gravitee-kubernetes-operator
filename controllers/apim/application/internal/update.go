@@ -20,23 +20,22 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
-	spec := &application.Spec
-
-	apim, err := apim.FromContextRef(ctx, spec.Context, application.GetNamespace())
+	apim, err := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
 	if err != nil {
 		return err
 	}
 
-	application.PopulateIDs(apim.Context)
+	application.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(application))
 
 	if err := ResolveClientCertificates(ctx, application); err != nil {
 		return err
 	}
 
-	status, mgmtErr := apim.Applications.CreateOrUpdate(&spec.Application)
+	status, mgmtErr := apim.Applications.CreateOrUpdate(application)
 	if mgmtErr != nil {
 		return gerrors.NewControlPlaneError(mgmtErr)
 	}

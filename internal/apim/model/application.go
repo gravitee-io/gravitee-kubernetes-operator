@@ -20,6 +20,7 @@ import (
 
 type Application struct {
 	ID          string               `json:"id,omitempty"`
+	HRID        string               `json:"hrid,omitempty"`
 	Name        string               `json:"name,omitempty"`
 	Status      string               `json:"status,omitempty"`
 	Description string               `json:"description,omitempty"`

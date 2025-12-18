@@ -17,6 +17,8 @@ package v4
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -92,20 +94,19 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 
 	cp, _ := api.DeepCopyObject().(core.ApiDefinitionObject)
 
-	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
 		errs.AddSevere(err.Error())
+		return errs
 	}
 
-	cp.PopulateIDs(apim.Context)
+	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 	cp.SetDefinitionContext(v4.NewDefaultKubernetesContext().MergeWith(cp.GetDefinitionContext()))
-
-	impl, ok := cp.GetDefinition().(*v4.Api)
+	impl, ok := cp.(*v1alpha1.ApiV4Definition)
 	if !ok {
 		errs.AddSevere("unable to call dry run import because api is not a v4 API")
 	}
-
-	status, err := apim.APIs.DryRunImportV4(impl)
+	status, err := apimClient.APIs.DryRunImportV4(impl)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

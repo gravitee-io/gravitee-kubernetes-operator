@@ -80,6 +80,8 @@ spec:
                   items:
                     type: string
                   type: array
+                hrid:
+                  type: string
                 id:
                   description: |-
                     io.gravitee.definition.model.Application

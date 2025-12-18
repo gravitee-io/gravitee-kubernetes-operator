@@ -120,6 +120,7 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) e
 	flowStep.Policy = utils.ToReference("shared-policy-group-policy")
 	flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
 		"sharedPolicyGroupId": spg.Status.CrossID,
+		"hrid":                spg.Spec.HRID,
 	})
 
 	return nil

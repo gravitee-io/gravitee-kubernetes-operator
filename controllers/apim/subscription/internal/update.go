@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -32,6 +34,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	ns := subscription.Namespace
 	spec := subscription.Spec
 
+	creating := subscription.Status.ID == ""
 	app, err := dynamic.ResolveApplication(ctx, &spec.App, ns)
 	if err != nil {
 		return err
@@ -42,7 +45,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return err
 	}
 
-	apim, err := apim.FromContextRef(ctx, api.ContextRef(), ns)
+	apimClient, err := apim.FromContextRef(ctx, api.ContextRef(), ns)
 	if err != nil {
 		return err
 	}
@@ -51,26 +54,23 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		return fmt.Errorf("plan %s not found", subscription.Spec.Plan)
 	}
 
-	api.PopulateIDs(apim.Context)
+	api.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(subscription))
 
-	appID := app.GetID()
-	apiID := api.GetID()
-	planID := api.GetPlan(subscription.Spec.Plan).GetID()
-	subscriptionID := string(subscription.UID)
+	sub := &model.Subscription{}
 
-	sub := &model.Subscription{
-		ID:       subscriptionID,
-		AppID:    appID,
-		ApiID:    apiID,
-		PlanID:   planID,
-		Metadata: spec.Metadata,
-	}
-
+	setHridWithSubscriptionUUID := setSubscriptionID(subscription, sub)
+	setHridWithApiUUID := setApiIDAndPlan(api, sub, spec)
+	setHridWithAppUUID := setApplicationID(app, sub)
+	sub.Metadata = spec.Metadata
 	if spec.EndingAt != nil {
 		sub.EndingAt = *spec.EndingAt
 	}
 
-	status, err := apim.Subscription.Import(sub)
+	status, err := apimClient.Subscription.Import(*sub,
+		subscription,
+		setHridWithSubscriptionUUID,
+		setHridWithApiUUID,
+		setHridWithAppUUID)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
@@ -84,19 +84,53 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	subscription.Status.EndingAt = status.EndingAt
 	subscription.Status.ID = status.ID
 
-	appStatus, _ := app.GetStatus().(core.SubscribableStatus)
-	apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
+	// Avoid increasing counter on updates
+	// Counters are used to prevent deletions
+	// When subscription is used by an application or an API
+	if creating {
+		appStatus, _ := app.GetStatus().(core.SubscribableStatus)
+		apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
 
-	appStatus.AddSubscription()
-	apiStatus.AddSubscription()
+		appStatus.AddSubscription()
+		apiStatus.AddSubscription()
 
-	if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
-		return err
-	}
+		if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
+			return err
+		}
 
-	if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
-		return err
+		if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func setApiIDAndPlan(api core.ApiDefinitionObject, sub *model.Subscription, spec v1alpha1.SubscriptionSpec) bool {
+	if api.GetID() == "" || k8s.IsAutomationAPIManaged(api) {
+		sub.ApiID = refs.NewNamespacedNameFromObject(api).HRID()
+		sub.PlanID = spec.Plan
+		return false
+	}
+	sub.ApiID = api.GetID()
+	sub.PlanID = api.GetPlan(spec.Plan).GetID()
+	return true
+}
+
+func setSubscriptionID(subscription *v1alpha1.Subscription, sub *model.Subscription) bool {
+	if subscription.Status.ID == "" || k8s.IsAutomationAPIManaged(subscription) {
+		sub.ID = refs.NewNamespacedNameFromObject(subscription).HRID()
+		return false
+	}
+	sub.ID = string(subscription.UID)
+	return true
+}
+
+func setApplicationID(app core.ApplicationObject, sub *model.Subscription) bool {
+	if app.GetID() == "" || k8s.IsAutomationAPIManaged(app) {
+		sub.AppID = refs.NewNamespacedNameFromObject(app).HRID()
+		return false
+	}
+	sub.AppID = app.GetID()
+	return true
 }

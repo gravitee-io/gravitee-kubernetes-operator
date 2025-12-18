@@ -18,6 +18,10 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
@@ -83,36 +87,63 @@ func (svc *Applications) GetMetadataByApplicationID(appID string) (*[]model.Appl
 	return app, nil
 }
 
-func (svc *Applications) CreateOrUpdate(spec *application.Application) (*application.Status, error) {
-	return svc.createOrUpdate(spec, false)
-}
+// GetByHRID For test purposes only.
+func (svc *Applications) GetByHRID(hrid string) (*model.Application, error) {
+	url := svc.AutomationTarget(applicationsPath).WithPath(hrid)
+	app := new(model.Application)
 
-func (svc *Applications) DryRunCreateOrUpdate(spec *application.Application) (*application.Status, error) {
-	return svc.createOrUpdate(spec, true)
-}
-
-func (svc *Applications) createOrUpdate(spec *application.Application, dryRun bool) (*application.Status, error) {
-	url := svc.EnvV2Target(applicationsPath).
-		WithPath("/_import/crd").
-		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
-
-	status := new(application.Status)
-	apimApp := struct {
-		*application.Application
-		Origin string `json:"origin"`
-	}{
-		Application: spec,
-		Origin:      "kubernetes",
-	}
-
-	if err := svc.HTTP.Put(url.String(), apimApp, status); err != nil {
+	if err := svc.HTTP.Get(url.String(), app); err != nil {
 		return nil, err
 	}
 
+	return app, nil
+}
+
+func (svc *Applications) CreateOrUpdate(app *v1alpha1.Application) (*application.Status, error) {
+	return svc.createOrUpdate(app, false)
+}
+
+func (svc *Applications) DryRunCreateOrUpdate(app *v1alpha1.Application) (*application.Status, error) {
+	return svc.createOrUpdate(app, true)
+}
+
+func (svc *Applications) createOrUpdate(app *v1alpha1.Application, dryRun bool) (*application.Status, error) {
+	url := svc.AutomationTarget(applicationsPath).
+		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
+
+	setHridWithUUID := app.Spec.ID != ""
+
+	// If an ID is set, the CRD was created before Automation API (prior to 4.12)
+	// Then, use HRID to store ID and pass setHridWithUUID query param
+	// to tell AutomationAPI that this it is not an HRID-managed resource
+	// UUIDs are already computed
+	if setHridWithUUID {
+		app.Spec.HRID = app.Spec.ID
+		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	}
+	status := new(application.Status)
+
+	if err := svc.HTTP.Put(url.String(), app.Spec, status); err != nil {
+		return nil, err
+	}
+
+	if !setHridWithUUID {
+		k8s.AddAutomationAPIManagedCondition(app)
+	}
 	return status, nil
 }
 
-func (svc *Applications) Delete(appID string) error {
-	url := svc.EnvV1Target(applicationsPath).WithPath(appID)
+func (svc *Applications) Delete(app *v1alpha1.Application) error {
+	appID, hridContainsUUID := getAppID(app)
+	url := svc.AutomationTarget(applicationsPath).
+		WithPath(appID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(hridContainsUUID))
 	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func getAppID(application *v1alpha1.Application) (string, bool) {
+	if k8s.IsAutomationAPIManaged(application) {
+		return refs.NewNamespacedNameFromObject(application).HRID(), false
+	}
+	return application.GetID(), true
 }
