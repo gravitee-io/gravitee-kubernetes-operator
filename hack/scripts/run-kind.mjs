@@ -15,6 +15,8 @@
  */
 
 import { APIM } from "./lib/apim.mjs";
+import { Mongo } from "./lib/mongo.mjs";
+
 import {
   LOG,
   PROJECT_DIR,
@@ -37,6 +39,7 @@ const APIM_IMAGE_REGISTRY = await getAPIMImageRegistry();
 const APIM_IMAGE_TAG = await getAPIMImageTag();
 const APIM_CHART_REGISTRY = await getAPIMChartRegistry();
 const APIM_CHART_VERSION = await getAPIMChartVersion();
+const MONGO_IMAGE_TAG = await Mongo.getImageTag();
 
 const APIM_VALUES = `${$.env.APIM_VALUES || "values.yaml"}`;
 
@@ -53,7 +56,7 @@ const IMAGES = new Map([
     `${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`,
     `gravitee-apim-management-ui:dev`,
   ],
-  [`mongo:7.0.21-jammy`, `mongo:7.0.21-jammy`],
+  [`mongo:${MONGO_IMAGE_TAG}`, `mongo:${MONGO_IMAGE_TAG}`],
   [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
 ]);
 
