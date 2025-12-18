@@ -83,7 +83,7 @@ func getLocationHost(filter gwAPIv1.HTTPRequestRedirectFilter) string {
 	if filter.Hostname != nil {
 		host := string(*filter.Hostname)
 		if filter.Port != nil {
-			return fmt.Sprintf("%s:%d", host, int32(*filter.Port))
+			return fmt.Sprintf("%s:%d", host, *filter.Port)
 		}
 		return host
 	}
