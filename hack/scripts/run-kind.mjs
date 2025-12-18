@@ -101,16 +101,26 @@ async function createKindCluster() {
 async function loadImages() {
   setNoQuoteEscape();
 
-  for (const [image, tag] of IMAGES.entries()) {
-    LOG.blue(`pulling image ${image}`);
-    await $`docker pull ${image}`;
-    LOG.blue(`tagging image ${image} with ${tag}`);
-    await $`docker tag ${image} ${tag}`;
+  const promisesToLoad = Array.from(IMAGES.entries()).map(pullAndTag);
+
+  const tagsToLoad = await Promise.all(promisesToLoad);
+
+  LOG.blue(`All images pulled. Starting Kind load...`);
+
+  for (const tag of tagsToLoad) {
     LOG.blue(`loading image tag ${tag}`);
     await $`kind load docker-image ${tag} --name gravitee`;
   }
 
   setQuoteEscape();
+}
+
+async function pullAndTag([image, tag]) {
+  LOG.blue(`pulling image ${image}`);
+  await $`docker pull ${image}`;
+  LOG.blue(`tagging image ${image} with ${tag}`);
+  await $`docker tag ${image} ${tag}`;
+  return tag;
 }
 
 async function createGraviteeNamespace() {
