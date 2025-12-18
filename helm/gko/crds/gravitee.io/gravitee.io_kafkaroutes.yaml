@@ -328,6 +328,17 @@ spec:
                     type: object
                   maxItems: 32
                   type: array
+                  x-kubernetes-list-type: atomic
+                useDefaultGateways:
+                  description: >-
+                    UseDefaultGateways indicates the default Gateway scope to
+                    use for this
+
+                    Route.
+                  enum:
+                    - All
+                    - None
+                  type: string
               type: object
             status:
               properties:
@@ -463,11 +474,13 @@ spec:
                           - name
                         type: object
                     required:
+                      - conditions
                       - controllerName
                       - parentRef
                     type: object
                   maxItems: 32
                   type: array
+                  x-kubernetes-list-type: atomic
               required:
                 - parents
               type: object

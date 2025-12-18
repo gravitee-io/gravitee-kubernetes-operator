@@ -320,6 +320,28 @@ rules:
   - apiGroups:
       - gateway.networking.k8s.io
     resources:
+      - backendtlspolicies
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
+      - backendtlspolicies/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - backendtlspolicies.networking.k8s.io
+    resources:
+      - backendtlspolicies/status
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - gateway.networking.k8s.io
+    resources:
       - gateways
     verbs:
       - get
