@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-import { APIM } from "./lib/apim.mjs";
-import {
-  LOG,
-  PROJECT_DIR,
-  setNoQuoteEscape,
-  setQuoteEscape,
-  time,
-  toggleVerbosity,
-} from "./lib/index.mjs";
+import {APIM} from "./lib/apim.mjs";
+import {LOG, PROJECT_DIR, setNoQuoteEscape, setQuoteEscape, time, toggleVerbosity,} from "./lib/index.mjs";
 
 const KIND_CONFIG = path.join(PROJECT_DIR, "hack", "kind");
 const PKI = path.join(
-  PROJECT_DIR,
-  "examples",
-  "usecase",
-  "subscribe-to-mtls-plan",
-  "pki",
+    PROJECT_DIR,
+    "examples",
+    "usecase",
+    "subscribe-to-mtls-plan",
+    "pki",
 );
 
 const APIM_IMAGE_REGISTRY = await getAPIMImageRegistry();
@@ -41,20 +34,20 @@ const APIM_CHART_VERSION = await getAPIMChartVersion();
 const APIM_VALUES = `${$.env.APIM_VALUES || "values.yaml"}`;
 
 const IMAGES = new Map([
-  [
-    `${APIM_IMAGE_REGISTRY}/apim-gateway:${APIM_IMAGE_TAG}`,
-    `gravitee-apim-gateway:dev`,
-  ],
-  [
-    `${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}`,
-    `gravitee-apim-management-api:dev`,
-  ],
-  [
-    `${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`,
-    `gravitee-apim-management-ui:dev`,
-  ],
-  [`mongo:7.0.21-jammy`, `mongo:7.0.21-jammy`],
-  [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
+    [
+        `${APIM_IMAGE_REGISTRY}/apim-gateway:${APIM_IMAGE_TAG}`,
+        `gravitee-apim-gateway:dev`,
+    ],
+    [
+        `${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}`,
+        `gravitee-apim-management-api:dev`,
+    ],
+    [
+        `${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`,
+        `gravitee-apim-management-ui:dev`,
+    ],
+    [`mongo:7.0.21-jammy`, `mongo:7.0.21-jammy`],
+    [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
 ]);
 
 const REDIRECT = argv.verbose ? "" : "> /dev/null";
@@ -62,74 +55,76 @@ const REDIRECT = argv.verbose ? "" : "> /dev/null";
 toggleVerbosity(argv.verbose);
 
 async function getAPIMImageRegistry() {
-  if ($.env.APIM_IMAGE_REGISTRY) {
-    return $.env.APIM_IMAGE_REGISTRY;
-  }
-  return await APIM.getImageRegistry();
+    if ($.env.APIM_IMAGE_REGISTRY) {
+        return $.env.APIM_IMAGE_REGISTRY;
+    }
+    return await APIM.getImageRegistry();
 }
 
 async function getAPIMImageTag() {
-  if ($.env.APIM_IMAGE_TAG) {
-    return $.env.APIM_IMAGE_TAG;
-  }
-  return await APIM.getImageTag();
+    if ($.env.APIM_IMAGE_TAG) {
+        return $.env.APIM_IMAGE_TAG;
+    }
+    return await APIM.getImageTag();
 }
 
 async function getAPIMChartRegistry() {
-  if ($.env.APIM_CHART_REGISTRY) {
-    return $.env.APIM_CHART_REGISTRY;
-  }
-  return await APIM.getChartRegistry();
+    if ($.env.APIM_CHART_REGISTRY) {
+        return $.env.APIM_CHART_REGISTRY;
+    }
+    return await APIM.getChartRegistry();
 }
 
 async function getAPIMChartVersion() {
-  if ($.env.APIM_CHART_VERSION) {
-    return $.env.APIM_CHART_VERSION;
-  }
-  return await APIM.getChartVersion();
+    if ($.env.APIM_CHART_VERSION) {
+        return $.env.APIM_CHART_VERSION;
+    }
+    return await APIM.getChartVersion();
 }
 
 async function createKindCluster() {
-  setNoQuoteEscape();
-  await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml ${REDIRECT}`;
-  setQuoteEscape();
+    setNoQuoteEscape();
+    await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml ${REDIRECT}`;
+    setQuoteEscape();
 }
 
 async function loadImages() {
-  setNoQuoteEscape();
+    setNoQuoteEscape();
 
-  for (const [image, tag] of IMAGES.entries()) {
-    LOG.blue(`pulling image ${image}`);
-    await $`docker pull ${image}`;
-    LOG.blue(`tagging image ${image} with ${tag}`);
-    await $`docker tag ${image} ${tag}`;
-    LOG.blue(`loading image tag ${tag}`);
-    await $`kind load docker-image ${tag} --name gravitee`;
-  }
+    for (const [image, tag] of IMAGES.entries()) {
+        if (!image.endsWith(":local")) {
+            LOG.blue(`pulling image ${image}`);
+            await $`docker pull ${image}`;
+        }
+        LOG.blue(`tagging image ${image} with ${tag}`);
+        await $`docker tag ${image} ${tag}`;
+        LOG.blue(`loading image tag ${tag}`);
+        await $`kind load docker-image ${tag} --name gravitee`;
+    }
 
-  setQuoteEscape();
+    setQuoteEscape();
 }
 
 async function createGraviteeNamespace() {
-  await $`kubectl create ns gravitee`;
+    await $`kubectl create ns gravitee`;
 }
 
 async function createTLSSecret() {
-  await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key`;
+    await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key`;
 }
 
 async function helmInstallAPIM() {
-  await $`helm repo add graviteeio https://helm.gravitee.io`;
-  await $`helm repo update graviteeio`;
-  await $`helm install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --version ${APIM_CHART_VERSION}`;
+    await $`helm repo add graviteeio https://helm.gravitee.io`;
+    await $`helm repo update graviteeio`;
+    await $`helm install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --version ${APIM_CHART_VERSION}`;
 }
 
 async function deployHTTPBin() {
-  await $`kubectl apply -f ${KIND_CONFIG}/httpbin`;
+    await $`kubectl apply -f ${KIND_CONFIG}/httpbin`;
 }
 
 async function waitForApim() {
-  await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
+    await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
 }
 
 LOG.blue(`

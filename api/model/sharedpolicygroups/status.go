@@ -47,6 +47,8 @@ type Status struct {
 	// When SharedPolicyGroup has been created regardless of errors, this field is
 	// used to persist the error message encountered during admission
 	Errors status.Errors `json:"errors,omitempty"`
+	//+kubebuilder:skipversion
+	UseHRID bool `json:"use_hrid"`
 }
 
 func (s *Status) DeepCopyTo(out *Status) {

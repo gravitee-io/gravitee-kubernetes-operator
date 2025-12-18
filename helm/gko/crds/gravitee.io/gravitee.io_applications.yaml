@@ -80,6 +80,8 @@ spec:
                   items:
                     type: string
                   type: array
+                hrid:
+                  type: string
                 id:
                   description: |-
                     io.gravitee.definition.model.Application
@@ -313,6 +315,10 @@ spec:
                 subscriptions:
                   description: The number of subscriptions that reference the application
                   type: integer
+                use_hrid:
+                  type: boolean
+              required:
+                - use_hrid
               type: object
           type: object
       served: true

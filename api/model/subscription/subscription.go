@@ -61,3 +61,7 @@ func (t *Type) SetApiKind(kind string) {
 func (t *Type) GetEndingAt() *string {
 	return t.EndingAt
 }
+
+func (t *Type) GetID() string {
+	panic("Subscription has no user defined ID")
+}

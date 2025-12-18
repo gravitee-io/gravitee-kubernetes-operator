@@ -108,7 +108,13 @@ func (app *Application) HasContext() bool {
 	return app.Spec.Context != nil
 }
 
-func (app *Application) PopulateIDs(mCtx core.ContextModel) {
+func (app *Application) PopulateIDs(core.ContextModel) {
+
+	if app.GetID() == "" || app.Status.UseHRID {
+		app.Spec.HRID = app.GetHRID()
+		return
+	}
+
 	if app.Status.ID != "" {
 		app.Spec.ID = app.Status.ID
 	}
@@ -120,6 +126,13 @@ func (app *Application) PopulateIDs(mCtx core.ContextModel) {
 
 func (app *Application) GetID() string {
 	return app.Status.ID
+}
+
+func (app *Application) GetHRID() string {
+	if app.Spec.HRID != "" {
+		return app.Spec.HRID
+	}
+	return refs.NewNamespacedNameFromObject(app).HRID()
 }
 
 func (app *Application) GetOrgID() string {

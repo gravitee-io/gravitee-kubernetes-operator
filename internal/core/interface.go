@@ -85,6 +85,7 @@ type ApiDefinitionModel interface {
 	GetNotificationRefs() []ObjectRef
 	SetConsoleNotification(ConsoleNotificationSettingsObject)
 	GetTags() []string
+	GetHRID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -122,6 +123,7 @@ type ApplicationModel interface {
 type ApplicationObject interface {
 	ContextAwareObject
 	GetModel() ApplicationModel
+	GetHRID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -215,6 +217,7 @@ type ObjectRef interface {
 	HasNameSpace() bool
 	IsMissingNamespace() bool
 	SetNamespace(ns string)
+	HRID() string
 }
 
 // +k8s:deepcopy-gen=false
@@ -241,6 +244,7 @@ type SubscriptionModel interface {
 	SetApiKind(string)
 	GetPlan() string
 	GetEndingAt() *string
+	GetID() string
 }
 
 type ConditionAware interface {

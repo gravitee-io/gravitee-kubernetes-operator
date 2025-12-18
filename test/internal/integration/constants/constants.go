@@ -31,8 +31,8 @@ const (
 	Interval          = time.Millisecond * 250
 
 	GatewayHost      = "localhost"
-	GatewayPortHTTP  = "30082"
-	GatewayPortHTTPS = "30084"
+	GatewayPortHTTP  = "8082"
+	GatewayPortHTTPS = "8084"
 	GatewayUrlHTTP   = "http://" + GatewayHost + ":" + GatewayPortHTTP
 	GatewayUrlHTTPS  = "https://" + GatewayHost + ":" + GatewayPortHTTPS
 

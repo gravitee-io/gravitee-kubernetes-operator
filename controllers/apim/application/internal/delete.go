@@ -16,7 +16,6 @@ package internal
 
 import (
 	"context"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -32,14 +31,11 @@ func Delete(
 		return nil
 	}
 
-	apim, apimErr := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
+	apimClient, apimErr := apim.FromContextRef(ctx, application.Spec.Context, application.GetNamespace())
 	if apimErr != nil {
 		return apimErr
 	}
 
-	if err := apim.Applications.Delete(application.Status.ID); errors.IgnoreNotFound(err) != nil {
-		return err
-	}
+	return errors.IgnoreNotFound(apimClient.Applications.Delete(application))
 
-	return nil
 }

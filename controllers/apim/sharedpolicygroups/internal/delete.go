@@ -17,7 +17,6 @@ package internal
 import (
 	"context"
 	"fmt"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -39,7 +38,7 @@ func Delete(
 		return err
 	}
 
-	apim, apimErr := apim.FromContextRef(ctx, spg.Spec.Context, spg.GetNamespace())
+	apimClient, apimErr := apim.FromContextRef(ctx, spg.Spec.Context, spg.GetNamespace())
 	if apimErr != nil {
 		return apimErr
 	}
@@ -48,9 +47,5 @@ func Delete(
 		return fmt.Errorf("can not delete a CRD that hasn't been successfuly created in APIM")
 	}
 
-	if err := apim.SharedPolicyGroup.Delete(spg.Status.ID); errors.IgnoreNotFound(err) != nil {
-		return err
-	}
-
-	return nil
+	return errors.IgnoreNotFound(apimClient.SharedPolicyGroup.Delete(spg))
 }

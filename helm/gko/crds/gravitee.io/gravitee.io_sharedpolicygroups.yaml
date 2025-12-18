@@ -82,6 +82,8 @@ spec:
                 description:
                   description: SharedPolicyGroup description
                   type: string
+                hrid:
+                  type: string
                 name:
                   description: SharedPolicyGroup name
                   type: string
@@ -235,6 +237,10 @@ spec:
                 processingStatus:
                   description: The processing status of the SharedPolicyGroup.
                   type: string
+                use_hrid:
+                  type: boolean
+              required:
+                - use_hrid
               type: object
           type: object
       served: true
