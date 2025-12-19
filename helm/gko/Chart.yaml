@@ -13,8 +13,8 @@
 # limitations under the License.
 
 apiVersion: v2
-appVersion: 4.9.10-rc
-version: 4.9.10-rc
+appVersion: 4.9.10
+version: 4.9.10
 kubeVersion: ">=1.18.0-0"
 type: application
 name: gko
