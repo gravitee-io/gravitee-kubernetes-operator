@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/gateway-api/conformance/tests"
 	"sigs.k8s.io/gateway-api/conformance/utils/config"
 	"sigs.k8s.io/gateway-api/conformance/utils/suite"
-	"sigs.k8s.io/gateway-api/pkg/features"
 	"sigs.k8s.io/yaml"
 )
 
@@ -55,11 +54,11 @@ func TestGatewayAPIConformance(t *testing.T) {
 		suite.GatewayHTTPConformanceProfileName,
 	)
 
-	opts.SupportedFeatures = sets.New(
-		features.GatewayFeature.Name,
-		features.HTTPRouteFeature.Name,
-		features.ReferenceGrantFeature.Name,
-	)
+	// opts.SupportedFeatures = sets.New(
+	// 	features.GatewayFeature.Name,
+	// 	features.HTTPRouteFeature.Name,
+	// 	features.ReferenceGrantFeature.Name,
+	// )
 
 	opts.Mode = "default"
 
