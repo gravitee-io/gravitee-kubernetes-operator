@@ -372,7 +372,7 @@ func buildServiceSpec(
 		svc.Annotations[k] = v
 	}
 
-	for k, v := range params.Spec.Kubernetes.Deployment.Labels {
+	for k, v := range params.Spec.Kubernetes.Service.Labels {
 		svc.Labels[k] = v
 	}
 }
