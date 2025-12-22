@@ -363,10 +363,8 @@ jobs:
       - run:
           name: Generate cache keys for Go tools
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - go/load-mod-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - go/load-build-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-mod-cache
+      - go/load-build-cache
       - restore_cache:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
@@ -409,8 +407,8 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-<< parameters.ginkgo-filter >>.out
-      - go/save-build-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/save-mod-cache
+      - go/save-build-cache
 
   job-e2e-tests:
     machine:
