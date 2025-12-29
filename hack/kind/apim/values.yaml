@@ -20,7 +20,7 @@ mongodb:
   enabled: true
   image:
     repository: mongo
-    tag: 7.0.25-jammy
+    tag: 7.0.28-jammy
   architecture: standalone
   persistence:
     type: emptyDir
