@@ -111,7 +111,7 @@ test
 Running all integration tests at once
 
 ```
-./bin/gingko ./test/integration/...
+./bin/ginkgo ./test/integration/...
 ```
 
 Running all integration tests not involving a management context (required if you run APIM in dbless mode)
