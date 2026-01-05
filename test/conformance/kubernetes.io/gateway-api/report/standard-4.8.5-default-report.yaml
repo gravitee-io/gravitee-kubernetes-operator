@@ -1,7 +1,7 @@
 apiVersion: gateway.networking.k8s.io/v1
-date: "2025-10-17T16:24:41+01:00"
+date: "2026-01-07T16:47:18Z"
 gatewayAPIChannel: standard
-gatewayAPIVersion: v1.3.0
+gatewayAPIVersion: v1.4.1
 implementation:
   contact:
   - team-devex@graviteesource.com
@@ -21,5 +21,40 @@ profiles:
       Failed: 0
       Passed: 31
       Skipped: 2
+  extended:
+    result: success
+    statistics:
+      Failed: 0
+      Passed: 6
+      Skipped: 0
+    supportedFeatures:
+    - GatewayPort8080
+    - HTTPRoutePathRedirect
+    - HTTPRoutePortRedirect
+    - HTTPRouteResponseHeaderModification
+    - HTTPRouteSchemeRedirect
+    unsupportedFeatures:
+    - BackendTLSPolicy
+    - BackendTLSPolicySANValidation
+    - GatewayAddressEmpty
+    - GatewayHTTPListenerIsolation
+    - GatewayInfrastructurePropagation
+    - GatewayStaticAddresses
+    - HTTPRouteBackendProtocolH2C
+    - HTTPRouteBackendProtocolWebSocket
+    - HTTPRouteBackendRequestHeaderModification
+    - HTTPRouteBackendTimeout
+    - HTTPRouteCORS
+    - HTTPRouteDestinationPortMatching
+    - HTTPRouteHostRewrite
+    - HTTPRouteMethodMatching
+    - HTTPRouteNamedRouteRule
+    - HTTPRouteParentRefPort
+    - HTTPRoutePathRewrite
+    - HTTPRouteQueryParamMatching
+    - HTTPRouteRequestMirror
+    - HTTPRouteRequestMultipleMirrors
+    - HTTPRouteRequestPercentageMirror
+    - HTTPRouteRequestTimeout
   name: GATEWAY-HTTP
-  summary: Core tests partially succeeded with 2 test skips.
+  summary: Core tests partially succeeded with 2 test skips. Extended tests succeeded.
