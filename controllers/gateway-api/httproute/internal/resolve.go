@@ -91,7 +91,6 @@ func resolveParent(
 		return conditionBuilder.Build(), nil
 	}
 
-	// Check cache first, then fetch if not cached
 	key := gatewayKey(route.ObjectMeta, ref)
 	gw, cached := cache[key]
 	if !cached {
@@ -106,7 +105,6 @@ func resolveParent(
 			return conditionBuilder.Build(), nil
 		}
 
-		// Cache the gateway for reuse in Accept
 		cache[key] = gw
 	}
 
@@ -115,7 +113,6 @@ func resolveParent(
 		if lIdx == -1 {
 			specIdx := k8s.FindListenerIndexBySectionNameInSpec(gw, *ref.SectionName)
 			if specIdx != -1 && !k8s.IsGatewayStatusReady(gw) {
-				// Gateway exists and has the listener in spec, but status is not ready yet
 				return nil, ErrGatewayNotReady
 			}
 			conditionBuilder.RejectNoMatchingParent("unable to resolve parent section name")
