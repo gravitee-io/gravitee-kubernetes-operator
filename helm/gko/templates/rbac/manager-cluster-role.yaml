@@ -358,7 +358,7 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - backendtlspolicies.networking.k8s.io
+      - gateway.networking.k8s.io
     resources:
       - backendtlspolicies/status
     verbs:
