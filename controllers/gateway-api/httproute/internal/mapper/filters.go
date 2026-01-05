@@ -15,15 +15,17 @@
 package mapper
 
 import (
+	"context"
+
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
-func buildRequestFilters(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
+func buildRequestFilters(ctx context.Context, route *gwAPIv1.HTTPRoute, rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 	steps := []*v4.FlowStep{}
 	for _, f := range rule.Filters {
 		if f.RequestRedirect != nil {
-			steps = append(steps, buildHTTPRedirect(*f.RequestRedirect))
+			steps = append(steps, buildHTTPRedirect(ctx, route, *f.RequestRedirect))
 		}
 		if f.RequestHeaderModifier != nil {
 			steps = append(steps, buildHeaderTransformer(*f.RequestHeaderModifier))

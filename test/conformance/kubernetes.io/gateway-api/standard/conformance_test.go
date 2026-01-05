@@ -59,6 +59,11 @@ func TestGatewayAPIConformance(t *testing.T) {
 		features.GatewayFeature.Name,
 		features.HTTPRouteFeature.Name,
 		features.ReferenceGrantFeature.Name,
+		features.SupportGatewayPort8080,
+		features.SupportHTTPRouteSchemeRedirect,
+		features.SupportHTTPRoutePortRedirect,
+		features.SupportHTTPRoutePathRedirect,
+		features.SupportHTTPRouteResponseHeaderModification,
 	)
 
 	opts.Mode = "default"
