@@ -302,9 +302,7 @@ jobs:
       - run:
           name: Load gateway image
           command: |
-            docker pull graviteeio.azurecr.io/apim-gateway:master-latest 
-            docker tag graviteeio.azurecr.io/apim-gateway:master-latest gateway:latest
-            kind load docker-image gateway:latest --name gravitee
+            make kind-load-gateway
       - run:
           name: Install MetalLB
           command: |
