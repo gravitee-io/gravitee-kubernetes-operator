@@ -56,3 +56,7 @@ endif
 .PHONY: metallb
 metallb: ## Install MetalLB load balancer in the kind cluster
 	@npx zx ./hack/scripts/install-metallb.mjs
+
+.PHONY: kind-load-gateway
+kind-load-gateway: ## Load the gateway image into the kind cluster
+	@npx zx ./hack/scripts/kind-load-gateway.mjs
