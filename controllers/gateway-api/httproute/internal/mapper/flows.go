@@ -119,11 +119,13 @@ func createRuleMatchFlow(
 	case hasInvalidGrants:
 		return buildRuleErrorFlow("Invalid reference grant", match, conditionsExpressions), nil
 	default:
-		return buildRoutingFlow(rule, ruleIndex, match, matchIndex, conditionsExpressions), nil
+		return buildRoutingFlow(ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions), nil
 	}
 }
 
 func buildRoutingFlow(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
 	rule gwAPIv1.HTTPRouteRule,
 	ruleIndex int,
 	match gwAPIv1.HTTPRouteMatch,
@@ -133,7 +135,7 @@ func buildRoutingFlow(
 	flowName := fmt.Sprintf("rule-%d-match%d", ruleIndex, matchIndex)
 	return &v4.Flow{
 		Name:      &flowName,
-		Request:   buildRequestFlow(rule, ruleIndex, matchIndex),
+		Request:   buildRequestFlow(ctx, route, rule, ruleIndex, matchIndex),
 		Response:  buildResponseFlow(rule),
 		Enabled:   true,
 		Selectors: buildFlowSelectors(match, conditionsExpressions),
@@ -207,12 +209,17 @@ func buildHTTPSelector(match gwAPIv1.HTTPRouteMatch) *v4.FlowSelector {
 	return v4.NewHTTPSelector("/", "STARTS_WITH", methods)
 }
 
-func buildRequestFlow(rule gwAPIv1.HTTPRouteRule, ruleIndex, matchIndex int) []*v4.FlowStep {
+func buildRequestFlow(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	rule gwAPIv1.HTTPRouteRule,
+	ruleIndex, matchIndex int,
+) []*v4.FlowStep {
 	steps := []*v4.FlowStep{}
 	if len(rule.BackendRefs) > 0 {
 		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex))
 	}
-	return append(steps, buildRequestFilters(rule)...)
+	return append(steps, buildRequestFilters(ctx, route, rule)...)
 }
 
 func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
