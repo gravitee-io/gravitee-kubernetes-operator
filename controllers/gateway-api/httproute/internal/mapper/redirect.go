@@ -22,6 +22,7 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -137,7 +138,14 @@ func inferPort(
 		port := gwAPIv1.PortNumber(443)
 		return &port
 	}
-	return getListenerPort(ctx, route)
+	port := getListenerPort(ctx, route)
+	if port == nil {
+		log.Debug(ctx,
+			"listener port not found, this will result in an empty port suffix",
+			"route", fmt.Sprintf("%s/%s", route.Namespace, route.Name),
+		)
+	}
+	return port
 }
 
 func getActualPortSuffix(
