@@ -66,6 +66,9 @@ rules:
     resources:
       - apidefinitions
     verbs:
+{{- if .Values.ingress.controller.enabled }}
+      - create
+{{- end }}
       - get
       - list
       - update
