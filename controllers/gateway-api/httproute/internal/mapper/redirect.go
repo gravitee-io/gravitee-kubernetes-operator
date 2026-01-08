@@ -20,7 +20,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
@@ -176,13 +175,7 @@ func shouldOmitPort(ctx context.Context, route *gwAPIv1.HTTPRoute, scheme string
 }
 
 func getListenerPort(ctx context.Context, route *gwAPIv1.HTTPRoute) *gwAPIv1.PortNumber {
-	for i := range route.Status.Parents {
-		parentStatus := route.Status.Parents[i]
-		if !k8s.IsAccepted(gateway.WrapRouteParentStatus(&parentStatus)) {
-			continue
-		}
-
-		parentRef := parentStatus.ParentRef
+	for _, parentRef := range route.Spec.ParentRefs {
 		gw, err := resolveGateway(ctx, route.ObjectMeta, parentRef, k8s.ResolveGateway)
 		if err != nil {
 			continue
@@ -244,16 +237,7 @@ func isHTTPSListener(ctx context.Context, route *gwAPIv1.HTTPRoute) bool {
 }
 
 func hasProtocolListener(ctx context.Context, route *gwAPIv1.HTTPRoute, protocol gwAPIv1.ProtocolType) bool {
-	for i := range route.Status.Parents {
-		if i >= len(route.Spec.ParentRefs) {
-			continue
-		}
-		parentStatus := route.Status.Parents[i]
-		if !k8s.IsAccepted(gateway.WrapRouteParentStatus(&parentStatus)) {
-			continue
-		}
-
-		parentRef := parentStatus.ParentRef
+	for _, parentRef := range route.Spec.ParentRefs {
 		gw, err := resolveGateway(ctx, route.ObjectMeta, parentRef, k8s.ResolveGateway)
 		if err != nil {
 			continue

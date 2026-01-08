@@ -1,5 +1,5 @@
 apiVersion: gateway.networking.k8s.io/v1
-date: "2026-01-08T12:31:14Z"
+date: "2026-01-08T12:42:10Z"
 gatewayAPIChannel: standard
 gatewayAPIVersion: v1.4.1
 implementation:
