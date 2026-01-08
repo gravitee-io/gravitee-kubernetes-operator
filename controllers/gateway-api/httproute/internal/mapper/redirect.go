@@ -175,7 +175,7 @@ func shouldOmitPort(ctx context.Context, route *gwAPIv1.HTTPRoute, scheme string
 	return false
 }
 
-func getListenerPort(ctx context.Context, route *gwAPIv1.HTTPRoute) *int32 {
+func getListenerPort(ctx context.Context, route *gwAPIv1.HTTPRoute) *gwAPIv1.PortNumber {
 	for i := range route.Status.Parents {
 		parentStatus := route.Status.Parents[i]
 		if !k8s.IsAccepted(gateway.WrapRouteParentStatus(&parentStatus)) {
@@ -183,28 +183,32 @@ func getListenerPort(ctx context.Context, route *gwAPIv1.HTTPRoute) *int32 {
 		}
 
 		parentRef := parentStatus.ParentRef
-		gw, err := k8s.ResolveGateway(ctx, route.ObjectMeta, parentRef)
+		gw, err := resolveGateway(ctx, route.ObjectMeta, parentRef, k8s.ResolveGateway)
 		if err != nil {
 			continue
 		}
 
-		if parentRef.SectionName != nil {
-			listenerIndex := findListenerIndexBySectionName(gw, parentRef.SectionName)
-			if listenerIndex >= 0 && listenerIndex < len(gw.Spec.Listeners) {
-				port := gw.Spec.Listeners[listenerIndex].Port
-				return &port
-			}
-		} else {
-			firstHTTPListenerPort := findFirstHTTPListenerPort(gw, parentRef)
-			if firstHTTPListenerPort != nil {
-				return firstHTTPListenerPort
-			}
+		port := getPortFromGateway(gw, parentRef)
+		if port != nil {
+			return port
 		}
 	}
 	return nil
 }
 
-func findFirstHTTPListenerPort(gw *gwAPIv1.Gateway, parentRef gwAPIv1.ParentReference) *int32 {
+func getPortFromGateway(gw *gwAPIv1.Gateway, parentRef gwAPIv1.ParentReference) *gwAPIv1.PortNumber {
+	if parentRef.SectionName != nil {
+		listenerIndex := findListenerIndexBySectionName(gw, parentRef.SectionName)
+		if listenerIndex >= 0 && listenerIndex < len(gw.Spec.Listeners) {
+			port := gw.Spec.Listeners[listenerIndex].Port
+			return &port
+		}
+		return nil
+	}
+	return findFirstHTTPListenerPort(gw, parentRef)
+}
+
+func findFirstHTTPListenerPort(gw *gwAPIv1.Gateway, parentRef gwAPIv1.ParentReference) *gwAPIv1.PortNumber {
 	if parentRef.Port != nil {
 		for _, listener := range gw.Spec.Listeners {
 			if (listener.Protocol == gwAPIv1.HTTPProtocolType || listener.Protocol == gwAPIv1.HTTPSProtocolType) &&
@@ -250,7 +254,7 @@ func hasProtocolListener(ctx context.Context, route *gwAPIv1.HTTPRoute, protocol
 		}
 
 		parentRef := parentStatus.ParentRef
-		gw, err := k8s.ResolveGateway(ctx, route.ObjectMeta, parentRef)
+		gw, err := resolveGateway(ctx, route.ObjectMeta, parentRef, k8s.ResolveGateway)
 		if err != nil {
 			continue
 		}
