@@ -5,86 +5,85 @@ metadata:
   name: api-v4-with-mcp-entrypoint
 spec:
   contextRef:
-      name: dev-ctx
+    name: dev-ctx
   name: api-v4-with-mcp-entrypoint
   version: "1.0"
   type: PROXY
-  description: "API V4 with MCP that uses a API Open-Weather as tool."
+  description: "API V4 with MCP that uses the Open-Weather API as a tool."
   listeners:
-  - type: "HTTP"
-    paths:
-    - path: "/open-weatherapis/"
-      overrideAccess: true
-    entrypoints:
-    - type: "http-proxy"
-    - type: "mcp"
-      qos: "AUTO"
-      configuration:
-        mcpPath: "/mcp"
-        tools:
-        - gatewayMapping:
-            http:
-              path: "/forecast"
-              method: "GET"
-              queryParams:
-              - "latitude"
-              - "longitude"
-              - "current"
-              - "timezone"
-              - "wind_speed_unit"
-          toolDefinition:
-            inputSchema:
-              type: "object"
-              properties:
-                current:
-                  description: "Comma-separated list of current weather variables\
-                    \ to fetch."
-                  type: "string"
-                  example: "temperature_2m,wind_speed_10m"
-                wind_speed_unit:
-                  description: "Unit for wind speed."
-                  type: "string"
-                  enum:
-                  - "kmh"
-                  - "ms"
-                  - "mph"
-                  - "kn"
-                  example: "kmh"
-                timezone:
-                  description: "Timezone for the output. Use `auto` to detect automatically."
-                  type: "string"
-                  example: "auto"
-                latitude:
-                  format: "float"
-                  description: "Latitude of the location."
-                  type: "number"
-                  example: 40.7128
-                longitude:
-                  format: "float"
-                  description: "Longitude of the location."
-                  type: "number"
-                  example: -74.006
-              required:
-              - "latitude"
-              - "longitude"
-              - "current"
-              - "timezone"
-              - "wind_speed_unit"
-            name: "get_forecast"
-            description: "Get current weather"
+    - type: "HTTP"
+      paths:
+        - path: "/open-weatherapis/"
+          overrideAccess: true
+      entrypoints:
+        - type: "http-proxy"
+        - type: "mcp"
+          qos: "AUTO"
+          configuration:
+            mcpPath: "/mcp"
+            tools:
+              - gatewayMapping:
+                  http:
+                    path: "/forecast"
+                    method: "GET"
+                    queryParams:
+                      - "latitude"
+                      - "longitude"
+                      - "current"
+                      - "timezone"
+                      - "wind_speed_unit"
+                toolDefinition:
+                  inputSchema:
+                    type: "object"
+                    properties:
+                      current:
+                        description: "Comma-separated list of current weather variables to fetch."
+                        type: "string"
+                        example: "temperature_2m,wind_speed_10m"
+                      wind_speed_unit:
+                        description: "Unit for wind speed."
+                        type: "string"
+                        enum:
+                          - "kmh"
+                          - "ms"
+                          - "mph"
+                          - "kn"
+                        example: "kmh"
+                      timezone:
+                        description: "Timezone for the output. Use `auto` to detect automatically."
+                        type: "string"
+                        example: "auto"
+                      latitude:
+                        format: "float"
+                        description: "Latitude of the location."
+                        type: "number"
+                        example: 40.7128
+                      longitude:
+                        format: "float"
+                        description: "Longitude of the location."
+                        type: "number"
+                        example: -74.006
+                    required:
+                      - "latitude"
+                      - "longitude"
+                      - "current"
+                      - "timezone"
+                      - "wind_speed_unit"
+                  name: "get_forecast"
+                  description: "Get current weather"
   endpointGroups:
-  - name: Default endpoint group
-    type: http-proxy
-    loadBalancer:
-      type: ROUND_ROBIN
-    endpoints:
-    - name: default
+    - name: Default endpoint group
       type: http-proxy
-      weight: 1
-      inheritConfiguration: false
-      configuration:
-        target: https://api.open-meteo.com/v1
-      secondary: false
+      loadBalancer:
+        type: ROUND_ROBIN
+      endpoints:
+        - name: default
+          type: http-proxy
+          weight: 1
+          inheritConfiguration: false
+          configuration:
+            target: https://api.open-meteo.com/v1
+          secondary: false
   plans:
     KeyLess:
       name: "Free plan"
