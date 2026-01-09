@@ -71,3 +71,11 @@ gateway:
     elasticsearch:
       enabled: false
   dbLess: true
+  additionalPlugins:
+    - https://download.gravitee.io/graviteeio-apim/plugins/resources/gravitee-resource-cache-redis/gravitee-resource-cache-redis-4.0.3.zip
+    - https://download.gravitee.io/graviteeio-apim/plugins/resources/gravitee-resource-auth-provider-http/gravitee-resource-auth-provider-http-1.4.0.zip
+    - https://download.gravitee.io/graviteeio-apim/plugins/resources/gravitee-resource-auth-provider-ldap/gravitee-resource-auth-provider-ldap-2.0.0.zip
+    - https://download.gravitee.io/graviteeio-apim/plugins/resources/gravitee-resource-content-provider-inline/gravitee-resource-content-provider-inline-1.1.1.zip
+    - https://download.gravitee.io/graviteeio-apim/plugins/policies/gravitee-policy-basic-authentication/gravitee-policy-basic-authentication-1.6.0.zip
+    - https://download.gravitee.io/graviteeio-apim/plugins/resources/gravitee-resource-auth-provider-inline/gravitee-resource-auth-provider-inline-1.4.0.zip
+    - https://download.gravitee.io/graviteeio-apim/plugins/resources/gravitee-resource-oauth2-provider-keycloak/gravitee-resource-oauth2-provider-keycloak-3.0.0.zip
