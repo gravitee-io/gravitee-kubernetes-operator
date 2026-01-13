@@ -19,4 +19,4 @@ apim:
     version: master-latest
   chart:
     registry: oci://graviteeio.azurecr.io/helm/apim3
-    version: 4.9.0
+    version: 4.10.0
