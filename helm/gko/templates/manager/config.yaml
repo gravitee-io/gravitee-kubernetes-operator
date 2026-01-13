@@ -55,8 +55,8 @@ data:
   {{- end }}
   {{- end }}
   {{- end }}
-  {{- if not .Values.ingress.controller.enabled }}
-  ENABLE_INGRESS: "false"
+  {{- if .Values.ingress.controller.enabled }}
+  ENABLE_INGRESS: "true"
   {{- end }}
   {{- if .Values.gatewayAPI.controller.enabled }}
   ENABLE_GATEWAY_API: "true"
