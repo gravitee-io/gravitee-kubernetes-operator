@@ -5,8 +5,8 @@ go 1.25.5
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/moby/moby v27.5.1+incompatible
-	github.com/onsi/ginkgo/v2 v2.23.4
-	github.com/onsi/gomega v1.37.0
+	github.com/onsi/ginkgo/v2 v2.27.5
+	github.com/onsi/gomega v1.38.2
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	gopkg.in/yaml.v2 v2.4.0
@@ -26,6 +26,7 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/evanphx/json-patch v5.9.11+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
@@ -63,7 +64,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.37.0 // indirect
 	go.opentelemetry.io/otel/trace v1.37.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
-	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.31.0 // indirect
