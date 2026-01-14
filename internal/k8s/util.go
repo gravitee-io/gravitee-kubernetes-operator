@@ -178,6 +178,11 @@ func IsServiceKind(ref gwAPIv1.BackendObjectReference) bool {
 	}
 }
 
+// IsHeadlessService returns true if the service has no ClusterIP (headless service).
+func IsHeadlessService(svc *coreV1.Service) bool {
+	return svc.Spec.ClusterIP == "" || svc.Spec.ClusterIP == coreV1.ClusterIPNone
+}
+
 func IsGatewayRef(gw *gwAPIv1.Gateway, ref gwAPIv1.ParentReference) bool {
 	if ref.Group != nil && *ref.Group != GwAPIv1Group {
 		return false
