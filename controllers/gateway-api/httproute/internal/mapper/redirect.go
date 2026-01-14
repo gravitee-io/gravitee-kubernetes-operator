@@ -15,11 +15,14 @@
 package mapper
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -42,32 +45,48 @@ var (
 	statusCodeDefault = 302
 )
 
-func buildHTTPRedirect(filter gwAPIv1.HTTPRequestRedirectFilter) *v4.FlowStep {
+func buildHTTPRedirect(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	filter gwAPIv1.HTTPRequestRedirectFilter,
+) *v4.FlowStep {
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:        &httpRedirectPolicyName,
 		Enabled:       true,
-		Configuration: buildHTTPRedirectConfig(filter),
+		Configuration: buildHTTPRedirectConfig(ctx, route, filter),
 	})
 }
 
-func buildHTTPRedirectConfig(filter gwAPIv1.HTTPRequestRedirectFilter) *utils.GenericStringMap {
+func buildHTTPRedirectConfig(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	filter gwAPIv1.HTTPRequestRedirectFilter,
+) *utils.GenericStringMap {
 	config := utils.NewGenericStringMap()
-	rules := []any{buildRedirectRule(filter)}
+	rules := []any{buildRedirectRule(ctx, route, filter)}
 	config.Put(rulesKey, rules)
 	return config
 }
 
-func buildRedirectRule(filter gwAPIv1.HTTPRequestRedirectFilter) map[string]any {
+func buildRedirectRule(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	filter gwAPIv1.HTTPRequestRedirectFilter,
+) map[string]any {
 	rule := make(map[string]any)
 	rule[rulePathKey] = rulePath
-	rule[ruleLocationKey] = buildRedirectLocation(filter)
+	rule[ruleLocationKey] = buildRedirectLocation(ctx, route, filter)
 	rule[ruleStatusKey] = getStatusCode(filter)
 	return rule
 }
 
-func buildRedirectLocation(filter gwAPIv1.HTTPRequestRedirectFilter) string {
+func buildRedirectLocation(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	filter gwAPIv1.HTTPRequestRedirectFilter,
+) string {
 	scheme := getLocationScheme(filter)
-	host := getLocationHost(filter)
+	host := getLocationHost(ctx, route, filter)
 	path := getLocationPath(filter)
 	return fmt.Sprintf("%s://%s%s", scheme, host, path)
 }
@@ -79,15 +98,183 @@ func getLocationScheme(filter gwAPIv1.HTTPRequestRedirectFilter) string {
 	return locationSchemeDefault
 }
 
-func getLocationHost(filter gwAPIv1.HTTPRequestRedirectFilter) string {
+func getLocationHost(ctx context.Context, route *gwAPIv1.HTTPRoute, filter gwAPIv1.HTTPRequestRedirectFilter) string {
+	portSuffix := getHostPortSuffix(ctx, route, filter)
+
 	if filter.Hostname != nil {
 		host := string(*filter.Hostname)
-		if filter.Port != nil {
-			return fmt.Sprintf("%s:%d", host, int32(*filter.Port))
-		}
-		return host
+		return host + portSuffix
 	}
-	return locationHostDefault
+	return locationHostDefault + portSuffix
+}
+
+func getHostPortSuffix(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	filter gwAPIv1.HTTPRequestRedirectFilter,
+) string {
+	scheme := getLocationScheme(filter)
+
+	if filter.Port != nil {
+		return getActualPortSuffix(ctx, route, scheme, filter.Port)
+	}
+
+	port := inferPort(ctx, route, filter)
+
+	return getActualPortSuffix(ctx, route, scheme, port)
+}
+
+func inferPort(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	filter gwAPIv1.HTTPRequestRedirectFilter,
+) *gwAPIv1.PortNumber {
+	scheme := getLocationScheme(filter)
+	if scheme == "http" {
+		port := gwAPIv1.PortNumber(80)
+		return &port
+	}
+	if scheme == "https" {
+		port := gwAPIv1.PortNumber(443)
+		return &port
+	}
+	port := getListenerPort(ctx, route)
+	if port == nil {
+		log.Debug(ctx,
+			"listener port not found, this will result in an empty port suffix",
+			"route", fmt.Sprintf("%s/%s", route.Namespace, route.Name),
+		)
+	}
+	return port
+}
+
+func getActualPortSuffix(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	scheme string,
+	port *gwAPIv1.PortNumber,
+) string {
+	if port == nil || shouldOmitPort(ctx, route, scheme, port) {
+		return ""
+	}
+	return fmt.Sprintf(":%d", *port)
+}
+
+func shouldOmitPort(ctx context.Context, route *gwAPIv1.HTTPRoute, scheme string, port *gwAPIv1.PortNumber) bool {
+	if *port == 80 {
+		if scheme == "http" {
+			return true
+		}
+		if scheme == locationSchemeDefault && isHTTPListener(ctx, route) {
+			return true
+		}
+	}
+
+	if *port == 443 {
+		if scheme == "https" {
+			return true
+		}
+		if scheme == locationSchemeDefault && isHTTPSListener(ctx, route) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func getListenerPort(ctx context.Context, route *gwAPIv1.HTTPRoute) *gwAPIv1.PortNumber {
+	for _, parentRef := range route.Spec.ParentRefs {
+		gw, err := resolveGateway(ctx, route.ObjectMeta, parentRef, k8s.ResolveGateway)
+		if err != nil {
+			continue
+		}
+
+		port := getPortFromGateway(gw, parentRef)
+		if port != nil {
+			return port
+		}
+	}
+	return nil
+}
+
+func getPortFromGateway(gw *gwAPIv1.Gateway, parentRef gwAPIv1.ParentReference) *gwAPIv1.PortNumber {
+	if parentRef.SectionName != nil {
+		listenerIndex := findListenerIndexBySectionName(gw, parentRef.SectionName)
+		if listenerIndex >= 0 && listenerIndex < len(gw.Spec.Listeners) {
+			port := gw.Spec.Listeners[listenerIndex].Port
+			return &port
+		}
+		return nil
+	}
+	return findFirstHTTPListenerPort(gw, parentRef)
+}
+
+func findFirstHTTPListenerPort(gw *gwAPIv1.Gateway, parentRef gwAPIv1.ParentReference) *gwAPIv1.PortNumber {
+	if parentRef.Port != nil {
+		for _, listener := range gw.Spec.Listeners {
+			if (listener.Protocol == gwAPIv1.HTTPProtocolType || listener.Protocol == gwAPIv1.HTTPSProtocolType) &&
+				listener.Port == *parentRef.Port {
+				port := listener.Port
+				return &port
+			}
+		}
+	}
+	for _, listener := range gw.Spec.Listeners {
+		if listener.Protocol == gwAPIv1.HTTPProtocolType || listener.Protocol == gwAPIv1.HTTPSProtocolType {
+			port := listener.Port
+			return &port
+		}
+	}
+	return nil
+}
+
+func findListenerIndexBySectionName(gw *gwAPIv1.Gateway, sectionName *gwAPIv1.SectionName) int {
+	listenerIndex := k8s.FindListenerIndexBySectionName(gw, *sectionName)
+	if listenerIndex < 0 {
+		listenerIndex = k8s.FindListenerIndexBySectionNameInSpec(gw, *sectionName)
+	}
+	return listenerIndex
+}
+
+func isHTTPListener(ctx context.Context, route *gwAPIv1.HTTPRoute) bool {
+	return hasProtocolListener(ctx, route, gwAPIv1.HTTPProtocolType)
+}
+
+func isHTTPSListener(ctx context.Context, route *gwAPIv1.HTTPRoute) bool {
+	return hasProtocolListener(ctx, route, gwAPIv1.HTTPSProtocolType)
+}
+
+func hasProtocolListener(ctx context.Context, route *gwAPIv1.HTTPRoute, protocol gwAPIv1.ProtocolType) bool {
+	for _, parentRef := range route.Spec.ParentRefs {
+		gw, err := resolveGateway(ctx, route.ObjectMeta, parentRef, k8s.ResolveGateway)
+		if err != nil {
+			continue
+		}
+
+		if hasParentWithProtocol(gw, parentRef.SectionName, protocol) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasParentWithProtocol(gw *gwAPIv1.Gateway, sectionName *gwAPIv1.SectionName, protocol gwAPIv1.ProtocolType) bool {
+	if sectionName != nil {
+		listenerIndex := k8s.FindListenerIndexBySectionName(gw, *sectionName)
+		if listenerIndex < 0 {
+			listenerIndex = k8s.FindListenerIndexBySectionNameInSpec(gw, *sectionName)
+		}
+		if listenerIndex >= 0 && listenerIndex < len(gw.Spec.Listeners) {
+			return gw.Spec.Listeners[listenerIndex].Protocol == protocol
+		}
+	} else {
+		for _, listener := range gw.Spec.Listeners {
+			if listener.Protocol == protocol {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func getLocationPath(filter gwAPIv1.HTTPRequestRedirectFilter) string {
