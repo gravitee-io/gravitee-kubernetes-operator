@@ -22,6 +22,8 @@ import (
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	coreV1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
@@ -105,40 +107,39 @@ func buildEndpoints(
 		} else if !granted {
 			endpoints = append(endpoints, buildDummyEndpoint())
 		} else {
-			endpoints = append(
-				endpoints,
-				buildEndpoint(
-					backendRef,
-					backendIndex,
-					match,
-					matchIndex,
-					k8s.GetRefNs(route, k8s.NsPtrToStr(backendRef.Namespace)),
-				),
-			)
+			ns := k8s.GetRefNs(route, k8s.NsPtrToStr(backendRef.Namespace))
+			ep := buildEndpoint(ctx, backendRef, backendIndex, match, matchIndex, ns)
+			endpoints = append(endpoints, ep)
 		}
 	}
 	return endpoints, nil
 }
 
 func buildDummyEndpoint() *v4.Endpoint {
-	ep := buildEndpoint(gwAPIv1.HTTPBackendRef{}, 0, gwAPIv1.HTTPRouteMatch{}, 0, "")
+	ep := newEndpoint(gwAPIv1.HTTPBackendRef{}, 0, 0, discardURI)
 	ep.Secondary = true
 	return ep
 }
 
 func buildEndpoint(
+	ctx context.Context,
 	backendRef gwAPIv1.HTTPBackendRef,
 	backendIndex int,
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
 	namespace string,
 ) *v4.Endpoint {
+	target := buildEndpointTarget(ctx, match, backendRef, namespace)
+	return newEndpoint(backendRef, backendIndex, matchIndex, target)
+}
+
+func newEndpoint(backendRef gwAPIv1.HTTPBackendRef, backendIndex, matchIndex int, target string) *v4.Endpoint {
 	endpoint := v4.NewHttpEndpoint(
 		fmt.Sprintf("backend-%d-match-%d", backendIndex, matchIndex),
 	)
 
 	endpoint.Weight = backendRef.Weight
-	endpoint.Config.Object["target"] = buildEndpointTarget(match, backendRef, namespace)
+	endpoint.Config.Object["target"] = target
 	endpoint.Inherit = false
 
 	httpConfig := utils.NewGenericStringMap()
@@ -149,6 +150,7 @@ func buildEndpoint(
 }
 
 func buildEndpointTarget(
+	ctx context.Context,
 	match gwAPIv1.HTTPRouteMatch,
 	backendRef gwAPIv1.HTTPBackendRef,
 	namespace string,
@@ -156,13 +158,46 @@ func buildEndpointTarget(
 	if !k8s.IsServiceKind(backendRef.BackendObjectReference) {
 		return discardURI
 	}
+
+	port := resolveBackendPort(ctx, backendRef, namespace)
+
 	return fmt.Sprintf(
 		serviceURIPattern,
 		backendRef.Name,
 		namespace,
-		*backendRef.Port,
+		port,
 		getEndpointPath(match),
 	)
+}
+
+// resolveBackendPort returns the port to use for the backend connection.
+// For headless services, it returns the targetPort since there's no kube-proxy translation.
+// For regular ClusterIP services, it returns the service port.
+func resolveBackendPort(ctx context.Context, backendRef gwAPIv1.HTTPBackendRef, namespace string) int32 {
+	servicePort := *backendRef.Port
+
+	svc := &coreV1.Service{}
+	key := client.ObjectKey{Namespace: namespace, Name: string(backendRef.Name)}
+	if err := k8s.GetClient().Get(ctx, key, svc); err != nil {
+		return servicePort
+	}
+
+	if !k8s.IsHeadlessService(svc) {
+		return servicePort
+	}
+
+	// For headless services, find the targetPort
+	for _, p := range svc.Spec.Ports {
+		if p.Port == servicePort {
+			targetPort := p.TargetPort.IntValue()
+			if targetPort > 0 && targetPort <= 65535 {
+				return int32(targetPort)
+			}
+			return p.Port
+		}
+	}
+
+	return servicePort
 }
 
 func getEndpointPath(match gwAPIv1.HTTPRouteMatch) string {
