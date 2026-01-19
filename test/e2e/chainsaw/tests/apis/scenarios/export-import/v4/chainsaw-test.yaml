@@ -175,7 +175,7 @@ spec:
             - name: assertArgs
               value:
                 - '--assert spec.state:STARTED'              
-                - '--assert spec.plans.Default Keyless (UNSECURED).name:Default Keyless (UNSECURED)'
+                - '--assert spec.plans.Default-Keyless-(UNSECURED).name:"Default Keyless (UNSECURED)"'
                 - --assert spec.plans.myApiKeyPlan.name:myApiKeyPlan
 
     - name: Re-export API after import
