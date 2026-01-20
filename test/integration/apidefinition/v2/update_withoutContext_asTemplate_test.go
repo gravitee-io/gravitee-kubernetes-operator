@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Delete", labels.WithoutContext, func() {
+var _ = Describe("Update", labels.WithoutContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 
