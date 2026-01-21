@@ -88,6 +88,15 @@ var _ = Describe("Update", labels.WithoutContext, func() {
 			return manager.UpdateSafely(ctx, updated)
 		}, timeout, interval).Should(Succeed())
 
+		By("expecting ingress API definition to have updated plans")
+
+		Eventually(func() error {
+			if err := manager.GetLatest(ctx, apiDef); err != nil {
+				return err
+			}
+			return assert.Equals("number of plans", 2, len(apiDef.Spec.Plans))
+		}, timeout, interval).Should(Succeed())
+
 		By("checking access to backend service, expecting status 200")
 
 		Eventually(func() error {
