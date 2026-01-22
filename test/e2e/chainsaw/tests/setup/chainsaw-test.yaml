@@ -38,4 +38,4 @@ spec:
     - name: setup-management-context
       try:
       - apply:               
-          file: resources/management-context-with-credentials.yml
+          file: resources/management-context-with-credentials.yaml
