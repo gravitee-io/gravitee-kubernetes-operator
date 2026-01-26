@@ -28,7 +28,7 @@ import (
 // +kubebuilder:validation:Enum=PROXY;MESSAGE;NATIVE;
 type ApiType string
 
-// +kubebuilder:validation:Enum=PUBLISHED;UNPUBLISHED;
+// +kubebuilder:validation:Enum=PUBLISHED;UNPUBLISHED;DEPRECATED;
 type ApiV4LifecycleState string
 
 var _ core.ApiDefinitionModel = &Api{}
@@ -48,7 +48,7 @@ type Api struct {
 	DefinitionContext *DefinitionContext `json:"definitionContext,omitempty"`
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:=`UNPUBLISHED`
-	// API life cycle state can be one of the values PUBLISHED, UNPUBLISHED
+	// API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED
 	LifecycleState ApiV4LifecycleState `json:"lifecycleState,omitempty"`
 	// +kubebuilder:validation:Required
 	// Api Type (proxy or message)
