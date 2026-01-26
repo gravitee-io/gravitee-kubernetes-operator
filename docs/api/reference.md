@@ -195,7 +195,7 @@ _Appears in:_
 | `description` _string_ | API description |  | Optional: \{\} <br /> |
 | `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
 | `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
-| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED] <br />Optional: \{\} <br /> |
+| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED] <br />Optional: \{\} <br /> |
 | `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE] <br />Required: \{\} <br /> |
 | `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
 | `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
@@ -3199,7 +3199,7 @@ _Appears in:_
 | `description` _string_ | API description |  | Optional: \{\} <br /> |
 | `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
 | `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
-| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED] <br />Optional: \{\} <br /> |
+| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED] <br />Optional: \{\} <br /> |
 | `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE] <br />Required: \{\} <br /> |
 | `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
 | `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
@@ -3253,7 +3253,7 @@ _Underlying type:_ _string_
 
 
 _Validation:_
-- Enum: [PUBLISHED UNPUBLISHED]
+- Enum: [PUBLISHED UNPUBLISHED DEPRECATED]
 
 _Appears in:_
 - [Api](#api)
