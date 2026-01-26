@@ -944,10 +944,11 @@ spec:
                 lifecycleState:
                   default: UNPUBLISHED
                   description: API life cycle state can be one of the values PUBLISHED,
-                    UNPUBLISHED
+                    UNPUBLISHED, DEPRECATED
                   enum:
                     - PUBLISHED
                     - UNPUBLISHED
+                    - DEPRECATED
                   type: string
                 listeners:
                   description: List of listeners for this API
