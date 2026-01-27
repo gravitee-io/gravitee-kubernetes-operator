@@ -90,10 +90,6 @@ func TestGatewayAPIConformance(t *testing.T) {
 		opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
 	}
 
-	// That one might be handled first because it looks like its half
-	// baked implementation from our side.
-	opts.SkipTests = append(opts.SkipTests, "HTTPRouteServiceTypes")
-
 	cSuite, err := suite.NewConformanceTestSuite(opts)
 	if err != nil {
 		t.Fatalf("Error creating conformance test suite: %v", err)
