@@ -18,6 +18,9 @@ parameters:
   helm-version:
     type: string
     default: "v3.19.4"
+  kubernetes-version:
+    type: string
+    default: "v1.34.1"
   trigger:
     type: enum
     default: none
@@ -275,7 +278,8 @@ jobs:
       - restore_cache:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
-      - kubernetes/install_kubectl
+      - kubernetes/install_kubectl:
+          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
       - run:
@@ -368,7 +372,8 @@ jobs:
       - restore_cache:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
-      - kubernetes/install_kubectl
+      - kubernetes/install_kubectl:
+          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
       - run:
@@ -425,7 +430,8 @@ jobs:
       - restore_cache:
           keys:
             - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
-      - kubernetes/install_kubectl
+      - kubernetes/install_kubectl:
+          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
       - run:
