@@ -16,18 +16,7 @@
 apim:
   image:
     registry: graviteeio.azurecr.io
-<<<<<<< HEAD
     version: master-latest
   chart:
     registry: oci://graviteeio.azurecr.io/helm/apim3
-    version: 4.11.0
-=======
-    version: 4.10.x-latest
-  chart:
-    registry: oci://graviteeio.azurecr.io/helm/apim3
-<<<<<<< HEAD
-    version: 4.10.0
->>>>>>> 8d487ad (ci: add script to load gateway image)
-=======
-    version: 4.10.*
->>>>>>> 090ce9a (ci: use wildcard for apim3 helm chart)
+    version: 4.11.*

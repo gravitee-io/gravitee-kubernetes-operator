@@ -62,6 +62,6 @@ make conformance
 7. Print report
 
 ```bash
-cat test/conformance/kubernetes.io/gateway-api/report/standard-4.8.5-default-report.yaml
+cat test/conformance/kubernetes.io/gateway-api/report/standard-4.10.3-default-report.yaml
 ```
 
