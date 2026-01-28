@@ -19,11 +19,21 @@ import fs from 'fs';
 import https from 'https';
 import fetch from 'node-fetch'; // native fetch is not used because it does not support https.Agent config (needed for mTLS/client certs)
 
-const { endpoint: endpointPath, status: expectedStatusCode, notStatus: notExpectedStatusCode, gateway, cert, key, cacert } = argv;
+const {
+  endpoint: endpointPath,
+  status: expectedStatusCode,
+  notStatus: notExpectedStatusCode,
+  gateway,
+  cert,
+  key,
+  cacert,
+  authorization,
+  header: headerArgs,
+} = argv;
 
 if (!endpointPath || (!expectedStatusCode && !notExpectedStatusCode) || (expectedStatusCode && notExpectedStatusCode)) {
   console.error(
-    'Usage: callGateway.mjs --endpoint <endpointPath> (--status <statusCode> | --notStatus <statusCode>) [--gateway <baseUrl>] [--cert <certPem>] [--key <keyPem>] [--cacert <caCertPem>]',
+    'Usage: callGateway.mjs --endpoint <endpointPath> (--status <statusCode> | --notStatus <statusCode>) [--gateway <baseUrl>] [--cert <certPem>] [--key <keyPem>] [--cacert <caCertPem>] [--authorization <value>] [--header "Key: Value"]',
   );
   process.exit(1);
 }
@@ -38,6 +48,36 @@ const retryDelay = 500;
 
 const expected = expectedStatusCode ? parseInt(expectedStatusCode, 10) : undefined;
 const notExpected = notExpectedStatusCode ? parseInt(notExpectedStatusCode, 10) : undefined;
+
+// Optional headers (Authorization or custom headers)
+const requestHeaders = {};
+
+if (authorization) {
+  requestHeaders.Authorization = String(authorization);
+}
+
+if (headerArgs) {
+  const values = Array.isArray(headerArgs) ? headerArgs : [headerArgs];
+  for (const value of values) {
+    const headerText = String(value);
+    const separatorIndex = headerText.indexOf(':');
+    if (separatorIndex === -1) {
+      console.warn(`Ignoring malformed header entry (expected "Key: Value"): ${headerText}`);
+      continue;
+    }
+    const keyName = headerText.slice(0, separatorIndex).trim();
+    const headerValue = headerText.slice(separatorIndex + 1).trim();
+    if (!keyName || !headerValue) {
+      console.warn(`Ignoring empty header key/value: ${headerText}`);
+      continue;
+    }
+    if (keyName.toLowerCase() === 'authorization') {
+      requestHeaders.Authorization = headerValue;
+    } else {
+      requestHeaders[keyName] = headerValue;
+    }
+  }
+}
 
 console.log(`Testing connection to: ${url}`);
 
@@ -92,6 +132,9 @@ while (attempt < maxRetry && !success) {
 
   try {
     const fetchOptions = isHttps ? { agent } : {};
+    if (Object.keys(requestHeaders).length > 0) {
+      fetchOptions.headers = requestHeaders;
+    }
     const response = await fetch(url, fetchOptions);
 
     const actualStatusCode = response.status;
