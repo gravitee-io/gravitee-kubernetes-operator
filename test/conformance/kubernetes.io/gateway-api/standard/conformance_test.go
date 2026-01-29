@@ -64,6 +64,7 @@ func TestGatewayAPIConformance(t *testing.T) {
 		features.SupportHTTPRoutePortRedirect,
 		features.SupportHTTPRoutePathRedirect,
 		features.SupportHTTPRouteResponseHeaderModification,
+		features.SupportHTTPRoutePathRewrite,
 	)
 
 	opts.Mode = "default"

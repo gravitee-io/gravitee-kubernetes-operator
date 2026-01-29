@@ -67,11 +67,12 @@ func buildEndpointGroup(
 	)
 
 	backendRefs := getActiveBackendRefs(rule.BackendRefs)
+	rewrite := extractURLRewriteFilter(rule.Filters)
 
 	if len(backendRefs) > 1 {
 		endpointGroup.LoadBalancer = v4.NewLoadBalancer(v4.WeightedRoundRobin)
 	}
-	eps, err := buildEndpoints(ctx, route, match, matchIndex, backendRefs)
+	eps, err := buildEndpoints(ctx, route, match, matchIndex, backendRefs, rewrite)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +90,7 @@ func buildEndpoints(
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
 	backendRefs []gwAPIv1.HTTPBackendRef,
+	rewrite *gwAPIv1.HTTPURLRewriteFilter,
 ) ([]*v4.Endpoint, error) {
 	endpoints := []*v4.Endpoint{}
 	if len(backendRefs) == 0 {
@@ -108,7 +110,7 @@ func buildEndpoints(
 			endpoints = append(endpoints, buildDummyEndpoint())
 		} else {
 			ns := k8s.GetRefNs(route, k8s.NsPtrToStr(backendRef.Namespace))
-			ep := buildEndpoint(ctx, backendRef, backendIndex, match, matchIndex, ns)
+			ep := buildEndpoint(ctx, backendRef, backendIndex, match, matchIndex, ns, rewrite)
 			endpoints = append(endpoints, ep)
 		}
 	}
@@ -128,8 +130,9 @@ func buildEndpoint(
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
 	namespace string,
+	rewrite *gwAPIv1.HTTPURLRewriteFilter,
 ) *v4.Endpoint {
-	target := buildEndpointTarget(ctx, match, backendRef, namespace)
+	target := buildEndpointTarget(ctx, match, backendRef, namespace, rewrite)
 	return newEndpoint(backendRef, backendIndex, matchIndex, target)
 }
 
@@ -154,6 +157,7 @@ func buildEndpointTarget(
 	match gwAPIv1.HTTPRouteMatch,
 	backendRef gwAPIv1.HTTPBackendRef,
 	namespace string,
+	rewrite *gwAPIv1.HTTPURLRewriteFilter,
 ) string {
 	if !k8s.IsServiceKind(backendRef.BackendObjectReference) {
 		return discardURI
@@ -161,12 +165,19 @@ func buildEndpointTarget(
 
 	port := resolveBackendPort(ctx, backendRef, namespace)
 
+	// When path rewrite is configured, don't include match path in endpoint.
+	// The rewritten path comes from dynamic routing.
+	path := ""
+	if rewrite == nil || rewrite.Path == nil {
+		path = getEndpointPath(match)
+	}
+
 	return fmt.Sprintf(
 		serviceURIPattern,
 		backendRef.Name,
 		namespace,
 		port,
-		getEndpointPath(match),
+		path,
 	)
 }
 
