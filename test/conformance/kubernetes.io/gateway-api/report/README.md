@@ -4,9 +4,9 @@
 
 | API channel  | Implementation version                    | Mode    | Report                                                 |
 |--------------|-------------------------------------------|---------|--------------------------------------------------------|
-| standard     | [version-4.8.5](https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/4.8.5) | default | [version-4.8.5 report](./standard-4.8.5-default-report.yaml) |
+| standard     | [version-4.10.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/4.10.3) | default | [version-4.10.3 report](./standard-4.10.3-default-report.yaml) |
 
-> The Gravitee Kubernetes Operator provides partial conformance for Gateway - HTTP features in version 4.8.5. It does not support matching rules across routes or defining services of a type other than Kubernetes Core v1 services. These features will be introduced in a future release.
+> The Gravitee Kubernetes Operator provides partial conformance for Gateway - HTTP features in version 4.10.3. It does not support matching rules across routes. These feature will be introduced in a future release.
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ The reproducer has been tested on macOS and Linux only.
 1. Clone the Gravitee Kubernetes Operator repository
 
 ```bash
-git clone --depth 1 --branch 4.8.5 https://github.com/gravitee-io/gravitee-kubernetes-operator.git
+git clone --depth 1 --branch 4.10.3 https://github.com/gravitee-io/gravitee-kubernetes-operator.git
 ```
 
 2. Start the Kubernetes cluster

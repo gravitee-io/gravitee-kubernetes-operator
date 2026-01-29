@@ -217,7 +217,8 @@ func buildRequestFlow(
 ) []*v4.FlowStep {
 	steps := []*v4.FlowStep{}
 	if len(rule.BackendRefs) > 0 {
-		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex))
+		rewrite := extractURLRewriteFilter(rule.Filters)
+		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex, rewrite))
 	}
 	return append(steps, buildRequestFilters(ctx, route, rule)...)
 }
@@ -226,29 +227,34 @@ func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 	return buildResponseFilters(rule)
 }
 
-func buildRoutingStep(ruleIndex, matchIndex int) *v4.FlowStep {
+func buildRoutingStep(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter) *v4.FlowStep {
 	policyName := routingPolicyName
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &policyName,
 		Enabled: true,
 		Configuration: utils.NewGenericStringMap().
-			Put(routingRulesKey, buildRoutingRule(ruleIndex, matchIndex)),
+			Put(routingRulesKey, buildRoutingRule(ruleIndex, matchIndex, rewrite)),
 	})
 }
 
-func buildRoutingRule(ruleIndex, matchIndex int) []interface{} {
+func buildRoutingRule(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			routingPatternKey: routingPattern,
-			routingURLKey:     buildRoutingTarget(ruleIndex, matchIndex),
+			routingURLKey:     buildRoutingTarget(ruleIndex, matchIndex, rewrite),
 		},
 	}
 }
 
-func buildRoutingTarget(ruleIndex, matchIndex int) string {
-	return fmt.Sprintf(
-		endpointMatcherPattern, buildEndpointGroupName(ruleIndex, matchIndex),
-	)
+func buildRoutingTarget(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter) string {
+	endpointGroup := buildEndpointGroupName(ruleIndex, matchIndex)
+
+	if rewrite == nil || rewrite.Path == nil {
+		return fmt.Sprintf(endpointMatcherPattern, endpointGroup)
+	}
+
+	rewrittenPath := getRewrittenPath(rewrite.Path)
+	return fmt.Sprintf("%s:%s", endpointGroup, rewrittenPath)
 }
 
 func buildRuleErrorFlow(
