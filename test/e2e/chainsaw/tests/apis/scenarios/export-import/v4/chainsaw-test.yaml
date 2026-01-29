@@ -226,7 +226,6 @@ spec:
               npx --yes --quiet zx $COMMAND_DIR/compareYamlFiles.mjs --first $FIRST_EXPORT --second $SECOND_EXPORT \
                 --ignore $.spec.state \
                 --ignore $.spec.pages.Aside.crossId \
-                --ignore $.spec.pages.markdown_test.crossId
       catch:
         - script:
             env:
