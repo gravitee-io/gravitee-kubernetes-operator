@@ -30,7 +30,7 @@ var _ = Describe("Validate create", labels.WithoutContext, func() {
 	ctx := context.Background()
 	admissionCtrl := adm.AdmissionCtrl{}
 
-	It("should return error on API creation with missing secrete for templating", func() {
+	It("should return error on API creation with missing secret for templating", func() {
 		fixtures := fixture.
 			Builder().
 			WithAPI(constants.ApiWithTemplatingFile).
@@ -39,6 +39,7 @@ var _ = Describe("Validate create", labels.WithoutContext, func() {
 		By("updating plan security")
 
 		fixtures.API.Spec.Plans[0].Security = "[[ secret `graviteeio-templating/unknown` ]]"
+		fixtures.API.Spec.Proxy = nil
 
 		By("checking that API creation does not pass validation")
 

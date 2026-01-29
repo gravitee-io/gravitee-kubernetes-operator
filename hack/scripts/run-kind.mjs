@@ -60,6 +60,12 @@ const IMAGES = new Map([
   [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
 ]);
 
+if (APIM_VALUES.includes("dbless")) {
+  IMAGES.delete(`mongo:${MONGO_IMAGE_TAG}`);
+  IMAGES.delete(`${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}`);
+  IMAGES.delete(`${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`);
+}
+
 const REDIRECT = argv.verbose ? "" : "> /dev/null";
 
 toggleVerbosity(argv.verbose);
