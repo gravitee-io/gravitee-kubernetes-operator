@@ -1,5 +1,5 @@
 apiVersion: gateway.networking.k8s.io/v1
-date: "2026-01-28T11:44:26-06:00"
+date: "2026-01-29T13:03:55-06:00"
 gatewayAPIChannel: standard
 gatewayAPIVersion: v1.4.1
 implementation:
@@ -24,11 +24,12 @@ profiles:
     result: success
     statistics:
       Failed: 0
-      Passed: 6
+      Passed: 7
       Skipped: 0
     supportedFeatures:
     - GatewayPort8080
     - HTTPRoutePathRedirect
+    - HTTPRoutePathRewrite
     - HTTPRoutePortRedirect
     - HTTPRouteResponseHeaderModification
     - HTTPRouteSchemeRedirect
@@ -49,7 +50,6 @@ profiles:
     - HTTPRouteMethodMatching
     - HTTPRouteNamedRouteRule
     - HTTPRouteParentRefPort
-    - HTTPRoutePathRewrite
     - HTTPRouteQueryParamMatching
     - HTTPRouteRequestMirror
     - HTTPRouteRequestMultipleMirrors
