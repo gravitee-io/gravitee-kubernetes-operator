@@ -230,13 +230,7 @@ spec:
                 --first $FIRST_EXPORT \
                 --second $SECOND_EXPORT \
                 --ignore $.spec.state \
-                --ignore $.spec.plans[3].excluded_groups \
-                --ignore $.spec.proxy.groups[0].endpoints[0].http \
-                --ignore $.spec.proxy.groups[0].endpoints[0].proxy \
-                --ignore $.spec.proxy.groups[0].endpoints[0].ssl \
-                --ignore $.spec.proxy.groups[0].endpoints[1].http \
-                --ignore $.spec.proxy.groups[0].endpoints[1].proxy \
-                --ignore $.spec.proxy.groups[0].endpoints[1].ssl
+                --ignore $.spec.plans[3].excluded_groups
       catch:
         - script:
             env:
