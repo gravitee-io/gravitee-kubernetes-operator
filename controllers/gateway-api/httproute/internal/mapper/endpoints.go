@@ -146,7 +146,7 @@ func newEndpoint(backendRef gwAPIv1.HTTPBackendRef, backendIndex, matchIndex int
 	endpoint.Inherit = false
 
 	httpConfig := utils.NewGenericStringMap()
-	httpConfig.Put("propagateClientHost", true)
+	httpConfig.Put("propagateClientHost", false)
 	endpoint.ConfigOverride.Put("http", httpConfig)
 
 	return endpoint
