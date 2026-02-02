@@ -3,7 +3,7 @@ module github.com/gravitee-io/gravitee-kubernetes-operator
 go 1.25.5
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/moby/moby v27.5.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.27.5
 	github.com/onsi/gomega v1.39.0
