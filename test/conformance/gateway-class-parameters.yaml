@@ -19,7 +19,18 @@ metadata:
   namespace: default
 spec:
   kubernetes:
+    service:
+      labels:
+        # keep this because it tests that user defined labels don't break pod selectors
+        gravitee.io/foo: "bar"
+      annotations:
+        gravitee.io/scope: "test"
     deployment:
+      labels:
+        # keep this because it tests that user defined labels don't break pod selectors
+        gravitee.io/bar: "baz"
+      annotations:
+        gravitee.io/scope: "test"
       replicas: 1
       strategy:
         type: Recreate
