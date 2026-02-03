@@ -20,7 +20,9 @@ import (
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/indexer"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
@@ -30,6 +32,10 @@ import (
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 	if api, ok := obj.(core.ApiDefinitionObject); ok {
+		if api.GetAnnotations()[core.IngressTemplateAnnotation] == env.TrueString {
+			log.Global.Debugf("skipping validation for ingress template %s", api.GetName())
+			return errs
+		}
 		errs.MergeWith(base.ValidateCreate(ctx, obj))
 		if errs.IsSevere() {
 			return errs
