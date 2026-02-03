@@ -368,8 +368,16 @@ func buildServiceSpec(
 	svc.Spec.ExternalTrafficPolicy = params.Spec.Kubernetes.Service.ExternalTrafficPolicy
 	svc.Spec.LoadBalancerClass = params.Spec.Kubernetes.Service.LoadBalancerClass
 
+	if svc.Annotations == nil {
+		svc.Annotations = make(map[string]string)
+	}
+
 	for k, v := range params.Spec.Kubernetes.Service.Annotations {
 		svc.Annotations[k] = v
+	}
+
+	if svc.Labels == nil {
+		svc.Labels = make(map[string]string)
 	}
 
 	for k, v := range params.Spec.Kubernetes.Service.Labels {
