@@ -144,6 +144,7 @@ const (
 	IngressWithTLS             = "ingress/ingress-with-tls.yml"
 	IngressWithTLSSecretFile   = "ingress/ingress-with-tls-secret.yml"
 	IngressResponse404CMFile   = "ingress/ingress-response-404-config-map.yaml"
+	ApiAsIngressTemplate       = "ingress/ingress-api-template.yml"
 
 	Application                 = "apim/application/application.yml"
 	ApplicationWithClientIDFile = "apim/application/application-with-client-id.yml"
