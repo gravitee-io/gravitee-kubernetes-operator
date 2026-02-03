@@ -266,7 +266,7 @@ func buildDeployment(
 ) error {
 	labels := GwAPIv1GatewayLabels(gw.Object.Name)
 
-	deployment.Spec.Selector.MatchLabels = labels
+	deployment.Spec.Selector.MatchLabels = maps.Clone(labels)
 	deployment.Spec.Template.Labels = labels
 
 	template, err := getPodTemplateSpec(gw, params)
@@ -323,6 +323,11 @@ func buildDeployment(
 		deployment.Spec.Template.Labels[k] = v
 	}
 
+	// Prevents user defined labels from breaking pod selectors
+	for k, v := range labels {
+		deployment.Spec.Template.Labels[k] = v
+	}
+
 	deployment.Spec.Template.Annotations["gravitee.io/config"] = hash.Calculate(config)
 
 	return nil
@@ -339,7 +344,7 @@ func getService(
 	svc.Name = gw.Object.Name
 	svc.Namespace = gw.Object.Namespace
 	svc.Labels = labels
-	svc.Spec.Selector = labels
+	svc.Spec.Selector = maps.Clone(labels)
 
 	buildServiceSpec(gw, params, svc, portMapping)
 
