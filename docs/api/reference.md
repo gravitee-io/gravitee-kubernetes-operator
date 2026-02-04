@@ -1647,6 +1647,26 @@ _Appears in:_
 
 
 
+#### Autoscaling
+
+
+
+
+
+
+
+_Appears in:_
+- [KubernetesConfig](#kubernetesconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Use this field to enable HorizontalPodAutoscaler reconciliation for the Gateway. | false | Optional: \{\} <br /> |
+| `minReplicas` _integer_ | The minimum number of replicas when autoscaling is enabled. | 1 | Minimum: 1 <br />Optional: \{\} <br /> |
+| `maxReplicas` _integer_ | The maximum number of replicas when autoscaling is enabled. | 10 | Minimum: 1 <br />Optional: \{\} <br /> |
+| `metrics` _[MetricSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#metricspec-v2-autoscaling) array_ | The metrics used by the HorizontalPodAutoscaler to determine the desired replica count.<br />If empty and autoscaling is enabled, the operator will use a default CPU utilization metric<br />targeting 80% average utilization. |  | Optional: \{\} <br /> |
+| `behavior` _[HorizontalPodAutoscalerBehavior](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#horizontalpodautoscalerbehavior-v2-autoscaling)_ | Behavior configures scaling behavior for the HorizontalPodAutoscaler. |  | Optional: \{\} <br /> |
+
+
 #### Deployment
 
 
@@ -1761,9 +1781,29 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `deployment` _[Deployment](#deployment)_ | Use this field to modify pod labels and annotations,<br />adjust the number of replicas to control scaling,<br />specify update strategies for rolling updates,<br />and override the pod template to customize container specs,<br />security settings, or environment variables. |  | Optional: \{\} <br /> |
+| `autoscaling` _[Autoscaling](#autoscaling)_ | Use this field to configure Kubernetes HorizontalPodAutoscaler for the Gateway.<br />When enabled, the operator will reconcile an HPA for the Gateway and should not<br />force `deployment.replicas`. |  | Optional: \{\} <br /> |
+| `podDisruptionBudget` _[PodDisruptionBudget](#poddisruptionbudget)_ | Use this field to configure a PodDisruptionBudget for the Gateway.<br />When enabled, the operator will reconcile a PDB for the Gateway and will<br />set the selector to match Gateway pods. |  | Optional: \{\} <br /> |
 | `service` _[Service](#service)_ | Use this field to customize the Kubernetes Service that exposes the Gateway<br />by adding labels and annotations, choosing the service type,<br />configuring the external traffic policy, and specifying the load balancer class.` |  | Optional: \{\} <br /> |
 
 
+
+
+#### PodDisruptionBudget
+
+
+
+
+
+
+
+_Appears in:_
+- [KubernetesConfig](#kubernetesconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Use this field to enable PodDisruptionBudget reconciliation for the Gateway. | false | Optional: \{\} <br /> |
+| `minAvailable` _[IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#intorstring-intstr-util)_ | The minimum number of pods that must be available after an eviction. |  | Optional: \{\} <br /> |
+| `maxUnavailable` _[IntOrString](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#intorstring-intstr-util)_ | The maximum number of pods that can be unavailable after an eviction.<br />If neither minAvailable nor maxUnavailable is provided when enabled, the operator will<br />default maxUnavailable to 1. |  | Optional: \{\} <br /> |
 
 
 

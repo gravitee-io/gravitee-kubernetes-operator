@@ -26,6 +26,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	autoscalingV2 "k8s.io/api/autoscaling/v2"
+	coreV1 "k8s.io/api/core/v1"
+	policyV1 "k8s.io/api/policy/v1"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -37,7 +40,6 @@ import (
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	coreV1 "k8s.io/api/core/v1"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
@@ -331,5 +333,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&coreV1.Service{}, internal.WatchServices()).
 		Watches(&coreV1.Secret{}, internal.WatchSecrets()).
 		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
+		Watches(&autoscalingV2.HorizontalPodAutoscaler{}, internal.WatchHPAs()).
+		Watches(&policyV1.PodDisruptionBudget{}, internal.WatchPDBs()).
 		Complete(r)
 }
