@@ -28,17 +28,23 @@ import (
 )
 
 const (
-	ConditionAccepted     = "Accepted"
-	ConditionProgrammed   = "Programmed"
-	ConditionConflicted   = "Conflicted"
-	ConditionPending      = "Pending"
-	ConditionResolvedRefs = "ResolvedRefs"
+	ConditionAccepted        = "Accepted"
+	ConditionProgrammed      = "Programmed"
+	ConditionConflicted      = "Conflicted"
+	ConditionPending         = "Pending"
+	ConditionResolvedRefs    = "ResolvedRefs"
+	ConditionAutoscalingSync = "AutoscalingSync"
+	ConditionPDBSync         = "PodDisruptionBudgetSync"
 
 	ListenerReasonTooManyCertRefs = "TooManyCertificateRefs"
 	ListenerReasonKafkaConflict   = "TooManyKafkaListeners"
 
 	ParamsReasonLicenseNotFound = "LicenseNotFound"
 	ReasonNoConflict            = "NoConflicts"
+	ReasonHPAConflict           = "HPAConflict"
+	ReasonPDBConflict           = "PDBConflict"
+	ReasonSynced                = "Synced"
+	ReasonDisabled              = "Disabled"
 
 	ReasonGroupNotFound = "GroupNotFound"
 
@@ -139,6 +145,20 @@ func NewHTTPRoutePathConflictedConditionBuilder(generation int64) *ConditionBuil
 		ObservedGeneration(generation).
 		Status(ConditionStatusFalse).
 		Reason(ReasonNoConflict)
+}
+
+func NewAutoscalingSyncConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionAutoscalingSync).
+		ObservedGeneration(generation).
+		Status(ConditionStatusTrue).
+		Reason(ReasonSynced)
+}
+
+func NewPDBSyncConditionBuilder(generation int64) *ConditionBuilder {
+	return NewConditionBuilder(ConditionPDBSync).
+		ObservedGeneration(generation).
+		Status(ConditionStatusTrue).
+		Reason(ReasonSynced)
 }
 
 func NewConditionBuilder(cType string) *ConditionBuilder {
