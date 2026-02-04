@@ -21,7 +21,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	autoscalingV2 "k8s.io/api/autoscaling/v2"
 	coreV1 "k8s.io/api/core/v1"
+	policyV1 "k8s.io/api/policy/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -52,6 +54,14 @@ func WatchSecrets() handler.EventHandler {
 
 func WatchReferenceGrants() handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(requestFromReferenceGrant)
+}
+
+func WatchHPAs() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromHPA)
+}
+
+func WatchPDBs() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromPDB)
 }
 
 func requestsFromGatewayClass(ctx context.Context, obj client.Object) []reconcile.Request {
@@ -104,6 +114,58 @@ func requestsFromService(ctx context.Context, obj client.Object) []reconcile.Req
 		gw := list.Items[i]
 		if k8s.IsGatewayDependent(gateway.WrapGateway(&gw), svc) {
 			reqs[i] = buildRequest(gw)
+		}
+	}
+	return reqs
+}
+
+func requestsFromHPA(ctx context.Context, obj client.Object) []reconcile.Request {
+	hpa, ok := obj.(*autoscalingV2.HorizontalPodAutoscaler)
+	if !ok {
+		return nil
+	}
+	if !k8s.IsGatewayComponent(hpa) {
+		return nil
+	}
+	listOpts := &client.ListOptions{
+		Namespace: hpa.Namespace,
+	}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+		log.Error(ctx, err, "failed to list gateways when watching HPA")
+		return []reconcile.Request{}
+	}
+	var reqs []reconcile.Request
+	for i := range list.Items {
+		gw := list.Items[i]
+		if k8s.IsGatewayDependent(gateway.WrapGateway(&gw), hpa) {
+			reqs = append(reqs, buildRequest(gw))
+		}
+	}
+	return reqs
+}
+
+func requestsFromPDB(ctx context.Context, obj client.Object) []reconcile.Request {
+	pdb, ok := obj.(*policyV1.PodDisruptionBudget)
+	if !ok {
+		return nil
+	}
+	if !k8s.IsGatewayComponent(pdb) {
+		return nil
+	}
+	listOpts := &client.ListOptions{
+		Namespace: pdb.Namespace,
+	}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+		log.Error(ctx, err, "failed to list gateways when watching PDB")
+		return []reconcile.Request{}
+	}
+	var reqs []reconcile.Request
+	for i := range list.Items {
+		gw := list.Items[i]
+		if k8s.IsGatewayDependent(gateway.WrapGateway(&gw), pdb) {
+			reqs = append(reqs, buildRequest(gw))
 		}
 	}
 	return reqs
