@@ -16,20 +16,19 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: api-v4-deprecated
+  name: api-v4-archived
 spec:
   contextRef:
     name: "dev-ctx"
   name: "api-v4"
   description: "API v4 managed by Gravitee Kubernetes Operator"
   version: "1.0"
-  # Users need to beaware that there is no way back after setting the state to DEPRECATED
-  lifecycleState: DEPRECATED 
+  lifecycleState: ARCHIVED
   type: PROXY
   listeners:
     - type: HTTP
       paths:
-        - path: "/echo-v4-deprecated"
+        - path: "/echo-v4-archived"
       entrypoints:
         - type: http-proxy
           qos: AUTO
