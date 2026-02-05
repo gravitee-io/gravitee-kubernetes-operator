@@ -4934,9 +4934,9 @@ field of the resource.<br/>
         <td><b>lifecycleState</b></td>
         <td>enum</td>
         <td>
-          API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED<br/>
+          API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
           <br/>
-            <i>Enum</i>: PUBLISHED, UNPUBLISHED, DEPRECATED<br/>
+            <i>Enum</i>: PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED<br/>
             <i>Default</i>: UNPUBLISHED<br/>
         </td>
         <td>false</td>
