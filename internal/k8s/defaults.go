@@ -211,8 +211,7 @@ var DefaultGatewayPodSpec = &coreV1.PodSpec{
 	Containers: []coreV1.Container{
 		DefaultGatewayContainer,
 	},
-	Resources: DefaultResources,
-	Volumes:   []coreV1.Volume{},
+	Volumes: []coreV1.Volume{},
 }
 
 var DefaultGatewayPodTemplate = &coreV1.PodTemplateSpec{

@@ -27,7 +27,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/gateway/yaml"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	appV1 "k8s.io/api/apps/v1"
+	autoscalingV2 "k8s.io/api/autoscaling/v2"
 	coreV1 "k8s.io/api/core/v1"
+	policyV1 "k8s.io/api/policy/v1"
 	rbacV1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -90,19 +92,31 @@ func DeployGateway(
 
 	maps.Copy(configData, gatewayConfig.Data)
 
-	if deployment, err := getDeployment(gw, params, portMapping, configData); err != nil {
+	if err := syncGatewayHPA(ctx, gw, params); err != nil {
+		return err
+	}
+
+	if err := syncGatewayPDB(ctx, gw, params); err != nil {
+		return err
+	}
+
+	if deployment, err := getDeployment(ctx, gw, params, portMapping, configData); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
-		return buildDeployment(gw, params, deployment, portMapping, configData)
+		return buildDeployment(ctx, gw, params, deployment, portMapping, configData)
 	}); err != nil {
 		return err
 	}
 
 	svc := getService(gw, params, portMapping)
-	return CreateOrUpdate(ctx, svc, func() error {
+	if err := CreateOrUpdate(ctx, svc, func() error {
 		buildServiceSpec(gw, params, svc, portMapping)
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getPEMRegistryConfigMap(gw *gateway.Gateway) (*coreV1.ConfigMap, error) {
@@ -236,6 +250,7 @@ func BuildTag(namespace, name string) string {
 }
 
 func getDeployment(
+	ctx context.Context,
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
@@ -250,7 +265,7 @@ func getDeployment(
 
 	setOwnerReference(gw.Object, deployment)
 
-	if err := buildDeployment(gw, params, deployment, portMapping, config); err != nil {
+	if err := buildDeployment(ctx, gw, params, deployment, portMapping, config); err != nil {
 		return nil, err
 	}
 
@@ -258,6 +273,7 @@ func getDeployment(
 }
 
 func buildDeployment(
+	ctx context.Context,
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 	deployment *appV1.Deployment,
@@ -282,6 +298,14 @@ func buildDeployment(
 
 	deployment.Spec.Template = *template
 
+	autoscalingEnabled := hasAutoscalingEnabled(params)
+	if autoscalingEnabled {
+		// When autoscaling is enabled, we must not force replicas in the Deployment spec to avoid
+		// briefly fighting with the HorizontalPodAutoscaler (especially on first reconcile, before
+		// the HPA exists).
+		deployment.Spec.Replicas = nil
+	}
+
 	if params.Spec.Kubernetes == nil {
 		return nil
 	}
@@ -289,8 +313,14 @@ func buildDeployment(
 		return nil
 	}
 
-	if params.Spec.Kubernetes.Deployment.Replicas != nil {
-		deployment.Spec.Replicas = params.Spec.Kubernetes.Deployment.Replicas
+	if !autoscalingEnabled && params.Spec.Kubernetes.Deployment.Replicas != nil {
+		targeted, err := hpaTargetsGatewayDeployment(ctx, gw)
+		if err != nil {
+			return err
+		}
+		if !targeted {
+			deployment.Spec.Replicas = params.Spec.Kubernetes.Deployment.Replicas
+		}
 	}
 
 	if params.Spec.Kubernetes.Deployment.Strategy != nil {
@@ -331,6 +361,344 @@ func buildDeployment(
 	deployment.Spec.Template.Annotations["gravitee.io/config"] = hash.Calculate(config)
 
 	return nil
+}
+
+func hpaTargetsGatewayDeployment(ctx context.Context, gw *gateway.Gateway) (bool, error) {
+	hpa := &autoscalingV2.HorizontalPodAutoscaler{}
+	key := client.ObjectKey{
+		Namespace: gw.Object.Namespace,
+		Name:      gw.Object.Name,
+	}
+
+	if err := GetClient().Get(ctx, key, hpa); err != nil {
+		if client.IgnoreNotFound(err) == nil {
+			return false, nil
+		}
+		return false, err
+	}
+
+	ref := hpa.Spec.ScaleTargetRef
+	if ref.Kind != "Deployment" {
+		return false, nil
+	}
+	if ref.Name != gw.Object.Name {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func syncGatewayHPA(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+) error {
+	key := client.ObjectKey{
+		Namespace: gw.Object.Namespace,
+		Name:      gw.Object.Name,
+	}
+
+	existing := &autoscalingV2.HorizontalPodAutoscaler{}
+	getErr := GetClient().Get(ctx, key, existing)
+
+	if !hasAutoscalingEnabled(params) {
+		return handleDisabledHPA(ctx, gw, existing, getErr)
+	}
+
+	autoscaling := params.Spec.Kubernetes.Autoscaling
+
+	if getErr != nil {
+		return createHPAIfNotFound(ctx, gw, autoscaling, getErr)
+	}
+
+	if !IsGatewayDependent(gw, existing) {
+		setHPAConflictCondition(gw, existing)
+		return nil
+	}
+
+	buildGatewayHPA(gw, autoscaling, existing)
+	if err := Update(ctx, existing); err != nil {
+		return err
+	}
+	SetCondition(
+		gw,
+		NewAutoscalingSyncConditionBuilder(gw.Object.Generation).
+			Message("HorizontalPodAutoscaler synced successfully").
+			Build(),
+	)
+	return nil
+}
+
+func handleDisabledHPA(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	existing *autoscalingV2.HorizontalPodAutoscaler,
+	getErr error,
+) error {
+	SetCondition(
+		gw,
+		NewAutoscalingSyncConditionBuilder(gw.Object.Generation).
+			Reason(ReasonDisabled).
+			Message("Autoscaling is disabled").
+			Build(),
+	)
+	if getErr != nil {
+		return client.IgnoreNotFound(getErr)
+	}
+	if !IsGatewayDependent(gw, existing) {
+		setHPAConflictCondition(gw, existing)
+		return nil
+	}
+	return client.IgnoreNotFound(GetClient().Delete(ctx, existing))
+}
+
+func createHPAIfNotFound(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	autoscaling *gateway.Autoscaling,
+	getErr error,
+) error {
+	if client.IgnoreNotFound(getErr) != nil {
+		return getErr
+	}
+	hpa := &autoscalingV2.HorizontalPodAutoscaler{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+	}
+	buildGatewayHPA(gw, autoscaling, hpa)
+	if err := GetClient().Create(ctx, hpa); err != nil {
+		return err
+	}
+	SetCondition(
+		gw,
+		NewAutoscalingSyncConditionBuilder(gw.Object.Generation).
+			Message("HorizontalPodAutoscaler created successfully").
+			Build(),
+	)
+	return nil
+}
+
+func setHPAConflictCondition(gw *gateway.Gateway, existing *autoscalingV2.HorizontalPodAutoscaler) {
+	SetCondition(
+		gw,
+		NewAutoscalingSyncConditionBuilder(gw.Object.Generation).
+			Status(ConditionStatusFalse).
+			Reason(ReasonHPAConflict).
+			Message(fmt.Sprintf(
+				"HorizontalPodAutoscaler %s/%s exists but is not managed by this Gateway; "+
+					"operator-managed autoscaling is skipped",
+				existing.GetNamespace(),
+				existing.GetName(),
+			)).
+			Build(),
+	)
+}
+
+func buildGatewayHPA(
+	gw *gateway.Gateway,
+	autoscaling *gateway.Autoscaling,
+	hpa *autoscalingV2.HorizontalPodAutoscaler,
+) {
+	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+
+	hpa.Labels = labels
+	setOwnerReference(gw.Object, hpa)
+
+	minReplicas := int32(1)
+	if autoscaling != nil && autoscaling.MinReplicas != nil {
+		minReplicas = *autoscaling.MinReplicas
+	}
+	maxReplicas := int32(10)
+	if autoscaling != nil && autoscaling.MaxReplicas != nil {
+		maxReplicas = *autoscaling.MaxReplicas
+	}
+
+	metrics := getHPAMetrics(autoscaling)
+
+	var behavior *autoscalingV2.HorizontalPodAutoscalerBehavior
+	if autoscaling != nil {
+		behavior = autoscaling.Behavior
+	}
+
+	hpa.Spec = autoscalingV2.HorizontalPodAutoscalerSpec{
+		ScaleTargetRef: autoscalingV2.CrossVersionObjectReference{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+			Name:       gw.Object.Name,
+		},
+		MinReplicas: &minReplicas,
+		MaxReplicas: maxReplicas,
+		Metrics:     metrics,
+		Behavior:    behavior,
+	}
+}
+
+func getHPAMetrics(autoscaling *gateway.Autoscaling) []autoscalingV2.MetricSpec {
+	if autoscaling != nil && len(autoscaling.Metrics) > 0 {
+		return autoscaling.Metrics
+	}
+	avgUtil := int32(80)
+	return []autoscalingV2.MetricSpec{
+		{
+			Type: autoscalingV2.ResourceMetricSourceType,
+			Resource: &autoscalingV2.ResourceMetricSource{
+				Name: coreV1.ResourceCPU,
+				Target: autoscalingV2.MetricTarget{
+					Type:               autoscalingV2.UtilizationMetricType,
+					AverageUtilization: &avgUtil,
+				},
+			},
+		},
+	}
+}
+
+func syncGatewayPDB(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	params *v1alpha1.GatewayClassParameters,
+) error {
+	key := client.ObjectKey{
+		Namespace: gw.Object.Namespace,
+		Name:      gw.Object.Name,
+	}
+
+	existing := &policyV1.PodDisruptionBudget{}
+	getErr := GetClient().Get(ctx, key, existing)
+
+	if !hasPDBEnabled(params) {
+		return handleDisabledPDB(ctx, gw, existing, getErr)
+	}
+
+	pdbCfg := params.Spec.Kubernetes.PodDisruptionBudget
+
+	if getErr != nil {
+		return createPDBIfNotFound(ctx, gw, pdbCfg, getErr)
+	}
+
+	if !IsGatewayDependent(gw, existing) {
+		setPDBConflictCondition(gw, existing)
+		return nil
+	}
+
+	buildGatewayPDB(gw, pdbCfg, existing)
+	if err := Update(ctx, existing); err != nil {
+		return err
+	}
+	SetCondition(
+		gw,
+		NewPDBSyncConditionBuilder(gw.Object.Generation).
+			Message("PodDisruptionBudget synced successfully").
+			Build(),
+	)
+	return nil
+}
+
+func handleDisabledPDB(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	existing *policyV1.PodDisruptionBudget,
+	getErr error,
+) error {
+	SetCondition(
+		gw,
+		NewPDBSyncConditionBuilder(gw.Object.Generation).
+			Reason(ReasonDisabled).
+			Message("PodDisruptionBudget is disabled").
+			Build(),
+	)
+	if getErr != nil {
+		return client.IgnoreNotFound(getErr)
+	}
+	if !IsGatewayDependent(gw, existing) {
+		setPDBConflictCondition(gw, existing)
+		return nil
+	}
+	return client.IgnoreNotFound(GetClient().Delete(ctx, existing))
+}
+
+func createPDBIfNotFound(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	pdbCfg *gateway.PodDisruptionBudget,
+	getErr error,
+) error {
+	if client.IgnoreNotFound(getErr) != nil {
+		return getErr
+	}
+	pdb := &policyV1.PodDisruptionBudget{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      gw.Object.Name,
+			Namespace: gw.Object.Namespace,
+		},
+	}
+	buildGatewayPDB(gw, pdbCfg, pdb)
+	if err := GetClient().Create(ctx, pdb); err != nil {
+		return err
+	}
+	SetCondition(
+		gw,
+		NewPDBSyncConditionBuilder(gw.Object.Generation).
+			Message("PodDisruptionBudget created successfully").
+			Build(),
+	)
+	return nil
+}
+
+func setPDBConflictCondition(gw *gateway.Gateway, existing *policyV1.PodDisruptionBudget) {
+	SetCondition(
+		gw,
+		NewPDBSyncConditionBuilder(gw.Object.Generation).
+			Status(ConditionStatusFalse).
+			Reason(ReasonPDBConflict).
+			Message(fmt.Sprintf(
+				"PodDisruptionBudget %s/%s exists but is not managed by this Gateway; "+
+					"operator-managed PDB is skipped",
+				existing.GetNamespace(),
+				existing.GetName(),
+			)).
+			Build(),
+	)
+}
+
+func buildGatewayPDB(gw *gateway.Gateway, cfg *gateway.PodDisruptionBudget, pdb *policyV1.PodDisruptionBudget) {
+	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	pdb.Labels = labels
+	setOwnerReference(gw.Object, pdb)
+
+	var minAvailable *intstr.IntOrString
+	var maxUnavailable *intstr.IntOrString
+	if cfg != nil {
+		minAvailable = cfg.MinAvailable
+		maxUnavailable = cfg.MaxUnavailable
+	}
+	if minAvailable == nil && maxUnavailable == nil {
+		defaultMaxUnavailable := intstr.FromInt32(1)
+		maxUnavailable = &defaultMaxUnavailable
+	}
+
+	pdb.Spec = policyV1.PodDisruptionBudgetSpec{
+		MinAvailable:   minAvailable,
+		MaxUnavailable: maxUnavailable,
+		Selector: &metaV1.LabelSelector{
+			MatchLabels: maps.Clone(labels),
+		},
+	}
+}
+
+func hasAutoscalingEnabled(params *v1alpha1.GatewayClassParameters) bool {
+	if params == nil || params.Spec.Kubernetes == nil || params.Spec.Kubernetes.Autoscaling == nil {
+		return false
+	}
+	return params.Spec.Kubernetes.Autoscaling.Enabled
+}
+
+func hasPDBEnabled(params *v1alpha1.GatewayClassParameters) bool {
+	if params == nil || params.Spec.Kubernetes == nil || params.Spec.Kubernetes.PodDisruptionBudget == nil {
+		return false
+	}
+	return params.Spec.Kubernetes.PodDisruptionBudget.Enabled
 }
 
 func getService(

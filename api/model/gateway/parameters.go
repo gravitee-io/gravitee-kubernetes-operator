@@ -83,6 +83,16 @@ type KubernetesConfig struct {
 	// security settings, or environment variables.
 	// +kubebuilder:validation:Optional
 	Deployment *Deployment `json:"deployment"`
+	// Use this field to configure Kubernetes HorizontalPodAutoscaler for the Gateway.
+	// When enabled, the operator will reconcile an HPA for the Gateway and should not
+	// force `deployment.replicas`.
+	// +kubebuilder:validation:Optional
+	Autoscaling *Autoscaling `json:"autoscaling"`
+	// Use this field to configure a PodDisruptionBudget for the Gateway.
+	// When enabled, the operator will reconcile a PDB for the Gateway and will
+	// set the selector to match Gateway pods.
+	// +kubebuilder:validation:Optional
+	PodDisruptionBudget *PodDisruptionBudget `json:"podDisruptionBudget"`
 	// Use this field to customize the Kubernetes Service that exposes the Gateway
 	// by adding labels and annotations, choosing the service type,
 	// configuring the external traffic policy, and specifying the load balancer class.`
