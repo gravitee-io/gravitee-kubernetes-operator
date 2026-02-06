@@ -67,7 +67,7 @@ type GraviteeKafkaConfig struct {
 type GraviteeKafkaRoutingHostModeConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:="broker-{brokerId}-{apiHost}"
-	BokerDomainPattern string `json:"brokerDomainPattern"`
+	BrokerDomainPattern string `json:"brokerDomainPattern"`
 	// You can find details about these configurations options in our
 	// [documentation](https://documentation.gravitee.io/apim/kafka-gateway/configure-the-kafka-gateway-and-client).
 	// +kubebuilder:validation:Optional

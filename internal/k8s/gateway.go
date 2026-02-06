@@ -1108,17 +1108,17 @@ func getKafkaServer(
 		"routingHostMode",
 		map[string]any{
 			"defaultPort":            portMapping[kafkaListener.Port],
-			"brokerDomainPattern":    routingHostModeParams.BokerDomainPattern,
+			"brokerDomainPattern":    routingHostModeParams.BrokerDomainPattern,
 			"bootstrapDomainPattern": routingHostModeParams.BootstrapDomainPattern,
+			"defaultDomain":          kafkaListener.Hostname,
 		},
 	)
 
 	kafka.Put("port", kafkaListener.Port)
 
-	kafka.Put(
-		"ssl",
-		buildTLS(*kafkaListener),
-	)
+	tls := buildTLS(*kafkaListener)
+
+	kafka.Put("ssl", tls)
 
 	return kafka.Object
 }
@@ -1129,6 +1129,7 @@ func buildTLS(listener gwAPIv1.Listener) map[string]any {
 	keystore := make(map[string]any)
 	keystore["type"] = "pem"
 	keystore["secret"] = buildKeystoreSecret(tls.CertificateRefs)
+	keystore["watch"] = true
 	ssl["keystore"] = keystore
 	return ssl
 }
