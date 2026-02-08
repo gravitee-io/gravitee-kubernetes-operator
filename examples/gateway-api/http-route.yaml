@@ -30,7 +30,12 @@ spec:
        - path:
            type: PathPrefix
            value: /bin
-      filters: []
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
       backendRefs:
         - kind: Service
           group: ""
@@ -45,7 +50,12 @@ spec:
           - name: env
             type: Exact
             value: canary
-      filters: []
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
       backendRefs:
         - kind: Service
           group: ""

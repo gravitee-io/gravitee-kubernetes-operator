@@ -16,24 +16,18 @@ Commands are expected to be executed from the root of this respository.
 ## Run a kind cluster
 
 ```sh
-kind create cluster --config hack/kind/kind.conformance.yaml
+make start-conformance-cluster
 ```
 
 > This will start Kind with ports `80`, `443` and `9092` bound to your host.
 
 ## Run kind cloud provider
 
-Install the `cloud-provider-kind` binary by running the following command:
 
 ```sh
-GOBIN=$(pwd)/bin go install sigs.k8s.io/cloud-provider-kind@latest 
+make cloud-lb
 ```
 
-Then run the following command:
-
-```sh
-sudo bin/cloud-provider-kind
-```
 
 > sudo is required to open ports on the system and to connect to the container runtime.
 
@@ -44,7 +38,7 @@ Once cloud-provider-kind is running, run the rest of the commands from a new she
 ```sh
 IMG=gko TAG=dev make docker-build \
     && kind load docker-image gko:dev --name gravitee \
-    && helm upgrade --install gko helm/gko \
+    && helm upgrade  --skip-crds --install gko helm/gko \
     --set manager.image.repository=gko \
     --set manager.image.tag=dev \
     --set manager.metrics.enabled=false \
@@ -141,7 +135,7 @@ You can export the IP address of your gateway to an environment variable for fur
 
 ```sh
 export GW_ADDR=$(kubectl get gateway gravitee-gateway -o jsonpath='{.status.addresses[0].value}')
-echo "$GW_ADDR"
+echo "Gateway is listening at IP address $GW_ADDR"
 ```
 
 > This should output the IP address assigned to the LoadBalancer service of the gateway.

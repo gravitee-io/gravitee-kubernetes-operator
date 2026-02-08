@@ -31,6 +31,11 @@ spec:
            type: PathPrefix
            value: /bin
       filters:
+      - type: URLRewrite
+        urlRewrite:
+          path:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /
       - type: RequestHeaderModifier
         requestHeaderModifier:
           add:
