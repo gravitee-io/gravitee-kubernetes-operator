@@ -27,6 +27,7 @@ lint-licenses: ## Run addlicense linter and fail on error
 		-ignore ".idea/**" \
 		-ignore "helm/gko/crds/kubernetes.io/**" \
 		-ignore "**/kubernetes.io/gateway-api/report/**" \
+		-ignore "examples/gateway-api/**" \
 		. 
 
 .PHONY: add-license
@@ -39,6 +40,7 @@ add-license: ## Add license headers to files
 		-ignore ".idea/**" \
 		-ignore "helm/gko/crds/kubernetes.io/**" \
 		-ignore "**/kubernetes.io/gateway-api/report/**" \
+		-ignore "examples/gateway-api/**" \
 		. 
 
 .PHONY: clean-tools ## Run all linters
