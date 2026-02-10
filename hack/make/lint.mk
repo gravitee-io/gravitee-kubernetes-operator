@@ -26,7 +26,12 @@ lint-licenses: ## Run addlicense linter and fail on error
 		-ignore ".crd-ref-docs.yaml" \
 		-ignore ".idea/**" \
 		-ignore "helm/gko/crds/kubernetes.io/**" \
+<<<<<<< HEAD
 		-ignore "**/standard-4.8.5-default-report.yaml" \
+=======
+		-ignore "**/kubernetes.io/gateway-api/report/**" \
+		-ignore "examples/gateway-api/**" \
+>>>>>>> 2e407bd (docs: fix strimzi version in the gateway-api guide)
 		. 
 
 .PHONY: add-license
@@ -38,7 +43,12 @@ add-license: ## Add license headers to files
 		-ignore ".crd-ref-docs.yaml" \
 		-ignore ".idea/**" \
 		-ignore "helm/gko/crds/kubernetes.io/**" \
+<<<<<<< HEAD
 		-ignore "**/standard-4.8.5-default-report.yaml" \
+=======
+		-ignore "**/kubernetes.io/gateway-api/report/**" \
+		-ignore "examples/gateway-api/**" \
+>>>>>>> 2e407bd (docs: fix strimzi version in the gateway-api guide)
 		. 
 
 .PHONY: clean-tools ## Run all linters

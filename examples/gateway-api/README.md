@@ -304,7 +304,7 @@ kubectl get secret kafka-server -o json | jq '.data."ca.crt"' | tr -d '"' | base
 ## Start a Kafka cluster with Strimzi
 
 ```sh
-kubectl create -f 'https://strimzi.io/install/latest?namespace=default'
+kubectl create -f examples/gateway-api/strimzi-0.46.0.yaml
 ```
 
 > This will install the Strimzi kubernetes operator.

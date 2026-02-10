@@ -1110,7 +1110,6 @@ func getKafkaServer(
 			"defaultPort":            portMapping[kafkaListener.Port],
 			"brokerDomainPattern":    routingHostModeParams.BrokerDomainPattern,
 			"bootstrapDomainPattern": routingHostModeParams.BootstrapDomainPattern,
-			"defaultDomain":          kafkaListener.Hostname,
 		},
 	)
 
