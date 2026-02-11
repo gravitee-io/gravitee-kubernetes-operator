@@ -37,6 +37,10 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should subscribe to v4 API with MTLS plan", func() {
+		Skip(`
+			This test is currently part of the migration efforts towards e2e test suite
+		`)
+
 		fixtures := fixture.Builder().
 			AddSecret(constants.SubscribeMTLSUseCaseTLSSecretFile).
 			WithApplication(constants.SubscribeMTLSUseCaseApplicationFile).
