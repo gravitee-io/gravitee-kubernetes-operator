@@ -10,8 +10,12 @@ This guide assumes that the following binaries are installed on your device:
   * kind
   * curl
   * go
+
+⚠️ If you are testing this guide on macOS with Docker Desktop, the following option needs to be activated in order to make the Kafka client able to authenticate with the gateway.
+
+  - `Settings` > `Resources` > `Network` > ☑ `Use kernel networking for UDP`
   
-Commands are expected to be executed from the root of this respository.
+Commands are expected to be executed from the root of this repository.
 
 ## Run a kind cluster
 
@@ -342,7 +346,7 @@ You can download and install a Kafka client by running the following commands:
 ```sh
 mkdir -p examples/gateway-api/tmp/kafka-client 
 export KAFKA_CLI_DL=https://dlcdn.apache.org/kafka/4.0.0/kafka_2.13-4.0.0.tgz
-curl -s -L  $KAFKA_CLI_DL | tar xvz - -C examples/gateway-api/tmp/kafka-client --strip-components=1
+curl -s -L "$KAFKA_CLI_DL" | tar -xvz -C examples/gateway-api/tmp/kafka-client --strip-components=1
 ```
 
 ## Test the Kafka route
