@@ -40,6 +40,10 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should subscribe to v2 API with JWT plan", func() {
+		Skip(`
+			This test is currently part of the migration efforts towards e2e test suite
+		`)
+
 		fixtures := fixture.Builder().
 			WithApplication(constants.ApplicationWithClientIDFile).
 			WithAPI(constants.ApiWithJWTPlan).
