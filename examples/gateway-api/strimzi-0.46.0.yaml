@@ -19185,5 +19185,3 @@ rules:
       - delete
       - patch
       - update
-
----
