@@ -26,7 +26,8 @@ lint-licenses: ## Run addlicense linter and fail on error
 		-ignore ".crd-ref-docs.yaml" \
 		-ignore ".idea/**" \
 		-ignore "helm/gko/crds/kubernetes.io/**" \
-		-ignore "**/standard-4.8.5-default-report.yaml" \
+		-ignore "examples/gateway-api/**" \
+		-ignore "**/kubernetes.io/gateway-api/report/**" \
 		. 
 
 .PHONY: add-license
@@ -38,7 +39,8 @@ add-license: ## Add license headers to files
 		-ignore ".crd-ref-docs.yaml" \
 		-ignore ".idea/**" \
 		-ignore "helm/gko/crds/kubernetes.io/**" \
-		-ignore "**/standard-4.8.5-default-report.yaml" \
+		-ignore "examples/gateway-api/**" \
+		-ignore "**/kubernetes.io/gateway-api/report/**" \
 		. 
 
 .PHONY: clean-tools ## Run all linters
