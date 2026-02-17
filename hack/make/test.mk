@@ -10,7 +10,7 @@ IT_ARGS ?= ""
 TIMEOUT ?= 1200s 
 
 .PHONY: it
-it: use-cluster install ## Run integration tests
+it: use-cluster install install-go-tools ## Run integration tests
 	$(GINKGO) $(IT_ARGS) --timeout $(TIMEOUT)  test/integration/...
 
 UT_ARGS ?= ""
