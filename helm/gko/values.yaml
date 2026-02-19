@@ -152,8 +152,10 @@ manager:
     service:
       ## @param manager.webhook.service.name The service used to expose the webhook server.
       name: gko-webhook
-      ## @param manager.webhook.service.port Which port the webhook server will listen to.
-      port: 9443
+      ## @param manager.webhook.service.port The port exposed by the webhook Service.
+      port: 443
+      ## @param manager.webhook.service.targetPort The port the webhook server listens on.
+      targetPort: 9443
     cert:
       ## @param manager.webhook.cert.create If true, a secret will be created to store the webhook server certificate.
       create: true

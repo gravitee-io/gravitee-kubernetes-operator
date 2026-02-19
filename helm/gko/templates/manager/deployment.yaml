@@ -119,7 +119,7 @@ spec:
             protocol: TCP
           {{- end }}
           {{- if .Values.manager.webhook.enabled }}
-          - containerPort: {{ .Values.manager.webhook.service.port }}
+          - containerPort: {{ .Values.manager.webhook.service.targetPort }}
             name: webhook
             protocol: TCP
           {{- end }}
