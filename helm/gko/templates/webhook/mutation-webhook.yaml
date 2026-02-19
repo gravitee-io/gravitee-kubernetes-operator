@@ -43,7 +43,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /mutate-gravitee-io-v1alpha1-managementcontext
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
   failurePolicy: Fail
   matchPolicy: Equivalent
   objectSelector: {}
@@ -79,7 +79,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /mutate-gravitee-io-v1alpha1-subscription
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
   failurePolicy: Fail
   matchPolicy: Equivalent
   objectSelector: {}
@@ -115,7 +115,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /mutate-gravitee-io-v1alpha1-group
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
   failurePolicy: Fail
   matchPolicy: Equivalent
   objectSelector: {}
