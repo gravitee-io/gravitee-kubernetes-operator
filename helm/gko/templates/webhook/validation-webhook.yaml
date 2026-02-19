@@ -43,7 +43,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-apidefinition
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
@@ -79,7 +79,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-apiv4definition
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
@@ -115,7 +115,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-application
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
@@ -151,7 +151,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-apiresource
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
@@ -187,7 +187,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-managementcontext
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
@@ -223,7 +223,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-subscription
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
@@ -259,7 +259,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-group
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
@@ -295,7 +295,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         name: {{ .Values.manager.webhook.service.name }}
         path: /validate-gravitee-io-v1alpha1-sharedpolicygroup
-        port: 443
+        port: {{ .Values.manager.webhook.service.port }}
     rules:
       - operations:
           - CREATE
