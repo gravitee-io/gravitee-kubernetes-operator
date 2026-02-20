@@ -53,3 +53,7 @@ https.ca.crt
 
 # Kubernetes Gateway API report
 test/conformance/.*/standard-.*-default-report.yaml
+
+CLAUDE.md
+prompts
+plans

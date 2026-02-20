@@ -18,29 +18,12 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 )
 
-func CreateOrUpdate(ctx context.Context, application *v1alpha1.Application) error {
-	spec := &application.Spec
-
-	apim, err := apim.FromContextRef(ctx, spec.Context, application.GetNamespace())
-	if err != nil {
-		return err
+func ResolveClientCertificates(ctx context.Context, app *v1alpha1.Application) error {
+	if app.Spec.Settings == nil {
+		return nil
 	}
-
-	application.PopulateIDs(apim.Context)
-
-	if err := ResolveClientCertificates(ctx, application); err != nil {
-		return err
-	}
-
-	status, mgmtErr := apim.Applications.CreateOrUpdate(&spec.Application)
-	if mgmtErr != nil {
-		return gerrors.NewControlPlaneError(mgmtErr)
-	}
-
-	status.DeepCopyTo(&application.Status.Status)
-	return nil
+	return appResolve.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.Spec.Name)
 }
