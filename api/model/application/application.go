@@ -56,9 +56,16 @@ type OAuthClientSettings struct {
 // TLS settings are used to configure client side TLS in order
 // to be able to subscribe to a MTLS plan.
 type TLSSettings struct {
-	// This client certificate is mandatory to subscribe to a TLS plan.
-	// +kubebuilder:validation:Required
-	ClientCertificate string `json:"clientCertificate"`
+	// Deprecated: use ClientCertificates instead.
+	// This client certificate can be used to subscribe to a TLS plan.
+	// Cannot be used at the same time as ClientCertificates.
+	// +kubebuilder:validation:Optional
+	ClientCertificate string `json:"clientCertificate,omitempty"`
+	// List of client certificates for mTLS plans.
+	// Supports inline PEM/Base64, template [[ ]] notation, and references to Secrets/ConfigMaps.
+	// Cannot be used at the same time as ClientCertificate.
+	// +kubebuilder:validation:Optional
+	ClientCertificates []ClientCertificate `json:"clientCertificates,omitempty"`
 }
 
 type Setting struct {
@@ -69,11 +76,30 @@ type Setting struct {
 
 // HasTLS implements core.ApplicationSettings.
 func (in *Setting) HasTLS() bool {
-	return in.TLS != nil
+	if in.TLS == nil {
+		return false
+	}
+	return in.TLS.ClientCertificate != "" || len(in.TLS.ClientCertificates) > 0
 }
 
 func (in *Setting) GetClientCertificate() string {
+	if in.TLS == nil {
+		return ""
+	}
 	return in.TLS.ClientCertificate
+}
+
+// HasClientCertificates implements core.ApplicationSettings.
+func (in *Setting) HasClientCertificates() bool {
+	return in.TLS != nil && len(in.TLS.ClientCertificates) > 0
+}
+
+// GetClientCertificates returns the list of client certificates.
+func (in *Setting) GetClientCertificates() []ClientCertificate {
+	if in.TLS == nil {
+		return nil
+	}
+	return in.TLS.ClientCertificates
 }
 
 // IsOAuth implements core.ApplicationSettings.

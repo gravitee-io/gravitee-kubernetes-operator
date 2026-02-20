@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -143,6 +144,13 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	}
 
 	errs.Add(validateEndingAt(sub.GetEndingAt()))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	if plan.GetSecurityType() == "MTLS" {
+		errs.Add(validateCertEndDatesVsSubscriptionEndDate(sub, app))
+	}
 
 	return errs
 }
@@ -273,6 +281,51 @@ func validateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObjec
 		)
 	}
 	return nil
+}
+
+func validateCertEndDatesVsSubscriptionEndDate(
+	sub core.SubscriptionObject,
+	app core.ApplicationObject,
+) *errors.AdmissionError {
+	endingAt := sub.GetEndingAt()
+	if endingAt == nil {
+		return nil
+	}
+
+	settings, ok := app.GetModel().GetSettings().(*application.Setting)
+	if !ok || !settings.HasClientCertificates() {
+		return nil
+	}
+
+	subEnd, err := time.Parse(time.RFC3339, *endingAt)
+	if err != nil {
+		return nil // endingAt format is validated elsewhere
+	}
+
+	certs := settings.GetClientCertificates()
+	certsWithEndsAt := 0
+	for _, cert := range certs {
+		if cert.EndsAt == "" {
+			continue
+		}
+		certsWithEndsAt++
+		certEnd, err := time.Parse(time.RFC3339, cert.EndsAt)
+		if err != nil {
+			continue
+		}
+		if certEnd.After(subEnd) {
+			return nil // at least one cert outlives the subscription
+		}
+	}
+
+	if certsWithEndsAt == 0 {
+		return nil // no cert has endsAt, nothing to validate
+	}
+
+	return errors.NewSeveref(
+		"subscription ending date [%s] is after all client certificate end dates in application [%s]",
+		*endingAt, app.GetRef(),
+	)
 }
 
 func validateEndingAt(endingAt *string) *errors.AdmissionError {

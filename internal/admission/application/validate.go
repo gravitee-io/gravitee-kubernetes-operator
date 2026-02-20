@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,7 +41,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		if errs.IsSevere() {
 			return errs
 		}
-		errs.MergeWith(validateSettings(app))
+		errs.MergeWith(validateSettings(ctx, app))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -74,7 +75,7 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(validateSettings(newApp))
+	errs.MergeWith(validateSettings(ctx, newApp))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -86,7 +87,7 @@ func validateUpdate(
 	return errs
 }
 
-func validateSettings(app core.ApplicationObject) *errors.AdmissionErrors {
+func validateSettings(ctx context.Context, app core.ApplicationObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
 	model := app.GetModel()
@@ -96,18 +97,58 @@ func validateSettings(app core.ApplicationObject) *errors.AdmissionErrors {
 		errs.AddSevere("configuring both OAuth and simple settings is not allowed")
 	}
 
-	if settings.HasTLS() {
-		errs.Add(validateClientCertificate(settings.GetClientCertificate()))
+	hasSingleCert := settings.HasTLS() && settings.GetClientCertificate() != ""
+	hasMultipleCerts := settings.HasClientCertificates()
+
+	if hasSingleCert && hasMultipleCerts {
+		errs.AddSevere("clientCertificate and clientCertificates cannot be used at the same time")
+		return errs
+	}
+
+	if hasSingleCert {
+		errs.Add(validateSingleClientCertificate(settings.GetClientCertificate()))
+	}
+
+	if hasMultipleCerts {
+		appSettings, ok := settings.(*application.Setting)
+		if !ok {
+			return errs
+		}
+		errs.MergeWith(validateClientCertificates(appSettings.GetClientCertificates()))
+		if errs.IsSevere() {
+			return errs
+		}
+		if err := appResolve.ResolveClientCertificates(ctx, appSettings, app.GetNamespace(), app.GetName()); err != nil {
+			errs.AddSevere(err.Error())
+		}
 	}
 
 	return errs
 }
 
-func validateClientCertificate(cert string) *errors.AdmissionError {
+func validateSingleClientCertificate(cert string) *errors.AdmissionError {
 	if b, _ := pem.Decode([]byte(cert)); b == nil {
 		return errors.NewSevere("failed to parse TLS client certificate")
 	}
-	return nil
+	return errors.NewWarning("clientCertificate is deprecated, use clientCertificates instead")
+}
+
+func validateClientCertificates(certs []application.ClientCertificate) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	for i, cert := range certs {
+		hasContent := cert.Content != ""
+		hasRef := cert.Ref != nil
+
+		if hasContent && hasRef {
+			errs.AddSeveref("clientCertificates[%d]: content and ref cannot both be set", i)
+		}
+		if !hasContent && !hasRef {
+			errs.AddSeveref("clientCertificates[%d]: either content or ref must be set", i)
+		}
+	}
+
+	return errs
 }
 
 func validateSettingsUpdate(oldApp, newApp core.ApplicationObject) *errors.AdmissionErrors {
