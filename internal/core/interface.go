@@ -109,6 +109,7 @@ type ApplicationSettings interface {
 	GetOAuthType() string
 	IsSimple() bool
 	HasTLS() bool
+	HasClientCertificates() bool
 	GetClientID() string
 	GetClientCertificate() string
 }

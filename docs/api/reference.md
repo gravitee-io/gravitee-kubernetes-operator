@@ -716,6 +716,47 @@ _Appears in:_
 | `members` _[Member](#member)_ | Application members |  | Optional: \{\} <br /> |
 
 
+#### CertificateRef
+
+
+
+CertificateRef is a reference to a Secret or ConfigMap containing a client certificate.
+
+
+
+_Appears in:_
+- [ClientCertificate](#clientcertificate)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `kind` _string_ | Kind of the referenced resource. Defaults to "secrets". | secrets | Enum: [secrets configmaps] <br /> |
+| `name` _string_ | Name of the referenced Secret or ConfigMap. |  | Required: \{\} <br /> |
+| `key` _string_ | Key in the referenced Secret or ConfigMap data. Defaults to "tls.crt". | tls.crt |  |
+| `namespace` _string_ | Namespace of the referenced resource. Defaults to the Application namespace. |  | Optional: \{\} <br /> |
+
+
+#### ClientCertificate
+
+
+
+ClientCertificate represents a client certificate for mTLS plans.
+Either content or ref must be set, but not both.
+
+
+
+_Appears in:_
+- [TLSSettings](#tlssettings)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name is an optional label for this certificate.<br />Defaults to the application name suffixed with the certificate index. |  | Optional: \{\} <br /> |
+| `content` _string_ | Content is the certificate inlined (PEM or Base64) or a template [[ ]] notation. |  | Optional: \{\} <br /> |
+| `ref` _[CertificateRef](#certificateref)_ | Ref is a reference to a Secret or ConfigMap containing the certificate. |  | Optional: \{\} <br /> |
+| `startsAt` _string_ | StartsAt is the optional start date of the certificate validity (RFC3339). |  | Optional: \{\} <br /> |
+| `endsAt` _string_ | EndsAt is the optional end date of the certificate validity (RFC3339). |  | Optional: \{\} <br /> |
+| `encoded` _boolean_ | Encoded indicates whether the content is base64 encoded.<br />If true, the content will be decoded before being sent to APIM. |  | Optional: \{\} <br /> |
+
+
 #### GrantType
 
 _Underlying type:_ _string_
@@ -895,7 +936,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `clientCertificate` _string_ | This client certificate is mandatory to subscribe to a TLS plan. |  | Required: \{\} <br /> |
+| `clientCertificate` _string_ | Deprecated: use ClientCertificates instead.<br />This client certificate can be used to subscribe to a TLS plan.<br />Cannot be used at the same time as ClientCertificates. |  | Optional: \{\} <br /> |
+| `clientCertificates` _[ClientCertificate](#clientcertificate) array_ | List of client certificates for mTLS plans.<br />Supports inline PEM/Base64, template [[ ]] notation, and references to Secrets/ConfigMaps.<br />Cannot be used at the same time as ClientCertificate. |  | Optional: \{\} <br /> |
 
 
 

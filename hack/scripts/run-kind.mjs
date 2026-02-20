@@ -122,8 +122,10 @@ async function loadImages() {
 }
 
 async function pullAndTag([image, tag]) {
-  LOG.blue(`pulling image ${image}`);
-  await $`docker pull ${image}`;
+  if (!image.includes("local")) {
+    LOG.blue(`pulling image ${image}`);
+    await $`docker pull ${image}`;
+  }
   LOG.blue(`tagging image ${image} with ${tag}`);
   await $`docker tag ${image} ${tag}`;
   return tag;
