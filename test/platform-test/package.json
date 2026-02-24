@@ -1,0 +1,60 @@
+{
+  "name": "@gravitee/platform-test",
+  "version": "0.1.0",
+  "description": "Assertion library for Gravitee platform e2e testing",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "platform-test": "./dist/cmd/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./assertions/apim": {
+      "types": "./dist/assertions/apim/index.d.ts",
+      "default": "./dist/assertions/apim/index.js"
+    },
+    "./assertions/am": {
+      "types": "./dist/assertions/am/index.d.ts",
+      "default": "./dist/assertions/am/index.js"
+    },
+    "./utils/http": {
+      "types": "./dist/utils/http/index.d.ts",
+      "default": "./dist/utils/http/index.js"
+    },
+    "./utils/match": {
+      "types": "./dist/utils/match/index.d.ts",
+      "default": "./dist/utils/match/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/apim.d.ts",
+      "default": "./dist/types/apim.js"
+    },
+    "./cmd": {
+      "types": "./dist/cmd/index.d.ts",
+      "default": "./dist/cmd/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "yaml": "^2"
+  },
+  "devDependencies": {
+    "typescript": "^5.7",
+    "vitest": "^3.0",
+    "@types/node": "^22"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "Apache-2.0"
+}
