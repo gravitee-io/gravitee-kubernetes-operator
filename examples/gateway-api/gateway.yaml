@@ -13,10 +13,16 @@ spec:
     - name: http
       port: 80
       protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
     - name: https
       port: 443
       protocol: HTTPS
       hostname: '*.apis.example.dev'
+      allowedRoutes:
+        namespaces:
+          from: All
       tls:
         certificateRefs:
           - group: ""
