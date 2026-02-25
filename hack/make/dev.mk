@@ -43,7 +43,7 @@ uninstall-gateway-api: ## Install gateway-api CRDs into the current cluster
 
 .PHONY: run
 run: ## Run a controller from your host
-	@APPLY_CRDS=true ENABLE_GATEWAY_API=true go run ./main.go
+	@APPLY_CRDS=true APPLY_GATEWAY_API_CRDS=true ENABLE_GATEWAY_API=true go run ./main.go
 
 .PHONY: cloud-provider-kind
 cloud-lb: install-go-tools ## Run a local cloud load balancer service (cloud-provider-kind)
