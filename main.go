@@ -381,7 +381,7 @@ func applyCRDs() error {
 			return nil
 		}
 
-		if strings.Contains(path, "gateway-api") && !env.Config.EnableGatewayAPI {
+		if strings.Contains(path, "gateway-api") && shouldSkipGatewayCRDs() {
 			return nil
 		}
 
@@ -409,6 +409,10 @@ func applyCRDs() error {
 
 		return err
 	})
+}
+
+func shouldSkipGatewayCRDs() bool {
+	return !env.Config.EnableGatewayAPI || !env.Config.ApplyGatewayAPICRDs
 }
 
 func patchAdmissionWebhook() {
