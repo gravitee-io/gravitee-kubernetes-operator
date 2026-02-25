@@ -92,8 +92,8 @@ import (
 var (
 	scheme = runtime.NewScheme()
 
-	//go:embed helm
-	helm embed.FS
+	//go:embed crds
+	crds embed.FS
 )
 
 func init() {
@@ -372,7 +372,7 @@ func applyCRDs() error {
 		Resource: "customresourcedefinitions",
 	}
 
-	return fs.WalkDir(helm, "helm/gko/crds", func(path string, d fs.DirEntry, walkErr error) error {
+	return fs.WalkDir(crds, "crds", func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
@@ -385,7 +385,7 @@ func applyCRDs() error {
 			return nil
 		}
 
-		b, err := fs.ReadFile(helm, path)
+		b, err := fs.ReadFile(crds, path)
 		if err != nil {
 			return err
 		}
