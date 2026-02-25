@@ -25,7 +25,7 @@ lint-licenses: ## Run addlicense linter and fail on error
 		-ignore ".mergify.yml" \
 		-ignore ".crd-ref-docs.yaml" \
 		-ignore ".idea/**" \
-		-ignore "helm/gko/crds/kubernetes.io/**" \
+		-ignore "crds/kubernetes.io/**" \
 		-ignore "examples/gateway-api/**" \
 		-ignore "**/kubernetes.io/gateway-api/report/**" \
 		-ignore "examples/gateway-api/**" \
@@ -39,7 +39,7 @@ add-license: ## Add license headers to files
 		-ignore ".mergify.yml" \
 		-ignore ".crd-ref-docs.yaml" \
 		-ignore ".idea/**" \
-		-ignore "helm/gko/crds/kubernetes.io/**" \
+		-ignore "crds/kubernetes.io/**" \
 		-ignore "**/kubernetes.io/gateway-api/report/**" \
 		-ignore "examples/gateway-api/**" \
 		. 
