@@ -61,6 +61,9 @@ data:
   {{- if .Values.gatewayAPI.controller.enabled }}
   ENABLE_GATEWAY_API: "true"
   {{- end }}
+  {{- if .Values.gatewayAPI.applyCRDs }}
+  APPLY_GATEWAY_API_CRDS: "true"
+  {{- end }}
   INGRESS_CLASSES: {{ template "ingress.Classes" . }}
   {{- $template404 := get .Values.ingress.templates "404" }}
   {{- if $template404.name }}

@@ -110,6 +110,7 @@ When storing templates stored in config maps, the config map should contain a co
 | `ingress.ingressClasses`          | list of ingress classes that the gateway will handle.                            | `["graviteeio"]` |
 | `ingress.templates.404.name`      | Name of the config map storing the HTTP 404 ingress response template.           | `""`             |
 | `ingress.templates.404.namespace` | Namespace of the config map storing the HTTP 404 ingress response template.      | `""`             |
+| `gatewayAPI.applyCRDs`            | If true, the manager will apply Gateway API CRDs on startup.                     | `true`           |
 | `gatewayAPI.controller.enabled`   | Set to true to enable experimental gateway api support.                          | `false`          |
 
 ### HTTP Client
