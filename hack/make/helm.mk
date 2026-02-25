@@ -2,4 +2,4 @@
 
 .PHONY: helm-template
 helm-template: manifests ## Generates legacy bundle.yml file from helm chart
-	helm template --include-crds  helm/gko -n gko-system > bundle.yml
+	helm template helm/gko -n gko-system > bundle.yml
