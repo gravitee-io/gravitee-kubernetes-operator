@@ -30,7 +30,7 @@ COPY controllers/ controllers/
 COPY main.go main.go
 
 # Copy the CRD manifests
-COPY helm/gko/crds/ helm/gko/crds/
+COPY crds/ crds/
 
 
 # Build

@@ -30,7 +30,7 @@ COPY internal/ internal/
 COPY controllers/ controllers/
 
 # Copy the CRD manifests
-COPY helm/gko/crds/ helm/gko/crds/
+COPY crds/ crds/
 
 
 # Build
