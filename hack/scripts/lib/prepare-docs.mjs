@@ -137,7 +137,7 @@ async function prepareAPIReference(workingDir, nextVersion) {
     "api-reference.md",
   );
   const refLinkMessage = `The Gravitee Kubernetes Operator (GKO) API reference documentation can be found [in the GKO Github repository](https://github.com/gravitee-io/gravitee-kubernetes-operator/blob/${nextVersion.minor()}.x/docs/api/reference.md).`;
-  const crdLinkMessage = `The GKO CRDs can be found [on GitHub](https://github.com/gravitee-io/gravitee-kubernetes-operator/tree/${nextVersion.minor()}.x/helm/gko/crds).`;
+  const crdLinkMessage = `The GKO CRDs can be found [on GitHub](https://github.com/gravitee-io/gravitee-kubernetes-operator/tree/${nextVersion.minor()}.x/crds).`;
   await $`echo '# API Reference' > ${referenceFile}`;
   await $`echo >> ${referenceFile}`;
   await $`echo ${refLinkMessage} >> ${referenceFile}`;

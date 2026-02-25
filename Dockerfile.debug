@@ -29,7 +29,7 @@ COPY internal/ internal/
 COPY controllers/ controllers/
 
 # Copy the CRD manifests
-COPY helm/gko/crds/ helm/gko/crds/
+COPY crds/ crds/
 
 
 # Build
@@ -40,7 +40,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -gcflags "all=-N -l" -o manag
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM alpine
 WORKDIR /
-COPY --from=builder /workspace/helm/gko/crds/ helm/gko/crds/
+COPY --from=builder /workspace/crds/ crds/
 COPY --from=builder /go/bin/dlv dlv
 COPY --from=builder /workspace/manager .
 
