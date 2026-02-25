@@ -321,6 +321,10 @@ jobs:
                 --set manager.image.tag=latest \
                 -f ./test/conformance/operator.values.yaml
       - run:
+          name: Wait for operator to be ready
+          command: |
+            kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
+      - run:
           name: Apply GatewayClassParameters and GatewayClass custom resources
           command: |
             kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
