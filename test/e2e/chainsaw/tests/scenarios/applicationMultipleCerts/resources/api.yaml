@@ -16,22 +16,22 @@
 apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiV4Definition"
 metadata:
-  name: "mtls-multi-cert-demo"
+  name: "mtls-multi-cert"
 spec:
   definitionContext:
     syncFrom: MANAGEMENT
   contextRef:
     name: dev-ctx
     namespace: default
-  name: "mtls-multi-cert-demo"
+  name: "mtls-multi-cert"
   version: "1"
   type: "PROXY"
   state: "STARTED"
-  description: "MTLS multiple certificates API"
+  description: "MTLS multiple certificates API."
   listeners:
     - type: HTTP
       paths:
-        - path: "/mtls-multi-cert-demo"
+        - path: "/mtls-multi-cert"
       entrypoints:
         - type: http-proxy
           qos: AUTO
