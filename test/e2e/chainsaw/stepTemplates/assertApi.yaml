@@ -1,0 +1,68 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kyverno/chainsaw/main/.schemas/json/steptemplate-chainsaw-v1alpha1.json
+
+# Assert an API in APIM using the platform-test CLI.
+#
+# Required bindings (set at the test level):
+#   $platformTestCli    - path to platform-test CLI (e.g. ../../platform-test/dist/cmd/cli.js)
+#   $platformTestConfig - path to platform-test config.yaml
+#   $apiVersionK8s      - K8s resource type (e.g. apidefinitions.gravitee.io)
+#   $apiName            - K8s resource name
+#   $gkoNamespace       - GKO namespace (for catch pod logs)
+#
+# Assertion bindings (provide at least one):
+#   $expected           - JMESPath hash expression with expected API fields (converted to JSON via to_string)
+#                         Must be quoted due to YAML special chars: "({categories: [$categoryName], state: 'STARTED'})"
+#   $expectFile         - path to a YAML file with the expected partial API shape (--expect flag)
+
+apiVersion: chainsaw.kyverno.io/v1alpha1
+kind: StepTemplate
+metadata:
+  name: assert-api
+spec:
+  bindings:
+    - name: expected
+      value: ""
+    - name: expectFile
+      value: ""
+  try:
+    - script:
+        env:
+          - name: PLATFORM_TEST_CLI
+            value: ($platformTestCli)
+          - name: PLATFORM_TEST_CONFIG
+            value: ($platformTestConfig)
+          - name: API_VERSION_K8S
+            value: ($apiVersionK8s)
+          - name: API_NAME
+            value: ($apiName)
+          - name: RESOURCE_NAMESPACE
+            value: ($namespace)
+          - name: MATCH_JSON
+            value: (to_string($expected))
+          - name: EXPECT_FILE
+            value: ($expectFile)
+        content: |
+          API_ID=$(kubectl get "$API_VERSION_K8S" -n "$RESOURCE_NAMESPACE" "$API_NAME" -o jsonpath='{.status.id}')
+          set -- --config "$PLATFORM_TEST_CONFIG" --api-id "$API_ID"
+          [ -n "$MATCH_JSON" ] && set -- "$@" --match "$MATCH_JSON"
+          [ -n "$EXPECT_FILE" ]     && set -- "$@" --expect "$EXPECT_FILE"
+          node "$PLATFORM_TEST_CLI" assert-api "$@"
+  catch:
+    - events: {}
+    - podLogs:
+        selector: "app.kubernetes.io/component=api"
+        namespace: ($gkoNamespace)
