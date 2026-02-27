@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Application with client1 removed (only client2 remains) — for rotation test
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
@@ -22,11 +21,12 @@ spec:
     name: "dev-ctx"
     namespace: default
   name: "multi-cert-app"
-  description: "Application after cert rotation (client1 removed)"
+  description: "Application with 1 inline client2 certificates as list"
   settings:
     app:
       type: WEB
     tls:
+      clientCertificate: "" # kubectl apply will patch, and consider two fields are set... so we need to remove it.
       clientCertificates:
         - name: client2
           content: |
