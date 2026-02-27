@@ -42,6 +42,10 @@ spec:
       value: "../../../../../lib/commands"
     - name: gkoNamespace
       value: default
+    - name: platformTestCli
+      value: "../../../../../../platform-test/dist/cmd/cli.js"
+    - name: platformTestConfig
+      value: "../../../../../../platform-test/config.yaml"
     - name: categoryName
       value: (concat('category-for-', $apiName))
 
@@ -54,6 +58,14 @@ spec:
     use:
       template: ../../../../stepTemplates/createApi.yaml
 
+  - name: Assert APIM API has the expected category
+    use:
+      template: ../../../../stepTemplates/assertApi.yaml
+      with:
+        bindings:
+          - name: expected
+            value: "({categories: [$categoryName]})"
+  
   - name: Assert exported API for created category
     use:
       template: ../../../../stepTemplates/exportApiAndAssert.yaml
