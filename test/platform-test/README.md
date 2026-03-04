@@ -77,14 +77,14 @@ platform-test assert-api --api-id <id> --status 404
 platform-test assert-api --api-id <id> --match '{"categories":["finance"]}'
 platform-test assert-api --api-id <id> --match '{"visibility":"PUBLIC","tags":["internal"]}'
 
-# Assert from a YAML expect file (same shape as the API object)
-platform-test assert-api --api-id <id> --expect expected-api.yaml
+# Assert from a YAML match file (same shape as the API object)
+platform-test assert-api --api-id <id> --match-file expected-api.yaml
 
-# Combine --expect with flag overrides (flags take precedence)
-platform-test assert-api --api-id <id> --expect expected-api.yaml --state STARTED
+# Combine --match-file with flag overrides (flags take precedence)
+platform-test assert-api --api-id <id> --match-file expected-api.yaml --state STARTED
 
-# Combine --expect with --match (--match overrides --expect, flags override both)
-platform-test assert-api --api-id <id> --expect expected-api.yaml --match '{"visibility":"PUBLIC"}'
+# Combine --match-file with --match (--match overrides --match-file, flags override both)
+platform-test assert-api --api-id <id> --match-file expected-api.yaml --match '{"visibility":"PUBLIC"}'
 
 # Combine specific flags with --match
 platform-test assert-api --api-id <id> --state STARTED --match '{"categories":["finance"]}'
@@ -97,7 +97,7 @@ platform-test assert-api --api-id <id> --state STARTED --match '{"categories":["
 | `--state <state>` | Expected lifecycle state (e.g. STARTED, STOPPED) |
 | `--path <path>` | Expected listener path (e.g. /petstore) |
 | `--match <json>` | Arbitrary JSON partial merged into the assertion |
-| `--expect <file>` | YAML file with expected partial API shape (merged before `--match`/`--state`/`--path`) |
+| `--match-file <file>` | YAML file with expected partial API shape (merged before `--match`/`--state`/`--path`) |
 | `--config <file>` | Path to `config.yaml` (default: CWD) |
 
 **How `--match` works:** The JSON value is parsed and merged into the partial object
@@ -105,9 +105,9 @@ passed to `assertApiMatches()`. You can assert any field on the API object — c
 tags, labels, properties, visibility, etc. Explicit flags (`--state`, `--path`) take
 precedence over overlapping keys in `--match`.
 
-**How `--expect` works:** The YAML file is parsed as a plain object with the same shape
+**How `--match-file` works:** The YAML file is parsed as a plain object with the same shape
 as the API (i.e. `DeepPartial<Api>`). This provides a file-based alternative to `--match`
-for complex assertions. The merge order is: `--expect` file (base) → `--match` JSON
+for complex assertions. The merge order is: `--match-file` (base) → `--match` JSON
 (overrides) → individual flags (`--state`, `--path`) (highest precedence).
 
 Example `expected-api.yaml`:
@@ -230,7 +230,7 @@ steps:
             API_ID=$(kubectl get $API_VERSION_K8S -n default $API_NAME -o jsonpath='{.status.id}')
             node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match '{"categories":["'$CATEGORY_NAME'"]}'
 
-  - name: Assert API shape from YAML expect file
+  - name: Assert API shape from YAML match file
     try:
       - script:
           env:
@@ -242,7 +242,7 @@ steps:
               value: ($apiName)
           content: |
             API_ID=$(kubectl get $API_VERSION_K8S -n default $API_NAME -o jsonpath='{.status.id}')
-            node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --expect expected-api.yaml
+            node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match-file expected-api.yaml
 ```
 
 ## TypeScript API
