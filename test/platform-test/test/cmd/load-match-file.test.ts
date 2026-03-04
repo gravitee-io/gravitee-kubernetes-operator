@@ -16,7 +16,7 @@
 
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { readFile } from "node:fs/promises";
-import { loadExpectFile } from "../../src/cmd/assert-api.js";
+import { loadMatchFile } from "../../src/cmd/assert-api.js";
 
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn(),
@@ -28,10 +28,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("loadExpectFile", () => {
+describe("loadMatchFile", () => {
   it("parses a valid YAML file", async () => {
     mockedReadFile.mockResolvedValue("state: STARTED\nname: My API\n");
-    const result = await loadExpectFile("/path/to/expect.yaml");
+    const result = await loadMatchFile("/path/to/expect.yaml");
     expect(result).toEqual({ state: "STARTED", name: "My API" });
     expect(mockedReadFile).toHaveBeenCalledWith("/path/to/expect.yaml", "utf-8");
   });
@@ -40,7 +40,7 @@ describe("loadExpectFile", () => {
     mockedReadFile.mockResolvedValue(
       "listeners:\n  - type: HTTP\n    paths:\n      - path: /petstore\ncategories:\n  - finance\n",
     );
-    const result = await loadExpectFile("/path/to/expect.yaml");
+    const result = await loadMatchFile("/path/to/expect.yaml");
     expect(result).toEqual({
       listeners: [{ type: "HTTP", paths: [{ path: "/petstore" }] }],
       categories: ["finance"],
@@ -49,36 +49,36 @@ describe("loadExpectFile", () => {
 
   it("throws when the file does not exist", async () => {
     mockedReadFile.mockRejectedValue(new Error("ENOENT: no such file or directory"));
-    await expect(loadExpectFile("/missing.yaml")).rejects.toThrow(
-      'assert-api: cannot read --expect file "/missing.yaml"',
+    await expect(loadMatchFile("/missing.yaml")).rejects.toThrow(
+      'assert-api: cannot read --match-file "/missing.yaml"',
     );
   });
 
   it("throws when the file contains invalid YAML", async () => {
     mockedReadFile.mockResolvedValue("key: [unterminated");
-    await expect(loadExpectFile("/bad.yaml")).rejects.toThrow(
-      'assert-api: --expect file "/bad.yaml" is not valid YAML',
+    await expect(loadMatchFile("/bad.yaml")).rejects.toThrow(
+      'assert-api: --match-file "/bad.yaml" is not valid YAML',
     );
   });
 
   it("throws when the file contains a YAML scalar instead of a mapping", async () => {
     mockedReadFile.mockResolvedValue("just a string");
-    await expect(loadExpectFile("/scalar.yaml")).rejects.toThrow(
-      'assert-api: --expect file "/scalar.yaml" must contain a YAML mapping (object)',
+    await expect(loadMatchFile("/scalar.yaml")).rejects.toThrow(
+      'assert-api: --match-file "/scalar.yaml" must contain a YAML mapping (object)',
     );
   });
 
   it("throws when the file contains a YAML array instead of a mapping", async () => {
     mockedReadFile.mockResolvedValue("- item1\n- item2\n");
-    await expect(loadExpectFile("/array.yaml")).rejects.toThrow(
-      'assert-api: --expect file "/array.yaml" must contain a YAML mapping (object), got array',
+    await expect(loadMatchFile("/array.yaml")).rejects.toThrow(
+      'assert-api: --match-file "/array.yaml" must contain a YAML mapping (object), got array',
     );
   });
 
   it("throws when the file is empty (parses to null)", async () => {
     mockedReadFile.mockResolvedValue("");
-    await expect(loadExpectFile("/empty.yaml")).rejects.toThrow(
-      'assert-api: --expect file "/empty.yaml" must contain a YAML mapping (object)',
+    await expect(loadMatchFile("/empty.yaml")).rejects.toThrow(
+      'assert-api: --match-file "/empty.yaml" must contain a YAML mapping (object)',
     );
   });
 });
