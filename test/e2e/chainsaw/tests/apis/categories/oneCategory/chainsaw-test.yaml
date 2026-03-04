@@ -63,7 +63,7 @@ spec:
       template: ../../../../stepTemplates/assertApi.yaml
       with:
         bindings:
-          - name: expected
+          - name: match
             value: "({categories: [$categoryName]})"
   
   - name: Assert exported API for created category

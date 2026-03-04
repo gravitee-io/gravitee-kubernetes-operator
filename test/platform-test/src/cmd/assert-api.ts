@@ -32,24 +32,24 @@ export interface AssertApiFlags {
   /** Raw JSON partial to merge into the assertion (e.g. '{"categories":["finance"]}') */
   match?: string;
   /** Path to a YAML file containing the expected partial API shape */
-  expectFile?: string;
-  /** Pre-parsed content from --expect file (for testability; set by assertApiCommand) */
-  expectContent?: Record<string, unknown>;
+  matchFile?: string;
+  /** Pre-parsed content from --match-file (for testability; set by assertApiCommand) */
+  matchContent?: Record<string, unknown>;
   /** Path to config.yaml config file */
   configPath?: string;
 }
 
 /**
- * Load and parse a YAML expect file as a plain object.
+ * Load and parse a YAML match file as a plain object.
  * Throws a descriptive error if the file cannot be read or parsed.
  */
-export async function loadExpectFile(filePath: string): Promise<Record<string, unknown>> {
+export async function loadMatchFile(filePath: string): Promise<Record<string, unknown>> {
   let content: string;
   try {
     content = await readFile(filePath, "utf-8");
   } catch (err) {
     throw new Error(
-      `assert-api: cannot read --expect file "${filePath}": ${err instanceof Error ? err.message : String(err)}`,
+      `assert-api: cannot read --match-file "${filePath}": ${err instanceof Error ? err.message : String(err)}`,
     );
   }
 
@@ -58,13 +58,13 @@ export async function loadExpectFile(filePath: string): Promise<Record<string, u
     parsed = parse(content);
   } catch (err) {
     throw new Error(
-      `assert-api: --expect file "${filePath}" is not valid YAML: ${err instanceof Error ? err.message : String(err)}`,
+      `assert-api: --match-file "${filePath}" is not valid YAML: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
 
   if (parsed === null || parsed === undefined || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error(
-      `assert-api: --expect file "${filePath}" must contain a YAML mapping (object), got ${Array.isArray(parsed) ? "array" : String(parsed)}`,
+      `assert-api: --match-file "${filePath}" must contain a YAML mapping (object), got ${Array.isArray(parsed) ? "array" : String(parsed)}`,
     );
   }
 
@@ -75,15 +75,15 @@ export async function loadExpectFile(filePath: string): Promise<Record<string, u
  * Build a DeepPartial<Api> from CLI flags.
  *
  * Merge order (later wins):
- *   1. `--expect <file>` content (loaded externally, passed as `expectContent`)
+ *   1. `--match-file <file>` content (loaded externally, passed as `matchContent`)
  *   2. `--match <JSON>` inline partial
  *   3. `--state`, `--path` individual flags
  */
 export function buildPartial(flags: AssertApiFlags): DeepPartial<Api> {
   const partial: DeepPartial<Api> = {};
 
-  if (flags.expectContent) {
-    Object.assign(partial, flags.expectContent);
+  if (flags.matchContent) {
+    Object.assign(partial, flags.matchContent);
   }
 
   if (flags.match) {
@@ -119,8 +119,8 @@ export async function assertApiCommand(flags: AssertApiFlags): Promise<void> {
     throw new Error("assert-api: --api-id is required");
   }
 
-  if (flags.expectFile) {
-    flags.expectContent = await loadExpectFile(flags.expectFile);
+  if (flags.matchFile) {
+    flags.matchContent = await loadMatchFile(flags.matchFile);
   }
 
   const config = await loadGraviteeConfig(flags.configPath);

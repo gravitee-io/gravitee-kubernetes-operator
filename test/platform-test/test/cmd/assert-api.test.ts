@@ -94,49 +94,49 @@ describe("buildPartial", () => {
   });
 });
 
-// ── buildPartial with --expect content ────────────────────────
+// ── buildPartial with --match-file content ────────────────────
 
-describe("buildPartial with expectContent", () => {
-  it("merges expectContent into the partial", () => {
+describe("buildPartial with matchContent", () => {
+  it("merges matchContent into the partial", () => {
     const partial = buildPartial({
       apiId: "abc",
-      expectContent: { name: "My API", visibility: "PUBLIC" },
+      matchContent: { name: "My API", visibility: "PUBLIC" },
     });
     expect(partial).toEqual({ name: "My API", visibility: "PUBLIC" });
   });
 
-  it("--match overrides expectContent fields", () => {
+  it("--match overrides matchContent fields", () => {
     const partial = buildPartial({
       apiId: "abc",
-      expectContent: { name: "From File", visibility: "PUBLIC" },
+      matchContent: { name: "From File", visibility: "PUBLIC" },
       match: '{"name":"From Match"}',
     });
     expect(partial).toEqual({ name: "From Match", visibility: "PUBLIC" });
   });
 
-  it("--state overrides expectContent state", () => {
+  it("--state overrides matchContent state", () => {
     const partial = buildPartial({
       apiId: "abc",
-      expectContent: { state: "STOPPED", name: "My API" },
+      matchContent: { state: "STOPPED", name: "My API" },
       state: "STARTED",
     });
     expect(partial.state).toBe("STARTED");
     expect((partial as { name?: string }).name).toBe("My API");
   });
 
-  it("--path overrides expectContent listeners", () => {
+  it("--path overrides matchContent listeners", () => {
     const partial = buildPartial({
       apiId: "abc",
-      expectContent: { listeners: [{ type: "HTTP", paths: [{ path: "/from-file" }] }] },
+      matchContent: { listeners: [{ type: "HTTP", paths: [{ path: "/from-file" }] }] },
       path: "/from-flag",
     }) as { listeners: Array<{ paths: Array<{ path: string }> }> };
     expect(partial.listeners[0].paths[0].path).toBe("/from-flag");
   });
 
-  it("combines expectContent with all flag types", () => {
+  it("combines matchContent with all flag types", () => {
     const partial = buildPartial({
       apiId: "abc",
-      expectContent: { categories: ["finance"], tags: ["internal"] },
+      matchContent: { categories: ["finance"], tags: ["internal"] },
       match: '{"visibility":"PUBLIC"}',
       state: "STARTED",
       path: "/petstore",
@@ -149,7 +149,7 @@ describe("buildPartial with expectContent", () => {
     });
   });
 
-  it("treats absent expectContent the same as before", () => {
+  it("treats absent matchContent the same as before", () => {
     const partial = buildPartial({ apiId: "abc", state: "STARTED" });
     expect(partial).toEqual({ state: "STARTED" });
   });
