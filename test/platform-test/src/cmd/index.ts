@@ -15,4 +15,4 @@
  */
 
 export { parseArgs } from "./parse-args.js";
-export { buildPartial, loadExpectFile } from "./assert-api.js";
+export { buildPartial, loadMatchFile } from "./assert-api.js";

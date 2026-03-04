@@ -24,9 +24,9 @@
 #   $gkoNamespace       - GKO namespace (for catch pod logs)
 #
 # Assertion bindings (provide at least one):
-#   $expected           - JMESPath hash expression with expected API fields (converted to JSON via to_string)
+#   $match              - JMESPath hash expression with expected API fields (converted to JSON via to_string)
 #                         Must be quoted due to YAML special chars: "({categories: [$categoryName], state: 'STARTED'})"
-#   $expectFile         - path to a YAML file with the expected partial API shape (--expect flag)
+#   $matchFile          - path to a YAML file with the expected partial API shape (--match-file flag)
 
 apiVersion: chainsaw.kyverno.io/v1alpha1
 kind: StepTemplate
@@ -34,9 +34,9 @@ metadata:
   name: assert-api
 spec:
   bindings:
-    - name: expected
+    - name: match
       value: ""
-    - name: expectFile
+    - name: matchFile
       value: ""
   try:
     - script:
@@ -52,14 +52,14 @@ spec:
           - name: RESOURCE_NAMESPACE
             value: ($namespace)
           - name: MATCH_JSON
-            value: (to_string($expected))
-          - name: EXPECT_FILE
-            value: ($expectFile)
+            value: (to_string($match))
+          - name: MATCH_FILE
+            value: ($matchFile)
         content: |
           API_ID=$(kubectl get "$API_VERSION_K8S" -n "$RESOURCE_NAMESPACE" "$API_NAME" -o jsonpath='{.status.id}')
           set -- --config "$PLATFORM_TEST_CONFIG" --api-id "$API_ID"
           [ -n "$MATCH_JSON" ] && set -- "$@" --match "$MATCH_JSON"
-          [ -n "$EXPECT_FILE" ]     && set -- "$@" --expect "$EXPECT_FILE"
+          [ -n "$MATCH_FILE" ]     && set -- "$@" --match-file "$MATCH_FILE"
           node "$PLATFORM_TEST_CLI" assert-api "$@"
   catch:
     - events: {}

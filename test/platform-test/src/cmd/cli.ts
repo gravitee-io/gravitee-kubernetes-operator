@@ -49,7 +49,7 @@ async function main(): Promise<void> {
         state: flags["state"],
         path: flags["path"],
         match: flags["match"],
-        expectFile: flags["expect"],
+        matchFile: flags["match-file"],
         configPath: flags["config"],
       });
       break;
@@ -90,7 +90,7 @@ async function main(): Promise<void> {
           "  --state  <state>           Expected state (e.g. STARTED, STOPPED)",
           "  --path   <path>            Expected listener path (e.g. /petstore)",
           "  --match  <json>            Arbitrary JSON partial to assert (e.g. '{\"categories\":[\"finance\"]}')",
-          "  --expect <file>            YAML file with expected partial API shape (merged before --match/--state/--path)",
+          "  --match-file <file>        YAML file with expected partial API shape (merged before --match/--state/--path)",
           "  --config <file>            Path to config.yaml (default: CWD)",
           "",
           "Flags for assert-gateway:",
