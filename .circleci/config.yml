@@ -464,6 +464,9 @@ jobs:
           name: Install libs
           command: yarn --cwd test/e2e/lib install
       - run:
+          name: Build platform-test CLI
+          command: npm --prefix test/platform-test install && npm --prefix test/platform-test run build
+      - run:
           name: Install Chainsaw
           command: |
             GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.14
