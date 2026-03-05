@@ -29,11 +29,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validate create", labels.WithContext, func() {
+var _ = FDescribe("Validate create", labels.WithContext, func() {
 	ctx := context.Background()
 	admissionCtrl := adm.AdmissionCtrl{}
 
-	It("should fail if subscription ending date is after all client certificate end dates", func() {
+	It("should fail to create if subscription ending date is after all client certificate end dates", func() {
 		fixtures := fixture.
 			Builder().
 			WithAPIv4(constants.SubscribeMTLSUseCaseAPIFile).
@@ -63,5 +63,43 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 				err,
 			)
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+	})
+
+	It("should fail to update if subscription ending date is after all client certificate end dates", func() {
+		fixtures := fixture.
+			Builder().
+			WithAPIv4(constants.SubscribeMTLSUseCaseAPIFile).
+			WithApplication(constants.ApplicationWithClientCertsAndDates).
+			WithSubscription(constants.SubscriptionMTLSWithCertDatesFile).
+			WithContext(constants.ContextWithCredentialsFile).
+			Build()
+		fixtures.Apply()
+
+		Eventually(func() error {
+			Expect(admissionCtrl.Default(ctx, fixtures.Subscription)).ToNot(HaveOccurred())
+			_, err := admissionCtrl.ValidateCreate(ctx, fixtures.Subscription)
+			return assert.Equals("error", nil, err)
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+
+		// The application fixture has clientCertificates with endsAt: 2027-06-01T00:00:00Z
+		// Set subscription endingAt to after all cert endsAt dates
+		endingAt := "2028-01-01T00:00:00Z"
+		newSubscription := fixtures.Subscription.DeepCopy()
+		newSubscription.Spec.EndingAt = &endingAt
+
+		Eventually(func() error {
+			Expect(admissionCtrl.Default(ctx, fixtures.Subscription)).ToNot(HaveOccurred())
+			_, err := admissionCtrl.ValidateUpdate(ctx, fixtures.Subscription, newSubscription)
+			return assert.Equals(
+				"error",
+				errors.NewSeveref(
+					"subscription ending date [%s] is after all client certificate end dates in application [%s]",
+					endingAt,
+					fixtures.Application.GetRef(),
+				),
+				err,
+			)
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+
 	})
 })
