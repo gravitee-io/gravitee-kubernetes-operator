@@ -31,7 +31,7 @@ import (
 var allowedPlanSecurities = []string{"JWT", "OAUTH2", "MTLS"}
 
 func validateUpdate(
-	_ context.Context,
+	ctx context.Context,
 	oldObj runtime.Object,
 	newObj runtime.Object,
 ) *errors.AdmissionErrors {
@@ -44,6 +44,13 @@ func validateUpdate(
 			return errs
 		}
 		errs.Add(validateEndingAt(newSub.GetEndingAt()))
+
+		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+		if errs.IsSevere() {
+			return errs
+		}
+
+		validateMTLS(newSub, plan, app, errs)
 	}
 	return errs
 }
@@ -89,12 +96,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 
 	errs.Add(validateApiKind(sub))
 
-	api, err := dynamic.ResolveAPI(ctx, sub.GetApiRef(), ns)
-	if err != nil {
-		errs.AddSeveref(
-			"unable to resolve API [%s]", sub.GetApiRef(),
-		)
-	}
+	api, app, plan := resolveDependencies(ctx, sub, ns, errs)
 
 	if errs.IsSevere() {
 		return errs
@@ -115,23 +117,10 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	app, err := dynamic.ResolveApplication(ctx, sub.GetAppRef(), ns)
-	if err != nil {
-		errs.AddSeveref(
-			"unable to resolve application [%s]", sub.GetAppRef(),
-		)
-	}
-
-	if errs.IsSevere() {
-		return errs
-	}
-
 	errs.Add(validateApplicationState(app))
 	if errs.IsSevere() {
 		return errs
 	}
-
-	plan := api.GetPlan(sub.GetPlan())
 
 	errs.MergeWith(validateApplicationSettings(plan, app))
 	if errs.IsSevere() {
@@ -148,11 +137,35 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	if plan.GetSecurityType() == "MTLS" {
-		errs.Add(validateCertEndDatesVsSubscriptionEndDate(sub, app))
-	}
+	validateMTLS(sub, plan, app, errs)
 
 	return errs
+}
+
+func resolveDependencies(
+	ctx context.Context,
+	sub core.SubscriptionObject,
+	ns string, errs *errors.AdmissionErrors) (core.ApiDefinitionObject, core.ApplicationObject, core.PlanModel) {
+	api, err := dynamic.ResolveAPI(ctx, sub.GetApiRef(), ns)
+	if err != nil {
+		errs.AddSeveref(
+			"unable to resolve API [%s]", sub.GetApiRef(),
+		)
+	}
+
+	if errs.IsSevere() {
+		return nil, nil, nil
+	}
+
+	app, err := dynamic.ResolveApplication(ctx, sub.GetAppRef(), ns)
+	if err != nil {
+		errs.AddSeveref(
+			"unable to resolve application [%s]", sub.GetAppRef(),
+		)
+	}
+
+	plan := api.GetPlan(sub.GetPlan())
+	return api, app, plan
 }
 
 func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *errors.AdmissionError {
@@ -170,6 +183,16 @@ func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *erro
 		)
 	}
 	return validatePlanSecurityType(plan, sub.GetPlan())
+}
+
+func validateMTLS(
+	sub core.SubscriptionObject,
+	plan core.PlanModel,
+	app core.ApplicationObject,
+	errs *errors.AdmissionErrors) {
+	if plan.GetSecurityType() == "MTLS" {
+		errs.Add(validateCertEndDatesVsSubscriptionEndDate(sub, app))
+	}
 }
 
 func validateApiState(api core.ApiDefinitionObject) *errors.AdmissionError {
