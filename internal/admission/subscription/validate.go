@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -30,7 +31,7 @@ import (
 var allowedPlanSecurities = []string{"JWT", "OAUTH2", "MTLS"}
 
 func validateUpdate(
-	_ context.Context,
+	ctx context.Context,
 	oldObj runtime.Object,
 	newObj runtime.Object,
 ) *errors.AdmissionErrors {
@@ -43,6 +44,13 @@ func validateUpdate(
 			return errs
 		}
 		errs.Add(validateEndingAt(newSub.GetEndingAt()))
+
+		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+		if errs.IsSevere() {
+			return errs
+		}
+
+		validateMTLS(newSub, plan, app, errs)
 	}
 	return errs
 }
@@ -88,12 +96,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 
 	errs.Add(validateApiKind(sub))
 
-	api, err := dynamic.ResolveAPI(ctx, sub.GetApiRef(), ns)
-	if err != nil {
-		errs.AddSeveref(
-			"unable to resolve API [%s]", sub.GetApiRef(),
-		)
-	}
+	api, app, plan := resolveDependencies(ctx, sub, ns, errs)
 
 	if errs.IsSevere() {
 		return errs
@@ -114,23 +117,10 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	app, err := dynamic.ResolveApplication(ctx, sub.GetAppRef(), ns)
-	if err != nil {
-		errs.AddSeveref(
-			"unable to resolve application [%s]", sub.GetAppRef(),
-		)
-	}
-
-	if errs.IsSevere() {
-		return errs
-	}
-
 	errs.Add(validateApplicationState(app))
 	if errs.IsSevere() {
 		return errs
 	}
-
-	plan := api.GetPlan(sub.GetPlan())
 
 	errs.MergeWith(validateApplicationSettings(plan, app))
 	if errs.IsSevere() {
@@ -143,8 +133,39 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	}
 
 	errs.Add(validateEndingAt(sub.GetEndingAt()))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	validateMTLS(sub, plan, app, errs)
 
 	return errs
+}
+
+func resolveDependencies(
+	ctx context.Context,
+	sub core.SubscriptionObject,
+	ns string, errs *errors.AdmissionErrors) (core.ApiDefinitionObject, core.ApplicationObject, core.PlanModel) {
+	api, err := dynamic.ResolveAPI(ctx, sub.GetApiRef(), ns)
+	if err != nil {
+		errs.AddSeveref(
+			"unable to resolve API [%s]", sub.GetApiRef(),
+		)
+	}
+
+	if errs.IsSevere() {
+		return nil, nil, nil
+	}
+
+	app, err := dynamic.ResolveApplication(ctx, sub.GetAppRef(), ns)
+	if err != nil {
+		errs.AddSeveref(
+			"unable to resolve application [%s]", sub.GetAppRef(),
+		)
+	}
+
+	plan := api.GetPlan(sub.GetPlan())
+	return api, app, plan
 }
 
 func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *errors.AdmissionError {
@@ -162,6 +183,16 @@ func validatePlan(sub core.SubscriptionModel, api core.ApiDefinitionModel) *erro
 		)
 	}
 	return validatePlanSecurityType(plan, sub.GetPlan())
+}
+
+func validateMTLS(
+	sub core.SubscriptionObject,
+	plan core.PlanModel,
+	app core.ApplicationObject,
+	errs *errors.AdmissionErrors) {
+	if plan.GetSecurityType() == "MTLS" {
+		errs.Add(validateCertEndDatesVsSubscriptionEndDate(sub, app))
+	}
 }
 
 func validateApiState(api core.ApiDefinitionObject) *errors.AdmissionError {
@@ -273,6 +304,51 @@ func validateContextRefs(api core.ApiDefinitionObject, app core.ApplicationObjec
 		)
 	}
 	return nil
+}
+
+func validateCertEndDatesVsSubscriptionEndDate(
+	sub core.SubscriptionObject,
+	app core.ApplicationObject,
+) *errors.AdmissionError {
+	endingAt := sub.GetEndingAt()
+	if endingAt == nil {
+		return nil
+	}
+
+	settings, ok := app.GetModel().GetSettings().(*application.Setting)
+	if !ok || !settings.HasClientCertificates() {
+		return nil
+	}
+
+	subEnd, err := time.Parse(time.RFC3339, *endingAt)
+	if err != nil {
+		return nil // endingAt format is validated elsewhere
+	}
+
+	certs := settings.GetClientCertificates()
+	certsWithEndsAt := 0
+	for _, cert := range certs {
+		if cert.EndsAt == "" {
+			continue
+		}
+		certsWithEndsAt++
+		certEnd, err := time.Parse(time.RFC3339, cert.EndsAt)
+		if err != nil {
+			continue
+		}
+		if certEnd.After(subEnd) {
+			return nil // at least one cert outlives the subscription
+		}
+	}
+
+	if certsWithEndsAt == 0 {
+		return nil // no cert has endsAt, nothing to validate
+	}
+
+	return errors.NewSeveref(
+		"subscription ending date [%s] is after all client certificate end dates in application [%s]",
+		*endingAt, app.GetRef(),
+	)
 }
 
 func validateEndingAt(endingAt *string) *errors.AdmissionError {

@@ -16,6 +16,7 @@ package application
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,8 +40,36 @@ func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 type AdmissionCtrl struct{}
 
 // Default implements admission.CustomDefaulter.
-func (a AdmissionCtrl) Default(ctx context.Context, obj runtime.Object) error {
+func (a AdmissionCtrl) Default(_ context.Context, obj runtime.Object) error {
+	app, ok := obj.(*v1alpha1.Application)
+	if !ok {
+		return nil
+	}
+	defaultClientCertificates(app)
 	return nil
+}
+
+func defaultClientCertificates(app *v1alpha1.Application) {
+	if app.Spec.Settings == nil || app.Spec.Settings.TLS == nil {
+		return
+	}
+
+	for i := range app.Spec.Settings.TLS.ClientCertificates {
+		cert := &app.Spec.Settings.TLS.ClientCertificates[i]
+
+		if cert.Name == "" {
+			cert.Name = app.Spec.Name + "-" + strconv.Itoa(i)
+		}
+
+		if cert.Ref != nil {
+			if cert.Ref.Kind == "" {
+				cert.Ref.Kind = "secrets"
+			}
+			if cert.Ref.Key == "" {
+				cert.Ref.Key = "tls.crt"
+			}
+		}
+	}
 }
 
 // ValidateCreate implements admission.CustomValidator.

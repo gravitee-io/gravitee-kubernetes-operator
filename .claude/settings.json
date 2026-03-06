@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_FILE\" == *.go ]]; then gofmt -w \"$CLAUDE_FILE\"; fi",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

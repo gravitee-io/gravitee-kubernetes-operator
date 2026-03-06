@@ -46,6 +46,7 @@ const (
 	AppContextField              IndexField = "app-context"
 	ApiV2SubsField               IndexField = "api-v2-subscription"
 	ApiV4SubsField               IndexField = "api-v4-subscription"
+	AppSubsField                 IndexField = "app-subscription"
 	SPGContextField              IndexField = "spg-context"
 )
 
@@ -61,86 +62,31 @@ type Indexer struct {
 func InitCache(ctx context.Context, cache cache.Cache) error {
 	errs := make([]error, 0)
 
-	err := newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiContextField, indexManagementContexts)
-	if err != nil {
-		errs = append(errs, err)
+	collect := func(err error) {
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4ContextField, indexApiV4ManagementContexts)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiResourceField, indexApiResourceRefs)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4ResourceField, indexApiV4ResourceRefs)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiNotificationRefsField, indexNotificationRefs)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4NotificationRefsField, indexApiV4NotificationRefs)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiGroupField, indexApiGroupsRefs)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4GroupField, indexApiV4GroupsRefs)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4SharedPolicyGroupsField,
-		indexApiV4FlowsSharedPolicyGroupsRefs)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.ManagementContext{}, SecretRefField, indexManagementContextSecrets)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1.Ingress{}, ApiTemplateField, indexApiTemplate)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1.Ingress{}, TLSSecretField, indexTLSSecret)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.Application{}, AppContextField, indexApplicationManagementContexts)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.Subscription{}, ApiV2SubsField, indexAPIv2Subscriptions)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.Subscription{}, ApiV4SubsField, indexAPIv4Subscriptions)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
-	err = newIndexer(ctx, cache, &v1alpha1.SharedPolicyGroup{}, SPGContextField, indexSharedPolicyGroupManagementContexts)
-	if err != nil {
-		errs = append(errs, err)
-	}
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiContextField, indexManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4ContextField, indexApiV4ManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiResourceField, indexApiResourceRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4ResourceField, indexApiV4ResourceRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiNotificationRefsField, indexNotificationRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4NotificationRefsField, indexApiV4NotificationRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiDefinition{}, ApiGroupField, indexApiGroupsRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4GroupField, indexApiV4GroupsRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.ApiV4Definition{}, ApiV4SharedPolicyGroupsField,
+		indexApiV4FlowsSharedPolicyGroupsRefs))
+	collect(newIndexer(ctx, cache, &v1alpha1.ManagementContext{}, SecretRefField, indexManagementContextSecrets))
+	collect(newIndexer(ctx, cache, &v1.Ingress{}, ApiTemplateField, indexApiTemplate))
+	collect(newIndexer(ctx, cache, &v1.Ingress{}, TLSSecretField, indexTLSSecret))
+	collect(newIndexer(ctx, cache, &v1alpha1.Application{}, AppContextField, indexApplicationManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.Subscription{}, ApiV2SubsField, indexAPIv2Subscriptions))
+	collect(newIndexer(ctx, cache, &v1alpha1.Subscription{}, ApiV4SubsField, indexAPIv4Subscriptions))
+	collect(newIndexer(ctx, cache, &v1alpha1.Subscription{}, AppSubsField, indexAppSubscriptions))
+	collect(newIndexer(ctx, cache, &v1alpha1.SharedPolicyGroup{}, SPGContextField,
+		indexSharedPolicyGroupManagementContexts))
 
 	return errors.NewAggregate(errs)
 }
@@ -334,6 +280,18 @@ func indexAPIv2Subscriptions(sub *v1alpha1.Subscription, fields *[]string) {
 	if kind == core.CRDApiDefinitionResource {
 		*fields = append(*fields, nsn.String())
 	}
+}
+
+func indexAppSubscriptions(sub *v1alpha1.Subscription, fields *[]string) {
+	ns := sub.Spec.App.Namespace
+	if ns == "" {
+		ns = sub.GetNamespace()
+	}
+	nsn := refs.NamespacedName{
+		Name:      sub.Spec.App.Name,
+		Namespace: ns,
+	}
+	*fields = append(*fields, nsn.String())
 }
 
 func indexSharedPolicyGroupManagementContexts(spg *v1alpha1.SharedPolicyGroup, fields *[]string) {
