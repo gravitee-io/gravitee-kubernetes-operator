@@ -1,0 +1,14 @@
+{
+  "name": "@gravitee/platform-test-playwright-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npx playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48",
+    "@types/node": "^22",
+    "typescript": "^5.7",
+    "yaml": "^2"
+  }
+}
