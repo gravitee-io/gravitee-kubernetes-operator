@@ -1,0 +1,16 @@
+{
+  "name": "@gravitee/platform-test-jest-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^29",
+    "@types/node": "^22",
+    "jest": "^29",
+    "ts-jest": "^29",
+    "typescript": "^5.7",
+    "yaml": "^2"
+  }
+}
