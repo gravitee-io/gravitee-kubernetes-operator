@@ -36,7 +36,7 @@ spec:
         - events: {}
       cleanup:
         - delete:
-            file: resources/tls-secrets.yaml
+            file: ../resources/tls-secrets.yaml
     - name: Deploy v4 API with MTLS plan
       use:
         template: ../../../../stepTemplates/deploy-and-wait.yaml
