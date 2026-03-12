@@ -135,6 +135,9 @@ const (
 	ApiV4WithPagesFile                 = "apim/api_definition/v4/api-v4-with-page-markdown.yml"
 	ApiWithNotificationsAndGroups      = "apim/api_definition/v2/api-with-notifications-and-groups.yml"
 	ApiV4WithNotificationsAndGroups    = "apim/api_definition/v4/api-v4-with-notifications-and-groups.yml"
+	ApiV4LLMProxy                      = "apim/api_definition/v4/api-v4-llm-proxy.yml"
+	ApiV4MCPProxy                      = "apim/api_definition/v4/api-v4-mcp-proxy.yml"
+	ApiV4A2AProxy                      = "apim/api_definition/v4/api-v4-a2a-proxy.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"

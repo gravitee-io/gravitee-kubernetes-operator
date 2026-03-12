@@ -24,7 +24,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
-// +kubebuilder:validation:Enum=PROXY;MESSAGE;NATIVE;
+// +kubebuilder:validation:Enum=PROXY;MESSAGE;NATIVE;LLM_PROXY;MCP_PROXY;A2A_PROXY;
 type ApiType string
 
 // +kubebuilder:validation:Enum=PUBLISHED;UNPUBLISHED;DEPRECATED;ARCHIVED;
