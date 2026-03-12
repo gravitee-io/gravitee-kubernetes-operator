@@ -28,15 +28,6 @@ spec:
     # ========================================================
     # Setup: deploy TLS secrets and ConfigMap
     # ========================================================
-    - name: Deploy TLS secrets and ConfigMap
-      try:
-        - apply:
-            file: ../resources/tls-secrets.yaml
-      catch:
-        - events: {}
-      cleanup:
-        - delete:
-            file: ../resources/tls-secrets.yaml
     - name: Deploy v4 API with MTLS plan
       use:
         template: ../../../../stepTemplates/deploy-and-wait.yaml

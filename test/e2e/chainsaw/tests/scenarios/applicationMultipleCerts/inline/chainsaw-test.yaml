@@ -26,19 +26,6 @@ spec:
 
   steps:
     # ========================================================
-    # Setup: deploy TLS secrets and ConfigMap
-    # ========================================================
-    - name: Deploy TLS secrets and ConfigMap
-      try:
-        - apply:
-            file: ../resources/tls-secrets.yaml
-      catch:
-        - events: {}
-      cleanup:
-        - delete:
-            file: ../resources/tls-secrets.yaml
-
-    # ========================================================
     # Test: Inline certificates
     # ========================================================
     - name: Deploy v4 API with MTLS plan
