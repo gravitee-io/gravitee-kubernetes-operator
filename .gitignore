@@ -57,3 +57,4 @@ test/conformance/.*/standard-.*-default-report.yaml
 CLAUDE.md
 prompts
 plans
+/.claude/settings.local.json
