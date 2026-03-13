@@ -18,7 +18,7 @@ metadata:
   name: multi-cert-subscription
 spec:
   api:
-    name: mtls-multi-cert
+    name: mtls-multi-cert-inline
   application:
     name: multi-cert-app
   plan: MTLS
