@@ -146,16 +146,13 @@ const (
 	IngressResponse404CMFile   = "ingress/ingress-response-404-config-map.yaml"
 	ApiAsIngressTemplate       = "ingress/ingress-api-template.yml"
 
-	Application                        = "apim/application/application.yml"
-	ApplicationWithClientIDFile        = "apim/application/application-with-client-id.yml"
-	ApplicationWithClientCertsAndDates = "apim/application/application-with-client-certs-and-dates.yml"
-	ApplicationWithClientCertsRefs     = "apim/application/application-with-client-certs-refs.yml"
-	ClientCertSecretFile               = "apim/application/client-cert-secret.yml"
-	ClientCertConfigMapFile            = "apim/application/client-cert-configmap.yml"
-	CACertSecretFile                   = "apim/application/ca-cert-secret.yml"
-
-	SubscriptionFile                  = "apim/subscription/subscription.yml"
-	SubscriptionMTLSWithCertDatesFile = "apim/subscription/subscription-mtls-with-cert-dates.yml"
+	Application                    = "apim/application/application.yml"
+	ApplicationWithClientIDFile    = "apim/application/application-with-client-id.yml"
+	ApplicationWithClientCertsRefs = "apim/application/application-with-client-certs-refs.yml"
+	ClientCertSecretFile           = "apim/application/client-cert-secret.yml"
+	ClientCertConfigMapFile        = "apim/application/client-cert-configmap.yml"
+	CACertSecretFile               = "apim/application/ca-cert-secret.yml"
+	SubscriptionFile               = "apim/subscription/subscription.yml"
 
 	SharedPolicyGroupsFile = "apim/shared_policy_groups/shared_policy_groups.yml"
 
