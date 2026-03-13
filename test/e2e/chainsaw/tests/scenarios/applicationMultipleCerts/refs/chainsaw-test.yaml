@@ -31,12 +31,12 @@ spec:
     - name: Deploy TLS secrets and ConfigMap
       try:
         - apply:
-            file: ../resources/tls-secrets.yaml
+            file: resources/tls-secrets.yaml
       catch:
         - events: {}
       cleanup:
         - delete:
-            file: ../resources/tls-secrets.yaml
+            file: resources/tls-secrets.yaml
 
     - name: Deploy v4 API with MTLS plan
       use:
@@ -44,13 +44,13 @@ spec:
         with:
           bindings:
             - name: resourceFile
-              value: ../resources/api.yaml
+              value: resources/api.yaml
             - name: apiVersion
               value: gravitee.io/v1alpha1
             - name: kind
               value: ApiV4Definition
             - name: name
-              value: mtls-multi-cert
+              value: mtls-multi-cert-refs
     # ========================================================
     # Certificate refs (Secret + ConfigMap)
     # ========================================================
@@ -94,7 +94,7 @@ spec:
         with:
           bindings:
             - name: resourceFile
-              value: ../resources/subscription.yaml
+              value: resources/subscription.yaml
             - name: apiVersion
               value: gravitee.io/v1alpha1
             - name: kind
@@ -109,7 +109,7 @@ spec:
               - name: COMMAND_DIR
                 value: ($commandDir)
             content: |
-              npx --yes --quiet zx "$COMMAND_DIR/callGateway.mjs" --endpoint mtls-multi-cert --status 200 --cert ../resources/pki/client1.crt --key ../resources/pki/client1.key --gateway https://localhost:30084
+              npx --yes --quiet zx "$COMMAND_DIR/callGateway.mjs" --endpoint mtls-multi-cert-refs --status 200 --cert resources/pki/client1.crt --key resources/pki/client1.key --gateway https://localhost:30084
       catch:
         - podLogs:
             selector: "control-plane=controller-manager"
@@ -126,7 +126,7 @@ spec:
               - name: COMMAND_DIR
                 value: ($commandDir)
             content: |
-              npx --yes --quiet zx "$COMMAND_DIR/callGateway.mjs" --endpoint mtls-multi-cert --status 200 --cert ../resources/pki/client2.crt --key ../resources/pki/client2.key --gateway https://localhost:30084
+              npx --yes --quiet zx "$COMMAND_DIR/callGateway.mjs" --endpoint mtls-multi-cert-refs --status 200 --cert resources/pki/client2.crt --key resources/pki/client2.key --gateway https://localhost:30084
       catch:
         - podLogs:
             selector: "control-plane=controller-manager"

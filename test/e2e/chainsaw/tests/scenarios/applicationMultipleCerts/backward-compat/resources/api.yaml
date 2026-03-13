@@ -16,14 +16,14 @@
 apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiV4Definition"
 metadata:
-  name: "mtls-multi-cert"
+  name: "mtls-multi-cert-backward-compat"
 spec:
   definitionContext:
     syncFrom: MANAGEMENT
   contextRef:
     name: dev-ctx
     namespace: default
-  name: "mtls-multi-cert"
+  name: "mtls-multi-cert-backward-compat"
   version: "1"
   type: "PROXY"
   state: "STARTED"
@@ -31,7 +31,7 @@ spec:
   listeners:
     - type: HTTP
       paths:
-        - path: "/mtls-multi-cert"
+        - path: "/mtls-multi-cert-backward-compat"
       entrypoints:
         - type: http-proxy
           qos: AUTO
