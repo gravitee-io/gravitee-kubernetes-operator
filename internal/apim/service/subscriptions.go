@@ -61,6 +61,19 @@ func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.Subscri
 	return response, nil
 }
 
+func (svc *Subscriptions) GetByID(apiID, subscriptionID string) (*model.Subscription, error) {
+	url := svc.EnvV2Target("apis").WithPath(apiID).
+		WithPath("subscriptions").WithPath(subscriptionID)
+
+	sub := new(model.Subscription)
+
+	if err := svc.HTTP.Get(url.String(), sub); err != nil {
+		return nil, err
+	}
+
+	return sub, nil
+}
+
 func (svc *Subscriptions) Delete(spec *model.Subscription) error {
 	url := svc.EnvV2Target("apis").WithPath(spec.ApiID).
 		WithPath("subscriptions").WithPath("spec").WithPath(spec.ID)
