@@ -65,5 +65,12 @@ func (t *Type) GetEndingAt() *string {
 }
 
 func (t *Type) GetMetadata() map[string]string {
-	return t.Metadata
+	if t.Metadata == nil {
+		return nil
+	}
+	metadataCopy := make(map[string]string, len(t.Metadata))
+	for k, v := range t.Metadata {
+		metadataCopy[k] = v
+	}
+	return metadataCopy
 }
