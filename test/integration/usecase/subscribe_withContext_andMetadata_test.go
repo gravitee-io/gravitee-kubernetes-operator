@@ -17,6 +17,7 @@ package usecase
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -76,10 +77,11 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 			if err != nil {
 				return err
 			}
-			if err = assert.Equals("metadata[team]", "platform", sub.Metadata["team"]); err != nil {
-				return err
+			expectedMetadata := map[string]string{
+				"team":        "platform",
+				"cost-center": "engineering",
 			}
-			return assert.Equals("metadata[cost-center]", "engineering", sub.Metadata["cost-center"])
+			return assert.Equals("metadata", expectedMetadata, sub.Metadata)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
 
 		By("updating metadata and expecting it to be updated in management API")
@@ -90,7 +92,7 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 			"env":         "staging",
 		}
 
-		fixtures.Apply()
+		Expect(manager.UpdateSafely(ctx, fixtures.Subscription)).To(Succeed())
 
 		Eventually(func() error {
 			sub, err := client.Subscriptions.GetByID(
@@ -100,13 +102,12 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 			if err != nil {
 				return err
 			}
-			if err = assert.Equals("metadata[team]", "platform-v2", sub.Metadata["team"]); err != nil {
-				return err
+			expectedMetadata := map[string]string{
+				"team":        "platform-v2",
+				"cost-center": "engineering",
+				"env":         "staging",
 			}
-			if err = assert.Equals("metadata[env]", "staging", sub.Metadata["env"]); err != nil {
-				return err
-			}
-			return assert.Equals("metadata[cost-center]", "engineering", sub.Metadata["cost-center"])
+			return assert.Equals("metadata", expectedMetadata, sub.Metadata)
 		}, timeout, interval).Should(Succeed(), fixtures.Subscription.Name)
 	})
 })

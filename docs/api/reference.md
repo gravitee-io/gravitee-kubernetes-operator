@@ -661,6 +661,7 @@ _Appears in:_
 | `application` _[NamespacedName](#namespacedname)_ |  |  | Required: \{\} <br /> |
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
+| `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
 
 
 #### SubscriptionStatus
@@ -2522,6 +2523,7 @@ _Appears in:_
 | `application` _[NamespacedName](#namespacedname)_ |  |  | Required: \{\} <br /> |
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
+| `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
 
 
 
