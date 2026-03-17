@@ -34,6 +34,8 @@ type Type struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Format:=date-time
 	EndingAt *string `json:"endingAt,omitempty"`
+	// +kubebuilder:validation:Optional
+	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
 type ApiRef struct {
@@ -60,4 +62,8 @@ func (t *Type) SetApiKind(kind string) {
 
 func (t *Type) GetEndingAt() *string {
 	return t.EndingAt
+}
+
+func (t *Type) GetMetadata() map[string]string {
+	return t.Metadata
 }

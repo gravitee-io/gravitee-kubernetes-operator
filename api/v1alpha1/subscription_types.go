@@ -141,6 +141,10 @@ func (s *Subscription) GetEndingAt() *string {
 	return s.Spec.EndingAt
 }
 
+func (s *Subscription) GetMetadata() map[string]string {
+	return s.Spec.Metadata
+}
+
 // +kubebuilder:object:root=true
 type SubscriptionList struct {
 	metav1.TypeMeta `json:",inline"`
