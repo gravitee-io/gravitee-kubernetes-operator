@@ -6,6 +6,7 @@
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
+- [gravitee.io/v1alpha1/idpgroupmapping](#graviteeiov1alpha1idpgroupmapping)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
 - [gravitee.io/v1alpha1/management](#graviteeiov1alpha1management)
 - [gravitee.io/v1alpha1/notification](#graviteeiov1alpha1notification)
@@ -29,6 +30,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [Application](#application)
 - [GatewayClassParameters](#gatewayclassparameters)
 - [Group](#group)
+- [IDPGroupMapping](#idpgroupmapping)
 - [KafkaRoute](#kafkaroute)
 - [ManagementContext](#managementcontext)
 - [Notification](#notification)
@@ -412,6 +414,63 @@ _Appears in:_
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `members` _integer_ | The number of members added to this group |  |  |
+| `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### IDPGroupMapping
+
+
+
+
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `IDPGroupMapping` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[IDPGroupMappingSpec](#idpgroupmappingspec)_ |  |  |  |
+| `status` _[IDPGroupMappingStatus](#idpgroupmappingstatus)_ |  |  |  |
+
+
+#### IDPGroupMappingSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [IDPGroupMapping](#idpgroupmapping)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `contextRef` _[NamespacedName](#namespacedname)_ |  |  |  |
+
+
+#### IDPGroupMappingStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [IDPGroupMapping](#idpgroupmapping)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `group` _string array_ | The group name in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
@@ -1952,6 +2011,55 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/idpgroupmapping
+
+
+
+
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [IDPGroupMappingStatus](#idpgroupmappingstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `group` _string array_ | The group name in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
+| `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+
+
+
+
+_Appears in:_
+- [IDPGroupMappingSpec](#idpgroupmappingspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ |  |  | Optional: \{\} <br /> |
+| `groups` _string array_ |  |  | Required: \{\} <br /> |
+| `idpId` _string_ |  |  | Required: \{\} <br /> |
+| `condition` _string_ |  |  | Required: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/kafka
 
 
@@ -2353,6 +2461,7 @@ _Appears in:_
 - [Console](#console)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
+- [IDPGroupMappingSpec](#idpgroupmappingspec)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [SubscriptionSpec](#subscriptionspec)
@@ -2483,7 +2592,9 @@ _Appears in:_
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
 - [GroupStatus](#groupstatus)
+- [IDPGroupMappingStatus](#idpgroupmappingstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
