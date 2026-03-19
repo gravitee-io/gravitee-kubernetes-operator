@@ -59,10 +59,11 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	subscriptionID := string(subscription.UID)
 
 	sub := &model.Subscription{
-		ID:     subscriptionID,
-		AppID:  appID,
-		ApiID:  apiID,
-		PlanID: planID,
+		ID:       subscriptionID,
+		AppID:    appID,
+		ApiID:    apiID,
+		PlanID:   planID,
+		Metadata: spec.Metadata,
 	}
 
 	if spec.EndingAt != nil {

@@ -78,6 +78,10 @@ spec:
                 endingAt:
                   format: date-time
                   type: string
+                metadata:
+                  additionalProperties:
+                    type: string
+                  type: object
                 plan:
                   type: string
               required:

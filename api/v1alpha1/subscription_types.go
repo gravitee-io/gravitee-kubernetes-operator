@@ -141,6 +141,17 @@ func (s *Subscription) GetEndingAt() *string {
 	return s.Spec.EndingAt
 }
 
+func (s *Subscription) GetMetadata() map[string]string {
+	if s.Spec.Metadata == nil {
+		return nil
+	}
+	clone := make(map[string]string, len(s.Spec.Metadata))
+	for k, v := range s.Spec.Metadata {
+		clone[k] = v
+	}
+	return clone
+}
+
 // +kubebuilder:object:root=true
 type SubscriptionList struct {
 	metav1.TypeMeta `json:",inline"`
