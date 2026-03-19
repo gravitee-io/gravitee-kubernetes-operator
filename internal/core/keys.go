@@ -57,6 +57,7 @@ const (
 	GatewayFinalizer                 = "finalizers.gravitee.io/gateway"
 	HTTPRouteFinalizer               = "finalizers.gravitee.io/httproute"
 	KafkaRouteFinalizer              = "finalizers.gravitee.io/kafkaroute"
+	IDPGroupMappingFinalizer        = "finalizers.gravitee.io/idpgroupmapping"
 
 	GraviteeGatewayClassController = "apim.gravitee.io/gateway"
 
