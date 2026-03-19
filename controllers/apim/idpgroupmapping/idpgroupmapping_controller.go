@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package oidcgroupmapping
+package idpgroupmapping
 
 import (
 	"context"
@@ -41,38 +41,38 @@ type Reconciler struct {
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	oidcgroupmapping := &v1alpha1.IDPGroupMapping{}
-	if err := k8s.GetClient().Get(ctx, req.NamespacedName, oidcgroupmapping); err != nil {
+	idpgroupmapping := &v1alpha1.IDPGroupMapping{}
+	if err := k8s.GetClient().Get(ctx, req.NamespacedName, idpgroupmapping); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	oidcgroupmapping.SetNamespace(req.Namespace)
+	idpgroupmapping.SetNamespace(req.Namespace)
 
 	events := event.NewRecorder(r.Recorder)
 
-	oidcgroupmapping.SetConditions([]metav1.Condition{})
-	dc := oidcgroupmapping.DeepCopy()
+	idpgroupmapping.SetConditions([]metav1.Condition{})
+	dc := idpgroupmapping.DeepCopy()
 
-	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), oidcgroupmapping, func() error {
-		util.AddFinalizer(oidcgroupmapping, core.IDPGroupMappingFinalizer)
-		k8s.AddAnnotation(oidcgroupmapping, core.LastSpecHashAnnotation, hash.Calculate(&dc.Spec))
+	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), idpgroupmapping, func() error {
+		util.AddFinalizer(idpgroupmapping, core.IDPGroupMappingFinalizer)
+		k8s.AddAnnotation(idpgroupmapping, core.LastSpecHashAnnotation, hash.Calculate(&dc.Spec))
 
 		if err := template.Compile(ctx, dc, true); err != nil {
-			oidcgroupmapping.Status.ProcessingStatus = core.ProcessingStatusFailed
+			idpgroupmapping.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
 
 		var err error
-		if oidcgroupmapping.IsBeingDeleted() {
-			err = events.Record(event.Delete, oidcgroupmapping, func() error {
+		if idpgroupmapping.IsBeingDeleted() {
+			err = events.Record(event.Delete, idpgroupmapping, func() error {
 				if err := internal.Delete(ctx, dc); err != nil {
 					return err
 				}
-				util.RemoveFinalizer(oidcgroupmapping, core.GroupFinalizer)
+				util.RemoveFinalizer(idpgroupmapping, core.IDPGroupMappingFinalizer)
 				return nil
 			})
 		} else {
-			err = events.Record(event.Update, oidcgroupmapping, func() error {
+			err = events.Record(event.Update, idpgroupmapping, func() error {
 				return internal.CreateOrUpdate(ctx, dc)
 			})
 		}
@@ -80,26 +80,26 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return err
 	})
 
-	if err := dc.GetStatus().DeepCopyTo(oidcgroupmapping); err != nil {
+	if err := dc.GetStatus().DeepCopyTo(idpgroupmapping); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if err == nil {
-		log.InfoEndReconcile(ctx, oidcgroupmapping)
-		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, oidcgroupmapping)
+		log.InfoEndReconcile(ctx, idpgroupmapping)
+		return ctrl.Result{}, internal.UpdateStatusSuccess(ctx, idpgroupmapping)
 	}
 
 	// An error occurred during the reconcile
-	if err := internal.UpdateStatusFailure(ctx, oidcgroupmapping, err); err != nil {
+	if err := internal.UpdateStatusFailure(ctx, idpgroupmapping, err); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	if errors.IsRecoverable(err) {
-		log.ErrorRequeuingReconcile(ctx, err, oidcgroupmapping)
+		log.ErrorRequeuingReconcile(ctx, err, idpgroupmapping)
 		return ctrl.Result{}, err
 	}
 
-	log.ErrorAbortingReconcile(ctx, err, oidcgroupmapping)
+	log.ErrorAbortingReconcile(ctx, err, idpgroupmapping)
 	return ctrl.Result{}, nil
 }
 
