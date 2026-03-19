@@ -56,6 +56,7 @@ rules:
       - subscriptions.gravitee.io
       - sharedpolicygroups.gravitee.io
       - groups.gravitee.io
+      - idpgroupmappings.gravitee.io
       - notifications.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
       - gatewayclassparameters.gravitee.io
