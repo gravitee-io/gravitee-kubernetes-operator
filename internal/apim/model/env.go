@@ -34,6 +34,6 @@ type Category struct {
 }
 
 type PaginatedGroups struct {
-	Data  []Group `json:"data"`
+	Data []Group        `json:"data"`
 	Page PaginationData `json:"page"`
 }

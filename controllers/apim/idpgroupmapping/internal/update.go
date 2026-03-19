@@ -50,7 +50,7 @@ func CreateOrUpdate(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMappi
 	for _, group := range spec.Groups {
 		// If the group is not an ID, we try to resolve it as a name
 		resolvedGroup, err := apim.Env.FindGroup(group)
-		
+
 		if err != nil {
 			return gerrors.NewControlPlaneError(err)
 		}

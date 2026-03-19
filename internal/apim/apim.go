@@ -36,7 +36,7 @@ type APIM struct {
 	Subscription      *service.Subscriptions
 	SharedPolicyGroup *service.SharedPolicyGroup
 	Env               *service.Env
-	Configuration 	 *service.Configuration
+	Configuration     *service.Configuration
 
 	Context core.ContextModel
 }

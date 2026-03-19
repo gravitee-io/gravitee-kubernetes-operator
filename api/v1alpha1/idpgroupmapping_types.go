@@ -36,7 +36,7 @@ var _ core.ConditionAware = &IDPGroupMapping{}
 // +kubebuilder:object:generate=true
 type IDPGroupMappingSpec struct {
 	*idpgroupmapping.Type `json:",inline"`
-	Context     *refs.NamespacedName `json:"contextRef,omitempty"`
+	Context               *refs.NamespacedName `json:"contextRef,omitempty"`
 }
 
 func (spec *IDPGroupMappingSpec) Hash() string {

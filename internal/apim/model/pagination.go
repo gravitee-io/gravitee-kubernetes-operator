@@ -15,9 +15,9 @@
 package model
 
 type PaginationData struct {
-	Current   int `json:"current"`
-	Size      int `json:"size"`
-	PerPage   int `json:"per_page"`
-	TotalPages   int `json:"total_pages"`
-	TotalElements   int `json:"total_elements"`
+	Current       int `json:"current"`
+	Size          int `json:"size"`
+	PerPage       int `json:"per_page"`
+	TotalPages    int `json:"total_pages"`
+	TotalElements int `json:"total_elements"`
 }

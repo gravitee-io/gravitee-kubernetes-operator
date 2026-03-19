@@ -66,14 +66,14 @@ func (svc *Env) FindGroup(name string) (*model.Group, error) {
 		WithPath("groups").
 		WithPath("_paged").
 		WithQueryParam("query", name)
-	
+
 	paginatedGroup := new(model.PaginatedGroups)
 	if err := svc.HTTP.Get(url.String(), paginatedGroup); err != nil {
 		return nil, err
 	}
 
 	if paginatedGroup.Page.TotalElements == 0 {
-		return nil, nil
+		return nil, nil //nolint:nilnil // Returning nil, nil is intentional: not found is not an error condition
 	}
 
 	return &paginatedGroup.Data[0], nil

@@ -29,8 +29,8 @@ func NewConfiguration(client *client.Client) *Configuration {
 	return &Configuration{Client: client}
 }
 
-func (svc *Configuration) GetIDPConfiguration(idpId string) (*model.IDPConfiguration, error) {
-	url := svc.ConfigurationTarget("identities").WithPath(idpId)
+func (svc *Configuration) GetIDPConfiguration(idpID string) (*model.IDPConfiguration, error) {
+	url := svc.ConfigurationTarget("identities").WithPath(idpID)
 	idpConfig := new(model.IDPConfiguration)
 	if err := svc.HTTP.Get(url.String(), idpConfig); err != nil {
 		return nil, err

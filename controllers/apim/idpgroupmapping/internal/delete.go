@@ -19,11 +19,11 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func Delete(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMapping) error {
@@ -52,7 +52,7 @@ func Delete(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMapping) erro
 	for _, group := range idpgroupmapping.Spec.Groups {
 		// If the group is not an ID, we try to resolve it as a name
 		resolvedGroup, err := apim.Env.FindGroup(group)
-		
+
 		if err != nil {
 			return gerrors.NewControlPlaneError(err)
 		}
@@ -65,9 +65,10 @@ func Delete(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMapping) erro
 	idpgroupmapping.Spec.Groups = resolvedGroups
 
 	// Step 4,Check if the group mapping exists, if yes, remove it from the configuration
-	if groupMappingConfig == nil || !containsGroupMapping(groupMappingConfig, idpgroupmapping.Spec.Condition, idpgroupmapping.Spec.Groups) {
+	if groupMappingConfig == nil ||
+		!containsGroupMapping(groupMappingConfig, idpgroupmapping.Spec.Condition, idpgroupmapping.Spec.Groups) {
 		return nil
-	} 
+	}
 
 	// Step 5, generate a new group mapping configuration without the group mapping to delete
 	newGroupMappingConfig := make([]model.GroupMapping, 0)
