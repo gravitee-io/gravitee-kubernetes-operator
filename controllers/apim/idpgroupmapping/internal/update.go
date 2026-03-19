@@ -19,8 +19,9 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
 
 func CreateOrUpdate(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMapping) error {
@@ -44,7 +45,24 @@ func CreateOrUpdate(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMappi
 	groupMappingConfig := idpConfig.GroupMappings
 	updated := false
 
-	// Check if the group mapping configuration is nil, if yes, initialize it
+	// Step 3, Resolve the group names to group IDs
+	resolvedGroups := []string{}
+	for _, group := range spec.Groups {
+		// If the group is not an ID, we try to resolve it as a name
+		resolvedGroup, err := apim.Env.FindGroup(group)
+		
+		if err != nil {
+			return gerrors.NewControlPlaneError(err)
+		}
+		if resolvedGroup == nil || resolvedGroup.ID == "" {
+			log.Error(ctx, nil, "unable to resolve group, skipping", "group", group, "mapping", idpgroupmapping.Name)
+			continue
+		}
+		resolvedGroups = append(resolvedGroups, resolvedGroup.ID)
+	}
+	spec.Groups = resolvedGroups
+
+	// Step 4, Check if the group mapping configuration is nil, if yes, initialize it
 	if groupMappingConfig == nil {
 		groupMappingConfig = []model.GroupMapping{
 			{
@@ -61,7 +79,7 @@ func CreateOrUpdate(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMappi
 		updated = true
 	}
 
-	// Step 3, Update the IDP configuration with the new group mapping configuration if needed
+	// Step 5, Update the IDP configuration with the new group mapping configuration if needed
 	if updated {
 		idpConfig.GroupMappings = groupMappingConfig
 		if err := apim.Configuration.UpdateIDPConfiguration(idpConfig); err != nil {
