@@ -468,7 +468,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `group` _string array_ | The group name in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `groups` _string array_ | The group names in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -2017,8 +2017,6 @@ _Appears in:_
 
 
 
-
-
 #### Status
 
 
@@ -2035,7 +2033,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `group` _string array_ | The group name in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `groups` _string array_ | The group names in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |

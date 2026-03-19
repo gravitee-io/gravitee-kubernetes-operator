@@ -79,7 +79,6 @@ func Delete(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMapping) erro
 		newGroupMappingConfig = append(newGroupMappingConfig, gm)
 	}
 	idpConfig.GroupMappings = newGroupMappingConfig
-	log.Info(ctx, "GroupMapping", idpConfig)
 
 	// Step 6, Update the IDP configuration with the new group mapping configuration
 	return apim.Configuration.UpdateIDPConfiguration(idpConfig)

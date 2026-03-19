@@ -20,15 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +kubebuilder:validation:Enum=API;APPLICATION;INTEGRATION;
-type RoleScope string
-
-const (
-	APIRoleScope         = RoleScope("API")
-	ApplicationRoleScope = RoleScope("APPLICATION")
-	IntegrationRoleScope = RoleScope("INTEGRATION")
-)
-
 type Type struct {
 	// +kubebuilder:validation:Optional
 	ID string `json:"id,omitempty"`
@@ -50,9 +41,9 @@ type Status struct {
 	// The environment ID defined in the management context
 	// +kubebuilder:validation:Optional
 	EnvID string `json:"environmentId,omitempty"`
-	// The group name in the Gravitee API Management instance
+	// The group names in the Gravitee API Management instance
 	// +kubebuilder:validation:Optional
-	Groups []string `json:"group,omitempty"`
+	Groups []string `json:"groups,omitempty"`
 	// Conditions describe the current conditions of the Group.
 	//
 	// Known condition types are:

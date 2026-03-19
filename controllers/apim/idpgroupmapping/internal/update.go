@@ -87,7 +87,7 @@ func CreateOrUpdate(ctx context.Context, idpgroupmapping *v1alpha1.IDPGroupMappi
 		}
 	}
 
-	idpgroupmapping.Status.ID = idpConfig.ID
+	idpgroupmapping.Status.ID = idpgroupmapping.Spec.ID
 	idpgroupmapping.Status.OrgID = apim.Context.GetOrgID()
 	idpgroupmapping.Status.EnvID = apim.Context.GetEnvID()
 

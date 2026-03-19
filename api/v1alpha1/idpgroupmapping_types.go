@@ -79,7 +79,6 @@ func (s *IDPGroupMappingStatus) SetProcessingStatus(status core.ProcessingStatus
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Members at",type=string,JSONPath=`.status.members`,description="The number of members added to the group"
 // +kubebuilder:storageversion
 type IDPGroupMapping struct {
 	metav1.TypeMeta   `json:",inline"`

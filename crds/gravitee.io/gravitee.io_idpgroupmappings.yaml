@@ -28,12 +28,7 @@ spec:
     singular: idpgroupmapping
   scope: Namespaced
   versions:
-    - additionalPrinterColumns:
-        - description: The number of members added to the group
-          jsonPath: .status.members
-          name: Members at
-          type: string
-      name: v1alpha1
+    - name: v1alpha1
       schema:
         openAPIV3Schema:
           properties:
@@ -158,8 +153,8 @@ spec:
                         type: string
                       type: array
                   type: object
-                group:
-                  description: The group name in the Gravitee API Management instance
+                groups:
+                  description: The group names in the Gravitee API Management instance
                   items:
                     type: string
                   type: array
