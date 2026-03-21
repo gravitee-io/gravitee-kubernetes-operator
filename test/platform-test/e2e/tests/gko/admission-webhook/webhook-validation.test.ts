@@ -22,6 +22,7 @@
  *     WHEN an invalid or unsupported CR is submitted
  *     THEN the admission webhook rejects it with a clear error message
  *     AND the resource is never created in APIM
+ *     Test cases: missing required fields, invalid enum values, deprecated fields
  *
  * Preconditions:
  *   - GKO operator is running with admission webhooks enabled
