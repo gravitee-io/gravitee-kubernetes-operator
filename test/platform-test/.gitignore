@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.tsbuildinfo
 .vitest/
+test-results/
+playwright-report/
