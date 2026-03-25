@@ -15,11 +15,12 @@
 package internal
 
 import (
+	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	"golang.org/x/net/context"
 	v1 "k8s.io/api/core/v1"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
