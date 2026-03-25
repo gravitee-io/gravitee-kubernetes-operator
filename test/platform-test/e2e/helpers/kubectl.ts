@@ -111,6 +111,63 @@ export async function assertEventContains(
   }
 }
 
+/** Extract a specific field using jsonpath. */
+export async function getField<T = string>(
+  kind: string,
+  name: string,
+  jsonpath: string,
+  namespace = NAMESPACE,
+): Promise<T> {
+  const { stdout } = await run([
+    "get",
+    `${kind}/${name}`,
+    "-n",
+    namespace,
+    "-o",
+    `jsonpath=${jsonpath}`,
+  ]);
+  try {
+    return JSON.parse(stdout) as T;
+  } catch {
+    return stdout as unknown as T;
+  }
+}
+
+/** Poll until a resource is deleted (no longer found). */
+export async function waitForDeletion(
+  kind: string,
+  name: string,
+  timeoutSeconds = 60,
+  namespace = NAMESPACE,
+): Promise<void> {
+  const deadline = Date.now() + timeoutSeconds * 1_000;
+  while (Date.now() < deadline) {
+    try {
+      await run(["get", `${kind}/${name}`, "-n", namespace]);
+    } catch {
+      return; // Resource not found = deleted
+    }
+    await new Promise((r) => setTimeout(r, 1_000));
+  }
+  throw new Error(`${kind}/${name} still exists after ${timeoutSeconds}s`);
+}
+
+/** Try to delete and expect it to fail (e.g., webhook blocks deletion). Returns stderr. */
+export async function delExpectFailure(
+  yamlPath: string,
+  namespace = NAMESPACE,
+): Promise<string> {
+  try {
+    await run(["delete", "-f", yamlPath, "-n", namespace]);
+    throw new Error(`Expected kubectl delete to fail for ${yamlPath}, but it succeeded`);
+  } catch (err: unknown) {
+    if (err != null && typeof err === "object" && "stderr" in err && typeof (err as Record<string, unknown>).stderr === "string") {
+      return (err as Record<string, unknown>).stderr as string;
+    }
+    throw err;
+  }
+}
+
 /**
  * Try to apply a manifest and expect it to fail (e.g., admission webhook rejection).
  * Returns the stderr output for further assertions.
