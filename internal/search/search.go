@@ -15,9 +15,10 @@
 package search
 
 import (
+	"context"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
-	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/fields"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
