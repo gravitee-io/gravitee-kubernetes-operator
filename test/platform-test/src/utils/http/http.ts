@@ -67,6 +67,11 @@ export class HttpClient {
     return this.request<T>("DELETE", path);
   }
 
+  /** Build v1 management API path for the configured environment */
+  managementV1Path(resource: string): string {
+    return `/management/organizations/DEFAULT/environments/${this.envId}${resource}`;
+  }
+
   /** Build v2 management API path for the configured environment */
   managementV2Path(resource: string): string {
     return `/management/v2/environments/${this.envId}${resource}`;

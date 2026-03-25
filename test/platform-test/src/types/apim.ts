@@ -459,6 +459,56 @@ export interface BaseApplication {
   apiKeyMode?: "SHARED" | "UNSPECIFIED" | "EXCLUSIVE";
 }
 
+/** Full Application resource from APIM management API. */
+export interface Application extends BaseApplication {
+  applicationType?: string;
+  status?: string;
+  groups?: string[];
+  settings?: ApplicationSettings;
+  metadata?: Record<string, ApplicationMetadataValue>;
+  disableMembershipNotifications?: boolean;
+  originContext?: OriginContext;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ApplicationSettings {
+  app?: ApplicationSimpleSettings;
+  oauth?: ApplicationOAuthSettings;
+}
+
+export interface ApplicationSimpleSettings {
+  clientId?: string;
+  type?: string;
+}
+
+export interface ApplicationOAuthSettings {
+  clientId?: string;
+  clientSecret?: string;
+  applicationType?: string;
+  grantTypes?: string[];
+  redirectUris?: string[];
+}
+
+export interface ApplicationMetadataValue {
+  name?: string;
+  value?: string;
+  format?: string;
+  defaultValue?: string;
+}
+
+/** Paginated list response from APIM. */
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination?: {
+    page: number;
+    perPage: number;
+    pageCount: number;
+    pageItemsCount: number;
+    totalCount: number;
+  };
+}
+
 export interface BaseApiProduct {
   id: string;
   name?: string;

@@ -22,7 +22,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Plan, Subscription } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -148,7 +148,47 @@ export class Mapi {
     return new Gateway(config, fetchFn);
   }
 
+  // ── Application Assertions ──────────────────────────────────
+
+  async assertApplicationMatches(appId: string, expected: DeepPartial<Application>): Promise<void> {
+    const app = await this.fetchApplication(appId);
+    throwIfFailed(deepPartialMatch(app, expected));
+  }
+
+  async assertApplicationHttpStatus(appId: string, expectedStatus: number): Promise<void> {
+    const path = this.http.managementV1Path(`/applications/${appId}`);
+    const res = await this.http.get<unknown>(path);
+    if (res.status !== expectedStatus) {
+      throw new AssertionError({
+        message: `Expected HTTP ${expectedStatus} but got ${res.status} for Application ${appId}`,
+        expected: expectedStatus,
+        actual: res.status,
+        operator: "assertApplicationHttpStatus",
+      });
+    }
+  }
+
+  // ── Plan List Helpers ──────────────────────────────────────
+
+  async listApiPlans(apiId: string): Promise<Plan[]> {
+    const path = this.http.managementV2Path(`/apis/${apiId}/plans?page=1&perPage=100`);
+    const res = await this.http.get<PaginatedResult<Plan>>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list plans for API ${apiId}: ${res.status}`);
+    }
+    return res.body.data;
+  }
+
   // ── Fetch Helpers ───────────────────────────────────────────
+
+  async fetchApplication(appId: string): Promise<Application> {
+    const path = this.http.managementV1Path(`/applications/${appId}`);
+    const res = await this.http.get<Application>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to fetch Application ${appId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
+    }
+    return res.body;
+  }
 
   async fetchApi(apiId: string): Promise<Api> {
     const path = this.http.managementV2Path(`/apis/${apiId}`);
