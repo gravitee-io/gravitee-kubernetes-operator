@@ -21,7 +21,7 @@ spec:
     name: "dev-ctx"
     namespace: "default"
   name: "e2e-app-po-member"
-  description: "E2E test: application with PRIMARY_OWNER in members (should fail)"
+  description: "E2E test: application with one PRIMARY_OWNER in members (allowed)"
   members:
     - source: "gravitee"
       sourceId: "admin"
