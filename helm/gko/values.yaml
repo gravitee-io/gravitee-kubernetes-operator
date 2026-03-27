@@ -62,12 +62,18 @@ manager:
     pullSecret: {}
   pod:
     ## @param manager.pod.securityContext Specifies the security context that will apply to all containers running within the pod
-    securityContext: {}
+    securityContext:
+      runAsNonRoot: true
     ## @param manager.pod.nodeSelector Specifies a set of labels to be used to select on which node the manager pod should be scheduled.
     nodeSelector: {}
   container:
     ## @param manager.container.securityContext Specifies the security context that will apply to the controller manager container.
-    securityContext: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
   logs:
     ## @param manager.logs.json Whether to output manager logs in JSON format.
     ## 👎 This value is deprecated in benefit of manager.logs.format
