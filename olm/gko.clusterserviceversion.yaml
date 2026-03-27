@@ -312,10 +312,10 @@ spec:
     url: https://gravitee.io
   maintainers:
     - name: Gravitee.io
-      email: contact@graviteesource.com
+      email: team-devex@graviteesource.com
   links:
     - name: Documentation
-      url: https://docs.gravitee.io/
+      url: https://documentation.gravitee.io/gravitee-kubernetes-operator-gko
     - name: Gravitee.io
       url: https://gravitee.io
     - name: GitHub
