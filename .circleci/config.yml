@@ -697,11 +697,28 @@ jobs:
                 command: |
                   npx zx hack/scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
       - run:
+          name: Generate OLM bundle
+          command: |
+            make olm-bundle VERSION=<< pipeline.parameters.release-version >> IMG=graviteeio/kubernetes-operator
+      - run:
+          name: Build OLM bundle image
+          command: |
+            make olm-bundle-build BUNDLE_IMG=graviteeio/gko-bundle:<< pipeline.parameters.release-version >>
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Push OLM bundle image
+                command: |
+                  make olm-bundle-push BUNDLE_IMG=graviteeio/gko-bundle:<< pipeline.parameters.release-version >>
+      - run:
           name: Commit and tag release
           command: |
             make add-license > /dev/null
             git add helm/gko/Chart.yaml
             git add crds
+            git add olm/bundle
             git commit -m "ci: release version << pipeline.parameters.release-version >> [skip ci]"
             git tag << pipeline.parameters.release-version >>
             echo

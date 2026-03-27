@@ -179,7 +179,8 @@ await time(async () => {
   const webhookDefs = [];
   const mapWebhooks = (whc, type) => {
     if (!whc?.webhooks) return;
-    const suffix = type === "ValidatingAdmissionWebhook" ? "validate" : "mutate";
+    const suffix =
+      type === "ValidatingAdmissionWebhook" ? "validate" : "mutate";
     for (const wh of whc.webhooks) {
       webhookDefs.push({
         type,
@@ -246,14 +247,12 @@ await time(async () => {
           parallel: true,
           tests: [
             {
-              image:
-                "quay.io/operator-framework/scorecard-test:v1.26.0",
+              image: "quay.io/operator-framework/scorecard-test:v1.26.0",
               entrypoint: ["scorecard-test", "basic-check-spec"],
               labels: { suite: "basic", test: "basic-check-spec-test" },
             },
             {
-              image:
-                "quay.io/operator-framework/scorecard-test:v1.26.0",
+              image: "quay.io/operator-framework/scorecard-test:v1.26.0",
               entrypoint: ["scorecard-test", "olm-bundle-validation"],
               labels: { suite: "olm", test: "olm-bundle-validation-test" },
             },

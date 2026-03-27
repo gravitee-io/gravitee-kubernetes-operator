@@ -118,7 +118,9 @@ async function startRegistry() {
       LOG.green(`  Registry "${REGISTRY_NAME}" already running`);
       return;
     }
-  } catch { /* not running */ }
+  } catch {
+    /* not running */
+  }
 
   await $`docker rm -f ${REGISTRY_NAME}`.nothrow().quiet();
   await $`docker run -d --restart=always -p 127.0.0.1:${REGISTRY_PORT}:5000 --name ${REGISTRY_NAME} registry:2`;
@@ -286,14 +288,20 @@ async function waitForCSV() {
           await $`kubectl get csv -n ${TEST_NS} -o jsonpath='{.items[0].status.message}'`.quiet();
         throw new Error(`CSV failed: ${reason.stdout}`);
       }
-      LOG.log(`  CSV phase: ${phase || "(not yet available)"} (attempt ${i + 1}/${maxAttempts})`);
+      LOG.log(
+        `  CSV phase: ${phase || "(not yet available)"} (attempt ${i + 1}/${maxAttempts})`,
+      );
     } catch (e) {
       if (e.message?.startsWith("CSV failed")) throw e;
-      LOG.log(`  Waiting for CSV to appear (attempt ${i + 1}/${maxAttempts}) ...`);
+      LOG.log(
+        `  Waiting for CSV to appear (attempt ${i + 1}/${maxAttempts}) ...`,
+      );
     }
     await sleep(intervalMs);
   }
-  throw new Error(`CSV did not reach Succeeded phase within ${(maxAttempts * intervalMs) / 1000}s`);
+  throw new Error(
+    `CSV did not reach Succeeded phase within ${(maxAttempts * intervalMs) / 1000}s`,
+  );
 }
 
 async function verifyOperatorPod() {
@@ -325,29 +333,54 @@ async function verifyCRDs() {
 async function printDiagnostics() {
   LOG.yellow("\n  === Diagnostics ===");
   try {
-    const events = await $`kubectl get events -n ${TEST_NS} --sort-by=.lastTimestamp`.nothrow().quiet();
+    const events =
+      await $`kubectl get events -n ${TEST_NS} --sort-by=.lastTimestamp`
+        .nothrow()
+        .quiet();
     LOG.log(events.stdout);
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
   try {
-    const csvs = await $`kubectl get csv -n ${TEST_NS} -o yaml`.nothrow().quiet();
+    const csvs = await $`kubectl get csv -n ${TEST_NS} -o yaml`
+      .nothrow()
+      .quiet();
     LOG.log(csvs.stdout);
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
   try {
-    const subs = await $`kubectl get subscription -n ${TEST_NS} -o yaml`.nothrow().quiet();
+    const subs = await $`kubectl get subscription -n ${TEST_NS} -o yaml`
+      .nothrow()
+      .quiet();
     LOG.log(subs.stdout);
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
   try {
-    const pods = await $`kubectl get pods -n ${TEST_NS} -o wide`.nothrow().quiet();
+    const pods = await $`kubectl get pods -n ${TEST_NS} -o wide`
+      .nothrow()
+      .quiet();
     LOG.log(pods.stdout);
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
   try {
-    const catalog = await $`kubectl get catalogsource -n ${OLM_NS} -o yaml`.nothrow().quiet();
+    const catalog = await $`kubectl get catalogsource -n ${OLM_NS} -o yaml`
+      .nothrow()
+      .quiet();
     LOG.log(catalog.stdout);
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
   try {
-    const olmPods = await $`kubectl get pods -n ${OLM_NS} -o wide`.nothrow().quiet();
+    const olmPods = await $`kubectl get pods -n ${OLM_NS} -o wide`
+      .nothrow()
+      .quiet();
     LOG.log(olmPods.stdout);
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
 }
 
 async function teardown() {
