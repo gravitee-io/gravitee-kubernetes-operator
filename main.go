@@ -106,16 +106,7 @@ func init() {
 func main() {
 	var webhookServer webhook.Server
 	if env.Config.EnableWebhook {
-		patchAdmissionWebhook()
-		webhookServer = webhook.NewServer(webhook.Options{
-			CertDir:  "/tmp/webhook-server/certs",
-			Port:     env.Config.WebhookPort,
-			CertName: wk.CertName,
-			KeyName:  wk.KeyName,
-			TLSOpts: []func(*tls.Config){func(config *tls.Config) {
-				config.InsecureSkipVerify = true
-			}},
-		})
+		webhookServer = createWebhookServer()
 	}
 
 	if env.Config.HTTPClientInsecureSkipVerify {
@@ -413,6 +404,29 @@ func applyCRDs() error {
 
 func shouldSkipGatewayCRDs() bool {
 	return !env.Config.EnableGatewayAPI || !env.Config.ApplyGatewayAPICRDs
+}
+
+func createWebhookServer() webhook.Server {
+	tlsOpts := []func(*tls.Config){func(config *tls.Config) {
+		config.InsecureSkipVerify = true
+	}}
+
+	if env.Config.WebhookCertSecret != "" {
+		patchAdmissionWebhook()
+		return webhook.NewServer(webhook.Options{
+			CertDir:  "/tmp/webhook-server/certs",
+			Port:     env.Config.WebhookPort,
+			CertName: wk.CertName,
+			KeyName:  wk.KeyName,
+			TLSOpts:  tlsOpts,
+		})
+	}
+
+	log.Global.Info("Webhook certs managed externally (OLM or cert-manager)")
+	return webhook.NewServer(webhook.Options{
+		Port:    env.Config.WebhookPort,
+		TLSOpts: tlsOpts,
+	})
 }
 
 func patchAdmissionWebhook() {

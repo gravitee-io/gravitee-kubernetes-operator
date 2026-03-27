@@ -714,11 +714,33 @@ jobs:
                 command: |
                   npx zx hack/scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
       - run:
+          name: Generate OLM bundle
+          command: |
+            MINOR=$(echo "<< pipeline.parameters.release-version >>" | cut -d. -f1,2)
+            make olm-bundle \
+              VERSION=<< pipeline.parameters.release-version >> \
+              IMG=docker.io/graviteeio/kubernetes-operator \
+              CHANNELS=stable-v${MINOR},alpha \
+              DEFAULT_CHANNEL=stable-v${MINOR}
+      - run:
+          name: Build OLM bundle image
+          command: |
+            make olm-bundle-build BUNDLE_IMG=graviteeio/gko-bundle:<< pipeline.parameters.release-version >>
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Push OLM bundle image
+                command: |
+                  make olm-bundle-push BUNDLE_IMG=graviteeio/gko-bundle:<< pipeline.parameters.release-version >>
+      - run:
           name: Commit release
           command: |
             make add-license > /dev/null
             git add helm/gko/Chart.yaml
             git add crds
+            git add olm/bundle
             git commit -m "ci: release version << pipeline.parameters.release-version >> [skip ci]"
             echo
             git diff HEAD~1 HEAD
@@ -788,6 +810,15 @@ jobs:
                   npx zx hack/scripts/submit-changelog.mjs \
                     --version << pipeline.parameters.release-version >> \
                     --file /tmp/CHANGELOG.md --output /tmp/pr.txt
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Submit OLM bundle to community-operators
+                command: |
+                  npx zx hack/scripts/submit-community-operators.mjs \
+                    --version << pipeline.parameters.release-version >> || true
 
   job-notify-release-slack:
     docker:
