@@ -61,17 +61,19 @@ manager:
     ## @param manager.image.pullSecret Specifies the secret holding the credentials used to pull image from the registry
     pullSecret: {}
   pod:
-    ## @param manager.pod.securityContext Specifies the security context that will apply to all containers running within the pod
     securityContext:
+      ## @param manager.pod.securityContext.runAsNonRoot Requires the pod to run as a non-root user.
       runAsNonRoot: true
     ## @param manager.pod.nodeSelector Specifies a set of labels to be used to select on which node the manager pod should be scheduled.
     nodeSelector: {}
   container:
-    ## @param manager.container.securityContext Specifies the security context that will apply to the controller manager container.
     securityContext:
+      ## @param manager.container.securityContext.allowPrivilegeEscalation Prevents the container from gaining additional privileges.
       allowPrivilegeEscalation: false
+      ## @param manager.container.securityContext.readOnlyRootFilesystem Mounts the root filesystem as read-only.
       readOnlyRootFilesystem: true
       capabilities:
+        ## @param manager.container.securityContext.capabilities.drop Linux capabilities to drop from the container.
         drop:
           - ALL
   logs:
