@@ -92,8 +92,23 @@ await time(async () => {
   );
   if (!leaderRole) throw new Error("Leader election Role not found");
 
+  const configMap = resources.find(
+    (r) => r.kind === "ConfigMap" && r.metadata?.name === "gko-config",
+  );
+  if (!configMap) throw new Error("ConfigMap gko-config not found");
+
+  const validatingWHC = resources.find(
+    (r) => r.kind === "ValidatingWebhookConfiguration",
+  );
+  const mutatingWHC = resources.find(
+    (r) => r.kind === "MutatingWebhookConfiguration",
+  );
+
   LOG.green(
     `  Found Deployment, ${clusterRoles.length} ClusterRoles, leader election Role`,
+  );
+  LOG.green(
+    `  Found ConfigMap, ${validatingWHC ? "ValidatingWHC" : "no ValidatingWHC"}, ${mutatingWHC ? "MutatingWHC" : "no MutatingWHC"}`,
   );
 
   LOG.blue("Assembling CSV ...");
@@ -112,13 +127,43 @@ await time(async () => {
   const container = deploySpec.template.spec.containers.find(
     (c) => c.name === "manager",
   );
-  if (!container.env) container.env = [];
+
+  const EXCLUDED_ENV_VARS = new Set([
+    "NAMESPACE",
+    "APPLY_CRDS",
+    "WEBHOOK_CERT_SECRET_NAME",
+    "WEBHOOK_NAMESPACE",
+    "WEBHOOK_SERVICE_NAME",
+    "WEBHOOK_VALIDATING_CONFIGURATION_NAME",
+    "WEBHOOK_MUTATING_CONFIGURATION_NAME",
+  ]);
+
+  const cmData = configMap.data || {};
+  container.env = Object.entries(cmData)
+    .filter(([key]) => !EXCLUDED_ENV_VARS.has(key))
+    .map(([name, value]) => ({ name, value: String(value) }));
+
   container.env.push({
     name: "NAMESPACE",
     valueFrom: {
       fieldRef: { fieldPath: "metadata.annotations['olm.targetNamespaces']" },
     },
   });
+
+  delete container.envFrom;
+
+  if (container.volumeMounts) {
+    container.volumeMounts = container.volumeMounts.filter(
+      (vm) => vm.name !== "webhook-cert",
+    );
+    if (container.volumeMounts.length === 0) delete container.volumeMounts;
+  }
+
+  const podSpec = deploySpec.template.spec;
+  if (podSpec.volumes) {
+    podSpec.volumes = podSpec.volumes.filter((v) => v.name !== "webhook-cert");
+    if (podSpec.volumes.length === 0) delete podSpec.volumes;
+  }
 
   csv.spec.install.spec.deployments = [{ name: SA_NAME, spec: deploySpec }];
   csv.spec.install.spec.clusterPermissions = [
@@ -130,6 +175,34 @@ await time(async () => {
   csv.spec.install.spec.permissions = [
     { serviceAccountName: SA_NAME, rules: leaderRole.rules },
   ];
+
+  const webhookDefs = [];
+  const mapWebhooks = (whc, type) => {
+    if (!whc?.webhooks) return;
+    const suffix = type === "ValidatingAdmissionWebhook" ? "validate" : "mutate";
+    for (const wh of whc.webhooks) {
+      webhookDefs.push({
+        type,
+        deploymentName: SA_NAME,
+        containerPort: 443,
+        targetPort: 9443,
+        generateName: `${wh.name}.${suffix}`,
+        webhookPath: wh.clientConfig?.service?.path,
+        admissionReviewVersions: wh.admissionReviewVersions,
+        failurePolicy: wh.failurePolicy,
+        sideEffects: wh.sideEffects,
+        rules: wh.rules,
+      });
+    }
+  };
+
+  mapWebhooks(validatingWHC, "ValidatingAdmissionWebhook");
+  mapWebhooks(mutatingWHC, "MutatingAdmissionWebhook");
+
+  if (webhookDefs.length > 0) {
+    csv.spec.webhookdefinitions = webhookDefs;
+    LOG.green(`  Added ${webhookDefs.length} webhook definitions to CSV`);
+  }
 
   LOG.blue("Writing bundle ...");
   await fs.ensureDir(MANIFESTS_DIR);

@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -127,6 +128,9 @@ func (p *Patcher) getCaFromSecret(ctx context.Context, secretName string, namesp
 	log.Global.Debugf("Getting secret [%s] in namespace [%s]", secretName, namespace)
 
 	secret, err := p.client.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		return nil
+	}
 	if err != nil {
 		log.Global.Error(err, "Could not get admission webhook CA secret")
 		panic(err)
@@ -135,23 +139,42 @@ func (p *Patcher) getCaFromSecret(ctx context.Context, secretName string, namesp
 	return secret.Data["ca"]
 }
 
-// SaveCertsToSecret saves the provided ca, cert and key into a secret in the specified namespace.
+// saveCertsToSecret saves the provided ca, cert and key into a secret in the specified namespace.
+// If the secret does not exist yet, it is created.
 func (p *Patcher) saveCertsToSecret(ctx context.Context,
 	secretName, namespace, certName, keyName string, ca, cert, key []byte) error {
 	log.Global.Debugf("Saving to webhook secret '%s' in namespace '%s'", secretName, namespace)
 
+	data := map[string][]byte{caName: ca, certName: cert, keyName: key}
+
 	secret, err := p.client.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		newSecret := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secretName,
+				Namespace: namespace,
+			},
+			Data: data,
+		}
+		_, createErr := p.client.CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
+		if errors.IsAlreadyExists(createErr) {
+			secret, err = p.client.CoreV1().Secrets(namespace).Get(ctx, secretName, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			secret.Data = data
+			_, err = p.client.CoreV1().Secrets(namespace).Update(ctx, secret, metav1.UpdateOptions{})
+			return err
+		}
+		return createErr
+	}
 	if err != nil {
 		return err
 	}
 
-	secret.Data = map[string][]byte{caName: ca, certName: cert, keyName: key}
+	secret.Data = data
 	_, err = p.client.CoreV1().Secrets(namespace).Update(ctx, secret, metav1.UpdateOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // GenerateCerts venerates a ca with a leaf certificate and key and returns the ca, cert and key as PEM encoded slices.

@@ -219,9 +219,6 @@ async function applyOLMResources() {
 
   await $`kubectl create ns ${TEST_NS}`;
 
-  LOG.blue("  Creating empty webhook cert secret (operator will self-provision certs) ...");
-  await $`kubectl create secret generic gko-webhook-cert -n ${TEST_NS}`;
-
   const catalogSource = YAML.stringify({
     apiVersion: "operators.coreos.com/v1alpha1",
     kind: "CatalogSource",

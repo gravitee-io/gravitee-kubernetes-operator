@@ -383,10 +383,6 @@ spec:
                   - args: []
                     command:
                       - /manager
-                    envFrom:
-                      - configMapRef:
-                          name: gko-config
-                          optional: true
                     image: graviteeio/kubernetes-operator:0.0.0-test
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
@@ -415,10 +411,6 @@ spec:
                         drop:
                           - ALL
                       readOnlyRootFilesystem: true
-                    volumeMounts:
-                      - mountPath: /tmp/webhook-server/certs/
-                        name: webhook-cert
-                        readOnly: true
                     ports:
                       - containerPort: 8081
                         name: probes
@@ -430,17 +422,50 @@ spec:
                         name: webhook
                         protocol: TCP
                     env:
+                      - name: ENABLE_LEADER_ELECTION
+                        value: "true"
+                      - name: RECONCILE_STRATEGY
+                        value: onSpecChange
+                      - name: LOGS_FORMAT
+                        value: json
+                      - name: LOGS_LEVEL
+                        value: info
+                      - name: LOGS_LEVEL_CASE
+                        value: upper
+                      - name: LOGS_TIMESTAMP_FIELD
+                        value: timestamp
+                      - name: LOGS_TIMESTAMP_FORMAT
+                        value: epoch-second
+                      - name: PROBES_PORT
+                        value: "8081"
+                      - name: ENABLE_METRICS
+                        value: "true"
+                      - name: METRICS_PORT
+                        value: "8080"
+                      - name: SECURE_METRICS
+                        value: "true"
+                      - name: ENABLE_INGRESS
+                        value: "true"
+                      - name: ENABLE_GATEWAY_API
+                        value: "true"
+                      - name: APPLY_GATEWAY_API_CRDS
+                        value: "true"
+                      - name: INGRESS_CLASSES
+                        value: graviteeio
+                      - name: HTTP_CLIENT_TIMEOUT_SECONDS
+                        value: "5"
+                      - name: ENABLE_WEBHOOK
+                        value: "true"
+                      - name: WEBHOOK_SERVICE_PORT
+                        value: "9443"
+                      - name: ENABLE_TEMPLATING
+                        value: "true"
                       - name: NAMESPACE
                         valueFrom:
                           fieldRef:
                             fieldPath: metadata.annotations['olm.targetNamespaces']
                 hostNetwork: false
                 serviceAccountName: gko-controller-manager
-                volumes:
-                  - name: webhook-cert
-                    secret:
-                      defaultMode: 420
-                      secretName: gko-webhook-cert
                 terminationGracePeriodSeconds: 10
       clusterPermissions:
         - serviceAccountName: gko-controller-manager
@@ -1334,3 +1359,243 @@ spec:
             description: Kafka hostname for this route.
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:text
+  webhookdefinitions:
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.apidefinition.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-apidefinition
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - apidefinitions
+          scope: "*"
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.apiv4definition.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-apiv4definition
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - apiv4definitions
+          scope: "*"
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.application.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-application
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - applications
+          scope: "*"
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.apiresource.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-apiresource
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - apiresources
+          scope: "*"
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.managementcontext.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-managementcontext
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - managementcontexts
+          scope: "*"
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.subscription.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-subscription
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - subscriptions
+          scope: "*"
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.group.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-group
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - groups
+          scope: "*"
+    - type: ValidatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.sharedpolicygroups.validate
+      webhookPath: /validate-gravitee-io-v1alpha1-sharedpolicygroup
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - operations:
+            - CREATE
+            - UPDATE
+            - DELETE
+          apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          resources:
+            - sharedpolicygroups
+          scope: "*"
+    - type: MutatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.managementcontext.mutate
+      webhookPath: /mutate-gravitee-io-v1alpha1-managementcontext
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - managementcontexts
+          scope: "*"
+    - type: MutatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.subscription.mutate
+      webhookPath: /mutate-gravitee-io-v1alpha1-subscription
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - subscriptions
+          scope: "*"
+    - type: MutatingAdmissionWebhook
+      deploymentName: gko-controller-manager
+      containerPort: 443
+      targetPort: 9443
+      generateName: v1alpha1.gravitee.io.group.mutate
+      webhookPath: /mutate-gravitee-io-v1alpha1-group
+      admissionReviewVersions:
+        - v1
+      failurePolicy: Fail
+      sideEffects: None
+      rules:
+        - apiGroups:
+            - gravitee.io
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - groups
+          scope: "*"
