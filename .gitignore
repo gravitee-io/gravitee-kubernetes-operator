@@ -35,8 +35,8 @@ gko-config-default.yml
 
 # K8S OLM 
 cache/
-bundle/
 bundle.yml
+bundle_tmp*/
 
 # MacOS
 .DS_Store
