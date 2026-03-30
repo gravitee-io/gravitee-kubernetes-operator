@@ -15,6 +15,10 @@
  */
 
 import { defineConfig } from "@playwright/test";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   globalSetup: "./global-setup.ts",
@@ -26,7 +30,7 @@ export default defineConfig({
   reporter: [
     ["html", { open: "never" }],
     ["list"],
-    ["junit", { outputFile: "playwright-results.xml" }],
+    ["junit", { outputFile: path.join(__dirname, "../playwright-results/results.xml") }],
   ],
   projects: [
     {
