@@ -474,7 +474,7 @@ jobs:
           name: Install Terraform
           command: |
             curl -fsSL https://releases.hashicorp.com/terraform/1.12.1/terraform_1.12.1_linux_amd64.zip -o /tmp/terraform.zip
-            unzip -o /tmp/terraform.zip -d /usr/local/bin/
+            sudo unzip -o /tmp/terraform.zip -d /usr/local/bin/
             terraform version
       - run:
           name: Run Chainsaw tests
