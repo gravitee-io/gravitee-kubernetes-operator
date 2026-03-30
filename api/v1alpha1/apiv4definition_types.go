@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	"fmt"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
@@ -158,6 +160,13 @@ func (api *ApiV4Definition) pickPlanIDs(mCtx core.ContextModel) *map[string]*v4.
 		} else if plan.ID == "" {
 			p.ID = uuid.FromStrings(api.pickID(mCtx), key)
 		}
+		// This if condition can be removed once GKO moved to using the new Automation APIs
+		if p.GeneralConditions != nil && api.Spec.Pages != nil {
+			if page, ok := (*api.Spec.Pages)[*p.GeneralConditions]; ok {
+				p.GeneralConditions = ptr.To(page.ID)
+			}
+		}
+
 		plans[key] = p
 	}
 	return &plans
