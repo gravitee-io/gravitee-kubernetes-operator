@@ -484,7 +484,10 @@ jobs:
           name: Run Playwright E2E tests
           command: npm --prefix test/platform-test run e2e
       - store_test_results:
-          path: test/platform-test/playwright-results.xml
+          path: test/platform-test/playwright-results
+      - store_artifacts:
+          path: test/platform-test/playwright-results
+          destination: playwright-results
       - store_artifacts:
           path: test/platform-test/playwright-report
           destination: playwright-report
