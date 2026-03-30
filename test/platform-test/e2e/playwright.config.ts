@@ -23,7 +23,11 @@ export default defineConfig({
   timeout: 30_000,
   retries: 0,
   workers: 1,
-  reporter: [["html", { open: "never" }], ["list"]],
+  reporter: [
+    ["html", { open: "never" }],
+    ["list"],
+    ["junit", { outputFile: "playwright-results.xml" }],
+  ],
   projects: [
     {
       name: "platform-test",
