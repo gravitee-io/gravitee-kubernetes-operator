@@ -91,6 +91,13 @@ spec:
                     If true, new members added to the API spec will
                     be notified when the API is synced with APIM.
                   type: boolean
+                roles:
+                  properties:
+                    API:
+                      type: string
+                    APPLICATION:
+                      type: string
+                  type: object
               required:
                 - members
                 - name
