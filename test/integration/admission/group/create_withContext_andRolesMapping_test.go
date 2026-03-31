@@ -63,13 +63,11 @@ var _ = Describe("Create", labels.WithContext, func() {
 			},
 			Spec: v1alpha1.GroupSpec{
 				Type: &group.Type{
-					Name:          name,
-					NotifyMembers: false,
-					Members:       []group.Member{groupMember},
-					Roles: &group.Roles{
-						API:         "OWNER",
-						Application: "USER",
-					},
+					Name:            name,
+					NotifyMembers:   false,
+					Members:         []group.Member{groupMember},
+					ApiRole:         "OWNER",
+					ApplicationRole: "USER",
 				},
 				Context: &refs.NamespacedName{
 					Name:      fixtures.Context.Name,
@@ -131,9 +129,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 					Name:          name,
 					NotifyMembers: false,
 					Members:       []group.Member{groupMember},
-					Roles: &group.Roles{
-						API: "OWNER",
-					},
+					ApiRole:       "OWNER",
 				},
 				Context: &refs.NamespacedName{
 					Name:      fixtures.Context.Name,

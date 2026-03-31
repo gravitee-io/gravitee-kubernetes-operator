@@ -22,9 +22,8 @@ spec:
     name: "dev-ctx"
   name: "developers"
   notifyMembers: false
-  roles:
-    API: "OWNER"
-    APPLICATION: "USER"
+  apiRole: "OWNER"
+  applicationRole: "USER"
   members:
   - source: memory
     sourceId: api1
