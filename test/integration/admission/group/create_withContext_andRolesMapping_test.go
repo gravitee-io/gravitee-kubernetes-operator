@@ -78,7 +78,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			},
 		}
 
-		fixtures = fixtures.Apply()
+		fixtures.Apply()
 		Expect(manager.Client().Create(ctx, &group)).To(Succeed())
 
 		Eventually(func() error {
@@ -142,7 +142,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 			},
 		}
 
-		fixtures = fixtures.Apply()
+		fixtures.Apply()
 		Expect(manager.Client().Create(ctx, &group)).To(Succeed())
 
 		Eventually(func() error {
@@ -187,7 +187,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		groupMember := base.NewGraviteeGroupMember(saName, "OWNER")
 		fixtures.Group.Spec.Members = []group.Member{groupMember}
 
-		fixtures = fixtures.Apply()
+		fixtures.Apply()
 
 		Eventually(func() error {
 			g := &v1alpha1.Group{}
@@ -214,12 +214,12 @@ var _ = Describe("Create", labels.WithContext, func() {
 	})
 })
 
-var ErrStatusNotPopulated = ErrorWithMessage{Message: "status not populated"}
+var ErrStatusNotPopulated = StatusNotPopulatedError{Message: "status not populated"}
 
-type ErrorWithMessage struct {
+type StatusNotPopulatedError struct {
 	Message string
 }
 
-func (e ErrorWithMessage) Error() string {
+func (e StatusNotPopulatedError) Error() string {
 	return e.Message
 }
