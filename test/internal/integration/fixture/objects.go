@@ -35,6 +35,7 @@ type Objects struct {
 	Application       *v1alpha1.Application
 	Subscription      *v1alpha1.Subscription
 	Group             *v1alpha1.Group
+	IDPGroupMapping   *v1alpha1.IDPGroupMapping
 	SharedPolicyGroup *v1alpha1.SharedPolicyGroup
 	Notification      *v1alpha1.Notification
 
