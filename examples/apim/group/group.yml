@@ -23,8 +23,8 @@ spec:
   name: "developers"
   notifyMembers: false
   roles:
-    API: OWNER
-    APPLICATION: OWNER
+    API: "OWNER"
+    APPLICATION: "USER"
   members:
   - source: memory
     sourceId: api1
