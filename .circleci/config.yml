@@ -4,7 +4,7 @@ orbs:
   gravitee: gravitee-io/gravitee@4.17.0
   kubernetes: circleci/kubernetes@2.0.2
   helm: circleci/helm@3.2.0
-  go: circleci/go@3.0.3
+  go: circleci/go@3.0.4
   keeper: gravitee-io/keeper@0.7.0
   slack: circleci/slack@5.2.3
   gh: circleci/github-cli@2.7.2
@@ -64,7 +64,7 @@ parameters:
 executors:
   azure-cli:
     docker:
-      - image: mcr.microsoft.com/azure-cli:2.81.0
+      - image: mcr.microsoft.com/azure-cli:2.84.0
     resource_class: small
 
 commands:
@@ -471,9 +471,23 @@ jobs:
           command: |
             GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.14
       - run:
+          name: Install Terraform
+          command: |
+            curl -fsSL https://releases.hashicorp.com/terraform/1.12.1/terraform_1.12.1_linux_amd64.zip -o /tmp/terraform.zip
+            sudo unzip -o /tmp/terraform.zip -d /usr/local/bin/
+            terraform version
+      - run:
           name: Run Chainsaw tests
           command: |
             bin/chainsaw test --quiet --config test/e2e/chainsaw/config.yaml
+      - run:
+          name: Run Playwright E2E tests
+          command: npm --prefix test/platform-test run e2e
+      - store_test_results:
+          path: test/platform-test/playwright-results.xml
+      - store_artifacts:
+          path: test/platform-test/playwright-report
+          destination: playwright-report
 
   job-stage-helm-chart:
     docker:

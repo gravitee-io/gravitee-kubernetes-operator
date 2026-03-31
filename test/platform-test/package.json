@@ -43,12 +43,15 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "npx playwright test --config e2e/playwright.config.ts",
+    "e2e:regression": "npx playwright test --config e2e/playwright.config.ts --grep @regression"
   },
   "dependencies": {
     "yaml": "^2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48",
     "typescript": "^5.7",
     "vitest": "^3.0",
     "@types/node": "^22"

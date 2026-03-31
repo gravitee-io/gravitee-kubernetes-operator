@@ -1,0 +1,132 @@
+/**
+ * Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+
+const NAMESPACE = process.env["K8S_NAMESPACE"] ?? "default";
+
+interface ExecResult {
+  stdout: string;
+  stderr: string;
+}
+
+const EXEC_TIMEOUT_MS = 15_000;
+
+async function run(args: string[], timeoutMs = EXEC_TIMEOUT_MS): Promise<ExecResult> {
+  return execFileAsync("kubectl", args, { timeout: timeoutMs });
+}
+
+/** Apply a YAML manifest file. */
+export async function apply(yamlPath: string, namespace = NAMESPACE): Promise<void> {
+  await run(["apply", "-f", yamlPath, "-n", namespace]);
+}
+
+/** Delete resources defined in a YAML manifest file. */
+export async function del(yamlPath: string, namespace = NAMESPACE): Promise<void> {
+  await run(["delete", "-f", yamlPath, "-n", namespace, "--ignore-not-found"]);
+}
+
+/** Wait for a condition on a resource. */
+export async function waitForCondition(
+  kind: string,
+  name: string,
+  condition: string,
+  timeoutSeconds = 60,
+  namespace = NAMESPACE,
+): Promise<void> {
+  // Use kubectl's own timeout + a small buffer for the exec timeout
+  const execTimeoutMs = (timeoutSeconds + 5) * 1_000;
+  await run(
+    [
+      "wait",
+      `--for=condition=${condition}`,
+      `${kind}/${name}`,
+      `--timeout=${timeoutSeconds}s`,
+      "-n",
+      namespace,
+    ],
+    execTimeoutMs,
+  );
+}
+
+/** Get the full resource as parsed JSON. */
+export async function get<T = unknown>(
+  kind: string,
+  name: string,
+  namespace = NAMESPACE,
+): Promise<T> {
+  const { stdout } = await run(["get", `${kind}/${name}`, "-n", namespace, "-o", "json"]);
+  return JSON.parse(stdout) as T;
+}
+
+/** Get just the .status field of a resource. */
+export async function getStatus<T = unknown>(
+  kind: string,
+  name: string,
+  namespace = NAMESPACE,
+): Promise<T> {
+  const resource = await get<{ status: T }>(kind, name, namespace);
+  return resource.status;
+}
+
+/** Assert that a Kubernetes event for the given resource contains a message substring. */
+export async function assertEventContains(
+  kind: string,
+  name: string,
+  message: string,
+  namespace = NAMESPACE,
+): Promise<void> {
+  const { stdout } = await run([
+    "get",
+    "events",
+    `--field-selector=involvedObject.name=${name}`,
+    "-n",
+    namespace,
+    "-o",
+    "json",
+  ]);
+  const events = JSON.parse(stdout) as { items: Array<{ message: string }> };
+  const found = events.items.some((e) => e.message.includes(message));
+  if (!found) {
+    throw new Error(
+      `No event for ${kind}/${name} contains "${message}". ` +
+        `Events: ${events.items.map((e) => e.message).join("; ")}`,
+    );
+  }
+}
+
+/**
+ * Try to apply a manifest and expect it to fail (e.g., admission webhook rejection).
+ * Returns the stderr output for further assertions.
+ * Throws if the apply unexpectedly succeeds.
+ */
+export async function applyExpectFailure(
+  yamlPath: string,
+  namespace = NAMESPACE,
+): Promise<string> {
+  try {
+    await run(["apply", "-f", yamlPath, "-n", namespace]);
+    throw new Error(`Expected kubectl apply to fail for ${yamlPath}, but it succeeded`);
+  } catch (err: unknown) {
+    if (err != null && typeof err === "object" && "stderr" in err && typeof (err as Record<string, unknown>).stderr === "string") {
+      return (err as Record<string, unknown>).stderr as string;
+    }
+    throw err;
+  }
+}
