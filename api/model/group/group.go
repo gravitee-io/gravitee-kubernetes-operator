@@ -45,8 +45,10 @@ type Type struct {
 }
 
 type Roles struct {
+	// Default role for Applications.
 	Application string `json:"APPLICATION,omitempty"`
-	API         string `json:"API,omitempty"`
+	// Default role for APIs.
+	API string `json:"API,omitempty"`
 }
 
 type Member struct {
