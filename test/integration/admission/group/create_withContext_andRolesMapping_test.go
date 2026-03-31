@@ -66,7 +66,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 					Name:          name,
 					NotifyMembers: false,
 					Members:       []group.Member{groupMember},
-					Roles: group.Roles{
+					Roles: &group.Roles{
 						API:         "OWNER",
 						Application: "USER",
 					},
@@ -131,7 +131,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 					Name:          name,
 					NotifyMembers: false,
 					Members:       []group.Member{groupMember},
-					Roles: group.Roles{
+					Roles: &group.Roles{
 						API: "OWNER",
 					},
 				},
