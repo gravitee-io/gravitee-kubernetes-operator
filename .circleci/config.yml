@@ -864,7 +864,7 @@ jobs:
             sonar-scanner \
               -Dsonar.projectVersion=$(npx zx hack/scripts/get-chart-version.mjs)
 workflows:
-  pull-request:
+  pre-merge:
     when:
       equal:
         - none
