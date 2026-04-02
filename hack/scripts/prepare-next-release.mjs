@@ -17,7 +17,7 @@
 import { HELM, LOG } from "./lib/index.mjs";
 import { Version } from "./lib/version.mjs";
 import { rolloutMergify } from "./lib/rollout-mergify.mjs";
-import { rolloutTestScheduller } from "./lib/rollout-test-scheduler.mjs";
+import { rolloutTestScheduler } from "./lib/rollout-test-scheduler.mjs";
 import { prepareDocs } from "./lib/prepare-docs.mjs";
 
 const releasedVersion = new Version(await HELM.getChartVersion());
@@ -85,7 +85,7 @@ await $`git add .mergify.yml`;
 LOG.blue(`
     🚧 Rolling out test scheduler`);
 
-await rolloutTestScheduller(releasedVersion.toString());
+await rolloutTestScheduler(releasedVersion.toString());
 
 await $`git add .github/workflows/schedule-test.yml `;
 

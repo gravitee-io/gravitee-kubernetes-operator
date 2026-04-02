@@ -17,7 +17,7 @@
 import { HELM, LOG, PROJECT_DIR, isEmptyString } from "./lib/index.mjs";
 import { Version } from "./lib/version.mjs";
 import { rolloutMergify } from "./lib/rollout-mergify.mjs";
-import { rolloutTestScheduller } from "./lib/rollout-test-scheduler.mjs";
+import { rolloutTestScheduler } from "./lib/rollout-test-scheduler.mjs";
 import { prepareDocs } from "./lib/prepare-docs.mjs";
 
 const VERSION = argv.version;
@@ -118,7 +118,7 @@ await $`git add .mergify.yml`;
 LOG.blue(`
     🚧 Rolling out test scheduler on master`);
 
-await rolloutTestScheduller(frozenVersion.toString());
+await rolloutTestScheduler(frozenVersion.toString());
 
 await $`git add .github/workflows/schedule-test.yml`;
 
