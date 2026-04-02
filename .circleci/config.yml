@@ -714,13 +714,12 @@ jobs:
                 command: |
                   npx zx hack/scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
       - run:
-          name: Commit and tag release
+          name: Commit release
           command: |
             make add-license > /dev/null
             git add helm/gko/Chart.yaml
             git add crds
             git commit -m "ci: release version << pipeline.parameters.release-version >> [skip ci]"
-            git tag << pipeline.parameters.release-version >>
             echo
             git diff HEAD~1 HEAD
       - when:
@@ -728,11 +727,10 @@ jobs:
             not: << pipeline.parameters.dry-run >>
           steps:
             - run:
-                name: Push release tag and commit
+                name: Push release commit
                 command: |
                   export RELEASE_BRANCH=$(npx zx hack/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
                   git push -u origin $RELEASE_BRANCH
-                  git push --tags origin $RELEASE_BRANCH
       - run:
           name: Generate Changelog
           command: npx zx hack/scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
@@ -759,7 +757,9 @@ jobs:
             - run:
                 name: Publish Github Release << pipeline.parameters.release-version >> as latest
                 command: |
-                  gh release create --latest << pipeline.parameters.release-version >> \
+                  gh release create --latest \
+                    --target "$(git rev-parse HEAD)" \
+                    << pipeline.parameters.release-version >> \
                     /tmp/custom-resource-definitions.zip \
                     -F /tmp/CHANGELOG.md
       - when:
@@ -772,7 +772,9 @@ jobs:
             - run:
                 name: Publish Github Release << pipeline.parameters.release-version >>
                 command: |
-                  gh release create << pipeline.parameters.release-version >> \
+                  gh release create \
+                    --target "$(git rev-parse HEAD)" \
+                    << pipeline.parameters.release-version >> \
                     /tmp/custom-resource-definitions.zip \
                     -F /tmp/CHANGELOG.md
       - when:
