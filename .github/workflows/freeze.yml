@@ -43,5 +43,5 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: "Freeze version ${VERSION}"
+      - name: "Freeze version ${{ inputs.version }}"
         run: npx zx hack/scripts/freeze.mjs --version ${VERSION}
