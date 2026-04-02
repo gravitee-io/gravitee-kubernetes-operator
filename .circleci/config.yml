@@ -857,6 +857,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - gh/setup
       - run:
           name: Freeze version << pipeline.parameters.freeze-version >>
           command: |
