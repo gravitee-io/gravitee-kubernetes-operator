@@ -792,61 +792,28 @@ jobs:
       - image: cimg/base:stable
     resource_class: small
     steps:
-      - keeper/env-export:
-          secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
-          var-name: SLACK_ACCESS_TOKEN
-      - slack/notify:
-          channel: C02NGT20S4W
-          event: pass
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":kubernetes: Gravitee Kubernetes Operator - <https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/${CIRCLE_TAG}|Version ${CIRCLE_TAG}> has been released 🎉"
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - keeper/env-export:
+                secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+                var-name: SLACK_ACCESS_TOKEN
+            - slack/notify:
+                channel: C02NGT20S4W
+                event: pass
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":kubernetes: Gravitee Kubernetes Operator - <https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/<< pipeline.parameters.release-version >>|Version << pipeline.parameters.release-version >>> has been released 🎉"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
-
-  job-prepare-next-release:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>-node
-    steps:
-      - checkout
-      - run:
-          name: Generate cache keys for Go tools
-          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - restore_cache:
-          keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
-      - setup_remote_docker
-      - helm/install_helm_client:
-          version: "<< pipeline.parameters.helm-version >>"
-      - keeper/env-export:
-          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
-          var-name: GITHUB_TOKEN
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
-          var-name: GIT_AUTHOR_NAME
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
-          var-name: GIT_AUTHOR_EMAIL
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
-          var-name: GIT_COMMITTER_NAME
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
-          var-name: GIT_COMMITTER_EMAIL
-      - add_ssh_keys:
-          fingerprints:
-            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
-      - run:
-          name: Prepare next release
-          command: |
-            npx zx hack/scripts/prepare-next-release.mjs
 
   job-helm-lint:
     docker:
@@ -1095,62 +1062,49 @@ workflows:
       - job-release:
           name: Release
           context: cicd-orchestrator
-  post-release:
-    when:
-      equal:
-        - none
-        - << pipeline.parameters.trigger >>
-    jobs:
       - job-notify-release-slack:
-          name: Notify gravitee-release-alerts slack channel
+          name: Notify release on Slack
           context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
-      - job-prepare-next-release:
-          name: Prepare next release
-          context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
+          requires:
+            - Release
       - aquasec/register_artifact:
-          name: Register artifact
+          name: Register release artifact
           context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
+          requires:
+            - Release
           built_docker_image_file: /tmp/docker-image.txt
           pre-steps:
+            - run:
+                name: Skip on dry run
+                command: |
+                  if [ "<< pipeline.parameters.dry-run >>" = "true" ]; then
+                    circleci-agent step halt
+                  fi
             - cmd-setup-aqua-scan
             - run:
                 name: Store docker image version
-                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+                command: echo "graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>" > /tmp/docker-image.txt
       - aquasec/docker_image_scan:
-          name: Scan docker image
+          name: Scan release image
           context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
           requires:
-            - Register artifact
+            - Register release artifact
           scanner_url: https://82fb8f75da.cloud.aquasec.com
           built_docker_image_file: /tmp/docker-image.txt
           pre-steps:
+            - run:
+                name: Skip on dry run
+                command: |
+                  if [ "<< pipeline.parameters.dry-run >>" = "true" ]; then
+                    circleci-agent step halt
+                  fi
             - cmd-setup-aqua-scan
             - run:
                 name: Store docker image version
-                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+                command: echo "graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>" > /tmp/docker-image.txt
             - run:
                 name: Pull docker image
-                command: docker pull "graviteeio/kubernetes-operator:${CIRCLE_TAG}"
+                command: docker pull "graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>"
 
   test:
     when:
