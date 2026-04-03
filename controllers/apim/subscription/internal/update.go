@@ -31,6 +31,8 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	ns := subscription.Namespace
 	spec := subscription.Spec
 
+	creating := subscription.HasNoStatus()
+
 	app, err := dynamic.ResolveApplication(ctx, &spec.App, ns)
 	if err != nil {
 		return err
@@ -82,18 +84,20 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	subscription.Status.EndingAt = status.EndingAt
 	subscription.Status.ID = status.ID
 
-	appStatus, _ := app.GetStatus().(core.SubscribableStatus)
-	apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
+	if creating {
+		appStatus, _ := app.GetStatus().(core.SubscribableStatus)
+		apiStatus, _ := api.GetStatus().(core.SubscribableStatus)
 
-	appStatus.AddSubscription()
-	apiStatus.AddSubscription()
+		appStatus.AddSubscription()
+		apiStatus.AddSubscription()
 
-	if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
-		return err
-	}
+		if err := k8s.GetClient().Status().Update(ctx, app); err != nil {
+			return err
+		}
 
-	if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
-		return err
+		if err := k8s.GetClient().Status().Update(ctx, api); err != nil {
+			return err
+		}
 	}
 
 	return nil
