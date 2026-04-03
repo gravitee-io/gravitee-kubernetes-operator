@@ -138,6 +138,13 @@ func (s *Subscription) IsBeingDeleted() bool {
 	return !s.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+func (s *Subscription) HasNoStatus() bool {
+	return s.Status.ID == "" &&
+		s.Status.StartedAt == "" &&
+		s.Status.EndingAt == "" &&
+		s.Status.ProcessingStatus == ""
+}
+
 func init() {
 	SchemeBuilder.Register(&Subscription{}, &SubscriptionList{})
 }
