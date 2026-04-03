@@ -56,9 +56,8 @@ await $`git switch master`;
 await $`git switch -c ${releaseBranch}`;
 
 LOG.blue(`
-    🔧 Running make add-license && make manifests`);
+    🔧 Running make manifests`);
 
-await $`make add-license`;
 await $`make manifests`;
 
 const branchLabel = `apply-on-${releaseBranch.replaceAll(".", "-")}`;
@@ -82,6 +81,8 @@ LOG.blue(`
     📝 Updating impl.yaml → version: ${frozenVersion}`);
 
 await updateImplYaml(frozenVersion.toString());
+
+await $`make add-license`;
 
 await $`git add .`;
 await $`git commit -m "chore: freeze ${frozenVersion}"`;
@@ -122,6 +123,9 @@ await rolloutTestScheduler(frozenVersion.toString());
 
 await $`git add .github/workflows/schedule-test.yml`;
 
+await $`make add-license`;
+
+await $`git add .`;
 await $`git commit -m "chore: prepare for ${nextMinorVersion}"`;
 await $`git push -u origin master`;
 
