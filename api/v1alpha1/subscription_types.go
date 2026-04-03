@@ -160,6 +160,14 @@ func (s *Subscription) SetConditions(conditions []metav1.Condition) {
 	s.Status.Conditions = conditions
 }
 
+func (s *Subscription) HasNoStatus() bool {
+	return s.Status.ID == "" &&
+		s.Status.StartedAt == "" &&
+		s.Status.EndingAt == "" &&
+		len(s.Status.Conditions) == 0 &&
+		s.Status.ProcessingStatus == ""
+}
+
 func init() {
 	SchemeBuilder.Register(&Subscription{}, &SubscriptionList{})
 }

@@ -14,7 +14,7 @@ lint-commits:  ## Run commitlint and fail on error
 .PHONY: lint-sources
 lint-sources: ## Run golangci-lint and fail on error
 	@echo "Linting go sources ..."
-	@$(GOLANGCILINT) --concurrency 4 run ./...
+	@$(GOLANGCILINT) --concurrency 4 --exclude-dirs "e2e" run ./...
 	@npx --yes prettier --check hack/scripts
 
 .PHONY: lint-licenses
@@ -49,6 +49,6 @@ lint: $(ALL_LINT)
 
 .PHONY: lint-fix
 lint-fix: ## Fix whatever golangci-lint can fix and add licenses headers
-	@$(GOLANGCILINT) run ./... --fix
+	@$(GOLANGCILINT) run ./... --fix --exclude-dirs "e2e"
 	@$(MAKE) add-license
 	@npx --yes prettier --write hack/scripts
