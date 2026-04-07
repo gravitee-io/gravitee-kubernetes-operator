@@ -1011,13 +1011,6 @@ workflows:
           name: Test Helm chart
           requires:
             - Lint Helm chart
-      - job-sonarcloud-analysis:
-          name: Sonarcloud analysis
-          context: cicd-orchestrator
-          requires:
-            - Run IT with context
-            - Run IT without context
-            - Run Conformance Test
       - aquasec/fs_scan:
           context: cicd-orchestrator
           pre-steps:
@@ -1094,7 +1087,62 @@ workflows:
                   channel: C098YUEDMGE
                   event: pass
                   template: basic_success_1
-                  branch_pattern: ".+"      
+                  branch_pattern: ".+"
+      - job-install-go-tools:
+          name: Install GO tools (master)
+          filters:
+            branches:
+              only:
+                - master
+      - job-unit-test:
+          name: Run unit tests (master)
+          requires:
+            - Install GO tools (master)
+          filters:
+            branches:
+              only:
+                - master
+      - job-integration-test:
+          name: Run IT with context (master)
+          context: cicd-orchestrator
+          requires:
+            - Install GO tools (master)
+          ginkgo-filter: withContext
+          filters:
+            branches:
+              only:
+                - master
+      - job-integration-test:
+          name: Run IT without context (master)
+          context: cicd-orchestrator
+          requires:
+            - Install GO tools (master)
+          ginkgo-filter: withoutContext
+          filters:
+            branches:
+              only:
+                - master
+      - job-conformance-test:
+          name: Run Conformance Test (master)
+          context: cicd-orchestrator
+          requires:
+            - Install GO tools (master)
+          filters:
+            branches:
+              only:
+                - master
+      - job-sonarcloud-analysis:
+          name: Sonarcloud analysis
+          context: cicd-orchestrator
+          requires:
+            - Run IT with context (master)
+            - Run IT without context (master)
+            - Run Conformance Test (master)
+            - Run end to end tests
+          filters:
+            branches:
+              only:
+                - master
 
       - aquasec/register_artifact:
           name: Register staged image for scanning
