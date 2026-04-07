@@ -38,3 +38,7 @@ nodes:
         # gko-controller debug port
       - containerPort: 32767
         hostPort: 32767
+    extraMounts:
+      - hostPath: /tmp/coverage
+        containerPath: /tmp/coverage
+        readOnly: false
