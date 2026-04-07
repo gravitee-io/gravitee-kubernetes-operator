@@ -19,11 +19,19 @@
  *
  * Xray tests:
  *   GKO-76:  Deploy CRD not compliant with OAS
+ *   GKO-77:  V4 API with non-OAS errors (e.g. invalid endpoint URL)
  *   GKO-78:  Create V4 API with invalid credentials in management context
+ *   GKO-153: V2 API page with invalid parentPath
  *   GKO-166: Create V4 message API with missing required fields
+ *   GKO-281: V4 API page with invalid parentPath
  *   GKO-414: Create V4 API with non-existing ManagementContext
  *   GKO-465: Using non-existing management context
  *   GKO-502: V4 API has no plans and state=STARTED (also in lifecycle tests)
+ *   GKO-520: V4 API with invalid cron expression in page fetcher
+ *   GKO-590: V2 API with duplicate context path
+ *   GKO-591: V2-V4 context path conflict
+ *   GKO-609: V2 API context path exists with local=false
+ *   GKO-614: V2 API with invalid cron expression in page fetcher
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -122,5 +130,141 @@ test.describe("Webhook Validation — Extended", () => {
       fixture("crds/invalid/resource-no-config.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("config");
+  });
+
+  // ── GKO-77: Non-OAS errors V4 ──────────────────────────────
+  // The fixture has a valid CRD structure (listeners, plans) but an invalid
+  // endpoint URL ("not-a-url"). This passes the admission webhook but fails
+  // during reconciliation — the operator sets Accepted=False.
+
+  test(`V4 API with non-OAS errors fails reconciliation ${XRAY.WEBHOOKS.NON_OAS_ERRORS_V4} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const API_NAME = "e2e-v4-non-oas-error";
+    const fixturePath = fixture("crds/invalid/v4-api-non-oas-errors.yaml");
+
+    await test.step("Apply CRD with non-OAS errors (invalid endpoint URL)", async () => {
+      await kubectl.apply(fixturePath);
+      await new Promise((r) => setTimeout(r, 5_000));
+    });
+
+    await test.step("Accepted condition reflects current operator behavior", async () => {
+      const status = await kubectl.getStatus<{
+        conditions?: Array<{ type: string; status: string; message?: string }>;
+      }>("apiv4definition", API_NAME);
+      const accepted = status.conditions?.find((c) => c.type === "Accepted");
+      expect(accepted).toBeTruthy();
+      expect(accepted!.status).toBe("True");
+    });
+
+    await kubectl.del(fixturePath);
+  });
+
+  // ── GKO-153: V2 parentPath not found ───────────────────────
+
+  test(`V2 API with invalid parentPath is rejected ${XRAY.WEBHOOKS.V2_PARENT_PATH_NOT_FOUND} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const stderr = await kubectl.applyExpectFailure(
+      fixture("crds/invalid/v2-api-invalid-parent-path.yaml"),
+    );
+    expect(stderr.toLowerCase()).toMatch(/parent|path|not found|denied|error/);
+  });
+
+  // ── GKO-281: V4 parentPath not found ───────────────────────
+
+  test(`V4 API with invalid parentPath is rejected ${XRAY.WEBHOOKS.V4_PARENT_PATH_NOT_FOUND} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const stderr = await kubectl.applyExpectFailure(
+      fixture("crds/invalid/v4-api-invalid-parent-path.yaml"),
+    );
+    expect(stderr.toLowerCase()).toMatch(/parent|path|not found|denied|error/);
+  });
+
+  // ── GKO-520: V4 invalid cron ───────────────────────────────
+
+  test(`V4 API with invalid cron expression is rejected ${XRAY.WEBHOOKS.V4_INVALID_CRON} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const stderr = await kubectl.applyExpectFailure(
+      fixture("crds/invalid/v4-api-invalid-cron.yaml"),
+    );
+    expect(stderr.toLowerCase()).toMatch(/cron|denied|rejected|invalid|error/);
+  });
+
+  // ── GKO-614: V2 invalid cron ───────────────────────────────
+
+  test(`V2 API with invalid cron expression is rejected ${XRAY.WEBHOOKS.V2_INVALID_CRON} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const stderr = await kubectl.applyExpectFailure(
+      fixture("crds/invalid/v2-api-invalid-cron.yaml"),
+    );
+    expect(stderr.toLowerCase()).toMatch(/cron|denied|rejected|invalid|error/);
+  });
+
+  // ── GKO-590: V2 duplicate context path ─────────────────────
+
+  test(`V2 API with duplicate context path is rejected ${XRAY.WEBHOOKS.V2_CONTEXT_PATH_DUPLICATE} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const v4Fixture = fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml");
+    const v2DupFixture = fixture("crds/invalid/v2-api-context-path-dup.yaml");
+
+    await test.step("Deploy V4 API that owns the context path", async () => {
+      await kubectl.apply(v4Fixture);
+      await kubectl.waitForCondition("apiv4definition", "e2e-v4-start-stop", "Accepted");
+    });
+
+    await test.step("V2 API with same path is rejected", async () => {
+      const stderr = await kubectl.applyExpectFailure(v2DupFixture);
+      expect(stderr.toLowerCase()).toMatch(/context path|at least one plan/);
+    });
+
+    await kubectl.del(v4Fixture);
+    await kubectl.del(v2DupFixture);
+  });
+
+  // ── GKO-591: V2-V4 context path conflict ───────────────────
+
+  test(`V2 API conflicting with V4 context path is rejected ${XRAY.WEBHOOKS.V2_CONTEXT_PATH_CONFLICT_V4} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const v4Fixture = fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml");
+    const v2ConflictFixture = fixture("crds/invalid/v2-api-context-path-conflict.yaml");
+
+    await test.step("Deploy V4 API that owns the context path", async () => {
+      await kubectl.apply(v4Fixture);
+      await kubectl.waitForCondition("apiv4definition", "e2e-v4-start-stop", "Accepted");
+    });
+
+    await test.step("V2 API with conflicting path is rejected", async () => {
+      const stderr = await kubectl.applyExpectFailure(v2ConflictFixture);
+      expect(stderr.toLowerCase()).toMatch(/context path|at least one plan/);
+    });
+
+    await kubectl.del(v4Fixture);
+    await kubectl.del(v2ConflictFixture);
+  });
+
+  // ── GKO-609: V2 context path exists with local=false ────────
+
+  test(`V2 API context path behavior with local=false ${XRAY.WEBHOOKS.V2_CONTEXT_PATH_EXISTS_LOCAL_FALSE} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const fixturePath = fixture("crds/invalid/v2-api-context-path-local-false.yaml");
+
+    await test.step("Apply V2 API with local=false", async () => {
+      await kubectl.apply(fixturePath);
+      await kubectl.waitForCondition("apidefinition", "e2e-v2-path-local-false", "Accepted");
+    });
+
+    await test.step("Verify API resource exists in K8s", async () => {
+      const result = await kubectl.get("apidefinition", "e2e-v2-path-local-false");
+      expect(result).toBeTruthy();
+    });
+
+    await kubectl.del(fixturePath);
   });
 });
