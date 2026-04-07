@@ -25,3 +25,4 @@ spec:
   settings:
     app:
       type: "SIMPLE"
+      clientId: "e2e-client-id-simple"
