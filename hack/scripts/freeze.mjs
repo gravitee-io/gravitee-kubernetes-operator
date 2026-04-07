@@ -18,7 +18,6 @@ import { HELM, LOG, PROJECT_DIR, isEmptyString } from "./lib/index.mjs";
 import { Version } from "./lib/version.mjs";
 import { rolloutMergify } from "./lib/rollout-mergify.mjs";
 import { rolloutTestScheduler } from "./lib/rollout-test-scheduler.mjs";
-import { prepareDocs } from "./lib/prepare-docs.mjs";
 
 const VERSION = argv.version;
 
@@ -133,13 +132,6 @@ await $`make add-license`;
 await $`git add .`;
 await $`git commit -m "chore: prepare for ${nextMinorVersion}"`;
 await $`git push -u origin master`;
-
-// -- Documentation -----------------------------------------------------------
-
-LOG.blue(`
-    📚 Preparing documentation for ${nextMinorVersion}`);
-
-await prepareDocs(frozenVersion.toString());
 
 LOG.green(`
     ✅ Freeze complete for ${frozenVersion}`);
