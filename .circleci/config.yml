@@ -458,13 +458,21 @@ jobs:
           command: |
             make start-cluster
       - run:
+          name: Prepare coverage storage
+          command: |
+            sudo chmod -R 777 /tmp/coverage
+      - run:
+          name: Create coverage persistent volume
+          command: kubectl apply -f ./test/e2e/coverage.yaml
+      - run:
           name: Helm install GKO
           command: |
             IMG=gko TAG=latest make docker-build-cover \
               && kind load docker-image gko:latest --name gravitee \
               && helm upgrade --install gko helm/gko -n default \
                 --set manager.image.repository=gko \
-                --set manager.image.tag=latest
+                --set manager.image.tag=latest \
+                -f ./test/e2e/operator.values.yaml
       - run:
           name: Install libs
           command: yarn --cwd test/e2e/lib install
@@ -488,6 +496,20 @@ jobs:
       - run:
           name: Run Playwright E2E tests
           command: npm --prefix test/platform-test run e2e
+      - run:
+          name: Scale down operator
+          command: |
+            kubectl scale deployment gko-controller-manager -n default --replicas=0
+            kubectl wait --for=delete pod -l control-plane=controller-manager --timeout=60s
+      - run:
+          name: Generate coverage
+          command: |
+            mkdir -p /tmp/junit/reports
+            go tool covdata textfmt -i=/tmp/coverage -o /tmp/junit/reports/cover-e2e.out
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover-e2e.out
       - store_test_results:
           path: test/platform-test/playwright-results
       - store_artifacts:
