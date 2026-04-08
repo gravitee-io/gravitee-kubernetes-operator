@@ -490,12 +490,12 @@ jobs:
             sudo unzip -o /tmp/terraform.zip -d /usr/local/bin/
             terraform version
       - run:
+          name: Run Playwright E2E tests
+          command: npm --prefix test/platform-test run e2e
+      - run:
           name: Run Chainsaw tests
           command: |
             bin/chainsaw test --quiet --config test/e2e/chainsaw/config.yaml
-      - run:
-          name: Run Playwright E2E tests
-          command: npm --prefix test/platform-test run e2e
       - run:
           name: Scale down operator
           command: |
