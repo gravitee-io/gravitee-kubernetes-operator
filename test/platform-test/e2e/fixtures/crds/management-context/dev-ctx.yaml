@@ -18,7 +18,7 @@ metadata:
   name: dev-ctx
   namespace: default
 spec:
-  baseUrl: http://apim-apim-rest-api.apim.svc:83
+  baseUrl: http://apim-apim3-api.default.svc:83
   environmentId: DEFAULT
   organizationId: DEFAULT
   auth:

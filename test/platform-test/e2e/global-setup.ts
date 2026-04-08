@@ -117,4 +117,15 @@ export default async function globalSetup() {
   }
 
   console.log("Infrastructure check passed: Management API, Gateway, and K8s cluster are reachable.");
+
+  // Ensure the dev-ctx ManagementContext exists before any tests run.
+  const ctxFixture = path.resolve(__dirname, "fixtures/crds/management-context/dev-ctx.yaml");
+  try {
+    await execFileAsync("kubectl", ["apply", "-f", ctxFixture, "-n", "default"], {
+      timeout: 10_000,
+    });
+    console.log("ManagementContext 'dev-ctx' applied successfully.");
+  } catch (err) {
+    throw new Error(`Failed to apply ManagementContext 'dev-ctx': ${err}`);
+  }
 }
