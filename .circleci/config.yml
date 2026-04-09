@@ -31,10 +31,6 @@ parameters:
       - release
       - freeze
       - none
-  apim-version:
-    type: string
-    default: ""
-    description: "The version of APIM to use when we run a test suite. Leave empty to use the version defined in the hack/apim.yaml file."
   apim-source-branch:
     type: string
     default: ""
@@ -364,7 +360,6 @@ jobs:
       ginkgo-filter:
         type: enum
         enum:
-          - integration
           - withContext
           - withoutContext
     steps:
@@ -967,17 +962,14 @@ workflows:
           requires:
             - Install GO tools
       - job-integration-test:
-          name: Run IT with context
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
           requires:
             - Install GO tools
-          ginkgo-filter: withContext
-      - job-integration-test:
-          name: Run IT without context
-          context: cicd-orchestrator
-          requires:
-            - Install GO tools
-          ginkgo-filter: withoutContext
       - job-conformance-test:
           name: Run Conformance Test
           context: cicd-orchestrator
@@ -993,8 +985,8 @@ workflows:
           name: Sonarcloud analysis
           context: cicd-orchestrator
           requires:
-            - Run IT with context
-            - Run IT without context
+            - job-integration-test-withContext
+            - job-integration-test-withoutContext
             - Run Conformance Test
       - aquasec/fs_scan:
           context: cicd-orchestrator
@@ -1198,18 +1190,18 @@ workflows:
         - test
         - << pipeline.parameters.trigger >>
     jobs:
+      - job-install-go-tools:
+          name: Install GO tools
       - job-integration-test:
-          name:  Run integration tests with APIM version << pipeline.parameters.apim-version >>
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
-          ginkgo-filter: integration
+          requires:
+            - Install GO tools
           pre-steps:
-            - checkout
-            - run:
-                name: Generate cache keys for Go tools
-                command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-            - restore_cache:
-                keys:
-                  - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
             - keeper/env-export:
                 secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
                 var-name: SLACK_ACCESS_TOKEN
