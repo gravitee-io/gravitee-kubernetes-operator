@@ -22,7 +22,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Application, Plan, PaginatedResult, Subscription } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, NotificationSetting } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -215,6 +215,52 @@ export class Mapi {
       throw new Error(`Failed to fetch Subscription ${subscriptionId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
     }
     return res.body;
+  }
+
+  // ── Delete API ─────────────────────────────────────────────
+
+  /** Delete an API directly from APIM (for orphan cleanup tests). */
+  async deleteApi(apiId: string, closePlans = true): Promise<void> {
+    const suffix = closePlans ? "?closePlans=true" : "";
+    const path = this.http.managementV2Path(`/apis/${apiId}${suffix}`);
+    const res = await this.http.delete(path);
+    if (res.status !== 204 && res.status !== 202) {
+      throw new Error(`Failed to delete API ${apiId}: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  // ── Notification Settings ──────────────────────────────────
+
+  /** Fetch notification settings for an API (v1 management API). */
+  async fetchApiNotificationSettings(apiId: string): Promise<NotificationSetting[]> {
+    const path = this.http.managementV1Path(`/apis/${apiId}/notificationsettings`);
+    const res = await this.http.get<NotificationSetting[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to fetch notification settings for API ${apiId}: ${res.status}`);
+    }
+    return res.body;
+  }
+
+  // ── CRD Export ─────────────────────────────────────────────
+
+  /**
+   * Export an API as a CRD YAML string and return the raw text.
+   *
+   * Uses a plain fetch without `Accept: application/json` because
+   * the APIM export endpoint returns YAML and rejects JSON requests.
+   */
+  async exportApiCrd(apiId: string): Promise<string> {
+    const path = this.http.managementV2Path(`/apis/${apiId}/_export/crd`);
+    const url = `${this.http["baseUrl"]}${path}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.http["authHeader"],
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (response.status !== 200) {
+      throw new Error(`Failed to export CRD for API ${apiId}: ${response.status}`);
+    }
+    return response.text();
   }
 }
 

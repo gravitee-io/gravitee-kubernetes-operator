@@ -31,13 +31,17 @@ type E2EFixtures = {
   mapi: Mapi;
   gateway: Gateway;
   kubectl: typeof kubectl;
+  mtlsGatewayBaseUrl: string;
 };
 
 let sharedMapi: Mapi | undefined;
 let sharedGateway: Gateway | undefined;
+let sharedMtlsGatewayBaseUrl: string | undefined;
 
-async function initClients(): Promise<{ mapi: Mapi; gateway: Gateway }> {
-  if (sharedMapi && sharedGateway) return { mapi: sharedMapi, gateway: sharedGateway };
+async function initClients(): Promise<{ mapi: Mapi; gateway: Gateway; mtlsGatewayBaseUrl: string }> {
+  if (sharedMapi && sharedGateway && sharedMtlsGatewayBaseUrl) {
+    return { mapi: sharedMapi, gateway: sharedGateway, mtlsGatewayBaseUrl: sharedMtlsGatewayBaseUrl };
+  }
 
   const configPath = path.resolve(__dirname, "../config.yaml");
   const config = await loadGraviteeConfig(configPath);
@@ -46,8 +50,9 @@ async function initClients(): Promise<{ mapi: Mapi; gateway: Gateway }> {
   sharedGateway = sharedMapi.gateway({
     baseUrl: config.gateway?.baseUrl ?? "http://localhost:30082",
   });
+  sharedMtlsGatewayBaseUrl = config.gateway?.mtlsBaseUrl ?? "https://localhost:30084";
 
-  return { mapi: sharedMapi, gateway: sharedGateway };
+  return { mapi: sharedMapi, gateway: sharedGateway, mtlsGatewayBaseUrl: sharedMtlsGatewayBaseUrl };
 }
 
 export const test = base.extend<E2EFixtures>({
@@ -61,6 +66,10 @@ export const test = base.extend<E2EFixtures>({
   },
   kubectl: async ({}, use) => {
     await use(kubectl);
+  },
+  mtlsGatewayBaseUrl: async ({}, use) => {
+    const { mtlsGatewayBaseUrl } = await initClients();
+    await use(mtlsGatewayBaseUrl);
   },
 });
 

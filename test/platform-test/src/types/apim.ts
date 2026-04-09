@@ -804,3 +804,14 @@ export interface Sampling {
 }
 
 export type SamplingType = "PROBABILITY" | "TEMPORAL" | "COUNT" | "WINDOWED_COUNT";
+
+// ── Notification Types ───────────────────────────────────────
+
+export interface NotificationSetting {
+  config_type: "PORTAL" | "GENERIC";
+  referenceType: string;
+  referenceId: string;
+  hooks: string[];
+  groups: string[];
+  name?: string;
+}

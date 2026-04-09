@@ -168,6 +168,36 @@ export async function delExpectFailure(
   }
 }
 
+/** Check if a resource exists (returns true/false without throwing). */
+export async function exists(
+  kind: string,
+  name: string,
+  namespace = NAMESPACE,
+): Promise<boolean> {
+  try {
+    await run(["get", `${kind}/${name}`, "-n", namespace]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Apply a YAML string via stdin (useful for dynamically generated manifests). */
+export async function applyString(
+  yamlContent: string,
+  namespace = NAMESPACE,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const child = execFile(
+      "kubectl",
+      ["apply", "-f", "-", "-n", namespace],
+      { timeout: EXEC_TIMEOUT_MS },
+      (err: Error | null) => (err ? reject(err) : resolve()),
+    );
+    child.stdin?.end(yamlContent);
+  });
+}
+
 /**
  * Try to apply a manifest and expect it to fail (e.g., admission webhook rejection).
  * Returns the stderr output for further assertions.
