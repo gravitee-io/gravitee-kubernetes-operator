@@ -55,11 +55,6 @@ LOG.blue(`
 await $`git switch master`;
 await $`git switch -c ${releaseBranch}`;
 
-LOG.blue(`
-    🔧 Running make manifests`);
-
-await $`make manifests`;
-
 const branchLabel = `apply-on-${releaseBranch.replaceAll(".", "-")}`;
 
 LOG.blue(`
@@ -82,6 +77,7 @@ LOG.blue(`
 
 await updateImplYaml(frozenVersion.toString());
 
+await $`make generate manifests reference helm-reference`;
 await $`make add-license`;
 
 await $`git add .`;
@@ -123,6 +119,7 @@ await rolloutTestScheduler(frozenVersion.toString());
 
 await $`git add .github/workflows/schedule-test.yml`;
 
+await $`make generate manifests reference helm-reference`;
 await $`make add-license`;
 
 await $`git add .`;
