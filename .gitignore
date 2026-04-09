@@ -41,8 +41,6 @@ bundle_tmp*/
 # MacOS
 .DS_Store
 
-# Kyverno Chainsaw E2E tests
-chainsaw/reports/
 node_modules
 
 # Gravitee internal

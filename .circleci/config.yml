@@ -176,23 +176,6 @@ jobs:
               -x @commitlint/config-conventional \
               --from $(git describe --tags --abbrev=0)
 
-  job-lint-e2e-lib:
-    docker:
-      - image: cimg/node:24.12.0
-    working_directory: ~/project/test/e2e/lib
-    steps:
-      - checkout:
-          path: ~/project      
-      - run:
-          name: Install dependencies
-          command: corepack yarn@4.10.3 install --immutable
-      - run:
-          name: Check e2e library format
-          command: corepack yarn@4.10.3 format:check
-      - run:
-          name: Lint e2e library
-          command: corepack yarn@4.10.3 lint
-
   job-lint-resources:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -472,15 +455,8 @@ jobs:
                 --set manager.image.tag=latest \
                 -f ./test/e2e/operator.values.yaml
       - run:
-          name: Install libs
-          command: yarn --cwd test/e2e/lib install
-      - run:
           name: Build platform-test CLI
           command: npm --prefix test/platform-test install && npm --prefix test/platform-test run build
-      - run:
-          name: Install Chainsaw
-          command: |
-            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.14
       - run:
           name: Install Terraform
           command: |
@@ -488,12 +464,12 @@ jobs:
             sudo unzip -o /tmp/terraform.zip -d /usr/local/bin/
             terraform version
       - run:
+          name: Wait for operator to be ready
+          command: |
+            kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
+      - run:
           name: Run Playwright E2E tests
           command: npm --prefix test/platform-test run e2e
-      - run:
-          name: Run Chainsaw tests
-          command: |
-            bin/chainsaw test --quiet --config test/e2e/chainsaw/config.yaml
       - run:
           name: Scale down operator
           command: |
@@ -976,8 +952,6 @@ workflows:
             - Install GO tools
       - job-lint-commits:
           name: Lint commits
-      - job-lint-e2e-lib:
-          name: Lint E2E library
       - job-lint-resources:
           name: Lint resources
           requires:
