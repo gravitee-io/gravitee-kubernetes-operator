@@ -31,10 +31,6 @@ parameters:
       - release
       - freeze
       - none
-  apim-version:
-    type: string
-    default: ""
-    description: "The version of APIM to use when we run a test suite. Leave empty to use the version defined in the hack/apim.yaml file."
   apim-source-branch:
     type: string
     default: ""
@@ -365,7 +361,6 @@ jobs:
       ginkgo-filter:
         type: enum
         enum:
-          - integration
           - withContext
           - withoutContext
     steps:
@@ -992,17 +987,14 @@ workflows:
           requires:
             - Install GO tools
       - job-integration-test:
-          name: Run IT with context
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
           requires:
             - Install GO tools
-          ginkgo-filter: withContext
-      - job-integration-test:
-          name: Run IT without context
-          context: cicd-orchestrator
-          requires:
-            - Install GO tools
-          ginkgo-filter: withoutContext
       - job-conformance-test:
           name: Run Conformance Test
           context: cicd-orchestrator
@@ -1106,21 +1098,14 @@ workflows:
               only:
                 - master
       - job-integration-test:
-          name: Run IT with context (master)
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
           requires:
             - Install GO tools (master)
-          ginkgo-filter: withContext
-          filters:
-            branches:
-              only:
-                - master
-      - job-integration-test:
-          name: Run IT without context (master)
-          context: cicd-orchestrator
-          requires:
-            - Install GO tools (master)
-          ginkgo-filter: withoutContext
           filters:
             branches:
               only:
@@ -1274,9 +1259,12 @@ workflows:
       - job-install-go-tools:
           name: Install GO tools
       - job-integration-test:
-          name: Run integration tests
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
-          ginkgo-filter: integration
           requires:
             - Install GO tools
           pre-steps:
