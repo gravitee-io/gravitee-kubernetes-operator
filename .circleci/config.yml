@@ -113,6 +113,7 @@ jobs:
       - run:
           name: Install GO tools
           command: make install-go-tools
+          no_output_timeout: 30m
       - go/save-mod-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/save-build-cache:
@@ -1268,47 +1269,15 @@ workflows:
         - test
         - << pipeline.parameters.trigger >>
     jobs:
+      - job-install-go-tools:
+          name: Install GO tools
       - job-integration-test:
-          name: Run IT with context
+          name: Run integration tests
           context: cicd-orchestrator
-          ginkgo-filter: withContext
+          ginkgo-filter: integration
+          requires:
+            - Install GO tools
           pre-steps:
-            - checkout
-            - run:
-                name: Generate cache keys for Go tools
-                command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-            - restore_cache:
-                keys:
-                  - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
-            - keeper/env-export:
-                secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
-                var-name: SLACK_ACCESS_TOKEN
-          post-steps:
-            - when:
-                condition: << pipeline.parameters.notify >>
-                steps:
-                  - slack/notify:
-                      channel: C07QP2Z7Z9V
-                      event: fail
-                      template: basic_fail_1
-                      branch_pattern: ".+"
-                  - slack/notify:
-                      channel: C07QP2Z7Z9V
-                      event: pass
-                      template: basic_success_1
-                      branch_pattern: ".+"
-      - job-integration-test:
-          name: Run IT without context
-          context: cicd-orchestrator
-          ginkgo-filter: withoutContext
-          pre-steps:
-            - checkout
-            - run:
-                name: Generate cache keys for Go tools
-                command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-            - restore_cache:
-                keys:
-                  - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
             - keeper/env-export:
                 secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
                 var-name: SLACK_ACCESS_TOKEN
