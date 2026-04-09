@@ -409,9 +409,11 @@ jobs:
                 command: echo 'export APIM_VALUES=values-dbless.yaml' >> $BASH_ENV
       - run:
           name: Start cluster
+          no_output_timeout: 30m
           command: make start-cluster
       - run:
           name: Run IT with filter << parameters.ginkgo-filter >>
+          no_output_timeout: 30m
           command: |
             export SAFE_RANDOM=true
             export GKO_MANAGER_SILENT_LOG=true
