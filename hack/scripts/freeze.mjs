@@ -77,6 +77,14 @@ LOG.blue(`
 
 await updateImplYaml(frozenVersion.toString());
 
+LOG.blue(`
+    📝 Updating hack/apim.yaml → image: ${releaseBranch}-latest, chart: ${frozenVersion.minor()}.*`);
+
+await updateApimYaml({
+  imageVersion: `${releaseBranch}-latest`,
+  chartVersion: `${frozenVersion.minor()}.*`,
+});
+
 await $`make generate manifests reference helm-reference`;
 await $`make add-license`;
 
@@ -101,7 +109,7 @@ await $`git add helm/gko/Chart.yaml`;
 LOG.blue(`
     📝 Updating hack/apim.yaml → chart version: ${nextMinorVersion.minor()}.*`);
 
-await updateApimChartVersion(`${nextMinorVersion.minor()}.*`);
+await updateApimYaml({ chartVersion: `${nextMinorVersion.minor()}.*` });
 
 await $`git add hack/apim.yaml`;
 
@@ -146,11 +154,16 @@ async function updateStableYaml(branch) {
   await fs.writeFile(filePath, YAML.stringify(yaml));
 }
 
-async function updateApimChartVersion(chartVersion) {
+async function updateApimYaml({ imageVersion, chartVersion }) {
   const filePath = path.join(PROJECT_DIR, "hack", "apim.yaml");
   const content = await fs.readFile(filePath, "utf8");
   const yaml = YAML.parse(content);
-  yaml.apim.chart.version = chartVersion;
+  if (imageVersion) {
+    yaml.apim.image.version = imageVersion;
+  }
+  if (chartVersion) {
+    yaml.apim.chart.version = chartVersion;
+  }
   await fs.writeFile(filePath, YAML.stringify(yaml));
 }
 
