@@ -30,10 +30,6 @@ parameters:
       - rollout-apim
       - release
       - none
-  apim-version:
-    type: string
-    default: ""
-    description: "The version of APIM to use when we run a test suite. Leave empty to use the version defined in the hack/apim.yaml file."
   apim-source-branch:
     type: string
     default: ""
@@ -294,7 +290,6 @@ jobs:
       ginkgo-filter:
         type: enum
         enum:
-          - integration
           - withContext
           - withoutContext
     steps:
@@ -894,13 +889,12 @@ workflows:
       - job-unit-test:
           name: Run unit tests
       - job-integration-test:
-          name: Run IT with context
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
-          ginkgo-filter: withContext
-      - job-integration-test:
-          name: Run IT without context
-          context: cicd-orchestrator
-          ginkgo-filter: withoutContext
       - job-conformance-test:
           name: Run Conformance Test
           context: cicd-orchestrator
@@ -915,8 +909,8 @@ workflows:
           context: cicd-orchestrator
           requires:
             - Run unit tests
-            - Run IT with context
-            - Run IT without context
+            - job-integration-test-withContext
+            - job-integration-test-withoutContext
             - Run Conformance Test
   post-merge:
     when:
@@ -1081,9 +1075,12 @@ workflows:
         - << pipeline.parameters.trigger >>
     jobs:
       - job-integration-test:
-          name:  Run integration tests with APIM version << pipeline.parameters.apim-version >>
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
-          ginkgo-filter: integration
           pre-steps:
             - checkout
             - go/install:
