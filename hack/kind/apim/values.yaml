@@ -69,6 +69,9 @@ portal:
   enabled: false
 
 gateway:
+  managedServiceAccount: false
+  deployment:
+    serviceAccount: gravitee-gateway
   image:
     repository: gravitee-apim-gateway
     tag: dev
@@ -105,6 +108,7 @@ gateway:
     sync:
       kubernetes:
         enabled: true
+        namespaces: ALL
   reporters:
     elasticsearch:
       enabled: false
@@ -131,3 +135,32 @@ installation:
     proxyPath:
       management: /management
       portal: /portal
+
+extraObjects:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: gravitee-gateway
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: gravitee-gateway-role
+    rules:
+      - apiGroups: [""]
+        resources: ["configmaps", "secrets"]
+        verbs: ["get", "watch", "list"]
+      - apiGroups: ["gravitee.io"]
+        resources: ["apidefinitions"]
+        verbs: ["get", "watch", "list"]
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: gravitee-gateway-binding
+    subjects:
+      - kind: ServiceAccount
+        name: gravitee-gateway
+        namespace: default
+    roleRef:
+      kind: ClusterRole
+      name: gravitee-gateway-role
+      apiGroup: rbac.authorization.k8s.io
