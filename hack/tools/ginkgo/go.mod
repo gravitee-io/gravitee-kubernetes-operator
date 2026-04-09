@@ -4,7 +4,7 @@ go 1.25.3
 
 tool github.com/onsi/ginkgo/v2/ginkgo
 
-require github.com/onsi/ginkgo/v2 v2.27.5 // indirect
+require github.com/onsi/ginkgo/v2 v2.28.0 // indirect
 
 require (
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect

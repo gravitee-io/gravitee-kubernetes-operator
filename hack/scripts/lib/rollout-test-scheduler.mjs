@@ -17,5 +17,5 @@
 import { GH } from "./github.mjs";
 
 export async function rolloutTestScheduler(version) {
-  GH.rolloutMatrix("schedule-test.yml", "trigger-test-suite", version);
+  await GH.rolloutMatrix("schedule-test.yml", "trigger-test-suite", version);
 }
