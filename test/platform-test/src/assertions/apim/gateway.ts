@@ -119,7 +119,14 @@ export class Gateway {
 
     await poll(
       async () => {
-        const actual = await this.get(url, headers);
+        let actual: number;
+        try {
+          actual = await this.get(url, headers);
+        } catch {
+          // Connection / TLS errors count as "not responding with notStatus"
+          // (e.g. mTLS handshake rejected → no HTTP status at all).
+          return;
+        }
         if (actual === notStatus) {
           throw new AssertionError({
             message: `Gateway assertion failed: GET ${url} → ${actual}, expected anything except ${notStatus}`,
