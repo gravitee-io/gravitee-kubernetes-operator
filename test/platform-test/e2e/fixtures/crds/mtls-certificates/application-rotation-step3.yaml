@@ -1,0 +1,50 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: gravitee.io/v1alpha1
+kind: Application
+metadata:
+  name: e2e-mtls-rotation-app
+spec:
+  contextRef:
+    name: "dev-ctx"
+    namespace: default
+  name: "e2e-mtls-rotation-app"
+  description: "Application with client 2, client 1 removed"
+  settings:
+    app:
+      type: WEB
+    tls:
+      clientCertificates:
+        - name: client2
+          content: |
+            -----BEGIN CERTIFICATE-----
+
+            MIIC9zCCAd+gAwIBAgIUX2VAL31BGWMotcLtfpAfU/NKIiswDQYJKoZIhvcNAQEL
+            BQAwDjEMMAoGA1UEAwwDR0tPMB4XDTI2MDMxMjE3NDMwM1oXDTM2MDMwOTE3NDMw
+            M1owGTEXMBUGA1UEAwwOY2xpZW50Mi1pbmxpbmUwggEiMA0GCSqGSIb3DQEBAQUA
+            A4IBDwAwggEKAoIBAQDNMTSPLwqIoIQ6f3o6uMiJjt14XZTmGFXeKbZ7oZfHLRuY
+            Kb0beb3bVqH7nXfwVSyleDD2WjAe/FvqE6zZNXS1Xf3RfB2SK83nJRhiaZ618dYz
+            hL3j2qXGClxtiiMYc/MijiJcFLugOmWk8UbYBLCDnxLc8ckmSsk7oLd51m0Fru/K
+            rBfzAZWYFXB4I7zksnw7oe1P3cpayuoqGvSsUWdoqHMlE7smCyTPOeZX5l9Y2rre
+            t35WR4Oe3+VgJLGz0awOezd23BFdK3CrhGiNK8Ny3XmJZRTPXISZyU2y+BYVjSIm
+            O1uee7z1pQz6zYvLCl3G4+AcmEDejqN+gD+jWbZPAgMBAAGjQjBAMB0GA1UdDgQW
+            BBQbbG5K1OWe1yhf5uWUHJfurFZQpjAfBgNVHSMEGDAWgBTZBbf+1GWQzFWeeZXD
+            Q1Qwkea76DANBgkqhkiG9w0BAQsFAAOCAQEALG0QrC0X9g+22LwYmKKKtcJ7Iz5A
+            sgbVH/+Hdf65g8foaLoVttE7pPwkotJCM4ceRftiQzHe7ICLx5VptMLvp0WdrBVL
+            uxto8mKNpUjY9EICklnUq30kNK4Mg6bAzOEtotJhHJ5TjUXoqkTSADxzSlRq4Bx3
+            KcFvZs2YBycx5+ygcGw35KRnxou34TJkV14axS5h6joquo+rLzsO9Dmyr7Yqh+1d
+            sYPEguKN8173vOxs3xfZYYdE0MYsKMDf6mgMMjwq+upMLdyQQqa2riprhKCX2yuo
+            zH7pNqKS8rDLkPcLnEGaclWNA+MvL+FJbf9cnfN1Y7Fh1zlON96oKX0O1g==
+            -----END CERTIFICATE-----
