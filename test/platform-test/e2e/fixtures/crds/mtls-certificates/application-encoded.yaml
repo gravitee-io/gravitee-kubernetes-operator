@@ -1,0 +1,32 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: gravitee.io/v1alpha1
+kind: Application
+metadata:
+  name: e2e-mtls-encoded-app
+spec:
+  contextRef:
+    name: "dev-ctx"
+    namespace: default
+  name: "e2e-mtls-encoded-app"
+  description: "Application with a base64-encoded client certificate"
+  settings:
+    app:
+      type: WEB
+    tls:
+      clientCertificates:
+        - name: client1-encoded
+          encoded: true
+          content: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM5ekNDQWQrZ0F3SUJBZ0lVWDJWQUwzMUJHV01vdGNMdGZwQWZVL05LSWlvd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0RqRU1NQW9HQTFVRUF3d0RSMHRQTUI0WERUSTJNRE14TWpFM05ETXdNMW9YRFRNMk1ETXdPVEUzTkRNdwpNMW93R1RFWE1CVUdBMVVFQXd3T1kyeHBaVzUwTVMxcGJteHBibVV3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBCkE0SUJEd0F3Z2dFS0FvSUJBUURZQ2phS2hGV2cyWVMvSC9UWFZSeks5bnlub3c4RVBOSnFwVTBxMDYyeTV3ZjEKeldiUjJhRnUxL2RGVHJRa2tqWlViSnVKdFNiR0o4M0xFUGZId3A0d2c4K2dIVU4yd29JMGVkNmU4Ym9pV3JMZgp1R3hGQjFmcTBnajdsMlkwd2F3cjJRcHVNdDdYL1FOS0hUN2FSM2JkR3c1RjRaMDdPeC9UcjB1NVZXT3F6ZzkwCnBUVjg5bVBlakhCVHVraU1iUThNWU15Sjl6OForQUlrV2Z1eHFOZnY1RjV6QzJSVTErQnlnZzdTQStWazhqdlcKaVY3NjlwZzZBa1NoNW1kSG5pdjZjUnVSazBvM3F4YXVmZUdCcENHdi9EOU45cHp2QUlodmZ5ajY5TU1EOWJFMwo4cDNtem0rV0hRWGV2bWNjMElQOUE0L0tTaFp2ZDJFVUI2NlNPMkRuQWdNQkFBR2pRakJBTUIwR0ExVWREZ1FXCkJCUS9DbHpWSWNlT3pDc1U2ODdBVGx0VEVxYkFiekFmQmdOVkhTTUVHREFXZ0JUWkJiZisxR1dRekZXZWVaWEQKUTFRd2tlYTc2REFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBQTM4cmxlbUtWeVlYN2RUYzg5YkswQ2hPQWNXMApSeDNvZmlTaGxxL1lNbHVhZllxUWNuTlJJRVJQdkJ5UGI0Wko1eVp1S2xWUjdtNGxQL2JVUGNpVFhRU09lVFBrCnhtd0w4UGpRcDVnWE50OG1rcnJsajR4cUZsWURzdjZ6K3V4bDEzc1VrdU1hM045SE9xTERMMER4TUVhSWkvc1oKNGViZ3BCV1hiVmdtMW5EczA5M0RWMnVuNXg5UnQzRHdwV05kdmdoN2FCTk4rTHBSQmZSR2dmTlorenVFS1FTNApPRlZPQ3Noa2xRUzhOc1hBME5HbnRFRGFpK1h0SDhteGErVi9keG1qK211TlB2WEphWG9zdG5idXRFaCtOUUpVCmYrRjhtYytRNzhhcGVycTBvekwrdUFiM2JSbFF2YmZrWS9vVHBuOWtrZmRPcnREZzZoSDdUQWJDR1E9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
