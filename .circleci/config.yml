@@ -113,7 +113,7 @@ jobs:
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - save_cache:
-          key: gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+          key: gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
           paths:
             - /home/circleci/project/bin
 
@@ -131,7 +131,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Lint sources
           command: make lint-sources
@@ -152,7 +152,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Lint licenses
           command: make lint-licenses
@@ -206,7 +206,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Check that `make generate` has been executed
           command: |
@@ -244,7 +244,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Run unit tests
           command: |
@@ -277,7 +277,10 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -375,7 +378,10 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -433,7 +439,10 @@ jobs:
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -578,7 +587,7 @@ jobs:
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -832,7 +841,7 @@ jobs:
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -1175,12 +1184,17 @@ workflows:
           ginkgo-filter: integration
           pre-steps:
             - checkout
+            - go/install:
+                version: "<< pipeline.parameters.go-version >>"
             - run:
                 name: Generate cache keys for Go tools
                 command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
             - restore_cache:
                 keys:
-                  - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+                  - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - run:
+                name: Install GO tools if not cached
+                command: make install-go-tools
             - keeper/env-export:
                 secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
                 var-name: SLACK_ACCESS_TOKEN
