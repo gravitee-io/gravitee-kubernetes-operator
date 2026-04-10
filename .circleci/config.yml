@@ -98,7 +98,7 @@ jobs:
           command: make install-go-tools
       - go/save-mod-cache
       - save_cache:
-          key: gotools-{{ checksum "go.sum" }}
+          key: gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
           paths:
             - /home/circleci/project/bin
 
@@ -110,7 +110,7 @@ jobs:
       - go/load-mod-cache
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
       - go/load-golangci-lint-cache
       - run:
           name: Lint sources
@@ -125,7 +125,7 @@ jobs:
       - go/load-mod-cache
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
       - run:
           name: Lint licenses
           command: make lint-licenses
@@ -154,7 +154,7 @@ jobs:
       - go/load-mod-cache
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
       - run:
           name: Check that `make generate` has been executed
           command: |
@@ -184,7 +184,7 @@ jobs:
       - go/load-mod-cache
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
       - run:
           name: Run unit tests
           command: |
@@ -209,7 +209,10 @@ jobs:
       - go/load-mod-cache
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -296,7 +299,10 @@ jobs:
       - go/load-mod-cache
       - restore_cache:
           keys:
-            - gotools-{{ checksum "go.sum" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -1059,6 +1065,8 @@ workflows:
           ginkgo-filter: integration
           pre-steps:
             - checkout
+            - go/install:
+                version: "<< pipeline.parameters.go-version >>"
             - run:
                 name: Install GO tools
                 command: make install-go-tools
