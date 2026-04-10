@@ -15,6 +15,7 @@
 gatewayAPI:
   controller:
     enabled: true
+    skipAPIDefinition: true
 
 manager:
   image:

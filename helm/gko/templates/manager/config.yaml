@@ -71,6 +71,9 @@ data:
   {{- if .Values.gatewayAPI.controller.enabled }}
   ENABLE_GATEWAY_API: "true"
   {{- end }}
+  {{- if .Values.gatewayAPI.controller.skipAPIDefinition }}
+  GATEWAY_API_SKIP_API_DEFINITION: "true"
+  {{- end }}
   {{- if .Values.gatewayAPI.applyCRDs }}
   APPLY_GATEWAY_API_CRDS: "true"
   {{- end }}

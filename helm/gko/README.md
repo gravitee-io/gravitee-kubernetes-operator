@@ -132,10 +132,11 @@ When storing templates stored in config maps, the config map should contain a co
 Configure Kubernetes Gateway API support.
 
 
-| Name                            | Description                                                  | Value   |
-| ------------------------------- | ------------------------------------------------------------ | ------- |
-| `gatewayAPI.applyCRDs`          | If true, the manager will apply Gateway API CRDs on startup. | `true`  |
-| `gatewayAPI.controller.enabled` | Set to true to enable experimental gateway api support.      | `false` |
+| Name                                      | Description                                                                                                                                                         | Value   |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `gatewayAPI.applyCRDs`                    | If true, the manager will apply Gateway API CRDs on startup.                                                                                                        | `true`  |
+| `gatewayAPI.controller.enabled`           | Set to true to enable experimental gateway api support.                                                                                                             | `false` |
+| `gatewayAPI.controller.skipAPIDefinition` | If true, the HTTPRoute reconciler creates a ConfigMap directly instead of an intermediate ApiV4Definition CR, freeing the CR name for user-managed API definitions. | `false` |
 
 ### HTTP Client
 
