@@ -17,9 +17,10 @@
 import { AssertionError } from "node:assert";
 import { HttpClient } from "../../utils/http/http.js";
 import { deepPartialMatch } from "../../utils/match/partial.js";
+import { poll } from "../../utils/match/poll.js";
 import { throwIfFailed } from "../../utils/match/result.js";
 import type { FetchFn } from "../../types/http.js";
-import type { DeepPartial, AssertionReport } from "../../types/match.js";
+import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
 import type { Api, Application, Plan, PaginatedResult, Subscription, NotificationSetting } from "../../types/apim.js";
@@ -55,6 +56,20 @@ export class Mapi {
     throwIfFailed(report);
   }
 
+  async waitForApiMatches(
+    apiId: string,
+    expected: DeepPartial<Api>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertApiMatches(apiId, expected),
+      {
+        description: `API ${apiId} matches expected shape`,
+        ...options,
+      },
+    );
+  }
+
   /** Non-throwing variant — returns the report for soft assertions. */
   async checkApiMatches(apiId: string, expected: DeepPartial<Api>): Promise<AssertionReport> {
     const api = await this.fetchApi(apiId);
@@ -69,8 +84,30 @@ export class Mapi {
     return this.assertApiState(apiId, "STARTED");
   }
 
+  async waitForApiStarted(apiId: string, options: PollOptions = {}): Promise<void> {
+    await this.waitForApiMatches(
+      apiId,
+      { state: "STARTED" },
+      {
+        description: `API ${apiId} is STARTED`,
+        ...options,
+      },
+    );
+  }
+
   async assertApiStopped(apiId: string): Promise<void> {
     return this.assertApiState(apiId, "STOPPED");
+  }
+
+  async waitForApiStopped(apiId: string, options: PollOptions = {}): Promise<void> {
+    await this.waitForApiMatches(
+      apiId,
+      { state: "STOPPED" },
+      {
+        description: `API ${apiId} is STOPPED`,
+        ...options,
+      },
+    );
   }
 
   /**
@@ -153,6 +190,20 @@ export class Mapi {
   async assertApplicationMatches(appId: string, expected: DeepPartial<Application>): Promise<void> {
     const app = await this.fetchApplication(appId);
     throwIfFailed(deepPartialMatch(app, expected));
+  }
+
+  async waitForApplicationMatches(
+    appId: string,
+    expected: DeepPartial<Application>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertApplicationMatches(appId, expected),
+      {
+        description: `Application ${appId} matches expected shape`,
+        ...options,
+      },
+    );
   }
 
   async assertApplicationHttpStatus(appId: string, expectedStatus: number): Promise<void> {

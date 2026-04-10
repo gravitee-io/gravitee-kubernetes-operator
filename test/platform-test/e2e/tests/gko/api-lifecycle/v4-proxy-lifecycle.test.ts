@@ -283,7 +283,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     });
 
     await test.step("Changes are reflected in APIM", async () => {
-      await mapi.assertApiMatches(apiId, {
+      await mapi.waitForApiMatches(apiId, {
         description: "E2E test: V4 Message API updated description",
         apiVersion: "2.0.0",
       });

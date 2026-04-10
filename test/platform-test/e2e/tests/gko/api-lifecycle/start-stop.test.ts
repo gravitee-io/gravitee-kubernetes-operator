@@ -46,7 +46,7 @@ test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${
   const apiId = status.id;
 
   await test.step("API responds 200 when STARTED", async () => {
-    await mapi.assertApiMatches(apiId, {
+    await mapi.waitForApiMatches(apiId, {
       name: API_NAME,
       state: "STARTED",
     });
@@ -57,7 +57,7 @@ test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${
     await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-stopped.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
-    await mapi.assertApiStopped(apiId);
+    await mapi.waitForApiStopped(apiId);
     await gateway.assertResponds(API_PATH, { status: 404 });
   });
 
@@ -65,7 +65,7 @@ test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${
     await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
-    await mapi.assertApiStarted(apiId);
+    await mapi.waitForApiStarted(apiId);
     await gateway.assertResponds(API_PATH, { status: 200 });
   });
 
