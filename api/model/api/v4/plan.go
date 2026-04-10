@@ -81,7 +81,11 @@ func (plan *Plan) GetSecurityType() string {
 
 func NewPlan() *Plan {
 	return &Plan{
-		Plan: base.NewPlan(),
+		Plan:              base.NewPlan(),
+		DefinitionVersion: PlanDefinitionVersion,
+		Mode:              "STANDARD",
+		Flows:             []*Flow{},
+		ExcludedGroups:    []string{},
 	}
 }
 
