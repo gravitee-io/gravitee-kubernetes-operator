@@ -78,11 +78,13 @@ test.describe("Notification Lifecycle", () => {
     });
 
     await test.step("PORTAL notification has empty hooks and groups", async () => {
-      const settings = await mapi.fetchApiNotificationSettings(apiId);
-      const portal = settings.find((s) => s.config_type === "PORTAL");
-      expect(portal).toBeDefined();
-      expect(portal!.hooks).toEqual([]);
-      expect(portal!.groups).toEqual([]);
+      await expect.poll(async () => {
+        const settings = await mapi.fetchApiNotificationSettings(apiId);
+        return settings.find((s) => s.config_type === "PORTAL");
+      }, { timeout: 10_000 }).toMatchObject({
+        hooks: [],
+        groups: [],
+      });
     });
 
     // Cleanup
@@ -124,13 +126,13 @@ test.describe("Notification Lifecycle", () => {
     });
 
     await test.step("PORTAL notification contains updated hooks and group", async () => {
-      const settings = await mapi.fetchApiNotificationSettings(apiId);
-      const portal = settings.find((s) => s.config_type === "PORTAL");
-      expect(portal).toBeDefined();
-      expect(portal!.hooks).toContain("API_STARTED");
-      expect(portal!.hooks).toContain("API_STOPPED");
-      expect(portal!.hooks).toContain("APIKEY_EXPIRED");
-      expect(portal!.groups).toContain(groupId);
+      await expect.poll(async () => {
+        const settings = await mapi.fetchApiNotificationSettings(apiId);
+        return settings.find((s) => s.config_type === "PORTAL");
+      }, { timeout: 10_000 }).toMatchObject({
+        hooks: expect.arrayContaining(["API_STARTED", "API_STOPPED", "APIKEY_EXPIRED"]),
+        groups: expect.arrayContaining([groupId]),
+      });
     });
 
     // Cleanup
@@ -171,13 +173,13 @@ test.describe("Notification Lifecycle", () => {
     });
 
     await test.step("PORTAL notification has hooks but empty groups", async () => {
-      const settings = await mapi.fetchApiNotificationSettings(apiId);
-      const portal = settings.find((s) => s.config_type === "PORTAL");
-      expect(portal).toBeDefined();
-      expect(portal!.hooks).toContain("API_STARTED");
-      expect(portal!.hooks).toContain("API_STOPPED");
-      expect(portal!.hooks).toContain("APIKEY_EXPIRED");
-      expect(portal!.groups).toEqual([]);
+      await expect.poll(async () => {
+        const settings = await mapi.fetchApiNotificationSettings(apiId);
+        return settings.find((s) => s.config_type === "PORTAL");
+      }, { timeout: 10_000 }).toMatchObject({
+        hooks: expect.arrayContaining(["API_STARTED", "API_STOPPED", "APIKEY_EXPIRED"]),
+        groups: [],
+      });
     });
 
     // Cleanup
