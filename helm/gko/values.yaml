@@ -234,6 +234,8 @@ gatewayAPI:
   controller:
     ## @param gatewayAPI.controller.enabled Set to true to enable experimental gateway api support.
     enabled: false
+    ## @param gatewayAPI.controller.skipAPIDefinition If true, the HTTPRoute reconciler creates a ConfigMap directly instead of an intermediate ApiV4Definition CR, freeing the CR name for user-managed API definitions.
+    skipAPIDefinition: false
 
 ## @section HTTP Client
 ## @descriptionStart
