@@ -49,7 +49,7 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
   const apiId = status.id;
 
   await test.step("API is created and reachable", async () => {
-    await mapi.assertApiMatches(apiId, {
+    await mapi.waitForApiMatches(apiId, {
       name: API_NAME,
       state: "STARTED",
     });
@@ -60,7 +60,7 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
     await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-reconcile-updated.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
-    await mapi.assertApiMatches(apiId, {
+    await mapi.waitForApiMatches(apiId, {
       name: "e2e-v4-reconcile-updated",
     });
   });

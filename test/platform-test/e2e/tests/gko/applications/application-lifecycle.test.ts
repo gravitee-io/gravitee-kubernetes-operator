@@ -51,7 +51,7 @@ test.describe("Applications — Lifecycle", () => {
     const appId = status.id;
 
     await test.step("Application exists in APIM", async () => {
-      await mapi.assertApplicationMatches(appId, {
+      await mapi.waitForApplicationMatches(appId, {
         name: APP_NAME,
         description: "E2E test: simple application",
       });
@@ -84,7 +84,7 @@ test.describe("Applications — Lifecycle", () => {
     });
 
     await test.step("Updated description is reflected in APIM", async () => {
-      await mapi.assertApplicationMatches(appId, {
+      await mapi.waitForApplicationMatches(appId, {
         description: "E2E test: updated application description",
       });
     });
@@ -115,14 +115,11 @@ test.describe("Applications — Lifecycle", () => {
     });
 
     await test.step("Application is ARCHIVED in APIM", async () => {
-      // GKO archives applications on CRD deletion (not hard-delete)
-      const deadline = Date.now() + 15_000;
-      while (Date.now() < deadline) {
-        const app = await mapi.fetchApplication(appId);
-        if (app.status === "ARCHIVED") return;
-        await new Promise((r) => setTimeout(r, 1_000));
-      }
-      await mapi.assertApplicationMatches(appId, { status: "ARCHIVED" });
+      await mapi.waitForApplicationMatches(
+        appId,
+        { status: "ARCHIVED" },
+        { timeoutMs: 15_000 },
+      );
     });
   });
 
@@ -163,7 +160,7 @@ test.describe("Applications — Lifecycle", () => {
     const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
     const appId = status.id;
 
-    await mapi.assertApplicationMatches(appId, {
+    await mapi.waitForApplicationMatches(appId, {
       name: APP_NAME,
       description: "E2E test: application with metadata",
     });
@@ -206,7 +203,7 @@ test.describe("Applications — Lifecycle", () => {
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
 
     const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
-    await mapi.assertApplicationMatches(status.id, { name: APP_NAME });
+    await mapi.waitForApplicationMatches(status.id, { name: APP_NAME });
 
     await kubectl.del(fixturePath);
   });
@@ -224,7 +221,7 @@ test.describe("Applications — Lifecycle", () => {
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
 
     const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
-    await mapi.assertApplicationMatches(status.id, { name: APP_NAME });
+    await mapi.waitForApplicationMatches(status.id, { name: APP_NAME });
 
     await kubectl.del(fixturePath);
   });
