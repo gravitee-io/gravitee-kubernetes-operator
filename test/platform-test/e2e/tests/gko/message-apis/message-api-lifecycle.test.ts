@@ -25,9 +25,11 @@
  *   GKO-132: Deploy V4 message API with SSE entrypoint
  *   GKO-133: Deploy V4 message API with Webhooks entrypoint
  *   GKO-134: Deploy V4 message API with Websockets entrypoint
- *   GKO-135: Deploy V4 message API with Kafka endpoint
  *   GKO-136: Deploy V4 message API with Mock endpoint
  *   GKO-164: Deploy V4 message API with policy
+ *
+ * Removed (see "Batch 3 - Skipped Tests.md" in hermesVault):
+ *   GKO-135: Kafka endpoint — APIM schema bug
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -220,33 +222,8 @@ test.describe("Message APIs — Lifecycle", () => {
     await kubectl.del(fixturePath);
   });
 
-  // ── GKO-135: Deploy V4 message API with Kafka endpoint ──────
-
-  // SKIP: APIM dev build returns 500 "required key [consumer/producer] not found"
-  // for Kafka endpoint configuration. GKO/APIM serialization bug.
-  test.skip(`Deploy V4 message API with Kafka endpoint ${XRAY.MESSAGE_APIS.KAFKA_ENDPOINT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-kafka";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-kafka.yaml");
-
-    await test.step("Apply CRD with Kafka endpoint", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = await mapi.fetchApi(apiId);
-      expect(api).toBeTruthy();
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
+  // GKO-135 (Kafka endpoint) was removed from the suite — APIM schema
+  // bug, documented in "Batch 3 - Skipped Tests.md" in hermesVault.
 
   // ── GKO-136: Deploy V4 message API with Mock endpoint ───────
 
