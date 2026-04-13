@@ -199,6 +199,32 @@ export async function applyString(
 }
 
 /**
+ * Try to apply a YAML string via stdin and expect it to fail.
+ * Returns the stderr output for further assertions.
+ * Throws if the apply unexpectedly succeeds.
+ */
+export async function applyStringExpectFailure(
+  yamlContent: string,
+  namespace = NAMESPACE,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const child = execFile(
+      "kubectl",
+      ["apply", "-f", "-", "-n", namespace],
+      { timeout: EXEC_TIMEOUT_MS },
+      (err: Error | null, _stdout, stderr) => {
+        if (err) {
+          resolve(stderr ?? "");
+        } else {
+          reject(new Error("Expected kubectl apply to fail, but it succeeded"));
+        }
+      },
+    );
+    child.stdin?.end(yamlContent);
+  });
+}
+
+/**
  * Try to apply a manifest and expect it to fail (e.g., admission webhook rejection).
  * Returns the stderr output for further assertions.
  * Throws if the apply unexpectedly succeeds.
