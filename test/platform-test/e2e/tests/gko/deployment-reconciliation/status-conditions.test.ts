@@ -22,9 +22,11 @@
  *   GKO-1388: Accepted condition is not False on successful reconciliation
  *   GKO-1389: Accepted condition updates on configuration changes
  *   GKO-1390: processingStatus is still present in the status field
- *   GKO-1392: ResolvedRefs condition is no longer present
  *   GKO-1445: Idempotent reconciliation
  *   GKO-1446: Status conditions reflect reconciliation state
+ *
+ * Removed (see "Batch 3 - Skipped Tests.md" in hermesVault):
+ *   GKO-1392: ResolvedRefs condition absence — forward-looking, GKO still emits it
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -202,25 +204,7 @@ test.describe("Reconciliation — Status & Conditions", () => {
     await kubectl.del(updateFixture);
   });
 
-  // ── GKO-1392: ResolvedRefs condition ─────────────────────────
-
-  // GKO-1392 is forward-looking: ResolvedRefs is deprecated and will be removed from status
-  // in a future GKO release. Re-enable once the operator no longer sets this condition.
-  test.fixme(`ResolvedRefs condition is not present in status ${XRAY.DEPLOYMENT_RECONCILIATION.RESOLVED_REFS_NOT_PRESENT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<StatusWithConditions>("apiv4definition", API_NAME);
-
-    // GKO-1392: ResolvedRefs condition is no longer present in status
-    const resolvedRefs = status.conditions?.find((c) => c.type === "ResolvedRefs");
-    expect(resolvedRefs).toBeUndefined();
-
-    await kubectl.del(fixturePath);
-  });
+  // GKO-1392 (ResolvedRefs condition absence) was removed from the suite —
+  // see "Batch 3 - Skipped Tests.md" in hermesVault. Re-add when the GKO
+  // operator stops emitting the ResolvedRefs condition.
 });

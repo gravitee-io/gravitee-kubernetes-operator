@@ -54,7 +54,6 @@ export const XRAY = {
     SSE_ENTRYPOINT: "@GKO-132",
     WEBHOOK_ENTRYPOINT: "@GKO-133",
     WEBSOCKET_ENTRYPOINT: "@GKO-134",
-    KAFKA_ENDPOINT: "@GKO-135",
     MOCK_ENDPOINT: "@GKO-136",
     MSG_API_WITH_POLICY: "@GKO-164",
   },
@@ -137,20 +136,10 @@ export const XRAY = {
     DELETE_API_WITH_OTHER_PLAN: "@GKO-854",
     MTLS_PLAN_V4: "@GKO-869",
   },
-  NATIVE_APIS: {
-    NON_NATIVE_PLAN_ERROR: "@GKO-874",
-    NON_NATIVE_FLOW_ERROR: "@GKO-875",
-    UPDATE_NATIVE_API: "@GKO-876",
-    DELETE_NATIVE_API: "@GKO-878",
-    START_NATIVE_API: "@GKO-904",
-    STOP_NATIVE_API: "@GKO-906",
-    REMOVE_CATEGORY: "@GKO-908",
-    ADD_NON_EXISTING_CATEGORY: "@GKO-909",
-    CREATE_WITH_CATEGORY: "@GKO-910",
-    ADD_FLOW: "@GKO-925",
-    UPDATE_FLOW: "@GKO-961",
-    DELETE_FLOW: "@GKO-962",
-  },
+  // NATIVE_APIS group removed — 10 tests were never committed due to the
+  // APIM native-plan serialization bug (see "Batch 3 - Skipped Tests.md").
+  // GKO-874 and GKO-875 were listed in batch 2 but their test files were
+  // also never committed; they are tracked as not-yet-covered.
   GROUPS: {
     CREATE_WITH_MEMBER: "@GKO-983",
     CREATE_NON_EXISTING_USER: "@GKO-984",
@@ -171,7 +160,6 @@ export const XRAY = {
     ACCEPTED_NOT_FALSE_ON_SUCCESS: "@GKO-1388",
     ACCEPTED_UPDATES_ON_CHANGE: "@GKO-1389",
     PROCESSING_STATUS_PRESENT: "@GKO-1390",
-    RESOLVED_REFS_NOT_PRESENT: "@GKO-1392",
     IDEMPOTENT_RECONCILIATION: "@GKO-1445",
     STATUS_CONDITIONS_REFLECT_STATE: "@GKO-1446",
   },
@@ -228,11 +216,9 @@ export const XRAY = {
     NON_EXISTING_CATEGORY_V4: "@GKO-269",
     REMOVE_CATEGORY_V4: "@GKO-270",
   },
-  TCP_FAILOVER: {
-    TCP_PROXY_API: "@GKO-79",
-    SYNC_FROM_MGMT_MULTI_CLUSTER: "@GKO-80",
-    FAILOVER_MESSAGE_API: "@GKO-861",
-  },
+  // TCP_FAILOVER group removed — tcp-failover.test.ts was never committed
+  // (GKO-79 depended on TCP proxy setup that the test cluster does not
+  // provide). Tracked in "Batch 3 - Skipped Tests.md".
   TERRAFORM: {
     APPLY_COMPLEX_CONFIG: "@GKO-1926",
     APIM_CONTAINS_ALL_ENTITIES: "@GKO-1929",
