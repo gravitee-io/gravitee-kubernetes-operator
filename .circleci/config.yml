@@ -501,6 +501,9 @@ jobs:
       - store_artifacts:
           path: test/platform-test/playwright-report
           destination: playwright-report
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-e2e.out
+          destination: cover-e2e.out
 
   job-stage-helm-chart:
     docker:
