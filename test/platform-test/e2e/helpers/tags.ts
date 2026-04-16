@@ -96,7 +96,10 @@ export const XRAY = {
     V2_IMPORT_NON_EXISTING_CATEGORY_DRYRUN: "@GKO-605",
     V2_NO_PLANS_STARTED: "@GKO-606",
     V2_NO_PLANS_STOPPED: "@GKO-607",
-    // GKO-653 — dropped: APIM does not support CRD export for V2 APIs
+    // GKO-653 (V2 exported read-only round-trip) — removed from batch 5:
+    // APIM does not support CRD export for V2 APIs (/management/v2/.../_export/crd
+    // returns 400 "definition version 2.0.0 is not supported anymore").
+    // Tracked in "Batch 5 - Skipped Tests.md".
   },
   APPLICATIONS_MEMBERS: {
     APP_NON_EXISTING_MEMBER: "@GKO-533",
@@ -203,6 +206,8 @@ export const XRAY = {
     PROCESSING_STATUS_PRESENT: "@GKO-1390",
     IDEMPOTENT_RECONCILIATION: "@GKO-1445",
     STATUS_CONDITIONS_REFLECT_STATE: "@GKO-1446",
+    MGMT_CTX_CONDITION_VOCABULARY: "@GKO-1282",
+    CONSISTENT_CONDITION_STRUCTURE: "@GKO-1283",
   },
   MANAGEMENT_CONTEXT: {
     NON_EXISTING_ENV: "@GKO-472",
@@ -234,6 +239,9 @@ export const XRAY = {
     V4_METADATA_ON_IMPORT: "@GKO-239",
     V4_EXPORT_IMPORT_ROUND_TRIP: "@GKO-1472",
     V4_TERRAFORM_IMPORT_EXPORT_PARITY: "@GKO-1927",
+    // GKO-1471 (V2 import/export round-trip) — dropped from batch 5:
+    // APIM does not support CRD export for V2 APIs. Tracked in
+    // "Batch 5 - Skipped Tests.md".
   },
   MEMBERS: {
     V4_NON_EXISTING_MEMBER: "@GKO-251",
@@ -271,9 +279,15 @@ export const XRAY = {
     V2_REMOVE_GROUP: "@GKO-400",
     V2_NOTIFY_MEMBERS: "@GKO-401",
     V2_PO_NOT_OVERWRITEABLE: "@GKO-601",
-    // GKO-602 — dropped: GKO webhook does not enforce different-user PO rejection
+    // GKO-602 (V2 API with a different PRIMARY_OWNER is rejected) — dropped
+    // from batch 5: GKO admission does not enforce this (product gap). The
+    // webhook accepts the CR and the API is created in APIM. Tracked in
+    // "Batch 5 - Skipped Tests.md" as a GKO product bug.
     V2_TAKE_OVER_PO: "@GKO-657",
-    // GKO-659 — dropped: overlaps with GKO-601
+    // GKO-659 (adding PO to members has no effect) — dropped from batch 5
+    // because the companion GKO-602 scenario is also dropped, and GKO-601
+    // already verifies that re-declaring the mgmt-ctx user as PO is a no-op.
+    // Tracked in "Batch 5 - Skipped Tests.md".
     V2_ADD_GROUP_REFS: "@GKO-1003",
   },
   DEFAULTS: {
@@ -320,6 +334,7 @@ export const XRAY = {
     REMOVE_APPLICATION: "@GKO-1378",
     CREATE_APP_AND_SUBSCRIPTION: "@GKO-1379",
     VALID_AND_MALFORMED_HCL: "@GKO-1453",
+    GENERAL_CONDITIONS_PAGE: "@GKO-1930",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",
@@ -339,20 +354,35 @@ export const XRAY = {
     V2_DOC_PRIVATE_NO_GROUPS: "@GKO-200",
     V2_DOC_PRIVATE_GROUPS: "@GKO-315",
     V2_DOC_PRIVATE_EXCLUDED: "@GKO-316",
-    // GKO-662 — dropped: APIM rejects V2 ROOT fetchers via http-fetcher
+    // GKO-662 (delete fetched ROOT pages) — dropped from batch 5: APIM
+    // rejects V2 ROOT fetchers backed by http-fetcher with
+    // "The plugin does not support to import a directory". ROOT pages need
+    // a directory-listing fetcher (e.g. github-fetcher) which in turn
+    // requires real GitHub credentials. Tracked in "Batch 5 - Skipped
+    // Tests.md".
     V2_DOC_RENAME: "@GKO-699",
     V2_WEB_FETCHER_NO_URL: "@GKO-620",
     V2_WEB_FETCHER_WARNING: "@GKO-621",
     V2_GITHUB_FETCHER_REQUIRED_FIELDS: "@GKO-622",
     V2_GITHUB_FETCHER_WARNING: "@GKO-623",
-    // GKO-626, 675, 689, 692 — dropped: webhook pre-fetches github pages,
-    // test cluster has no real GitHub credentials
+    // GKO-626, 675, 689, 692 — dropped from batch 5 because the GKO
+    // admission webhook pre-fetches github-fetcher pages at apply time
+    // and the test cluster has no real GitHub credentials, so any positive
+    // github-fetcher test is rejected by admission with "Page cannot be
+    // fetched, this can come from either invalid / missing github
+    // credentials or an invalid file path". Tracked in "Batch 5 - Skipped
+    // Tests.md".
   },
   NOTIFICATIONS: {
     REMOVE_NOTIFICATION: "@GKO-1238",
     NOTIFICATION_HOOKS_GROUPS: "@GKO-1231",
     API_REF_NOTIFICATION: "@GKO-1232",
     NOTIFICATIONS_VIA_CRS: "@GKO-1461",
+    // GKO-1236 (cannot delete Notification CR if referenced) — dropped from
+    // batch 5: GKO does not enforce an in-use protection on Notification
+    // CRs. The delete succeeds even when an API references it. Tracked in
+    // "Batch 5 - Skipped Tests.md" as a product gap.
+    WORKS_WITH_V2_AND_V4: "@GKO-1237",
   },
   LOCAL_CONFIGMAP: {
     LOCAL_FALSE_NO_CONFIGMAP: "@GKO-765",
