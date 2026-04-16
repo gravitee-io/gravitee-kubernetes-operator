@@ -218,7 +218,11 @@ test.describe("Subscriptions — Security Plans", () => {
     await test.step("Deploy V2 API with manual approval plan and application", async () => {
       await kubectl.apply(apiFixture);
       await kubectl.apply(appFixture);
-      await kubectl.waitForCondition("apidefinition", "e2e-v2-manual-approval", "Accepted");
+      // V2 reconciliation uses the heavier v1 import-crd endpoint. By the
+      // time this test runs (~7th in the describe block) the operator's
+      // reconcile queue has accumulated work from prior tests' apply/delete
+      // cycles, so the default 60s occasionally isn't enough.
+      await kubectl.waitForCondition("apidefinition", "e2e-v2-manual-approval", "Accepted", 120);
       await kubectl.waitForCondition("application", "e2e-app-simple", "Accepted");
     });
 
