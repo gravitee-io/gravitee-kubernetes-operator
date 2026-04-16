@@ -37,9 +37,23 @@ export async function apply(yamlPath: string, namespace = NAMESPACE): Promise<vo
   await run(["apply", "-f", yamlPath, "-n", namespace]);
 }
 
+/** Server-side dry-run apply — validates through admission without persisting. */
+export async function applyDryRun(yamlPath: string, namespace = NAMESPACE): Promise<void> {
+  await run(["apply", "-f", yamlPath, "-n", namespace, "--dry-run=server"]);
+}
+
 /** Delete resources defined in a YAML manifest file. */
 export async function del(yamlPath: string, namespace = NAMESPACE): Promise<void> {
   await run(["delete", "-f", yamlPath, "-n", namespace, "--ignore-not-found"]);
+}
+
+/** Delete a single resource by kind and name. */
+export async function deleteResource(
+  kind: string,
+  name: string,
+  namespace = NAMESPACE,
+): Promise<void> {
+  await run(["delete", kind, name, "-n", namespace, "--ignore-not-found"]);
 }
 
 /** Wait for a condition on a resource. */
