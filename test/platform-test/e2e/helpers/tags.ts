@@ -300,6 +300,22 @@ export const XRAY = {
     V4_READ_ONLY_DOC: "@GKO-280",
     V4_DOC_VISIBILITY_PUBLIC: "@GKO-282",
     V4_DOC_RECONCILED: "@GKO-1470",
+    V2_DOC_CRUD: "@GKO-146",
+    V2_DOC_OVERSIZE: "@GKO-147",
+    V2_DOC_INLINE_UPDATE: "@GKO-148",
+    V2_DOC_FETCHER: "@GKO-151",
+    V2_DOC_PUBLIC: "@GKO-199",
+    V2_DOC_PRIVATE_NO_GROUPS: "@GKO-200",
+    V2_DOC_PRIVATE_GROUPS: "@GKO-315",
+    V2_DOC_PRIVATE_EXCLUDED: "@GKO-316",
+    // GKO-662 — dropped: APIM rejects V2 ROOT fetchers via http-fetcher
+    V2_DOC_RENAME: "@GKO-699",
+    V2_WEB_FETCHER_NO_URL: "@GKO-620",
+    V2_WEB_FETCHER_WARNING: "@GKO-621",
+    V2_GITHUB_FETCHER_REQUIRED_FIELDS: "@GKO-622",
+    V2_GITHUB_FETCHER_WARNING: "@GKO-623",
+    // GKO-626, 675, 689, 692 — dropped: webhook pre-fetches github pages,
+    // test cluster has no real GitHub credentials
   },
   NOTIFICATIONS: {
     REMOVE_NOTIFICATION: "@GKO-1238",
