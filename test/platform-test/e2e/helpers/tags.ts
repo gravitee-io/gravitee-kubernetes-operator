@@ -250,6 +250,15 @@ export const XRAY = {
     V2_PO_IN_MEMBERS: "@GKO-258",
     V2_CHANGE_MEMBER_ROLE: "@GKO-308",
     V2_MEMBER_NO_ROLE: "@GKO-393",
+    V2_ADD_GROUP_HRID: "@GKO-398",
+    V2_MULTIPLE_GROUPS: "@GKO-399",
+    V2_REMOVE_GROUP: "@GKO-400",
+    V2_NOTIFY_MEMBERS: "@GKO-401",
+    V2_PO_NOT_OVERWRITEABLE: "@GKO-601",
+    // GKO-602 — dropped: GKO webhook does not enforce different-user PO rejection
+    V2_TAKE_OVER_PO: "@GKO-657",
+    // GKO-659 — dropped: overlaps with GKO-601
+    V2_ADD_GROUP_REFS: "@GKO-1003",
   },
   DEFAULTS: {
     NAMESPACE_DEFAULT: "@GKO-463",
