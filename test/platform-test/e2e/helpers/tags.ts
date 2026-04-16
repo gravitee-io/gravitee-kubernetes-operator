@@ -273,6 +273,12 @@ export const XRAY = {
     V4_DEPLOY_NON_EXISTING_CATEGORY: "@GKO-412",
     V4_IMPORT_NON_EXISTING_CATEGORY_DRYRUN: "@GKO-415",
     V4_IMPORT_NON_EXISTING_CATEGORY_APPLY: "@GKO-416",
+    V2_VALID_CATEGORY: "@GKO-187",
+    V2_MANY_CATEGORIES: "@GKO-189",
+    V2_NON_EXISTING_CATEGORY: "@GKO-190",
+    V2_REMOVE_CATEGORY: "@GKO-191",
+    V2_CATEGORY_REMOVED_FROM_APIM: "@GKO-192",
+    V2_CATEGORY_RENAME_REDEPLOY: "@GKO-261",
   },
   // TCP_FAILOVER group removed — tcp-failover.test.ts was never committed
   // (GKO-79 depended on TCP proxy setup that the test cluster does not
