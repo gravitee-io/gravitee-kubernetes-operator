@@ -241,6 +241,9 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-unit.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-unit.out
+          destination: cover-unit.out
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
@@ -335,6 +338,9 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-conformance.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-conformance.out
+          destination: cover-conformance.out
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
@@ -408,6 +414,9 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-<< parameters.ginkgo-filter >>.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-<< parameters.ginkgo-filter >>.out
+          destination: cover-<< parameters.ginkgo-filter >>.out
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
