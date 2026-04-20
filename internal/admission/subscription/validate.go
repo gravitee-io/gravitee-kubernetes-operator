@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var allowedPlanSecurities = []string{"JWT", "OAUTH2", "MTLS"}
+var allowedPlanSecurities = []string{"API_KEY", "JWT", "OAUTH2", "MTLS"}
 
 func validateUpdate(
 	ctx context.Context,
@@ -242,7 +242,7 @@ func validateApiSyncMode(api core.ApiDefinitionObject) *errors.AdmissionError {
 func validateApplicationSettings(plan core.PlanModel, app core.ApplicationObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if slices.Contains([]string{"JWT", "OAUTH"}, plan.GetSecurityType()) {
+	if slices.Contains([]string{"JWT", "OAUTH2"}, plan.GetSecurityType()) {
 		errs.Add(validateClientID(app))
 	}
 
