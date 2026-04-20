@@ -24,6 +24,7 @@
  *   GKO-153: V2 API page with invalid parentPath
  *   GKO-166: Create V4 message API with missing required fields
  *   GKO-281: V4 API page with invalid parentPath
+ *   GKO-1477: Cross-version confirmation for parentPath validation (piggybacks GKO-281)
  *   GKO-414: Create V4 API with non-existing ManagementContext
  *   GKO-465: Using non-existing management context
  *   GKO-502: V4 API has no plans and state=STARTED (also in lifecycle tests)
@@ -171,9 +172,12 @@ test.describe("Webhook Validation — Extended", () => {
     expect(stderr.toLowerCase()).toMatch(/parent|path|not found|denied|error/);
   });
 
-  // ── GKO-281: V4 parentPath not found ───────────────────────
+  // ── GKO-281 / GKO-1477: V4 parentPath not found ────────────
+  // GKO-1477 is the cross-version companion to GKO-153 (V2) and this test —
+  // piggybacking the V4 check confirms admission rejects invalid parentPath
+  // on both versions.
 
-  test(`V4 API with invalid parentPath is rejected ${XRAY.WEBHOOKS.V4_PARENT_PATH_NOT_FOUND} ${TAGS.REGRESSION}`, async ({
+  test(`V4 API with invalid parentPath is rejected ${XRAY.WEBHOOKS.V4_PARENT_PATH_NOT_FOUND} ${XRAY.WEBHOOKS.CROSS_VERSION_PARENT_PATH} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(

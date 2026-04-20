@@ -77,7 +77,7 @@ test.describe("Members — V4 API", () => {
   // ── GKO-252: Non-existing group ─────────────────────────────────
   // Group validation also happens during reconciliation.
 
-  test(`Non-existing group causes reconciliation error ${XRAY.MEMBERS.V4_NON_EXISTING_GROUP} ${TAGS.REGRESSION}`, async ({
+  test(`Non-existing group causes reconciliation error ${XRAY.MEMBERS.V4_NON_EXISTING_GROUP} ${XRAY.VALIDATION.NON_EXISTING_GROUP_MESSAGE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-bad-group";
@@ -92,7 +92,23 @@ test.describe("Members — V4 API", () => {
       const status = await kubectl.getStatus<StatusWithConditions>("apiv4definition", API_NAME);
       const accepted = status.conditions?.find((c) => c.type === "Accepted");
       expect(accepted).toBeTruthy();
-      expect(accepted!.status).toBe("True");
+      expect(accepted?.status).toBe("True");
+    });
+
+    // GKO-1478: the non-existing group must surface a clear warning that
+    // names both the missing group and the environment so operators can act.
+    await test.step("Warning names the missing group", async () => {
+      const status = await kubectl.getStatus<{
+        errors?: { warning?: string[] };
+      }>("apiv4definition", API_NAME);
+      const warnings = status.errors?.warning ?? [];
+      const match = warnings.find((w) =>
+        /group \[non-existing-group-xyz\].*could not be found/i.test(w),
+      );
+      expect(
+        match,
+        `expected warning to name the missing group; got ${JSON.stringify(warnings)}`,
+      ).toBeTruthy();
     });
 
     await kubectl.del(fixturePath);
