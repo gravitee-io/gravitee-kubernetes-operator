@@ -50,6 +50,7 @@ export const XRAY = {
     START_STOP_V2_V4_NATIVE: "@GKO-1464",
     POLICY_ON_API_WITHOUT_PLANS: "@GKO-1465",
     ENTRYPOINT_POLICY_MATRIX: "@GKO-1474",
+    V2_V4_COMPATIBILITY: "@GKO-1448",
   },
   MESSAGE_APIS: {
     DEPLOY_V4_MSG_SYNC_MGMT: "@GKO-72",
@@ -76,6 +77,7 @@ export const XRAY = {
     FAIL_CHANGE_PUBLISHED_STATUS: "@GKO-171",
     PLAN_PUBLISHED_WHEN_API_STOPPED: "@GKO-174",
     GENERAL_CONDITIONS: "@GKO-238",
+    PLAN_LIFECYCLE_VIA_CR: "@GKO-1459",
     NATIVE_KAFKA_KEYLESS_PLAN: "@GKO-856",
     NATIVE_ADD_PLAN: "@GKO-918",
     NATIVE_REMOVE_PLAN: "@GKO-919",
@@ -87,6 +89,7 @@ export const XRAY = {
     V4_CONTEXT_PATH_CONFLICT: "@GKO-1476",
     V4_OAS_COMPLIANCE_WEBHOOK: "@GKO-1479",
     V4_DEFAULT_VALUES: "@GKO-1480",
+    NON_EXISTING_GROUP_MESSAGE: "@GKO-1478",
   },
   V2_API_LIFECYCLE: {
     V2_UPDATE_API_PATH: "@GKO-1065",
@@ -133,6 +136,8 @@ export const XRAY = {
     V2_CONTEXT_PATH_CONFLICT_V4: "@GKO-591",
     V2_CONTEXT_PATH_EXISTS_LOCAL_FALSE: "@GKO-609",
     V2_INVALID_CRON: "@GKO-614",
+    CROSS_VERSION_SCHEDULERS_FETCHERS: "@GKO-1475",
+    CROSS_VERSION_PARENT_PATH: "@GKO-1477",
   },
   APPLICATIONS: {
     APP_WITH_METADATA: "@GKO-194",
@@ -172,6 +177,7 @@ export const XRAY = {
     DELETE_API_WITH_OTHER_PLAN: "@GKO-854",
     MTLS_PLAN_V4: "@GKO-869",
     V4_SUBSCRIPTION_READ_ONLY: "@GKO-795",
+    SUBSCRIPTION_IMMUTABILITY: "@GKO-1460",
     V4_JWT_PLAN_DELETION_WITH_SUB: "@GKO-822",
     V4_OAUTH2_PLAN_DELETION_WITH_SUB: "@GKO-826",
     CROSS_MGMT_CONTEXT_ERROR: "@GKO-796",
@@ -208,6 +214,11 @@ export const XRAY = {
     STATUS_CONDITIONS_REFLECT_STATE: "@GKO-1446",
     MGMT_CTX_CONDITION_VOCABULARY: "@GKO-1282",
     CONSISTENT_CONDITION_STRUCTURE: "@GKO-1283",
+    PROCESSING_STATUS_DEPRECATED: "@GKO-1391",
+    AUDITABILITY_EVENTS: "@GKO-1463",
+    RECOVERY_REAPPLY: "@GKO-1808",
+    CR_MANAGED_READ_ONLY: "@GKO-1456",
+    OPERATOR_RESTART_RECOVERY: "@GKO-1451",
   },
   MANAGEMENT_CONTEXT: {
     NON_EXISTING_ENV: "@GKO-472",
@@ -289,6 +300,7 @@ export const XRAY = {
     // already verifies that re-declaring the mgmt-ctx user as PO is a no-op.
     // Tracked in "Batch 5 - Skipped Tests.md".
     V2_ADD_GROUP_REFS: "@GKO-1003",
+    PRIMARY_OWNER_VISIBILITY: "@GKO-1457",
   },
   DEFAULTS: {
     NAMESPACE_DEFAULT: "@GKO-463",
@@ -318,6 +330,7 @@ export const XRAY = {
     V2_REMOVE_CATEGORY: "@GKO-191",
     V2_CATEGORY_REMOVED_FROM_APIM: "@GKO-192",
     V2_CATEGORY_RENAME_REDEPLOY: "@GKO-261",
+    V4_LABELS_LIFECYCLE: "@GKO-1473",
   },
   // TCP_FAILOVER group removed — tcp-failover.test.ts was never committed
   // (GKO-79 depended on TCP proxy setup that the test cluster does not
@@ -365,6 +378,12 @@ export const XRAY = {
     V2_WEB_FETCHER_WARNING: "@GKO-621",
     V2_GITHUB_FETCHER_REQUIRED_FIELDS: "@GKO-622",
     V2_GITHUB_FETCHER_WARNING: "@GKO-623",
+    V4_WEB_FETCHER_NO_URL: "@GKO-629",
+    V4_WEB_FETCHER_WARNING: "@GKO-628",
+    V4_GITHUB_FETCHER_REQUIRED_FIELDS: "@GKO-636",
+    V4_GITHUB_FETCHER_WARNING: "@GKO-637",
+    V4_DOC_RENAME: "@GKO-1469",
+    DOC_PUBLIC_ACCESS_CROSS_VERSION: "@GKO-1467",
     // GKO-626, 675, 689, 692 — dropped from batch 5 because the GKO
     // admission webhook pre-fetches github-fetcher pages at apply time
     // and the test cluster has no real GitHub credentials, so any positive
@@ -383,6 +402,9 @@ export const XRAY = {
     // CRs. The delete succeeds even when an API references it. Tracked in
     // "Batch 5 - Skipped Tests.md" as a product gap.
     WORKS_WITH_V2_AND_V4: "@GKO-1237",
+    NOT_IN_EXPORT: "@GKO-1233",
+    DUPLICATE_CONSOLE_REJECTED: "@GKO-1235",
+    CR_READONLY_VIA_MAPI: "@GKO-1234",
   },
   LOCAL_CONFIGMAP: {
     LOCAL_FALSE_NO_CONFIGMAP: "@GKO-765",
