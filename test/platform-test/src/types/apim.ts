@@ -468,6 +468,8 @@ export interface Application extends BaseApplication {
   metadata?: Record<string, ApplicationMetadataValue>;
   disableMembershipNotifications?: boolean;
   originContext?: OriginContext;
+  /** Legacy flat origin field returned by the v1 Management API. */
+  origin?: "KUBERNETES" | "MANAGEMENT" | "INTEGRATION";
   createdAt?: string;
   updatedAt?: string;
 }
@@ -814,4 +816,5 @@ export interface NotificationSetting {
   hooks: string[];
   groups: string[];
   name?: string;
+  origin?: "KUBERNETES" | "MANAGEMENT" | null;
 }

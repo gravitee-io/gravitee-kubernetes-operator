@@ -196,6 +196,36 @@ export async function exists(
   }
 }
 
+/** Trigger a rolling restart of a workload (deployment, daemonset, statefulset). */
+export async function rolloutRestart(
+  kind: string,
+  name: string,
+  namespace = NAMESPACE,
+): Promise<void> {
+  await run(["rollout", "restart", `${kind}/${name}`, "-n", namespace]);
+}
+
+/** Wait for a rolling update to finish. */
+export async function waitForRollout(
+  kind: string,
+  name: string,
+  timeoutSeconds = 120,
+  namespace = NAMESPACE,
+): Promise<void> {
+  const execTimeoutMs = (timeoutSeconds + 5) * 1_000;
+  await run(
+    [
+      "rollout",
+      "status",
+      `${kind}/${name}`,
+      `--timeout=${timeoutSeconds}s`,
+      "-n",
+      namespace,
+    ],
+    execTimeoutMs,
+  );
+}
+
 /** Apply a YAML string via stdin (useful for dynamically generated manifests). */
 export async function applyString(
   yamlContent: string,
