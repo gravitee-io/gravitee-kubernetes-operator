@@ -40,6 +40,7 @@ var (
 	apiV4Kind              = v1alpha1.GroupVersion.WithKind("ApiV4Definition")
 	subscriptionKind       = v1alpha1.GroupVersion.WithKind("Subscription")
 	groupKind              = v1alpha1.GroupVersion.WithKind("Group")
+	idpGroupMappingKind    = v1alpha1.GroupVersion.WithKind("IDPGroupMapping")
 	sharedPolicyGroupsKind = v1alpha1.GroupVersion.WithKind("SharedPolicyGroup")
 	notificationKind       = v1alpha1.GroupVersion.WithKind("Notification")
 )

@@ -55,6 +55,11 @@ func (client *Client) OrgTarget(path string) *http.URL {
 	return client.URLs.Org.WithPath(path)
 }
 
+// ConfigurationTarget returns a new URL with the given path appended to the configuration URL.
+func (client *Client) ConfigurationTarget(path string) *http.URL {
+	return client.URLs.Org.WithPath("configuration").WithPath(path)
+}
+
 // NewURLs returns a new URLs instance for the given base URL
 // with Org path initialized from the given orgID and Env path initialized from the given envID.
 func NewURLs(baseUrl, basePath string, orgID, envID string) (*URLs, error) {

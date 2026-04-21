@@ -162,6 +162,19 @@ func GroupFailed(group *v1alpha1.Group) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, group.Status.ProcessingStatus)
 }
 
+func IDPGroupMappingCompleted(idpGroupMapping *v1alpha1.IDPGroupMapping) error {
+	return Equals(reconcileStatus, core.ProcessingStatusCompleted, idpGroupMapping.Status.ProcessingStatus)
+}
+
+func IDPGroupMappingAccepted(idpGroupMapping *v1alpha1.IDPGroupMapping) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(idpGroupMapping.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func IDPGroupMappingFailed(idpGroupMapping *v1alpha1.IDPGroupMapping) error {
+	return Equals(reconcileStatus, core.ProcessingStatusFailed, idpGroupMapping.Status.ProcessingStatus)
+}
+
 func NotificationCompleted(notification *v1alpha1.Notification) error {
 	return Equals(reconcileCondition, false, notification.Status.IsFailed())
 }

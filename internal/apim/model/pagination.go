@@ -14,26 +14,10 @@
 
 package model
 
-type Env struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type Group struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-type GroupStatus struct {
-	Members uint `json:"members"`
-}
-
-type Category struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-type PaginatedGroups struct {
-	Data []Group        `json:"data"`
-	Page PaginationData `json:"page"`
+type PaginationData struct {
+	Current       int `json:"current"`
+	Size          int `json:"size"`
+	PerPage       int `json:"per_page"`
+	TotalPages    int `json:"total_pages"`
+	TotalElements int `json:"total_elements"`
 }

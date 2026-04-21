@@ -41,6 +41,7 @@ type Files struct {
 	Subscription       string
 	SharedPolicyGroups string
 	Group              string
+	IDPGroupMapping    string
 	Notification       string
 }
 
@@ -89,6 +90,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if group := decodeIfDefined(f.Group, &v1alpha1.Group{}, groupKind); group != nil {
 		setUpGroup(obj, group, suffix)
+	}
+
+	if idpGroupMapping := decodeIfDefined(f.IDPGroupMapping, &v1alpha1.IDPGroupMapping{}, idpGroupMappingKind); idpGroupMapping != nil {
+		setupIDPGroupMapping(obj, idpGroupMapping, suffix)
 	}
 
 	if rsc := decodeIfDefined(f.Resource, &v1alpha1.ApiResource{}, rscKind); rsc != nil {
@@ -274,6 +279,12 @@ func setUpGroup(obj *Objects, group **v1alpha1.Group, suffix string) {
 	obj.Group.Namespace = constants.Namespace
 }
 
+func setupIDPGroupMapping(obj *Objects, idpGroupMapping **v1alpha1.IDPGroupMapping, suffix string) {
+	obj.IDPGroupMapping = *idpGroupMapping
+	obj.IDPGroupMapping.Name += suffix
+	obj.IDPGroupMapping.Namespace = constants.Namespace
+}
+
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
 	obj.SharedPolicyGroup = *sub
 	obj.SharedPolicyGroup.Name += suffix
@@ -373,6 +384,11 @@ func (b *FSBuilder) WithSharedPolicyGroups(file string) *FSBuilder {
 
 func (b *FSBuilder) WithGroup(file string) *FSBuilder {
 	b.files.Group = file
+	return b
+}
+
+func (b *FSBuilder) WithIDPGroupMapping(file string) *FSBuilder {
+	b.files.IDPGroupMapping = file
 	return b
 }
 

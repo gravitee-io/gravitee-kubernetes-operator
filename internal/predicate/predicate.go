@@ -61,6 +61,8 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Group:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.IDPGroupMapping:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Notification:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *netV1.Ingress:
@@ -121,6 +123,9 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.Group:
 		oo, _ := e.ObjectOld.(*v1alpha1.Group)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *v1alpha1.IDPGroupMapping:
+		oo, _ := e.ObjectOld.(*v1alpha1.IDPGroupMapping)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.Notification:
 		oo, _ := e.ObjectOld.(*v1alpha1.Notification)

@@ -47,6 +47,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyGroup(ctx, cli)
 	}
 
+	if o.IDPGroupMapping != nil {
+		o.applyIDPGroupMapping(ctx, cli)
+	}
+
 	if o.Resource != nil {
 		o.applyResource(cli, ctx)
 	}
@@ -189,6 +193,20 @@ func (o *Objects) applyGroup(ctx context.Context, cli client.Client) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Group.Name)
+}
+
+func (o *Objects) applyIDPGroupMapping(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.IDPGroupMapping)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.IDPGroupMapping)
+		if err != nil {
+			return err
+		}
+		if err = assert.IDPGroupMappingCompleted(o.IDPGroupMapping); err != nil {
+			return assert.IDPGroupMappingFailed(o.IDPGroupMapping)
+		}
+		return nil
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.IDPGroupMapping.Name)
 }
 
 func (o *Objects) applyNotification(ctx context.Context, cli client.Client) {
