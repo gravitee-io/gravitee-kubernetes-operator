@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { AssertionError } from "node:assert";
 import { Mapi } from "../../src/assertions/apim/index.js";
 
-/** Create a Mapi with a mocked fetch that returns the given body. */
+/** Create a Mapi with globalThis.fetch stubbed to return the given body. */
 function createMockMapi(body: unknown, status = 200) {
   const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
     new Response(JSON.stringify(body), {
@@ -27,19 +27,20 @@ function createMockMapi(body: unknown, status = 200) {
       headers: { "Content-Type": "application/json" },
     }),
   );
+  vi.stubGlobal("fetch", mockFetch);
 
-  const mapi = new Mapi(
-    {
-      baseUrl: "http://localhost:8083",
-      auth: { type: "basic", username: "admin", password: "admin" },
-    },
-    mockFetch,
-  );
+  const mapi = new Mapi({
+    baseUrl: "http://localhost:8083",
+    auth: { type: "basic", username: "admin", password: "admin" },
+  });
 
   return { mapi, mockFetch };
 }
 
 describe("Mapi", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
   const fakeApi = {
     id: "api-1",
     name: "Petstore API",
