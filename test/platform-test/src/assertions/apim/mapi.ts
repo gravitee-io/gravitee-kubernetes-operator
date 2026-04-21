@@ -40,8 +40,8 @@ export class Mapi {
   /** @internal */
   readonly http: HttpClient;
 
-  constructor(config: MapiConfig, fetchFn?: FetchFn) {
-    this.http = new HttpClient(config, fetchFn);
+  constructor(config: MapiConfig) {
+    this.http = new HttpClient(config);
   }
 
   // ── API Assertions ──────────────────────────────────────────
@@ -316,6 +316,6 @@ export class Mapi {
 }
 
 /** Convenience factory */
-export function createMapi(config: MapiConfig, fetchFn?: FetchFn): Mapi {
-  return new Mapi(config, fetchFn);
+export function createMapi(config: MapiConfig): Mapi {
+  return new Mapi(config);
 }

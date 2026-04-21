@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { AssertionError } from "node:assert";
 import { buildPartial } from "../../src/cmd/assert-api.js";
 import { parseArgs } from "../../src/cmd/index.js";
@@ -158,6 +158,10 @@ describe("buildPartial with matchContent", () => {
 // ── assertApiCommand (mocked fetch) ──────────────────────────
 
 describe("assertApiCommand via Mapi", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   const fakeApi = {
     id: "api-1",
     name: "My API",
@@ -184,10 +188,11 @@ describe("assertApiCommand via Mapi", () => {
         headers: { "Content-Type": "application/json" },
       }),
     );
-    const apim = new Mapi(
-      { baseUrl: "http://localhost:8083", auth: { type: "basic", username: "admin", password: "admin" } },
-      mockFetch,
-    );
+    vi.stubGlobal("fetch", mockFetch);
+    const apim = new Mapi({
+      baseUrl: "http://localhost:8083",
+      auth: { type: "basic", username: "admin", password: "admin" },
+    });
     return { apim, mockFetch };
   }
 
