@@ -18,7 +18,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
     gravitee.io/extends: gateway.networking.k8s.io
-    gravitee.io/operator.version: 4.11.0-rc
+    gravitee.io/operator.version: 4.10.10
   name: gatewayclassparameters.gravitee.io
 spec:
   group: gravitee.io
@@ -2284,12 +2284,7 @@ spec:
                                             type: integer
                                         type: object
                                       resizePolicy:
-                                        description: >-
-                                          Resources resize policy for the
-                                          container.
-
-                                          This field cannot be set on ephemeral
-                                          containers.
+                                        description: Resources resize policy for the container.
                                         items:
                                           description: ContainerResizePolicy represents resource resize policy for the
                                             container.
@@ -4985,12 +4980,7 @@ spec:
                                             type: integer
                                         type: object
                                       resizePolicy:
-                                        description: >-
-                                          Resources resize policy for the
-                                          container.
-
-                                          This field cannot be set on ephemeral
-                                          containers.
+                                        description: Resources resize policy for the container.
                                         items:
                                           description: ContainerResizePolicy represents resource resize policy for the
                                             container.
@@ -5864,7 +5854,11 @@ spec:
                                           match all taint keys.
                                         type: string
                                       operator:
-                                        description: Operator represents a key's relationship to the value.
+                                        description: >-
+                                          Operator represents a key's
+                                          relationship to the value.
+
+                                          Valid operators are Exists and Equal.
                                         type: string
                                       tolerationSeconds:
                                         description: >-
@@ -7100,18 +7094,6 @@ spec:
                                                     signerName:
                                                       description: Kubelet's generated CSRs will be addressed to this signer.
                                                       type: string
-                                                    userAnnotations:
-                                                      additionalProperties:
-                                                        type: string
-                                                      description: >-
-                                                        userAnnotations allow
-                                                        pod authors to pass
-                                                        additional information
-                                                        to
-
-                                                        the signer
-                                                        implementation.
-                                                      type: object
                                                   required:
                                                     - keyType
                                                     - signerName
@@ -7478,31 +7460,6 @@ spec:
                                   x-kubernetes-list-map-keys:
                                     - name
                                   x-kubernetes-list-type: map
-                                workloadRef:
-                                  description: WorkloadRef provides a reference to the Workload object that this
-                                    Pod belongs to.
-                                  properties:
-                                    name:
-                                      description: Name defines the name of the Workload object this Pod belongs to.
-                                      type: string
-                                    podGroup:
-                                      description: >-
-                                        PodGroup is the name of the PodGroup
-                                        within the Workload that this Pod
-
-                                        belongs to.
-                                      type: string
-                                    podGroupReplicaKey:
-                                      description: >-
-                                        PodGroupReplicaKey specifies the replica
-                                        key of the PodGroup to which this
-
-                                        Pod belongs.
-                                      type: string
-                                  required:
-                                    - name
-                                    - podGroup
-                                  type: object
                               required:
                                 - containers
                               type: object
