@@ -26,7 +26,7 @@ export function throwIfFailed(report: AssertionReport): void {
 
   const lines = report.failures.map(
     (f) =>
-      `  path:     ${f.path}\n  expected: ${JSON.stringify(f.expected)}\n  actual:   ${JSON.stringify(f.actual)}`,
+      `  jsonPath: ${f.jsonPath}\n  expected: ${JSON.stringify(f.expected)}\n  actual:   ${JSON.stringify(f.actual)}`,
   );
 
   throw new AssertionError({

@@ -25,7 +25,7 @@ export type DeepPartial<T> = T extends object
  * A single field-level assertion failure.
  */
 export interface AssertionFailure {
-  path: string;
+  jsonPath: string;
   message: string;
   expected: unknown;
   actual: unknown;
