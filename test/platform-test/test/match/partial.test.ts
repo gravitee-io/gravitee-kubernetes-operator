@@ -28,7 +28,7 @@ describe("deepPartialMatch", () => {
     const result = deepPartialMatch({ name: "foo" }, { name: "bar" });
     expect(result.pass).toBe(false);
     expect(result.failures).toHaveLength(1);
-    expect(result.failures[0].path).toBe("$.name");
+    expect(result.failures[0].jsonPath).toBe("$.name");
     expect(result.failures[0].expected).toBe("bar");
     expect(result.failures[0].actual).toBe("foo");
   });
@@ -44,7 +44,7 @@ describe("deepPartialMatch", () => {
     const expected = { a: { b: { c: 99 } } };
     const result = deepPartialMatch(actual, expected);
     expect(result.pass).toBe(false);
-    expect(result.failures[0].path).toBe("$.a.b.c");
+    expect(result.failures[0].jsonPath).toBe("$.a.b.c");
   });
 
   it("matches arrays element-by-element", () => {
@@ -56,19 +56,19 @@ describe("deepPartialMatch", () => {
   it("fails when array element mismatches", () => {
     const result = deepPartialMatch({ items: ["a", "x"] }, { items: ["a", "b"] });
     expect(result.pass).toBe(false);
-    expect(result.failures[0].path).toBe("$.items[1]");
+    expect(result.failures[0].jsonPath).toBe("$.items[1]");
   });
 
   it("fails when expected array is longer than actual", () => {
     const result = deepPartialMatch({ items: ["a"] }, { items: ["a", "b"] });
     expect(result.pass).toBe(false);
-    expect(result.failures[0].path).toBe("$.items[1]");
+    expect(result.failures[0].jsonPath).toBe("$.items[1]");
   });
 
   it("fails when a property is missing from actual", () => {
     const result = deepPartialMatch({ a: 1 }, { a: 1, b: 2 });
     expect(result.pass).toBe(false);
-    expect(result.failures[0].path).toBe("$.b");
+    expect(result.failures[0].jsonPath).toBe("$.b");
   });
 
   it("matches null explicitly", () => {
