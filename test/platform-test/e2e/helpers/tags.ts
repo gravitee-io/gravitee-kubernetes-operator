@@ -365,6 +365,14 @@ export const XRAY = {
     CREATE_APP_AND_SUBSCRIPTION: "@GKO-1379",
     VALID_AND_MALFORMED_HCL: "@GKO-1453",
     GENERAL_CONDITIONS_PAGE: "@GKO-1930",
+    // Batch 8 — error handling in TF + delete-via-TF lifecycle.
+    // GKO-1381 (Role-specific access for managing Apps and subscriptions
+    // via Terraform) is dropped from batch 8: the test harness has no
+    // mechanism to provision a non-admin APIM user, so role scoping cannot
+    // be exercised. Re-evaluate when the bootstrap supports multi-user
+    // accounts (the same blocker as GKO-1541).
+    INVALID_SUBSCRIPTION_CONFIG: "@GKO-1380",
+    DELETE_APPLICATION_TF: "@GKO-1383",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

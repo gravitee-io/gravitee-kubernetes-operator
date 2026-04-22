@@ -52,6 +52,12 @@ https.ca.crt
 # Kubernetes Gateway API report
 test/conformance/.*/standard-.*-default-report.yaml
 
+# Terraform provider cache (created when someone runs `terraform init` in a
+# fixture dir; the e2e helper copies the fixture to a temp dir so this should
+# never end up in the committed fixture).
+test/platform-test/e2e/fixtures/**/.terraform/
+test/platform-test/e2e/fixtures/**/.terraform.lock.hcl
+
 CLAUDE.md
 prompts
 plans
