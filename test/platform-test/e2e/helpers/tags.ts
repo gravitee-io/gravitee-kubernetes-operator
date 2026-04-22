@@ -384,6 +384,8 @@ export const XRAY = {
     V4_GITHUB_FETCHER_WARNING: "@GKO-637",
     V4_DOC_RENAME: "@GKO-1469",
     DOC_PUBLIC_ACCESS_CROSS_VERSION: "@GKO-1467",
+    // Batch 8 — folder + page rename within a deployed API
+    V4_DOC_FOLDER_RENAME: "@GKO-700",
     // GKO-626, 675, 689, 692 — dropped from batch 5 because the GKO
     // admission webhook pre-fetches github-fetcher pages at apply time
     // and the test cluster has no real GitHub credentials, so any positive
