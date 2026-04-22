@@ -236,6 +236,10 @@ export const XRAY = {
     RECOVERY_REAPPLY: "@GKO-1808",
     CR_MANAGED_READ_ONLY: "@GKO-1456",
     OPERATOR_RESTART_RECOVERY: "@GKO-1451",
+    // GKO-1392 (ResolvedRefs absence) — still skipped in batch 8: the GKO
+    // operator continues to emit the ResolvedRefs condition. Originally
+    // skipped in batch 3, re-confirmed in batch 7. Re-add when the operator
+    // stops populating that condition.
   },
   MANAGEMENT_CONTEXT: {
     NON_EXISTING_ENV: "@GKO-472",
@@ -469,6 +473,24 @@ export const XRAY = {
     CRD_MISSING_NAME: "@GKO-2143",
     CRD_MISSING_CERT_FIELD: "@GKO-2146",
     CRD_INVALID_DATA_DATES: "@GKO-2148",
+    // ── Batch 8 — bucket H — clientCertificates visibility ─────
+    // Implemented as mAPI assertions on the application's settings.tls:
+    NO_ACTIVE_CERTS_DISPLAY: "@GKO-2219",
+    CERT_INFO_DISPLAY: "@GKO-2223",
+    ACTIVE_CERT_DISPLAY: "@GKO-2246",
+    EXPIRED_CERT_DISPLAY: "@GKO-2251",
+    // The rest of the bucket-H scenarios (subscription + cert lifecycle,
+    // PKCS7 bundles, rotation edge cases) are deferred to a follow-up
+    // batch: they require per-scenario PKI generation and multi-step
+    // subscription orchestration that needs dedicated fixtures.
+    // Tracking IDs (not tagged here until a concrete test exists):
+    //   Lifecycle: 2213, 2214, 2215, 2218, 2222, 2226, 2227, 2228, 2232,
+    //              2233, 2235, 2238, 2239, 2241, 2252, 2254, 2257, 2260,
+    //              2264
+    //   PKCS7 (no GKO analog; clientCertificates accepts PEM only):
+    //              2220, 2229, 2230, 2253, 2259
+    //   Duplicates of bucket I admission tests:
+    //              2237, 2240, 2242, 2256, 2262
   },
 } as const;
 
