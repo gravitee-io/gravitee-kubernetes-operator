@@ -51,6 +51,17 @@ export const XRAY = {
     POLICY_ON_API_WITHOUT_PLANS: "@GKO-1465",
     ENTRYPOINT_POLICY_MATRIX: "@GKO-1474",
     V2_V4_COMPATIBILITY: "@GKO-1448",
+    // Batch 8 — visibility & lifecycleState
+    V4_VISIBILITY_PRIVATE: "@GKO-172",
+    V4_VISIBILITY_PUBLIC: "@GKO-173",
+    V4_PUBLISHED_IN_PORTAL: "@GKO-179",
+    V4_UNPUBLISHED_NOT_IN_PORTAL: "@GKO-180",
+    V4_PORTAL_VISIBILITY_RULES: "@GKO-1466",
+    // GKO-1220 (auto-associated groups preserved across updates) — dropped
+    // from batch 8: depends on an APIM env-level "auto-associate group to
+    // new APIs" setting that is not exposed via mAPI or the test harness.
+    // Originally skipped in batch 7. Re-evaluate when the setting is
+    // configurable through the test cluster bootstrap.
   },
   MESSAGE_APIS: {
     DEPLOY_V4_MSG_SYNC_MGMT: "@GKO-72",
