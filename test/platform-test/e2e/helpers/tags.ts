@@ -454,6 +454,21 @@ export const XRAY = {
     REMOVE_CERT: "@GKO-2247",
     REMOVE_MULTI_CERTS: "@GKO-2250",
     DEPENDENCY_RESOLUTION: "@GKO-1449",
+    // ── Batch 8 — bucket I ─────────────────────────────────────
+    // Application clientCertificates admission rejections.
+    // GKO has no standalone MTLSCertificate CRD; these scenarios are
+    // exercised through the Application CR's spec.settings.app.tls.
+    CRD_BAD_PEM: "@GKO-2117",
+    CRD_FORBIDDEN_FIELD_UPDATE: "@GKO-2118",
+    CRD_START_EQ_END: "@GKO-2122",
+    CRD_NAME_TOO_LONG: "@GKO-2124",
+    CRD_MISSING_FIELDS: "@GKO-2125",
+    CRD_EXPIRED_REJECTED: "@GKO-2131",
+    CRD_INVALID_CHARS: "@GKO-2133",
+    CRD_END_BEFORE_START: "@GKO-2135",
+    CRD_MISSING_NAME: "@GKO-2143",
+    CRD_MISSING_CERT_FIELD: "@GKO-2146",
+    CRD_INVALID_DATA_DATES: "@GKO-2148",
   },
 } as const;
 
