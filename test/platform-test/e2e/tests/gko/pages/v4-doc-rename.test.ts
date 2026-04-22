@@ -15,12 +15,13 @@
  */
 
 /**
- * V4 documentation structure changes — batch 7.
+ * V4 documentation structure changes — batch 7 + 8.
  *
  * Xray tests:
- *   GKO-1469: Renaming a folder + page in the CR reconciles on the APIM side,
- *             no duplicate pages are left behind, and the new names are
- *             reflected in the exported CRD.
+ *   GKO-1469 / GKO-700: Renaming a folder + page in the CR reconciles on the
+ *             APIM side, no duplicate pages are left behind, and the new
+ *             names are reflected in the exported CRD. (GKO-700 covers the
+ *             same scenario as GKO-1469 — both are tagged on the same test.)
  *   GKO-1467: Cross-version confirmation that a page marked
  *             visibility=PUBLIC is exposed as public — extends the existing
  *             V2 (GKO-199) and V4 (GKO-282) coverage by verifying both
@@ -60,7 +61,7 @@ test.describe("V4 Documentation — Rename & cross-version visibility", () => {
 
   // ── GKO-1469: Folder + page rename reconciles ────────────────
 
-  test(`V4 folder and page rename reconciles without duplicates ${XRAY.PAGES.V4_DOC_RENAME} ${TAGS.REGRESSION}`, async ({
+  test(`V4 folder and page rename reconciles without duplicates ${XRAY.PAGES.V4_DOC_RENAME} ${XRAY.PAGES.V4_DOC_FOLDER_RENAME} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
