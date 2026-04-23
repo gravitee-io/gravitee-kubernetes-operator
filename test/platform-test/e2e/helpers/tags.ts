@@ -202,6 +202,11 @@ export const XRAY = {
     V2_JWT_DELETE: "@GKO-821",
     V2_OAUTH2_DELETE: "@GKO-825",
     API_APP_SYNCED_LAST_RECONCILE: "@GKO-839",
+    V4_APIKEY_SINGLE_KEY: "@GKO-2825",
+    V4_APIKEY_GATEWAY_CALL: "@GKO-2826",
+    V4_APIKEY_WEBHOOK_ACCEPTED: "@GKO-2827",
+    V4_APIKEY_KEY_REVOKED_ON_DELETE: "@GKO-2828",
+    V4_APIKEY_MIXED_WITH_KEYLESS: "@GKO-2829",
   },
   // NATIVE_APIS group removed — 10 tests were never committed due to the
   // APIM native-plan serialization bug (see "Batch 3 - Skipped Tests.md").

@@ -23,7 +23,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Application, Plan, PaginatedResult, Subscription, NotificationSetting } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -266,6 +266,47 @@ export class Mapi {
       throw new Error(`Failed to fetch Subscription ${subscriptionId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
     }
     return res.body;
+  }
+
+  // ── Subscription API Keys ──────────────────────────────────
+
+  async listSubscriptionApiKeys(
+    apiId: string,
+    subscriptionId: string,
+  ): Promise<PaginatedResult<SubscriptionApiKey>> {
+    const path = this.http.managementV2Path(
+      `/apis/${apiId}/subscriptions/${subscriptionId}/api-keys`,
+    );
+    const res = await this.http.get<PaginatedResult<SubscriptionApiKey>>(path);
+    if (res.status !== 200) {
+      throw new Error(
+        `Failed to list API keys for subscription ${subscriptionId}: ${res.status} ${res.statusText}`,
+      );
+    }
+    return res.body;
+  }
+
+  async waitForSubscriptionApiKeyCount(
+    apiId: string,
+    subscriptionId: string,
+    expectedCount: number,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      async () => {
+        const result = await this.listSubscriptionApiKeys(apiId, subscriptionId);
+        const actual = result.pagination?.totalCount ?? result.data.length;
+        if (actual !== expectedCount) {
+          throw new AssertionError({
+            message: `Expected ${expectedCount} API key(s) for subscription ${subscriptionId}, got ${actual}`,
+          });
+        }
+      },
+      {
+        description: `subscription ${subscriptionId} has ${expectedCount} API key(s)`,
+        ...options,
+      },
+    );
   }
 
   // ── Delete API ─────────────────────────────────────────────
