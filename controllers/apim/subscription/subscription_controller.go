@@ -21,12 +21,15 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -44,6 +47,7 @@ type Reconciler struct {
 	Log      logr.Logger
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+	Watcher  watch.Interface
 }
 
 // +kubebuilder:rbac:groups=gravitee.io,resources=subscriptions,verbs=get;list;watch;create;update;patch;delete;deletecollection
@@ -114,8 +118,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	newController := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Subscription{}).
-		WithEventFilter(predicate.LastSpecHashPredicate{}).
-		Complete(r)
+		WithEventFilter(predicate.LastSpecHashPredicate{})
+
+	if env.Config.EnableTemplating {
+		newController.Watches(&corev1.Secret{}, r.Watcher.WatchTemplatingSource("subscriptions"))
+	}
+
+	return newController.Complete(r)
 }

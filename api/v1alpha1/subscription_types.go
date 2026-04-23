@@ -152,6 +152,10 @@ func (s *Subscription) GetMetadata() map[string]string {
 	return clone
 }
 
+func (s *Subscription) GetCustomApiKey() string {
+	return s.Spec.CustomApiKey
+}
+
 // +kubebuilder:object:root=true
 type SubscriptionList struct {
 	metav1.TypeMeta `json:",inline"`
