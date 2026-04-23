@@ -430,6 +430,17 @@ export interface Subscription {
 export type SubscriptionStatus = "PENDING" | "ACCEPTED" | "CLOSED" | "REJECTED" | "PAUSED" | "RESUMED";
 export type SubscriptionConsumerStatus = "STARTED" | "STOPPED" | "FAILURE";
 
+export interface SubscriptionApiKey {
+  id: string;
+  key: string;
+  createdAt: string;
+  updatedAt?: string;
+  expireAt?: string;
+  revoked: boolean;
+  paused: boolean;
+  expired: boolean;
+}
+
 /** @deprecated Use SubscriptionConsumerStatus instead */
 export type ConsumerStatus = SubscriptionConsumerStatus;
 
