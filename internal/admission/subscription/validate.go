@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
@@ -36,6 +37,10 @@ func validateUpdate(
 	newObj runtime.Object,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
 	oldSub, ook := oldObj.(core.SubscriptionObject)
 	newSub, nok := newObj.(core.SubscriptionObject)
 	if ook && nok {
@@ -46,6 +51,11 @@ func validateUpdate(
 		errs.Add(validateEndingAt(newSub.GetEndingAt()))
 
 		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+		if errs.IsSevere() {
+			return errs
+		}
+
+		errs.Add(validateCustomApiKey(plan, newSub.GetCustomApiKey()))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -86,6 +96,10 @@ func validateImmutableProperties(
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
+	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	if errs.IsSevere() {
+		return errs
+	}
 
 	sub, ok := obj.(core.SubscriptionObject)
 	if !ok {
@@ -113,6 +127,11 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	}
 
 	errs.Add(validatePlan(sub, api))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(validateCustomApiKey(plan, sub.GetCustomApiKey()))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -225,6 +244,21 @@ func validatePlanSecurityType(plan core.PlanModel, planName string) *errors.Admi
 			planName, strings.Join(allowedPlanSecurities, ","),
 		)
 	}
+	return nil
+}
+
+func validateCustomApiKey(plan core.PlanModel, customApiKey string) *errors.AdmissionError {
+	if customApiKey == "" {
+		return nil
+	}
+
+	if plan.GetSecurityType() != "API_KEY" {
+		return errors.NewSeveref(
+			"customApiKey can only be set when subscribing to an API_KEY plan, got [%s]",
+			plan.GetSecurityType(),
+		)
+	}
+
 	return nil
 }
 

@@ -78,6 +78,8 @@ spec:
                 endingAt:
                   format: date-time
                   type: string
+                customApiKey:
+                  type: string
                 metadata:
                   additionalProperties:
                     type: string

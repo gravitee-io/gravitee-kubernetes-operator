@@ -65,6 +65,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	if spec.EndingAt != nil {
 		sub.EndingAt = *spec.EndingAt
 	}
+	sub.CustomApiKey = spec.CustomApiKey
 
 	status, err := apimClient.Subscription.Import(*sub,
 		subscription,

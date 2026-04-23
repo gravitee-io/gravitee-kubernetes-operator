@@ -271,6 +271,7 @@ func registerControllers(mgr manager.Manager) {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.SubscriptionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for subscriptions")
 		os.Exit(1)

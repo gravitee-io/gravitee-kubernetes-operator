@@ -649,6 +649,7 @@ _Appears in:_
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
+| `customApiKey` _string_ |  |  | Optional: \{\} <br /> |
 
 
 #### SubscriptionStatus
@@ -2544,6 +2545,7 @@ _Appears in:_
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
+| `customApiKey` _string_ |  |  | Optional: \{\} <br /> |
 
 
 

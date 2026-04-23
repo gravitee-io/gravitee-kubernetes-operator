@@ -36,6 +36,8 @@ type Type struct {
 	EndingAt *string `json:"endingAt,omitempty"`
 	// +kubebuilder:validation:Optional
 	Metadata map[string]string `json:"metadata,omitempty"`
+	// +kubebuilder:validation:Optional
+	CustomApiKey string `json:"customApiKey,omitempty"`
 }
 
 type ApiRef struct {
@@ -75,6 +77,10 @@ func (t *Type) GetMetadata() map[string]string {
 	return metadataCopy
 }
 
+func (t *Type) GetCustomApiKey() string {
+	return t.CustomApiKey
+}
+
 type AutomationSubscription struct {
 	HRID            string            `json:"hrid"`
 	ApplicationHrid string            `json:"applicationHrid"`
@@ -84,4 +90,5 @@ type AutomationSubscription struct {
 	StartingAt      string            `json:"startingAt"`
 	EndingAt        string            `json:"endingAt"`
 	Metadata        map[string]string `json:"metadata,omitempty"`
+	CustomApiKey    string            `json:"customApiKey,omitempty"`
 }

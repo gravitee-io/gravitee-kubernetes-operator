@@ -244,6 +244,7 @@ type SubscriptionModel interface {
 	GetPlan() string
 	GetEndingAt() *string
 	GetMetadata() map[string]string
+	GetCustomApiKey() string
 }
 
 type ConditionAware interface {

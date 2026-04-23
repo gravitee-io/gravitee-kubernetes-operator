@@ -165,6 +165,7 @@ func init() {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.SubscriptionList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&group.Reconciler{
