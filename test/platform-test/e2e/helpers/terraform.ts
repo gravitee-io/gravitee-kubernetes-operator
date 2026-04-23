@@ -16,8 +16,8 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { cp, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadGraviteeConfig } from "../../src/cmd/config.js";
@@ -33,6 +33,24 @@ export interface TfWorkspace {
 }
 
 /**
+ * Resolve the plugin-cache directory Terraform should use across all test
+ * workspaces. Each initWorkspace call otherwise creates a fresh temp dir and
+ * redownloads the APIM provider from GitHub, which is slow and flaky: it
+ * regularly exceeds the 30 s beforeAll timeout and occasionally hits GitHub
+ * rate-limiting or transient network errors ("context deadline exceeded").
+ *
+ * Respects TF_PLUGIN_CACHE_DIR if the caller already set one; otherwise uses
+ * the standard ~/.terraform.d/plugin-cache location (created if missing).
+ */
+async function resolvePluginCacheDir(): Promise<string> {
+  const existing = process.env["TF_PLUGIN_CACHE_DIR"];
+  if (existing) return existing;
+  const dir = path.join(homedir(), ".terraform.d", "plugin-cache");
+  await mkdir(dir, { recursive: true });
+  return dir;
+}
+
+/**
  * Create a Terraform workspace from a fixture directory.
  * Copies the fixture to a temp dir, loads APIM env vars, and runs `terraform init`.
  */
@@ -40,12 +58,14 @@ export async function initWorkspace(fixtureName: string): Promise<TfWorkspace> {
   const configPath = path.resolve(__dirname, "../../config.yaml");
   const config = await loadGraviteeConfig(configPath);
   const baseUrl = config.apim?.baseUrl ?? "http://localhost:30083";
+  const pluginCache = await resolvePluginCacheDir();
 
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),
     APIM_SERVER_URL: `${baseUrl}/automation`,
     APIM_USERNAME: config.apim?.auth?.username ?? "admin",
     APIM_PASSWORD: config.apim?.auth?.password ?? "admin",
+    TF_PLUGIN_CACHE_DIR: pluginCache,
   };
 
   const dir = await mkdtemp(path.join(tmpdir(), "e2e-tf-"));

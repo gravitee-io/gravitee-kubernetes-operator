@@ -41,10 +41,6 @@ test.describe("Terraform — subscription errors & app delete (batch 8)", () => 
   // ── GKO-1380: invalid subscription is rejected by apply ──────
 
   test(`Invalid subscription config produces a clear apply error ${XRAY.TERRAFORM.INVALID_SUBSCRIPTION_CONFIG} ${TAGS.REGRESSION}`, async () => {
-    // terraform init + apply (expected to fail) + destroy cleanup can exceed
-    // the default 30 s test timeout when the provider plugin cache is cold.
-    test.setTimeout(90_000);
-
     let ws: TfWorkspace | null = null;
     try {
       ws = await terraform.initWorkspace("terraform-1380-invalid-sub");
