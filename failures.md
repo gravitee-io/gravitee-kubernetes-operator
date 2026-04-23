@@ -1,12 +1,9 @@
 # Automation API related failures
 
-## E2E tests:
-Small fix to do (YAML export => flow execution case):
-- -- FAIL: chainsaw/v4-export-import (14.07s)
-Skipped tests as need Automation API support for notifications:
-- -- FAIL: chainsaw/remove-notification (69.51s)
-- -- FAIL: chainsaw/update-notification-events (38.17s)
-- -- FAIL: chainsaw/update-notification-grouprefs (50.52s)
+## Platform tests:
+2 Skipped tests in test/platform-test/e2e/tests/gko/notifications/notification-lifecycle.test.ts
+* Update notification events
+* Update notification group refs
 
 ## Integration tests:
 Skipped tests as need Automation API support for notifications:
