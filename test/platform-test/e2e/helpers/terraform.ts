@@ -39,15 +39,25 @@ export interface TfWorkspace {
  * regularly exceeds the 30 s beforeAll timeout and occasionally hits GitHub
  * rate-limiting or transient network errors ("context deadline exceeded").
  *
- * Respects TF_PLUGIN_CACHE_DIR if the caller already set one; otherwise uses
- * the standard ~/.terraform.d/plugin-cache location (created if missing).
+ * Respects TF_PLUGIN_CACHE_DIR if the caller already set one. Otherwise tries
+ * the standard ~/.terraform.d/plugin-cache location, and falls back to a
+ * tmpdir-scoped cache when the home directory is read-only or otherwise
+ * unwritable (CI containers, synthetic HOME). The fallback is still shared
+ * across workspaces within a single test run.
  */
 async function resolvePluginCacheDir(): Promise<string> {
   const existing = process.env["TF_PLUGIN_CACHE_DIR"];
   if (existing) return existing;
-  const dir = path.join(homedir(), ".terraform.d", "plugin-cache");
-  await mkdir(dir, { recursive: true });
-  return dir;
+
+  const preferred = path.join(homedir(), ".terraform.d", "plugin-cache");
+  try {
+    await mkdir(preferred, { recursive: true });
+    return preferred;
+  } catch {
+    const fallback = path.join(tmpdir(), "e2e-tf-plugin-cache");
+    await mkdir(fallback, { recursive: true });
+    return fallback;
+  }
 }
 
 /**
