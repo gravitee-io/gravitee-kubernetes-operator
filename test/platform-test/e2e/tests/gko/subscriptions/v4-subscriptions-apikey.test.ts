@@ -87,6 +87,14 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
     mapi,
     gateway,
   }) => {
+    // Budget: gateway.assertResponds polls for up to 30s waiting for the
+    // api-key plan to propagate from APIM to the gateway. Combined with the
+    // kubectl waits that precede it, the default 30s Playwright test timeout
+    // has no headroom and the test is killed mid-poll on slower CI runs.
+    // Locally the gateway sync is sub-second so 30s is plenty; in CI it can
+    // take 15–25s, pushing total test time well past 30s.
+    test.setTimeout(60_000);
+
     await kubectl.apply(fixture(API_APIKEY));
     await kubectl.apply(fixture(APP));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -141,6 +149,11 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
     mapi,
     gateway,
   }) => {
+    // Budget: see the comment on the GKO-2826 test above. This test has two
+    // gateway polls (one pre-delete, one post-delete), so the headroom need
+    // is even larger.
+    test.setTimeout(60_000);
+
     await kubectl.apply(fixture(API_APIKEY));
     await kubectl.apply(fixture(APP));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -204,6 +217,18 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
       await gateway.assertResponds(TWO_PLANS_API_PATH, {
         status: 200,
         headers: { "X-Gravitee-Api-Key": apiKey },
+      });
+    });
+
+    // Discriminator: a present but invalid api-key header is handled by the
+    // api-key plan (not keyless), so the gateway must reject. Without this
+    // step, the valid-key assertion above would pass even if api-key plan
+    // resolution regressed and keyless silently handled every header-bearing
+    // request.
+    await test.step("Api-key plan rejects traffic with an invalid api key header", async () => {
+      await gateway.assertNotResponds(TWO_PLANS_API_PATH, {
+        notStatus: 200,
+        headers: { "X-Gravitee-Api-Key": "bogus-invalid-key" },
       });
     });
   });
