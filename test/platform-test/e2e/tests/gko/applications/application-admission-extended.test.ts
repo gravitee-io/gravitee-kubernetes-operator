@@ -77,8 +77,9 @@ test.describe("Applications — admission & lifecycle (batch 8)", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(fixture(FIXTURE_578));
-    // Expect APIM dry-run rejection or admission rejection mentioning the URI.
-    expect(stderr.toLowerCase()).toMatch(/uri|redirect|invalid|denied/);
+    // Scoped to redirectUri-specific terms; a generic webhook failure (e.g.
+    // DNS/timeout) would no longer satisfy the assertion.
+    expect(stderr.toLowerCase()).toMatch(/uri|redirect/);
   });
 
   // ── GKO-579: SPA grant types restricted ──────────────────────
@@ -87,7 +88,7 @@ test.describe("Applications — admission & lifecycle (batch 8)", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(fixture(FIXTURE_579));
-    expect(stderr.toLowerCase()).toMatch(/grant|authorization_code|implicit|invalid|denied/);
+    expect(stderr.toLowerCase()).toMatch(/grant|authorization_code|implicit/);
   });
 
   // ── GKO-1382: name length edge case ──────────────────────────

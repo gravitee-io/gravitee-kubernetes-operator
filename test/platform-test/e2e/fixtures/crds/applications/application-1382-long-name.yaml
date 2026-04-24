@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-1382: Edge case for application name length — APIM enforces a 50-char
-# limit on application names. spec.name is 60 chars here so the dry-run via
-# admission should reject (or warn, depending on APIM behavior).
+# GKO-1382: Edge case for application name length. APIM does not enforce a
+# hard length limit on application `name` — a 60-char name is accepted via
+# the CRD + dry-run path. The test asserts the full name is preserved in
+# APIM (no silent truncation or rename) rather than expecting rejection.
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
@@ -24,7 +25,7 @@ spec:
     name: dev-ctx
     namespace: default
   name: "e2e-1382-this-app-name-is-far-too-long-and-exceeds-fifty-chars"
-  description: "E2E test: application name exceeds APIM length limit"
+  description: "E2E test: long application name is preserved (no truncation)"
   settings:
     app:
       type: SIMPLE

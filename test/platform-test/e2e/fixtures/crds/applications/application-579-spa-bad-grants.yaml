@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-579: SPA (Single-Page Application) accepts only `authorization_code` and
-# `implicit` grant types. Any other grant (e.g. `client_credentials`) should
-# be rejected by APIM dryRun via the admission webhook.
+# GKO-579: The original Xray scenario describes "SPA" (Single-Page Application)
+# accepting only authorization_code / implicit grants. APIM no longer exposes
+# a distinct SPA application type — the supported values are BACKEND_TO_BACKEND,
+# NATIVE, BROWSER, and WEB. BROWSER is the current equivalent of a SPA
+# (browser-hosted public client) and has the same grant-type restriction: any
+# other grant (e.g. client_credentials) should be rejected by the admission
+# webhook / APIM dryRun.
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
@@ -24,10 +28,10 @@ spec:
     name: dev-ctx
     namespace: default
   name: e2e-app-579-spa-bad
-  description: "E2E test: SPA app with invalid grant_type"
+  description: "E2E test: browser-hosted app with disallowed grant_type"
   settings:
     oauth:
-      applicationType: SPA
+      applicationType: BROWSER
       grantTypes:
         - client_credentials
       redirectUris:

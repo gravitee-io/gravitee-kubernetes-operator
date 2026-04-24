@@ -50,22 +50,6 @@ const APP_NO_CERTS = "crds/mtls-certificates/h-2219-app-no-certs.yaml";
 const APP_VALID_CERT = "crds/mtls-certificates/h-2223-app-valid-cert.yaml";
 const APP_PAST_END = "crds/mtls-certificates/h-2251-app-past-end.yaml";
 
-// mAPI serializes the certificate list in snake_case and uses epoch millis
-// for the validity window.
-interface AppClientCertView {
-  name?: string;
-  startsAt?: number;
-  endsAt?: number;
-  certificate?: string;
-}
-
-interface AppWithTls {
-  settings?: {
-    app?: { type?: string };
-    tls?: { client_certificates?: AppClientCertView[]; certificate_count?: number };
-  };
-}
-
 test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(APP_NO_CERTS)).catch(() => {});
@@ -84,7 +68,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
     const appId = (await kubectl.getStatus<{ id: string }>("application", APP)).id;
     await mapi.waitForApplicationMatches(appId, { name: APP });
 
-    const raw = (await mapi.fetchApplication(appId)) as unknown as AppWithTls;
+    const raw = await mapi.fetchApplication(appId);
     const certs = raw.settings?.tls?.client_certificates ?? [];
     expect(certs).toEqual([]);
   });
@@ -102,7 +86,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
     await expect
       .poll(
         async () => {
-          const raw = (await mapi.fetchApplication(appId)) as unknown as AppWithTls;
+          const raw = await mapi.fetchApplication(appId);
           const cert = raw.settings?.tls?.client_certificates?.[0];
           return {
             name: cert?.name,
@@ -132,7 +116,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
     await expect
       .poll(
         async () => {
-          const raw = (await mapi.fetchApplication(appId)) as unknown as AppWithTls;
+          const raw = await mapi.fetchApplication(appId);
           return raw.settings?.tls?.client_certificates?.length ?? 0;
         },
         { timeout: 10_000, intervals: [1_000] },
@@ -150,15 +134,13 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
 
     const appId = (await kubectl.getStatus<{ id: string }>("application", APP)).id;
 
-    // APIM treats endsAt as a hard filter: certificates whose endsAt has
-    // passed are removed from the application's client_certificates list
-    // returned by the management API. This is the data the console's
-    // "expired certificate" indicator is derived from — the absence of
-    // the cert from the active list is the signal.
+    // APIM filters out certificates whose endsAt has passed: they're removed
+    // from settings.tls.client_certificates in the management API response.
+    // The UI's "expired" indicator is driven by this absence.
     await expect
       .poll(
         async () => {
-          const raw = (await mapi.fetchApplication(appId)) as unknown as AppWithTls;
+          const raw = await mapi.fetchApplication(appId);
           return raw.settings?.tls?.client_certificates ?? [];
         },
         { timeout: 10_000, intervals: [1_000] },
