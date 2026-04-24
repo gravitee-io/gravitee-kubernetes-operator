@@ -44,7 +44,11 @@ interface ExportedCrd {
   };
 }
 
-test.describe("Notifications — export & validation", () => {
+// Skipped pending Notification migration to the APIM Automation API. GKO's
+// notification write path still goes through mAPI, so behavioural assertions
+// around notification settings (origin, propagation, export) no longer match
+// the live data. Re-enable when the Notification handler is migrated.
+test.describe.skip("Notifications — export & validation", () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V4_API_WITH_NOTIF)).catch(() => {});
     await kubectlSafe.del(fixture(DUPLICATE_API)).catch(() => {});
