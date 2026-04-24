@@ -488,6 +488,24 @@ export interface Application extends BaseApplication {
 export interface ApplicationSettings {
   app?: ApplicationSimpleSettings;
   oauth?: ApplicationOAuthSettings;
+  tls?: ApplicationTlsSettings;
+}
+
+/**
+ * mTLS settings for an application, as returned by the v1/v2 management API.
+ * Wire format is snake_case; epoch-millisecond timestamps are used for
+ * validity windows.
+ */
+export interface ApplicationTlsSettings {
+  client_certificates?: ApplicationClientCertificateView[];
+  certificate_count?: number;
+}
+
+export interface ApplicationClientCertificateView {
+  name?: string;
+  startsAt?: number;
+  endsAt?: number;
+  certificate?: string;
 }
 
 export interface ApplicationSimpleSettings {

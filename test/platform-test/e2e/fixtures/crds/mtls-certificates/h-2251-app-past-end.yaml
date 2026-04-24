@@ -13,7 +13,9 @@
 # limitations under the License.
 
 # GKO-2251: Application with a client cert whose endsAt is in the past.
-# APIM accepts this (end date is informational); mAPI surfaces the endsAt.
+# APIM accepts the apply but filters the expired cert out of the active list
+# returned via settings.tls.client_certificates. The test asserts that the
+# active list is empty.
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
@@ -23,7 +25,7 @@ spec:
     name: dev-ctx
     namespace: default
   name: e2e-app-h-2251
-  description: "E2E test (bucket H): cert with past endsAt still visible"
+  description: "E2E test (bucket H): cert with past endsAt filtered out"
   settings:
     app:
       type: SIMPLE

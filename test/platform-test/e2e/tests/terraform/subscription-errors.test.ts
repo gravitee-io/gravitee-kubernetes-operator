@@ -54,7 +54,11 @@ test.describe("Terraform — subscription errors & app delete (batch 8)", () => 
         stderr = `${e.stderr ?? ""}\n${e.stdout ?? ""}\n${e.message ?? ""}`;
       }
       expect(succeeded, "expected `terraform apply` to fail for invalid subscription").toBe(false);
-      expect(stderr.toLowerCase()).toMatch(/api|plan|not found|subscription|invalid|404|error/);
+      // Scoped to terms tied to the missing api_hrid/plan_hrid lookup. A
+      // generic TF error (e.g. provider auth failure) would still include
+      // "error" but not these — dropping the catch-all keeps the assertion
+      // meaningful.
+      expect(stderr.toLowerCase()).toMatch(/api_hrid|plan_hrid|does-not-exist|not found|404/);
     } finally {
       if (ws) await terraform.destroyWorkspace(ws);
     }

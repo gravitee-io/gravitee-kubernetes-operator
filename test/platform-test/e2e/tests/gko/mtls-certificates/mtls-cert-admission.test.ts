@@ -29,12 +29,9 @@
  *   GKO-2117: Bad PEM in deprecated clientCertificate
  *   GKO-2118: Both content and ref set on a clientCertificates entry
  *   GKO-2122: Cert startsAt == endsAt
- *   GKO-2124: Cert name exceeds APIM length limit
  *   GKO-2125: clientCertificates entry missing content/ref entirely
  *   GKO-2131: Cert with both dates in the past (already expired)
- *   GKO-2133: Cert name with invalid characters
  *   GKO-2135: Cert with endsAt before startsAt
- *   GKO-2143: Cert with empty name
  *   GKO-2146: Cert with explicit empty content (variant of 2125)
  *   GKO-2148: Cert with invalid date-format strings
  *
@@ -44,6 +41,17 @@
  * reject), document it as APIM-only and adjust during live-cluster
  * validation.
  *
+ * Deferred (not covered here):
+ *   GKO-2124: name exceeds APIM length limit
+ *   GKO-2133: name with invalid characters
+ *   GKO-2143: empty name
+ *   The GKO admission webhook rejects on PEM validity ("certificate is not
+ *   a valid pem") before any cert-name validator runs, so these name-rule
+ *   scenarios aren't reachable through the Application CRD path with the
+ *   current stub PEM. Exercising them requires a valid PEM plus confirmation
+ *   that APIM's dryRun actually enforces these name rules — tracked for a
+ *   follow-up batch alongside per-scenario PKI fixtures.
+ *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
  *   - A ManagementContext "dev-ctx" exists in the default namespace
@@ -51,84 +59,87 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const F = (name: string) => fixture(`crds/mtls-certificates/invalid/${name}.yaml`);
 
+// Every rejection regex is deliberately scoped to substrings that should
+// appear for the specific failure mode under test. Generic terms like
+// "invalid" or "denied" are intentionally excluded — they appear in almost
+// every admission/webhook error and would turn a real regression (e.g. the
+// admission path erroring for an unrelated reason) into a false pass.
 test.describe("mTLS — Application cert admission rejections (batch 8)", () => {
+  test.afterEach(async () => {
+    // Admission-rejected applies don't persist state, but be defensive in
+    // case a scenario ever slips past admission — the safety net matches the
+    // codebase's cleanup pattern.
+    await kubectlSafe.del(F("2117-bad-pem")).catch(() => {});
+    await kubectlSafe.del(F("2118-content-and-ref")).catch(() => {});
+    await kubectlSafe.del(F("2122-start-eq-end")).catch(() => {});
+    await kubectlSafe.del(F("2125-no-content-no-ref")).catch(() => {});
+    await kubectlSafe.del(F("2131-expired")).catch(() => {});
+    await kubectlSafe.del(F("2135-end-before-start")).catch(() => {});
+    await kubectlSafe.del(F("2146-missing-cert-content")).catch(() => {});
+    await kubectlSafe.del(F("2148-invalid-date-format")).catch(() => {});
+  });
+
   test(`Deprecated clientCertificate with non-PEM content is rejected ${XRAY.MTLS_CERTIFICATES.CRD_BAD_PEM} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2117-bad-pem"));
-    expect(stderr.toLowerCase()).toMatch(/parse|certificate|pem|tls|invalid|denied/);
+    // validateSingleClientCertificate → "failed to parse TLS client certificate"
+    expect(stderr.toLowerCase()).toMatch(/parse|pem|tls client certificate/);
   });
 
   test(`clientCertificates with both content and ref is rejected ${XRAY.MTLS_CERTIFICATES.CRD_FORBIDDEN_FIELD_UPDATE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2118-content-and-ref"));
-    expect(stderr.toLowerCase()).toMatch(/content|ref|both|cannot|denied/);
+    // validateClientCertificates → "content and ref cannot both be set"
+    expect(stderr.toLowerCase()).toMatch(/content and ref|both|cannot/);
   });
 
   test(`clientCertificate with startsAt equal to endsAt is rejected ${XRAY.MTLS_CERTIFICATES.CRD_START_EQ_END} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2122-start-eq-end"));
-    expect(stderr.toLowerCase()).toMatch(/date|window|valid|invalid|certificate|denied/);
-  });
-
-  test(`clientCertificate with overly long name is rejected ${XRAY.MTLS_CERTIFICATES.CRD_NAME_TOO_LONG} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const stderr = await kubectl.applyExpectFailure(F("2124-name-too-long"));
-    expect(stderr.toLowerCase()).toMatch(/name|length|too long|maximum|invalid|denied/);
+    expect(stderr.toLowerCase()).toMatch(/startsat|endsat|validity|window|never/);
   });
 
   test(`clientCertificates entry missing content and ref is rejected ${XRAY.MTLS_CERTIFICATES.CRD_MISSING_FIELDS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2125-no-content-no-ref"));
-    expect(stderr.toLowerCase()).toMatch(/content|ref|either|must be set|denied/);
+    // validateClientCertificates → "either content or ref must be set"
+    expect(stderr.toLowerCase()).toMatch(/either content or ref|must be set/);
   });
 
   test(`Already-expired clientCertificate is rejected ${XRAY.MTLS_CERTIFICATES.CRD_EXPIRED_REJECTED} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2131-expired"));
-    expect(stderr.toLowerCase()).toMatch(/expired|date|past|invalid|certificate|denied/);
-  });
-
-  test(`clientCertificate name with invalid characters is rejected ${XRAY.MTLS_CERTIFICATES.CRD_INVALID_CHARS} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const stderr = await kubectl.applyExpectFailure(F("2133-invalid-chars"));
-    expect(stderr.toLowerCase()).toMatch(/name|character|invalid|denied/);
+    expect(stderr.toLowerCase()).toMatch(/expired|past|endsat/);
   });
 
   test(`clientCertificate with endsAt before startsAt is rejected ${XRAY.MTLS_CERTIFICATES.CRD_END_BEFORE_START} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2135-end-before-start"));
-    expect(stderr.toLowerCase()).toMatch(/date|before|startsAt|endsAt|invalid|denied/);
-  });
-
-  test(`clientCertificate with empty name is rejected ${XRAY.MTLS_CERTIFICATES.CRD_MISSING_NAME} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const stderr = await kubectl.applyExpectFailure(F("2143-missing-name"));
-    expect(stderr.toLowerCase()).toMatch(/name|required|invalid|denied/);
+    expect(stderr.toLowerCase()).toMatch(/startsat|endsat|before|after/);
   });
 
   test(`clientCertificate with explicit empty content is rejected ${XRAY.MTLS_CERTIFICATES.CRD_MISSING_CERT_FIELD} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2146-missing-cert-content"));
-    expect(stderr.toLowerCase()).toMatch(/content|ref|either|must be set|denied/);
+    // validateClientCertificates → "either content or ref must be set"
+    expect(stderr.toLowerCase()).toMatch(/either content or ref|must be set/);
   });
 
   test(`clientCertificate with invalid date-format strings is rejected ${XRAY.MTLS_CERTIFICATES.CRD_INVALID_DATA_DATES} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(F("2148-invalid-date-format"));
-    expect(stderr.toLowerCase()).toMatch(/date|format|parse|invalid|denied/);
+    expect(stderr.toLowerCase()).toMatch(/date|rfc3339|parse|format/);
   });
 });
