@@ -93,7 +93,13 @@ test.describe("V4 Import/Export — Extended", () => {
   // will move off Accepted — neither of which the previous re-apply-original
   // formulation could catch.
 
-  test(`V4 CRD export/import round-trip preserves identity ${XRAY.IMPORT_EXPORT.V4_EXPORT_IMPORT_ROUND_TRIP} ${TAGS.REGRESSION}`, async ({
+  // Skipped pending APIM-13795: APIM emits `spec.analytics.reporterMetricsEnabled`
+  // on the shared Analytics schema for v4 proxy APIs, but the field is not
+  // declared on the GKO `ApiV4Definition` CRD. A round-trip re-apply fails
+  // with `strict decoding error: unknown field spec.analytics.reporterMetricsEnabled`
+  // on clusters with strict field validation (CircleCI). Re-enable once APIM
+  // stops leaking the native-only flag into the HTTP v4 response.
+  test.skip(`V4 CRD export/import round-trip preserves identity ${XRAY.IMPORT_EXPORT.V4_EXPORT_IMPORT_ROUND_TRIP} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {

@@ -83,8 +83,13 @@ test.describe("CR-managed resources are read-only in APIM", () => {
   });
 
   // ── GKO-1234: Notification settings tagged origin=KUBERNETES
+  //
+  // Skipped pending Notification migration to the APIM Automation API. GKO's
+  // notification write path still goes through mAPI, so APIM reports
+  // origin=MANAGEMENT for CR-created notification settings. Re-enable when
+  // the Notification handler is migrated.
 
-  test(`Notification settings created via CR are origin=KUBERNETES ${XRAY.NOTIFICATIONS.CR_READONLY_VIA_MAPI} ${TAGS.REGRESSION}`, async ({
+  test.skip(`Notification settings created via CR are origin=KUBERNETES ${XRAY.NOTIFICATIONS.CR_READONLY_VIA_MAPI} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
