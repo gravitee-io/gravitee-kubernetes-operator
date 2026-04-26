@@ -237,6 +237,12 @@ type SubscriptionObject interface {
 	SubscriptionModel
 }
 
+// +k8s:deepcopy-gen=false
+type ApiKeyModel interface {
+	GetKey() string
+	GetExpireAt() *string
+}
+
 type SubscriptionModel interface {
 	GetAppRef() ObjectRef
 	GetApiRef() ObjectRef
@@ -244,7 +250,7 @@ type SubscriptionModel interface {
 	GetPlan() string
 	GetEndingAt() *string
 	GetMetadata() map[string]string
-	GetCustomApiKey() string
+	GetApiKeys() []ApiKeyModel
 }
 
 type ConditionAware interface {

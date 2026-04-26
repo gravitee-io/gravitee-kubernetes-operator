@@ -55,7 +55,7 @@ func validateUpdate(
 			return errs
 		}
 
-		errs.Add(validateCustomApiKey(plan, newSub.GetCustomApiKey()))
+		errs.Add(validateApiKeys(plan, newSub.GetApiKeys()))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -131,7 +131,7 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
-	errs.Add(validateCustomApiKey(plan, sub.GetCustomApiKey()))
+	errs.Add(validateApiKeys(plan, sub.GetApiKeys()))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -247,16 +247,36 @@ func validatePlanSecurityType(plan core.PlanModel, planName string) *errors.Admi
 	return nil
 }
 
-func validateCustomApiKey(plan core.PlanModel, customApiKey string) *errors.AdmissionError {
-	if customApiKey == "" {
+func validateApiKeys(plan core.PlanModel, apiKeys []core.ApiKeyModel) *errors.AdmissionError {
+	if len(apiKeys) == 0 {
 		return nil
 	}
 
 	if plan.GetSecurityType() != "API_KEY" {
 		return errors.NewSeveref(
-			"customApiKey can only be set when subscribing to an API_KEY plan, got [%s]",
+			"apiKeys can only be set when subscribing to an API_KEY plan, got [%s]",
 			plan.GetSecurityType(),
 		)
+	}
+
+	seen := make(map[string]bool, len(apiKeys))
+	for _, k := range apiKeys {
+		if seen[k.GetKey()] {
+			return errors.NewSeveref(
+				"duplicate key [%s] in apiKeys",
+				k.GetKey(),
+			)
+		}
+		seen[k.GetKey()] = true
+
+		if k.GetExpireAt() != nil {
+			if err := validateEndingAt(k.GetExpireAt()); err != nil {
+				return errors.NewSeveref(
+					"invalid expireAt for key [%s]: %s",
+					k.GetKey(), err.Message,
+				)
+			}
+		}
 	}
 
 	return nil

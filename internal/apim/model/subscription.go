@@ -26,15 +26,15 @@ type SubscriptionRequest struct {
 }
 
 type Subscription struct {
-	ID           string            `json:"id"`
-	ApiID        string            `json:"apiId"`
-	AppID        string            `json:"applicationId"`
-	PlanID       string            `json:"planId"`
-	Status       string            `json:"status"`
-	StartingAt   string            `json:"startingAt"`
-	EndingAt     string            `json:"endingAt"`
-	Metadata     map[string]string `json:"metadata,omitempty"`
-	CustomApiKey string            `json:"customApiKey,omitempty"`
+	ID         string                              `json:"id"`
+	ApiID      string                              `json:"apiId"`
+	AppID      string                              `json:"applicationId"`
+	PlanID     string                              `json:"planId"`
+	Status     string                              `json:"status"`
+	StartingAt string                              `json:"startingAt"`
+	EndingAt   string                              `json:"endingAt"`
+	Metadata   map[string]string                   `json:"metadata,omitempty"`
+	ApiKeys    []subscription.AutomationApiKeySpec `json:"apiKeys,omitempty"`
 }
 
 type SubscriptionStatus struct {
@@ -53,6 +53,6 @@ func (s *Subscription) ToAutomation() subscription.AutomationSubscription {
 		StartingAt:      s.StartingAt,
 		EndingAt:        s.EndingAt,
 		Metadata:        s.Metadata,
-		CustomApiKey:    s.CustomApiKey,
+		ApiKeys:         s.ApiKeys,
 	}
 }

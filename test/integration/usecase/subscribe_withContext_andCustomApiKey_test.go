@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -35,7 +36,7 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should subscribe with custom API key loaded from a secret", func() {
-		const customAPIKey = "my-custom-api-key"
+		const customAPIKey = "my-custom-api-key-at-least-32-chars"
 
 		fixtures := fixture.Builder().
 			AddSecret("usecase/subscribe-to-api-key-plan/resources/custom-api-key-secret.yml").
@@ -50,7 +51,9 @@ var _ = Describe("Usecase", labels.WithContext, func() {
 		fixtures.Subscription.Spec.API.Name = fixtures.APIv4.Name
 		fixtures.Subscription.Spec.App.Name = fixtures.Application.Name
 		fixtures.Subscription.Spec.Plan = "API_KEY"
-		fixtures.Subscription.Spec.CustomApiKey = customAPIKey
+		fixtures.Subscription.Spec.ApiKeys = []subscription.ApiKeySpec{
+			{Key: customAPIKey},
+		}
 
 		By("creating secret, API, application and subscription resources")
 		fixtures.Apply()

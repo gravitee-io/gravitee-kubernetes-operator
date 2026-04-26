@@ -152,8 +152,8 @@ func (s *Subscription) GetMetadata() map[string]string {
 	return clone
 }
 
-func (s *Subscription) GetCustomApiKey() string {
-	return s.Spec.CustomApiKey
+func (s *Subscription) GetApiKeys() []core.ApiKeyModel {
+	return s.Spec.GetApiKeys()
 }
 
 // +kubebuilder:object:root=true

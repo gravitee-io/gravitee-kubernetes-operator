@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Secret
+apiVersion: gravitee.io/v1alpha1
+kind: Subscription
 metadata:
-  name: custom-api-key-secret
-type: Opaque
-stringData:
-  customApiKey: my-custom-api-key-at-least-32-chars
+  name: api-key-subscription
+spec:
+  api:
+    name: api-v4-with-api-key
+  application:
+    name: simple-application
+  plan: API_KEY
+  endingAt: "2040-12-25T09:12:28Z"
+  apiKeys:
+    - key: "my-custom-api-key-1-at-least-32c"
+      expireAt: "2040-12-25T09:12:28Z"
+    - key: "my-custom-api-key-2-at-least-32c"
+      expireAt: "2028-12-25T09:12:28Z"
