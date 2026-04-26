@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	submodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -65,7 +66,9 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	if spec.EndingAt != nil {
 		sub.EndingAt = *spec.EndingAt
 	}
-	sub.CustomApiKey = spec.CustomApiKey
+	for _, k := range spec.ApiKeys {
+		sub.ApiKeys = append(sub.ApiKeys, submodel.AutomationApiKeySpec(k))
+	}
 
 	status, err := apimClient.Subscription.Import(*sub,
 		subscription,

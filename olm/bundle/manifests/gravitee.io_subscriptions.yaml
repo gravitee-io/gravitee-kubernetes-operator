@@ -75,10 +75,22 @@ spec:
                   required:
                     - name
                   type: object
+                apiKeys:
+                  items:
+                    properties:
+                      expireAt:
+                        format: date-time
+                        type: string
+                      key:
+                        maxLength: 256
+                        minLength: 32
+                        type: string
+                    required:
+                      - key
+                    type: object
+                  type: array
                 endingAt:
                   format: date-time
-                  type: string
-                customApiKey:
                   type: string
                 metadata:
                   additionalProperties:

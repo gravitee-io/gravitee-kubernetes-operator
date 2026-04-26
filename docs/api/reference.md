@@ -649,7 +649,7 @@ _Appears in:_
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
-| `customApiKey` _string_ |  |  | Optional: \{\} <br /> |
+| `apiKeys` _[ApiKeySpec](#apikeyspec) array_ |  |  | Optional: \{\} <br /> |
 
 
 #### SubscriptionStatus
@@ -2521,6 +2521,41 @@ _Appears in:_
 
 
 
+#### ApiKeySpec
+
+
+
+
+
+
+
+_Appears in:_
+- [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ |  |  | MaxLength: 256 <br />MinLength: 32 <br />Required: \{\} <br /> |
+| `expireAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
+
+
+
+
+#### AutomationApiKeySpec
+
+
+
+
+
+
+
+_Appears in:_
+- [AutomationSubscription](#automationsubscription)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ |  |  |  |
+| `expireAt` _string_ |  |  |  |
 
 
 
@@ -2545,7 +2580,7 @@ _Appears in:_
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
-| `customApiKey` _string_ |  |  | Optional: \{\} <br /> |
+| `apiKeys` _[ApiKeySpec](#apikeyspec) array_ |  |  | Optional: \{\} <br /> |
 
 
 

@@ -36,21 +36,25 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 
 	fixtures := fixture.
 		Builder().
-		WithAPIv4(constants.ApiV4WithJWTPlanFile).
+		WithAPIv4(constants.ApiV4WithApiKeyPlanFile).
 		WithApplication(constants.ApplicationWithClientIDFile).
 		WithSubscription(constants.SubscriptionFile).
 		WithContext(constants.ContextWithCredentialsFile).
 		Build()
 
-	clientId := random.GetName()
-	fixtures.Application.Spec.Settings.App.ClientID = &clientId
+	clientID := random.GetName()
+	fixtures.Application.Spec.Settings.App.ClientID = &clientID
+	fixtures.Subscription.Spec.API.Name = fixtures.APIv4.Name
+	fixtures.Subscription.Spec.App.Name = fixtures.Application.Name
 	fixtures.Subscription.Namespace = constants.Namespace
 
 	fixtures.Apply()
 
-	It("should fail if apiKeys is set on non API_KEY plan", func() {
+	It("should fail if apiKeys contains duplicate keys", func() {
+		fixtures.Subscription.Spec.Plan = "API_KEY"
 		fixtures.Subscription.Spec.ApiKeys = []subscription.ApiKeySpec{
-			{Key: "my-custom-key-with-at-least-32-c"},
+			{Key: "same-key-value-at-least-32-chars!!"},
+			{Key: "same-key-value-at-least-32-chars!!"},
 		}
 		Eventually(func() error {
 			Expect(admissionCtrl.Default(ctx, fixtures.Subscription)).ToNot(HaveOccurred())
@@ -58,7 +62,7 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.Equals(
 				"error",
 				errors.NewSeveref(
-					"apiKeys can only be set when subscribing to an API_KEY plan, got [JWT]",
+					"duplicate key [same-key-value-at-least-32-chars!!] in apiKeys",
 				),
 				err,
 			)
