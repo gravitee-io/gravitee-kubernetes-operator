@@ -19,7 +19,7 @@ export APIM_IMAGE_REGISTRY=graviteeio.azurecr.io
 export APIM_410_TAG=4.10.x-latest            # initial APIM image tag
 export APIM_410_CHART=4.10.*          # initial Helm chart version
 export APIM_LATEST_TAG=master-latest  # upgrade target image tag
-export APIM_LATEST_CHART=4.11.*       # upgrade target chart version
+export APIM_LATEST_CHART=4.12.*       # upgrade target chart version
 
 # GKO
 export GKO_410_IMAGE=graviteeio/kubernetes-operator:4.10.9
@@ -33,9 +33,6 @@ export PKI_JWT=examples/usecase/subscribe-to-jwt-plan/pki
 export PKI_MTLS=examples/usecase/subscribe-to-mtls-plan/pki
 export RUNBOOK=runbooks/upgrade-lifecycle
 
-# Branch
-export GIT_CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-export GIT_410_BRANCH=4.10.x
 ```
 
 ---
@@ -58,8 +55,8 @@ for component in apim-gateway apim-management-api apim-management-ui; do
 done
 
 # MongoDB
-docker pull mongo:7.0.30-jammy
-kind load docker-image mongo:7.0.30-jammy --name gravitee
+docker pull mongo:7.0.31-jammy
+kind load docker-image mongo:7.0.31-jammy --name gravitee
 
 ```
 
@@ -70,14 +67,19 @@ kind load docker-image mongo:7.0.30-jammy --name gravitee
 kubectl create secret tls tls-server \
   --cert=${PKI_MTLS}/server.crt --key=${PKI_MTLS}/server.key \
   --dry-run=client -o yaml | kubectl apply -f -
-
+  
 # Install APIM 4.10 with explicit image tags
 helm repo add graviteeio https://helm.gravitee.io
 helm repo update graviteeio
 
+kubectl apply -f $RUNBOOK/mongo-standalone.yaml
+kubectl wait --for=condition=ready pod -l app=mongodb --timeout=360s
+
 helm upgrade --install apim oci://graviteeio.azurecr.io/helm/apim3 \
   -f $APIM_VALUES \
   --version "$APIM_410_CHART" \
+  --set mongodb.enabled=false \
+  --set mongo.uri=mongodb://mongodb:27017/gravitee \
   --set gateway.image.repository=gravitee-apim-gateway \
   --set gateway.image.tag=dev \
   --set api.image.repository=gravitee-apim-management-api \
@@ -153,12 +155,8 @@ curl -s -o /dev/null -w "---\nstatus %{http_code}\n---\n" http://localhost:30082
 ### 3.1 Load new APIM images
 
 ```bash
-# TODO remove this once APIM images are published to the public registry
-export APIM_LATEST_TAG=local 
-export APIM_IMAGE_REGISTRY=graviteeio
 for component in apim-gateway apim-management-api apim-management-ui; do
-  # TODO uncomment when APIM images are published to the public registry
-  # docker pull ${APIM_IMAGE_REGISTRY}/${component}:${APIM_LATEST_TAG}
+  docker pull ${APIM_IMAGE_REGISTRY}/${component}:${APIM_LATEST_TAG}
   docker tag  ${APIM_IMAGE_REGISTRY}/${component}:${APIM_LATEST_TAG} gravitee-${component}:dev
   kind load docker-image gravitee-${component}:dev --name gravitee
 done
@@ -173,16 +171,14 @@ by pinning the MongoDB subchart values so Helm sees no diff on that resource.
 helm upgrade apim oci://graviteeio.azurecr.io/helm/apim3 \
   -f $APIM_VALUES \
   --version "$APIM_LATEST_CHART" \
+  --set mongodb.enabled=false \
+  --set mongo.uri=mongodb://mongodb:27017/gravitee \
   --set gateway.image.repository=gravitee-apim-gateway \
   --set gateway.image.tag=dev \
   --set api.image.repository=gravitee-apim-management-api \
   --set api.image.tag=dev \
   --set ui.image.repository=gravitee-apim-management-ui \
-  --set ui.image.tag=dev \
-  --set mongodb.enabled=true \
-  --set mongodb.architecture=standalone \
-  --set mongodb.auth.enabled=false \
-  --reuse-values
+  --set ui.image.tag=dev
 ```
 
 > `--reuse-values` prevents Helm from recomputing the MongoDB subchart template,
@@ -198,7 +194,7 @@ kubectl rollout status deployment/apim-apim3-api --timeout=120s
 Verify MongoDB pod did **not** restart:
 
 ```bash
-kubectl get pod -l app.kubernetes.io/component=mongodb -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}'
+kubectl get pod -l app=mongodb -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}'
 # Expected: 0
 ```
 
@@ -215,10 +211,7 @@ curl -s -o /dev/null -w "---\nstatus %{http_code}\n---\n" \
 ### 3.4 Upgrade GKO
 
 ```bash
-#TODO remove this once GKO is published to the public registry
-export GKO_LATEST_IMAGE=gko:dev
-# TODO uncomment when GKO is published to the public registry
-# docker pull $GKO_LATEST_IMAGE
+docker pull $GKO_LATEST_IMAGE
 kind load docker-image $GKO_LATEST_IMAGE --name gravitee
 
 helm upgrade gko helm/gko \
