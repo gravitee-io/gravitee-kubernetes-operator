@@ -126,6 +126,12 @@ func setSubscriptionID(subscription *v1alpha1.Subscription, sub *model.Subscript
 		sub.ID = refs.NewNamespacedNameFromObject(subscription).HRID()
 		return false
 	}
+
+	if subscription.Status.ID != "" {
+		sub.ID = subscription.Status.ID
+		return true
+	}
+
 	sub.ID = string(subscription.UID)
 	return true
 }
