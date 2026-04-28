@@ -34,10 +34,11 @@ const NOTIFICATION = "crds/notifications/notification-shared.yaml";
 const V4_API = "crds/notifications/v4-api-using-shared-notification.yaml";
 const V2_API = "crds/notifications/v2-api-using-shared-notification.yaml";
 
-// Skipped pending Notification migration to the APIM Automation API. GKO's
-// notification write path still goes through mAPI, so behavioural assertions
-// around notification settings no longer match the live data. Re-enable when
-// the Notification handler is migrated.
+// Skipped: master-GKO ↔ APIM 4.11 payload mismatch. Master GKO sends embedded
+// `consoleNotificationConfiguration` via the Automation API v4 import; APIM
+// 4.11 silently drops it (PORTAL setting comes back with hooks/groups empty
+// and origin=MANAGEMENT). Verified passing with GKO 4.11.4 against APIM 4.11.
+// Re-enable when the test setup pins APIM ≥ 4.12.
 test.describe.skip("Notification CR — Cross Version", () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V2_API)).catch(() => {});
