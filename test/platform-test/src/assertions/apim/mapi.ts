@@ -286,27 +286,40 @@ export class Mapi {
     return res.body;
   }
 
+  // The /api-keys listing returns active + revoked + expired keys with no
+  // server-side filter. Combined with deterministic subscription HRIDs and
+  // persistent APIM MongoDB across runs, the raw count is unstable. Active
+  // keys are the only ones that matter for behavioural assertions.
+  async listActiveSubscriptionApiKeys(
+    apiId: string,
+    subscriptionId: string,
+  ): Promise<SubscriptionApiKey[]> {
+    const result = await this.listSubscriptionApiKeys(apiId, subscriptionId);
+    return result.data.filter((k) => !k.revoked && !k.expired);
+  }
+
   async waitForSubscriptionApiKeyCount(
     apiId: string,
     subscriptionId: string,
     expectedCount: number,
     options: PollOptions = {},
-  ): Promise<void> {
+  ): Promise<SubscriptionApiKey[]> {
+    let active: SubscriptionApiKey[] = [];
     await poll(
       async () => {
-        const result = await this.listSubscriptionApiKeys(apiId, subscriptionId);
-        const actual = result.pagination?.totalCount ?? result.data.length;
-        if (actual !== expectedCount) {
+        active = await this.listActiveSubscriptionApiKeys(apiId, subscriptionId);
+        if (active.length !== expectedCount) {
           throw new AssertionError({
-            message: `Expected ${expectedCount} API key(s) for subscription ${subscriptionId}, got ${actual}`,
+            message: `Expected ${expectedCount} active API key(s) for subscription ${subscriptionId}, got ${active.length}`,
           });
         }
       },
       {
-        description: `subscription ${subscriptionId} has ${expectedCount} API key(s)`,
+        description: `subscription ${subscriptionId} has ${expectedCount} active API key(s)`,
         ...options,
       },
     );
+    return active;
   }
 
   // ── Delete API ─────────────────────────────────────────────
