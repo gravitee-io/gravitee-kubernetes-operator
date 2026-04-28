@@ -135,6 +135,13 @@ installation:
     proxyPath:
       management: /management
       portal: /portal
+  standalone:
+    console:
+      urls:
+        - http://localhost:30080
+    portal:
+      urls:
+        - http://localhost:30080
 
 extraObjects:
   - apiVersion: v1
