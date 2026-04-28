@@ -26,15 +26,16 @@ type SubscriptionRequest struct {
 }
 
 type Subscription struct {
-	ID         string                              `json:"id"`
-	ApiID      string                              `json:"apiId"`
-	AppID      string                              `json:"applicationId"`
-	PlanID     string                              `json:"planId"`
-	Status     string                              `json:"status"`
-	StartingAt string                              `json:"startingAt"`
-	EndingAt   string                              `json:"endingAt"`
-	Metadata   map[string]string                   `json:"metadata,omitempty"`
-	ApiKeys    []subscription.AutomationApiKeySpec `json:"apiKeys,omitempty"`
+	ID                    string                              `json:"id"`
+	ApiID                 string                              `json:"apiId"`
+	AppID                 string                              `json:"applicationId"`
+	PlanID                string                              `json:"planId"`
+	Status                string                              `json:"status"`
+	StartingAt            string                              `json:"startingAt"`
+	EndingAt              string                              `json:"endingAt"`
+	Metadata              map[string]string                   `json:"metadata,omitempty"`
+	ApiKeys               []subscription.AutomationApiKeySpec `json:"apiKeys,omitempty"`
+	ConsumerConfiguration *subscription.ConsumerConfiguration `json:"consumerConfiguration,omitempty"`
 }
 
 type SubscriptionStatus struct {
@@ -45,14 +46,15 @@ type SubscriptionStatus struct {
 
 func (s *Subscription) ToAutomation() subscription.AutomationSubscription {
 	return subscription.AutomationSubscription{
-		HRID:            s.ID,
-		ApiHrid:         s.ApiID,
-		ApplicationHrid: s.AppID,
-		PlanHrid:        s.PlanID,
-		Status:          s.Status,
-		StartingAt:      s.StartingAt,
-		EndingAt:        s.EndingAt,
-		Metadata:        s.Metadata,
-		ApiKeys:         s.ApiKeys,
+		HRID:                  s.ID,
+		ApiHrid:               s.ApiID,
+		ApplicationHrid:       s.AppID,
+		PlanHrid:              s.PlanID,
+		Status:                s.Status,
+		StartingAt:            s.StartingAt,
+		EndingAt:              s.EndingAt,
+		Metadata:              s.Metadata,
+		ApiKeys:               s.ApiKeys,
+		ConsumerConfiguration: s.ConsumerConfiguration,
 	}
 }

@@ -650,6 +650,7 @@ _Appears in:_
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
 | `apiKeys` _[ApiKeySpec](#apikeyspec) array_ |  |  | Optional: \{\} <br /> |
+| `consumerConfiguration` _[ConsumerConfiguration](#consumerconfiguration)_ |  |  | Optional: \{\} <br /> |
 
 
 #### SubscriptionStatus
@@ -2560,6 +2561,26 @@ _Appears in:_
 
 
 
+#### ConsumerConfiguration
+
+
+
+
+
+
+
+_Appears in:_
+- [AutomationSubscription](#automationsubscription)
+- [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entrypointId` _string_ |  |  | Required: \{\} <br /> |
+| `channel` _string_ |  |  | Optional: \{\} <br /> |
+| `entrypointConfiguration` _[GenericStringMap](#genericstringmap)_ |  |  | Optional: \{\} <br /> |
+
+
 
 
 #### Type
@@ -2581,6 +2602,7 @@ _Appears in:_
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
 | `apiKeys` _[ApiKeySpec](#apikeyspec) array_ |  |  | Optional: \{\} <br /> |
+| `consumerConfiguration` _[ConsumerConfiguration](#consumerconfiguration)_ |  |  | Optional: \{\} <br /> |
 
 
 
@@ -2598,6 +2620,7 @@ _Appears in:_
 
 
 _Appears in:_
+- [ConsumerConfiguration](#consumerconfiguration)
 - [DynamicPropertyService](#dynamicpropertyservice)
 - [Endpoint](#endpoint)
 - [EndpointDiscoveryService](#endpointdiscoveryservice)
