@@ -40,7 +40,12 @@ spec:
           type: llm-proxy
           inheritConfiguration: false
           configuration:
+            provider: OPEN_AI
             target: https://api.openai.com
+            models:
+              - name: gpt-4o
+            authentication:
+              type: NONE
           secondary: false
   flowExecution:
     mode: DEFAULT
