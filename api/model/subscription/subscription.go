@@ -16,6 +16,7 @@ package subscription
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
 
@@ -33,6 +34,15 @@ type ApiKeySpec struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Format:=date-time
 	ExpireAt *string `json:"expireAt,omitempty"`
+}
+
+type ConsumerConfiguration struct {
+	// +kubebuilder:validation:Required
+	EntrypointID string `json:"entrypointId"`
+	// +kubebuilder:validation:Optional
+	Channel string `json:"channel,omitempty"`
+	// +kubebuilder:validation:Optional
+	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty"`
 }
 
 func (k *ApiKeySpec) GetKey() string {
@@ -57,6 +67,8 @@ type Type struct {
 	Metadata map[string]string `json:"metadata,omitempty"`
 	// +kubebuilder:validation:Optional
 	ApiKeys []ApiKeySpec `json:"apiKeys,omitempty"`
+	// +kubebuilder:validation:Optional
+	ConsumerConfiguration *ConsumerConfiguration `json:"consumerConfiguration,omitempty"`
 }
 
 type ApiRef struct {
@@ -110,13 +122,14 @@ type AutomationApiKeySpec struct {
 }
 
 type AutomationSubscription struct {
-	HRID            string                 `json:"hrid"`
-	ApplicationHrid string                 `json:"applicationHrid"`
-	PlanHrid        string                 `json:"planHrid"`
-	ApiHrid         string                 `json:"apiHrid"`
-	Status          string                 `json:"status"`
-	StartingAt      string                 `json:"startingAt"`
-	EndingAt        string                 `json:"endingAt"`
-	Metadata        map[string]string      `json:"metadata,omitempty"`
-	ApiKeys         []AutomationApiKeySpec `json:"apiKeys,omitempty"`
+	HRID                  string                 `json:"hrid"`
+	ApplicationHrid       string                 `json:"applicationHrid"`
+	PlanHrid              string                 `json:"planHrid"`
+	ApiHrid               string                 `json:"apiHrid"`
+	Status                string                 `json:"status"`
+	StartingAt            string                 `json:"startingAt"`
+	EndingAt              string                 `json:"endingAt"`
+	Metadata              map[string]string      `json:"metadata,omitempty"`
+	ApiKeys               []AutomationApiKeySpec `json:"apiKeys,omitempty"`
+	ConsumerConfiguration *ConsumerConfiguration `json:"consumerConfiguration,omitempty"`
 }

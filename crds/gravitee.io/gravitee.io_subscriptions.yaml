@@ -89,6 +89,18 @@ spec:
                   required:
                     - name
                   type: object
+                consumerConfiguration:
+                  properties:
+                    channel:
+                      type: string
+                    entrypointConfiguration:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    entrypointId:
+                      type: string
+                  required:
+                    - entrypointId
+                  type: object
                 endingAt:
                   format: date-time
                   type: string

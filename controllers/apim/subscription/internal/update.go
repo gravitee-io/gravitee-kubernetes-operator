@@ -69,6 +69,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	for _, k := range spec.ApiKeys {
 		sub.ApiKeys = append(sub.ApiKeys, submodel.AutomationApiKeySpec(k))
 	}
+	sub.ConsumerConfiguration = spec.ConsumerConfiguration
 
 	status, err := apimClient.Subscription.Import(*sub,
 		subscription,
