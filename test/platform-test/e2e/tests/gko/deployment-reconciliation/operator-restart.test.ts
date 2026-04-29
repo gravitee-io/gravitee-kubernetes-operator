@@ -24,6 +24,7 @@
  *             and a follow-up CR update reconciles cleanly.
  */
 
+import { readFileSync } from "node:fs";
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
@@ -68,6 +69,50 @@ test.describe("Operator restart — recovery", () => {
     await test.step("APIM still sees the same API after restart", async () => {
       const api = await mapi.fetchApi(apiIdBefore);
       expect(api.name).toBe(API_NAME);
+    });
+
+    // The previous two assertions only confirm pre-restart state still
+    // looks healthy; they don't prove the new operator process has
+    // re-listed CRs or can reconcile *future* changes. Apply a spec
+    // change and assert APIM picks it up — that's what proves the
+    // reconcile loop is live again.
+    await test.step("Post-restart spec change reconciles into APIM", async () => {
+      const original = readFileSync(fixture(ORIGINAL), "utf8");
+      const updated = original
+        .replace(/version: "1\.0\.0"/, 'version: "1.0.1"')
+        .replace(
+          /description: "E2E test: Operator restart recovery"/,
+          'description: "E2E test: Operator restart recovery (post-rollout update)"',
+        );
+      expect(updated, "version/description bump must take effect").not.toBe(original);
+
+      // The validating webhook is part of the operator that just
+      // restarted; the readiness probe can flip to Ready a few
+      // seconds before the webhook server actually accepts TLS
+      // connections. Retry briefly to absorb that race.
+      const applyDeadline = Date.now() + 60_000;
+      let lastErr: unknown;
+      while (Date.now() < applyDeadline) {
+        try {
+          await kubectl.applyString(updated);
+          lastErr = undefined;
+          break;
+        } catch (err) {
+          lastErr = err;
+          await new Promise((r) => setTimeout(r, 2_000));
+        }
+      }
+      if (lastErr) throw lastErr;
+      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
+
+      await mapi.waitForApiMatches(
+        apiIdBefore,
+        {
+          apiVersion: "1.0.1",
+          description: "E2E test: Operator restart recovery (post-rollout update)",
+        },
+        { description: "post-restart update reconciles into APIM" },
+      );
     });
     // Cleanup handled by afterEach — the operator needs a few seconds after
     // the webhook endpoints recover before accepting deletes.

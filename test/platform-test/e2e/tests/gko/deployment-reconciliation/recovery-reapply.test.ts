@@ -25,6 +25,7 @@
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
+import type { ApiV4 } from "../../../../src/types/apim.js";
 
 const V4_API = "crds/api-v4-definitions/v4-proxy-api-started.yaml";
 
@@ -37,6 +38,12 @@ test.describe("Recovery — reapplying configuration", () => {
     kubectl,
     mapi,
   }) => {
+    // The full recovery cycle (apply → wait Accepted → delete → wait
+    // for APIM cleanup → reapply → wait Accepted) is server-side bound
+    // and routinely sits at ~25-30s before any verification runs. Same
+    // pattern as operator-restart.test.ts.
+    test.slow();
+
     const API_NAME = "e2e-v4-start-stop";
 
     await test.step("Initial apply", async () => {
@@ -47,6 +54,7 @@ test.describe("Recovery — reapplying configuration", () => {
     const firstId = (
       await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME)
     ).id;
+    expect(typeof firstId).toBe("string");
 
     await test.step("Delete CR and wait for APIM cleanup", async () => {
       await kubectl.del(fixture(V4_API));
@@ -62,12 +70,41 @@ test.describe("Recovery — reapplying configuration", () => {
       await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME)
     ).id;
 
-    // The new API in APIM is a fresh resource — just confirm it exists and
-    // is reachable. The IDs may differ (new UUID) or match (idempotent) —
-    // both are acceptable for "recovery".
-    const reapplied = await mapi.fetchApi(secondId);
-    expect(reapplied.name).toBe(API_NAME);
-    expect(typeof firstId).toBe("string");
+    // The recovery promise is "same configuration", not just "exists" —
+    // a regression that recreated the API with missing plans, wrong
+    // state, or a broken endpoint config would silently pass a
+    // name-only check. Assert state, version, listener path, and plan
+    // presence to match the fixture.
+    await test.step("Reapplied API matches the fixture configuration", async () => {
+      await mapi.waitForApiMatches(
+        secondId,
+        {
+          name: API_NAME,
+          state: "STARTED",
+          apiVersion: "1.0.0",
+          definitionVersion: "V4",
+          // APIM normalises the listener path with a trailing slash.
+          listeners: [{ paths: [{ path: "/e2e-v4-start-stop/" }] }],
+        },
+        { description: "reapplied API has the original spec" },
+      );
+    });
+
+    await test.step("Reapplied API has the keyless plan and http-proxy endpoint", async () => {
+      const [plans, api] = await Promise.all([
+        mapi.listApiPlans(secondId),
+        mapi.fetchApi(secondId) as Promise<ApiV4>,
+      ]);
+
+      const keyless = plans.find((p) => p.name === "Free plan");
+      expect(keyless, "expected Free plan to exist after reapply").toBeTruthy();
+      expect(keyless?.security?.type).toBe("KEY_LESS");
+
+      expect(api.endpointGroups?.length, "at least one endpoint group must exist").toBeGreaterThan(
+        0,
+      );
+      expect(api.endpointGroups?.[0]?.endpoints?.[0]?.type).toBe("http-proxy");
+    });
 
     await kubectl.del(fixture(V4_API));
   });
