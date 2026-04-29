@@ -101,6 +101,12 @@ export const XRAY = {
     V4_OAS_COMPLIANCE_WEBHOOK: "@GKO-1479",
     V4_DEFAULT_VALUES: "@GKO-1480",
     NON_EXISTING_GROUP_MESSAGE: "@GKO-1478",
+    // GKO-283 ("V4 doc page visibility only accepts PUBLIC") was scoped for
+    // batch 9 but dropped during implementation: APIM 4.11 actually accepts
+    // and stores `visibility: PRIVATE` on V4 API doc pages — verified
+    // 2026-04-29 against the kind cluster + APIM 4.11. The Xray scenario is
+    // either outdated or describes a product gap. Tracked in
+    // "Batch 9 - Skipped Tests.md".
   },
   V2_API_LIFECYCLE: {
     V2_UPDATE_API_PATH: "@GKO-1065",
@@ -496,16 +502,40 @@ export const XRAY = {
     CERT_INFO_DISPLAY: "@GKO-2223",
     ACTIVE_CERT_DISPLAY: "@GKO-2246",
     EXPIRED_CERT_DISPLAY: "@GKO-2251",
-    // The rest of the bucket-H scenarios (subscription + cert lifecycle,
-    // PKCS7 bundles, rotation edge cases) are deferred to a follow-up
-    // batch: they require per-scenario PKI generation and multi-step
-    // subscription orchestration that needs dedicated fixtures.
-    // Tracking IDs (not tagged here until a concrete test exists):
-    //   Lifecycle: 2213, 2214, 2215, 2218, 2222, 2226, 2227, 2228, 2232,
-    //              2233, 2235, 2238, 2239, 2241, 2252, 2254, 2257, 2260,
-    //              2264
+    // ── Batch 9 — Application clientCertificates lifecycle (bucket-H) ───
+    // CR-driven cert lifecycle scenarios verified through mAPI assertions
+    // on `application.settings.tls.client_certificates[]`.
+    CERT_FUTURE_START_DATE: "@GKO-2228",
+    CERT_NAMING_CONVENTION: "@GKO-2264",
+    CERT_UPDATE_END_DATE: "@GKO-2241",
+    CERT_UPDATE_START_DATE: "@GKO-2214",
+    CERT_CHANGE_NEW_ENTITY: "@GKO-2215",
+    CERT_UPDATE_VIA_CR: "@GKO-2261",
+    CERT_DUPLICATE_REJECTED: "@GKO-2235",
+    // ── Batch 9 — Application clientCertificates date-acceptance ────────
+    // CR-driven scenarios verifying the operator accepts various date
+    // combinations and the cert lands as ACTIVE in mAPI. The wire format
+    // uses epoch-millisecond timestamps; the ACTIVE / SCHEDULED /
+    // ACTIVE_WITH_END status string is APIM-derived and not exposed via
+    // the mAPI Application response, so these tests assert cert presence
+    // rather than the literal status name. Future-start (SCHEDULED)
+    // scenarios are NOT here — APIM filters scheduled certs from the v1
+    // application response, so they're unobservable. GKO-2228 (future
+    // startsAt accepted by operator) is a smoke test in the lifecycle
+    // group above.
+    CERT_PAST_START_NULL_END: "@GKO-2121",
+    CERT_NULL_BOTH_DATES: "@GKO-2130",
+    CERT_NO_DATE_FIELDS: "@GKO-2141",
+    CERT_NULL_START_FUTURE_END: "@GKO-2149",
+    // Still deferred (require subscription orchestration, fault injection,
+    // or a dedicated upgrade lane):
+    //   Lifecycle: 2213, 2218, 2222, 2226, 2227, 2232, 2233, 2238, 2239,
+    //              2249, 2252, 2254, 2257, 2258, 2260
+    //   Upgrader-only paths (no GKO equivalent): 2236, 2263
+    //   Upgrade-flow only: 2216, 2217, 2224, 2245
     //   PKCS7 (no GKO analog; clientCertificates accepts PEM only):
     //              2220, 2229, 2230, 2253, 2259
+    //   Future-start (SCHEDULED, not observable in mAPI): 2126, 2129
     //   Duplicates of bucket I admission tests:
     //              2237, 2240, 2242, 2256, 2262
   },
