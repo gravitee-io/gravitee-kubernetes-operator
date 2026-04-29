@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API Labels lifecycle — batch 7.
+ * V4 API Labels lifecycle.
  *
  * Xray tests:
  *   GKO-1473: Labels on V4 API CRs are set initially and removed when the

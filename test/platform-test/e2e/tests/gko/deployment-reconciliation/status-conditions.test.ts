@@ -25,7 +25,7 @@
  *   GKO-1445: Idempotent reconciliation
  *   GKO-1446: Status conditions reflect reconciliation state
  *
- * Removed (see "Batch 3 - Skipped Tests.md" in hermesVault):
+ * Removed:
  *   GKO-1392: ResolvedRefs condition absence — forward-looking, GKO still emits it
  *
  * Preconditions:
@@ -204,7 +204,6 @@ test.describe("Reconciliation — Status & Conditions", () => {
     await kubectl.del(updateFixture);
   });
 
-  // GKO-1392 (ResolvedRefs condition absence) was removed from the suite —
-  // see "Batch 3 - Skipped Tests.md" in hermesVault. Re-add when the GKO
-  // operator stops emitting the ResolvedRefs condition.
+  // GKO-1392 (ResolvedRefs condition absence) was removed from the suite.
+  // Re-add when the GKO operator stops emitting the ResolvedRefs condition.
 });

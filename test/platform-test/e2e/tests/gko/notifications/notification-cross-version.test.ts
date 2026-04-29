@@ -15,7 +15,7 @@
  */
 
 /**
- * Notification CR cross-version behaviour — batch 5.
+ * Notification CR cross-version behaviour.
  *
  * Xray tests:
  *   GKO-1236: Notification CR cannot be deleted while referenced by an API
@@ -47,9 +47,8 @@ test.describe.skip("Notification CR — Cross Version", () => {
   });
 
   // GKO-1236 (Notification CR referenced by an API cannot be deleted) —
-  // dropped from batch 5: GKO does not enforce an in-use protection on
-  // Notification CRs. Tracked in "Batch 5 - Skipped Tests.md" as a
-  // product gap.
+  // not covered: GKO does not enforce an in-use protection on
+  // Notification CRs (product gap).
 
   // ── GKO-1237: Shared Notification works with V2 and V4 ─────
 

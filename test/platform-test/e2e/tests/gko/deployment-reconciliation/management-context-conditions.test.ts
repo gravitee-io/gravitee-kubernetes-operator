@@ -15,7 +15,7 @@
  */
 
 /**
- * ManagementContext condition vocabulary — batch 5 coverage.
+ * ManagementContext condition vocabulary.
  *
  * Xray tests:
  *   GKO-1282: ManagementContext status uses the standardised condition

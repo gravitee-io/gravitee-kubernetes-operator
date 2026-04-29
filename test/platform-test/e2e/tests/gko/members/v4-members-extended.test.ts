@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API Members — Extended scenarios (batch 4).
+ * V4 API Members — Extended scenarios.
  *
  * Xray tests:
  *   GKO-213:  Remove member from a V4 API (variant)
@@ -35,7 +35,7 @@
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
  *   - A ManagementContext "dev-ctx" exists in the default namespace
- *   - Xray batch 3 provisions an "e2e-group-with-member" group
+ *   - Xray provisions an "e2e-group-with-member" group
  */
 
 import { test, fixture, expect } from "../../../setup.js";

@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 Plans & Subscriptions — Advanced scenarios (batch 4).
+ * V4 Plans & Subscriptions — Advanced scenarios.
  *
  * Xray tests:
  *   GKO-795: Subscription read-only enforcement — operator must reject mutations

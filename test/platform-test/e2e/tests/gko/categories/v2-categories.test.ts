@@ -15,7 +15,7 @@
  */
 
 /**
- * V2 API Categories — batch 5 coverage.
+ * V2 API Categories.
  *
  * Xray tests:
  *   GKO-187: Add a valid category to a V2 API

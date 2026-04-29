@@ -15,7 +15,7 @@
  */
 
 /**
- * Application Members (non-OAuth) — batch 5 coverage.
+ * Application Members (non-OAuth).
  *
  * Xray tests:
  *   GKO-531: Add member with non-existing role (default role applied)
@@ -23,7 +23,7 @@
  *   GKO-538: Add member with a role name
  *   GKO-539: Change member role on an application
  *
- * Skipped (see "Batch 4 - Skipped Tests.md"): GKO-537 (remove member from APIM env) requires console UI.
+ * Skipped: GKO-537 (remove member from APIM env) requires console UI.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running

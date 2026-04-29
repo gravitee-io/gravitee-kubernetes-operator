@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API visibility & lifecycleState — batch 8.
+ * V4 API visibility & lifecycleState.
  *
  * Xray tests:
  *   GKO-172:  V4 API with visibility=PRIVATE — verify visibility on API record
@@ -52,7 +52,7 @@ interface StatusWithId {
   conditions?: Array<{ type: string; status: string }>;
 }
 
-test.describe("V4 API — Visibility & lifecycleState (batch 8)", () => {
+test.describe("V4 API — Visibility & lifecycleState", () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(PRIVATE_PUBLISHED)).catch(() => {});
     await kubectlSafe.del(fixture(PUBLIC_PUBLISHED)).catch(() => {});

@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API Lifecycle — Extended scenarios (batch 4).
+ * V4 API Lifecycle — Extended scenarios.
  *
  * Xray tests:
  *   GKO-81:   Deploy V4 API in DB-less mode
@@ -29,7 +29,7 @@
  *   GKO-1465: Policy enforcement on V4 APIs without plans
  *   GKO-1474: Entrypoint × policy compatibility matrix
  *
- * Skipped tests (see "Batch 4 - Skipped Tests.md" in hermesVault):
+ * Skipped tests:
  *   GKO-138 (RabbitMQ endpoint) — APIM schema bug
  *   GKO-139 (Solace endpoint)   — APIM schema bug
  *
@@ -106,7 +106,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
   });
 
   // GKO-138 (RabbitMQ) and GKO-139 (Solace) were skipped due to an APIM
-  // schema bug and are documented in "Batch 4 - Skipped Tests.md".
+  // schema bug.
 
   // ── GKO-159: Re-create deleted V4 API with closed plan ──────
   // Re-applying the same CRD after a full delete should create a fresh API

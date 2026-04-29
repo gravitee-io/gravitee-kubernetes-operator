@@ -15,7 +15,7 @@
  */
 
 /**
- * Primary owner + visibility — batch 7.
+ * Primary owner + visibility.
  *
  * Xray tests:
  *   GKO-1457: A CR that specifies a PRIMARY_OWNER user and PRIVATE

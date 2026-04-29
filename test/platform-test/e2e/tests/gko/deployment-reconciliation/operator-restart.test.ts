@@ -15,7 +15,7 @@
  */
 
 /**
- * Operator restart recovery — batch 7.
+ * Operator restart recovery.
  *
  * Xray tests:
  *   GKO-1451: Restarting the GKO operator pod mid-flight must not break

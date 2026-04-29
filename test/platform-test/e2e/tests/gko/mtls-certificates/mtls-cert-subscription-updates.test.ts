@@ -15,7 +15,7 @@
  */
 
 /**
- * mTLS — Application clientCertificates visibility via mAPI (batch 8).
+ * mTLS — Application clientCertificates visibility via mAPI.
  *
  * Xray tests covered:
  *   GKO-2219: Application with no clientCertificates list is visible via mAPI
@@ -30,7 +30,7 @@
  *             of *active* certs is empty, the expired one is no longer
  *             surfaced through settings.tls.client_certificates).
  *
- * The broader bucket-H lifecycle scenarios (subscription update flows,
+ * The broader lifecycle scenarios (subscription update flows,
  * PKCS7 bundles, cert rotation edge cases) are not covered here — they
  * either have no GKO analog (PKCS7 — GKO only accepts PEM) or require
  * live per-scenario PKI generation that is tracked for a follow-up batch.
@@ -39,18 +39,18 @@
  *   - APIM, Gateway, and GKO operator are running
  *   - A ManagementContext "dev-ctx" exists in the default namespace
  *   - The existing PKI assets under fixtures/crds/mtls-certificates/pki/
- *     are reused (client1.crt is inlined in h-2223 / h-2251)
+ *     are reused (client1.crt is inlined in 2223 / 2251)
  */
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const APP_NO_CERTS = "crds/mtls-certificates/h-2219-app-no-certs.yaml";
-const APP_VALID_CERT = "crds/mtls-certificates/h-2223-app-valid-cert.yaml";
-const APP_PAST_END = "crds/mtls-certificates/h-2251-app-past-end.yaml";
+const APP_NO_CERTS = "crds/mtls-certificates/app-2219-no-certs.yaml";
+const APP_VALID_CERT = "crds/mtls-certificates/app-2223-valid-cert.yaml";
+const APP_PAST_END = "crds/mtls-certificates/app-2251-past-end.yaml";
 
-test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () => {
+test.describe("mTLS — clientCertificates visibility via mAPI", () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(APP_NO_CERTS)).catch(() => {});
     await kubectlSafe.del(fixture(APP_VALID_CERT)).catch(() => {});
@@ -61,7 +61,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
     kubectl,
     mapi,
   }) => {
-    const APP = "e2e-app-h-2219";
+    const APP = "e2e-app-2219";
     await kubectl.apply(fixture(APP_NO_CERTS));
     await kubectl.waitForCondition("application", APP, "Accepted");
 
@@ -77,7 +77,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
     kubectl,
     mapi,
   }) => {
-    const APP = "e2e-app-h-2223";
+    const APP = "e2e-app-2223";
     await kubectl.apply(fixture(APP_VALID_CERT));
     await kubectl.waitForCondition("application", APP, "Accepted");
 
@@ -107,7 +107,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
     kubectl,
     mapi,
   }) => {
-    const APP = "e2e-app-h-2223";
+    const APP = "e2e-app-2223";
     await kubectl.apply(fixture(APP_VALID_CERT));
     await kubectl.waitForCondition("application", APP, "Accepted");
 
@@ -128,7 +128,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI (batch 8)", () =>
     kubectl,
     mapi,
   }) => {
-    const APP = "e2e-app-h-2251";
+    const APP = "e2e-app-2251";
     await kubectl.apply(fixture(APP_PAST_END));
     await kubectl.waitForCondition("application", APP, "Accepted");
 

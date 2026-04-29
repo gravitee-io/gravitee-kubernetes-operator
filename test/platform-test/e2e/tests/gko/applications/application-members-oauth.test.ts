@@ -15,7 +15,7 @@
  */
 
 /**
- * Application Members & OAuth — batch 4 coverage.
+ * Application Members & OAuth.
  *
  * Xray tests:
  *   GKO-533: Add non-existing member to application
@@ -25,7 +25,7 @@
  *   GKO-555: Application member with non-existing role
  *   GKO-581: WEB application must include authorization_code
  *
- * Skipped tests (see "Batch 4 - Skipped Tests.md" in hermesVault):
+ * Skipped tests:
  *   GKO-553 (Configure OAuth settings)        — DCR not enabled in test env
  *   GKO-574 (BACKEND_TO_BACKEND grant)        — DCR not enabled in test env
  *   GKO-576 (B2B redirectURIs optional)       — DCR not enabled in test env
@@ -114,9 +114,8 @@ test.describe("Applications — Members & OAuth", () => {
     await kubectl.del(fixturePath);
   });
 
-  // GKO-553 (Configure OAuth settings) was skipped because the test APIM
-  // environment does not have Dynamic Client Registration enabled. See
-  // "Batch 4 - Skipped Tests.md" in hermesVault.
+  // GKO-553 (Configure OAuth settings) — not covered: the test APIM
+  // environment does not have Dynamic Client Registration enabled.
 
   // ── GKO-555: Non-existing role ──────────────────────────────
 
@@ -135,8 +134,8 @@ test.describe("Applications — Members & OAuth", () => {
     await kubectl.del(fixturePath);
   });
 
-  // GKO-574, GKO-576, GKO-580 were skipped for the same DCR precondition as
-  // GKO-553. See "Batch 4 - Skipped Tests.md" in hermesVault.
+  // GKO-574, GKO-576, GKO-580 are not covered for the same DCR precondition
+  // as GKO-553.
 
   // ── GKO-581: WEB must include authorization_code ────────────
 

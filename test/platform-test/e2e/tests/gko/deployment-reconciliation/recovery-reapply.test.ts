@@ -15,7 +15,7 @@
  */
 
 /**
- * Recovery after CR removal — batch 7.
+ * Recovery after CR removal.
  *
  * Xray tests:
  *   GKO-1808: Removing the CR and reapplying it recreates the API in APIM

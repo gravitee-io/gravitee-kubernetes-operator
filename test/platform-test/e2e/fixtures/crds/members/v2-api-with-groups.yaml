@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-208: V2 API referencing an existing group (provisioned in batch 3).
+# GKO-208: V2 API referencing an existing group (provisioned by another test).
 apiVersion: gravitee.io/v1alpha1
 kind: ApiDefinition
 metadata:

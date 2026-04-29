@@ -15,7 +15,7 @@
  */
 
 /**
- * V2 API Documentation — Fetchers (batch 5).
+ * V2 API Documentation — Fetchers.
  *
  * Xray tests:
  *   GKO-620: Web fetcher requires URL being set
@@ -23,7 +23,7 @@
  *   GKO-622: Github fetcher requires owner, repository, username, PAT
  *   GKO-623: Github fetcher shows warning on invalid configuration
  *
- * Dropped (see "Batch 5 - Skipped Tests.md"):
+ * Dropped:
  *   GKO-626, 675, 689, 692 — the GKO admission webhook pre-fetches
  *   github-fetcher pages at apply time, and the test cluster has no real
  *   GitHub credentials. Any positive github-fetcher test is rejected with

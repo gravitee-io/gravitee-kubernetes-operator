@@ -15,7 +15,7 @@
  */
 
 /**
- * Notification — export & admission checks (batch 7).
+ * Notification — export & admission checks.
  *
  * Xray tests:
  *   GKO-1233: CRD export does not include Notification configuration

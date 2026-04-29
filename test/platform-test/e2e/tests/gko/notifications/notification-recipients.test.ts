@@ -15,7 +15,7 @@
  */
 
 /**
- * Notification recipients & visibility — batch 8.
+ * Notification recipients & visibility.
  *
  * Xray tests:
  *   GKO-1194: View notification settings for an API (PORTAL setting present)
@@ -46,7 +46,7 @@ import * as kubectlSafe from "../../../helpers/kubectl.js";
 // returned 400 (no matching IDP entry for source=gravitee in the test
 // cluster), which is harmless but also useless; it has been removed.
 
-const BASE_API = "crds/notifications/v4-api-batch8-base.yaml";
+const BASE_API = "crds/notifications/v4-api-notif-base.yaml";
 const NOTIF_1219 = "crds/notifications/notification-1219-portal-target-user.yaml";
 const GROUP_1219 = "crds/notifications/group-1219-portal-target.yaml";
 const API_1219 = "crds/notifications/v4-api-1219-with-portal-target.yaml";
@@ -59,7 +59,7 @@ const API_1239 = "crds/notifications/v4-api-1239-with-group-members.yaml";
 // 4.11 silently drops it (PORTAL setting comes back with hooks/groups empty
 // and origin=MANAGEMENT). Verified passing with GKO 4.11.4 against APIM 4.11.
 // Re-enable when the test setup pins APIM ≥ 4.12.
-test.describe.skip("Notifications — recipients & visibility (batch 8)", () => {
+test.describe.skip("Notifications — recipients & visibility", () => {
   test.afterEach(async () => {
     // Reverse dependency order: API → Notification → Group
     await kubectlSafe.del(fixture(API_1239)).catch(() => {});
@@ -77,7 +77,7 @@ test.describe.skip("Notifications — recipients & visibility (batch 8)", () => 
     kubectl,
     mapi,
   }) => {
-    const NAME = "e2e-v4-notif-batch8-base";
+    const NAME = "e2e-v4-notif-base";
     await kubectl.apply(fixture(BASE_API));
     await kubectl.waitForCondition("apiv4definition", NAME, "Accepted");
     const apiId = (await kubectl.getStatus<{ id: string }>("apiv4definition", NAME)).id;
@@ -99,7 +99,7 @@ test.describe.skip("Notifications — recipients & visibility (batch 8)", () => 
     kubectl,
     mapi,
   }) => {
-    const NAME = "e2e-v4-notif-batch8-base";
+    const NAME = "e2e-v4-notif-base";
     await kubectl.apply(fixture(BASE_API));
     await kubectl.waitForCondition("apiv4definition", NAME, "Accepted");
     const apiId = (await kubectl.getStatus<{ id: string }>("apiv4definition", NAME)).id;
@@ -125,7 +125,7 @@ test.describe.skip("Notifications — recipients & visibility (batch 8)", () => 
     kubectl,
     mapi,
   }) => {
-    const NAME = "e2e-v4-notif-batch8-base";
+    const NAME = "e2e-v4-notif-base";
     await kubectl.apply(fixture(BASE_API));
     await kubectl.waitForCondition("apiv4definition", NAME, "Accepted");
     const apiId = (await kubectl.getStatus<{ id: string }>("apiv4definition", NAME)).id;

@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 documentation structure changes — batch 7 + 8.
+ * V4 documentation structure changes.
  *
  * Xray tests:
  *   GKO-1469 / GKO-700: Renaming a folder + page in the CR reconciles on the
@@ -117,8 +117,8 @@ test.describe("V4 Documentation — Rename & cross-version visibility", () => {
       const v2Id = (
         await kubectl.getStatus<{ id: string }>("apidefinition", "e2e-v2-public-page")
       ).id;
-      // APIM does not support CRD export for V2 APIs (see batch 5 notes),
-      // so query the v1 Management pages endpoint directly for visibility.
+      // APIM does not support CRD export for V2 APIs, so query the v1
+      // Management pages endpoint directly for visibility.
       const response = await mapi.http.get<Array<{ visibility?: string }>>(
         mapi.http.managementV1Path(`/apis/${v2Id}/pages`),
       );
