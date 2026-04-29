@@ -15,7 +15,7 @@
  */
 
 /**
- * V2 Subscriptions — Advanced scenarios (batch 5).
+ * V2 Subscriptions — Advanced scenarios.
  *
  * Xray tests:
  *   GKO-796: Subscription between API and App in different mgmt contexts is rejected

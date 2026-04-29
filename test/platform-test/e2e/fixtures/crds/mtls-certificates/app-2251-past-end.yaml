@@ -12,27 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-2223 / GKO-2246: Application with one valid client cert (long validity
-# window — uses the existing client1 PKI asset). Verifies cert info round-trip.
+# GKO-2251: Application with a client cert whose endsAt is in the past.
+# APIM accepts the apply but filters the expired cert out of the active list
+# returned via settings.tls.client_certificates. The test asserts that the
+# active list is empty.
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
-  name: e2e-app-h-2223
+  name: e2e-app-2251
 spec:
   contextRef:
     name: dev-ctx
     namespace: default
-  name: e2e-app-h-2223
-  description: "E2E test (bucket H): valid clientCertificate visible via mAPI"
+  name: e2e-app-2251
+  description: "E2E test cert with past endsAt filtered out"
   settings:
     app:
       type: SIMPLE
-      clientId: e2e-h-2223-client
+      clientId: e2e-2251-client
     tls:
       clientCertificates:
-        - name: client1
-          startsAt: "2026-01-01T00:00:00Z"
-          endsAt: "2030-01-01T00:00:00Z"
+        - name: client1-past-end
+          startsAt: "2020-01-01T00:00:00Z"
+          endsAt: "2025-06-01T00:00:00Z"
           content: |
             -----BEGIN CERTIFICATE-----
             MIIC9zCCAd+gAwIBAgIUX2VAL31BGWMotcLtfpAfU/NKIiowDQYJKoZIhvcNAQEL

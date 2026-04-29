@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 Import/Export — Extended scenarios (batch 4).
+ * V4 Import/Export — Extended scenarios.
  *
  * Xray tests:
  *   GKO-237:  No email sent on exporting CRD for v4 APIs

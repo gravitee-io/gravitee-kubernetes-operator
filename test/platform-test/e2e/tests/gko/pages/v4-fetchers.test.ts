@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API Documentation — Fetchers (batch 7).
+ * V4 API Documentation — Fetchers.
  *
  * Xray tests:
  *   GKO-629:  V4 web fetcher without URL is rejected
@@ -25,9 +25,9 @@
  *   GKO-1475: Cross-version validation coverage for schedulers/fetchers
  *             (URL + cron) — piggybacks on the V4 no-URL case.
  *
- * Dropped from batch 7 (see "Batch 7 - Skipped Tests.md"):
+ * Dropped:
  *   GKO-638 — V4 github fetcher default URL (positive path needs real
- *             credentials; same blocker that killed GKO-626/675 in batch 5).
+ *             credentials; same blocker that killed GKO-626/675).
  *   GKO-697 — V4 delete fetched ROOT pages (same blocker as GKO-662).
  */
 

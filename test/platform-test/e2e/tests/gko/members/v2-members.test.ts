@@ -15,7 +15,7 @@
  */
 
 /**
- * V2 API Lifecycle & Members — batch 4 coverage.
+ * V2 API Lifecycle & Members.
  *
  * Xray tests:
  *   GKO-1065: Update API path on a V2 CRD
@@ -32,7 +32,7 @@
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
  *   - A ManagementContext "dev-ctx" exists in the default namespace
- *   - Xray batch 3 provisions an "e2e-group-with-member" group
+ *   - Xray provisions an "e2e-group-with-member" group
  */
 
 import { test, fixture, expect } from "../../../setup.js";

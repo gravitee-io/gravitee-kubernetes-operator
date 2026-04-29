@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API Categories — Extended scenarios (batch 4).
+ * V4 API Categories — Extended scenarios.
  *
  * Xray tests:
  *   GKO-271: Category removal synced from APIM when category deleted

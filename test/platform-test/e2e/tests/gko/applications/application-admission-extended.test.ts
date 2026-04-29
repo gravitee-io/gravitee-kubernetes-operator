@@ -15,7 +15,7 @@
  */
 
 /**
- * Application admission & lifecycle edge cases — batch 8.
+ * Application admission & lifecycle edge cases.
  *
  * Xray tests:
  *   GKO-505:  Applications deployed via CR are read-only in APIM (origin=KUBERNETES)
@@ -44,7 +44,7 @@ interface StatusWithId {
   conditions?: Array<{ type: string; status: string }>;
 }
 
-test.describe("Applications — admission & lifecycle (batch 8)", () => {
+test.describe("Applications — admission & lifecycle", () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(FIXTURE_505)).catch(() => {});
     await kubectlSafe.del(fixture(FIXTURE_1383)).catch(() => {});

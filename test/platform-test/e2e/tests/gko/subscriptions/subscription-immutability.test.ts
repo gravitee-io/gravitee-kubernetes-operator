@@ -15,7 +15,7 @@
  */
 
 /**
- * Subscription immutability — batch 7.
+ * Subscription immutability.
  *
  * Xray tests:
  *   GKO-1460: Changing the plan of an existing Subscription CR must be

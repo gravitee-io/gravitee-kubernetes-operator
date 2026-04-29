@@ -15,7 +15,7 @@
  */
 
 /**
- * V2 API Groups, Members & Primary Owner — batch 5 coverage.
+ * V2 API Groups, Members & Primary Owner.
  *
  * Xray tests:
  *   GKO-398:  Add group using name (hrid) to V2 API
@@ -188,9 +188,8 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     await kubectl.del(fixturePath);
   });
 
-  // GKO-602 (V2 API with a different PRIMARY_OWNER is rejected) — dropped
-  // from batch 5: GKO admission does not enforce this. Tracked in
-  // "Batch 5 - Skipped Tests.md" as a product gap.
+  // GKO-602 (V2 API with a different PRIMARY_OWNER is rejected) — not
+  // covered: GKO admission does not enforce this (product gap).
 
   // ── GKO-657: PO take-over via management-context user ──────
 
@@ -210,10 +209,9 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     await kubectl.del(fixturePath);
   });
 
-  // GKO-659 (adding PO to members has no effect) — dropped from batch 5:
-  // the coverage overlaps with GKO-601 (idempotent re-apply with PO member)
-  // and GKO-602 was also dropped as a product gap. Tracked in
-  // "Batch 5 - Skipped Tests.md".
+  // GKO-659 (adding PO to members has no effect) — not covered: overlaps
+  // with GKO-601 (idempotent re-apply with PO member) and GKO-602 is also
+  // a product gap.
 
   // ── GKO-1003: Add GroupRefs to V2 API ───────────────────────
 

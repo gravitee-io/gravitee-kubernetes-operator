@@ -15,7 +15,7 @@
  */
 
 /**
- * mTLS — Application clientCertificates admission rejections (batch 8).
+ * mTLS — Application clientCertificates admission rejections.
  *
  * GKO does not have a standalone MTLSCertificate CRD; the original Xray tests
  * (GKO-2117 etc.) describe APIM cert-management API behavior. We exercise the
@@ -68,7 +68,7 @@ const F = (name: string) => fixture(`crds/mtls-certificates/invalid/${name}.yaml
 // "invalid" or "denied" are intentionally excluded — they appear in almost
 // every admission/webhook error and would turn a real regression (e.g. the
 // admission path erroring for an unrelated reason) into a false pass.
-test.describe("mTLS — Application cert admission rejections (batch 8)", () => {
+test.describe("mTLS — Application cert admission rejections", () => {
   test.afterEach(async () => {
     // Admission-rejected applies don't persist state, but be defensive in
     // case a scenario ever slips past admission — the safety net matches the

@@ -15,7 +15,7 @@
  */
 
 /**
- * CR-managed resources are tagged read-only in APIM — batch 7.
+ * CR-managed resources are tagged read-only in APIM.
  *
  * Xray tests:
  *   GKO-1456: APIM reports CR-managed resources (APIs, Applications) with

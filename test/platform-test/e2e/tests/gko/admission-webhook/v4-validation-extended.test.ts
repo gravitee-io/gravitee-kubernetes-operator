@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API Validation & Reconciliation — Extended scenarios (batch 4).
+ * V4 API Validation & Reconciliation — Extended scenarios.
  *
  * Xray tests:
  *   GKO-1476: Context path conflict validation on V4 APIs

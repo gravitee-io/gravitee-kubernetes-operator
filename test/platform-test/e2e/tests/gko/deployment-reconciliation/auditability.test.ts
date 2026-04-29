@@ -15,7 +15,7 @@
  */
 
 /**
- * Auditability — batch 7.
+ * Auditability.
  *
  * Xray tests:
  *   GKO-1463: Updates on a CR are traceable — k8s Events are emitted,

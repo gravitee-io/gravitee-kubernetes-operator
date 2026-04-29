@@ -15,7 +15,7 @@
  */
 
 /**
- * V2 API Lifecycle & Management Context — batch 5 coverage.
+ * V2 API Lifecycle & Management Context.
  *
  * Xray tests:
  *   GKO-260: Changing member role on V2 re-import is idempotent (no duplicate key)
@@ -25,7 +25,7 @@
  *   GKO-606: V2 API with no plans + state=STARTED
  *   GKO-607: V2 API with no plans + state=STOPPED
  *
- * Dropped (see "Batch 5 - Skipped Tests.md"):
+ * Dropped:
  *   GKO-653: Exported V2 APIs are read-only when re-imported —
  *            APIM does not support /_export/crd for V2 API definitions.
  *
@@ -192,5 +192,5 @@ test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
 
   // GKO-653 (Exported V2 APIs are read-only when re-imported) — dropped
   // from the shipped suite: APIM's CRD export endpoint does not support
-  // V2 API definitions. Tracked in "Batch 5 - Skipped Tests.md".
+  // V2 API definitions.
 });

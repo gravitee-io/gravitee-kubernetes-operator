@@ -15,7 +15,7 @@
  */
 
 /**
- * Terraform subscription errors & application lifecycle — batch 8.
+ * Terraform subscription errors & application lifecycle.
  *
  * Xray tests:
  *   GKO-1380: invalid subscription configuration in TF — apply fails with a
@@ -37,7 +37,7 @@ import { XRAY, TAGS } from "../../helpers/tags.js";
 import * as terraform from "../../helpers/terraform.js";
 import type { TfWorkspace } from "../../helpers/terraform.js";
 
-test.describe("Terraform — subscription errors & app delete (batch 8)", () => {
+test.describe("Terraform — subscription errors & app delete", () => {
   // ── GKO-1380: invalid subscription is rejected by apply ──────
 
   test(`Invalid subscription config produces a clear apply error ${XRAY.TERRAFORM.INVALID_SUBSCRIPTION_CONFIG} ${TAGS.REGRESSION}`, async () => {

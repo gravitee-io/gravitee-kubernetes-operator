@@ -16,14 +16,14 @@
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
-  name: e2e-app-h-2219
+  name: e2e-app-2219
 spec:
   contextRef:
     name: dev-ctx
     namespace: default
-  name: e2e-app-h-2219
-  description: "E2E test (bucket H): no active clientCertificates"
+  name: e2e-app-2219
+  description: "E2E test no active clientCertificates"
   settings:
     app:
       type: SIMPLE
-      clientId: e2e-h-2219-client
+      clientId: e2e-2219-client

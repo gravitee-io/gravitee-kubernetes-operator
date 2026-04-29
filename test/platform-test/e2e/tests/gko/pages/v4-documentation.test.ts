@@ -15,7 +15,7 @@
  */
 
 /**
- * V4 API Documentation — Extended scenarios (batch 4).
+ * V4 API Documentation — Extended scenarios.
  *
  * Xray tests:
  *   GKO-236:  CRUD on existing V4 API operations (documentation context)
@@ -23,7 +23,7 @@
  *   GKO-282:  Inline documentation with PUBLIC visibility
  *   GKO-1470: Documentation managed by GKO is reconciled end-to-end
  *
- * Skipped tests (see "Batch 4 - Skipped Tests.md" in hermesVault):
+ * Skipped tests:
  *   GKO-283 (V4 spec.visibility PUBLIC-only) — GKO product bug
  *
  * Preconditions:
@@ -131,7 +131,7 @@ test.describe("V4 API Documentation — Extended", () => {
   });
 
   // GKO-283 (V4 spec.visibility only accepts PUBLIC) was skipped due to a
-  // GKO product bug and is documented in "Batch 4 - Skipped Tests.md".
+  // GKO product bug.
 
   // ── GKO-1470: Documentation is fully reconciled by the operator ─
 

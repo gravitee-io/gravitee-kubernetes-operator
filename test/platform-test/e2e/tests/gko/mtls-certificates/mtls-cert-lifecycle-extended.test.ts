@@ -15,7 +15,7 @@
  */
 
 /**
- * mTLS — Application clientCertificates lifecycle (batch 9, bucket-H).
+ * mTLS — Application clientCertificates lifecycle.
  *
  * These scenarios were originally framed as console / API endpoint behavior
  * in Xray. Through the GKO Application CR they're observable via the mAPI
@@ -100,7 +100,7 @@ async function applyAndAssertCertVisible(
     .toBe(1);
 }
 
-test.describe("mTLS — Application cert lifecycle (batch 9 bucket-H)", () => {
+test.describe("mTLS — Application cert lifecycle", () => {
   let pem1: string;
   let pem2: string;
 
@@ -150,7 +150,7 @@ test.describe("mTLS — Application cert lifecycle (batch 9 bucket-H)", () => {
       `    name: dev-ctx`,
       `    namespace: default`,
       `  name: ${opts.name}`,
-      `  description: "E2E batch 9 ${opts.name}"`,
+      `  description: "E2E ${opts.name}"`,
       `  settings:`,
       `    app:`,
       `      type: WEB`,
@@ -314,13 +314,6 @@ test.describe("mTLS — Application cert lifecycle (batch 9 bucket-H)", () => {
   });
 
   // ── GKO-2264: cert name auto-generation convention ───────────────────
-  // Xray scenario expects "<applicationName> client certificate". Verified
-  // 2026-04-29 against APIM 4.12: when the CR omits `name`, the persisted
-  // cert name is "<applicationName>-<index>" instead — e.g. an app named
-  // "myapplication" with two unnamed certs gets "myapplication-0" and
-  // "myapplication-1". The Xray scenario is outdated. This test asserts
-  // the *current* convention so a future change to either side flips it
-  // deliberately.
 
   test(`Unnamed cert is auto-named "<app>-<index>" in mAPI ${XRAY.MTLS_CERTIFICATES.CERT_NAMING_CONVENTION} ${TAGS.REGRESSION}`, async ({
     kubectl,
@@ -339,7 +332,7 @@ test.describe("mTLS — Application cert lifecycle (batch 9 bucket-H)", () => {
       `    name: dev-ctx`,
       `    namespace: default`,
       `  name: ${APP}`,
-      `  description: "E2E batch 9 cert auto-name"`,
+      `  description: "E2E cert auto-name"`,
       `  settings:`,
       `    app:`,
       `      type: WEB`,
@@ -362,20 +355,19 @@ test.describe("mTLS — Application cert lifecycle (batch 9 bucket-H)", () => {
       .toBe(`${APP}-0`);
   });
 
-  // GKO-2236 was scoped for batch 9 but dropped during implementation:
+  // GKO-2236 was out of scope:
   // same APIM "upgrader" path as GKO-2263 — the scenario is about the
   // upgrader processing legacy applications without
   // `metadata.client_certificate`. GKO never runs the upgrader, so the
   // CR-equivalent ("apply a fresh app without metadata + cert works")
-  // is too far from the original scenario to count as coverage. Tracked
-  // in "Batch 9 - Skipped Tests.md".
+  // is too far from the original scenario to count as coverage.
 
-  // GKO-2263 was scoped for batch 9 but dropped during implementation:
+  // GKO-2263 was out of scope:
   // the Xray scenario describes an APIM "upgrader" migration path that
   // creates a cert from a magic `metadata.client_certificate` entry on
   // legacy applications. GKO has no upgrader path — applications go
   // through the create/update reconciler — so the scenario doesn't map
-  // cleanly to a CR-driven test. Tracked in "Batch 9 - Skipped Tests.md".
+  // cleanly to a CR-driven test.
 
   // ── GKO-2235: two cert entries with the same content (true duplicate) ──
   // The Xray scenario describes adding a cert "with the same details as
@@ -400,7 +392,7 @@ test.describe("mTLS — Application cert lifecycle (batch 9 bucket-H)", () => {
       `    name: dev-ctx`,
       `    namespace: default`,
       `  name: ${APP}`,
-      `  description: "E2E batch 9 true-duplicate cert content"`,
+      `  description: "E2E true-duplicate cert content"`,
       `  settings:`,
       `    app:`,
       `      type: WEB`,
@@ -424,7 +416,7 @@ test.describe("mTLS — Application cert lifecycle (batch 9 bucket-H)", () => {
 
 /**
  * Application clientCertificates — date-acceptance / status scenarios
- * (batch 9, ex bucket-J).
+ *.
  *
  * The Xray scenarios specify the cert `status` field (ACTIVE / SCHEDULED /
  * ACTIVE_WITH_END / REVOKED), which is computed by APIM and rendered in
@@ -447,7 +439,7 @@ const STATUS_APPS = [
   "e2e-mtls-2149",
 ];
 
-test.describe("mTLS — cert date acceptance (batch 9)", () => {
+test.describe("mTLS — cert date acceptance", () => {
   let pem: string;
 
   test.beforeAll(async () => {
@@ -477,7 +469,7 @@ test.describe("mTLS — cert date acceptance (batch 9)", () => {
       `    name: dev-ctx`,
       `    namespace: default`,
       `  name: ${opts.name}`,
-      `  description: "E2E batch 9 ${opts.name} (date acceptance)"`,
+      `  description: "E2E ${opts.name} (date acceptance)"`,
       `  settings:`,
       `    app:`,
       `      type: WEB`,

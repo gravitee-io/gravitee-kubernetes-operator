@@ -15,7 +15,7 @@
  */
 
 /**
- * Plan lifecycle via CR — batch 7.
+ * Plan lifecycle via CR.
  *
  * Xray tests:
  *   GKO-1459: Publishing and removing plans via the API CR syncs to APIM.

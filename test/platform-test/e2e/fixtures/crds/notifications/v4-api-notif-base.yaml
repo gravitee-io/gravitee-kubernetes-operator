@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Batch 8 — minimal V4 API used as the target for notification-recipient tests
+# minimal V4 API used as the target for notification-recipient tests
 # (GKO-1194, 1195, 1196). No notification refs — defaults are validated.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-notif-batch8-base
+  name: e2e-v4-notif-base
 spec:
   contextRef:
     name: dev-ctx
     namespace: default
-  name: e2e-v4-notif-batch8-base
+  name: e2e-v4-notif-base
   version: "1.0"
   description: "E2E test: V4 API for notification recipient/label assertions"
   type: PROXY
@@ -30,7 +30,7 @@ spec:
   listeners:
     - type: HTTP
       paths:
-        - path: /e2e-v4-notif-batch8-base
+        - path: /e2e-v4-notif-base
       entrypoints:
         - type: http-proxy
           qos: AUTO

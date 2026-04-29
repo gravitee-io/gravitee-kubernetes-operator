@@ -15,7 +15,7 @@
  */
 
 /**
- * CRD field deprecation — batch 7.
+ * CRD field deprecation.
  *
  * Xray tests:
  *   GKO-1391: processingStatus is deprecated in the status schema
@@ -24,7 +24,7 @@
  * field's description does not carry an obvious deprecation marker, any
  * migration guidance around "use the Accepted condition instead" is lost.
  *
- * Known product gap (logged in "Batch 7 - Skipped Tests.md"):
+ * Known product gap:
  *   The Application CRD's status.processingStatus.description currently reads
  *   "The processing status of the Application." with no "*** DEPRECATED ***"
  *   marker, unlike the three CRDs below. Application is intentionally not

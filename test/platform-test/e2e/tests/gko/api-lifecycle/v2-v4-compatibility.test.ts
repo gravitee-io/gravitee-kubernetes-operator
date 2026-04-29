@@ -15,7 +15,7 @@
  */
 
 /**
- * API version compatibility — batch 7.
+ * API version compatibility.
  *
  * Xray tests:
  *   GKO-1448: Minimal V2 and V4 CRs each reach Accepted=True and show

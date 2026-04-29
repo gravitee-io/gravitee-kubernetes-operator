@@ -28,7 +28,7 @@
  *   GKO-136: Deploy V4 message API with Mock endpoint
  *   GKO-164: Deploy V4 message API with policy
  *
- * Removed (see "Batch 3 - Skipped Tests.md" in hermesVault):
+ * Removed:
  *   GKO-135: Kafka endpoint — APIM schema bug
  *
  * Preconditions:
@@ -222,8 +222,7 @@ test.describe("Message APIs — Lifecycle", () => {
     await kubectl.del(fixturePath);
   });
 
-  // GKO-135 (Kafka endpoint) was removed from the suite — APIM schema
-  // bug, documented in "Batch 3 - Skipped Tests.md" in hermesVault.
+  // GKO-135 (Kafka endpoint) was removed from the suite — APIM schema bug.
 
   // ── GKO-136: Deploy V4 message API with Mock endpoint ───────
 

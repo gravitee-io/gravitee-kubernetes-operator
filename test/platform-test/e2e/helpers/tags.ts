@@ -51,17 +51,17 @@ export const XRAY = {
     POLICY_ON_API_WITHOUT_PLANS: "@GKO-1465",
     ENTRYPOINT_POLICY_MATRIX: "@GKO-1474",
     V2_V4_COMPATIBILITY: "@GKO-1448",
-    // Batch 8 — visibility & lifecycleState
+    // visibility & lifecycleState
     V4_VISIBILITY_PRIVATE: "@GKO-172",
     V4_VISIBILITY_PUBLIC: "@GKO-173",
     V4_PUBLISHED_IN_PORTAL: "@GKO-179",
     V4_UNPUBLISHED_NOT_IN_PORTAL: "@GKO-180",
     V4_PORTAL_VISIBILITY_RULES: "@GKO-1466",
-    // GKO-1220 (auto-associated groups preserved across updates) — dropped
-    // from batch 8: depends on an APIM env-level "auto-associate group to
+    // GKO-1220 (auto-associated groups preserved across updates) — not
+    // covered: depends on an APIM env-level "auto-associate group to
     // new APIs" setting that is not exposed via mAPI or the test harness.
-    // Originally skipped in batch 7. Re-evaluate when the setting is
-    // configurable through the test cluster bootstrap.
+    // Re-evaluate when the setting is configurable through the test
+    // cluster bootstrap.
   },
   MESSAGE_APIS: {
     DEPLOY_V4_MSG_SYNC_MGMT: "@GKO-72",
@@ -101,12 +101,10 @@ export const XRAY = {
     V4_OAS_COMPLIANCE_WEBHOOK: "@GKO-1479",
     V4_DEFAULT_VALUES: "@GKO-1480",
     NON_EXISTING_GROUP_MESSAGE: "@GKO-1478",
-    // GKO-283 ("V4 doc page visibility only accepts PUBLIC") was scoped for
-    // batch 9 but dropped during implementation: APIM 4.11 actually accepts
-    // and stores `visibility: PRIVATE` on V4 API doc pages — verified
-    // 2026-04-29 against the kind cluster + APIM 4.11. The Xray scenario is
-    // either outdated or describes a product gap. Tracked in
-    // "Batch 9 - Skipped Tests.md".
+    // GKO-283 ("V4 doc page visibility only accepts PUBLIC") — not covered:
+    // APIM 4.12 actually accepts and stores `visibility: PRIVATE` on V4 API
+    // doc pages. Verified 2026-04-29 against the kind cluster + APIM 4.12.
+    // The Xray scenario is either outdated or describes a product gap.
   },
   V2_API_LIFECYCLE: {
     V2_UPDATE_API_PATH: "@GKO-1065",
@@ -116,10 +114,9 @@ export const XRAY = {
     V2_IMPORT_NON_EXISTING_CATEGORY_DRYRUN: "@GKO-605",
     V2_NO_PLANS_STARTED: "@GKO-606",
     V2_NO_PLANS_STOPPED: "@GKO-607",
-    // GKO-653 (V2 exported read-only round-trip) — removed from batch 5:
-    // APIM does not support CRD export for V2 APIs (/management/v2/.../_export/crd
+    // GKO-653 (V2 exported read-only round-trip) — not covered: APIM does
+    // not support CRD export for V2 APIs (/management/v2/.../_export/crd
     // returns 400 "definition version 2.0.0 is not supported anymore").
-    // Tracked in "Batch 5 - Skipped Tests.md".
   },
   APPLICATIONS_MEMBERS: {
     APP_NON_EXISTING_MEMBER: "@GKO-533",
@@ -171,7 +168,7 @@ export const XRAY = {
     APP_CLIENT_ID_OPTIONAL: "@GKO-563",
     APP_CLIENT_ID_UNIQUE: "@GKO-564",
     APP_PO_ROLE_OVERWRITE: "@GKO-567",
-    // Batch 8 — admission edge cases & lifecycle
+    // admission edge cases & lifecycle
     APP_READ_ONLY_IN_APIM: "@GKO-505",
     APP_BROWSER_VALID_URIS: "@GKO-578",
     APP_SPA_GRANT_TYPES: "@GKO-579",
@@ -227,9 +224,9 @@ export const XRAY = {
     V4_APIKEY_STAGGERED_EXPIRY: "@GKO-TBD-V4-APIKEY-STAGGERED-EXPIRY",
   },
   // NATIVE_APIS group removed — 10 tests were never committed due to the
-  // APIM native-plan serialization bug (see "Batch 3 - Skipped Tests.md").
-  // GKO-874 and GKO-875 were listed in batch 2 but their test files were
-  // also never committed; they are tracked as not-yet-covered.
+  // APIM native-plan serialization bug. GKO-874 and GKO-875 were listed
+  // but their test files were also never committed; they are tracked as
+  // not-yet-covered.
   GROUPS: {
     CREATE_WITH_MEMBER: "@GKO-983",
     CREATE_NON_EXISTING_USER: "@GKO-984",
@@ -259,10 +256,9 @@ export const XRAY = {
     RECOVERY_REAPPLY: "@GKO-1808",
     CR_MANAGED_READ_ONLY: "@GKO-1456",
     OPERATOR_RESTART_RECOVERY: "@GKO-1451",
-    // GKO-1392 (ResolvedRefs absence) — still skipped in batch 8: the GKO
-    // operator continues to emit the ResolvedRefs condition. Originally
-    // skipped in batch 3, re-confirmed in batch 7. Re-add when the operator
-    // stops populating that condition.
+    // GKO-1392 (ResolvedRefs absence) — still not covered: the GKO
+    // operator continues to emit the ResolvedRefs condition. Re-add
+    // when the operator stops populating that condition.
   },
   MANAGEMENT_CONTEXT: {
     NON_EXISTING_ENV: "@GKO-472",
@@ -294,9 +290,8 @@ export const XRAY = {
     V4_METADATA_ON_IMPORT: "@GKO-239",
     V4_EXPORT_IMPORT_ROUND_TRIP: "@GKO-1472",
     V4_TERRAFORM_IMPORT_EXPORT_PARITY: "@GKO-1927",
-    // GKO-1471 (V2 import/export round-trip) — dropped from batch 5:
-    // APIM does not support CRD export for V2 APIs. Tracked in
-    // "Batch 5 - Skipped Tests.md".
+    // GKO-1471 (V2 import/export round-trip) — not covered: APIM does not
+    // support CRD export for V2 APIs.
   },
   MEMBERS: {
     V4_NON_EXISTING_MEMBER: "@GKO-251",
@@ -334,15 +329,13 @@ export const XRAY = {
     V2_REMOVE_GROUP: "@GKO-400",
     V2_NOTIFY_MEMBERS: "@GKO-401",
     V2_PO_NOT_OVERWRITEABLE: "@GKO-601",
-    // GKO-602 (V2 API with a different PRIMARY_OWNER is rejected) — dropped
-    // from batch 5: GKO admission does not enforce this (product gap). The
-    // webhook accepts the CR and the API is created in APIM. Tracked in
-    // "Batch 5 - Skipped Tests.md" as a GKO product bug.
+    // GKO-602 (V2 API with a different PRIMARY_OWNER is rejected) — not
+    // covered: GKO admission does not enforce this (product gap). The
+    // webhook accepts the CR and the API is created in APIM.
     V2_TAKE_OVER_PO: "@GKO-657",
-    // GKO-659 (adding PO to members has no effect) — dropped from batch 5
-    // because the companion GKO-602 scenario is also dropped, and GKO-601
-    // already verifies that re-declaring the mgmt-ctx user as PO is a no-op.
-    // Tracked in "Batch 5 - Skipped Tests.md".
+    // GKO-659 (adding PO to members has no effect) — not covered: the
+    // companion GKO-602 scenario is also not covered, and GKO-601 already
+    // verifies that re-declaring the mgmt-ctx user as PO is a no-op.
     V2_ADD_GROUP_REFS: "@GKO-1003",
     PRIMARY_OWNER_VISIBILITY: "@GKO-1457",
   },
@@ -378,7 +371,7 @@ export const XRAY = {
   },
   // TCP_FAILOVER group removed — tcp-failover.test.ts was never committed
   // (GKO-79 depended on TCP proxy setup that the test cluster does not
-  // provide). Tracked in "Batch 3 - Skipped Tests.md".
+  // provide).
   TERRAFORM: {
     APPLY_COMPLEX_CONFIG: "@GKO-1926",
     APIM_CONTAINS_ALL_ENTITIES: "@GKO-1929",
@@ -392,9 +385,9 @@ export const XRAY = {
     CREATE_APP_AND_SUBSCRIPTION: "@GKO-1379",
     VALID_AND_MALFORMED_HCL: "@GKO-1453",
     GENERAL_CONDITIONS_PAGE: "@GKO-1930",
-    // Batch 8 — error handling in TF + delete-via-TF lifecycle.
+    // error handling in TF + delete-via-TF lifecycle.
     // GKO-1381 (Role-specific access for managing Apps and subscriptions
-    // via Terraform) is dropped from batch 8: the test harness has no
+    // via Terraform) is not covered: the test harness has no
     // mechanism to provision a non-admin APIM user, so role scoping cannot
     // be exercised. Re-evaluate when the bootstrap supports multi-user
     // accounts (the same blocker as GKO-1541).
@@ -419,12 +412,11 @@ export const XRAY = {
     V2_DOC_PRIVATE_NO_GROUPS: "@GKO-200",
     V2_DOC_PRIVATE_GROUPS: "@GKO-315",
     V2_DOC_PRIVATE_EXCLUDED: "@GKO-316",
-    // GKO-662 (delete fetched ROOT pages) — dropped from batch 5: APIM
-    // rejects V2 ROOT fetchers backed by http-fetcher with
-    // "The plugin does not support to import a directory". ROOT pages need
-    // a directory-listing fetcher (e.g. github-fetcher) which in turn
-    // requires real GitHub credentials. Tracked in "Batch 5 - Skipped
-    // Tests.md".
+    // GKO-662 (delete fetched ROOT pages) — not covered: APIM rejects V2
+    // ROOT fetchers backed by http-fetcher with "The plugin does not
+    // support to import a directory". ROOT pages need a directory-listing
+    // fetcher (e.g. github-fetcher) which in turn requires real GitHub
+    // credentials.
     V2_DOC_RENAME: "@GKO-699",
     V2_WEB_FETCHER_NO_URL: "@GKO-620",
     V2_WEB_FETCHER_WARNING: "@GKO-621",
@@ -436,30 +428,29 @@ export const XRAY = {
     V4_GITHUB_FETCHER_WARNING: "@GKO-637",
     V4_DOC_RENAME: "@GKO-1469",
     DOC_PUBLIC_ACCESS_CROSS_VERSION: "@GKO-1467",
-    // Batch 8 — folder + page rename within a deployed API
+    // folder + page rename within a deployed API
     V4_DOC_FOLDER_RENAME: "@GKO-700",
-    // GKO-626, 675, 689, 692 — dropped from batch 5 because the GKO
-    // admission webhook pre-fetches github-fetcher pages at apply time
-    // and the test cluster has no real GitHub credentials, so any positive
+    // GKO-626, 675, 689, 692 — not covered because the GKO admission
+    // webhook pre-fetches github-fetcher pages at apply time and the test
+    // cluster has no real GitHub credentials, so any positive
     // github-fetcher test is rejected by admission with "Page cannot be
     // fetched, this can come from either invalid / missing github
-    // credentials or an invalid file path". Tracked in "Batch 5 - Skipped
-    // Tests.md".
+    // credentials or an invalid file path".
   },
   NOTIFICATIONS: {
     REMOVE_NOTIFICATION: "@GKO-1238",
     NOTIFICATION_HOOKS_GROUPS: "@GKO-1231",
     API_REF_NOTIFICATION: "@GKO-1232",
     NOTIFICATIONS_VIA_CRS: "@GKO-1461",
-    // GKO-1236 (cannot delete Notification CR if referenced) — dropped from
-    // batch 5: GKO does not enforce an in-use protection on Notification
-    // CRs. The delete succeeds even when an API references it. Tracked in
-    // "Batch 5 - Skipped Tests.md" as a product gap.
+    // GKO-1236 (cannot delete Notification CR if referenced) — not
+    // covered: GKO does not enforce an in-use protection on Notification
+    // CRs. The delete succeeds even when an API references it (product
+    // gap).
     WORKS_WITH_V2_AND_V4: "@GKO-1237",
     NOT_IN_EXPORT: "@GKO-1233",
     DUPLICATE_CONSOLE_REJECTED: "@GKO-1235",
     CR_READONLY_VIA_MAPI: "@GKO-1234",
-    // Batch 8 — recipient & label assertions via mAPI
+    // recipient & label assertions via mAPI
     VIEW_NOTIFICATION_SETTINGS: "@GKO-1194",
     NOTIFICATION_LABEL: "@GKO-1195",
     DEFAULT_RECIPIENT_OWNER: "@GKO-1196",
@@ -481,8 +472,7 @@ export const XRAY = {
     REMOVE_CERT: "@GKO-2247",
     REMOVE_MULTI_CERTS: "@GKO-2250",
     DEPENDENCY_RESOLUTION: "@GKO-1449",
-    // ── Batch 8 — bucket I ─────────────────────────────────────
-    // Application clientCertificates admission rejections.
+    // ── Application clientCertificates admission rejections ─────
     // GKO has no standalone MTLSCertificate CRD; these scenarios are
     // exercised through the Application CR's spec.settings.app.tls.
     CRD_BAD_PEM: "@GKO-2117",
@@ -496,13 +486,13 @@ export const XRAY = {
     CRD_MISSING_NAME: "@GKO-2143",
     CRD_MISSING_CERT_FIELD: "@GKO-2146",
     CRD_INVALID_DATA_DATES: "@GKO-2148",
-    // ── Batch 8 — bucket H — clientCertificates visibility ─────
+    // ── Application clientCertificates visibility ─────
     // Implemented as mAPI assertions on the application's settings.tls:
     NO_ACTIVE_CERTS_DISPLAY: "@GKO-2219",
     CERT_INFO_DISPLAY: "@GKO-2223",
     ACTIVE_CERT_DISPLAY: "@GKO-2246",
     EXPIRED_CERT_DISPLAY: "@GKO-2251",
-    // ── Batch 9 — Application clientCertificates lifecycle (bucket-H) ───
+    // ── Application clientCertificates lifecycle ─────
     // CR-driven cert lifecycle scenarios verified through mAPI assertions
     // on `application.settings.tls.client_certificates[]`.
     CERT_FUTURE_START_DATE: "@GKO-2228",
@@ -512,7 +502,7 @@ export const XRAY = {
     CERT_CHANGE_NEW_ENTITY: "@GKO-2215",
     CERT_UPDATE_VIA_CR: "@GKO-2261",
     CERT_DUPLICATE_REJECTED: "@GKO-2235",
-    // ── Batch 9 — Application clientCertificates date-acceptance ────────
+    // ── Application clientCertificates date-acceptance ────────
     // CR-driven scenarios verifying the operator accepts various date
     // combinations and the cert lands as ACTIVE in mAPI. The wire format
     // uses epoch-millisecond timestamps; the ACTIVE / SCHEDULED /
@@ -536,7 +526,7 @@ export const XRAY = {
     //   PKCS7 (no GKO analog; clientCertificates accepts PEM only):
     //              2220, 2229, 2230, 2253, 2259
     //   Future-start (SCHEDULED, not observable in mAPI): 2126, 2129
-    //   Duplicates of bucket I admission tests:
+    //   Duplicates of admission tests:
     //              2237, 2240, 2242, 2256, 2262
   },
 } as const;

@@ -15,7 +15,7 @@
  */
 
 /**
- * V2 API Documentation — batch 5 coverage.
+ * V2 API Documentation.
  *
  * Xray tests:
  *   GKO-146: Add/remove/update inline documentation pages on a V2 API
@@ -376,12 +376,11 @@ test.describe("V2 API Documentation — Extended", () => {
     await kubectl.del(fixture(GROUP_A));
   });
 
-  // GKO-662 (delete fetched ROOT pages) — dropped from batch 5. APIM
-  // rejects V2 ROOT fetchers backed by http-fetcher ("The plugin does not
-  // support to import a directory"); ROOT pages require a directory-capable
+  // GKO-662 (delete fetched ROOT pages) — not covered. APIM rejects V2
+  // ROOT fetchers backed by http-fetcher ("The plugin does not support
+  // to import a directory"); ROOT pages require a directory-capable
   // fetcher such as github-fetcher, which in turn needs real GitHub
-  // credentials that the test cluster does not provision. Tracked in
-  // "Batch 5 - Skipped Tests.md".
+  // credentials that the test cluster does not provision.
 
   // ── GKO-699: Rename folder & documentation page ─────────────
 
