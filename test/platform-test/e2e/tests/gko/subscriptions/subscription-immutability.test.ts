@@ -48,6 +48,12 @@ test.describe("Subscription — immutability", () => {
     kubectl,
     mapi,
   }) => {
+    // Setup (api+app+sub apply) plus the 15s drift-detection window
+    // routinely sits in the 25-30s band; under parallel contention it
+    // crosses the default budget. Same pattern as the other reconcile
+    // verification tests in this PR.
+    test.slow();
+
     await test.step("Deploy API, application, and subscription to JWT plan", async () => {
       await kubectl.apply(fixture(V4_API));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -89,16 +95,25 @@ test.describe("Subscription — immutability", () => {
         // admission-level rejection is fine
       }
 
-      // Give the operator time to attempt (and reject) the change.
-      await new Promise((r) => setTimeout(r, 5_000));
-
-      const sub = await mapi.fetchSubscription(apiId, subId);
-      const rawPlan = (sub as unknown as { plan?: unknown }).plan;
-      const planId =
-        typeof rawPlan === "string"
-          ? rawPlan
-          : (rawPlan as { id?: string } | undefined)?.id;
-      expect(planId, "APIM subscription plan must remain JWT").toBe(jwtPlanId);
+      // Sample APIM repeatedly across a window that covers the operator's
+      // reconcile loop — a single fixed sleep would silently miss a
+      // late-arriving rewrite. If the planId ever drifts, fail fast.
+      const windowMs = 15_000;
+      const intervalMs = 1_500;
+      const deadline = Date.now() + windowMs;
+      do {
+        const sub = await mapi.fetchSubscription(apiId, subId);
+        const rawPlan = (sub as unknown as { plan?: unknown }).plan;
+        const planId =
+          typeof rawPlan === "string"
+            ? rawPlan
+            : (rawPlan as { id?: string } | undefined)?.id;
+        expect(planId, "APIM subscription plan must remain JWT throughout the reconcile window").toBe(
+          jwtPlanId,
+        );
+        if (Date.now() >= deadline) break;
+        await new Promise((r) => setTimeout(r, intervalMs));
+      } while (Date.now() < deadline);
     });
 
     // Cleanup in reverse dependency order: sub → app → api.
