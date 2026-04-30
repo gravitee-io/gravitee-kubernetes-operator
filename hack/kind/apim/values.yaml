@@ -80,6 +80,8 @@ gateway:
     enabled: false
   ingressController:
     enabled: true
+  deployment:
+    serviceAccount: gravitee-gateway
   servers:
     - type: http
       port: 8082
