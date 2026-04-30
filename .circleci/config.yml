@@ -453,7 +453,11 @@ jobs:
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
       - run:
-          name: Start cluster
+          name: Start cluster (APIM 4.11)
+          no_output_timeout: 30m
+          environment:
+            APIM_IMAGE_TAG: "4.11.x-latest"
+            APIM_CHART_VERSION: "4.11.*"
           command: |
             make start-cluster
       - run:
