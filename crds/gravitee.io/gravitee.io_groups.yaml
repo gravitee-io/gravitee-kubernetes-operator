@@ -49,6 +49,10 @@ spec:
               type: object
             spec:
               properties:
+                apiRole:
+                  type: string
+                applicationRole:
+                  type: string
                 contextRef:
                   properties:
                     kind:

@@ -1928,6 +1928,23 @@ _Appears in:_
 
 
 
+#### Roles
+
+
+
+
+
+
+
+_Appears in:_
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `APPLICATION` _string_ |  |  |  |
+| `API` _string_ |  |  |  |
+
+
 #### Status
 
 
@@ -1967,6 +1984,7 @@ _Appears in:_
 | `name` _string_ |  |  | Required: \{\} <br /> |
 | `notifyMembers` _boolean_ | If true, new members added to the API spec will<br />be notified when the API is synced with APIM. | true | Optional: \{\} <br /> |
 | `members` _[Member](#member) array_ |  |  |  |
+| `roles` _[Roles](#roles)_ |  |  | Optional: \{\} <br /> |
 
 
 
