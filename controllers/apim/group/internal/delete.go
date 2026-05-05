@@ -35,5 +35,5 @@ func Delete(ctx context.Context, group *v1alpha1.Group) error {
 		return err
 	}
 
-	return apim.Env.DeleteGroup(group.Status.ID)
+	return apim.Env.DeleteGroup(group)
 }
