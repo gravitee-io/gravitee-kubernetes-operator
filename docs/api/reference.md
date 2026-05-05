@@ -1964,6 +1964,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `id` _string_ |  |  | Optional: \{\} <br /> |
+| `hrid` _string_ |  |  |  |
 | `name` _string_ |  |  | Required: \{\} <br /> |
 | `notifyMembers` _boolean_ | If true, new members added to the API spec will<br />be notified when the API is synced with APIM. | true | Optional: \{\} <br /> |
 | `members` _[Member](#member) array_ |  |  |  |

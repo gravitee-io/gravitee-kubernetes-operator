@@ -133,8 +133,21 @@ func (g *Group) GetOrgID() string {
 	return g.Status.OrgID
 }
 
-func (g *Group) PopulateIDs(mCtx core.ContextModel, _ bool) {
-	g.Spec.ID = g.pickID(mCtx)
+func (g *Group) PopulateIDs(mCtx core.ContextModel, automationAPIManaged bool) {
+	if g.GetID() == "" || automationAPIManaged {
+		g.Spec.HRID = refs.NewNamespacedNameFromObject(g).HRID()
+		return
+	}
+
+	// Legacy mode => managed by UUIDs
+	// Generated GKO side
+	if g.Status.ID != "" {
+		g.Spec.ID = g.Status.ID
+	}
+
+	if g.Spec.ID == "" {
+		g.Spec.ID = g.pickID(mCtx)
+	}
 }
 
 func (g *Group) pickID(mCtx core.ContextModel) string {

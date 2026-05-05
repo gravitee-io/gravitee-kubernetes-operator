@@ -25,7 +25,6 @@ import (
 
 func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
 	ns := group.Namespace
-	spec := group.Spec
 
 	apim, err := apim.FromContextRef(ctx, group.ContextRef(), ns)
 	if err != nil {
@@ -34,7 +33,7 @@ func CreateOrUpdate(ctx context.Context, group *v1alpha1.Group) error {
 
 	group.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
 
-	status, err := apim.Env.ImportGroup(spec.Type)
+	status, err := apim.Env.ImportGroup(group)
 	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}

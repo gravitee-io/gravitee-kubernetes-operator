@@ -50,7 +50,7 @@ func validateDryRun(ctx context.Context, group *v1alpha1.Group) *errors.Admissio
 
 	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
 
-	status, err := apim.Env.DryRunImportGroup(cp.Spec.Type)
+	status, err := apim.Env.DryRunImportGroup(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs
