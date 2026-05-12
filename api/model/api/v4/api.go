@@ -80,6 +80,9 @@ type V4BaseApi struct {
 	Members []*base.Member `json:"members,omitempty"`
 	// API Failover
 	Failover *Failover `json:"failover,omitempty"`
+	// ConsoleNotification struct sent to the Automation API, not part of the CRD spec.
+	// +kubebuilder:skipversion
+	ConsoleNotification *AutomationConsoleNotification `json:"consoleNotification,omitempty"`
 }
 
 type Api struct {
@@ -165,7 +168,7 @@ func (api *Api) GetNotificationRefs() []core.ObjectRef {
 func (api *Api) SetConsoleNotification(consoleNotification core.ConsoleNotificationSettingsObject) {
 	if consoleNotification == nil {
 		api.ConsoleNotification = nil
-	} else if impl, ok := consoleNotification.(*base.ConsoleNotificationConfiguration); ok {
+	} else if impl, ok := consoleNotification.(*AutomationConsoleNotification); ok {
 		api.ConsoleNotification = impl
 	}
 }

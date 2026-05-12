@@ -47,12 +47,8 @@ async function createServiceAccount(mapi: { http: { managementV1Path(r: string):
   }
 }
 
-// Skipped: master-GKO ↔ APIM 4.11 payload mismatch. Master GKO sends embedded
-// `consoleNotificationConfiguration` via the Automation API v4 import; APIM
-// 4.11 silently drops it (PORTAL setting comes back with hooks/groups empty
-// and origin=MANAGEMENT). Verified passing with GKO 4.11.4 against APIM 4.11.
-// Re-enable when the test setup pins APIM ≥ 4.12.
-test.describe.skip("Notification Lifecycle", () => {
+
+test.describe("Notification Lifecycle", () => {
   test(`Remove notification from API ${XRAY.NOTIFICATIONS.REMOVE_NOTIFICATION}`, async ({
     kubectl,
     mapi,

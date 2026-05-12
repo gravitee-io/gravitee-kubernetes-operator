@@ -142,7 +142,7 @@ func (api *ApiV4Definition) GetNotificationRefs() []core.ObjectRef {
 func (api *ApiV4Definition) SetConsoleNotification(consoleNotification core.ConsoleNotificationSettingsObject) {
 	if consoleNotification == nil {
 		api.Spec.ConsoleNotification = nil
-	} else if impl, ok := consoleNotification.(*base.ConsoleNotificationConfiguration); ok {
+	} else if impl, ok := consoleNotification.(*v4.AutomationConsoleNotification); ok {
 		api.Spec.ConsoleNotification = impl
 	}
 }

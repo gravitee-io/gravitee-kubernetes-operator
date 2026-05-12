@@ -87,9 +87,6 @@ type ApiBase struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default:={}
 	NotificationsRefs []refs.NamespacedName `json:"notificationsRefs,omitempty"`
-	// ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
-	// +kubebuilder:skipversion
-	ConsoleNotification *ConsoleNotificationConfiguration `json:"consoleNotificationConfiguration,omitempty"`
 }
 
 // GetResources implements core.ApiDefinitionModel.

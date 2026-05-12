@@ -34,8 +34,6 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 	It("should add notification to API after creation", func() {
 
-		Skip("Skip until Automations API is ready to support notifications")
-
 		By("Applying context and groups")
 
 		groupFixture := fixture.

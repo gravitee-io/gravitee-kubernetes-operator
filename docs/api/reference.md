@@ -112,6 +112,7 @@ _Appears in:_
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
 | `execution_mode` _string_ | Execution mode that eventually runs the API in the gateway | v4-emulation-engine | Enum: [v3 v4-emulation-engine] <br /> |
+| `consoleNotificationConfiguration` _[ConsoleNotificationConfiguration](#consolenotificationconfiguration)_ | ConsoleNotification struct sent to the mAPI, not part of the CRD spec. |  |  |
 | `contextRef` _[NamespacedName](#namespacedname)_ |  |  |  |
 | `local` _boolean_ | local defines if the api is local or not.<br />If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API<br />but without setting the update flag in the datastore.<br />If false, the Operator will not create the ConfigMaps for the Gateway.<br />Instead, it pushes the API to the Management API and forces it to update the event in the datastore.<br />This will cause Gateways to fetch the APIs from the datastore | false | Optional: \{\} <br /> |
 
@@ -985,7 +986,6 @@ _Appears in:_
 | `categories` _string array_ | The list of categories the API belongs to.<br />Categories are reflected in APIM portal so that consumers can easily find the APIs they need. | \{  \} | Optional: \{\} <br /> |
 | `notifyMembers` _boolean_ | If true, new members added to the API spec will<br />be notified when the API is synced with APIM. | true | Optional: \{\} <br /> |
 | `notificationsRefs` _[NamespacedName](#namespacedname) array_ | References to Notification custom resources to setup notifications.<br />For an API Notification CRD `eventType` field must be set to `api`<br />and only events set via `apiEvents` attributes are used.<br />Only one notification with `target` equals to `console` is admitted. | \{  \} | Optional: \{\} <br /> |
-| `consoleNotificationConfiguration` _[ConsoleNotificationConfiguration](#consolenotificationconfiguration)_ | ConsoleNotification struct sent to the mAPI, not part of the CRD spec. |  |  |
 
 
 #### ApiState
@@ -1061,7 +1061,8 @@ ConsoleNotificationConfiguration mAPI object to update notification settings.
 
 
 _Appears in:_
-- [ApiBase](#apibase)
+- [Api](#api)
+- [ApiDefinitionV2Spec](#apidefinitionv2spec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -2681,6 +2682,7 @@ _Appears in:_
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
 | `execution_mode` _string_ | Execution mode that eventually runs the API in the gateway | v4-emulation-engine | Enum: [v3 v4-emulation-engine] <br /> |
+| `consoleNotificationConfiguration` _[ConsoleNotificationConfiguration](#consolenotificationconfiguration)_ | ConsoleNotification struct sent to the mAPI, not part of the CRD spec. |  |  |
 
 
 #### Consumer
@@ -3443,6 +3445,23 @@ _Appears in:_
 
 
 
+#### AutomationConsoleNotification
+
+
+
+AutomationConsoleNotification is the Automation API object to update notification settings for v4 APIs.
+
+
+
+_Appears in:_
+- [V4BaseApi](#v4baseapi)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `events` _string array_ |  |  |  |
+| `groups` _string array_ |  |  |  |
+
+
 
 
 
@@ -4113,5 +4132,6 @@ _Appears in:_
 | `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `failover` _[Failover](#failover)_ | API Failover |  |  |
+| `consoleNotification` _[AutomationConsoleNotification](#automationconsolenotification)_ | ConsoleNotification struct sent to the Automation API, not part of the CRD spec. |  |  |
 
 
