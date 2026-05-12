@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
@@ -31,6 +32,7 @@ import (
 )
 
 var _ core.ConsoleNotificationSettingsObject = &base.ConsoleNotificationConfiguration{}
+var _ core.ConsoleNotificationSettingsObject = &v4.AutomationConsoleNotification{}
 var _ core.ConditionAware = &Notification{}
 
 // Notification defines notification settings in Gravitee

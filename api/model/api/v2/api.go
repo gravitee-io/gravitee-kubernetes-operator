@@ -79,6 +79,9 @@ type Api struct {
 	// +kubebuilder:default:=v4-emulation-engine
 	// +kubebuilder:validation:Enum=v3;v4-emulation-engine;
 	ExecutionMode string `json:"execution_mode,omitempty"`
+	// ConsoleNotification struct sent to the mAPI, not part of the CRD spec.
+	// +kubebuilder:skipversion
+	ConsoleNotification *base.ConsoleNotificationConfiguration `json:"consoleNotificationConfiguration,omitempty"`
 }
 
 func (api *Api) GetType() string {
