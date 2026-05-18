@@ -37,6 +37,7 @@ type Objects struct {
 	Group             *v1alpha1.Group
 	SharedPolicyGroup *v1alpha1.SharedPolicyGroup
 	Notification      *v1alpha1.Notification
+	Dictionary        *v1alpha1.Dictionary
 
 	randomSuffix string
 }

@@ -48,6 +48,8 @@ const (
 	ApiV4SubsField               IndexField = "api-v4-subscription"
 	AppSubsField                 IndexField = "app-subscription"
 	SPGContextField              IndexField = "spg-context"
+	GroupContextField            IndexField = "group-context"
+	DictionaryContextField       IndexField = "dictionary-context"
 )
 
 func (f IndexField) String() string {
@@ -87,6 +89,9 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	collect(newIndexer(ctx, cache, &v1alpha1.Subscription{}, AppSubsField, indexAppSubscriptions))
 	collect(newIndexer(ctx, cache, &v1alpha1.SharedPolicyGroup{}, SPGContextField,
 		indexSharedPolicyGroupManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.Group{}, GroupContextField, indexGroupManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.Dictionary{}, DictionaryContextField,
+		indexDictionaryManagementContexts))
 
 	return errors.NewAggregate(errs)
 }
@@ -300,6 +305,22 @@ func indexSharedPolicyGroupManagementContexts(spg *v1alpha1.SharedPolicyGroup, f
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(spg, spg.Spec.Context))
+}
+
+func indexGroupManagementContexts(group *v1alpha1.Group, fields *[]string) {
+	if group.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(group, group.Spec.Context))
+}
+
+func indexDictionaryManagementContexts(dict *v1alpha1.Dictionary, fields *[]string) {
+	if dict.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(dict, dict.Spec.Context))
 }
 
 func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {

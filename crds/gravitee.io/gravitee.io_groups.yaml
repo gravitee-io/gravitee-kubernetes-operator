@@ -25,6 +25,8 @@ spec:
     kind: Group
     listKind: GroupList
     plural: groups
+    shortNames:
+      - graviteegroups
     singular: group
   scope: Namespaced
   versions:

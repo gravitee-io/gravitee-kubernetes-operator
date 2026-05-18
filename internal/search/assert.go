@@ -29,6 +29,34 @@ const reviewMessage = "You can review those by running the following command: "
 func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 	ctxRef := refs.NewNamespacedName(mCtx.GetNamespace(), mCtx.GetName())
 
+	if err := assertNoApiDefinitions(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
+	if err := assertNoApiV4Definitions(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
+	if err := assertNoApplications(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
+	if err := assertNoSharedPolicyGroups(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
+	if err := assertNoGroups(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
+	if err := assertNoDictionaries(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func assertNoApiDefinitions(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
 	apis := &v1alpha1.ApiDefinitionList{}
 	if err := FindByFieldReferencing(
 		ctx,
@@ -44,10 +72,13 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 				reviewMessage+
 				"kubectl get apidefinitions.gravitee.io "+
 				kubectlCommand,
-			mCtx.GetName(), len(apis.Items), mCtx.GetName(),
+			contextName, len(apis.Items), contextName,
 		)
 	}
+	return nil
+}
 
+func assertNoApiV4Definitions(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
 	apisV4 := &v1alpha1.ApiV4DefinitionList{}
 	if err := FindByFieldReferencing(
 		ctx,
@@ -64,10 +95,13 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 				reviewMessage+
 				"kubectl get apiv4definitions.gravitee.io "+
 				kubectlCommand,
-			mCtx.GetName(), len(apisV4.Items), mCtx.GetName(),
+			contextName, len(apisV4.Items), contextName,
 		)
 	}
+	return nil
+}
 
+func assertNoApplications(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
 	apps := &v1alpha1.ApplicationList{}
 	if err := FindByFieldReferencing(
 		ctx,
@@ -84,10 +118,13 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 				reviewMessage+
 				"kubectl get applications.gravitee.io "+
 				kubectlCommand,
-			mCtx.GetName(), len(apps.Items), mCtx.GetName(),
+			contextName, len(apps.Items), contextName,
 		)
 	}
+	return nil
+}
 
+func assertNoSharedPolicyGroups(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
 	spg := &v1alpha1.SharedPolicyGroupList{}
 	if err := FindByFieldReferencing(
 		ctx,
@@ -104,10 +141,55 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 				reviewMessage+
 				"kubectl get sharedpolicygroups.gravitee.io "+
 				kubectlCommand,
-			mCtx.GetName(), len(spg.Items), mCtx.GetName(),
+			contextName, len(spg.Items), contextName,
 		)
 	}
+	return nil
+}
 
+func assertNoGroups(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	groups := &v1alpha1.GroupList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		GroupContextField,
+		ctxRef,
+		groups,
+	); err != nil {
+		return err
+	}
+
+	if len(groups.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d groups are relying on this context. "+
+				reviewMessage+
+				"kubectl get groups.gravitee.io "+
+				kubectlCommand,
+			contextName, len(groups.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoDictionaries(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	dictionaries := &v1alpha1.DictionaryList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		DictionaryContextField,
+		ctxRef,
+		dictionaries,
+	); err != nil {
+		return err
+	}
+
+	if len(dictionaries.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d dictionaries are relying on this context. "+
+				reviewMessage+
+				"kubectl get dictionaries.gravitee.io "+
+				kubectlCommand,
+			contextName, len(dictionaries.Items), contextName,
+		)
+	}
 	return nil
 }
 
