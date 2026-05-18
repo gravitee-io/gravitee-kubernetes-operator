@@ -57,6 +57,7 @@ rules:
       - sharedpolicygroups.gravitee.io
       - groups.gravitee.io
       - notifications.gravitee.io
+      - dictionaries.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
       - gatewayclassparameters.gravitee.io
       - kafkaroutes.gravitee.io

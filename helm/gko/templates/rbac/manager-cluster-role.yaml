@@ -275,6 +275,28 @@ rules:
     verbs:
       - get
       - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - dictionaries
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - dictionaries/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - dictionaries/status
+    verbs:
+      - get
+      - update
 {{- if .Values.gatewayAPI.controller.enabled }}
   - apiGroups:
       - gravitee.io

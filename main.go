@@ -26,7 +26,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
@@ -38,6 +43,7 @@ import (
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
+	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
@@ -57,12 +63,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	v1 "k8s.io/api/networking/v1"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
@@ -74,9 +78,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -207,26 +208,6 @@ func buildCacheOptions(ns string) cache.Options {
 }
 
 func registerControllers(mgr manager.Manager) {
-	if err := (&apidefinition.Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiDefinitionList{}),
-	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for API definitions")
-		os.Exit(1)
-	}
-
-	if err := (&apidefinition.V4Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
-	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for API v4 definitions")
-		os.Exit(1)
-	}
-
 	if err := (&managementcontext.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
@@ -234,6 +215,16 @@ func registerControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for management contexts")
+		os.Exit(1)
+	}
+
+	if err := (&apidefinition.Reconciler{
+		Client:   k8s.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiDefinitionList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for API definitions")
 		os.Exit(1)
 	}
 
@@ -257,6 +248,34 @@ func registerControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for API resources")
 		os.Exit(1)
 	}
+
+	if err := (&notification.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("notification-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for notification")
+		os.Exit(1)
+	}
+
+	registerAutomationAPIControllers(mgr)
+
+	if env.Config.EnableGatewayAPI {
+		registerGatewayAPIsControllers(mgr)
+	}
+}
+
+func registerAutomationAPIControllers(mgr manager.Manager) {
+	if err := (&apidefinition.V4Reconciler{
+		Client:   k8s.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for API v4 definitions")
+		os.Exit(1)
+	}
+
 	if err := (&application.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
@@ -279,7 +298,9 @@ func registerControllers(mgr manager.Manager) {
 
 	if err := (&group.Reconciler{
 		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("group-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.GroupList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for groups")
 		os.Exit(1)
@@ -295,17 +316,14 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 
-	if err := (&notification.Reconciler{
+	if err := (&dictionary.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("notification-controller"),
+		Recorder: mgr.GetEventRecorderFor("dictionary-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.DictionaryList{}),
 	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for notification")
+		log.Global.Error(err, "Unable to create controller for dictionaries")
 		os.Exit(1)
-	}
-
-	if env.Config.EnableGatewayAPI {
-		registerGatewayAPIsControllers(mgr)
 	}
 }
 
@@ -493,6 +511,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (groupAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (dictAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

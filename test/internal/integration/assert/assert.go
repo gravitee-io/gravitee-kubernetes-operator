@@ -167,6 +167,11 @@ func GroupFailed(group *v1alpha1.Group) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, group.Status.ProcessingStatus)
 }
 
+func DictionaryAccepted(dict *v1alpha1.Dictionary) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(dict.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func NotificationCompleted(notification *v1alpha1.Notification) error {
 	return Equals(reconcileCondition, false, notification.Status.IsFailed())
 }

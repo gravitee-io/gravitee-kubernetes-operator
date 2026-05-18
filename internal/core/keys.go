@@ -50,6 +50,7 @@ const (
 	ApplicationFinalizer             = "finalizers.gravitee.io/applicationdeletion"
 	SubscriptionFinalizer            = "finalizers.gravitee.io/subscriptions"
 	GroupFinalizer                   = "finalizers.gravitee.io/groups"
+	DictionaryFinalizer              = "finalizers.gravitee.io/dictionaries"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 	GraviteeClassParametersFinalizer = "finalizers.gravitee.io/gatewayclassparameters"

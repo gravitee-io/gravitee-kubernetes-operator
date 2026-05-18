@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
@@ -170,7 +171,9 @@ func init() {
 
 	runtimeUtil.Must((&group.Reconciler{
 		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("group-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.GroupList{}),
 	}).SetupWithManager(mgr))
 
 	runtimeUtil.Must((&policygroups.Reconciler{
@@ -184,6 +187,13 @@ func init() {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("notification-controller"),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&dictionary.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("dictionary-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.DictionaryList{}),
 	}).SetupWithManager(mgr))
 
 	go func() {

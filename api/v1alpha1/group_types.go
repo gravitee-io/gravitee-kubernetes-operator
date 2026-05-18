@@ -80,6 +80,7 @@ func (s *GroupStatus) SetProcessingStatus(status core.ProcessingStatus) {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Members at",type=string,JSONPath=`.status.members`,description="The number of members added to the group"
 // +kubebuilder:storageversion
+// +kubebuilder:resource:shortName=graviteegroups
 type Group struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

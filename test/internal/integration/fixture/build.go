@@ -42,6 +42,7 @@ type Files struct {
 	SharedPolicyGroups string
 	Group              string
 	Notification       string
+	Dictionary         string
 }
 
 type FSBuilder struct {
@@ -97,6 +98,10 @@ func (b *FSBuilder) Build() *Objects {
 
 	if ing := decodeIfDefined(f.Ingress, &netV1.Ingress{}, ingKind); ing != nil {
 		setupIngress(obj, ing, suffix)
+	}
+
+	if dict := decodeIfDefined(f.Dictionary, &v1alpha1.Dictionary{}, dictionaryKind); dict != nil {
+		setupDictionary(obj, dict, suffix)
 	}
 
 	if notif := decodeIfDefined(f.Notification, &v1alpha1.Notification{}, notificationKind); notif != nil {
@@ -201,6 +206,9 @@ func setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix str
 	if obj.SharedPolicyGroup != nil {
 		obj.SharedPolicyGroup.Spec.Context = obj.Context.GetNamespacedName()
 	}
+	if obj.Dictionary != nil {
+		obj.Dictionary.Spec.Context = obj.Context.GetNamespacedName()
+	}
 }
 
 func ensureNilContexts(obj *Objects) {
@@ -272,6 +280,13 @@ func setUpGroup(obj *Objects, group **v1alpha1.Group, suffix string) {
 	obj.Group.Name += suffix
 	obj.Group.Spec.Name += suffix
 	obj.Group.Namespace = constants.Namespace
+}
+
+func setupDictionary(obj *Objects, dict **v1alpha1.Dictionary, suffix string) {
+	obj.Dictionary = *dict
+	obj.Dictionary.Name += suffix
+	obj.Dictionary.Spec.Name += suffix
+	obj.Dictionary.Namespace = constants.Namespace
 }
 
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
@@ -378,6 +393,11 @@ func (b *FSBuilder) WithGroup(file string) *FSBuilder {
 
 func (b *FSBuilder) WithIngress(file string) *FSBuilder {
 	b.files.Ingress = file
+	return b
+}
+
+func (b *FSBuilder) WithDictionary(file string) *FSBuilder {
+	b.files.Dictionary = file
 	return b
 }
 

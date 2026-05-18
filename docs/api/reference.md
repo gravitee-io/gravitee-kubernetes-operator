@@ -4,6 +4,7 @@
 - [gravitee.io/v1alpha1](#graviteeiov1alpha1)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
+- [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
@@ -27,6 +28,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ApiResource](#apiresource)
 - [ApiV4Definition](#apiv4definition)
 - [Application](#application)
+- [Dictionary](#dictionary)
 - [GatewayClassParameters](#gatewayclassparameters)
 - [Group](#group)
 - [KafkaRoute](#kafkaroute)
@@ -292,6 +294,69 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Dictionary
+
+
+
+Dictionary is a Gravitee APIM dictionary managed as a Kubernetes resource.
+Dictionaries provide key/value data that can be referenced in API policies
+using Gravitee EL expressions: `{#dictionaries['hrid']['key']}`.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `Dictionary` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[DictionarySpec](#dictionaryspec)_ |  |  |  |
+| `status` _[DictionaryStatus](#dictionarystatus)_ |  |  |  |
+
+
+#### DictionarySpec
+
+
+
+DictionarySpec defines the desired state of a Dictionary.
+
+
+
+_Appears in:_
+- [Dictionary](#dictionary)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the dictionary. |  | Required: \{\} <br /> |
+| `description` _string_ | Detailed description of the dictionary. |  | Optional: \{\} <br /> |
+| `deployed` _boolean_ | If true, a MANUAL dictionary is deployed in the gateway and a DYNAMIC dictionary is started.<br />Setting this back to false will stop or undeploy the dictionary. |  | Required: \{\} <br /> |
+| `type` _[DictionaryType](#dictionarytype)_ |  |  | Enum: [MANUAL DYNAMIC] <br />Required: \{\} <br /> |
+| `manual` _[ManualSpec](#manualspec)_ | Manual dictionary specification. Required when type is MANUAL, forbidden when type is DYNAMIC. |  | Optional: \{\} <br /> |
+| `dynamic` _[DynamicSpec](#dynamicspec)_ | Dynamic dictionary specification. Required when type is DYNAMIC, forbidden when type is MANUAL. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this dictionary is synced to. |  |  |
+
+
+#### DictionaryStatus
+
+
+
+DictionaryStatus defines the observed state of a Dictionary.
+
+
+
+_Appears in:_
+- [Dictionary](#dictionary)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Dictionary in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When dictionary has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### GatewayClassParameters
@@ -1703,6 +1768,188 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/dictionary
+
+
+
+
+#### DictionaryType
+
+_Underlying type:_ _string_
+
+DictionaryType is the type of dictionary.
+MANUAL is to be updated manually, DYNAMIC is updated and deployed automatically.
+
+_Validation:_
+- Enum: [MANUAL DYNAMIC]
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `MANUAL` |  |
+| `DYNAMIC` |  |
+
+
+#### DynamicSpec
+
+
+
+DynamicSpec defines a dynamic dictionary populated from an external provider on a schedule.
+
+
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `provider` _[Provider](#provider)_ | HTTP provider configuration for fetching dictionary data. |  | Required: \{\} <br /> |
+| `trigger` _[Trigger](#trigger)_ | Renewal schedule controlling how often the provider is polled. |  | Required: \{\} <br /> |
+
+
+#### ManualSpec
+
+
+
+ManualSpec defines a manual dictionary with static key/value properties.
+
+
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `properties` _object (keys:string, values:string)_ | Key/value pairs that constitute the dictionary data. |  | Required: \{\} <br /> |
+
+
+#### Provider
+
+
+
+Provider defines the HTTP provider configuration for a DYNAMIC dictionary.
+
+
+
+_Appears in:_
+- [DynamicSpec](#dynamicspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _string_ | Type of dictionary provider. |  | Enum: [HTTP] <br />Required: \{\} <br /> |
+| `url` _string_ | URL of the provider to fetch data from. |  | Required: \{\} <br /> |
+| `method` _string_ | HTTP method used to call the provider. |  | Enum: [GET POST PUT PATCH DELETE HEAD OPTIONS TRACE CONNECT] <br />Required: \{\} <br /> |
+| `specification` _string_ | JOLT specification to transform the returned payload into dictionary entries. |  | Required: \{\} <br /> |
+| `body` _string_ | Optional request payload sent to the provider. |  | Optional: \{\} <br /> |
+| `useSystemProxy` _boolean_ | Use the system proxy for outbound requests to the provider. |  | Optional: \{\} <br /> |
+| `headers` _[ProviderHeader](#providerheader) array_ | HTTP headers sent with the provider request. |  | Optional: \{\} <br /> |
+
+
+#### ProviderHeader
+
+
+
+ProviderHeader is an HTTP header sent with a provider request.
+
+
+
+_Appears in:_
+- [Provider](#provider)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Header name. |  | Required: \{\} <br /> |
+| `value` _string_ | Header value. |  | Required: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [DictionaryStatus](#dictionarystatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Dictionary in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When dictionary has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Trigger
+
+
+
+Trigger defines the renewal configuration for a DYNAMIC dictionary.
+
+
+
+_Appears in:_
+- [DynamicSpec](#dynamicspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `rate` _integer_ | Polling interval value (used with Unit to define the schedule). |  | Required: \{\} <br /> |
+| `unit` _[TriggerUnit](#triggerunit)_ | Time unit for the polling interval. |  | Enum: [MICROSECONDS MILLISECONDS SECONDS MINUTES HOURS DAYS] <br />Required: \{\} <br /> |
+
+
+#### TriggerUnit
+
+_Underlying type:_ _string_
+
+TriggerUnit is the time unit for a dictionary trigger schedule.
+
+_Validation:_
+- Enum: [MICROSECONDS MILLISECONDS SECONDS MINUTES HOURS DAYS]
+
+_Appears in:_
+- [Trigger](#trigger)
+
+| Field | Description |
+| --- | --- |
+| `MICROSECONDS` |  |
+| `MILLISECONDS` |  |
+| `SECONDS` |  |
+| `MINUTES` |  |
+| `HOURS` |  |
+| `DAYS` |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a dictionary resource.
+Dictionaries can be used in Gravitee EL expressions:
+`{#dictionaries['hrid']['property key']}`.
+
+
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the dictionary. |  | Required: \{\} <br /> |
+| `description` _string_ | Detailed description of the dictionary. |  | Optional: \{\} <br /> |
+| `deployed` _boolean_ | If true, a MANUAL dictionary is deployed in the gateway and a DYNAMIC dictionary is started.<br />Setting this back to false will stop or undeploy the dictionary. |  | Required: \{\} <br /> |
+| `type` _[DictionaryType](#dictionarytype)_ |  |  | Enum: [MANUAL DYNAMIC] <br />Required: \{\} <br /> |
+| `manual` _[ManualSpec](#manualspec)_ | Manual dictionary specification. Required when type is MANUAL, forbidden when type is DYNAMIC. |  | Optional: \{\} <br /> |
+| `dynamic` _[DynamicSpec](#dynamicspec)_ | Dynamic dictionary specification. Required when type is DYNAMIC, forbidden when type is MANUAL. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/gateway
 
 
@@ -2371,6 +2618,7 @@ _Appears in:_
 - [Auth](#auth)
 - [Cloud](#cloud)
 - [Console](#console)
+- [DictionarySpec](#dictionaryspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
 - [ResourceOrRef](#resourceorref)
@@ -2505,8 +2753,10 @@ _Appears in:_
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
 - [AutomationStatus](#automationstatus)
+- [DictionaryStatus](#dictionarystatus)
 - [GroupStatus](#groupstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
