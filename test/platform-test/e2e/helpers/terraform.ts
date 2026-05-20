@@ -17,6 +17,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -68,15 +69,39 @@ export async function initWorkspace(fixtureName: string): Promise<TfWorkspace> {
   const configPath = path.resolve(__dirname, "../../config.yaml");
   const config = await loadGraviteeConfig(configPath);
   const baseUrl = config.apim?.baseUrl ?? "http://localhost:30083";
-  const pluginCache = await resolvePluginCacheDir();
 
   const env: Record<string, string> = {
     ...(process.env as Record<string, string>),
     APIM_SERVER_URL: `${baseUrl}/automation`,
     APIM_USERNAME: config.apim?.auth?.username ?? "admin",
     APIM_PASSWORD: config.apim?.auth?.password ?? "admin",
-    TF_PLUGIN_CACHE_DIR: pluginCache,
   };
+
+  // Auto-pickup the locally-built provider mirror (see
+  // scripts/build-tf-provider.sh) so e2e tests can exercise unreleased
+  // provider features without each developer needing to export
+  // TF_CLI_CONFIG_FILE by hand. An explicit caller-set TF_CLI_CONFIG_FILE
+  // wins, matching the usual CLI-override convention.
+  const mirrorDefault = path.join(homedir(), ".terraform.d", "gko-e2e-mirror", ".terraformrc");
+  const tfCliConfig =
+    env["TF_CLI_CONFIG_FILE"] ?? (existsSync(mirrorDefault) ? mirrorDefault : undefined);
+
+  if (tfCliConfig) {
+    env["TF_CLI_CONFIG_FILE"] = tfCliConfig;
+    // Drop TF_PLUGIN_CACHE_DIR for the mirror: it may have been inherited
+    // from the spread of process.env above, so it must be deleted, not just
+    // left unset. The mirror serves the apim provider straight from local
+    // disk (no registry download), so the cache adds nothing — and combining
+    // TF_PLUGIN_CACHE_DIR with a filesystem_mirror of an unpacked provider
+    // triggers intermittent "provider ... still not detected in plugin-cache"
+    // init failures, a known Terraform bug. The fixtures use no other
+    // provider, so dropping the cache costs nothing.
+    delete env["TF_PLUGIN_CACHE_DIR"];
+  } else {
+    // No mirror: fall back to the public registry, with a shared plugin
+    // cache so each initWorkspace call doesn't redownload the provider.
+    env["TF_PLUGIN_CACHE_DIR"] = await resolvePluginCacheDir();
+  }
 
   const dir = await mkdtemp(path.join(tmpdir(), "e2e-tf-"));
   await cp(fixture(fixtureName), dir, { recursive: true });

@@ -482,6 +482,16 @@ jobs:
             sudo unzip -o /tmp/terraform.zip -d /usr/local/bin/
             terraform version
       - run:
+          name: Build Gravitee Terraform provider from source
+          # Some e2e tests exercise provider features merged to main but not
+          # yet on registry.terraform.io. The script builds the provider from
+          # source and stages it into a filesystem mirror that
+          # helpers/terraform.ts auto-detects via TF_CLI_CONFIG_FILE.
+          # Override the ref via the TF_PROVIDER_REF pipeline env var when a
+          # specific commit/tag must be tested instead of main.
+          command: |
+            bash test/platform-test/scripts/build-tf-provider.sh "${TF_PROVIDER_REF:-main}"
+      - run:
           name: Wait for operator to be ready
           command: |
             kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
