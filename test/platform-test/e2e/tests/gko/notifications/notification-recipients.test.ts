@@ -54,12 +54,7 @@ const NOTIF_1239 = "crds/notifications/notification-1239-group-members.yaml";
 const GROUP_1239 = "crds/notifications/group-1239-group-members.yaml";
 const API_1239 = "crds/notifications/v4-api-1239-with-group-members.yaml";
 
-// Skipped: master-GKO ↔ APIM 4.11 payload mismatch. Master GKO sends embedded
-// `consoleNotificationConfiguration` via the Automation API v4 import; APIM
-// 4.11 silently drops it (PORTAL setting comes back with hooks/groups empty
-// and origin=MANAGEMENT). Verified passing with GKO 4.11.4 against APIM 4.11.
-// Re-enable when the test setup pins APIM ≥ 4.12.
-test.describe.skip("Notifications — recipients & visibility", () => {
+test.describe("Notifications — recipients & visibility", () => {
   test.afterEach(async () => {
     // Reverse dependency order: API → Notification → Group
     await kubectlSafe.del(fixture(API_1239)).catch(() => {});

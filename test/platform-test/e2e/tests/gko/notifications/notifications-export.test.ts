@@ -44,12 +44,7 @@ interface ExportedCrd {
   };
 }
 
-// Skipped: master-GKO ↔ APIM 4.11 payload mismatch. Master GKO sends embedded
-// `consoleNotificationConfiguration` via the Automation API v4 import; APIM
-// 4.11 silently drops it (PORTAL setting comes back with hooks/groups empty
-// and origin=MANAGEMENT). Verified passing with GKO 4.11.4 against APIM 4.11.
-// Re-enable when the test setup pins APIM ≥ 4.12.
-test.describe.skip("Notifications — export & validation", () => {
+test.describe("Notifications — export & validation", () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V4_API_WITH_NOTIF)).catch(() => {});
     await kubectlSafe.del(fixture(DUPLICATE_API)).catch(() => {});
