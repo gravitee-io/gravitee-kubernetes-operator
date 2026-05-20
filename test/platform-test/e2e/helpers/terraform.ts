@@ -16,7 +16,7 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
@@ -140,6 +140,37 @@ export async function plan(ws: TfWorkspace): Promise<{ stdout: string; hasChange
     }
     throw err;
   }
+}
+
+/**
+ * Write `*.auto.tfvars.json` into the workspace so subsequent `apply`/`plan`
+ * runs pick up the variable values without needing -var flags. Single file is
+ * overwritten between calls — callers don't need to clean up.
+ *
+ * Use this for tests that drive multi-step rotations through the same
+ * workspace (apply with keys=[A], then apply with keys=[B], etc.).
+ */
+export async function writeVars(
+  ws: TfWorkspace,
+  vars: Record<string, unknown>,
+): Promise<void> {
+  const file = path.join(ws.dir, "e2e.auto.tfvars.json");
+  await writeFile(file, JSON.stringify(vars, null, 2), "utf8");
+}
+
+/**
+ * Like {@link apply} but expects terraform to fail. Returns the combined
+ * stdout+stderr so callers can assert on the error message (e.g. for
+ * server-side validation of api-key length).
+ */
+export async function applyExpectFailure(ws: TfWorkspace): Promise<string> {
+  try {
+    await tf(ws, ["apply", "-auto-approve", "-no-color"]);
+  } catch (err: unknown) {
+    const e = err as { stderr?: string; stdout?: string; message?: string };
+    return `${e.stdout ?? ""}\n${e.stderr ?? ""}\n${e.message ?? ""}`;
+  }
+  throw new Error("expected terraform apply to fail, but it succeeded");
 }
 
 /** Get a terraform output value by name. */
