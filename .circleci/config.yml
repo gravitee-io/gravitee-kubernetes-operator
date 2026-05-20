@@ -585,9 +585,14 @@ jobs:
       - run:
           name: Generate cache keys for Go tools
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
             - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -839,9 +844,14 @@ jobs:
       - run:
           name: Generate cache keys for Go tools
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
             - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
