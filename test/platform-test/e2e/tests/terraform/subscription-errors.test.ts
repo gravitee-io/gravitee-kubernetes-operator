@@ -41,6 +41,11 @@ test.describe("Terraform — subscription errors & app delete", () => {
   // ── GKO-1380: invalid subscription is rejected by apply ──────
 
   test(`Invalid subscription config produces a clear apply error ${XRAY.TERRAFORM.INVALID_SUBSCRIPTION_CONFIG} ${TAGS.REGRESSION}`, async () => {
+    // init + apply + destroy are sequential terraform invocations, each capped
+    // at terraform.TF_TIMEOUT_MS. The test timeout must exceed their combined
+    // ceiling so terraform's own timeout fires first instead of Playwright
+    // orphaning a running terraform process (leaking the .tfstate lock).
+    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
     let ws: TfWorkspace | null = null;
     try {
       ws = await terraform.initWorkspace("terraform-1380-invalid-sub");
@@ -73,6 +78,12 @@ test.describe("Terraform — subscription errors & app delete", () => {
   test(`Terraform destroy archives the application in APIM ${XRAY.TERRAFORM.DELETE_APPLICATION_TF} ${TAGS.REGRESSION}`, async ({
     mapi,
   }) => {
+    // init + apply + destroy + the safety-net destroyWorkspace are sequential
+    // terraform invocations, each capped at terraform.TF_TIMEOUT_MS. The test
+    // timeout must exceed their combined ceiling so terraform's own timeout
+    // fires first instead of Playwright orphaning a running terraform process
+    // (leaking the .tfstate lock).
+    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
     const ws = await terraform.initWorkspace("terraform-1383-app-delete");
     try {
       await test.step("Apply creates the application", async () => {
