@@ -83,14 +83,8 @@ test.describe("CR-managed resources are read-only in APIM", () => {
   });
 
   // ── GKO-1234: Notification settings tagged origin=KUBERNETES
-  //
-  // Skipped: master-GKO ↔ APIM 4.11 payload mismatch. Master GKO sends embedded
-  // `consoleNotificationConfiguration` via the Automation API v4 import; APIM
-  // 4.11 silently drops it, so the default PORTAL setting comes back with
-  // origin=MANAGEMENT. Verified passing with GKO 4.11.4 against APIM 4.11.
-  // Re-enable when the test setup pins APIM ≥ 4.12.
 
-  test.skip(`Notification settings created via CR are origin=KUBERNETES ${XRAY.NOTIFICATIONS.CR_READONLY_VIA_MAPI} ${TAGS.REGRESSION}`, async ({
+  test(`Notification settings created via CR are origin=KUBERNETES ${XRAY.NOTIFICATIONS.CR_READONLY_VIA_MAPI} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
