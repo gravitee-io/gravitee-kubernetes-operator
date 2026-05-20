@@ -40,17 +40,19 @@ interface PlanWithGeneralConditions {
 
 test.describe("Terraform — Plan General Conditions", () => {
   test.beforeAll(async () => {
-    // terraform init + apply on a fresh workspace blows past Playwright's 30s
-    // default hook timeout — bump it to give terraform room to provision the
-    // provider, run init and apply.
-    test.setTimeout(180_000);
+    // terraform init + apply + output on a fresh workspace blows past
+    // Playwright's 30s default hook timeout. Use the shared workspace timeout,
+    // which is sized above the combined terraform.TF_TIMEOUT_MS ceilings so
+    // terraform's own per-process timeout fires before Playwright orphans a
+    // running terraform process (which would leak the .tfstate lock).
+    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
     ws = await terraform.initWorkspace("terraform-general-conditions");
     await terraform.apply(ws);
     apiId = await terraform.output(ws, "api_id");
   });
 
   test.afterAll(async () => {
-    test.setTimeout(180_000);
+    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
     if (ws) await terraform.destroyWorkspace(ws);
   });
 

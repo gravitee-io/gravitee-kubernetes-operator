@@ -26,7 +26,32 @@ import { fixture } from "../setup.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
-const TF_TIMEOUT_MS = 60_000;
+
+/**
+ * Per-process timeout for a single `terraform` invocation (init, plan, apply,
+ * output, destroy). When exceeded, execFile SIGTERM-kills the child; terraform
+ * releases the .tfstate lock on SIGTERM.
+ */
+export const TF_TIMEOUT_MS = 60_000;
+
+/**
+ * Playwright timeout that every hook or test driving a terraform workspace
+ * MUST allow, via `test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS)`.
+ *
+ * The ordering matters. Playwright does not kill child processes when a hook
+ * or test times out — it only abandons the pending promise. If the Playwright
+ * timeout is *smaller* than the terraform process still running underneath,
+ * Playwright moves on while that `terraform` child keeps running, orphaned and
+ * still holding the .tfstate lock. The next test's `destroy` then fails with
+ * "Error acquiring the state lock".
+ *
+ * Sizing this above {@link TF_TIMEOUT_MS} × (the number of sequential
+ * terraform calls a workspace lifecycle makes: init, apply/plan, output,
+ * destroy, plus the safety-net destroy in destroyWorkspace) guarantees
+ * terraform's own per-process timeout always fires first and cleans up its
+ * child — Playwright's timeout becomes the outer bound it should be.
+ */
+export const TF_WORKSPACE_TIMEOUT_MS = TF_TIMEOUT_MS * 6;
 
 export interface TfWorkspace {
   dir: string;
