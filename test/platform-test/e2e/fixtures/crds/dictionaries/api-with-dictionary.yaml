@@ -38,6 +38,7 @@ spec:
         - name: echo
           type: http-proxy
           inheritConfiguration: false
+          secondary: false
           configuration:
             target: https://api.gravitee.io/echo
   flowExecution:
