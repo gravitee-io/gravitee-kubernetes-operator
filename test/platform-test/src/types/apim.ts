@@ -847,3 +847,32 @@ export interface NotificationSetting {
   name?: string;
   origin?: "KUBERNETES" | "MANAGEMENT" | null;
 }
+
+// ── Group Types ──────────────────────────────────────────────
+
+/**
+ * A Group as returned by the v1 management API
+ * (`/configuration/groups` list and `/configuration/groups/{id}` detail).
+ *
+ * Field naming is the raw wire shape: `disable_membership_notifications`
+ * is snake_case (it is the inverse of the Automation API / Terraform
+ * `notify_members` flag) and `origin` reflects the write path
+ * (`KUBERNETES` for groups written via the Automation API / Terraform).
+ */
+export interface Group {
+  id: string;
+  hrid?: string;
+  name: string;
+  origin?: "KUBERNETES" | "MANAGEMENT" | null;
+  environmentId?: string;
+  manageable?: boolean;
+  primary_owner?: boolean;
+  disable_membership_notifications?: boolean;
+}
+
+/** A resolved member of a group (`/configuration/groups/{id}/members`). */
+export interface GroupMember {
+  id: string;
+  displayName?: string;
+  roles?: Record<string, string>;
+}
