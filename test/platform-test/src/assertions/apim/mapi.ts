@@ -23,7 +23,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -366,6 +366,119 @@ export class Mapi {
       throw new Error(`Failed to export CRD for API ${apiId}: ${response.status}`);
     }
     return response.text();
+  }
+
+  // ── Groups ─────────────────────────────────────────────────
+
+  /**
+   * List all groups in the environment via the v1 management API.
+   *
+   * The v1 `/configuration/groups` endpoint returns full group objects
+   * (including `hrid`, `origin` and `disable_membership_notifications`) as a
+   * plain array — unlike the v2 list, which is paginated and omits `hrid`.
+   */
+  async listGroups(): Promise<Group[]> {
+    const path = this.http.managementV1Path("/configuration/groups");
+    const res = await this.http.get<Group[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list groups: ${res.status} ${res.statusText}`);
+    }
+    return res.body;
+  }
+
+  /** Fetch a single group by its human-readable id. @throws if not found. */
+  async fetchGroupByHrid(hrid: string): Promise<Group> {
+    const groups = await this.listGroups();
+    const group = groups.find((g) => g.hrid === hrid);
+    if (!group) {
+      throw new Error(
+        `Group with hrid "${hrid}" not found. Known hrids: ${groups.map((g) => g.hrid).join(", ")}`,
+      );
+    }
+    return group;
+  }
+
+  /** Fetch a group by hrid and assert it partially matches the expected shape. */
+  async assertGroupMatches(hrid: string, expected: DeepPartial<Group>): Promise<void> {
+    const group = await this.fetchGroupByHrid(hrid);
+    throwIfFailed(deepPartialMatch(group, expected));
+  }
+
+  async waitForGroupMatches(
+    hrid: string,
+    expected: DeepPartial<Group>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertGroupMatches(hrid, expected),
+      { description: `group "${hrid}" matches expected shape`, ...options },
+    );
+  }
+
+  /** List the resolved members of a group (v1 management API). */
+  async fetchGroupMembers(groupId: string): Promise<GroupMember[]> {
+    const path = this.http.managementV1Path(`/configuration/groups/${groupId}/members`);
+    const res = await this.http.get<GroupMember[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list members for group ${groupId}: ${res.status} ${res.statusText}`);
+    }
+    return res.body;
+  }
+
+  /** Assert no group with the given hrid exists (e.g. after `terraform destroy`). */
+  async assertGroupAbsent(hrid: string): Promise<void> {
+    const groups = await this.listGroups();
+    const found = groups.find((g) => g.hrid === hrid);
+    if (found) {
+      throw new AssertionError({
+        message: `Expected no group with hrid "${hrid}", but found one (id ${found.id})`,
+      });
+    }
+  }
+
+  async waitForGroupAbsent(hrid: string, options: PollOptions = {}): Promise<void> {
+    await poll(
+      () => this.assertGroupAbsent(hrid),
+      { description: `group "${hrid}" is absent`, ...options },
+    );
+  }
+
+  /**
+   * Delete a group directly from APIM by its id.
+   *
+   * Used to simulate an out-of-band change so a subsequent `terraform plan`
+   * has to detect the drift and propose recreating the group.
+   */
+  async deleteGroup(groupId: string): Promise<void> {
+    const path = this.http.managementV1Path(`/configuration/groups/${groupId}`);
+    const res = await this.http.delete(path);
+    if (res.status !== 204 && res.status !== 200) {
+      throw new Error(`Failed to delete group ${groupId}: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  /**
+   * Idempotently create a `gravitee`-source user (service account) in APIM.
+   *
+   * Group member tests need a member that actually resolves to a user. The
+   * only pre-existing memory-source user is `admin`, the org primary owner —
+   * and APIM rejects adding the primary owner as a group member (it surfaces
+   * as an HTTP 500). A dedicated service account is a non-PO user that
+   * resolves cleanly. A 400/409 is treated as "already exists" so the call
+   * is safe to repeat across runs.
+   */
+  async createServiceAccount(name: string): Promise<void> {
+    const path = this.http.managementV1Path("/users");
+    const res = await this.http.post(path, {
+      firstname: name,
+      lastname: "Service",
+      email: `${name}@gravitee.io`,
+      source: "gravitee",
+      sourceId: name,
+    });
+    if (![200, 201, 400, 409].includes(res.status)) {
+      throw new Error(`Failed to create service account ${name}: ${res.status} ${res.statusText}`);
+    }
   }
 }
 

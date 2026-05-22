@@ -26,4 +26,5 @@ export type {
   Subscription, SubscriptionStatus, SubscriptionConsumerStatus, ConsumerStatus,
   Listener, HttpListener, SubscriptionListener, TcpListener, KafkaListener,
   Entrypoint, EndpointGroupV4, EndpointV4,
+  Group, GroupMember,
 } from "../../types/index.js";
