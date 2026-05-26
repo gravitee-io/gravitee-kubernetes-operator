@@ -236,10 +236,14 @@ export const XRAY = {
     PREVENT_PO_GROUP_AS_MEMBER: "@GKO-974",
   },
   DICTIONARIES: {
-    CREATE_AND_RESOLVE: "@GKO-2562",
-    DELETE_DICTIONARY: "@GKO-2563",
-    DYNAMIC_RESOLVE: "@GKO-2564",
-    DYNAMIC_TEMPLATE_RESOLVE: "@GKO-TBD-DICT-DYNAMIC-TPL",
+    // @parent: GKO-2562
+    CREATE_AND_RESOLVE: "@GKO-2903",
+    DELETE_DICTIONARY: "@GKO-2905",
+    DYNAMIC_RESOLVE: "@GKO-2904",
+    // DYNAMIC_TEMPLATE_RESOLVE is currently skipped pending GKO-2858 — templated
+    // Dictionary cannot be deleted because secret-resolve runs during the delete
+    // reconcile.
+    DYNAMIC_TEMPLATE_RESOLVE: "@GKO-2902",
   },
   SHARED_POLICY_GROUPS: {
     ADD_SPG_TO_API: "@GKO-976",
