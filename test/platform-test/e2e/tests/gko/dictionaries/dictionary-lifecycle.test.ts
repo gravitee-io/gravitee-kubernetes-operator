@@ -18,10 +18,10 @@
  * Dictionaries Lifecycle tests.
  *
  * Xray tests:
- *   GKO-2562: Create a manual dictionary and verify resolution in API response
- *   GKO-2563: Delete a dictionary
- *   GKO-2564: Create a dynamic dictionary and verify resolution in API response
- *   GKO-TBD-DICT-ADMISSION-DYNAMIC-WITH-MANUAL: Admission rejects DYNAMIC + manual
+ *   GKO-2903: Create a manual dictionary and verify resolution in API response
+ *   GKO-2904: Create a dynamic dictionary and verify resolution in API response
+ *   GKO-2905: Delete a dictionary
+ *   GKO-2912: Admission webhook rejects DYNAMIC dictionary with manual field set
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
