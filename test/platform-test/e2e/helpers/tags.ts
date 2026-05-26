@@ -244,6 +244,14 @@ export const XRAY = {
     // Dictionary cannot be deleted because secret-resolve runs during the delete
     // reconcile.
     DYNAMIC_TEMPLATE_RESOLVE: "@GKO-2902",
+    // DYNAMIC lifecycle coverage for GKO-2565 (start/stop semantics).
+    // Tags are placeholders until the corresponding Xray tickets are filed.
+    DYNAMIC_DELETE_STOPS: "@GKO-TBD-DICT-DYNAMIC-DELETE",
+    DYNAMIC_UPDATE_PROPAGATES: "@GKO-TBD-DICT-DYNAMIC-UPDATE",
+    // DYNAMIC_DEPLOYED_FALSE_STOPS is currently skipped pending GKO-2908 —
+    // setting deployed=false on a DYNAMIC dict doesn't stop gateway resolution.
+    DYNAMIC_DEPLOYED_FALSE_STOPS: "@GKO-TBD-DICT-DYNAMIC-DEPLOYED-FALSE",
+    ADMISSION_REJECTS_DYNAMIC_WITH_MANUAL: "@GKO-TBD-DICT-ADMISSION-DYNAMIC-WITH-MANUAL",
   },
   SHARED_POLICY_GROUPS: {
     ADD_SPG_TO_API: "@GKO-976",
