@@ -21,6 +21,7 @@
  *   GKO-2562: Create a manual dictionary and verify resolution in API response
  *   GKO-2563: Delete a dictionary
  *   GKO-2564: Create a dynamic dictionary and verify resolution in API response
+ *   GKO-TBD-DICT-ADMISSION-DYNAMIC-WITH-MANUAL: Admission rejects DYNAMIC + manual
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -148,5 +149,16 @@ test.describe("Dictionaries — Lifecycle", () => {
       await kubectl.del(dictFixture);
       await kubectl.waitForDeletion("dictionary", DICT_NAME);
     });
+  });
+
+  // ── Admission: DYNAMIC + manual field is rejected ─────────────
+
+  test(`Admission webhook rejects DYNAMIC dictionary with manual field set ${XRAY.DICTIONARIES.ADMISSION_REJECTS_DYNAMIC_WITH_MANUAL} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+  }) => {
+    const invalidFixture = fixture("crds/dictionaries/dictionary-dynamic-invalid.yaml");
+
+    const stderr = await kubectl.applyExpectFailure(invalidFixture);
+    expect(stderr).toMatch(/dictionary type is DYNAMIC but 'manual' field is set/);
   });
 });

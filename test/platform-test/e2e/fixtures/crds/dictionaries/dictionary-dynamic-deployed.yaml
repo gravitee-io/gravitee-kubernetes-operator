@@ -1,0 +1,54 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Started DYNAMIC dictionary (deployed=true). Used together with
+# dictionary-dynamic-undeployed.yaml to verify the stop pathway: flipping
+# `deployed` to false stops polling without deleting the CR.
+apiVersion: gravitee.io/v1alpha1
+kind: Dictionary
+metadata:
+  name: e2e-dict-dyn-deployed
+spec:
+  contextRef:
+    name: "dev-ctx"
+    namespace: "default"
+  name: "e2e-dict-dyn-deployed"
+  description: "DYNAMIC dictionary in deployed (started) state"
+  type: DYNAMIC
+  deployed: true
+  dynamic:
+    provider:
+      type: HTTP
+      url: "https://api.gravitee.io/echo"
+      method: GET
+      headers:
+        - name: "X-Test-Specific"
+          value: "DEPLOYED"
+      specification: |
+        [
+          {
+            "operation": "shift",
+            "spec": {
+              "headers": {
+                "*": {
+                  "$": "[#2].key",
+                  "@": "[#2].value"
+                }
+              }
+            }
+          }
+        ]
+    trigger:
+      rate: 5
+      unit: SECONDS
