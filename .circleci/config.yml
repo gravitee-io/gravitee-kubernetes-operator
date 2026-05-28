@@ -495,6 +495,16 @@ jobs:
           name: Wait for operator to be ready
           command: |
             kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
+      # Export the Xray Cloud API credentials BEFORE the e2e run. keeper/env-export
+      # runs on_success, so placing it here (while the pipeline is still green)
+      # guarantees the creds are in BASH_ENV for the `when: always` push step below
+      # even when the e2e run itself fails.
+      - keeper/env-export:
+          secret-url: keeper://so8_Jh2tP-AZSbtIYcbBvg/custom_field/CLIENT ID
+          var-name: XRAY_CLIENT_ID
+      - keeper/env-export:
+          secret-url: keeper://so8_Jh2tP-AZSbtIYcbBvg/custom_field/CLIENT SECRET
+          var-name: XRAY_CLIENT_SECRET
       - run:
           name: Run Playwright E2E tests
           command: npm --prefix test/platform-test run e2e
@@ -523,6 +533,22 @@ jobs:
       - store_artifacts:
           path: /tmp/junit/reports/cover-e2e.out
           destination: cover-e2e.out
+      # Best-effort push of the Playwright JUnit results to Xray Cloud so the
+      # "Test Coverage" panel on each linked Jira Test reflects the latest run.
+      # See test/platform-test/scripts/xray/README.md for env-var setup. Runs
+      # `when: always` so failed test runs still surface their failures in Jira
+      # instead of leaving the panel stuck at TO DO. The XRAY_CLIENT_* creds are
+      # exported earlier (before the e2e run) by keeper/env-export.
+      - run:
+          name: Push results to Xray Cloud
+          when: always
+          command: ./test/platform-test/scripts/xray/push-results.sh
+      # Note: store_artifacts can't take `when: always`; if e2e fails this
+      # step is skipped — the Test Execution key is still in the build log
+      # of the "Push results to Xray Cloud" step above.
+      - store_artifacts:
+          path: /tmp/xray-test-execution.txt
+          destination: xray-test-execution.txt
 
   job-stage-helm-chart:
     docker:
