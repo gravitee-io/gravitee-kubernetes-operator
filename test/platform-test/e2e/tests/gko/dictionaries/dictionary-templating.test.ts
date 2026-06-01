@@ -46,11 +46,7 @@ async function gatewayBaseUrl(): Promise<string> {
 }
 
 test.describe("Dictionaries — Templating", () => {
-  // FIXME(GKO-2858): a secret-templated Dictionary cannot be deleted — the Dictionary
-  // controller runs template.Compile before the IsBeingDeleted() check, so the finalizer
-  // is never removed and cleanup hangs in Terminating. Un-fixme once GKO-2858 is fixed.
-  // https://gravitee.atlassian.net/browse/GKO-2858
-  test.fixme(`Dynamic dictionary with secret templates resolves in API header ${XRAY.DICTIONARIES.DYNAMIC_TEMPLATE_RESOLVE} ${TAGS.REGRESSION}`, async ({
+  test(`Dynamic dictionary with secret templates resolves in API header ${XRAY.DICTIONARIES.DYNAMIC_TEMPLATE_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const secretFixture = fixture("crds/dictionaries/dictionary-dynamic-tpl-secret.yaml");
