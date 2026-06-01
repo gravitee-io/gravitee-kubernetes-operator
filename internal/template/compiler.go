@@ -129,6 +129,9 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 
 	err := cli.Get(ctx, nn, cm)
 	if kErrors.IsNotFound(err) {
+		if parentResourceDeleted {
+			return "", nil
+		}
 		return "", gerrors.NewResolveRefError(fmt.Errorf("configmap [%s/%s] not found", ns, name))
 	}
 
@@ -178,6 +181,9 @@ func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
 
 	err := cli.Get(ctx, nn, sec)
 	if kErrors.IsNotFound(err) {
+		if parentResourceDeleted {
+			return "", nil
+		}
 		return "", gerrors.NewResolveRefError(fmt.Errorf("secret [%s/%s] not found", ns, name))
 	}
 
