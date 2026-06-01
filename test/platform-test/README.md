@@ -2,6 +2,20 @@
 
 Assertion library for Gravitee platform e2e testing. TypeScript, minimal dependencies, test-runner agnostic.
 
+## Running the E2E test suite
+
+The Playwright suite under [`e2e/`](e2e/) drives end-to-end tests for both the
+**Gravitee Kubernetes Operator** and the **Terraform APIM provider** against a
+live APIM + Gateway stack. See **[e2e/README.md](e2e/README.md)** for
+prerequisites, cluster bootstrap, and how to run the suite.
+
+Quick start (assumes a local cluster with APIM + GKO is already running):
+
+```bash
+npm install && npm run build
+npm run e2e
+```
+
 ## Install
 
 ```bash
