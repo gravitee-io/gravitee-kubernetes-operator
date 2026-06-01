@@ -192,18 +192,7 @@ test.describe("Dictionaries — Dynamic lifecycle", () => {
     await kubectl.del(UPDATE_DICT_V2_FIXTURE);
   });
 
-  // FIXME(GKO-2908): Setting `deployed: false` on a DYNAMIC dictionary does
-  // not stop the gateway from resolving the value, even though APIM correctly
-  // persists `deployed: false` via the Automation API. Verified manually
-  // against a local sew stack on 2026-05-26: APIM-side state flips to
-  // deployed=false within ~5 s, but the gateway continues to return the
-  // resolved value for ≥ 90 s of polling (well past 18 trigger cycles). The
-  // CRD comment on api/model/dictionary/dictionary.go:37 claims "Setting this
-  // back to false will stop or undeploy the dictionary", but end-to-end that
-  // contract is broken — either APIM doesn't act on the flag for DYNAMIC
-  // dicts, or the operator needs to call a separate stop endpoint. Un-fixme
-  // once GKO-2908 is fixed. https://gravitee.atlassian.net/browse/GKO-2908
-  test.fixme(`Setting deployed=false on a dynamic dictionary stops gateway resolution ${XRAY.DICTIONARIES.DYNAMIC_DEPLOYED_FALSE_STOPS} ${TAGS.REGRESSION}`, async ({
+  test(`Setting deployed=false on a dynamic dictionary stops gateway resolution ${XRAY.DICTIONARIES.DYNAMIC_DEPLOYED_FALSE_STOPS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     test.setTimeout(120_000);
