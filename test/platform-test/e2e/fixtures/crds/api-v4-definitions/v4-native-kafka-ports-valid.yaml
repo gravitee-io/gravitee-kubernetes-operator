@@ -48,6 +48,10 @@ spec:
           configuration:
             bootstrapServers: "kafka.example.local:9092"
           secondary: false
+          sharedConfigurationOverride:
+            security:
+              protocol: PLAINTEXT
+
   plans:
     KeyLess:
       name: "Free plan"

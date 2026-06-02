@@ -15,60 +15,49 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-analytics-otel
+  name: e2e-v4-native-kafka-reporter-disabled
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-analytics-otel"
-  description: "E2E test: V4 API analytics otelLogs/reporterMetricsEnabled"
+  name: "e2e-v4-native-kafka-ports"
+  description: "E2E test: Native Kafka API plan ports validation"
   version: "1.0.0"
-  type: PROXY
+  type: NATIVE
   state: STOPPED
   analytics:
     enabled: true
-    otelLogs:
-      enabled: true
-    tracing:
-      enabled: true
-      verbose: true
-    logging:
-      condition: "{#request.method == 'GET'}"
-      mode:
-        entrypoint: true
-        endpoint: false
-      phase:
-        request: true
-        response: false
-      content:
-        headers: true
-        messageHeaders: false
-        payload: false
-        messagePayload: false
-        messageMetadata: false
+    reporterMetricsEnabled: false
   definitionContext:
     origin: KUBERNETES
     syncFrom: MANAGEMENT
   listeners:
-    - type: HTTP
-      paths:
-        - path: "/e2e-v4-analytics-otel"
+    - type: KAFKA
+      host: "kafka.example.local"
+      port: 9092
       entrypoints:
-        - type: http-proxy
+        - type: native-kafka
           qos: AUTO
   endpointGroups:
-    - name: Default HTTP proxy group
-      type: http-proxy
+    - name: Default Kafka group
+      type: native-kafka
       endpoints:
-        - name: Default HTTP proxy
-          type: http-proxy
+        - name: Default Kafka endpoint
+          type: native-kafka
           inheritConfiguration: false
           configuration:
-            target: https://api.gravitee.io/echo
+            bootstrapServers: "kafka.example.local:9092"
           secondary: false
+          sharedConfigurationOverride:
+            security:
+              protocol: PLAINTEXT
+
   plans:
     KeyLess:
       name: "Free plan"
       security:
         type: "KEY_LESS"
+      bootstrapPort: 9092
+      brokerRangeStart: 9100
+      brokerRangeEnd: 9102
 

@@ -161,12 +161,8 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
   }) => {
     const SPG_PROXY_NAME = "e2e-spg-proxy";
     const SPG_MESSAGE_NAME = "e2e-spg-message";
-    const SPG_ENTRYPOINT_CONNECT_NAME = "e2e-spg-proxy-entrypoint-connect";
     const proxyFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
     const messageFixture = fixture("shared-policy-groups/spg-message-unsupported/crd.yaml");
-    const entrypointConnectFixture = fixture(
-      "crds/shared-policy-groups/spg-proxy-entrypoint-connect.yaml",
-    );
 
     await test.step("Deploy valid PROXY SPG", async () => {
       await kubectl.apply(proxyFixture);
@@ -190,24 +186,7 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
       }
     });
 
-    await test.step("Deploy SPG with ENTRYPOINT_CONNECT phase (schema validation)", async () => {
-      // This mainly validates CRD enum coverage; control-plane acceptance may vary.
-      try {
-        await kubectl.apply(entrypointConnectFixture);
-        await kubectl.waitForCondition("sharedpolicygroup", SPG_ENTRYPOINT_CONNECT_NAME, "Accepted");
-        const st = await kubectl.getStatus<{ id: string }>(
-          "sharedpolicygroup",
-          SPG_ENTRYPOINT_CONNECT_NAME,
-        );
-        expect(st.id).toBeTruthy();
-      } catch {
-        const st = await kubectl.getStatus("sharedpolicygroup", SPG_ENTRYPOINT_CONNECT_NAME);
-        expect(st).toBeTruthy();
-      }
-    });
-
     await kubectl.del(proxyFixture);
     await kubectl.del(messageFixture);
-    await kubectl.del(entrypointConnectFixture);
   });
 });

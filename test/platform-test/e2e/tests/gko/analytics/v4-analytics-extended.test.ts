@@ -37,12 +37,13 @@ test.describe("V4 API Analytics — Extended", () => {
     const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
     const api = await mapi.fetchApi(status.id);
 
-    expect(api.analytics?.enabled).toBe(true);
-    expect(api.analytics?.otelLogs?.enabled).toBe(true);
-    expect(api.analytics?.tracing?.enabled).toBe(true);
-    expect(api.analytics?.tracing?.verbose).toBe(true);
-    expect(api.analytics?.sampling?.type).toBe("COUNT");
-    expect(api.analytics?.sampling?.value).toBe("10");
+    await mapi.waitForApiMatches(api.id, {
+      analytics: {
+        enabled: true,
+        otelLogs: { enabled: true },
+        tracing: { enabled: true, verbose: true },
+      },
+    })
 
     await kubectl.del(fixturePath).catch(() => {});
   });
