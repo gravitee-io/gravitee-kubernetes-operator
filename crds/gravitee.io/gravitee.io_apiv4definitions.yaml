@@ -61,6 +61,13 @@ spec:
             spec:
               description: ApiV4DefinitionSpec defines the desired state of ApiDefinition.
               properties:
+                allowMultiJwtOauth2Subscriptions:
+                  description: Allow an application to subscribe to more than one JWT/OAuth2 plan
+                    (V4 only).
+                  type: boolean
+                allowedInApiProducts:
+                  description: Indicates whether this API is allowed to be used in API Products.
+                  type: boolean
                 analytics:
                   description: API Analytics (Not applicable for Native API)
                   properties:
@@ -142,6 +149,18 @@ spec:
                             - response
                           type: object
                       type: object
+                    otelLogs:
+                      description: OpenTelemetry log export configuration.
+                      properties:
+                        enabled:
+                          description: Enable OpenTelemetry log export for this API.
+                          type: boolean
+                      type: object
+                    reporterMetricsEnabled:
+                      description: |-
+                        Enable the connection-metrics reporter on the gateway.
+                        Only applicable to Native v4 APIs.
+                      type: boolean
                     sampling:
                       description: Analytics Sampling
                       properties:
@@ -1099,6 +1118,17 @@ spec:
                 plans:
                   additionalProperties:
                     properties:
+                      bootstrapPort:
+                        description: Bootstrap port for port-based routing (native Kafka APIs only).
+                        type: integer
+                      brokerRangeEnd:
+                        description: End of broker port range for port-based routing (native Kafka APIs
+                          only).
+                        type: integer
+                      brokerRangeStart:
+                        description: Start of the broker port range for port-based routing (native Kafka
+                          APIs only).
+                        type: integer
                       characteristics:
                         description: List of plan characteristics
                         items:
