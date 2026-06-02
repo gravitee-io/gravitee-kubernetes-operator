@@ -72,6 +72,21 @@ type Plan struct {
 	GeneralConditionsHRID *string `json:"generalConditionsHrid,omitempty"`
 	// +kubebuilder:skipversion
 	HRID string `json:"hrid,omitempty"`
+	// Bootstrap port for port-based routing (native Kafka APIs only).
+	// When set, BrokerRangeStart must be strictly lower than BrokerRangeEnd, and
+	// BootstrapPort must NOT be within the [BrokerRangeStart, BrokerRangeEnd] range (inclusive).
+	// +kubebuilder:validation:Optional
+	BootstrapPort *int `json:"bootstrapPort,omitempty"`
+	// Start of the broker port range for port-based routing (native Kafka APIs only).
+	// Must be strictly lower than BrokerRangeEnd.
+	// See BootstrapPort for full validation rules.
+	// +kubebuilder:validation:Optional
+	BrokerRangeStart *int `json:"brokerRangeStart,omitempty"`
+	// End of broker port range for port-based routing (native Kafka APIs only).
+	// Must be strictly greater	than BrokerRangeStart.
+	// See BootstrapPort for full validation rules.
+	// +kubebuilder:validation:Optional
+	BrokerRangeEnd *int `json:"brokerRangeEnd,omitempty"`
 }
 
 type GatewayDefinitionPlan struct {

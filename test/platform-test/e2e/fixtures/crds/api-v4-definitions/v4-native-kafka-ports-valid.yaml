@@ -1,0 +1,59 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: e2e-v4-native-kafka-ports
+spec:
+  contextRef:
+    name: "dev-ctx"
+    namespace: "default"
+  name: "e2e-v4-native-kafka-ports"
+  description: "E2E test: Native Kafka API plan ports validation"
+  version: "1.0.0"
+  type: NATIVE
+  state: STOPPED
+  analytics:
+    enabled: true
+    reporterMetricsEnabled: false
+  definitionContext:
+    origin: KUBERNETES
+    syncFrom: MANAGEMENT
+  listeners:
+    - type: KAFKA
+      host: "kafka.example.local"
+      port: 9092
+      entrypoints:
+        - type: native-kafka
+          qos: AUTO
+  endpointGroups:
+    - name: Default Kafka group
+      type: native-kafka
+      endpoints:
+        - name: Default Kafka endpoint
+          type: native-kafka
+          inheritConfiguration: false
+          configuration:
+            bootstrapServers: "kafka.example.local:9092"
+          secondary: false
+  plans:
+    KeyLess:
+      name: "Free plan"
+      security:
+        type: "KEY_LESS"
+      bootstrapPort: 9092
+      brokerRangeStart: 9100
+      brokerRangeEnd: 9102
+
