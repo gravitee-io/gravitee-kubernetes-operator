@@ -102,6 +102,15 @@ type Analytics struct {
 	// Analytics Enabled or not?
 	Enabled bool `json:"enabled"`
 
+	// Enable the connection-metrics reporter on the gateway.
+	// Only applicable to Native v4 APIs.
+	// +kubebuilder:validation:Optional
+	ReporterMetricsEnabled *bool `json:"reporterMetricsEnabled,omitempty"`
+
+	// OpenTelemetry log export configuration.
+	// +kubebuilder:validation:Optional
+	OtelLogs *OtelLogs `json:"otelLogs,omitempty"`
+
 	// Analytics Sampling
 	Sampling *Sampling `json:"sampling,omitempty"`
 
@@ -110,6 +119,12 @@ type Analytics struct {
 
 	// Analytics Tracing
 	Tracing *Tracing `json:"tracing,omitempty"`
+}
+
+type OtelLogs struct {
+	// Enable OpenTelemetry log export for this API.
+	// +kubebuilder:validation:Optional
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 func NewAnalytics() *Analytics {
