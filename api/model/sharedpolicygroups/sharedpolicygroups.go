@@ -21,8 +21,19 @@ import (
 // +kubebuilder:validation:Enum=MESSAGE;PROXY;NATIVE;
 type ApiType string
 
-// +kubebuilder:validation:Enum=REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE;
+// +kubebuilder:validation:Enum=REQUEST;RESPONSE;ENTRYPOINT_CONNECT;INTERACT;CONNECT;PUBLISH;SUBSCRIBE;
 type FlowPhase string
+
+const (
+	FlowPhaseRequest           FlowPhase = "REQUEST"
+	FlowPhaseResponse          FlowPhase = "RESPONSE"
+	FlowPhaseEntrypointConnect FlowPhase = "ENTRYPOINT_CONNECT"
+	FlowPhaseInteract          FlowPhase = "INTERACT"
+	// Deprecated: legacy value kept for backward compatibility.
+	FlowPhaseConnect   FlowPhase = "CONNECT"
+	FlowPhasePublish   FlowPhase = "PUBLISH"
+	FlowPhaseSubscribe FlowPhase = "SUBSCRIBE"
+)
 
 type SharedPolicyGroup struct {
 	// +kubebuilder:skipversion
