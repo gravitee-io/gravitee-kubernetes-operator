@@ -50,7 +50,6 @@ spec:
             messageInterval: 1000
             messageContent: '{"message": "updated mock message"}'
             messagesCount: 1
-          secondary: false
   flowExecution:
     mode: DEFAULT
     matchRequired: false

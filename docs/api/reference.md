@@ -3805,7 +3805,7 @@ _Appears in:_
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Endpoint Configuration, arbitrary map of key-values |  | Optional: \{\} <br /> |
 | `sharedConfigurationOverride` _[GenericStringMap](#genericstringmap)_ | Endpoint Configuration Override, arbitrary map of key-values |  | Optional: \{\} <br /> |
 | `services` _[EndpointServices](#endpointservices)_ | Endpoint Services |  |  |
-| `secondary` _boolean_ | Endpoint is secondary or not? |  |  |
+| `secondary` _boolean_ | Endpoint is secondary or not? |  | Optional: \{\} <br /> |
 | `tenants` _string array_ | List of endpoint tenants | \{  \} | Optional: \{\} <br /> |
 
 

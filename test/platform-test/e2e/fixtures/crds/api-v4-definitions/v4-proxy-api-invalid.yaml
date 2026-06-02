@@ -38,4 +38,3 @@ spec:
           inheritConfiguration: false
           configuration:
             target: https://api.gravitee.io/echo
-          secondary: false
