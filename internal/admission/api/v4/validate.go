@@ -86,6 +86,60 @@ func validateFlowsAndEndpoints(_ context.Context, api core.ApiDefinitionObject,
 
 	errs.MergeWith(validateApiResponseTemplates(impl))
 
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateNativeKafkaPlanPorts(impl))
+
+	return errs
+}
+
+func validateNativeKafkaPlanPorts(api *v4.Api) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if api == nil || api.Type != nativeAPI || api.Plans == nil {
+		return errs
+	}
+
+	for hrid, plan := range *api.Plans {
+		if plan == nil || plan.BootstrapPort == nil {
+			continue
+		}
+
+		if plan.BrokerRangeStart == nil || plan.BrokerRangeEnd == nil {
+			errs.AddSeveref(
+				"plan [%s] has bootstrapPort set but brokerRangeStart/brokerRangeEnd are missing in Native API [%s]",
+				hrid,
+				api.Name,
+			)
+			continue
+		}
+
+		start := *plan.BrokerRangeStart
+		end := *plan.BrokerRangeEnd
+		bootstrap := *plan.BootstrapPort
+
+		if start >= end {
+			errs.AddSeveref(
+				"plan [%s] has invalid broker port range (brokerRangeStart must be < brokerRangeEnd) in Native API [%s]",
+				hrid,
+				api.Name,
+			)
+			continue
+		}
+
+		if bootstrap >= start && bootstrap <= end {
+			errs.AddSeveref(
+				"plan [%s] has bootstrapPort within broker port range [%d,%d] in Native API [%s]",
+				hrid,
+				start,
+				end,
+				api.Name,
+			)
+		}
+	}
+
 	return errs
 }
 
