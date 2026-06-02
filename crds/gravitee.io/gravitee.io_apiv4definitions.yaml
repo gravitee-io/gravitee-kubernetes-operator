@@ -307,7 +307,6 @@ spec:
                               type: integer
                           required:
                             - inheritConfiguration
-                            - secondary
                             - type
                           type: object
                         type: array

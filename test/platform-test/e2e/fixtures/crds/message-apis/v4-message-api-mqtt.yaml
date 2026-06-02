@@ -49,7 +49,6 @@ spec:
             consumer:
               enabled: true
               topic: "e2e-mqtt-topic"
-          secondary: false
   flowExecution:
     mode: DEFAULT
     matchRequired: false

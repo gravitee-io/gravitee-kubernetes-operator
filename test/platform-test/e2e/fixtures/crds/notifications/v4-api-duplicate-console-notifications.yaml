@@ -43,7 +43,6 @@ spec:
           inheritConfiguration: false
           configuration:
             target: https://api.gravitee.io/echo
-          secondary: false
   flowExecution:
     mode: DEFAULT
     matchRequired: false

@@ -1398,7 +1398,6 @@ components:
                 type: integer
             required:
               - inheritConfiguration
-              - secondary
             type: object
           type: array
         headers:
