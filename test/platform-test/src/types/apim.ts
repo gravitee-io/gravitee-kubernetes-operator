@@ -75,6 +75,7 @@ export interface ApiV4 extends ApiBase {
   flows?: FlowV4[];
   services?: ApiServices;
   allowedInApiProducts?: boolean;
+  allowMultiJwtOauth2Subscriptions?: boolean;
 }
 
 export interface ApiV2 extends ApiBase {
@@ -824,9 +825,15 @@ export interface TracingV4 {
 
 export interface Analytics {
   enabled?: boolean;
+  reporterMetricsEnabled?: boolean;
+  otelLogs?: OtelLogs;
   sampling?: Sampling;
   logging?: LoggingV4;
   tracing?: TracingV4;
+}
+
+export interface OtelLogs {
+  enabled?: boolean;
 }
 
 export interface Sampling {

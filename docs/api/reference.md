@@ -2660,11 +2660,20 @@ _Underlying type:_ _string_
 
 
 _Validation:_
-- Enum: [REQUEST RESPONSE INTERACT CONNECT PUBLISH SUBSCRIBE]
+- Enum: [REQUEST RESPONSE ENTRYPOINT_CONNECT INTERACT CONNECT PUBLISH SUBSCRIBE]
 
 _Appears in:_
 - [SharedPolicyGroup](#sharedpolicygroup)
 
+| Field | Description |
+| --- | --- |
+| `REQUEST` |  |
+| `RESPONSE` |  |
+| `ENTRYPOINT_CONNECT` |  |
+| `INTERACT` |  |
+| `CONNECT` | Deprecated: legacy value kept for backward compatibility.<br /> |
+| `PUBLISH` |  |
+| `SUBSCRIBE` |  |
 
 
 #### SharedPolicyGroup
@@ -2686,7 +2695,7 @@ _Appears in:_
 | `description` _string_ | SharedPolicyGroup description |  |  |
 | `prerequisiteMessage` _string_ | SharedPolicyGroup prerequisite Message |  |  |
 | `apiType` _[ApiType](#apitype)_ | Specify the SharedPolicyGroup ApiType |  | Enum: [MESSAGE PROXY NATIVE] <br />Required: \{\} <br /> |
-| `phase` _[FlowPhase](#flowphase)_ | SharedPolicyGroup phase (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE) |  | Enum: [REQUEST RESPONSE INTERACT CONNECT PUBLISH SUBSCRIBE] <br />Required: \{\} <br /> |
+| `phase` _[FlowPhase](#flowphase)_ | SharedPolicyGroup phase (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE) |  | Enum: [REQUEST RESPONSE ENTRYPOINT_CONNECT INTERACT CONNECT PUBLISH SUBSCRIBE] <br />Required: \{\} <br /> |
 | `steps` _[Step](#step) array_ | SharedPolicyGroup Steps |  |  |
 
 
@@ -3626,6 +3635,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Analytics Enabled or not? | true |  |
+| `reporterMetricsEnabled` _boolean_ | Enable the connection-metrics reporter on the gateway.<br />Only applicable to Native v4 APIs. |  | Optional: \{\} <br /> |
+| `otelLogs` _[OtelLogs](#otellogs)_ | OpenTelemetry log export configuration. |  | Optional: \{\} <br /> |
 | `sampling` _[Sampling](#sampling)_ | Analytics Sampling |  |  |
 | `logging` _[Logging](#logging)_ | Analytics Logging |  |  |
 | `tracing` _[Tracing](#tracing)_ | Analytics Tracing |  |  |
@@ -4172,6 +4183,22 @@ _Appears in:_
 | `response` _boolean_ | Should the response phase of the request roundtrip be included in the log payload or not ? |  |  |
 
 
+#### OtelLogs
+
+
+
+
+
+
+
+_Appears in:_
+- [Analytics](#analytics)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enable OpenTelemetry log export for this API. |  | Optional: \{\} <br /> |
+
+
 #### Page
 
 
@@ -4232,6 +4259,9 @@ _Appears in:_
 | `generalConditions` _string_ | The general conditions defined to use this plan |  | Optional: \{\} <br /> |
 | `generalConditionsHrid` _string_ |  |  |  |
 | `hrid` _string_ |  |  |  |
+| `bootstrapPort` _integer_ | Bootstrap port for port-based routing (native Kafka APIs only).<br />When set, BrokerRangeStart must be strictly lower than BrokerRangeEnd, and<br />BootstrapPort must NOT be within the [BrokerRangeStart, BrokerRangeEnd] range (inclusive). |  | Optional: \{\} <br /> |
+| `brokerRangeStart` _integer_ | Start of the broker port range for port-based routing (native Kafka APIs only).<br />Must be strictly lower than BrokerRangeEnd.<br />See BootstrapPort for full validation rules. |  | Optional: \{\} <br /> |
+| `brokerRangeEnd` _integer_ | End of broker port range for port-based routing (native Kafka APIs only).<br />Must be strictly greater	than BrokerRangeStart.<br />See BootstrapPort for full validation rules. |  | Optional: \{\} <br /> |
 
 
 #### PlanMode
@@ -4380,6 +4410,8 @@ _Appears in:_
 | `analytics` _[Analytics](#analytics)_ | API Analytics (Not applicable for Native API) |  |  |
 | `services` _[ApiServices](#apiservices)_ | API Services (Not applicable for Native API) |  |  |
 | `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
+| `allowedInApiProducts` _boolean_ | Indicates whether this API is allowed to be used in API Products.<br />Only applicable for V4 HTTP Proxy APIs. |  | Optional: \{\} <br /> |
+| `allowMultiJwtOauth2Subscriptions` _boolean_ | Allow an application to subscribe to more than one JWT/OAuth2 plan (V4 only). |  | Optional: \{\} <br /> |
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `failover` _[Failover](#failover)_ | API Failover |  |  |
 | `consoleNotification` _[AutomationConsoleNotification](#automationconsolenotification)_ | ConsoleNotification struct sent to the Automation API, not part of the CRD spec. |  |  |
