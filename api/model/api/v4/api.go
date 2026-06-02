@@ -75,6 +75,13 @@ type V4BaseApi struct {
 	// A list of Response Templates for the API (Not applicable for Native API)
 	// +kubebuilder:validation:Optional
 	ResponseTemplates *map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
+	// Indicates whether this API is allowed to be used in API Products.
+	// Only applicable for V4 HTTP Proxy APIs.
+	// +kubebuilder:validation:Optional
+	AllowedInApiProducts *bool `json:"allowedInApiProducts,omitempty"`
+	// Allow an application to subscribe to more than one JWT/OAuth2 plan (V4 only).
+	// +kubebuilder:validation:Optional
+	AllowMultiJwtOauth2Subscriptions *bool `json:"allowMultiJwtOauth2Subscriptions,omitempty"`
 	// List of members associated with the API
 	// +kubebuilder:validation:Optional
 	Members []*base.Member `json:"members,omitempty"`

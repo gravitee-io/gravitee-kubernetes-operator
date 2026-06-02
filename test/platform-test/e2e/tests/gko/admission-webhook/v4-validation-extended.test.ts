@@ -101,4 +101,12 @@ test.describe("V4 API Validation & Reconciliation — Extended", () => {
 
     await kubectl.del(fixturePath);
   });
+
+  test(`V4 API with Automation API fields is accepted by admission ${TAGS.REGRESSION}`, async ({ kubectl }) => {
+    const API_NAME = "e2e-v4-new-fields";
+    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-new-fields.yaml");
+    await kubectl.apply(fixturePath);
+    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
+    await kubectl.del(fixturePath).catch(() => {});
+  });
 });
