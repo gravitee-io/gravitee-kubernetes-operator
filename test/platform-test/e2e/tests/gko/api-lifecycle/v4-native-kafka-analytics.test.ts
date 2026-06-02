@@ -26,7 +26,7 @@ import { TAGS } from "../../../helpers/tags.js";
 test.describe("Native Kafka API — Analytics", () => {
   test(`reporterMetricsEnabled=false is applied in APIM ${TAGS.REGRESSION}`, async ({ kubectl, mapi }) => {
     const API_NAME = "e2e-v4-native-kafka-ports";
-    const f = fixture("crds/api-v4-definitions/v4-native-kafka-ports-valid.yaml");
+    const f = fixture("crds/api-v4-definitions/v4-native-kafka-reporter-disabled.yaml");
 
     await kubectl.apply(f);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
