@@ -48,7 +48,7 @@ test.describe("Terraform — subscription errors & app delete", () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
     let ws: TfWorkspace | null = null;
     try {
-      ws = await terraform.initWorkspace("terraform-1380-invalid-sub");
+      ws = await terraform.initWorkspace("subscriptions/invalid-sub");
       let stderr = "";
       let succeeded = false;
       try {
@@ -84,7 +84,7 @@ test.describe("Terraform — subscription errors & app delete", () => {
     // fires first instead of Playwright orphaning a running terraform process
     // (leaking the .tfstate lock).
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
-    const ws = await terraform.initWorkspace("terraform-1383-app-delete");
+    const ws = await terraform.initWorkspace("applications/lifecycle-archive");
     try {
       await test.step("Apply creates the application", async () => {
         await terraform.apply(ws);

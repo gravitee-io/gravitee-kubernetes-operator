@@ -45,7 +45,7 @@ test.describe("Terraform — Extended Validation", () => {
     // first instead of Playwright orphaning a running terraform process (which
     // would leak the .tfstate lock). See terraform.TF_WORKSPACE_TIMEOUT_MS.
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
-    ws = await terraform.initWorkspace("terraform");
+    ws = await terraform.initWorkspace("subscriptions/v4-full-stack");
     await terraform.apply(ws);
     apiId = await terraform.output(ws, "api_id");
   });

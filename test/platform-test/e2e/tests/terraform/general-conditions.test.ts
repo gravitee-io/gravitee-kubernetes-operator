@@ -46,7 +46,7 @@ test.describe("Terraform — Plan General Conditions", () => {
     // terraform's own per-process timeout fires before Playwright orphans a
     // running terraform process (which would leak the .tfstate lock).
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
-    ws = await terraform.initWorkspace("terraform-general-conditions");
+    ws = await terraform.initWorkspace("plans/general-conditions");
     await terraform.apply(ws);
     apiId = await terraform.output(ws, "api_id");
   });
