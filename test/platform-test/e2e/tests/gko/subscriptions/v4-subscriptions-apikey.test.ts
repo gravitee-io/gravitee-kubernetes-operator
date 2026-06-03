@@ -151,10 +151,14 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
     kubectl,
     mapi,
   }) => {
-    await kubectl.apply(fixture(API_APIKEY));
-    await kubectl.apply(fixture(APP));
+    await kubectl.apply(fixture("subscriptions/apikey-auto/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
+    // The Subscription is applied separately: when applied in the same
+    // multi-doc as the Application, APIM's automation API can still see the
+    // Application as archived when the Sub PUT lands (eventual consistency
+    // between the application and subscription endpoints), failing the Sub
+    // permanently with "Application [...] is archived and cannot be modified."
     await kubectl.apply(fixture(SUB_APIKEY));
     await kubectl.waitForCondition("subscription", SUB_NAME, "Accepted");
 
@@ -185,10 +189,14 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
     // take 15–25s, pushing total test time well past 30s.
     test.setTimeout(60_000);
 
-    await kubectl.apply(fixture(API_APIKEY));
-    await kubectl.apply(fixture(APP));
+    await kubectl.apply(fixture("subscriptions/apikey-auto/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
+    // The Subscription is applied separately: when applied in the same
+    // multi-doc as the Application, APIM's automation API can still see the
+    // Application as archived when the Sub PUT lands (eventual consistency
+    // between the application and subscription endpoints), failing the Sub
+    // permanently with "Application [...] is archived and cannot be modified."
     await kubectl.apply(fixture(SUB_APIKEY));
     await kubectl.waitForCondition("subscription", SUB_NAME, "Accepted");
 
@@ -216,14 +224,17 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
   test(`Admission webhook accepts api-key plan subscriptions ${XRAY.SUBSCRIPTIONS.V4_APIKEY_WEBHOOK_ACCEPTED} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    await kubectl.apply(fixture(API_APIKEY));
-    await kubectl.apply(fixture(APP));
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-
     // Before GKO-2547, the admission webhook rejected API_KEY plan subscriptions
     // with "security type is not one of [JWT,OAUTH2,MTLS]". `kubectl apply` must
     // not fail and the Subscription must reach Accepted.
+    await kubectl.apply(fixture("subscriptions/apikey-auto/crd.yaml"));
+    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
+    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
+    // The Subscription is applied separately: when applied in the same
+    // multi-doc as the Application, APIM's automation API can still see the
+    // Application as archived when the Sub PUT lands (eventual consistency
+    // between the application and subscription endpoints), failing the Sub
+    // permanently with "Application [...] is archived and cannot be modified."
     await kubectl.apply(fixture(SUB_APIKEY));
     await kubectl.waitForCondition("subscription", SUB_NAME, "Accepted");
 
@@ -243,10 +254,14 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
     // is even larger.
     test.setTimeout(60_000);
 
-    await kubectl.apply(fixture(API_APIKEY));
-    await kubectl.apply(fixture(APP));
+    await kubectl.apply(fixture("subscriptions/apikey-auto/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
+    // The Subscription is applied separately: when applied in the same
+    // multi-doc as the Application, APIM's automation API can still see the
+    // Application as archived when the Sub PUT lands (eventual consistency
+    // between the application and subscription endpoints), failing the Sub
+    // permanently with "Application [...] is archived and cannot be modified."
     await kubectl.apply(fixture(SUB_APIKEY));
     await kubectl.waitForCondition("subscription", SUB_NAME, "Accepted");
 
@@ -282,10 +297,10 @@ test.describe("V4 API-Key Plan Subscriptions", () => {
     mapi,
     gateway,
   }) => {
-    await kubectl.apply(fixture(API_TWO_PLANS));
-    await kubectl.apply(fixture(APP));
+    await kubectl.apply(fixture("subscriptions/apikey-mixed/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", TWO_PLANS_API_NAME, "Accepted");
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
+    // Sub applied separately — see comment on the GKO-2825 test above.
     await kubectl.apply(fixture(SUB_APIKEY_TWO_PLANS));
     await kubectl.waitForCondition("subscription", SUB_TWO_PLANS_NAME, "Accepted");
 
