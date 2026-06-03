@@ -89,7 +89,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-db-less";
-    const fixturePath = fixture("v4-lifecycle-extended/v4-proxy-api-db-less/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-db-less/crd.yaml");
 
     await test.step("Apply DB-less V4 API CRD", async () => {
       await kubectl.apply(fixturePath);
@@ -136,7 +136,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-started/crd.yaml");
 
     await test.step("Deploy, then delete the V4 API", async () => {
       await kubectl.apply(fixturePath);
@@ -164,7 +164,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-many-cats";
-    const fixturePath = fixture("v4-lifecycle-extended/v4-proxy-api-many-categories/crd.yaml");
+    const fixturePath = fixture("categories/v4-many/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -184,9 +184,9 @@ test.describe("V4 API Lifecycle — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-many-cats";
-    const fixturePath = fixture("v4-lifecycle-extended/v4-proxy-api-many-categories/crd.yaml");
+    const fixturePath = fixture("categories/v4-many/crd.yaml");
     const renamedFixture = fixture(
-      "v4-lifecycle-extended/v4-proxy-api-many-categories-renamed/crd.yaml",
+      "categories/v4-many-renamed/crd.yaml",
     );
 
     await kubectl.apply(fixturePath);
@@ -220,7 +220,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
   }) => {
     const API_NAME = "e2e-v4-non-existing-cat";
     const fixturePath = fixture(
-      "v4-lifecycle-extended/v4-proxy-api-non-existing-category/crd.yaml",
+      "categories/v4-non-existing/crd.yaml",
     );
 
     await kubectl.apply(fixturePath);
@@ -238,7 +238,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-non-existing-group-ref";
-    const fixturePath = fixture("v4-lifecycle-extended/v4-proxy-api-non-existing-group/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-non-existing-group/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -258,7 +258,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-started/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -288,7 +288,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-policy-no-plans";
-    const fixturePath = fixture("v4-lifecycle-extended/v4-proxy-api-policy-no-plans/crd.yaml");
+    const fixturePath = fixture("policies/v4-no-plans/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -307,7 +307,7 @@ test.describe("V4 API Lifecycle — Extended", () => {
   }) => {
     const API_NAME = "e2e-v4-entrypoint-policy";
     const fixturePath = fixture(
-      "v4-lifecycle-extended/v4-message-api-entrypoint-policy/crd.yaml",
+      "message-apis/v4-entrypoint-policy/crd.yaml",
     );
 
     await kubectl.apply(fixturePath);

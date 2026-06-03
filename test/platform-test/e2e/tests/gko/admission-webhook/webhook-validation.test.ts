@@ -32,7 +32,7 @@
 import { test, expect, fixture } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 
-const INVALID_FIXTURE = fixture("api-v4-definitions/v4-proxy-api-invalid/crd.yaml");
+const INVALID_FIXTURE = fixture("admission-webhook/v4-invalid-spec/crd.yaml");
 
 test.describe("Webhooks — Admission validation", () => {
   test.afterAll(async ({ kubectl }) => {

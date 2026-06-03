@@ -43,9 +43,9 @@ import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 import type { ApiLifecycleState, ApiVisibility } from "../../../../src/types/apim.js";
 
-const PRIVATE_PUBLISHED = "api-v4-definitions/v4-api-private-published/crd.yaml";
-const PUBLIC_PUBLISHED = "api-v4-definitions/v4-api-public-published/crd.yaml";
-const PUBLIC_UNPUBLISHED = "api-v4-definitions/v4-api-public-unpublished/crd.yaml";
+const PRIVATE_PUBLISHED = "api-lifecycle/v4-private-published/crd.yaml";
+const PUBLIC_PUBLISHED = "api-lifecycle/v4-public-published/crd.yaml";
+const PUBLIC_UNPUBLISHED = "api-lifecycle/v4-public-unpublished/crd.yaml";
 
 interface StatusWithId {
   id?: string;

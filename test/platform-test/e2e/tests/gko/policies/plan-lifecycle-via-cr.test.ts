@@ -27,8 +27,8 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const TWO_PLANS = "api-v4-definitions/v4-proxy-api-two-plans/crd.yaml";
-const ONE_PLAN = "api-v4-definitions/v4-proxy-api-one-plan-remaining/crd.yaml";
+const TWO_PLANS = "plans/v4-two-plans/crd.yaml";
+const ONE_PLAN = "plans/v4-one-plan-remaining/crd.yaml";
 const API_NAME = "e2e-v4-two-plans";
 
 test.describe("Plan lifecycle — via CR", () => {

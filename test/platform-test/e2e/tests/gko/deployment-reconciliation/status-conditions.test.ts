@@ -68,7 +68,7 @@ test.describe("Reconciliation — Status & Conditions", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-started/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -88,7 +88,7 @@ test.describe("Reconciliation — Status & Conditions", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-started/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -105,7 +105,7 @@ test.describe("Reconciliation — Status & Conditions", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-started/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -138,7 +138,7 @@ test.describe("Reconciliation — Status & Conditions", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-started/crd.yaml");
 
     await test.step("First apply", async () => {
       await kubectl.apply(fixturePath);
@@ -171,7 +171,7 @@ test.describe("Reconciliation — Status & Conditions", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-bad-endpoint";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-bad-endpoint-type/crd.yaml");
+    const fixturePath = fixture("admission-webhook/v4-bad-endpoint-type/crd.yaml");
 
     await test.step("Apply CRD that passes webhook but fails reconciliation", async () => {
       await kubectl.apply(fixturePath);
@@ -197,8 +197,8 @@ test.describe("Reconciliation — Status & Conditions", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-reconcile";
-    const createFixture = fixture("api-v4-definitions/v4-proxy-api-reconcile/crd.yaml");
-    const updateFixture = fixture("api-v4-definitions/v4-proxy-api-reconcile-updated/crd.yaml");
+    const createFixture = fixture("api-lifecycle/v4-reconcile/crd.yaml");
+    const updateFixture = fixture("api-lifecycle/v4-reconcile-updated/crd.yaml");
 
     await test.step("Apply initial CRD", async () => {
       await kubectl.apply(createFixture);

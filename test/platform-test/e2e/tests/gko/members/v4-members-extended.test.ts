@@ -231,7 +231,7 @@ test.describe("V4 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
+    const fixturePath = fixture("api-v4-definitions/sync-from-mgmt/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -258,7 +258,7 @@ test.describe("V4 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
+    const fixturePath = fixture("api-v4-definitions/sync-from-mgmt/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -323,7 +323,7 @@ test.describe("V4 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
+    const fixturePath = fixture("api-v4-definitions/sync-from-mgmt/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");

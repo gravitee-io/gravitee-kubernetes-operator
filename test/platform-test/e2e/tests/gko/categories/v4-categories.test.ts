@@ -64,7 +64,7 @@ test.describe("V4 API Categories — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const fixturePath = fixture("api-lifecycle/v4-started/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -86,7 +86,7 @@ test.describe("V4 API Categories — Extended", () => {
   }) => {
     const API_NAME = "e2e-v4-non-existing-cat";
     const fixturePath = fixture(
-      "v4-lifecycle-extended/v4-proxy-api-non-existing-category/crd.yaml",
+      "categories/v4-non-existing/crd.yaml",
     );
 
     // Applying the CRD is the closest-analog to an "apply import" for the
@@ -109,7 +109,7 @@ test.describe("V4 API Categories — Extended", () => {
   }) => {
     const API_NAME = "e2e-v4-non-existing-cat";
     const fixturePath = fixture(
-      "v4-lifecycle-extended/v4-proxy-api-non-existing-category/crd.yaml",
+      "categories/v4-non-existing/crd.yaml",
     );
 
     await kubectl.apply(fixturePath);

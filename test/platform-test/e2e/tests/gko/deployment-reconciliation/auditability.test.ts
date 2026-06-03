@@ -36,8 +36,8 @@ import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const execFile = promisify(execFileCb);
 
-const V4_ORIGINAL = "api-v4-definitions/v4-proxy-api-reconcile/crd.yaml";
-const V4_UPDATED = "api-v4-definitions/v4-proxy-api-reconcile-updated/crd.yaml";
+const V4_ORIGINAL = "api-lifecycle/v4-reconcile/crd.yaml";
+const V4_UPDATED = "api-lifecycle/v4-reconcile-updated/crd.yaml";
 const API_NAME = "e2e-v4-reconcile";
 
 interface K8sEvent {

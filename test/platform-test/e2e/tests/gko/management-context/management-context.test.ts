@@ -51,7 +51,7 @@ test.describe("ManagementContext — Lifecycle", () => {
   test(`Cannot delete ManagementContext referenced by V4 API ${XRAY.MANAGEMENT_CONTEXT.DELETE_WITH_V4_API_REF} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const apiFixture = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
+    const apiFixture = fixture("api-v4-definitions/sync-from-mgmt/crd.yaml");
 
     await test.step("Deploy an API referencing dev-ctx", async () => {
       await kubectl.apply(apiFixture);
@@ -74,7 +74,7 @@ test.describe("ManagementContext — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("invalid/management-context-invalid-env/crd.yaml"),
+      fixture("management-context/invalid-env/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("invalid organization or environment");
   });
@@ -85,7 +85,7 @@ test.describe("ManagementContext — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("invalid/management-context-invalid-org/crd.yaml"),
+      fixture("management-context/invalid-org/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("invalid organization or environment");
   });

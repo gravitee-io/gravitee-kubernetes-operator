@@ -178,10 +178,27 @@ e2e/
     kubectl.ts           # kubectl CLI wrapper
     terraform.ts         # Terraform workspace lifecycle & commands
     tags.ts              # Xray test ID constants
-  fixtures/
-    crds/                # Kubernetes CRD manifests
-    terraform/           # Terraform .tf files
+  fixtures/              # one folder per domain; see "Fixture convention" below
+    admission-webhook/
+    api-definitions/
+    api-lifecycle/
+    api-v4-definitions/
+    applications/
+    categories/
+    ...
   tests/
     gko/                 # GKO operator tests
     terraform/           # Terraform provider tests
 ```
+
+## Fixture convention
+
+Every fixture lives under `fixtures/<domain>/<scenario>/`. A scenario directory contains:
+- `crd.yaml` — Kubernetes CRD manifest(s) for the GKO-driven test (multi-doc YAML when multiple resources are part of the starting state)
+- `main.tf` — Terraform configuration for the TF-provider-driven test
+
+A scenario with both files is **paired** (same APIM behaviour exercised through both drivers). A scenario with only one file is single-driver — and the gap is visible at `ls` time.
+
+**Naming**: domain folders mirror test folders under `tests/gko/` (e.g. `admission-webhook/`, `api-lifecycle/`, `categories/`, `policies/`). Scenario folder names describe *what's being tested*, not *what kind of CR sits at the top of the manifest* — e.g. a V4 API with a JWT plan goes under `plans/v4-jwt/`, not `api-v4-definitions/`. Inside domains that hold both V2 and V4 variants (`plans/`, `categories/`, `policies/`, `api-lifecycle/`, `admission-webhook/`), prefix scenario names with `v2-` / `v4-` to disambiguate.
+
+The slimmed `api-definitions/` and `api-v4-definitions/` domains hold only scenarios that test the bare API CR itself (minimal shape, default-field behaviour, etc.) — anything that tests plans, lifecycle, categories, message-API entrypoints, etc. lives in the corresponding domain.
