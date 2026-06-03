@@ -46,9 +46,9 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const APP_NO_CERTS = "mtls-certificates/app-2219-no-certs/crd.yaml";
-const APP_VALID_CERT = "mtls-certificates/app-2223-valid-cert/crd.yaml";
-const APP_PAST_END = "mtls-certificates/app-2251-past-end/crd.yaml";
+const APP_NO_CERTS = "mtls-certificates/app-no-certs/crd.yaml";
+const APP_VALID_CERT = "mtls-certificates/app-valid-cert/crd.yaml";
+const APP_PAST_END = "mtls-certificates/app-past-end/crd.yaml";
 
 test.describe("mTLS — clientCertificates visibility via mAPI", () => {
   test.afterEach(async () => {
