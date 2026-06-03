@@ -55,8 +55,8 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
   }) => {
     const SPG_NAME = "e2e-spg-proxy";
     const API_NAME = "e2e-v4-with-spg";
-    const spgFixture = fixture("crds/shared-policy-groups/spg-proxy-request.yaml");
-    const apiFixture = fixture("crds/api-v4-definitions/v4-api-with-spg.yaml");
+    const spgFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-api-with-spg/crd.yaml");
 
     await test.step("Deploy Shared Policy Group", async () => {
       await kubectl.apply(spgFixture);
@@ -94,9 +94,9 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
   }) => {
     const SPG_NAME = "e2e-spg-proxy";
     const API_NAME = "e2e-v4-with-spg";
-    const spgFixture = fixture("crds/shared-policy-groups/spg-proxy-request.yaml");
-    const apiWithSpg = fixture("crds/api-v4-definitions/v4-api-with-spg.yaml");
-    const apiWithoutSpg = fixture("crds/api-v4-definitions/v4-api-without-spg.yaml");
+    const spgFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
+    const apiWithSpg = fixture("api-v4-definitions/v4-api-with-spg/crd.yaml");
+    const apiWithoutSpg = fixture("api-v4-definitions/v4-api-without-spg/crd.yaml");
 
     await test.step("Deploy SPG and API with SPG reference", async () => {
       await kubectl.apply(spgFixture);
@@ -130,8 +130,8 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
     kubectl,
   }) => {
     const SPG_NAME = "e2e-spg-proxy";
-    const createFixture = fixture("crds/shared-policy-groups/spg-proxy-request.yaml");
-    const updateFixture = fixture("crds/shared-policy-groups/spg-proxy-updated.yaml");
+    const createFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
+    const updateFixture = fixture("shared-policy-groups/spg-proxy-updated/crd.yaml");
 
     await test.step("Deploy SPG", async () => {
       await kubectl.apply(createFixture);
@@ -161,8 +161,8 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
   }) => {
     const SPG_PROXY_NAME = "e2e-spg-proxy";
     const SPG_MESSAGE_NAME = "e2e-spg-message";
-    const proxyFixture = fixture("crds/shared-policy-groups/spg-proxy-request.yaml");
-    const messageFixture = fixture("crds/shared-policy-groups/spg-message-unsupported.yaml");
+    const proxyFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
+    const messageFixture = fixture("shared-policy-groups/spg-message-unsupported/crd.yaml");
 
     await test.step("Deploy valid PROXY SPG", async () => {
       await kubectl.apply(proxyFixture);

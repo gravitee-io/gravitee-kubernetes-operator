@@ -36,7 +36,7 @@ import { XRAY } from "../../../helpers/tags.js";
 import { createTlsFetch } from "../../../../src/utils/http/tls.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
-const PKI = (...segments: string[]) => fixture("crds/mtls-certificates/pki", ...segments);
+const PKI = (...segments: string[]) => fixture("mtls-certificates/pki", ...segments);
 
 async function loadPki() {
   const [cert1, key1, cert2, key2, ca] = await Promise.all([
@@ -59,7 +59,7 @@ test.describe("mTLS Certificates — Dates, Refs, Rotation, Templates", () => {
       "subscription-templates", "application-templates", "api-mtls-templates", "tls-secrets-templates",
     ];
     for (const f of files) {
-      await kubectl.del(fixture(`crds/mtls-certificates/${f}.yaml`)).catch(() => {});
+      await kubectl.del(fixture(`mtls-certificates/${f}/crd.yaml`)).catch(() => {});
     }
   });
 
@@ -73,12 +73,12 @@ test.describe("mTLS Certificates — Dates, Refs, Rotation, Templates", () => {
     const APP_NAME = "e2e-mtls-dates-app";
 
     await test.step("Deploy TLS secrets, API, Application (step1), Subscription", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/tls-secrets-dates.yaml"));
-      await kubectl.apply(fixture("crds/mtls-certificates/api-mtls-dates.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/tls-secrets-dates/crd.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/api-mtls-dates/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/application-dates-step1.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-dates-step1/crd.yaml"));
       await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/subscription-dates.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/subscription-dates/crd.yaml"));
       await kubectl.waitForCondition("subscription", "e2e-mtls-dates-sub", "Accepted");
     });
 
@@ -214,10 +214,10 @@ spec:
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/mtls-certificates/subscription-dates.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/application-dates-step1.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/api-mtls-dates.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/tls-secrets-dates.yaml"));
+    await kubectl.del(fixture("mtls-certificates/subscription-dates/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/application-dates-step1/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/api-mtls-dates/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/tls-secrets-dates/crd.yaml"));
   });
 
   test(`Certificate refs from Secrets and ConfigMaps ${XRAY.MTLS_CERTIFICATES.DEPENDENCY_RESOLUTION}`, async ({
@@ -230,12 +230,12 @@ spec:
     const APP_NAME = "e2e-mtls-refs-app";
 
     await test.step("Deploy TLS secrets, API, Application, Subscription", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/tls-secrets-refs.yaml"));
-      await kubectl.apply(fixture("crds/mtls-certificates/api-mtls-refs.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/tls-secrets-refs/crd.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/api-mtls-refs/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/application-refs.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-refs/crd.yaml"));
       await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/subscription-refs.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/subscription-refs/crd.yaml"));
       await kubectl.waitForCondition("subscription", "e2e-mtls-refs-sub", "Accepted");
     });
 
@@ -268,10 +268,10 @@ spec:
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/mtls-certificates/subscription-refs.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/application-refs.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/api-mtls-refs.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/tls-secrets-refs.yaml"));
+    await kubectl.del(fixture("mtls-certificates/subscription-refs/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/application-refs/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/api-mtls-refs/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/tls-secrets-refs/crd.yaml"));
   });
 
   test(`Certificate rotation ${XRAY.MTLS_CERTIFICATES.CERT_ROTATION} ${XRAY.MTLS_CERTIFICATES.REMOVE_CERT}`, async ({
@@ -284,11 +284,11 @@ spec:
     const APP_NAME = "e2e-mtls-rotation-app";
 
     await test.step("Deploy API, Application (client1 only), Subscription", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/api-mtls-rotation.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/api-mtls-rotation/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/application-rotation-step1.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-rotation-step1/crd.yaml"));
       await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/subscription-rotation.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/subscription-rotation/crd.yaml"));
       await kubectl.waitForCondition("subscription", "e2e-mtls-rotation-sub", "Accepted");
     });
 
@@ -303,7 +303,7 @@ spec:
     });
 
     await test.step("Add client2 (step2) — both certs registered", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/application-rotation-step2.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-rotation-step2/crd.yaml"));
       await kubectl.waitForCondition("application", APP_NAME, "Accepted");
     });
 
@@ -316,7 +316,7 @@ spec:
     });
 
     await test.step("Remove client1 (step3) — only client2 remains", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/application-rotation-step3.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-rotation-step3/crd.yaml"));
       await kubectl.waitForCondition("application", APP_NAME, "Accepted");
     });
 
@@ -331,9 +331,9 @@ spec:
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/mtls-certificates/subscription-rotation.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/application-rotation-step3.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/api-mtls-rotation.yaml"));
+    await kubectl.del(fixture("mtls-certificates/subscription-rotation/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/application-rotation-step3/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/api-mtls-rotation/crd.yaml"));
   });
 
   test(`Certificate templates from ConfigMap ${XRAY.MTLS_CERTIFICATES.MTLS_SUBSCRIPTION}`, async ({
@@ -346,12 +346,12 @@ spec:
     const APP_NAME = "e2e-mtls-templates-app";
 
     await test.step("Deploy TLS secrets, API, Application, Subscription", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/tls-secrets-templates.yaml"));
-      await kubectl.apply(fixture("crds/mtls-certificates/api-mtls-templates.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/tls-secrets-templates/crd.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/api-mtls-templates/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/application-templates.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-templates/crd.yaml"));
       await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/subscription-templates.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/subscription-templates/crd.yaml"));
       await kubectl.waitForCondition("subscription", "e2e-mtls-templates-sub", "Accepted");
     });
 
@@ -374,9 +374,9 @@ spec:
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/mtls-certificates/subscription-templates.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/application-templates.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/api-mtls-templates.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/tls-secrets-templates.yaml"));
+    await kubectl.del(fixture("mtls-certificates/subscription-templates/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/application-templates/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/api-mtls-templates/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/tls-secrets-templates/crd.yaml"));
   });
 });

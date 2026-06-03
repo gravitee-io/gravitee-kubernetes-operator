@@ -53,19 +53,19 @@ function acceptedTrue(status: StatusWithConditions): boolean {
 test.describe("V2 API Categories — Extended", () => {
   test.afterEach(async () => {
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-with-category.yaml"))
+      .del(fixture("api-definitions/v2-api-with-category/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-without-category.yaml"))
+      .del(fixture("api-definitions/v2-api-without-category/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-with-many-categories.yaml"))
+      .del(fixture("api-definitions/v2-api-with-many-categories/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-renamed-category.yaml"))
+      .del(fixture("api-definitions/v2-api-renamed-category/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-non-existing-category.yaml"))
+      .del(fixture("api-definitions/v2-api-non-existing-category/crd.yaml"))
       .catch(() => {});
   });
 
@@ -75,7 +75,7 @@ test.describe("V2 API Categories — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-with-category";
-    const fixturePath = fixture("crds/api-definitions/v2-api-with-category.yaml");
+    const fixturePath = fixture("api-definitions/v2-api-with-category/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -92,7 +92,7 @@ test.describe("V2 API Categories — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-many-cats";
-    const fixturePath = fixture("crds/api-definitions/v2-api-with-many-categories.yaml");
+    const fixturePath = fixture("api-definitions/v2-api-with-many-categories/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -110,7 +110,7 @@ test.describe("V2 API Categories — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-non-existing-cat";
-    const fixturePath = fixture("crds/api-definitions/v2-api-non-existing-category.yaml");
+    const fixturePath = fixture("api-definitions/v2-api-non-existing-category/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -130,8 +130,8 @@ test.describe("V2 API Categories — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-with-category";
-    const withCategory = fixture("crds/api-definitions/v2-api-with-category.yaml");
-    const withoutCategory = fixture("crds/api-definitions/v2-api-without-category.yaml");
+    const withCategory = fixture("api-definitions/v2-api-with-category/crd.yaml");
+    const withoutCategory = fixture("api-definitions/v2-api-without-category/crd.yaml");
 
     await kubectl.apply(withCategory);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -157,7 +157,7 @@ test.describe("V2 API Categories — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-with-category";
-    const withoutCategory = fixture("crds/api-definitions/v2-api-without-category.yaml");
+    const withoutCategory = fixture("api-definitions/v2-api-without-category/crd.yaml");
 
     // Starting point: CRD without categories — APIM must show no categories.
     await kubectl.apply(withoutCategory);
@@ -179,8 +179,8 @@ test.describe("V2 API Categories — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-many-cats";
-    const original = fixture("crds/api-definitions/v2-api-with-many-categories.yaml");
-    const renamed = fixture("crds/api-definitions/v2-api-renamed-category.yaml");
+    const original = fixture("api-definitions/v2-api-with-many-categories/crd.yaml");
+    const renamed = fixture("api-definitions/v2-api-renamed-category/crd.yaml");
 
     await kubectl.apply(original);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");

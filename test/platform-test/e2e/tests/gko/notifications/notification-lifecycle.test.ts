@@ -60,13 +60,13 @@ test.describe("Notification Lifecycle", () => {
     });
 
     await test.step("Create Group and Notification resources", async () => {
-      await kubectl.apply(fixture("crds/notifications/group-for-remove-notification.yaml"));
+      await kubectl.apply(fixture("notifications/group-for-remove-notification/crd.yaml"));
       await kubectl.waitForCondition("group", "e2e-group-remove-notification", "Accepted");
-      await kubectl.apply(fixture("crds/notifications/notification-for-remove.yaml"));
+      await kubectl.apply(fixture("notifications/notification-for-remove/crd.yaml"));
     });
 
     await test.step("Deploy API with notification reference", async () => {
-      await kubectl.apply(fixture("crds/notifications/v4-api-with-notification-remove.yaml"));
+      await kubectl.apply(fixture("notifications/v4-api-with-notification-remove/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
 
@@ -74,7 +74,7 @@ test.describe("Notification Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("Remove notification reference from API", async () => {
-      await kubectl.apply(fixture("crds/notifications/v4-api-with-removed-notification.yaml"));
+      await kubectl.apply(fixture("notifications/v4-api-with-removed-notification/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
 
@@ -89,9 +89,9 @@ test.describe("Notification Lifecycle", () => {
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/notifications/v4-api-with-removed-notification.yaml"));
-    await kubectl.del(fixture("crds/notifications/notification-for-remove.yaml"));
-    await kubectl.del(fixture("crds/notifications/group-for-remove-notification.yaml"));
+    await kubectl.del(fixture("notifications/v4-api-with-removed-notification/crd.yaml"));
+    await kubectl.del(fixture("notifications/notification-for-remove/crd.yaml"));
+    await kubectl.del(fixture("notifications/group-for-remove-notification/crd.yaml"));
   });
 
   test(`Update notification events ${XRAY.NOTIFICATIONS.NOTIFICATION_HOOKS_GROUPS}`, async ({
@@ -106,13 +106,13 @@ test.describe("Notification Lifecycle", () => {
     });
 
     await test.step("Create Group and Notification resources", async () => {
-      await kubectl.apply(fixture("crds/notifications/group-for-update-events.yaml"));
+      await kubectl.apply(fixture("notifications/group-for-update-events/crd.yaml"));
       await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/notifications/notification-for-update-events.yaml"));
+      await kubectl.apply(fixture("notifications/notification-for-update-events/crd.yaml"));
     });
 
     await test.step("Deploy API with notification reference", async () => {
-      await kubectl.apply(fixture("crds/notifications/v4-api-with-notification-update-events.yaml"));
+      await kubectl.apply(fixture("notifications/v4-api-with-notification-update-events/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
 
@@ -121,7 +121,7 @@ test.describe("Notification Lifecycle", () => {
     const groupId = (await kubectl.getStatus<{ id: string }>("group", GROUP_NAME)).id;
 
     await test.step("Update Notification resource with added event", async () => {
-      await kubectl.apply(fixture("crds/notifications/notification-for-update-events-added.yaml"));
+      await kubectl.apply(fixture("notifications/notification-for-update-events-added/crd.yaml"));
       // Wait for reconciliation
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
@@ -137,9 +137,9 @@ test.describe("Notification Lifecycle", () => {
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/notifications/v4-api-with-notification-update-events.yaml"));
-    await kubectl.del(fixture("crds/notifications/notification-for-update-events-added.yaml"));
-    await kubectl.del(fixture("crds/notifications/group-for-update-events.yaml"));
+    await kubectl.del(fixture("notifications/v4-api-with-notification-update-events/crd.yaml"));
+    await kubectl.del(fixture("notifications/notification-for-update-events-added/crd.yaml"));
+    await kubectl.del(fixture("notifications/group-for-update-events/crd.yaml"));
   });
 
   test(`Update notification group refs ${XRAY.NOTIFICATIONS.API_REF_NOTIFICATION} ${XRAY.NOTIFICATIONS.NOTIFICATIONS_VIA_CRS}`, async ({
@@ -154,13 +154,13 @@ test.describe("Notification Lifecycle", () => {
     });
 
     await test.step("Create Group and Notification resources", async () => {
-      await kubectl.apply(fixture("crds/notifications/group-for-update-grouprefs.yaml"));
+      await kubectl.apply(fixture("notifications/group-for-update-grouprefs/crd.yaml"));
       await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/notifications/notification-for-update-grouprefs.yaml"));
+      await kubectl.apply(fixture("notifications/notification-for-update-grouprefs/crd.yaml"));
     });
 
     await test.step("Deploy API with notification reference", async () => {
-      await kubectl.apply(fixture("crds/notifications/v4-api-with-notification-update-grouprefs.yaml"));
+      await kubectl.apply(fixture("notifications/v4-api-with-notification-update-grouprefs/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
 
@@ -168,7 +168,7 @@ test.describe("Notification Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("Update Notification resource removing groups", async () => {
-      await kubectl.apply(fixture("crds/notifications/notification-for-update-grouprefs-removed.yaml"));
+      await kubectl.apply(fixture("notifications/notification-for-update-grouprefs-removed/crd.yaml"));
       // Wait for reconciliation
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
@@ -184,8 +184,8 @@ test.describe("Notification Lifecycle", () => {
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/notifications/v4-api-with-notification-update-grouprefs.yaml"));
-    await kubectl.del(fixture("crds/notifications/notification-for-update-grouprefs-removed.yaml"));
-    await kubectl.del(fixture("crds/notifications/group-for-update-grouprefs.yaml"));
+    await kubectl.del(fixture("notifications/v4-api-with-notification-update-grouprefs/crd.yaml"));
+    await kubectl.del(fixture("notifications/notification-for-update-grouprefs-removed/crd.yaml"));
+    await kubectl.del(fixture("notifications/group-for-update-grouprefs/crd.yaml"));
   });
 });

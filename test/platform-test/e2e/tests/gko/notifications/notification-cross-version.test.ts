@@ -30,9 +30,9 @@ import { test, fixture } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const NOTIFICATION = "crds/notifications/notification-shared.yaml";
-const V4_API = "crds/notifications/v4-api-using-shared-notification.yaml";
-const V2_API = "crds/notifications/v2-api-using-shared-notification.yaml";
+const NOTIFICATION = "notifications/notification-shared/crd.yaml";
+const V4_API = "notifications/v4-api-using-shared-notification/crd.yaml";
+const V2_API = "notifications/v2-api-using-shared-notification/crd.yaml";
 
 test.describe("Notification CR — Cross Version", () => {
   test.afterEach(async () => {

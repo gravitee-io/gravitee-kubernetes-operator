@@ -33,7 +33,7 @@ import * as kubectlSafe from "../../../helpers/kubectl.js";
 // cleanup window cannot collide with sibling tests that also use
 // v4-proxy-api-reconcile.yaml (notably reconciliation.test.ts and
 // auditability.test.ts).
-const ORIGINAL = "crds/api-v4-definitions/v4-proxy-api-restart.yaml";
+const ORIGINAL = "api-v4-definitions/v4-proxy-api-restart/crd.yaml";
 const API_NAME = "e2e-v4-restart";
 const OPERATOR_DEPLOY = "gko-controller-manager";
 

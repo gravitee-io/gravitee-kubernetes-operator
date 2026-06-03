@@ -40,7 +40,7 @@ test.describe("V4 API Documentation — Fetchers", () => {
   test(`V4 web fetcher without URL is rejected ${XRAY.PAGES.V4_WEB_FETCHER_NO_URL} ${XRAY.WEBHOOKS.CROSS_VERSION_SCHEDULERS_FETCHERS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v4-api-web-fetcher-no-url.yaml");
+    const fixturePath = fixture("pages/v4-api-web-fetcher-no-url/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/url|required|denied|invalid/);
@@ -51,7 +51,7 @@ test.describe("V4 API Documentation — Fetchers", () => {
   test(`V4 web fetcher with invalid cron is rejected ${XRAY.PAGES.V4_WEB_FETCHER_WARNING} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v4-api-web-fetcher-invalid-param.yaml");
+    const fixturePath = fixture("pages/v4-api-web-fetcher-invalid-param/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/cron|fetchcron|invalid|denied/);
@@ -62,7 +62,7 @@ test.describe("V4 API Documentation — Fetchers", () => {
   test(`V4 github fetcher missing required fields is rejected ${XRAY.PAGES.V4_GITHUB_FETCHER_REQUIRED_FIELDS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v4-api-github-fetcher-missing-fields.yaml");
+    const fixturePath = fixture("pages/v4-api-github-fetcher-missing-fields/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(
@@ -80,7 +80,7 @@ test.describe("V4 API Documentation — Fetchers", () => {
   test(`V4 github fetcher with invalid cron is rejected ${XRAY.PAGES.V4_GITHUB_FETCHER_WARNING} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v4-api-github-fetcher-invalid-param.yaml");
+    const fixturePath = fixture("pages/v4-api-github-fetcher-invalid-param/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/cron|fetchcron|invalid|denied/);

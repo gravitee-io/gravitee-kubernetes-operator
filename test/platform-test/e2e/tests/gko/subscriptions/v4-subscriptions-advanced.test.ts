@@ -35,13 +35,13 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const APP_SIMPLE = "crds/applications/application-simple.yaml";
-const JWT_API = "crds/api-v4-definitions/v4-api-jwt-plan.yaml";
-const JWT_API_PLAN_REMOVED = "crds/api-v4-definitions/v4-api-jwt-plan-removed.yaml";
-const OAUTH2_API = "crds/api-v4-definitions/v4-api-oauth2-plan.yaml";
-const OAUTH2_API_PLAN_REMOVED = "crds/api-v4-definitions/v4-api-oauth2-plan-removed.yaml";
-const SUB_JWT = "crds/subscriptions/subscription-jwt-v4.yaml";
-const SUB_OAUTH2 = "crds/subscriptions/subscription-oauth2-v4.yaml";
+const APP_SIMPLE = "applications/application-simple/crd.yaml";
+const JWT_API = "api-v4-definitions/v4-api-jwt-plan/crd.yaml";
+const JWT_API_PLAN_REMOVED = "api-v4-definitions/v4-api-jwt-plan-removed/crd.yaml";
+const OAUTH2_API = "api-v4-definitions/v4-api-oauth2-plan/crd.yaml";
+const OAUTH2_API_PLAN_REMOVED = "api-v4-definitions/v4-api-oauth2-plan-removed/crd.yaml";
+const SUB_JWT = "subscriptions/subscription-jwt-v4/crd.yaml";
+const SUB_OAUTH2 = "subscriptions/subscription-oauth2-v4/crd.yaml";
 
 test.describe("V4 Plans & Subscriptions — Advanced", () => {
   test.afterEach(async () => {

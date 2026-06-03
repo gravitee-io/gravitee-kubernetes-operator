@@ -67,7 +67,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     const API_PATH = "/e2e-v4-sync-mgmt";
 
     await test.step("Apply CRD with syncFrom Management", async () => {
-      await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml"));
+      await kubectl.apply(fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
 
@@ -79,7 +79,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
       await gateway.assertResponds(API_PATH, { status: 200 });
     });
 
-    await kubectl.del(fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml"));
+    await kubectl.del(fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml"));
   });
 
   // ── GKO-140: Delete a V4 API ─────────────────────────────────
@@ -91,7 +91,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
     const API_PATH = "/e2e-v4-sync-mgmt";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
 
     await test.step("Deploy API", async () => {
       await kubectl.apply(fixturePath);
@@ -126,7 +126,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/api-v4-definitions/v4-proxy-api-invalid.yaml"),
+      fixture("api-v4-definitions/v4-proxy-api-invalid/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
   });
@@ -140,7 +140,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
     const API_PATH = "/e2e-v4-sync-mgmt";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
 
     await test.step("Deploy, verify, then delete", async () => {
       await kubectl.apply(fixturePath);
@@ -171,8 +171,8 @@ test.describe("V4 Proxy API — Lifecycle", () => {
   test(`Context path conflict is rejected ${XRAY.API_LIFECYCLE.CONTEXT_PATH_CONFLICT_V4} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath1 = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
-    const fixturePath2 = fixture("crds/api-v4-definitions/v4-proxy-api-conflict-path.yaml");
+    const fixturePath1 = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
+    const fixturePath2 = fixture("api-v4-definitions/v4-proxy-api-conflict-path/crd.yaml");
 
     await test.step("Deploy first API", async () => {
       await kubectl.apply(fixturePath1);
@@ -195,7 +195,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/api-v4-definitions/v4-proxy-api-no-plans-started.yaml"),
+      fixture("api-v4-definitions/v4-proxy-api-no-plans-started/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("plan");
   });
@@ -207,7 +207,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-no-plans-stopped";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-no-plans-stopped.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-no-plans-stopped/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -227,7 +227,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
   }) => {
     const API_NAME = "e2e-v4-failover";
     const API_PATH = "/e2e-v4-failover";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-with-failover.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-with-failover/crd.yaml");
 
     await test.step("Deploy API with failover", async () => {
       await kubectl.apply(fixturePath);
@@ -262,7 +262,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-labels-cats";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-with-labels-categories.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-with-labels-categories/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -285,8 +285,8 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-message-mock";
-    const createFixture = fixture("crds/api-v4-definitions/v4-message-api-mock.yaml");
-    const updateFixture = fixture("crds/api-v4-definitions/v4-message-api-mock-updated.yaml");
+    const createFixture = fixture("api-v4-definitions/v4-message-api-mock/crd.yaml");
+    const updateFixture = fixture("api-v4-definitions/v4-message-api-mock-updated/crd.yaml");
 
     await test.step("Deploy message API", async () => {
       await kubectl.apply(createFixture);
@@ -317,7 +317,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-message-mock";
-    const createFixture = fixture("crds/api-v4-definitions/v4-message-api-mock.yaml");
+    const createFixture = fixture("api-v4-definitions/v4-message-api-mock/crd.yaml");
 
     await test.step("Deploy valid message API", async () => {
       await kubectl.apply(createFixture);
@@ -326,7 +326,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
 
     await test.step("Update with invalid CRD (missing listeners) is rejected", async () => {
       const stderr = await kubectl.applyExpectFailure(
-        fixture("crds/api-v4-definitions/v4-proxy-api-invalid.yaml"),
+        fixture("api-v4-definitions/v4-proxy-api-invalid/crd.yaml"),
       );
       expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
     });
@@ -345,7 +345,7 @@ test.describe("V4 Proxy API — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
 
     await test.step("First apply", async () => {
       await kubectl.apply(fixturePath);

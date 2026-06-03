@@ -68,8 +68,8 @@ test.describe("V4 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-markdown-page";
-    const WITH_PAGE = fixture("crds/pages/v4-api-with-page-markdown.yaml");
-    const UPDATED = fixture("crds/pages/v4-api-with-updated-page-markdown.yaml");
+    const WITH_PAGE = fixture("pages/v4-api-with-page-markdown/crd.yaml");
+    const UPDATED = fixture("pages/v4-api-with-updated-page-markdown/crd.yaml");
 
     await test.step("Create API with markdown page", async () => {
       await kubectl.apply(WITH_PAGE);
@@ -105,7 +105,7 @@ test.describe("V4 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-markdown-page";
-    const WITH_PAGE = fixture("crds/pages/v4-api-with-page-markdown.yaml");
+    const WITH_PAGE = fixture("pages/v4-api-with-page-markdown/crd.yaml");
 
     await kubectl.apply(WITH_PAGE);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -134,7 +134,7 @@ test.describe("V4 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-public-page";
-    const fixturePath = fixture("crds/pages/v4-api-public-page.yaml");
+    const fixturePath = fixture("pages/v4-api-public-page/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -156,8 +156,8 @@ test.describe("V4 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-markdown-page";
-    const WITH_PAGE = fixture("crds/pages/v4-api-with-page-markdown.yaml");
-    const WITHOUT_PAGE = fixture("crds/pages/v4-api-without-page-markdown.yaml");
+    const WITH_PAGE = fixture("pages/v4-api-with-page-markdown/crd.yaml");
+    const WITHOUT_PAGE = fixture("pages/v4-api-without-page-markdown/crd.yaml");
 
     await kubectl.apply(WITH_PAGE);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");

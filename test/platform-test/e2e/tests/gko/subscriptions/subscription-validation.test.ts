@@ -49,7 +49,7 @@ test.describe("Subscriptions — Validation", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/subscriptions/subscription-ending-before-start.yaml"),
+      fixture("subscriptions/subscription-ending-before-start/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/end.*before|invalid.*end/);
   });
@@ -60,7 +60,7 @@ test.describe("Subscriptions — Validation", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/subscriptions/subscription-non-existing-plan.yaml"),
+      fixture("subscriptions/subscription-non-existing-plan/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("plan");
   });
@@ -74,7 +74,7 @@ test.describe("Subscriptions — Validation", () => {
     // But syncFrom: KUBERNETES should be rejected for subscriptions
     // We test with the existing API — the rejection comes from the subscription webhook
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/subscriptions/subscription-sync-from-k8s.yaml"),
+      fixture("subscriptions/subscription-sync-from-k8s/crd.yaml"),
     );
     // The webhook may reject because the API or app doesn't exist, or because of syncFrom
     expect(stderr).toBeTruthy();
@@ -86,7 +86,7 @@ test.describe("Subscriptions — Validation", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/subscriptions/subscription-stopped-api.yaml"),
+      fixture("subscriptions/subscription-stopped-api/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/not started|stopped/);
   });
@@ -99,7 +99,7 @@ test.describe("Subscriptions — Validation", () => {
     // Subscribing to a keyless plan via subscription CRD should be rejected
     // because subscription CRDs only support JWT/OAUTH2 security types
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/subscriptions/subscription-sync-from-k8s.yaml"),
+      fixture("subscriptions/subscription-sync-from-k8s/crd.yaml"),
     );
     expect(stderr).toBeTruthy();
   });
@@ -114,7 +114,7 @@ test.describe("Subscriptions — Validation", () => {
     // uses kind: ApiV4Definition explicitly — the default behavior test
     // requires a fixture without kind set, which we verify at the CRD level
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/subscriptions/subscription-non-existing-plan.yaml"),
+      fixture("subscriptions/subscription-non-existing-plan/crd.yaml"),
     );
     // The error should mention plan, not kind — meaning the kind defaulted correctly
     expect(stderr.toLowerCase()).toContain("plan");

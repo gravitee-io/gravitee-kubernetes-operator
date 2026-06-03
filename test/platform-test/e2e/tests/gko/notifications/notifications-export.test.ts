@@ -31,11 +31,11 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const NOTIFICATION = "crds/notifications/notification-shared.yaml";
-const V4_API_WITH_NOTIF = "crds/notifications/v4-api-using-shared-notification.yaml";
-const CONSOLE_A = "crds/notifications/notification-console-a.yaml";
-const CONSOLE_B = "crds/notifications/notification-console-b.yaml";
-const DUPLICATE_API = "crds/notifications/v4-api-duplicate-console-notifications.yaml";
+const NOTIFICATION = "notifications/notification-shared/crd.yaml";
+const V4_API_WITH_NOTIF = "notifications/v4-api-using-shared-notification/crd.yaml";
+const CONSOLE_A = "notifications/notification-console-a/crd.yaml";
+const CONSOLE_B = "notifications/notification-console-b/crd.yaml";
+const DUPLICATE_API = "notifications/v4-api-duplicate-console-notifications/crd.yaml";
 
 interface ExportedCrd {
   spec?: Record<string, unknown> & {

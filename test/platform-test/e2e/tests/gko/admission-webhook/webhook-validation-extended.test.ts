@@ -64,7 +64,7 @@ test.describe("Webhook Validation — Extended", () => {
   }) => {
     // The existing v4-proxy-api-invalid.yaml is missing listeners (required field)
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/api-v4-definitions/v4-proxy-api-invalid.yaml"),
+      fixture("api-v4-definitions/v4-proxy-api-invalid/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
   });
@@ -76,7 +76,7 @@ test.describe("Webhook Validation — Extended", () => {
   }) => {
     // Message APIs also require listeners — reuse the invalid fixture which omits them
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/api-v4-definitions/v4-proxy-api-invalid.yaml"),
+      fixture("api-v4-definitions/v4-proxy-api-invalid/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
   });
@@ -87,7 +87,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/v4-api-non-existing-context.yaml"),
+      fixture("invalid/v4-api-non-existing-context/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("management");
   });
@@ -98,7 +98,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/api-v4-definitions/v4-proxy-api-no-plans-started.yaml"),
+      fixture("api-v4-definitions/v4-proxy-api-no-plans-started/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("plan");
   });
@@ -109,7 +109,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/v4-api-invalid-credentials-context.yaml"),
+      fixture("invalid/v4-api-invalid-credentials-context/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("bad credentials");
   });
@@ -120,7 +120,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/resource-no-name.yaml"),
+      fixture("invalid/resource-no-name/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("name");
   });
@@ -131,7 +131,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/resource-no-type.yaml"),
+      fixture("invalid/resource-no-type/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("type");
   });
@@ -142,7 +142,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/resource-no-config.yaml"),
+      fixture("invalid/resource-no-config/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("config");
   });
@@ -156,7 +156,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-non-oas-error";
-    const fixturePath = fixture("crds/invalid/v4-api-non-oas-errors.yaml");
+    const fixturePath = fixture("invalid/v4-api-non-oas-errors/crd.yaml");
 
     await test.step("Apply CRD with non-OAS errors (invalid endpoint URL)", async () => {
       await kubectl.apply(fixturePath);
@@ -181,7 +181,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/v2-api-invalid-parent-path.yaml"),
+      fixture("invalid/v2-api-invalid-parent-path/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/parent|path|not found|denied|error/);
   });
@@ -195,7 +195,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/v4-api-invalid-parent-path.yaml"),
+      fixture("invalid/v4-api-invalid-parent-path/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/parent|path|not found|denied|error/);
   });
@@ -206,7 +206,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/v4-api-invalid-cron.yaml"),
+      fixture("invalid/v4-api-invalid-cron/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/cron|denied|rejected|invalid|error/);
   });
@@ -217,7 +217,7 @@ test.describe("Webhook Validation — Extended", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/v2-api-invalid-cron.yaml"),
+      fixture("invalid/v2-api-invalid-cron/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/cron|denied|rejected|invalid|error/);
   });
@@ -227,8 +227,8 @@ test.describe("Webhook Validation — Extended", () => {
   test(`V2 API with duplicate context path is rejected ${XRAY.WEBHOOKS.V2_CONTEXT_PATH_DUPLICATE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const v4Fixture = fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml");
-    const v2DupFixture = fixture("crds/invalid/v2-api-context-path-dup.yaml");
+    const v4Fixture = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const v2DupFixture = fixture("invalid/v2-api-context-path-dup/crd.yaml");
 
     await test.step("Deploy V4 API that owns the context path", async () => {
       await kubectl.apply(v4Fixture);
@@ -249,8 +249,8 @@ test.describe("Webhook Validation — Extended", () => {
   test(`V2 API conflicting with V4 context path is rejected ${XRAY.WEBHOOKS.V2_CONTEXT_PATH_CONFLICT_V4} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const v4Fixture = fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml");
-    const v2ConflictFixture = fixture("crds/invalid/v2-api-context-path-conflict.yaml");
+    const v4Fixture = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const v2ConflictFixture = fixture("invalid/v2-api-context-path-conflict/crd.yaml");
 
     await test.step("Deploy V4 API that owns the context path", async () => {
       await kubectl.apply(v4Fixture);
@@ -271,7 +271,7 @@ test.describe("Webhook Validation — Extended", () => {
   test(`V2 API context path behavior with local=false ${XRAY.WEBHOOKS.V2_CONTEXT_PATH_EXISTS_LOCAL_FALSE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/invalid/v2-api-context-path-local-false.yaml");
+    const fixturePath = fixture("invalid/v2-api-context-path-local-false/crd.yaml");
 
     await test.step("Apply V2 API with local=false", async () => {
       await kubectl.apply(fixturePath);

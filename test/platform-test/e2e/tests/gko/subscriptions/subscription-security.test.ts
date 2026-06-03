@@ -75,9 +75,9 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("crds/api-v4-definitions/v4-api-jwt-plan.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-jwt-v4.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-api-jwt-plan/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-jwt-v4/crd.yaml");
 
     await test.step("Deploy API and application", async () => {
       await kubectl.apply(apiFixture);
@@ -109,9 +109,9 @@ test.describe("Subscriptions — Security Plans", () => {
     mapi,
   }) => {
     test.slow(); // V2 API reconciliation can be slower under load
-    const apiFixture = fixture("crds/subscriptions/v2-api-jwt-plan.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-jwt-v2.yaml");
+    const apiFixture = fixture("subscriptions/v2-api-jwt-plan/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-jwt-v2/crd.yaml");
 
     await test.step("Deploy API and application", async () => {
       await kubectl.apply(apiFixture);
@@ -141,9 +141,9 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("crds/api-v4-definitions/v4-api-oauth2-plan.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-oauth2-v4.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-api-oauth2-plan/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-oauth2-v4/crd.yaml");
 
     await test.step("Deploy API and application", async () => {
       await kubectl.apply(apiFixture);
@@ -174,9 +174,9 @@ test.describe("Subscriptions — Security Plans", () => {
     mapi,
   }) => {
     test.slow(); // V2 API reconciliation can be slower under load
-    const apiFixture = fixture("crds/subscriptions/v2-api-oauth2-plan.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-oauth2-v2.yaml");
+    const apiFixture = fixture("subscriptions/v2-api-oauth2-plan/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-oauth2-v2/crd.yaml");
 
     await test.step("Deploy API and application", async () => {
       await kubectl.apply(apiFixture);
@@ -206,9 +206,9 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("crds/api-v4-definitions/v4-api-manual-approval-plan.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-manual-v4.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-api-manual-approval-plan/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-manual-v4/crd.yaml");
 
     await test.step("Deploy API with manual approval plan and application", async () => {
       await kubectl.apply(apiFixture);
@@ -239,9 +239,9 @@ test.describe("Subscriptions — Security Plans", () => {
     mapi,
   }) => {
     test.slow(); // V2 API reconciliation can be slower under load
-    const apiFixture = fixture("crds/subscriptions/v2-api-manual-approval.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-manual-v2.yaml");
+    const apiFixture = fixture("subscriptions/v2-api-manual-approval/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-manual-v2/crd.yaml");
 
     await test.step("Deploy V2 API with manual approval plan and application", async () => {
       await kubectl.apply(apiFixture);
@@ -275,9 +275,9 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     gateway,
   }) => {
-    const apiFixture = fixture("crds/api-v4-definitions/v4-api-jwt-plan.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-jwt-v4.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-api-jwt-plan/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-jwt-v4/crd.yaml");
 
     await test.step("Deploy API, app, and subscription", async () => {
       await kubectl.apply(apiFixture);
@@ -306,9 +306,9 @@ test.describe("Subscriptions — Security Plans", () => {
     gateway,
   }) => {
     test.slow(); // V2 API reconciliation can be slower under load
-    const apiFixture = fixture("crds/subscriptions/v2-api-jwt-plan.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-jwt-v2.yaml");
+    const apiFixture = fixture("subscriptions/v2-api-jwt-plan/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-jwt-v2/crd.yaml");
 
     await test.step("Deploy API, app, and subscription", async () => {
       await kubectl.apply(apiFixture);
@@ -335,9 +335,9 @@ test.describe("Subscriptions — Security Plans", () => {
   test(`Delete API despite active subscription when another plan exists ${XRAY.SUBSCRIPTIONS.DELETE_API_WITH_OTHER_PLAN} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const apiFixture = fixture("crds/api-v4-definitions/v4-api-two-plans-sub.yaml");
-    const appFixture = fixture("crds/applications/application-simple.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-jwt-v4.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-api-two-plans-sub/crd.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-jwt-v4/crd.yaml");
 
     await test.step("Deploy API with two plans and create subscription to JWT plan", async () => {
       await kubectl.apply(apiFixture);
@@ -367,9 +367,9 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("crds/api-v4-definitions/v4-api-mtls-plan.yaml");
-    const appFixture = fixture("crds/applications/application-mtls.yaml");
-    const subFixture = fixture("crds/subscriptions/subscription-mtls-v4.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-api-mtls-plan/crd.yaml");
+    const appFixture = fixture("applications/application-mtls/crd.yaml");
+    const subFixture = fixture("subscriptions/subscription-mtls-v4/crd.yaml");
 
     await test.step("Deploy API and application with client certificate", async () => {
       await kubectl.apply(apiFixture);

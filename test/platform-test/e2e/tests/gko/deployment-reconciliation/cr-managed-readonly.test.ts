@@ -34,10 +34,10 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const V4_API = "crds/api-v4-definitions/v4-proxy-api-started.yaml";
-const APP = "crds/applications/application-simple.yaml";
-const NOTIFICATION = "crds/notifications/notification-shared.yaml";
-const V4_API_WITH_NOTIF = "crds/notifications/v4-api-using-shared-notification.yaml";
+const V4_API = "api-v4-definitions/v4-proxy-api-started/crd.yaml";
+const APP = "applications/application-simple/crd.yaml";
+const NOTIFICATION = "notifications/notification-shared/crd.yaml";
+const V4_API_WITH_NOTIF = "notifications/v4-api-using-shared-notification/crd.yaml";
 
 test.describe("CR-managed resources are read-only in APIM", () => {
   test.afterEach(async () => {

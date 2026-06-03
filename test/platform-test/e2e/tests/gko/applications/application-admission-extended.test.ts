@@ -33,11 +33,11 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const FIXTURE_505 = "crds/applications/application-505-readonly.yaml";
-const FIXTURE_578 = "crds/applications/application-578-browser-bad-uris.yaml";
-const FIXTURE_579 = "crds/applications/application-579-spa-bad-grants.yaml";
-const FIXTURE_1382 = "crds/applications/application-1382-long-name.yaml";
-const FIXTURE_1383 = "crds/applications/application-1383-delete.yaml";
+const FIXTURE_505 = "applications/application-505-readonly/crd.yaml";
+const FIXTURE_578 = "applications/application-578-browser-bad-uris/crd.yaml";
+const FIXTURE_579 = "applications/application-579-spa-bad-grants/crd.yaml";
+const FIXTURE_1382 = "applications/application-1382-long-name/crd.yaml";
+const FIXTURE_1383 = "applications/application-1383-delete/crd.yaml";
 
 interface StatusWithId {
   id?: string;

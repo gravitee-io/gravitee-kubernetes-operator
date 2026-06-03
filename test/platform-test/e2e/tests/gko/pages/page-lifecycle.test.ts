@@ -51,9 +51,9 @@ test.describe("Page Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-markdown-page";
-    const WITH_PAGE = fixture("crds/pages/v4-api-with-page-markdown.yaml");
-    const UPDATED_PAGE = fixture("crds/pages/v4-api-with-updated-page-markdown.yaml");
-    const WITHOUT_PAGE = fixture("crds/pages/v4-api-without-page-markdown.yaml");
+    const WITH_PAGE = fixture("pages/v4-api-with-page-markdown/crd.yaml");
+    const UPDATED_PAGE = fixture("pages/v4-api-with-updated-page-markdown/crd.yaml");
+    const WITHOUT_PAGE = fixture("pages/v4-api-without-page-markdown/crd.yaml");
 
     await test.step("Deploy API with markdown page", async () => {
       await kubectl.apply(WITH_PAGE);
@@ -110,7 +110,7 @@ test.describe("Page Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-swagger-http-fetcher";
-    const FIXTURE = fixture("crds/pages/v4-api-with-swagger-http-fetcher.yaml");
+    const FIXTURE = fixture("pages/v4-api-with-swagger-http-fetcher/crd.yaml");
 
     await test.step("Deploy API with swagger HTTP fetcher page", async () => {
       await kubectl.apply(FIXTURE);

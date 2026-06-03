@@ -46,16 +46,16 @@ function acceptedTrue(status: StatusWithConditions): boolean {
 test.describe("Applications — Members Extended", () => {
   test.afterEach(async () => {
     await kubectlSafe
-      .del(fixture("crds/applications/application-member-non-existing-role-531.yaml"))
+      .del(fixture("applications/application-member-non-existing-role-531/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/applications/application-with-member.yaml"))
+      .del(fixture("applications/application-with-member/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/applications/application-with-member-removed.yaml"))
+      .del(fixture("applications/application-with-member-removed/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/applications/application-with-member-reviewer.yaml"))
+      .del(fixture("applications/application-with-member-reviewer/crd.yaml"))
       .catch(() => {});
   });
 
@@ -67,7 +67,7 @@ test.describe("Applications — Members Extended", () => {
   }) => {
     const APP_NAME = "e2e-app-member-non-existing-role";
     const fixturePath = fixture(
-      "crds/applications/application-member-non-existing-role-531.yaml",
+      "applications/application-member-non-existing-role-531/crd.yaml",
     );
 
     await kubectl.apply(fixturePath);
@@ -86,8 +86,8 @@ test.describe("Applications — Members Extended", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-with-member";
-    const withMember = fixture("crds/applications/application-with-member.yaml");
-    const removed = fixture("crds/applications/application-with-member-removed.yaml");
+    const withMember = fixture("applications/application-with-member/crd.yaml");
+    const removed = fixture("applications/application-with-member-removed/crd.yaml");
 
     await kubectl.apply(withMember);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -110,7 +110,7 @@ test.describe("Applications — Members Extended", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-with-member";
-    const fixturePath = fixture("crds/applications/application-with-member.yaml");
+    const fixturePath = fixture("applications/application-with-member/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -128,8 +128,8 @@ test.describe("Applications — Members Extended", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-with-member";
-    const withMember = fixture("crds/applications/application-with-member.yaml");
-    const reviewer = fixture("crds/applications/application-with-member-reviewer.yaml");
+    const withMember = fixture("applications/application-with-member/crd.yaml");
+    const reviewer = fixture("applications/application-with-member-reviewer/crd.yaml");
 
     await kubectl.apply(withMember);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");

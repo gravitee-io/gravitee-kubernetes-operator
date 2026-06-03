@@ -33,16 +33,16 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const APP_SIMPLE = "crds/applications/application-simple.yaml";
-const V2_JWT_API = "crds/subscriptions/v2-api-jwt-plan.yaml";
-const V2_OAUTH2_API = "crds/subscriptions/v2-api-oauth2-plan.yaml";
-const V2_LOCAL_API = "crds/subscriptions/v2-api-local-true.yaml";
-const SUB_JWT_V2 = "crds/subscriptions/subscription-jwt-v2.yaml";
-const SUB_OAUTH2_V2 = "crds/subscriptions/subscription-oauth2-v2.yaml";
-const SUB_LOCAL_V2 = "crds/subscriptions/subscription-to-local-v2-api.yaml";
-const CROSS_CTX_APP = "crds/subscriptions/cross-ctx-app.yaml";
-const CROSS_CTX_SUB = "crds/subscriptions/cross-ctx-subscription.yaml";
-const TEMP_CTX = "crds/management-context/temporary-ctx.yaml";
+const APP_SIMPLE = "applications/application-simple/crd.yaml";
+const V2_JWT_API = "subscriptions/v2-api-jwt-plan/crd.yaml";
+const V2_OAUTH2_API = "subscriptions/v2-api-oauth2-plan/crd.yaml";
+const V2_LOCAL_API = "subscriptions/v2-api-local-true/crd.yaml";
+const SUB_JWT_V2 = "subscriptions/subscription-jwt-v2/crd.yaml";
+const SUB_OAUTH2_V2 = "subscriptions/subscription-oauth2-v2/crd.yaml";
+const SUB_LOCAL_V2 = "subscriptions/subscription-to-local-v2-api/crd.yaml";
+const CROSS_CTX_APP = "subscriptions/cross-ctx-app/crd.yaml";
+const CROSS_CTX_SUB = "subscriptions/cross-ctx-subscription/crd.yaml";
+const TEMP_CTX = "management-context/temporary-ctx/crd.yaml";
 
 test.describe("V2 Subscriptions — Advanced", () => {
   test.afterEach(async () => {

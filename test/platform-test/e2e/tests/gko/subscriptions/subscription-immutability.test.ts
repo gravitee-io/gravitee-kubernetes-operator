@@ -27,10 +27,10 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const V4_API = "crds/api-v4-definitions/v4-proxy-api-jwt-oauth2-plans.yaml";
-const APP = "crds/applications/application-simple.yaml";
-const SUB_A = "crds/subscriptions/subscription-plan-a.yaml";
-const SUB_B = "crds/subscriptions/subscription-plan-b.yaml";
+const V4_API = "api-v4-definitions/v4-proxy-api-jwt-oauth2-plans/crd.yaml";
+const APP = "applications/application-simple/crd.yaml";
+const SUB_A = "subscriptions/subscription-plan-a/crd.yaml";
+const SUB_B = "subscriptions/subscription-plan-b/crd.yaml";
 
 const API_NAME = "e2e-v4-sub-immutability";
 const APP_NAME = "e2e-app-simple";

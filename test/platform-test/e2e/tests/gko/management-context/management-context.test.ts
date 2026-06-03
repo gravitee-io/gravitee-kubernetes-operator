@@ -51,7 +51,7 @@ test.describe("ManagementContext — Lifecycle", () => {
   test(`Cannot delete ManagementContext referenced by V4 API ${XRAY.MANAGEMENT_CONTEXT.DELETE_WITH_V4_API_REF} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const apiFixture = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
+    const apiFixture = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
 
     await test.step("Deploy an API referencing dev-ctx", async () => {
       await kubectl.apply(apiFixture);
@@ -60,7 +60,7 @@ test.describe("ManagementContext — Lifecycle", () => {
 
     await test.step("Attempting to delete dev-ctx fails", async () => {
       const stderr = await kubectl.delExpectFailure(
-        fixture("crds/management-context/dev-ctx.yaml"),
+        fixture("management-context/dev-ctx/crd.yaml"),
       );
       expect(stderr.toLowerCase()).toContain("cannot be deleted");
     });
@@ -74,7 +74,7 @@ test.describe("ManagementContext — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/management-context-invalid-env.yaml"),
+      fixture("invalid/management-context-invalid-env/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("invalid organization or environment");
   });
@@ -85,7 +85,7 @@ test.describe("ManagementContext — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/invalid/management-context-invalid-org.yaml"),
+      fixture("invalid/management-context-invalid-org/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("invalid organization or environment");
   });
@@ -95,7 +95,7 @@ test.describe("ManagementContext — Lifecycle", () => {
   test(`Cannot delete ManagementContext referenced by Application ${XRAY.MANAGEMENT_CONTEXT.DELETE_WITH_APP_REF} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const appFixture = fixture("crds/applications/application-simple.yaml");
+    const appFixture = fixture("applications/application-simple/crd.yaml");
 
     await test.step("Deploy an Application referencing dev-ctx", async () => {
       await kubectl.apply(appFixture);
@@ -104,7 +104,7 @@ test.describe("ManagementContext — Lifecycle", () => {
 
     await test.step("Attempting to delete dev-ctx fails", async () => {
       const stderr = await kubectl.delExpectFailure(
-        fixture("crds/management-context/dev-ctx.yaml"),
+        fixture("management-context/dev-ctx/crd.yaml"),
       );
       expect(stderr.toLowerCase()).toContain("cannot be deleted");
     });
@@ -117,7 +117,7 @@ test.describe("ManagementContext — Lifecycle", () => {
   test(`ManagementContext deletion succeeds with no references ${XRAY.MANAGEMENT_CONTEXT.DELETE_NO_REFS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const ctxFixture = fixture("crds/management-context/temporary-ctx.yaml");
+    const ctxFixture = fixture("management-context/temporary-ctx/crd.yaml");
 
     await test.step("Create a temporary ManagementContext with valid creds", async () => {
       await kubectl.apply(ctxFixture);

@@ -56,7 +56,7 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-simple";
-    const fixturePath = fixture("crds/applications/application-simple.yaml");
+    const fixturePath = fixture("applications/application-simple/crd.yaml");
 
     await test.step("Apply application CRD", async () => {
       await kubectl.apply(fixturePath);
@@ -83,8 +83,8 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-simple";
-    const createFixture = fixture("crds/applications/application-simple.yaml");
-    const updateFixture = fixture("crds/applications/application-updated.yaml");
+    const createFixture = fixture("applications/application-simple/crd.yaml");
+    const updateFixture = fixture("applications/application-updated/crd.yaml");
 
     await test.step("Create application", async () => {
       await kubectl.apply(createFixture);
@@ -115,7 +115,7 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-simple";
-    const fixturePath = fixture("crds/applications/application-simple.yaml");
+    const fixturePath = fixture("applications/application-simple/crd.yaml");
 
     await test.step("Create application", async () => {
       await kubectl.apply(fixturePath);
@@ -145,7 +145,7 @@ test.describe("Applications — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/applications/application-no-context.yaml"),
+      fixture("applications/application-no-context/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("management");
   });
@@ -156,7 +156,7 @@ test.describe("Applications — Lifecycle", () => {
     kubectl,
   }) => {
     const stderr = await kubectl.applyExpectFailure(
-      fixture("crds/applications/application-both-settings.yaml"),
+      fixture("applications/application-both-settings/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
   });
@@ -168,7 +168,7 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-metadata";
-    const fixturePath = fixture("crds/applications/application-with-metadata.yaml");
+    const fixturePath = fixture("applications/application-with-metadata/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -191,7 +191,7 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-settings";
-    const fixturePath = fixture("crds/applications/application-with-app-settings.yaml");
+    const fixturePath = fixture("applications/application-with-app-settings/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -213,7 +213,7 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-po-member";
-    const fixturePath = fixture("crds/applications/application-po-member.yaml");
+    const fixturePath = fixture("applications/application-po-member/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -231,7 +231,7 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-no-client-id";
-    const fixturePath = fixture("crds/applications/application-no-client-id.yaml");
+    const fixturePath = fixture("applications/application-no-client-id/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -247,7 +247,7 @@ test.describe("Applications — Lifecycle", () => {
   test(`Client ID in simple apps must be unique ${XRAY.APPLICATIONS.APP_CLIENT_ID_UNIQUE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/applications/application-with-app-settings.yaml");
+    const fixturePath = fixture("applications/application-with-app-settings/crd.yaml");
 
     await test.step("Deploy first app with client ID", async () => {
       await kubectl.apply(fixturePath);
@@ -269,7 +269,7 @@ test.describe("Applications — Lifecycle", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-po-member";
-    const fixturePath = fixture("crds/applications/application-po-member.yaml");
+    const fixturePath = fixture("applications/application-po-member/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");

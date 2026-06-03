@@ -53,7 +53,7 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
   gateway,
 }) => {
   await test.step("Initial CRD apply creates API in APIM", async () => {
-    await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-reconcile.yaml"));
+    await kubectl.apply(fixture("api-v4-definitions/v4-proxy-api-reconcile/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
   });
 
@@ -69,7 +69,7 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
   });
 
   await test.step("Updated CRD is reconciled in APIM", async () => {
-    await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-reconcile-updated.yaml"));
+    await kubectl.apply(fixture("api-v4-definitions/v4-proxy-api-reconcile-updated/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
     await mapi.waitForApiMatches(apiId, {
@@ -88,5 +88,5 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
     expect(acceptedCondition!.status).toBe("True");
   });
 
-  await kubectl.del(fixture("crds/api-v4-definitions/v4-proxy-api-reconcile.yaml"));
+  await kubectl.del(fixture("api-v4-definitions/v4-proxy-api-reconcile/crd.yaml"));
 });

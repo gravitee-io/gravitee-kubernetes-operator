@@ -54,7 +54,7 @@ test.describe("Groups — Lifecycle", () => {
     kubectl,
   }) => {
     const GROUP_NAME = "e2e-group-simple";
-    const fixturePath = fixture("crds/groups/group-simple.yaml");
+    const fixturePath = fixture("groups/group-simple/crd.yaml");
 
     await test.step("Apply group CRD", async () => {
       await kubectl.apply(fixturePath);
@@ -75,7 +75,7 @@ test.describe("Groups — Lifecycle", () => {
     kubectl,
   }) => {
     const GROUP_NAME = "e2e-group-bad-user";
-    const fixturePath = fixture("crds/groups/group-non-existing-user.yaml");
+    const fixturePath = fixture("groups/group-non-existing-user/crd.yaml");
 
     await test.step("Apply group CRD with non-existing user", async () => {
       await kubectl.apply(fixturePath);
@@ -104,7 +104,7 @@ test.describe("Groups — Lifecycle", () => {
     kubectl,
   }) => {
     const GROUP_NAME = "e2e-group-simple";
-    const fixturePath = fixture("crds/groups/group-simple.yaml");
+    const fixturePath = fixture("groups/group-simple/crd.yaml");
 
     await test.step("Create group", async () => {
       await kubectl.apply(fixturePath);
@@ -126,8 +126,8 @@ test.describe("Groups — Lifecycle", () => {
     kubectl,
   }) => {
     const GROUP_NAME = "e2e-group-simple";
-    const createFixture = fixture("crds/groups/group-simple.yaml");
-    const updateFixture = fixture("crds/groups/group-updated.yaml");
+    const createFixture = fixture("groups/group-simple/crd.yaml");
+    const updateFixture = fixture("groups/group-updated/crd.yaml");
 
     await test.step("Create group", async () => {
       await kubectl.apply(createFixture);
@@ -156,7 +156,7 @@ test.describe("Groups — Lifecycle", () => {
     kubectl,
   }) => {
     const GROUP_NAME = "e2e-group-no-roles";
-    const fixturePath = fixture("crds/groups/group-no-roles.yaml");
+    const fixturePath = fixture("groups/group-no-roles/crd.yaml");
 
     await test.step("Apply group CRD without roles", async () => {
       await kubectl.apply(fixturePath);
@@ -177,7 +177,7 @@ test.describe("Groups — Lifecycle", () => {
     kubectl,
   }) => {
     const GROUP_NAME = "e2e-group-simple";
-    const groupFixture = fixture("crds/groups/group-simple.yaml");
+    const groupFixture = fixture("groups/group-simple/crd.yaml");
 
     await test.step("Create a group", async () => {
       await kubectl.apply(groupFixture);

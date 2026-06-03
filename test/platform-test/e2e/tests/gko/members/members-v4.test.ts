@@ -73,7 +73,7 @@ test.describe("Members — V4 API", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-bad-member";
-    const fixturePath = fixture("crds/members/v4-api-non-existing-member.yaml");
+    const fixturePath = fixture("members/v4-api-non-existing-member/crd.yaml");
 
     await test.step("Apply CRD with non-existing member", async () => {
       await kubectl.apply(fixturePath);
@@ -97,7 +97,7 @@ test.describe("Members — V4 API", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-bad-group";
-    const fixturePath = fixture("crds/members/v4-api-non-existing-group.yaml");
+    const fixturePath = fixture("members/v4-api-non-existing-group/crd.yaml");
 
     await test.step("Apply CRD with non-existing group", async () => {
       await kubectl.apply(fixturePath);
@@ -137,8 +137,8 @@ test.describe("Members — V4 API", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-with-members";
-    const withMembersFixture = fixture("crds/members/v4-api-with-members.yaml");
-    const removedFixture = fixture("crds/members/v4-api-member-removed.yaml");
+    const withMembersFixture = fixture("members/v4-api-with-members/crd.yaml");
+    const removedFixture = fixture("members/v4-api-member-removed/crd.yaml");
 
     await test.step("Deploy API with member", async () => {
       await kubectl.apply(withMembersFixture);
@@ -173,7 +173,7 @@ test.describe("Members — V4 API", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-member-no-role";
-    const fixturePath = fixture("crds/members/v4-api-member-no-role.yaml");
+    const fixturePath = fixture("members/v4-api-member-no-role/crd.yaml");
 
     await test.step("Apply CRD with member missing role field", async () => {
       await kubectl.apply(fixturePath);
@@ -198,7 +198,7 @@ test.describe("Members — V4 API", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-member-no-src";
-    const fixturePath = fixture("crds/members/v4-api-member-no-source.yaml");
+    const fixturePath = fixture("members/v4-api-member-no-source/crd.yaml");
 
     await test.step("Apply CRD with member missing source field", async () => {
       const stderr = await kubectl.applyExpectFailure(fixturePath);
@@ -215,7 +215,7 @@ test.describe("Members — V4 API", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-bad-member";
-    const fixturePath = fixture("crds/members/v4-api-non-existing-member.yaml");
+    const fixturePath = fixture("members/v4-api-non-existing-member/crd.yaml");
 
     await test.step("Apply CRD with non-existing member", async () => {
       await kubectl.apply(fixturePath);
@@ -239,7 +239,7 @@ test.describe("Members — V4 API", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-extra-po";
-    const fixturePath = fixture("crds/members/v4-api-extra-po.yaml");
+    const fixturePath = fixture("members/v4-api-extra-po/crd.yaml");
 
     await test.step("Apply CRD with extra PRIMARY_OWNER member", async () => {
       await kubectl.apply(fixturePath);
@@ -264,8 +264,8 @@ test.describe("Members — V4 API", () => {
   }) => {
     const API_NAME = "e2e-v4-with-members";
     const EXTRA_PO_NAME = "e2e-v4-extra-po";
-    const withMembersFixture = fixture("crds/members/v4-api-with-members.yaml");
-    const extraPoFixture = fixture("crds/members/v4-api-extra-po.yaml");
+    const withMembersFixture = fixture("members/v4-api-with-members/crd.yaml");
+    const extraPoFixture = fixture("members/v4-api-extra-po/crd.yaml");
 
     await test.step("Deploy API with valid member", async () => {
       await kubectl.apply(withMembersFixture);

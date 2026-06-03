@@ -33,10 +33,10 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const ORIGINAL = "crds/pages/v4-api-with-page-markdown.yaml";
-const RENAMED = "crds/pages/v4-api-renamed-page.yaml";
-const V2_PUBLIC = "crds/pages/v2-api-public-page.yaml";
-const V4_PUBLIC = "crds/pages/v4-api-public-page.yaml";
+const ORIGINAL = "pages/v4-api-with-page-markdown/crd.yaml";
+const RENAMED = "pages/v4-api-renamed-page/crd.yaml";
+const V2_PUBLIC = "pages/v2-api-public-page/crd.yaml";
+const V4_PUBLIC = "pages/v4-api-public-page/crd.yaml";
 const API_NAME = "e2e-v4-markdown-page";
 
 interface ExportedPage {

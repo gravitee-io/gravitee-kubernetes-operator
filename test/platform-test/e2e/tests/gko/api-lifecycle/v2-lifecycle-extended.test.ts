@@ -50,31 +50,31 @@ function acceptedStatus(status: StatusWithConditions): string | undefined {
 test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
   test.afterEach(async () => {
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-valid-context-bad-update.yaml"))
+      .del(fixture("api-definitions/v2-api-valid-context-bad-update/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-valid-context.yaml"))
+      .del(fixture("api-definitions/v2-api-valid-context/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-invalid-context.yaml"))
+      .del(fixture("api-definitions/v2-api-invalid-context/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-no-plans-started.yaml"))
+      .del(fixture("api-definitions/v2-api-no-plans-started/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-no-plans-stopped.yaml"))
+      .del(fixture("api-definitions/v2-api-no-plans-stopped/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/api-definitions/v2-api-non-existing-category.yaml"))
+      .del(fixture("api-definitions/v2-api-non-existing-category/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-with-members.yaml"))
+      .del(fixture("members/v2-api-with-members/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-member-reviewer.yaml"))
+      .del(fixture("members/v2-api-member-reviewer/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/import-export/v2-api-export.yaml"))
+      .del(fixture("import-export/v2-api-export/crd.yaml"))
       .catch(() => {});
   });
 
@@ -84,8 +84,8 @@ test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-with-members";
-    const initial = fixture("crds/members/v2-api-with-members.yaml");
-    const reviewer = fixture("crds/members/v2-api-member-reviewer.yaml");
+    const initial = fixture("members/v2-api-with-members/crd.yaml");
+    const reviewer = fixture("members/v2-api-member-reviewer/crd.yaml");
 
     await kubectl.apply(initial);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -108,7 +108,7 @@ test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
   test(`V2 API with non-existing mgmt context is rejected on create ${XRAY.V2_API_LIFECYCLE.V2_MGMT_CTX_VALID_ON_CREATE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/api-definitions/v2-api-invalid-context.yaml");
+    const fixturePath = fixture("api-definitions/v2-api-invalid-context/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(
@@ -123,8 +123,8 @@ test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-valid-ctx";
-    const valid = fixture("crds/api-definitions/v2-api-valid-context.yaml");
-    const badUpdate = fixture("crds/api-definitions/v2-api-valid-context-bad-update.yaml");
+    const valid = fixture("api-definitions/v2-api-valid-context/crd.yaml");
+    const badUpdate = fixture("api-definitions/v2-api-valid-context-bad-update/crd.yaml");
 
     await kubectl.apply(valid);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -143,7 +143,7 @@ test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-non-existing-cat";
-    const fixturePath = fixture("crds/api-definitions/v2-api-non-existing-category.yaml");
+    const fixturePath = fixture("api-definitions/v2-api-non-existing-category/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -160,7 +160,7 @@ test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
   test(`V2 API with no plans and STARTED is rejected ${XRAY.V2_API_LIFECYCLE.V2_NO_PLANS_STARTED} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/api-definitions/v2-api-no-plans-started.yaml");
+    const fixturePath = fixture("api-definitions/v2-api-no-plans-started/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(
@@ -175,7 +175,7 @@ test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-no-plans-stopped";
-    const fixturePath = fixture("crds/api-definitions/v2-api-no-plans-stopped.yaml");
+    const fixturePath = fixture("api-definitions/v2-api-no-plans-stopped/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");

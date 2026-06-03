@@ -49,8 +49,8 @@ test.describe("V4 API Validation & Reconciliation — Extended", () => {
   test(`Context path conflict between two V4 APIs ${XRAY.VALIDATION.V4_CONTEXT_PATH_CONFLICT} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const firstFixture = fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml");
-    const conflictFixture = fixture("crds/v4-lifecycle-extended/v4-proxy-api-started-conflict.yaml");
+    const firstFixture = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
+    const conflictFixture = fixture("v4-lifecycle-extended/v4-proxy-api-started-conflict/crd.yaml");
 
     await kubectl.apply(firstFixture);
     await kubectl.waitForCondition("apiv4definition", "e2e-v4-start-stop", "Accepted");
@@ -73,7 +73,7 @@ test.describe("V4 API Validation & Reconciliation — Extended", () => {
   test(`Non-OAS-compliant V4 API is rejected by the webhook ${XRAY.VALIDATION.V4_OAS_COMPLIANCE_WEBHOOK} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-invalid.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-invalid/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/denied|invalid|error/);
@@ -86,7 +86,7 @@ test.describe("V4 API Validation & Reconciliation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-start-stop";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-started/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");

@@ -53,7 +53,7 @@ test.describe("Defaults — Namespace & SyncFrom", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-no-sync";
-    const fixturePath = fixture("crds/defaults/v4-api-no-sync-from.yaml");
+    const fixturePath = fixture("defaults/v4-api-no-sync-from/crd.yaml");
 
     await test.step("Apply V4 API without definitionContext.syncFrom", async () => {
       await kubectl.apply(fixturePath);
@@ -77,7 +77,7 @@ test.describe("Defaults — Namespace & SyncFrom", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-no-local";
-    const fixturePath = fixture("crds/defaults/v2-api-no-local.yaml");
+    const fixturePath = fixture("defaults/v2-api-no-local/crd.yaml");
 
     await test.step("Apply V2 API without local field", async () => {
       await kubectl.apply(fixturePath);
@@ -101,7 +101,7 @@ test.describe("Defaults — Namespace & SyncFrom", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-no-ns";
-    const fixturePath = fixture("crds/defaults/v4-api-no-namespace-ctx.yaml");
+    const fixturePath = fixture("defaults/v4-api-no-namespace-ctx/crd.yaml");
 
     await test.step("Apply V4 API with contextRef without namespace", async () => {
       await kubectl.apply(fixturePath);
@@ -125,7 +125,7 @@ test.describe("Defaults — Namespace & SyncFrom", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-valid-ctx";
-    const fixturePath = fixture("crds/defaults/v4-api-valid-ctx.yaml");
+    const fixturePath = fixture("defaults/v4-api-valid-ctx/crd.yaml");
 
     await test.step("Apply V4 API with explicit name and namespace in contextRef", async () => {
       await kubectl.apply(fixturePath);

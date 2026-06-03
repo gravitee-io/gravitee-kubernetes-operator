@@ -33,7 +33,7 @@ import { XRAY } from "../../../helpers/tags.js";
 import { createTlsFetch } from "../../../../src/utils/http/tls.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
-const PKI = (...segments: string[]) => fixture("crds/mtls-certificates/pki", ...segments);
+const PKI = (...segments: string[]) => fixture("mtls-certificates/pki", ...segments);
 
 async function loadPki() {
   const [cert1, key1, cert2, key2, ca] = await Promise.all([
@@ -54,7 +54,7 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
       "subscription-backward-compat", "application-compat-cert2-list", "api-mtls-backward-compat", "tls-secrets-backward-compat",
     ];
     for (const f of files) {
-      await kubectl.del(fixture(`crds/mtls-certificates/${f}.yaml`)).catch(() => {});
+      await kubectl.del(fixture(`mtls-certificates/${f}/crd.yaml`)).catch(() => {});
     }
   });
 
@@ -67,11 +67,11 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
     const API_PATH = "/e2e-mtls-inline";
 
     await test.step("Deploy API, Application, and Subscription", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/api-mtls-inline.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/api-mtls-inline/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/application-inline.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-inline/crd.yaml"));
       await kubectl.waitForCondition("application", "e2e-mtls-inline-app", "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/subscription-inline.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/subscription-inline/crd.yaml"));
       await kubectl.waitForCondition("subscription", "e2e-mtls-inline-sub", "Accepted");
     });
 
@@ -99,9 +99,9 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/mtls-certificates/subscription-inline.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/application-inline.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/api-mtls-inline.yaml"));
+    await kubectl.del(fixture("mtls-certificates/subscription-inline/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/application-inline/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/api-mtls-inline/crd.yaml"));
   });
 
   test(`Base64-encoded cert ${XRAY.MTLS_CERTIFICATES.ADD_SINGLE_CERT}`, async ({
@@ -113,11 +113,11 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
     const API_PATH = "/e2e-mtls-encoded";
 
     await test.step("Deploy API, Application, and Subscription", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/api-mtls-encoded.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/api-mtls-encoded/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/application-encoded.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-encoded/crd.yaml"));
       await kubectl.waitForCondition("application", "e2e-mtls-encoded-app", "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/subscription-encoded.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/subscription-encoded/crd.yaml"));
       await kubectl.waitForCondition("subscription", "e2e-mtls-encoded-sub", "Accepted");
     });
 
@@ -132,9 +132,9 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/mtls-certificates/subscription-encoded.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/application-encoded.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/api-mtls-encoded.yaml"));
+    await kubectl.del(fixture("mtls-certificates/subscription-encoded/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/application-encoded/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/api-mtls-encoded/crd.yaml"));
   });
 
   test(`Backward compat: deprecated clientCertificate field ${XRAY.MTLS_CERTIFICATES.DEPRECATED_FIELD}`, async ({
@@ -146,11 +146,11 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
     const API_PATH = "/e2e-mtls-backward-compat";
 
     await test.step("Deploy API, Application (deprecated field), and Subscription", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/api-mtls-backward-compat.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/api-mtls-backward-compat/crd.yaml"));
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/application-backward-compat.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-backward-compat/crd.yaml"));
       await kubectl.waitForCondition("application", "e2e-mtls-compat-app", "Accepted");
-      await kubectl.apply(fixture("crds/mtls-certificates/subscription-backward-compat.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/subscription-backward-compat/crd.yaml"));
       await kubectl.waitForCondition("subscription", "e2e-mtls-compat-sub", "Accepted");
     });
 
@@ -165,7 +165,7 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
     });
 
     await test.step("Upgrade to clientCertificates list with client2 only", async () => {
-      await kubectl.apply(fixture("crds/mtls-certificates/application-compat-cert2-list.yaml"));
+      await kubectl.apply(fixture("mtls-certificates/application-compat-cert2-list/crd.yaml"));
       await kubectl.waitForCondition("application", "e2e-mtls-compat-app", "Accepted");
     });
 
@@ -186,8 +186,8 @@ test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
     });
 
     // Cleanup
-    await kubectl.del(fixture("crds/mtls-certificates/subscription-backward-compat.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/application-compat-cert2-list.yaml"));
-    await kubectl.del(fixture("crds/mtls-certificates/api-mtls-backward-compat.yaml"));
+    await kubectl.del(fixture("mtls-certificates/subscription-backward-compat/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/application-compat-cert2-list/crd.yaml"));
+    await kubectl.del(fixture("mtls-certificates/api-mtls-backward-compat/crd.yaml"));
   });
 });
