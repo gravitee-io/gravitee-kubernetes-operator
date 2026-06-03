@@ -47,12 +47,12 @@ import * as kubectlSafe from "../../../helpers/kubectl.js";
 // cluster), which is harmless but also useless; it has been removed.
 
 const BASE_API = "notifications/v4-api-notif-base/crd.yaml";
-const NOTIF_1219 = "notifications/notification-1219-portal-target-user/crd.yaml";
-const GROUP_1219 = "notifications/group-1219-portal-target/crd.yaml";
-const API_1219 = "notifications/v4-api-1219-with-portal-target/crd.yaml";
-const NOTIF_1239 = "notifications/notification-1239-group-members/crd.yaml";
-const GROUP_1239 = "notifications/group-1239-group-members/crd.yaml";
-const API_1239 = "notifications/v4-api-1239-with-group-members/crd.yaml";
+const NOTIF_1219 = "notifications/notification-portal-target-user/crd.yaml";
+const GROUP_1219 = "notifications/group-portal-target/crd.yaml";
+const API_1219 = "notifications/v4-api-with-portal-target/crd.yaml";
+const NOTIF_1239 = "notifications/notification-group-members/crd.yaml";
+const GROUP_1239 = "notifications/group-group-members/crd.yaml";
+const API_1239 = "notifications/v4-api-with-group-members/crd.yaml";
 
 test.describe("Notifications — recipients & visibility", () => {
   test.afterEach(async () => {

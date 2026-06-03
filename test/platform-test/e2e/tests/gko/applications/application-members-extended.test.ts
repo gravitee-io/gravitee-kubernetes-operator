@@ -46,7 +46,7 @@ function acceptedTrue(status: StatusWithConditions): boolean {
 test.describe("Applications — Members Extended", () => {
   test.afterEach(async () => {
     await kubectlSafe
-      .del(fixture("applications/application-member-non-existing-role-531/crd.yaml"))
+      .del(fixture("applications/application-member-non-existing-role/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
       .del(fixture("applications/application-with-member/crd.yaml"))
@@ -67,7 +67,7 @@ test.describe("Applications — Members Extended", () => {
   }) => {
     const APP_NAME = "e2e-app-member-non-existing-role";
     const fixturePath = fixture(
-      "applications/application-member-non-existing-role-531/crd.yaml",
+      "applications/application-member-non-existing-role/crd.yaml",
     );
 
     await kubectl.apply(fixturePath);
