@@ -68,42 +68,42 @@ async function fetchV1Pages(mapi: Mapi, apiId: string): Promise<ApimPage[]> {
   return res.body;
 }
 
-const GROUP_A = "crds/members/group-for-v2-members.yaml";
+const GROUP_A = "members/group-for-v2-members/crd.yaml";
 
 test.describe("V2 API Documentation — Extended", () => {
   test.afterEach(async () => {
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-without-page-markdown.yaml"))
+      .del(fixture("pages/v2-api-without-page-markdown/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-public-page.yaml"))
+      .del(fixture("pages/v2-api-public-page/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-private-page-no-groups.yaml"))
+      .del(fixture("pages/v2-api-private-page-no-groups/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-private-page-with-groups.yaml"))
+      .del(fixture("pages/v2-api-private-page-with-groups/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-private-page-excluded-groups.yaml"))
+      .del(fixture("pages/v2-api-private-page-excluded-groups/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-with-fetcher-page.yaml"))
+      .del(fixture("pages/v2-api-with-fetcher-page/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-with-root-fetcher-deleted.yaml"))
+      .del(fixture("pages/v2-api-with-root-fetcher-deleted/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-with-root-fetcher.yaml"))
+      .del(fixture("pages/v2-api-with-root-fetcher/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-renamed-page.yaml"))
+      .del(fixture("pages/v2-api-renamed-page/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-with-updated-page-markdown.yaml"))
+      .del(fixture("pages/v2-api-with-updated-page-markdown/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/pages/v2-api-with-page-markdown.yaml"))
+      .del(fixture("pages/v2-api-with-page-markdown/crd.yaml"))
       .catch(() => {});
     await kubectlSafe.del(fixture(GROUP_A)).catch(() => {});
   });
@@ -115,9 +115,9 @@ test.describe("V2 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-markdown-page";
-    const WITH_PAGE = fixture("crds/pages/v2-api-with-page-markdown.yaml");
-    const UPDATED = fixture("crds/pages/v2-api-with-updated-page-markdown.yaml");
-    const WITHOUT = fixture("crds/pages/v2-api-without-page-markdown.yaml");
+    const WITH_PAGE = fixture("pages/v2-api-with-page-markdown/crd.yaml");
+    const UPDATED = fixture("pages/v2-api-with-updated-page-markdown/crd.yaml");
+    const WITHOUT = fixture("pages/v2-api-without-page-markdown/crd.yaml");
 
     await kubectl.apply(WITH_PAGE);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -244,8 +244,8 @@ test.describe("V2 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-markdown-page";
-    const WITH_PAGE = fixture("crds/pages/v2-api-with-page-markdown.yaml");
-    const UPDATED = fixture("crds/pages/v2-api-with-updated-page-markdown.yaml");
+    const WITH_PAGE = fixture("pages/v2-api-with-page-markdown/crd.yaml");
+    const UPDATED = fixture("pages/v2-api-with-updated-page-markdown/crd.yaml");
 
     await kubectl.apply(WITH_PAGE);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -271,7 +271,7 @@ test.describe("V2 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-fetcher-page";
-    const fixturePath = fixture("crds/pages/v2-api-with-fetcher-page.yaml");
+    const fixturePath = fixture("pages/v2-api-with-fetcher-page/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -292,7 +292,7 @@ test.describe("V2 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-public-page";
-    const fixturePath = fixture("crds/pages/v2-api-public-page.yaml");
+    const fixturePath = fixture("pages/v2-api-public-page/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -312,7 +312,7 @@ test.describe("V2 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-private-no-groups";
-    const fixturePath = fixture("crds/pages/v2-api-private-page-no-groups.yaml");
+    const fixturePath = fixture("pages/v2-api-private-page-no-groups/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -337,7 +337,7 @@ test.describe("V2 API Documentation — Extended", () => {
     await kubectl.apply(fixture(GROUP_A));
     await kubectl.waitForCondition("group", "e2e-v2-group-a", "Accepted");
 
-    const fixturePath = fixture("crds/pages/v2-api-private-page-with-groups.yaml");
+    const fixturePath = fixture("pages/v2-api-private-page-with-groups/crd.yaml");
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
     const apiId = (await kubectl.getStatus<{ id: string }>("apidefinition", API_NAME)).id;
@@ -362,7 +362,7 @@ test.describe("V2 API Documentation — Extended", () => {
     await kubectl.apply(fixture(GROUP_A));
     await kubectl.waitForCondition("group", "e2e-v2-group-a", "Accepted");
 
-    const fixturePath = fixture("crds/pages/v2-api-private-page-excluded-groups.yaml");
+    const fixturePath = fixture("pages/v2-api-private-page-excluded-groups/crd.yaml");
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
     const apiId = (await kubectl.getStatus<{ id: string }>("apidefinition", API_NAME)).id;
@@ -389,8 +389,8 @@ test.describe("V2 API Documentation — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-markdown-page";
-    const WITH_PAGE = fixture("crds/pages/v2-api-with-page-markdown.yaml");
-    const RENAMED = fixture("crds/pages/v2-api-renamed-page.yaml");
+    const WITH_PAGE = fixture("pages/v2-api-with-page-markdown/crd.yaml");
+    const RENAMED = fixture("pages/v2-api-renamed-page/crd.yaml");
 
     await kubectl.apply(WITH_PAGE);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");

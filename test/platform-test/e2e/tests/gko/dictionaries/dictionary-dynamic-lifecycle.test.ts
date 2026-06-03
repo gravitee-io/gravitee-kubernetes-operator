@@ -38,22 +38,22 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const DELETE_DICT_FIXTURE = fixture("crds/dictionaries/dictionary-dynamic.yaml");
-const DELETE_API_FIXTURE = fixture("crds/dictionaries/api-with-dynamic-dictionary.yaml");
+const DELETE_DICT_FIXTURE = fixture("dictionaries/dictionary-dynamic/crd.yaml");
+const DELETE_API_FIXTURE = fixture("dictionaries/api-with-dynamic-dictionary/crd.yaml");
 const DELETE_DICT_NAME = "e2e-dict-dynamic";
 const DELETE_API_NAME = "e2e-api-with-dyn-dict";
 const DELETE_API_PATH = "/e2e-api-with-dyn-dict";
 
-const UPDATE_DICT_V1_FIXTURE = fixture("crds/dictionaries/dictionary-dynamic-update-v1.yaml");
-const UPDATE_DICT_V2_FIXTURE = fixture("crds/dictionaries/dictionary-dynamic-update-v2.yaml");
-const UPDATE_API_FIXTURE = fixture("crds/dictionaries/api-with-dyn-dict-update.yaml");
+const UPDATE_DICT_V1_FIXTURE = fixture("dictionaries/dictionary-dynamic-update-v1/crd.yaml");
+const UPDATE_DICT_V2_FIXTURE = fixture("dictionaries/dictionary-dynamic-update-v2/crd.yaml");
+const UPDATE_API_FIXTURE = fixture("dictionaries/api-with-dyn-dict-update/crd.yaml");
 const UPDATE_DICT_NAME = "e2e-dict-dyn-update";
 const UPDATE_API_NAME = "e2e-api-dyn-dict-update";
 const UPDATE_API_PATH = "/e2e-api-dyn-dict-update";
 
-const DEPLOYED_DICT_FIXTURE = fixture("crds/dictionaries/dictionary-dynamic-deployed.yaml");
-const UNDEPLOYED_DICT_FIXTURE = fixture("crds/dictionaries/dictionary-dynamic-undeployed.yaml");
-const DEPLOYED_API_FIXTURE = fixture("crds/dictionaries/api-with-dyn-dict-deployed.yaml");
+const DEPLOYED_DICT_FIXTURE = fixture("dictionaries/dictionary-dynamic-deployed/crd.yaml");
+const UNDEPLOYED_DICT_FIXTURE = fixture("dictionaries/dictionary-dynamic-undeployed/crd.yaml");
+const DEPLOYED_API_FIXTURE = fixture("dictionaries/api-with-dyn-dict-deployed/crd.yaml");
 const DEPLOYED_DICT_NAME = "e2e-dict-dyn-deployed";
 const DEPLOYED_API_NAME = "e2e-api-dyn-dict-deployed";
 const DEPLOYED_API_PATH = "/e2e-api-dyn-dict-deployed";

@@ -38,7 +38,7 @@
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
  *   - A ManagementContext "dev-ctx" exists in the default namespace
- *   - The existing PKI assets under fixtures/crds/mtls-certificates/pki/
+ *   - The existing PKI assets under fixtures/mtls-certificates/pki/
  *     are reused (client1.crt is inlined in 2223 / 2251)
  */
 
@@ -46,9 +46,9 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const APP_NO_CERTS = "crds/mtls-certificates/app-2219-no-certs.yaml";
-const APP_VALID_CERT = "crds/mtls-certificates/app-2223-valid-cert.yaml";
-const APP_PAST_END = "crds/mtls-certificates/app-2251-past-end.yaml";
+const APP_NO_CERTS = "mtls-certificates/app-2219-no-certs/crd.yaml";
+const APP_VALID_CERT = "mtls-certificates/app-2223-valid-cert/crd.yaml";
+const APP_PAST_END = "mtls-certificates/app-2251-past-end/crd.yaml";
 
 test.describe("mTLS — clientCertificates visibility via mAPI", () => {
   test.afterEach(async () => {

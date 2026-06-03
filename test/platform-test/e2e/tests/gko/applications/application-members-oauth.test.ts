@@ -72,7 +72,7 @@ test.describe("Applications — Members & OAuth", () => {
     kubectl,
   }) => {
     const APP_NAME = "e2e-app-bad-member";
-    const fixturePath = fixture("crds/applications/application-non-existing-member.yaml");
+    const fixturePath = fixture("applications/application-non-existing-member/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -89,7 +89,7 @@ test.describe("Applications — Members & OAuth", () => {
     kubectl,
   }) => {
     const APP_NAME = "e2e-app-member-no-role";
-    const fixturePath = fixture("crds/applications/application-member-no-role.yaml");
+    const fixturePath = fixture("applications/application-member-no-role/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -105,7 +105,7 @@ test.describe("Applications — Members & OAuth", () => {
   test(`Application member without source is rejected ${XRAY.APPLICATIONS_MEMBERS.APP_MEMBER_NO_SOURCE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/applications/application-member-no-source.yaml");
+    const fixturePath = fixture("applications/application-member-no-source/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/source|required|denied|invalid/);
@@ -117,7 +117,7 @@ test.describe("Applications — Members & OAuth", () => {
     kubectl,
   }) => {
     const APP_NAME = "e2e-app-bad-group";
-    const fixturePath = fixture("crds/applications/application-non-existing-group.yaml");
+    const fixturePath = fixture("applications/application-non-existing-group/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -137,7 +137,7 @@ test.describe("Applications — Members & OAuth", () => {
     kubectl,
   }) => {
     const APP_NAME = "e2e-app-bad-role";
-    const fixturePath = fixture("crds/applications/application-member-bad-role.yaml");
+    const fixturePath = fixture("applications/application-member-bad-role/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("application", APP_NAME, "Accepted");
@@ -156,7 +156,7 @@ test.describe("Applications — Members & OAuth", () => {
   test(`WEB application without authorization_code is rejected ${XRAY.APPLICATIONS_MEMBERS.APP_WEB_REQUIRES_AUTH_CODE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/applications/application-oauth-web-no-auth-code.yaml");
+    const fixturePath = fixture("applications/application-oauth-web-no-auth-code/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/authorization_code|grant|denied|invalid/);

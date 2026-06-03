@@ -61,7 +61,7 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const F = (name: string) => fixture(`crds/mtls-certificates/invalid/${name}.yaml`);
+const F = (name: string) => fixture(`mtls-certificates/invalid/${name}/crd.yaml`);
 
 // Every rejection regex is deliberately scoped to substrings that should
 // appear for the specific failure mode under test. Generic terms like

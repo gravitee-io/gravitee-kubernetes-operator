@@ -49,9 +49,9 @@ test.describe("Dictionaries — Templating", () => {
   test(`Dynamic dictionary with secret templates resolves in API header ${XRAY.DICTIONARIES.DYNAMIC_TEMPLATE_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const secretFixture = fixture("crds/dictionaries/dictionary-dynamic-tpl-secret.yaml");
-    const dictFixture = fixture("crds/dictionaries/dictionary-dynamic-tpl.yaml");
-    const apiFixture = fixture("crds/dictionaries/api-with-dynamic-dictionary-tpl.yaml");
+    const secretFixture = fixture("dictionaries/dictionary-dynamic-tpl-secret/crd.yaml");
+    const dictFixture = fixture("dictionaries/dictionary-dynamic-tpl/crd.yaml");
+    const apiFixture = fixture("dictionaries/api-with-dynamic-dictionary-tpl/crd.yaml");
 
     await test.step("Apply secret with provider URL and header value", async () => {
       await kubectl.apply(secretFixture);

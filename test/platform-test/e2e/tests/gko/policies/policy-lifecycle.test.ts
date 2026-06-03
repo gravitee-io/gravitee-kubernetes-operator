@@ -54,7 +54,7 @@ test.describe("Policies — Lifecycle", () => {
   }) => {
     const API_NAME = "e2e-v4-policy";
     const API_PATH = "/e2e-v4-policy";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-with-policy.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-with-policy/crd.yaml");
 
     await test.step("Deploy API with transform-headers policy", async () => {
       await kubectl.apply(fixturePath);
@@ -87,8 +87,8 @@ test.describe("Policies — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-policy";
-    const withPolicy = fixture("crds/api-v4-definitions/v4-proxy-api-with-policy.yaml");
-    const noPolicy = fixture("crds/api-v4-definitions/v4-proxy-api-policy-removed.yaml");
+    const withPolicy = fixture("api-v4-definitions/v4-proxy-api-with-policy/crd.yaml");
+    const noPolicy = fixture("api-v4-definitions/v4-proxy-api-policy-removed/crd.yaml");
 
     await test.step("Deploy API with policy", async () => {
       await kubectl.apply(withPolicy);
@@ -120,8 +120,8 @@ test.describe("Policies — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-policy";
-    const withPolicy = fixture("crds/api-v4-definitions/v4-proxy-api-with-policy.yaml");
-    const updatedPolicy = fixture("crds/api-v4-definitions/v4-proxy-api-policy-updated.yaml");
+    const withPolicy = fixture("api-v4-definitions/v4-proxy-api-with-policy/crd.yaml");
+    const updatedPolicy = fixture("api-v4-definitions/v4-proxy-api-policy-updated/crd.yaml");
 
     await test.step("Deploy API with policy", async () => {
       await kubectl.apply(withPolicy);
@@ -154,7 +154,7 @@ test.describe("Policies — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-labels-cats";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-with-labels-categories.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-with-labels-categories/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -175,7 +175,7 @@ test.describe("Policies — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-labels-cats";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-with-labels-categories.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-with-labels-categories/crd.yaml");
 
     // The fixture has labels but no categories field — API should deploy fine
     await kubectl.apply(fixturePath);
@@ -194,7 +194,7 @@ test.describe("Policies — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-labels-cats";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-with-labels-categories.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-with-labels-categories/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");

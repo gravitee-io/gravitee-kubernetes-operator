@@ -63,8 +63,8 @@ test.describe("Dictionaries — Lifecycle", () => {
   test(`Create dictionary and resolve in API header ${XRAY.DICTIONARIES.CREATE_AND_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const dictFixture = fixture("crds/dictionaries/dictionary-manual.yaml");
-    const apiFixture = fixture("crds/dictionaries/api-with-dictionary.yaml");
+    const dictFixture = fixture("dictionaries/dictionary-manual/crd.yaml");
+    const apiFixture = fixture("dictionaries/api-with-dictionary/crd.yaml");
 
     await test.step("Apply dictionary CRD", async () => {
       await kubectl.apply(dictFixture);
@@ -104,8 +104,8 @@ test.describe("Dictionaries — Lifecycle", () => {
   test(`Create dynamic dictionary and resolve in API header ${XRAY.DICTIONARIES.DYNAMIC_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const dictFixture = fixture("crds/dictionaries/dictionary-dynamic.yaml");
-    const apiFixture = fixture("crds/dictionaries/api-with-dynamic-dictionary.yaml");
+    const dictFixture = fixture("dictionaries/dictionary-dynamic/crd.yaml");
+    const apiFixture = fixture("dictionaries/api-with-dynamic-dictionary/crd.yaml");
     const DYN_DICT_NAME = "e2e-dict-dynamic";
     const DYN_API_NAME = "e2e-api-with-dyn-dict";
     const DYN_API_PATH = "/e2e-api-with-dyn-dict";
@@ -149,7 +149,7 @@ test.describe("Dictionaries — Lifecycle", () => {
   test(`Delete a dictionary ${XRAY.DICTIONARIES.DELETE_DICTIONARY} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const dictFixture = fixture("crds/dictionaries/dictionary-manual.yaml");
+    const dictFixture = fixture("dictionaries/dictionary-manual/crd.yaml");
 
     await test.step("Create dictionary", async () => {
       await kubectl.apply(dictFixture);
@@ -170,7 +170,7 @@ test.describe("Dictionaries — Lifecycle", () => {
   test(`Admission webhook rejects DYNAMIC dictionary with manual field set ${XRAY.DICTIONARIES.ADMISSION_REJECTS_DYNAMIC_WITH_MANUAL} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const invalidFixture = fixture("crds/dictionaries/dictionary-dynamic-invalid.yaml");
+    const invalidFixture = fixture("dictionaries/dictionary-dynamic-invalid/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(invalidFixture);
     expect(stderr).toMatch(/dictionary type is DYNAMIC but 'manual' field is set/);

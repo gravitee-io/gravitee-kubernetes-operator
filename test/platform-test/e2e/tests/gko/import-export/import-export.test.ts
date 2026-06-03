@@ -53,7 +53,7 @@ test.describe("Import/Export — CRD Round-trips", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-export";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-export.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-export/crd.yaml");
 
     await test.step("Deploy V4 API with flows, plans, and labels", async () => {
       await kubectl.apply(fixturePath);
@@ -79,7 +79,7 @@ test.describe("Import/Export — CRD Round-trips", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-export";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-export.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-export/crd.yaml");
 
     await test.step("Apply V4 API CRD (simulating import)", async () => {
       await kubectl.apply(fixturePath);
@@ -103,7 +103,7 @@ test.describe("Import/Export — CRD Round-trips", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-export";
-    const fixturePath = fixture("crds/import-export/v2-api-export.yaml");
+    const fixturePath = fixture("import-export/v2-api-export/crd.yaml");
 
     await test.step("Deploy V2 API with flows and plans", async () => {
       await kubectl.apply(fixturePath);
@@ -128,7 +128,7 @@ test.describe("Import/Export — CRD Round-trips", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-export";
-    const fixturePath = fixture("crds/import-export/v2-api-export.yaml");
+    const fixturePath = fixture("import-export/v2-api-export/crd.yaml");
 
     await test.step("Apply V2 API CRD (simulating import)", async () => {
       await kubectl.apply(fixturePath);
@@ -153,7 +153,7 @@ test.describe("Import/Export — CRD Round-trips", () => {
   }) => {
     const K8S_NAME = "my-e2e-api-v4-test";
     const SPEC_NAME = "My E2E API (v4) Test";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-with-special-name.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-with-special-name/crd.yaml");
 
     await test.step("Deploy API with special characters in spec.name", async () => {
       await kubectl.apply(fixturePath);
@@ -177,7 +177,7 @@ test.describe("Import/Export — CRD Round-trips", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-export";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-export.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-export/crd.yaml");
 
     await test.step("Deploy V4 API with policy flows", async () => {
       await kubectl.apply(fixturePath);

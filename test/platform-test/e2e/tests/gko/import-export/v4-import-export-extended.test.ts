@@ -62,7 +62,7 @@ test.describe("V4 Import/Export — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-export";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-export.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-export/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -84,7 +84,7 @@ test.describe("V4 Import/Export — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-export";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-export.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-export/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -114,7 +114,7 @@ test.describe("V4 Import/Export — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-export";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-export.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-export/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -156,7 +156,7 @@ test.describe("V4 Import/Export — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-export";
-    const fixturePath = fixture("crds/import-export/v4-proxy-api-export.yaml");
+    const fixturePath = fixture("import-export/v4-proxy-api-export/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");

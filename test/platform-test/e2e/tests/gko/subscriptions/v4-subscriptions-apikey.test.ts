@@ -31,11 +31,11 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const API_APIKEY = "crds/api-v4-definitions/v4-proxy-api-apikey-plan.yaml";
-const API_TWO_PLANS = "crds/api-v4-definitions/v4-proxy-api-two-plans.yaml";
-const APP = "crds/applications/application-simple.yaml";
-const SUB_APIKEY = "crds/subscriptions/subscription-apikey-v4.yaml";
-const SUB_APIKEY_TWO_PLANS = "crds/subscriptions/subscription-apikey-v4-two-plans.yaml";
+const API_APIKEY = "api-v4-definitions/v4-proxy-api-apikey-plan/crd.yaml";
+const API_TWO_PLANS = "api-v4-definitions/v4-proxy-api-two-plans/crd.yaml";
+const APP = "applications/application-simple/crd.yaml";
+const SUB_APIKEY = "subscriptions/subscription-apikey-v4/crd.yaml";
+const SUB_APIKEY_TWO_PLANS = "subscriptions/subscription-apikey-v4-two-plans/crd.yaml";
 
 const API_NAME = "e2e-v4-apikey-plan";
 const API_PATH = "/e2e-v4-apikey-plan";

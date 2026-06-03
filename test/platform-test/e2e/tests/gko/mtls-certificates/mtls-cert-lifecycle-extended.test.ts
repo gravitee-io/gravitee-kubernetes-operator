@@ -51,7 +51,7 @@ import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 import type { Application } from "../../../../src/types/apim.js";
 
-const PKI = (...segments: string[]) => fixture("crds/mtls-certificates/pki", ...segments);
+const PKI = (...segments: string[]) => fixture("mtls-certificates/pki", ...segments);
 
 interface AppStatus {
   id?: string;

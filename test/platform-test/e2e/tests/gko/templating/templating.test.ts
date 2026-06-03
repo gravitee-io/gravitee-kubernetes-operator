@@ -39,9 +39,9 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
-const CONFIGMAP_FIXTURE = fixture("crds/templating/configmap-e2e-tpl.yaml");
-const SECRET_FIXTURE = fixture("crds/templating/secret-e2e-tpl.yaml");
-const BEARER_SECRET_FIXTURE = fixture("crds/templating/secret-e2e-bearer.yaml");
+const CONFIGMAP_FIXTURE = fixture("templating/configmap-e2e-tpl/crd.yaml");
+const SECRET_FIXTURE = fixture("templating/secret-e2e-tpl/crd.yaml");
+const BEARER_SECRET_FIXTURE = fixture("templating/secret-e2e-bearer/crd.yaml");
 
 test.describe("Templating — ConfigMap & Secret References", () => {
   // Safety-net cleanup: runs even if a test times out before its inline
@@ -70,7 +70,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-tpl-cm";
-    const apiFixture = fixture("crds/templating/v4-api-with-configmap-value.yaml");
+    const apiFixture = fixture("templating/v4-api-with-configmap-value/crd.yaml");
 
     await test.step("Apply ConfigMap and V4 API CRD", async () => {
       await kubectl.apply(CONFIGMAP_FIXTURE);
@@ -97,7 +97,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-tpl-secret";
-    const apiFixture = fixture("crds/templating/v2-api-with-secret-value.yaml");
+    const apiFixture = fixture("templating/v2-api-with-secret-value/crd.yaml");
 
     await test.step("Ensure clean state", async () => {
       await kubectl.del(apiFixture);
@@ -130,7 +130,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-tpl-missing-cm";
-    const apiFixture = fixture("crds/templating/v4-api-missing-configmap.yaml");
+    const apiFixture = fixture("templating/v4-api-missing-configmap/crd.yaml");
 
     await test.step("Apply CRD referencing non-existing ConfigMap", async () => {
       await kubectl.apply(apiFixture);
@@ -156,7 +156,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v4-tpl-missing-key";
-    const apiFixture = fixture("crds/templating/v4-api-missing-key.yaml");
+    const apiFixture = fixture("templating/v4-api-missing-key/crd.yaml");
 
     await test.step("Apply ConfigMap (key exists, but API references wrong key)", async () => {
       await kubectl.apply(CONFIGMAP_FIXTURE);
@@ -187,7 +187,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-tpl-missing-cm";
-    const apiFixture = fixture("crds/templating/v2-api-missing-configmap.yaml");
+    const apiFixture = fixture("templating/v2-api-missing-configmap/crd.yaml");
 
     await test.step("Apply CRD referencing non-existing ConfigMap", async () => {
       await kubectl.apply(apiFixture);
@@ -213,7 +213,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-tpl-missing-key";
-    const apiFixture = fixture("crds/templating/v2-api-missing-key.yaml");
+    const apiFixture = fixture("templating/v2-api-missing-key/crd.yaml");
 
     await test.step("Apply ConfigMap (key exists, but API references wrong key)", async () => {
       await kubectl.apply(CONFIGMAP_FIXTURE);
@@ -244,7 +244,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     mapi,
   }) => {
     const APP_NAME = "e2e-app-tpl-cm";
-    const appFixture = fixture("crds/templating/app-with-configmap-value.yaml");
+    const appFixture = fixture("templating/app-with-configmap-value/crd.yaml");
 
     await test.step("Apply ConfigMap and Application CRD", async () => {
       await kubectl.apply(CONFIGMAP_FIXTURE);
@@ -270,7 +270,7 @@ test.describe("Templating — ConfigMap & Secret References", () => {
     kubectl,
   }) => {
     const CTX_NAME = "e2e-ctx-bearer";
-    const ctxFixture = fixture("crds/templating/management-context-bearer-token.yaml");
+    const ctxFixture = fixture("templating/management-context-bearer-token/crd.yaml");
 
     await test.step("Apply bearer Secret and ManagementContext CRD", async () => {
       await kubectl.apply(BEARER_SECRET_FIXTURE);

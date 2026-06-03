@@ -169,7 +169,7 @@ export default async function globalSetup() {
   });
 
   // Ensure the dev-ctx ManagementContext exists before any tests run.
-  const ctxFixture = path.resolve(__dirname, "fixtures/crds/management-context/dev-ctx.yaml");
+  const ctxFixture = path.resolve(__dirname, "fixtures/management-context/dev-ctx/crd.yaml");
   try {
     await execFileAsync("kubectl", ["apply", "-f", ctxFixture, "-n", "default"], {
       timeout: 10_000,

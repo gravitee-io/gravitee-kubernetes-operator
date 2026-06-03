@@ -48,7 +48,7 @@ test.describe("Local ConfigMap", () => {
   }) => {
     const API_NAME = "e2e-v4-local-false";
     const API_PATH = "/e2e-v4-local-false";
-    const FIXTURE = fixture("crds/local-configmap/v4-api-local-false.yaml");
+    const FIXTURE = fixture("local-configmap/v4-api-local-false/crd.yaml");
 
     await test.step("Deploy V4 API with syncFrom MANAGEMENT", async () => {
       await kubectl.apply(FIXTURE);
@@ -74,7 +74,7 @@ test.describe("Local ConfigMap", () => {
   }) => {
     const API_NAME = "e2e-v4-delete-when-missing";
     const API_PATH = "/e2e-v4-delete-when-missing";
-    const FIXTURE = fixture("crds/local-configmap/v4-api-delete-when-missing.yaml");
+    const FIXTURE = fixture("local-configmap/v4-api-delete-when-missing/crd.yaml");
 
     await test.step("Deploy V4 API with syncFrom KUBERNETES", async () => {
       await kubectl.apply(FIXTURE);

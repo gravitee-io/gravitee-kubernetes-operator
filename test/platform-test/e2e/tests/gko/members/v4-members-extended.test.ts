@@ -52,14 +52,14 @@ interface StatusWithConditions {
   }>;
 }
 
-const WITH_MEMBERS = "crds/members/v4-api-with-members.yaml";
-const MEMBER_REMOVED = "crds/members/v4-api-member-removed.yaml";
-const NON_EXISTING_GROUP = "crds/members/v4-api-non-existing-group.yaml";
-const WITH_GROUPS = "crds/members/v4-api-with-groups.yaml";
-const CHANGED_ROLE = "crds/members/v4-api-member-changed-role.yaml";
-const NOTIFY_MEMBERS = "crds/members/v4-api-notify-members.yaml";
-const EXTRA_PO = "crds/members/v4-api-extra-po.yaml";
-const MEMBER_NO_ROLE = "crds/members/v4-api-member-no-role.yaml";
+const WITH_MEMBERS = "members/v4-api-with-members/crd.yaml";
+const MEMBER_REMOVED = "members/v4-api-member-removed/crd.yaml";
+const NON_EXISTING_GROUP = "members/v4-api-non-existing-group/crd.yaml";
+const WITH_GROUPS = "members/v4-api-with-groups/crd.yaml";
+const CHANGED_ROLE = "members/v4-api-member-changed-role/crd.yaml";
+const NOTIFY_MEMBERS = "members/v4-api-notify-members/crd.yaml";
+const EXTRA_PO = "members/v4-api-extra-po/crd.yaml";
+const MEMBER_NO_ROLE = "members/v4-api-member-no-role/crd.yaml";
 
 function acceptedTrue(status: StatusWithConditions): boolean {
   return status.conditions?.find((c) => c.type === "Accepted")?.status === "True";
@@ -231,7 +231,7 @@ test.describe("V4 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -258,7 +258,7 @@ test.describe("V4 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
@@ -323,7 +323,7 @@ test.describe("V4 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-sync-mgmt";
-    const fixturePath = fixture("crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml");
+    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-sync-from-mgmt/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");

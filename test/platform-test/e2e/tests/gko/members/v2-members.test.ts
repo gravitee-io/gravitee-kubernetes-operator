@@ -79,8 +79,8 @@ test.describe("V2 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-export";
-    const base = fixture("crds/import-export/v2-api-export.yaml");
-    const updated = fixture("crds/api-definitions/v2-api-updated-path.yaml");
+    const base = fixture("import-export/v2-api-export/crd.yaml");
+    const updated = fixture("api-definitions/v2-api-updated-path/crd.yaml");
 
     await kubectl.apply(base);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -101,7 +101,7 @@ test.describe("V2 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-with-members";
-    const fixturePath = fixture("crds/members/v2-api-with-members.yaml");
+    const fixturePath = fixture("members/v2-api-with-members/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -118,7 +118,7 @@ test.describe("V2 API Members — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-bad-role";
-    const fixturePath = fixture("crds/members/v2-api-non-existing-role.yaml");
+    const fixturePath = fixture("members/v2-api-non-existing-role/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -135,7 +135,7 @@ test.describe("V2 API Members — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-bad-member";
-    const fixturePath = fixture("crds/members/v2-api-non-existing-member.yaml");
+    const fixturePath = fixture("members/v2-api-non-existing-member/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -152,7 +152,7 @@ test.describe("V2 API Members — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-bad-group";
-    const fixturePath = fixture("crds/members/v2-api-non-existing-group.yaml");
+    const fixturePath = fixture("members/v2-api-non-existing-group/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -170,7 +170,7 @@ test.describe("V2 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-with-groups";
-    const fixturePath = fixture("crds/members/v2-api-with-groups.yaml");
+    const fixturePath = fixture("members/v2-api-with-groups/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -188,8 +188,8 @@ test.describe("V2 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-with-members";
-    const withMembers = fixture("crds/members/v2-api-with-members.yaml");
-    const removed = fixture("crds/members/v2-api-member-removed.yaml");
+    const withMembers = fixture("members/v2-api-with-members/crd.yaml");
+    const removed = fixture("members/v2-api-member-removed/crd.yaml");
 
     await kubectl.apply(withMembers);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -211,7 +211,7 @@ test.describe("V2 API Members — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-po-member";
-    const fixturePath = fixture("crds/members/v2-api-po-in-members.yaml");
+    const fixturePath = fixture("members/v2-api-po-in-members/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -229,8 +229,8 @@ test.describe("V2 API Members — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-with-members";
-    const withMembers = fixture("crds/members/v2-api-with-members.yaml");
-    const reviewer = fixture("crds/members/v2-api-member-reviewer.yaml");
+    const withMembers = fixture("members/v2-api-with-members/crd.yaml");
+    const reviewer = fixture("members/v2-api-member-reviewer/crd.yaml");
 
     await kubectl.apply(withMembers);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -249,7 +249,7 @@ test.describe("V2 API Members — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-member-no-role";
-    const fixturePath = fixture("crds/members/v2-api-member-no-role.yaml");
+    const fixturePath = fixture("members/v2-api-member-no-role/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");

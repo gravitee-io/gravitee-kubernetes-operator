@@ -46,34 +46,34 @@ function acceptedTrue(status: StatusWithConditions): boolean {
   return status.conditions?.find((c) => c.type === "Accepted")?.status === "True";
 }
 
-const GROUP_A = "crds/members/group-for-v2-members.yaml";
-const GROUP_B = "crds/members/group-b-for-v2-members.yaml";
+const GROUP_A = "members/group-for-v2-members/crd.yaml";
+const GROUP_B = "members/group-b-for-v2-members/crd.yaml";
 
 test.describe("V2 API Groups, Members & PO — Extended", () => {
   test.afterEach(async () => {
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-with-group-hrid.yaml"))
+      .del(fixture("members/v2-api-with-group-hrid/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-group-removed.yaml"))
+      .del(fixture("members/v2-api-group-removed/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-with-multiple-groups.yaml"))
+      .del(fixture("members/v2-api-with-multiple-groups/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-notify-members.yaml"))
+      .del(fixture("members/v2-api-notify-members/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-po-overwrite-attempt.yaml"))
+      .del(fixture("members/v2-api-po-overwrite-attempt/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-po-different-member.yaml"))
+      .del(fixture("members/v2-api-po-different-member/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-po-take-over.yaml"))
+      .del(fixture("members/v2-api-po-take-over/crd.yaml"))
       .catch(() => {});
     await kubectlSafe
-      .del(fixture("crds/members/v2-api-with-group-refs.yaml"))
+      .del(fixture("members/v2-api-with-group-refs/crd.yaml"))
       .catch(() => {});
     await kubectlSafe.del(fixture(GROUP_B)).catch(() => {});
     await kubectlSafe.del(fixture(GROUP_A)).catch(() => {});
@@ -90,13 +90,13 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     await kubectl.apply(fixture(GROUP_A));
     await kubectl.waitForCondition("group", "e2e-v2-group-a", "Accepted");
 
-    await kubectl.apply(fixture("crds/members/v2-api-with-group-hrid.yaml"));
+    await kubectl.apply(fixture("members/v2-api-with-group-hrid/crd.yaml"));
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
 
     const apiId = (await kubectl.getStatus<{ id: string }>("apidefinition", API_NAME)).id;
     await mapi.waitForApiMatches(apiId, { name: API_NAME });
 
-    await kubectl.del(fixture("crds/members/v2-api-with-group-hrid.yaml"));
+    await kubectl.del(fixture("members/v2-api-with-group-hrid/crd.yaml"));
     await kubectl.del(fixture(GROUP_A));
   });
 
@@ -113,13 +113,13 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     await kubectl.waitForCondition("group", "e2e-v2-group-a", "Accepted");
     await kubectl.waitForCondition("group", "e2e-v2-group-b", "Accepted");
 
-    await kubectl.apply(fixture("crds/members/v2-api-with-multiple-groups.yaml"));
+    await kubectl.apply(fixture("members/v2-api-with-multiple-groups/crd.yaml"));
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
 
     const apiId = (await kubectl.getStatus<{ id: string }>("apidefinition", API_NAME)).id;
     await mapi.waitForApiMatches(apiId, { name: API_NAME });
 
-    await kubectl.del(fixture("crds/members/v2-api-with-multiple-groups.yaml"));
+    await kubectl.del(fixture("members/v2-api-with-multiple-groups/crd.yaml"));
     await kubectl.del(fixture(GROUP_B));
     await kubectl.del(fixture(GROUP_A));
   });
@@ -131,8 +131,8 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-group-hrid";
-    const withGroup = fixture("crds/members/v2-api-with-group-hrid.yaml");
-    const without = fixture("crds/members/v2-api-group-removed.yaml");
+    const withGroup = fixture("members/v2-api-with-group-hrid/crd.yaml");
+    const without = fixture("members/v2-api-group-removed/crd.yaml");
 
     await kubectl.apply(fixture(GROUP_A));
     await kubectl.waitForCondition("group", "e2e-v2-group-a", "Accepted");
@@ -158,7 +158,7 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-notify-members";
-    const fixturePath = fixture("crds/members/v2-api-notify-members.yaml");
+    const fixturePath = fixture("members/v2-api-notify-members/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -175,7 +175,7 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     kubectl,
   }) => {
     const API_NAME = "e2e-v2-po-overwrite";
-    const fixturePath = fixture("crds/members/v2-api-po-overwrite-attempt.yaml");
+    const fixturePath = fixture("members/v2-api-po-overwrite-attempt/crd.yaml");
 
     // Declaring the same mgmt-ctx user (`admin`) as PO must be a no-op and
     // the API reconciles to Accepted=True.
@@ -198,7 +198,7 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v2-po-takeover";
-    const fixturePath = fixture("crds/members/v2-api-po-take-over.yaml");
+    const fixturePath = fixture("members/v2-api-po-take-over/crd.yaml");
 
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
@@ -224,13 +224,13 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
     await kubectl.apply(fixture(GROUP_A));
     await kubectl.waitForCondition("group", "e2e-v2-group-a", "Accepted");
 
-    await kubectl.apply(fixture("crds/members/v2-api-with-group-refs.yaml"));
+    await kubectl.apply(fixture("members/v2-api-with-group-refs/crd.yaml"));
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");
 
     const apiId = (await kubectl.getStatus<{ id: string }>("apidefinition", API_NAME)).id;
     await mapi.waitForApiMatches(apiId, { name: API_NAME });
 
-    await kubectl.del(fixture("crds/members/v2-api-with-group-refs.yaml"));
+    await kubectl.del(fixture("members/v2-api-with-group-refs/crd.yaml"));
     await kubectl.del(fixture(GROUP_A));
   });
 });

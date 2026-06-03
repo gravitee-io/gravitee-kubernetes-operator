@@ -46,13 +46,13 @@ import * as kubectlSafe from "../../../helpers/kubectl.js";
 // returned 400 (no matching IDP entry for source=gravitee in the test
 // cluster), which is harmless but also useless; it has been removed.
 
-const BASE_API = "crds/notifications/v4-api-notif-base.yaml";
-const NOTIF_1219 = "crds/notifications/notification-1219-portal-target-user.yaml";
-const GROUP_1219 = "crds/notifications/group-1219-portal-target.yaml";
-const API_1219 = "crds/notifications/v4-api-1219-with-portal-target.yaml";
-const NOTIF_1239 = "crds/notifications/notification-1239-group-members.yaml";
-const GROUP_1239 = "crds/notifications/group-1239-group-members.yaml";
-const API_1239 = "crds/notifications/v4-api-1239-with-group-members.yaml";
+const BASE_API = "notifications/v4-api-notif-base/crd.yaml";
+const NOTIF_1219 = "notifications/notification-1219-portal-target-user/crd.yaml";
+const GROUP_1219 = "notifications/group-1219-portal-target/crd.yaml";
+const API_1219 = "notifications/v4-api-1219-with-portal-target/crd.yaml";
+const NOTIF_1239 = "notifications/notification-1239-group-members/crd.yaml";
+const GROUP_1239 = "notifications/group-1239-group-members/crd.yaml";
+const API_1239 = "notifications/v4-api-1239-with-group-members/crd.yaml";
 
 test.describe("Notifications — recipients & visibility", () => {
   test.afterEach(async () => {

@@ -64,7 +64,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-sync-mgmt";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-sync-mgmt.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-sync-mgmt/crd.yaml");
 
     await test.step("Apply CRD with syncFrom Management", async () => {
       await kubectl.apply(fixturePath);
@@ -90,7 +90,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-sync-k8s";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-sync-k8s.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-sync-k8s/crd.yaml");
 
     await test.step("Apply CRD with syncFrom Kubernetes", async () => {
       await kubectl.apply(fixturePath);
@@ -116,7 +116,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-http-get";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-http-get.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-http-get/crd.yaml");
 
     await test.step("Apply CRD with HTTP GET entrypoint", async () => {
       await kubectl.apply(fixturePath);
@@ -142,7 +142,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-http-post";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-http-post.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-http-post/crd.yaml");
 
     await test.step("Apply CRD with HTTP POST entrypoint", async () => {
       await kubectl.apply(fixturePath);
@@ -168,7 +168,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-sse";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-sse.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-sse/crd.yaml");
 
     await test.step("Apply CRD with SSE entrypoint", async () => {
       await kubectl.apply(fixturePath);
@@ -194,7 +194,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-webhook";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-webhook.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-webhook/crd.yaml");
 
     await test.step("Apply CRD with Webhook entrypoint", async () => {
       await kubectl.apply(fixturePath);
@@ -220,7 +220,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-websocket";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-websocket.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-websocket/crd.yaml");
 
     await test.step("Apply CRD with Websocket entrypoint", async () => {
       await kubectl.apply(fixturePath);
@@ -248,7 +248,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-http-get";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-http-get.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-http-get/crd.yaml");
 
     await test.step("Apply CRD with Mock endpoint", async () => {
       await kubectl.apply(fixturePath);
@@ -272,7 +272,7 @@ test.describe("Message APIs — Lifecycle", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-msg-policy";
-    const fixturePath = fixture("crds/message-apis/v4-message-api-with-policy.yaml");
+    const fixturePath = fixture("message-apis/v4-message-api-with-policy/crd.yaml");
 
     await test.step("Apply CRD with transform-headers policy", async () => {
       await kubectl.apply(fixturePath);

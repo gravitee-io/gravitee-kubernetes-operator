@@ -45,7 +45,7 @@ test.describe("V2 API Documentation — Fetchers", () => {
   test(`V2 web fetcher without URL is rejected ${XRAY.PAGES.V2_WEB_FETCHER_NO_URL} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v2-api-web-fetcher-no-url.yaml");
+    const fixturePath = fixture("pages/v2-api-web-fetcher-no-url/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/url|required|denied|invalid/);
@@ -56,7 +56,7 @@ test.describe("V2 API Documentation — Fetchers", () => {
   test(`V2 web fetcher with invalid cron is rejected ${XRAY.PAGES.V2_WEB_FETCHER_WARNING} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v2-api-web-fetcher-invalid-param.yaml");
+    const fixturePath = fixture("pages/v2-api-web-fetcher-invalid-param/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/cron|fetchcron|invalid|denied/);
@@ -67,7 +67,7 @@ test.describe("V2 API Documentation — Fetchers", () => {
   test(`V2 github fetcher missing required fields is rejected ${XRAY.PAGES.V2_GITHUB_FETCHER_REQUIRED_FIELDS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v2-api-github-fetcher-missing-fields.yaml");
+    const fixturePath = fixture("pages/v2-api-github-fetcher-missing-fields/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(
@@ -80,7 +80,7 @@ test.describe("V2 API Documentation — Fetchers", () => {
   test(`V2 github fetcher with invalid cron is rejected ${XRAY.PAGES.V2_GITHUB_FETCHER_WARNING} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("crds/pages/v2-api-github-fetcher-invalid-param.yaml");
+    const fixturePath = fixture("pages/v2-api-github-fetcher-invalid-param/crd.yaml");
 
     const stderr = await kubectl.applyExpectFailure(fixturePath);
     expect(stderr.toLowerCase()).toMatch(/cron|fetchcron|invalid|denied/);
