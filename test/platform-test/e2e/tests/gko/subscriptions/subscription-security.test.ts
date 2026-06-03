@@ -75,7 +75,7 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("api-v4-definitions/v4-api-jwt-plan/crd.yaml");
+    const apiFixture = fixture("plans/v4-jwt/crd.yaml");
     const appFixture = fixture("applications/application-simple/crd.yaml");
     const subFixture = fixture("subscriptions/subscription-jwt-v4/crd.yaml");
 
@@ -141,7 +141,7 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("api-v4-definitions/v4-api-oauth2-plan/crd.yaml");
+    const apiFixture = fixture("plans/v4-oauth2/crd.yaml");
     const appFixture = fixture("applications/application-simple/crd.yaml");
     const subFixture = fixture("subscriptions/subscription-oauth2-v4/crd.yaml");
 
@@ -206,7 +206,7 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("api-v4-definitions/v4-api-manual-approval-plan/crd.yaml");
+    const apiFixture = fixture("plans/v4-manual-approval/crd.yaml");
     const appFixture = fixture("applications/application-simple/crd.yaml");
     const subFixture = fixture("subscriptions/subscription-manual-v4/crd.yaml");
 
@@ -275,7 +275,7 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     gateway,
   }) => {
-    const apiFixture = fixture("api-v4-definitions/v4-api-jwt-plan/crd.yaml");
+    const apiFixture = fixture("plans/v4-jwt/crd.yaml");
     const appFixture = fixture("applications/application-simple/crd.yaml");
     const subFixture = fixture("subscriptions/subscription-jwt-v4/crd.yaml");
 
@@ -335,7 +335,7 @@ test.describe("Subscriptions — Security Plans", () => {
   test(`Delete API despite active subscription when another plan exists ${XRAY.SUBSCRIPTIONS.DELETE_API_WITH_OTHER_PLAN} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const apiFixture = fixture("api-v4-definitions/v4-api-two-plans-sub/crd.yaml");
+    const apiFixture = fixture("subscriptions/v4-two-plans-sub/crd.yaml");
     const appFixture = fixture("applications/application-simple/crd.yaml");
     const subFixture = fixture("subscriptions/subscription-jwt-v4/crd.yaml");
 
@@ -367,7 +367,7 @@ test.describe("Subscriptions — Security Plans", () => {
     kubectl,
     mapi,
   }) => {
-    const apiFixture = fixture("api-v4-definitions/v4-api-mtls-plan/crd.yaml");
+    const apiFixture = fixture("plans/v4-mtls/crd.yaml");
     const appFixture = fixture("applications/application-mtls/crd.yaml");
     const subFixture = fixture("subscriptions/subscription-mtls-v4/crd.yaml");
 

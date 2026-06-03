@@ -26,8 +26,8 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const WITH_LABELS = "api-v4-definitions/v4-proxy-api-with-labels-categories/crd.yaml";
-const WITHOUT_LABELS = "api-v4-definitions/v4-proxy-api-without-labels/crd.yaml";
+const WITH_LABELS = "categories/v4-with-labels/crd.yaml";
+const WITHOUT_LABELS = "categories/v4-without-labels/crd.yaml";
 const API_NAME = "e2e-v4-labels-cats";
 
 test.describe("V4 API Labels — Lifecycle", () => {

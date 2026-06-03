@@ -27,7 +27,7 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
-const V4_API = "api-v4-definitions/v4-proxy-api-jwt-oauth2-plans/crd.yaml";
+const V4_API = "plans/v4-jwt-oauth2/crd.yaml";
 const APP = "applications/application-simple/crd.yaml";
 const SUB_A = "subscriptions/subscription-plan-a/crd.yaml";
 const SUB_B = "subscriptions/subscription-plan-b/crd.yaml";

@@ -36,10 +36,10 @@ import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const APP_SIMPLE = "applications/application-simple/crd.yaml";
-const JWT_API = "api-v4-definitions/v4-api-jwt-plan/crd.yaml";
-const JWT_API_PLAN_REMOVED = "api-v4-definitions/v4-api-jwt-plan-removed/crd.yaml";
-const OAUTH2_API = "api-v4-definitions/v4-api-oauth2-plan/crd.yaml";
-const OAUTH2_API_PLAN_REMOVED = "api-v4-definitions/v4-api-oauth2-plan-removed/crd.yaml";
+const JWT_API = "plans/v4-jwt/crd.yaml";
+const JWT_API_PLAN_REMOVED = "plans/v4-jwt-removed/crd.yaml";
+const OAUTH2_API = "plans/v4-oauth2/crd.yaml";
+const OAUTH2_API_PLAN_REMOVED = "plans/v4-oauth2-removed/crd.yaml";
 const SUB_JWT = "subscriptions/subscription-jwt-v4/crd.yaml";
 const SUB_OAUTH2 = "subscriptions/subscription-oauth2-v4/crd.yaml";
 

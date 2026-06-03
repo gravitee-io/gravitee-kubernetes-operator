@@ -56,7 +56,7 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
     const SPG_NAME = "e2e-spg-proxy";
     const API_NAME = "e2e-v4-with-spg";
     const spgFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
-    const apiFixture = fixture("api-v4-definitions/v4-api-with-spg/crd.yaml");
+    const apiFixture = fixture("shared-policy-groups/v4-api-with-spg/crd.yaml");
 
     await test.step("Deploy Shared Policy Group", async () => {
       await kubectl.apply(spgFixture);
@@ -95,8 +95,8 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
     const SPG_NAME = "e2e-spg-proxy";
     const API_NAME = "e2e-v4-with-spg";
     const spgFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
-    const apiWithSpg = fixture("api-v4-definitions/v4-api-with-spg/crd.yaml");
-    const apiWithoutSpg = fixture("api-v4-definitions/v4-api-without-spg/crd.yaml");
+    const apiWithSpg = fixture("shared-policy-groups/v4-api-with-spg/crd.yaml");
+    const apiWithoutSpg = fixture("shared-policy-groups/v4-api-without-spg/crd.yaml");
 
     await test.step("Deploy SPG and API with SPG reference", async () => {
       await kubectl.apply(spgFixture);

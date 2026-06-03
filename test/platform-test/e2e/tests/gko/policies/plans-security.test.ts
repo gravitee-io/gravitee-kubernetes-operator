@@ -50,7 +50,7 @@ test.describe("Plans — Security Types", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-oauth2-plan";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-oauth2-plan/crd.yaml");
+    const fixturePath = fixture("plans/v4-proxy-oauth2/crd.yaml");
 
     await test.step("Deploy API with OAuth2 plan", async () => {
       await kubectl.apply(fixturePath);
@@ -78,7 +78,7 @@ test.describe("Plans — Security Types", () => {
     mapi,
   }) => {
     const API_NAME = "e2e-v4-jwt-plan";
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-jwt-plan/crd.yaml");
+    const fixturePath = fixture("plans/v4-proxy-jwt/crd.yaml");
 
     await test.step("Deploy API with JWT plan", async () => {
       await kubectl.apply(fixturePath);
@@ -106,7 +106,7 @@ test.describe("Plans — Security Types", () => {
   test(`General conditions referencing non-existing page fails reconciliation ${XRAY.PLANS.GENERAL_CONDITIONS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
-    const fixturePath = fixture("api-v4-definitions/v4-proxy-api-general-conditions/crd.yaml");
+    const fixturePath = fixture("plans/general-conditions/crd.yaml");
 
     await test.step("Apply is rejected by admission webhook", async () => {
       const stderr = await kubectl.applyExpectFailure(fixturePath);

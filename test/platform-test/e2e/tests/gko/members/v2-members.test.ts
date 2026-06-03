@@ -80,7 +80,7 @@ test.describe("V2 API Members — Extended", () => {
   }) => {
     const API_NAME = "e2e-v2-export";
     const base = fixture("import-export/v2-api-export/crd.yaml");
-    const updated = fixture("api-definitions/v2-api-updated-path/crd.yaml");
+    const updated = fixture("api-lifecycle/v2-updated-path/crd.yaml");
 
     await kubectl.apply(base);
     await kubectl.waitForCondition("apidefinition", API_NAME, "Accepted");

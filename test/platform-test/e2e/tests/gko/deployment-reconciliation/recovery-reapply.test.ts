@@ -27,7 +27,7 @@ import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 import type { ApiV4 } from "../../../../src/types/apim.js";
 
-const V4_API = "api-v4-definitions/v4-proxy-api-started/crd.yaml";
+const V4_API = "api-lifecycle/v4-started/crd.yaml";
 
 test.describe("Recovery — reapplying configuration", () => {
   test.afterEach(async () => {
