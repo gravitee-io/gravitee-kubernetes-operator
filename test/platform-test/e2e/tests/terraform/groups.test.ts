@@ -53,7 +53,7 @@ test.describe("Terraform — Groups · Resource lifecycle", () => {
     // ceiling so terraform's own timeout fires first instead of Playwright
     // orphaning a running terraform process. See TF_WORKSPACE_TIMEOUT_MS.
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
-    ws = await terraform.initWorkspace("terraform-groups");
+    ws = await terraform.initWorkspace("groups/lifecycle");
     await terraform.apply(ws);
     groupHrid = await terraform.output(ws, "group_hrid");
   });
@@ -99,7 +99,7 @@ test.describe("Terraform — Groups · Update", () => {
     test.setTimeout(terraform.TF_TIMEOUT_MS * 9);
 
     const HRID = "e2e-tf-group-update";
-    const ws = await terraform.initWorkspace("terraform-groups");
+    const ws = await terraform.initWorkspace("groups/lifecycle");
     try {
       let groupId: string;
 
@@ -152,7 +152,7 @@ test.describe("Terraform — Groups · Destroy", () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 
     const HRID = "e2e-tf-group-destroy";
-    const ws = await terraform.initWorkspace("terraform-groups");
+    const ws = await terraform.initWorkspace("groups/lifecycle");
     try {
       await terraform.writeVars(ws, { hrid_suffix: "destroy", group_name: HRID });
       await terraform.apply(ws);
@@ -182,7 +182,7 @@ test.describe("Terraform — Groups · Members", () => {
     const SA_B = "e2e-sa-tf-group-b";
     const member = (sa: string) => ({ source: "gravitee", source_id: sa, roles: { API: "USER" } });
 
-    const ws = await terraform.initWorkspace("terraform-groups-members");
+    const ws = await terraform.initWorkspace("groups/members");
     try {
       let groupId: string;
 
@@ -236,7 +236,7 @@ test.describe("Terraform — Groups · Members", () => {
       test.setTimeout(terraform.TF_TIMEOUT_MS * 8);
 
       const SA = "e2e-sa-tf-group-idem";
-      const ws = await terraform.initWorkspace("terraform-groups-members");
+      const ws = await terraform.initWorkspace("groups/members");
       try {
         await mapi.createServiceAccount(SA);
         await terraform.writeVars(ws, {
@@ -259,7 +259,7 @@ test.describe("Terraform — Groups · Members", () => {
   }) => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 
-    const ws = await terraform.initWorkspace("terraform-groups-members");
+    const ws = await terraform.initWorkspace("groups/members");
     try {
       // The provider documents that members without an IDP entry are
       // ignored. The apply must still succeed and leave the group with zero
@@ -286,7 +286,7 @@ test.describe("Terraform — Groups · Replacement, drift & import", () => {
   }) => {
     test.setTimeout(terraform.TF_TIMEOUT_MS * 9);
 
-    const ws = await terraform.initWorkspace("terraform-groups");
+    const ws = await terraform.initWorkspace("groups/lifecycle");
     try {
       await terraform.writeVars(ws, { hrid_suffix: "hrid-a", group_name: "e2e-tf-group-hrid-a" });
       await terraform.apply(ws);
@@ -313,7 +313,7 @@ test.describe("Terraform — Groups · Replacement, drift & import", () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 
     const HRID = "e2e-tf-group-drift";
-    const ws = await terraform.initWorkspace("terraform-groups");
+    const ws = await terraform.initWorkspace("groups/lifecycle");
     try {
       await terraform.writeVars(ws, { hrid_suffix: "drift", group_name: HRID });
       await terraform.apply(ws);
@@ -336,7 +336,7 @@ test.describe("Terraform — Groups · Replacement, drift & import", () => {
     test.setTimeout(terraform.TF_TIMEOUT_MS * 9);
 
     const HRID = "e2e-tf-group-import";
-    const ws = await terraform.initWorkspace("terraform-groups");
+    const ws = await terraform.initWorkspace("groups/lifecycle");
     try {
       await terraform.writeVars(ws, { hrid_suffix: "import", group_name: HRID });
       await terraform.apply(ws);
@@ -366,7 +366,7 @@ test.describe("Terraform — Groups · Validation", () => {
   test(`an invalid hrid is rejected by the provider ${XRAY.TERRAFORM.GROUP_INVALID_HRID} ${TAGS.REGRESSION}`, async () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 
-    const ws = await terraform.initWorkspace("terraform-groups");
+    const ws = await terraform.initWorkspace("groups/lifecycle");
     try {
       // The space and "!" violate the hrid pattern
       // ^[a-zA-Z0-9][a-zA-Z0-9_-]+[a-zA-Z0-9]$.
@@ -381,7 +381,7 @@ test.describe("Terraform — Groups · Validation", () => {
   test(`an over-long name is rejected by the provider ${XRAY.TERRAFORM.GROUP_INVALID_NAME} ${TAGS.REGRESSION}`, async () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 
-    const ws = await terraform.initWorkspace("terraform-groups");
+    const ws = await terraform.initWorkspace("groups/lifecycle");
     try {
       // The group name must be 1–512 characters.
       await terraform.writeVars(ws, {
@@ -402,7 +402,7 @@ test.describe("Terraform — Groups · Data source", () => {
   test(`data "apim_group" reads a group back by hrid ${XRAY.TERRAFORM.GROUP_DATA_SOURCE} ${TAGS.REGRESSION}`, async () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 
-    const ws = await terraform.initWorkspace("terraform-groups-datasource");
+    const ws = await terraform.initWorkspace("groups/datasource");
     try {
       await terraform.apply(ws);
 

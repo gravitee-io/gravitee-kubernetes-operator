@@ -68,7 +68,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(120_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-auto");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-auto");
     try {
       await terraform.apply(ws);
       const apiId = await terraform.output(ws, "api_id");
@@ -102,7 +102,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(120_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const CUSTOM_KEY = uniqueKey("tf-custom-apikey");
       await terraform.writeVars(ws, {
@@ -142,7 +142,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(120_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const CUSTOM_KEY = uniqueKey("tf-expire-apikey");
       // 30 min keeps the test deterministic without depending on real expiry.
@@ -178,7 +178,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(120_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-mixed");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-mixed");
     try {
       const CUSTOM_KEY = uniqueKey("tf-mixed-apikey");
       await terraform.writeVars(ws, {
@@ -227,7 +227,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(180_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const k32 = uniqueKey("tf-bnd-32"); // padded to exactly 32 chars
       expect(k32).toHaveLength(32);
@@ -286,7 +286,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(180_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       // 31-char key (below minLength=32 on the CRD; APIM is expected to
       // enforce the same bound server-side via the Automation API).
@@ -349,7 +349,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(180_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const KEY_A = uniqueKey("tf-rot-instant-A");
       const KEY_B = uniqueKey("tf-rot-instant-B");
@@ -421,7 +421,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(240_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const KEY_A = uniqueKey("tf-rot-gradual-A");
       const KEY_B = uniqueKey("tf-rot-gradual-B");
@@ -501,7 +501,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(240_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const KEY_A = uniqueKey("tf-reactivation-A");
       const KEY_B = uniqueKey("tf-reactivation-B");
@@ -577,7 +577,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   }) => {
     test.setTimeout(240_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       // Three keys mirroring the canonical staged-rotation pattern from
       // GKO-2550: an early-expiring key on its way out, a longer-lived key,
@@ -691,7 +691,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
 
     let ws: TfWorkspace | null = null;
     try {
-      ws = await terraform.initWorkspace("terraform-apikey-custom");
+      ws = await terraform.initWorkspace("subscriptions/apikey-custom");
       const CUSTOM_KEY = uniqueKey("tf-destroy-apikey");
       await terraform.writeVars(ws, {
         hrid_suffix: "revoked-on-destroy",
@@ -736,7 +736,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   test(`terraform plan reports no drift immediately after apply ${XRAY.TERRAFORM.APIKEY_PLAN_NO_DRIFT} ${TAGS.REGRESSION}`, async () => {
     test.setTimeout(180_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const KEY_A = uniqueKey("tf-no-drift-A");
       const KEY_B = uniqueKey("tf-no-drift-B");
@@ -774,7 +774,7 @@ test.describe("Terraform — V4 API-Key Plan Subscriptions", () => {
   test(`Custom api-key values are redacted as sensitive in terraform plan output ${XRAY.TERRAFORM.APIKEY_SENSITIVE_IN_PLAN} ${TAGS.REGRESSION}`, async () => {
     test.setTimeout(120_000);
 
-    const ws = await terraform.initWorkspace("terraform-apikey-custom");
+    const ws = await terraform.initWorkspace("subscriptions/apikey-custom");
     try {
       const SECRET_KEY = uniqueKey("tf-sensitive-leak-detect");
       await terraform.writeVars(ws, {
