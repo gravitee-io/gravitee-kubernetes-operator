@@ -42,6 +42,7 @@ import { readFile } from "node:fs/promises";
 import YAML from "yaml";
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 import type { Api, ApiV4 } from "../../../../src/types/apim.js";
 
 /** Narrow a fetched Api to its V4 variant so tests can access V4-only fields. */
@@ -64,6 +65,24 @@ interface StatusWithConditions extends StatusWithId {
 }
 
 test.describe("V4 API Lifecycle — Extended", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/v4-lifecycle-extended/v4-proxy-api-db-less.yaml",
+      "crds/message-apis/v4-message-api-mqtt.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-started.yaml",
+      "crds/v4-lifecycle-extended/v4-proxy-api-many-categories.yaml",
+      "crds/v4-lifecycle-extended/v4-proxy-api-many-categories-renamed.yaml",
+      "crds/v4-lifecycle-extended/v4-proxy-api-non-existing-category.yaml",
+      "crds/v4-lifecycle-extended/v4-proxy-api-non-existing-group.yaml",
+      "crds/v4-lifecycle-extended/v4-proxy-api-policy-no-plans.yaml",
+      "crds/v4-lifecycle-extended/v4-message-api-entrypoint-policy.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-81: DB-less mode ─────────────────────────────────────
 
   test(`Deploy V4 API in DB-less mode ${XRAY.API_LIFECYCLE.DEPLOY_V4_DB_LESS} ${TAGS.REGRESSION}`, async ({

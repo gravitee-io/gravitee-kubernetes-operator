@@ -30,8 +30,22 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("ManagementContext — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  // NB: never delete dev-ctx — it is a shared precondition for the whole suite.
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/applications/application-simple.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml",
+      "crds/management-context/temporary-ctx.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-893: Cannot delete when referenced by V4 API ─────────
 
   test(`Cannot delete ManagementContext referenced by V4 API ${XRAY.MANAGEMENT_CONTEXT.DELETE_WITH_V4_API_REF} ${TAGS.REGRESSION}`, async ({

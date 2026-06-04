@@ -32,8 +32,20 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Import/Export — CRD Round-trips", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/import-export/v4-proxy-api-export.yaml",
+      "crds/import-export/v2-api-export.yaml",
+      "crds/import-export/v4-proxy-api-with-special-name.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
   // ── GKO-229: Export V4 API CRD ──────────────────────────────
 
   test(`Export V4 API CRD and verify fields in APIM ${XRAY.IMPORT_EXPORT.EXPORT_V4_CRD} ${TAGS.REGRESSION}`, async ({

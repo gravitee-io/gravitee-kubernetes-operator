@@ -29,8 +29,21 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("V4 API Validation & Reconciliation — Extended", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  // Reverse dependency order: subscriptions → applications → APIs.
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/v4-lifecycle-extended/v4-proxy-api-started-conflict.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-started.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-1476: Context path conflict ─────────────────────────
 
   test(`Context path conflict between two V4 APIs ${XRAY.VALIDATION.V4_CONTEXT_PATH_CONFLICT} ${TAGS.REGRESSION}`, async ({

@@ -28,8 +28,20 @@
 
 import { test, expect, fixture } from "../../../setup.js";
 import { XRAY } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Local ConfigMap", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/local-configmap/v4-api-local-false.yaml",
+      "crds/local-configmap/v4-api-delete-when-missing.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   test(`Local=false means no ConfigMap is created ${XRAY.LOCAL_CONFIGMAP.LOCAL_FALSE_NO_CONFIGMAP}`, async ({
     kubectl,
     gateway,

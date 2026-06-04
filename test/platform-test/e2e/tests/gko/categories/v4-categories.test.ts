@@ -29,6 +29,7 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
   id?: string;
@@ -43,6 +44,17 @@ function acceptedTrue(status: StatusWithConditions): boolean {
 }
 
 test.describe("V4 API Categories — Extended", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-v4-definitions/v4-proxy-api-started.yaml",
+      "crds/v4-lifecycle-extended/v4-proxy-api-non-existing-category.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-271: Category removal synced from APIM ──────────────
   // When an API is deployed with no categories field, any categories that
   // may have been set in APIM should not leak back onto the CRD.

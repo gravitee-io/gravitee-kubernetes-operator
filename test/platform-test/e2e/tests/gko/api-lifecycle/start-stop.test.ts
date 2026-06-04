@@ -28,9 +28,21 @@
 
 import { test, fixture } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 const API_NAME = "e2e-v4-start-stop";
 const API_PATH = "/e2e-v4-start-stop";
+
+// Safety-net cleanup: runs even if a test times out before its inline
+// cleanup. Each del() ignores errors (the resource may already be gone).
+test.afterEach(async () => {
+  for (const f of [
+    "crds/api-v4-definitions/v4-proxy-api-started.yaml",
+    "crds/api-v4-definitions/v4-proxy-api-stopped.yaml",
+  ]) {
+    await kubectl.del(fixture(f)).catch(() => {});
+  }
+});
 
 test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${XRAY.API_LIFECYCLE.START_STOP_V2_V4_NATIVE} ${TAGS.REGRESSION}`, async ({
   kubectl,

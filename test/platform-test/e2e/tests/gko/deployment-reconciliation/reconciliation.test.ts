@@ -31,9 +31,21 @@
 
 import { test, expect, fixture } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 const API_NAME = "e2e-v4-reconcile";
 const API_PATH = "/e2e-v4-reconcile";
+
+// Safety-net cleanup: runs even if a test times out before its inline
+// cleanup. Each del() ignores errors (the resource may already be gone).
+test.afterEach(async () => {
+  for (const f of [
+    "crds/api-v4-definitions/v4-proxy-api-reconcile.yaml",
+    "crds/api-v4-definitions/v4-proxy-api-reconcile-updated.yaml",
+  ]) {
+    await kubectl.del(fixture(f)).catch(() => {});
+  }
+});
 
 test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API_CONFIG} ${TAGS.REGRESSION}`, async ({
   kubectl,

@@ -38,8 +38,25 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Message APIs — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/message-apis/v4-message-api-sync-mgmt.yaml",
+      "crds/message-apis/v4-message-api-sync-k8s.yaml",
+      "crds/message-apis/v4-message-api-http-get.yaml",
+      "crds/message-apis/v4-message-api-http-post.yaml",
+      "crds/message-apis/v4-message-api-sse.yaml",
+      "crds/message-apis/v4-message-api-webhook.yaml",
+      "crds/message-apis/v4-message-api-websocket.yaml",
+      "crds/message-apis/v4-message-api-with-policy.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
   // ── GKO-72: Deploy V4 Message API with syncFrom Management ──
 
   test(`Deploy V4 Message API with syncFrom Management ${XRAY.MESSAGE_APIS.DEPLOY_V4_MSG_SYNC_MGMT} ${TAGS.REGRESSION}`, async ({

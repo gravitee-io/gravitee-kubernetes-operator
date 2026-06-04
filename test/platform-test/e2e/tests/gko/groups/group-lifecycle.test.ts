@@ -32,8 +32,22 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Groups — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/groups/group-simple.yaml",
+      "crds/groups/group-updated.yaml",
+      "crds/groups/group-non-existing-user.yaml",
+      "crds/groups/group-no-roles.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-983: Create Group with existing user ────────────────
 
   test(`Create Group with existing user ${XRAY.GROUPS.CREATE_WITH_MEMBER} ${TAGS.REGRESSION}`, async ({

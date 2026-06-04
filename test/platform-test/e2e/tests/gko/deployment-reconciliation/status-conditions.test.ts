@@ -35,6 +35,7 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
   id: string;
@@ -49,6 +50,18 @@ interface StatusWithConditions {
 }
 
 test.describe("Reconciliation — Status & Conditions", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-v4-definitions/v4-proxy-api-started.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-bad-endpoint-type.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-reconcile.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-1388: Accepted not False on success ──────────────────
 
   test(`Accepted condition not False on successful reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.ACCEPTED_NOT_FALSE_ON_SUCCESS} ${TAGS.REGRESSION}`, async ({

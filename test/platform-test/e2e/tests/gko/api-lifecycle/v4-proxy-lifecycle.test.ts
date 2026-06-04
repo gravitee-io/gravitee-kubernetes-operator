@@ -35,8 +35,27 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("V4 Proxy API — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  // These names are shared across test files, so a leak here cascades into
+  // unrelated suites — always remove them.
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-conflict-path.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-no-plans-started.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-no-plans-stopped.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-with-failover.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-with-labels-categories.yaml",
+      "crds/api-v4-definitions/v4-message-api-mock.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-71: Deploy with syncFrom Management ──────────────────
 
   test(`Deploy V4 Proxy API with syncFrom Management ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_FROM_MGMT} ${TAGS.REGRESSION}`, async ({
