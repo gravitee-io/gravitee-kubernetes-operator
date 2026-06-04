@@ -39,8 +39,36 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Subscriptions — Security Plans", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  // Reverse dependency order: subscriptions → applications → APIs.
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/subscriptions/subscription-jwt-v4.yaml",
+      "crds/subscriptions/subscription-jwt-v2.yaml",
+      "crds/subscriptions/subscription-oauth2-v4.yaml",
+      "crds/subscriptions/subscription-oauth2-v2.yaml",
+      "crds/subscriptions/subscription-manual-v4.yaml",
+      "crds/subscriptions/subscription-manual-v2.yaml",
+      "crds/subscriptions/subscription-mtls-v4.yaml",
+      "crds/applications/application-simple.yaml",
+      "crds/applications/application-mtls.yaml",
+      "crds/api-v4-definitions/v4-api-jwt-plan.yaml",
+      "crds/subscriptions/v2-api-jwt-plan.yaml",
+      "crds/api-v4-definitions/v4-api-oauth2-plan.yaml",
+      "crds/subscriptions/v2-api-oauth2-plan.yaml",
+      "crds/api-v4-definitions/v4-api-manual-approval-plan.yaml",
+      "crds/subscriptions/v2-api-manual-approval.yaml",
+      "crds/api-v4-definitions/v4-api-two-plans-sub.yaml",
+      "crds/api-v4-definitions/v4-api-mtls-plan.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-800: V4 JWT subscription ───────────────────────────────
 
   test(`V4 JWT subscription ${XRAY.SUBSCRIPTIONS.V4_JWT_SUBSCRIPTION} ${TAGS.REGRESSION}`, async ({

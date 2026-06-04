@@ -29,8 +29,22 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Policies — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-v4-definitions/v4-proxy-api-with-policy.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-policy-removed.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-policy-updated.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-with-labels-categories.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-94: Deploy API with policy ───────────────────────────
 
   test(`Deploy V4 proxy API with policy ${XRAY.POLICIES.DEPLOY_V4_WITH_POLICY} ${TAGS.REGRESSION}`, async ({

@@ -31,8 +31,24 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Applications — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/applications/application-simple.yaml",
+      "crds/applications/application-updated.yaml",
+      "crds/applications/application-with-metadata.yaml",
+      "crds/applications/application-with-app-settings.yaml",
+      "crds/applications/application-po-member.yaml",
+      "crds/applications/application-no-client-id.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-335: Create application ──────────────────────────────
 
   test(`Create an application using CRD ${XRAY.APPLICATIONS.CREATE_APP} ${TAGS.REGRESSION}`, async ({

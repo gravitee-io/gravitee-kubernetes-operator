@@ -38,6 +38,7 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
   id?: string;
@@ -52,6 +53,19 @@ function acceptedTrue(status: StatusWithConditions): boolean {
 }
 
 test.describe("Applications — Members & OAuth", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/applications/application-non-existing-member.yaml",
+      "crds/applications/application-member-no-role.yaml",
+      "crds/applications/application-non-existing-group.yaml",
+      "crds/applications/application-member-bad-role.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-533: Non-existing member ─────────────────────────────
 
   test(`Application with non-existing member ${XRAY.APPLICATIONS_MEMBERS.APP_NON_EXISTING_MEMBER} ${TAGS.REGRESSION}`, async ({

@@ -29,8 +29,20 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Plans — Security Types", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-v4-definitions/v4-proxy-api-oauth2-plan.yaml",
+      "crds/api-v4-definitions/v4-proxy-api-jwt-plan.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-162: Add OAuth2 plan to V4 API ──────────────────────
 
   test(`Add OAuth2 plan to V4 API ${XRAY.PLANS.OAUTH2_PLAN_V4} ${TAGS.REGRESSION}`, async ({

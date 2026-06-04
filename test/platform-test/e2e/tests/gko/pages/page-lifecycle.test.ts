@@ -31,8 +31,21 @@
 import YAML from "yaml";
 import { test, expect, fixture } from "../../../setup.js";
 import { XRAY } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Page Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/pages/v4-api-without-page-markdown.yaml",
+      "crds/pages/v4-api-with-updated-page-markdown.yaml",
+      "crds/pages/v4-api-with-page-markdown.yaml",
+      "crds/pages/v4-api-with-swagger-http-fetcher.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
   test(`Markdown page create, update, delete ${XRAY.PAGES.MARKDOWN_PAGE_CRUD_V4} ${XRAY.PAGES.MARKDOWN_PAGE_UPDATE_V4}`, async ({
     kubectl,
     mapi,

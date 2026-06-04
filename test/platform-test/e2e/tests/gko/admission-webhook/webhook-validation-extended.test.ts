@@ -41,8 +41,22 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Webhook Validation — Extended", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  // Reverse dependency order: subscriptions → applications → APIs.
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-v4-definitions/v4-proxy-api-started.yaml",
+      "crds/invalid/v4-api-non-oas-errors.yaml",
+      "crds/invalid/v2-api-context-path-local-false.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-76: Non-OAS-compliant CRD ───────────────────────────
 
   test(`Deploy CRD not compliant with OAS ${XRAY.WEBHOOKS.NON_OAS_COMPLIANT_V4} ${TAGS.REGRESSION}`, async ({

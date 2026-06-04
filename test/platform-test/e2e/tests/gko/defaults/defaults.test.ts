@@ -30,8 +30,22 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Defaults — Namespace & SyncFrom", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/defaults/v4-api-no-sync-from.yaml",
+      "crds/defaults/v2-api-no-local.yaml",
+      "crds/defaults/v4-api-no-namespace-ctx.yaml",
+      "crds/defaults/v4-api-valid-ctx.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-770: V4 syncFrom defaults to MANAGEMENT ────────────
 
   test(`V4 API syncFrom defaults to MANAGEMENT when omitted ${XRAY.DEFAULTS.V4_SYNC_FROM_MGMT_DEFAULT} ${TAGS.REGRESSION}`, async ({

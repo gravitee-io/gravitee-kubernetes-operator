@@ -37,12 +37,32 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 const CONFIGMAP_FIXTURE = fixture("crds/templating/configmap-e2e-tpl.yaml");
 const SECRET_FIXTURE = fixture("crds/templating/secret-e2e-tpl.yaml");
 const BEARER_SECRET_FIXTURE = fixture("crds/templating/secret-e2e-bearer.yaml");
 
 test.describe("Templating — ConfigMap & Secret References", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/templating/app-with-configmap-value.yaml",
+      "crds/templating/v4-api-with-configmap-value.yaml",
+      "crds/templating/v2-api-with-secret-value.yaml",
+      "crds/templating/v4-api-missing-configmap.yaml",
+      "crds/templating/v4-api-missing-key.yaml",
+      "crds/templating/v2-api-missing-configmap.yaml",
+      "crds/templating/v2-api-missing-key.yaml",
+      "crds/templating/management-context-bearer-token.yaml",
+      "crds/templating/configmap-e2e-tpl.yaml",
+      "crds/templating/secret-e2e-tpl.yaml",
+      "crds/templating/secret-e2e-bearer.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
   // ── GKO-683: V4 API description from ConfigMap ──────────────
 
   test(`V4 API description resolved from ConfigMap ${XRAY.TEMPLATING.V4_CONFIGMAP_VALUE} ${TAGS.REGRESSION}`, async ({

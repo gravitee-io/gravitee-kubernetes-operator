@@ -31,6 +31,7 @@
 import { test, fixture, expect } from "../../../setup.js";
 import { poll, loadGraviteeConfig } from "../../../../src/index.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -46,6 +47,19 @@ async function gatewayBaseUrl(): Promise<string> {
 }
 
 test.describe("Dictionaries — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/dictionaries/api-with-dictionary.yaml",
+      "crds/dictionaries/api-with-dynamic-dictionary.yaml",
+      "crds/dictionaries/dictionary-manual.yaml",
+      "crds/dictionaries/dictionary-dynamic.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   test(`Create dictionary and resolve in API header ${XRAY.DICTIONARIES.CREATE_AND_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {

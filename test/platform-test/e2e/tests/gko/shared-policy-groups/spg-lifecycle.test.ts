@@ -30,8 +30,23 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Shared Policy Groups — Lifecycle", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-v4-definitions/v4-api-with-spg.yaml",
+      "crds/api-v4-definitions/v4-api-without-spg.yaml",
+      "crds/shared-policy-groups/spg-proxy-request.yaml",
+      "crds/shared-policy-groups/spg-proxy-updated.yaml",
+      "crds/shared-policy-groups/spg-message-unsupported.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-976: Add SPG to V4 API ─────────────────────────────
 
   test(`Add SPG to V4 API ${XRAY.SHARED_POLICY_GROUPS.ADD_SPG_TO_API} ${TAGS.REGRESSION}`, async ({

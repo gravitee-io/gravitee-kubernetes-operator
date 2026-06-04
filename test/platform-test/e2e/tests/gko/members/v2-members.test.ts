@@ -37,6 +37,7 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
   id?: string;
@@ -51,6 +52,26 @@ function acceptedTrue(status: StatusWithConditions): boolean {
 }
 
 test.describe("V2 API Members — Extended", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/api-definitions/v2-api-updated-path.yaml",
+      "crds/import-export/v2-api-export.yaml",
+      "crds/members/v2-api-with-members.yaml",
+      "crds/members/v2-api-non-existing-role.yaml",
+      "crds/members/v2-api-non-existing-member.yaml",
+      "crds/members/v2-api-non-existing-group.yaml",
+      "crds/members/v2-api-with-groups.yaml",
+      "crds/members/v2-api-member-removed.yaml",
+      "crds/members/v2-api-po-in-members.yaml",
+      "crds/members/v2-api-member-reviewer.yaml",
+      "crds/members/v2-api-member-no-role.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-1065: Update API path ────────────────────────────────
 
   test(`Update V2 API virtual_host path ${XRAY.V2_API_LIFECYCLE.V2_UPDATE_API_PATH} ${TAGS.REGRESSION}`, async ({

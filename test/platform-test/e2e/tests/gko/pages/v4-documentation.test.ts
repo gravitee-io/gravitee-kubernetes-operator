@@ -34,6 +34,7 @@
 import YAML from "yaml";
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 interface ExportedPage {
   type?: string;
@@ -49,6 +50,17 @@ interface ExportedCrd {
 }
 
 test.describe("V4 API Documentation — Extended", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  test.afterEach(async () => {
+    for (const f of [
+      "crds/pages/v4-api-with-page-markdown.yaml",
+      "crds/pages/v4-api-public-page.yaml",
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-236: Documentation CRUD on existing V4 operations ───
 
   test(`Documentation CRUD on existing V4 operations ${XRAY.PAGES.V4_DOC_OPERATIONS} ${TAGS.REGRESSION}`, async ({

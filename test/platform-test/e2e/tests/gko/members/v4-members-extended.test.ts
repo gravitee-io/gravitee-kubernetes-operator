@@ -40,6 +40,7 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
   id?: string;
@@ -64,7 +65,28 @@ function acceptedTrue(status: StatusWithConditions): boolean {
   return status.conditions?.find((c) => c.type === "Accepted")?.status === "True";
 }
 
+const SYNC_FROM_MGMT = "crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml";
+
 test.describe("V4 API Members — Extended", () => {
+  // Safety-net cleanup: runs even if a test times out before its inline
+  // cleanup. Each del() ignores errors (the resource may already be gone).
+  // e2e-v4-sync-mgmt is shared with other files, so a leak here cascades.
+  test.afterEach(async () => {
+    for (const f of [
+      WITH_MEMBERS,
+      MEMBER_REMOVED,
+      NON_EXISTING_GROUP,
+      WITH_GROUPS,
+      CHANGED_ROLE,
+      NOTIFY_MEMBERS,
+      EXTRA_PO,
+      MEMBER_NO_ROLE,
+      SYNC_FROM_MGMT,
+    ]) {
+      await kubectl.del(fixture(f)).catch(() => {});
+    }
+  });
+
   // ── GKO-213: Remove member (variant) ─────────────────────────
 
   test(`Remove member from V4 API (variant) ${XRAY.MEMBERS.V4_REMOVE_MEMBER_VARIANT} ${TAGS.REGRESSION}`, async ({
