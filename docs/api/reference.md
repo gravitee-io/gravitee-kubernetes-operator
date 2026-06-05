@@ -2646,7 +2646,7 @@ _Underlying type:_ _string_
 
 
 _Validation:_
-- Enum: [MESSAGE PROXY NATIVE]
+- Enum: [MESSAGE PROXY]
 
 _Appears in:_
 - [SharedPolicyGroup](#sharedpolicygroup)
@@ -2660,20 +2660,11 @@ _Underlying type:_ _string_
 
 
 _Validation:_
-- Enum: [REQUEST RESPONSE ENTRYPOINT_CONNECT INTERACT CONNECT PUBLISH SUBSCRIBE]
+- Enum: [REQUEST RESPONSE PUBLISH SUBSCRIBE]
 
 _Appears in:_
 - [SharedPolicyGroup](#sharedpolicygroup)
 
-| Field | Description |
-| --- | --- |
-| `REQUEST` |  |
-| `RESPONSE` |  |
-| `ENTRYPOINT_CONNECT` |  |
-| `INTERACT` |  |
-| `CONNECT` | Deprecated: legacy value kept for backward compatibility.<br /> |
-| `PUBLISH` |  |
-| `SUBSCRIBE` |  |
 
 
 #### SharedPolicyGroup
@@ -2694,8 +2685,8 @@ _Appears in:_
 | `name` _string_ | SharedPolicyGroup name |  | Required: \{\} <br /> |
 | `description` _string_ | SharedPolicyGroup description |  |  |
 | `prerequisiteMessage` _string_ | SharedPolicyGroup prerequisite Message |  |  |
-| `apiType` _[ApiType](#apitype)_ | Specify the SharedPolicyGroup ApiType |  | Enum: [MESSAGE PROXY NATIVE] <br />Required: \{\} <br /> |
-| `phase` _[FlowPhase](#flowphase)_ | SharedPolicyGroup phase (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE) |  | Enum: [REQUEST RESPONSE ENTRYPOINT_CONNECT INTERACT CONNECT PUBLISH SUBSCRIBE] <br />Required: \{\} <br /> |
+| `apiType` _[ApiType](#apitype)_ | Specify the SharedPolicyGroup ApiType |  | Enum: [MESSAGE PROXY] <br />Required: \{\} <br /> |
+| `phase` _[FlowPhase](#flowphase)_ | SharedPolicyGroup phase (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE) |  | Enum: [REQUEST RESPONSE PUBLISH SUBSCRIBE] <br />Required: \{\} <br /> |
 | `steps` _[Step](#step) array_ | SharedPolicyGroup Steps |  |  |
 
 
