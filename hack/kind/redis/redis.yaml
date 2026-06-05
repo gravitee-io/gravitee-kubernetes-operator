@@ -1,0 +1,72 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    type: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      type: redis
+  template:
+    metadata:
+      labels:
+        type: redis
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: redis
+        image: redis:dev
+        imagePullPolicy: IfNotPresent
+        args: ["--requirepass", "redispassword"]
+        ports:
+        - containerPort: 6379
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
+            add:
+              - NET_BIND_SERVICE
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          runAsUser: 15000
+          runAsGroup: 15000
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "128m"
+            ephemeral-storage: "50Mi"
+          limits:
+            memory: "128Mi"
+            cpu: "128m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    type: redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+  selector:
+    type: redis

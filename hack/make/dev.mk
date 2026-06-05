@@ -4,6 +4,9 @@
 start-cluster: ## Init and start a local cluster
 	@npx zx ./hack/scripts/run-kind.mjs
 
+.PHONY: start-cluster-ui
+start-cluster-ui: ## Init and start a local cluster
+	@APIM_UI=true npx zx ./hack/scripts/run-kind.mjs
 
 .PHONY: start-conformance-cluster
 start-conformance-cluster: ## Init and start a local cluster for gateway-api conformance tests
