@@ -15,31 +15,9 @@
 package list
 
 import (
-	"fmt"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	v1 "k8s.io/api/core/v1"
-	netv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func OfType(obj interface{}) (client.ObjectList, error) {
-	switch obj.(type) {
-	case *v1alpha1.ApiDefinitionList:
-		return &v1alpha1.ApiDefinitionList{}, nil
-	case *v1alpha1.ApiV4DefinitionList:
-		return &v1alpha1.ApiV4DefinitionList{}, nil
-	case *v1alpha1.ManagementContextList:
-		return &v1alpha1.ManagementContextList{}, nil
-	case *netv1.IngressList:
-		return &netv1.IngressList{}, nil
-	case *v1.SecretList:
-		return &v1.SecretList{}, nil
-	case *v1alpha1.ApplicationList:
-		return &v1alpha1.ApplicationList{}, nil
-	case *v1alpha1.SharedPolicyGroupList:
-		return &v1alpha1.SharedPolicyGroupList{}, nil
-	default:
-		return nil, fmt.Errorf("unknown type %T", obj)
-	}
+func OfType[T client.ObjectList](obj T) (client.ObjectList, error) {
+	return obj, nil
 }
