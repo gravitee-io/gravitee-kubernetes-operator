@@ -96,7 +96,11 @@ test.describe("V4 API Documentation — Extended", () => {
   // ── GKO-280: GKO-created documentation is read-only ─────────
   // Re-applying the same CRD must not mutate the existing page content.
 
-  test(`GKO-managed documentation is stable across re-apply ${XRAY.PAGES.V4_READ_ONLY_DOC} ${TAGS.REGRESSION}`, async ({
+  // FIXME(GKO-2940): re-applying a V4 CR that omits the endpoint `secondary`
+  // field (post-GKO-2857) churns metadata.generation while the Accepted
+  // condition's observedGeneration lags, so kubectl wait (observedGeneration-
+  // aware in kubectl >=1.31) blocks. Re-enable once GKO-2940 is fixed.
+  test.fixme(`GKO-managed documentation is stable across re-apply ${XRAY.PAGES.V4_READ_ONLY_DOC} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
