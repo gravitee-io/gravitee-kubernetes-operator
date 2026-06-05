@@ -63,7 +63,6 @@ spec:
                   enum:
                     - MESSAGE
                     - PROXY
-                    - NATIVE
                   type: string
                 contextRef:
                   properties:
@@ -93,9 +92,6 @@ spec:
                   enum:
                     - REQUEST
                     - RESPONSE
-                    - ENTRYPOINT_CONNECT
-                    - INTERACT
-                    - CONNECT
                     - PUBLISH
                     - SUBSCRIBE
                   type: string

@@ -18,22 +18,11 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
-// +kubebuilder:validation:Enum=MESSAGE;PROXY;NATIVE;
+// +kubebuilder:validation:Enum=MESSAGE;PROXY;
 type ApiType string
 
-// +kubebuilder:validation:Enum=REQUEST;RESPONSE;ENTRYPOINT_CONNECT;INTERACT;CONNECT;PUBLISH;SUBSCRIBE;
+// +kubebuilder:validation:Enum=REQUEST;RESPONSE;PUBLISH;SUBSCRIBE;
 type FlowPhase string
-
-const (
-	FlowPhaseRequest           FlowPhase = "REQUEST"
-	FlowPhaseResponse          FlowPhase = "RESPONSE"
-	FlowPhaseEntrypointConnect FlowPhase = "ENTRYPOINT_CONNECT"
-	FlowPhaseInteract          FlowPhase = "INTERACT"
-	// Deprecated: legacy value kept for backward compatibility.
-	FlowPhaseConnect   FlowPhase = "CONNECT"
-	FlowPhasePublish   FlowPhase = "PUBLISH"
-	FlowPhaseSubscribe FlowPhase = "SUBSCRIBE"
-)
 
 type SharedPolicyGroup struct {
 	// +kubebuilder:skipversion
