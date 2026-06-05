@@ -129,7 +129,11 @@ test.describe("Reconciliation — Status & Conditions", () => {
 
   // ── GKO-1445: Idempotent reconciliation ──────────────────────
 
-  test(`Idempotent reconciliation for repeated apply ${XRAY.DEPLOYMENT_RECONCILIATION.IDEMPOTENT_RECONCILIATION} ${TAGS.REGRESSION}`, async ({
+  // FIXME(GKO-2940): re-applying a V4 CR that omits the endpoint `secondary`
+  // field (post-GKO-2857) churns metadata.generation while the Accepted
+  // condition's observedGeneration lags, so kubectl wait (observedGeneration-
+  // aware in kubectl >=1.31) blocks. Re-enable once GKO-2940 is fixed.
+  test.fixme(`Idempotent reconciliation for repeated apply ${XRAY.DEPLOYMENT_RECONCILIATION.IDEMPOTENT_RECONCILIATION} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {

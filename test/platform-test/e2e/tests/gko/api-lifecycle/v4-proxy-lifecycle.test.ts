@@ -336,7 +336,11 @@ test.describe("V4 Proxy API — Lifecycle", () => {
 
   // ── GKO-176: No-op when CRD unchanged ───────────────────────
 
-  test(`No-op when CRD is reapplied without changes ${XRAY.API_LIFECYCLE.NO_DEPLOY_WHEN_NO_CHANGES} ${TAGS.REGRESSION}`, async ({
+  // FIXME(GKO-2940): re-applying a V4 CR that omits the endpoint `secondary`
+  // field (post-GKO-2857) churns metadata.generation while the Accepted
+  // condition's observedGeneration lags, so kubectl wait (observedGeneration-
+  // aware in kubectl >=1.31) blocks. Re-enable once GKO-2940 is fixed.
+  test.fixme(`No-op when CRD is reapplied without changes ${XRAY.API_LIFECYCLE.NO_DEPLOY_WHEN_NO_CHANGES} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {

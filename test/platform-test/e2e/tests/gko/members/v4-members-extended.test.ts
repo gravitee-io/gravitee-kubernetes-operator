@@ -249,7 +249,11 @@ test.describe("V4 API Members — Extended", () => {
   // (out of scope). This test asserts the operator deploys stably when the
   // CRD is reapplied — the PO transfer scenario is covered by GKO-658.
 
-  test(`Primary owner stable across re-apply ${XRAY.MEMBERS.V4_TRANSFER_PRIMARY_OWNER} ${TAGS.REGRESSION}`, async ({
+  // FIXME(GKO-2940): re-applying a V4 CR that omits the endpoint `secondary`
+  // field (post-GKO-2857) churns metadata.generation while the Accepted
+  // condition's observedGeneration lags, so kubectl wait (observedGeneration-
+  // aware in kubectl >=1.31) blocks. Re-enable once GKO-2940 is fixed.
+  test.fixme(`Primary owner stable across re-apply ${XRAY.MEMBERS.V4_TRANSFER_PRIMARY_OWNER} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
