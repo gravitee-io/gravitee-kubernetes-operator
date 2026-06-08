@@ -262,6 +262,7 @@ spec:
                               description: The endpoint name (this value should be unique across endpoints)
                               type: string
                             secondary:
+                              default: false
                               description: Endpoint is secondary or not?
                               type: boolean
                             services:

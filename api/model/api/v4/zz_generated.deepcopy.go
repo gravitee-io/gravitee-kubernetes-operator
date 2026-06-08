@@ -317,6 +317,11 @@ func (in *Endpoint) DeepCopyInto(out *Endpoint) {
 		*out = new(EndpointServices)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Secondary != nil {
+		in, out := &in.Secondary, &out.Secondary
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Tenants != nil {
 		in, out := &in.Tenants, &out.Tenants
 		*out = make([]string, len(*in))
