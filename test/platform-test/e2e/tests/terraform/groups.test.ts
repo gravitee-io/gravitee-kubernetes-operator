@@ -222,16 +222,20 @@ test.describe("Terraform — Groups · Members", () => {
     }
   });
 
-  // KNOWN PROVIDER BUG — GKO-2862. A group member declared with a subset of
+  // ACCEPTED LIMITATION (GKO-2862, Won't Do). A group member declared with a subset of
   // role scopes (e.g. `roles = { API = "USER" }`) is stored by APIM with the
   // other scopes' default roles expanded in (`APPLICATION` and `INTEGRATION`
   // are added server-side). The provider's Read surfaces that expanded map
   // into state, so `terraform plan` reports a perpetual diff and a
   // group-with-members is never idempotent — every apply re-expands, every
-  // plan wants to strip. Reproduced 2026-05-22 against the kind cluster +
-  // provider main@60ba6fe. Flip back to `test(...)` once GKO-2862 is fixed.
-  test.fixme(
-    `terraform plan is idempotent for a group with members ${XRAY.TERRAFORM.GROUP_MEMBERS_IDEMPOTENT} ${TAGS.REGRESSION}`,
+  // plan wants to strip. GKO-2862 was resolved "Won't Do", so this perpetual
+  // diff is accepted behaviour, not a bug to be fixed. This test codifies that
+  // contract: a group WITH members reports a diff right after apply, and the
+  // diff is the server-expanded role scopes. If the provider ever round-trips
+  // members cleanly, this fails loudly and we revisit GKO-2862.
+  // Re-verified 2026-06-08 against provider main@c97d698.
+  test(
+    `terraform plan keeps reporting changes for server-expanded member roles ${XRAY.TERRAFORM.GROUP_MEMBERS_PERPETUAL_DIFF} ${TAGS.REGRESSION}`,
     async ({ mapi }) => {
       test.setTimeout(terraform.TF_TIMEOUT_MS * 8);
 
@@ -244,10 +248,13 @@ test.describe("Terraform — Groups · Members", () => {
         });
         await terraform.apply(ws);
 
-        // A no-op plan right after apply proves the provider's Read
-        // round-trips the member set cleanly.
+        // Per GKO-2862 (Won't Do), a plan right after apply is NOT a no-op:
+        // APIM expanded the declared `API` role into the other scopes, and the
+        // provider's Read surfaces them, so the plan proposes stripping the
+        // server-added `APPLICATION`/`INTEGRATION` scopes.
         const result = await terraform.plan(ws);
-        expect(result.hasChanges).toBe(false);
+        expect(result.hasChanges).toBe(true);
+        expect(result.stdout).toMatch(/APPLICATION|INTEGRATION/);
       } finally {
         await terraform.destroyWorkspace(ws);
       }
