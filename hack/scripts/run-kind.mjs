@@ -169,10 +169,6 @@ async function waitForApim() {
 
 async function waitForDeployments() {
   await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
-  await $`kubectl wait --for=condition=ready pod -l type=redis --timeout=360s`;
-  await $`kubectl wait --for=condition=ready pod -l type=httpbin-1 --timeout=360s`;
-  await $`kubectl wait --for=condition=ready pod -l type=httpbin-2 --timeout=360s`;
-  await $`kubectl wait --for=condition=ready pod -l type=httpbin-3 --timeout=360s`;
 }
 
 LOG.blue(`
@@ -233,4 +229,4 @@ LOG.blue(`Waiting for services to be ready ...
     
     Press ctrl+c to exit this script without waiting ...
 `);
-await time(waitForDeployments());
+await time(waitForDeployments);
