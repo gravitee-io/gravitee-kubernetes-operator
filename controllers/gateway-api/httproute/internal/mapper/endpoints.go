@@ -119,7 +119,8 @@ func buildEndpoints(
 
 func buildDummyEndpoint() *v4.Endpoint {
 	ep := newEndpoint(gwAPIv1.HTTPBackendRef{}, 0, 0, discardURI)
-	ep.Secondary = true
+	secondary := true
+	ep.Secondary = &secondary
 	return ep
 }
 
