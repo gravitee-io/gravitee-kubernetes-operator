@@ -167,10 +167,6 @@ async function waitForApim() {
   await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
 }
 
-async function waitForDeployments() {
-  await $`kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=apim3 --timeout=360s`;
-}
-
 LOG.blue(`
   ☸ Initializing kind cluster
 `);
@@ -229,4 +225,4 @@ LOG.blue(`Waiting for services to be ready ...
     
     Press ctrl+c to exit this script without waiting ...
 `);
-await time(waitForDeployments);
+await time(waitForApim);
