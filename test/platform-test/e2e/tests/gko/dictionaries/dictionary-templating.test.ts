@@ -46,7 +46,12 @@ async function gatewayBaseUrl(): Promise<string> {
 }
 
 test.describe("Dictionaries — Templating", () => {
-  test(`Dynamic dictionary with secret templates resolves in API header ${XRAY.DICTIONARIES.DYNAMIC_TEMPLATE_RESOLVE} ${TAGS.REGRESSION}`, async ({
+  // GKO-2858: deleting the Dictionary leaves the referenced Secret's
+  // `finalizers.gravitee.io/templating` finalizer in place, so the Secret sticks
+  // in Terminating and cleanup (`kubectl delete`) hangs until the helper's 15s
+  // timeout. Retested on master with the GKO-2858 fix attempt (d32a1876) and it
+  // still reproduces. Re-enable (flip back to `test(...)`) once GKO-2858 is resolved.
+  test.fixme(`Dynamic dictionary with secret templates resolves in API header ${XRAY.DICTIONARIES.DYNAMIC_TEMPLATE_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const secretFixture = fixture("dictionaries/dictionary-dynamic-tpl-secret/crd.yaml");
