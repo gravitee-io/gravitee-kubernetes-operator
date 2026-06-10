@@ -51,6 +51,7 @@ const (
 	SubscriptionFinalizer            = "finalizers.gravitee.io/subscriptions"
 	GroupFinalizer                   = "finalizers.gravitee.io/groups"
 	DictionaryFinalizer              = "finalizers.gravitee.io/dictionaries"
+	PortalFinalizer                  = "finalizers.gravitee.io/portals"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 	GraviteeClassParametersFinalizer = "finalizers.gravitee.io/gatewayclassparameters"

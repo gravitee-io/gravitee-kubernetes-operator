@@ -295,3 +295,13 @@ issues:
       linters:
         - funlen
         - gocognit
+    # Portal is an env-level, context-aware CRD that is structurally identical to
+    # Dictionary (same minimal status and interface method set). The established
+    # repository style is per-resource boilerplate cloning, so dupl findings between
+    # these sibling files are expected and intentional.
+    - path: "api/v1alpha1/(portal|dictionary)_types\\.go"
+      linters:
+        - dupl
+    - path: "internal/apim/service/(portals|dictionaries)\\.go"
+      linters:
+        - dupl

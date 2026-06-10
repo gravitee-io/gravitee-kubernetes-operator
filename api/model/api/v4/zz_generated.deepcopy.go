@@ -1249,6 +1249,17 @@ func (in *V4BaseApi) DeepCopyInto(out *V4BaseApi) {
 		*out = new(Failover)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.PortalNavigation != nil {
+		in, out := &in.PortalNavigation, &out.PortalNavigation
+		*out = make([]*NavigationPath, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(NavigationPath)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.ConsoleNotification != nil {
 		in, out := &in.ConsoleNotification, &out.ConsoleNotification
 		*out = new(AutomationConsoleNotification)

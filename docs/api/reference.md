@@ -9,7 +9,9 @@
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
 - [gravitee.io/v1alpha1/management](#graviteeiov1alpha1management)
+- [gravitee.io/v1alpha1/navigation](#graviteeiov1alpha1navigation)
 - [gravitee.io/v1alpha1/notification](#graviteeiov1alpha1notification)
+- [gravitee.io/v1alpha1/portal](#graviteeiov1alpha1portal)
 - [gravitee.io/v1alpha1/refs](#graviteeiov1alpha1refs)
 - [gravitee.io/v1alpha1/sharedpolicygroups](#graviteeiov1alpha1sharedpolicygroups)
 - [gravitee.io/v1alpha1/status](#graviteeiov1alpha1status)
@@ -34,6 +36,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [KafkaRoute](#kafkaroute)
 - [ManagementContext](#managementcontext)
 - [Notification](#notification)
+- [Portal](#portal)
 - [SharedPolicyGroup](#sharedpolicygroup)
 - [Subscription](#subscription)
 
@@ -619,6 +622,64 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions are the condition that must be met by the Notification<br />"Accepted" condition is used to indicate if the `Notification` can be used by another resource.<br />"ResolveRef" condition is used to indicate if an error occurred while resolving console groups. | \{  \} |  |
+
+
+#### Portal
+
+
+
+Portal is a Gravitee next-gen developer portal managed as a Kubernetes resource.
+A Portal is an environment-level object carrying its own navigation hierarchy.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `Portal` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[PortalSpec](#portalspec)_ |  |  |  |
+| `status` _[PortalStatus](#portalstatus)_ |  |  |  |
+
+
+#### PortalSpec
+
+
+
+PortalSpec defines the desired state of a Portal.
+
+
+
+_Appears in:_
+- [Portal](#portal)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
+| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | MaxItems: 50 <br />Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this portal is synced to. |  |  |
+
+
+#### PortalStatus
+
+
+
+PortalStatus defines the observed state of a Portal.
+
+
+
+_Appears in:_
+- [Portal](#portal)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Portal in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When portal has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### SharedPolicyGroup
@@ -2506,6 +2567,31 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/navigation
+
+
+
+
+#### NavigationPath
+
+
+
+NavigationPath is a single entry in a portal or API definition navigation tree.
+
+
+
+_Appears in:_
+- [PortalSpec](#portalspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `path` _string_ | A slash-separated path defining the navigation hierarchy.<br />Intermediate folders are implicitly created by APIM if not listed explicitly. |  | Pattern: `^/` <br />Required: \{\} <br /> |
+| `displayName` _string_ | Optional human-friendly label for this node. Listing a path explicitly<br />is the only way to attach a display name to it. |  |  |
+| `order` _integer_ | Optional display order of this node relative to its siblings at the same level.<br />Listing a path explicitly is the only way to attach an order. |  |  |
+
+
+
 ## gravitee.io/v1alpha1/notification
 
 
@@ -2596,6 +2682,49 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/portal
+
+
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [PortalStatus](#portalstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Portal in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When portal has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a Portal resource (next-gen developer portal).
+
+
+
+_Appears in:_
+- [PortalSpec](#portalspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
+| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | MaxItems: 50 <br />Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/refs
 
 
@@ -2621,6 +2750,7 @@ _Appears in:_
 - [DictionarySpec](#dictionaryspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
+- [PortalSpec](#portalspec)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [SubscriptionSpec](#subscriptionspec)
@@ -2755,7 +2885,9 @@ _Appears in:_
 - [AutomationStatus](#automationstatus)
 - [DictionaryStatus](#dictionarystatus)
 - [GroupStatus](#groupstatus)
+- [PortalStatus](#portalstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
@@ -4172,6 +4304,8 @@ _Appears in:_
 | `response` _boolean_ | Should the response phase of the request roundtrip be included in the log payload or not ? |  |  |
 
 
+
+
 #### Page
 
 
@@ -4382,6 +4516,7 @@ _Appears in:_
 | `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `failover` _[Failover](#failover)_ | API Failover |  |  |
+| `portalNavigation` _[NavigationPath](#navigationpath) array_ | The API's internal documentation navigation tree for the next-gen portal.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. Has no effect on the<br />classic portal (see `pages`). Not applicable to V2 APIs. |  | Optional: \{\} <br /> |
 | `consoleNotification` _[AutomationConsoleNotification](#automationconsolenotification)_ | ConsoleNotification struct sent to the Automation API, not part of the CRD spec. |  |  |
 
 

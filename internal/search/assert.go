@@ -53,6 +53,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoPortals(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -188,6 +192,29 @@ func assertNoDictionaries(ctx context.Context, ctxRef refs.NamespacedName, conte
 				"kubectl get dictionaries.gravitee.io "+
 				kubectlCommand,
 			contextName, len(dictionaries.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func assertNoPortals(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	portals := &v1alpha1.PortalList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		PortalContextField,
+		ctxRef,
+		portals,
+	); err != nil {
+		return err
+	}
+
+	if len(portals.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d portals are relying on this context. "+
+				reviewMessage+
+				"kubectl get portals.gravitee.io "+
+				kubectlCommand,
+			contextName, len(portals.Items), contextName,
 		)
 	}
 	return nil

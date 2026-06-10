@@ -1498,6 +1498,29 @@ spec:
                     Keys uniquely identify plans and are used to keep them in
                     sync...
                   type: object
+                portalNavigation:
+                  description: The API's internal documentation navigation tree for the next-gen
+                    portal.
+                  items:
+                    description: NavigationPath is a single entry in a portal or API definition
+                      navigation tree.
+                    properties:
+                      displayName:
+                        description: Optional human-friendly label for this node.
+                        type: string
+                      order:
+                        description: Optional display order of this node relative to its siblings at the
+                          same level.
+                        format: int32
+                        type: integer
+                      path:
+                        description: A slash-separated path defining the navigation hierarchy.
+                        pattern: ^/
+                        type: string
+                    required:
+                      - path
+                    type: object
+                  type: array
                 properties:
                   default: []
                   description: List of Properties for the API
