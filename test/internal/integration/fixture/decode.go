@@ -43,6 +43,7 @@ var (
 	sharedPolicyGroupsKind = v1alpha1.GroupVersion.WithKind("SharedPolicyGroup")
 	notificationKind       = v1alpha1.GroupVersion.WithKind("Notification")
 	dictionaryKind         = v1alpha1.GroupVersion.WithKind("Dictionary")
+	portalKind             = v1alpha1.GroupVersion.WithKind("Portal")
 )
 
 func decodeIfDefined[T client.Object](path string, rcv T, kind schema.GroupVersionKind) *T {

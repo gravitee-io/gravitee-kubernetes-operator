@@ -294,6 +294,28 @@ rules:
     verbs:
       - get
       - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portals
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portals/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portals/status
+    verbs:
+      - get
+      - update
 {{- if .Values.gatewayAPI.controller.enabled }}
   - apiGroups:
       - gravitee.io

@@ -75,6 +75,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyDictionary(ctx, cli)
 	}
 
+	if o.Portal != nil {
+		o.applyPortal(ctx, cli)
+	}
+
 	if o.SharedPolicyGroup != nil {
 		o.applySharedPolicyGroup(cli, ctx)
 	}
@@ -218,6 +222,17 @@ func (o *Objects) applyDictionary(ctx context.Context, cli client.Client) {
 		}
 		return assert.DictionaryAccepted(o.Dictionary)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Dictionary.Name)
+}
+
+func (o *Objects) applyPortal(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.Portal)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Portal)
+		if err != nil {
+			return err
+		}
+		return assert.PortalAccepted(o.Portal)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Portal.Name)
 }
 
 func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {
