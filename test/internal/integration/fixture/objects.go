@@ -38,6 +38,7 @@ type Objects struct {
 	SharedPolicyGroup *v1alpha1.SharedPolicyGroup
 	Notification      *v1alpha1.Notification
 	Dictionary        *v1alpha1.Dictionary
+	Portal            *v1alpha1.Portal
 
 	randomSuffix string
 }

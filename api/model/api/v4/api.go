@@ -87,6 +87,12 @@ type V4BaseApi struct {
 	Members []*base.Member `json:"members,omitempty"`
 	// API Failover
 	Failover *Failover `json:"failover,omitempty"`
+	// +kubebuilder:validation:Optional
+	// The API's internal documentation navigation tree for the next-gen portal.
+	// The order of entries in the list is preserved. Intermediate folders are
+	// implicitly created by APIM if not listed explicitly. Has no effect on the
+	// classic portal (see `pages`). Not applicable to V2 APIs.
+	PortalNavigation []*NavigationPath `json:"portalNavigation,omitempty"`
 	// ConsoleNotification struct sent to the Automation API, not part of the CRD spec.
 	// +kubebuilder:skipversion
 	ConsoleNotification *AutomationConsoleNotification `json:"consoleNotification,omitempty"`
