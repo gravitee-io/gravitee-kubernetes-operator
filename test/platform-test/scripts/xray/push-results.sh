@@ -40,7 +40,7 @@
 #   CIRCLE_BUILD_URL,
 #   CIRCLE_BUILD_NUM,
 #   CIRCLE_BRANCH          (optional) populated automatically in CircleCI; used
-#                          in the resulting Test Execution summary/description
+#                          to template the Test Execution summary/description
 
 set -uo pipefail
 
@@ -98,12 +98,21 @@ TOKEN=$(curl -fsS -X POST \
 # classname+name and would create duplicate Test issues). Skipped / fixme'd
 # cases are dropped so they don't overwrite a Test's prior result with TODO.
 
-BRANCH="${CIRCLE_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo local)}"
-BUILD_NUM="${CIRCLE_BUILD_NUM:-local}"
-BUILD_URL="${CIRCLE_BUILD_URL:-(local run)}"
+BRANCH="${CIRCLE_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")}"
+BUILD_NUM="${CIRCLE_BUILD_NUM:-}"
+BUILD_URL="${CIRCLE_BUILD_URL:-}"
+# The CircleCI workspace is checked out at the commit being tested, so
+# git log -1 returns its subject directly. Empty fallback is fine — the
+# transform's defaultDescription skips the "Commit:" line when it's unset.
+COMMIT_SUBJECT="$(git log -1 --pretty=%s 2>/dev/null || echo "")"
 
-XRAY_SUMMARY="GKO e2e - ${BUILD_NUM} (${BRANCH})" \
-XRAY_DESCRIPTION="Automated import from CircleCI: ${BUILD_URL}" \
+# Title / description templating now lives in junit-to-xray.mjs (it has the
+# totals naturally). The script only forwards context; the transform falls
+# back to sensible defaults when XRAY_SUMMARY / XRAY_DESCRIPTION are unset.
+XRAY_BRANCH="${BRANCH}" \
+XRAY_BUILD_NUM="${BUILD_NUM}" \
+XRAY_BUILD_URL="${BUILD_URL}" \
+XRAY_COMMIT_SUBJECT="${COMMIT_SUBJECT}" \
 XRAY_TEST_PLAN_KEY="${XRAY_TEST_PLAN_KEY:-}" \
   node "${TRANSFORM}" "${RESULTS_PATH}" > "${PAYLOAD_FILE}" \
   || warn_and_exit "failed to build Xray payload from ${RESULTS_PATH}"
