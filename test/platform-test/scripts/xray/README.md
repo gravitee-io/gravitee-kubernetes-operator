@@ -48,7 +48,48 @@ exit 0. The pipeline's pass/fail gate is unaffected (CircleCI parses
 | `XRAY_CLIENT_ID` | yes | — | Xray Cloud API key client id |
 | `XRAY_CLIENT_SECRET` | yes | — | Xray Cloud API key client secret |
 | `XRAY_TEST_PLAN_KEY` | no | — | Existing Test Plan issue (e.g. `GKO-NNNN`) to roll runs up to |
-| `CIRCLE_BUILD_URL` / `CIRCLE_BUILD_NUM` / `CIRCLE_BRANCH` | no | autodetected | Used to build the Test Execution summary + description; CircleCI sets them automatically |
+| `CIRCLE_BUILD_URL` / `CIRCLE_BUILD_NUM` / `CIRCLE_BRANCH` | no | autodetected | Used to template the Test Execution summary + description; CircleCI sets them automatically |
+
+### Test Execution title
+
+The script defers the title to [`junit-to-xray.mjs`](./junit-to-xray.mjs) — it
+has the per-test totals naturally. The default template is:
+
+```
+GKO Playwright e2e on <branch> — <n> passed, <n> failed[, <n> skipped] (CircleCI #<num>)
+```
+
+Examples:
+
+- `GKO Playwright e2e on master — 355 passed, 0 failed (CircleCI #85230)`
+- `GKO Playwright e2e on master — 354 passed, 1 failed, 12 skipped (CircleCI #85231)`
+- `GKO Playwright e2e on master — 1 passed, 0 failed (local)` *(local dry-run)*
+
+Pass an explicit `XRAY_SUMMARY` env var to override.
+
+### Test Execution description
+
+Deliberately small — the Xray-generated "Tests" panel inside the issue body
+already shows totals and the per-test rundown, so duplicating that here is
+noise. The default is:
+
+```
+Commit: <git log -1 --pretty=%s>
+Automated import from CircleCI: <build URL>
+```
+
+The `Commit:` line is omitted when `XRAY_COMMIT_SUBJECT` isn't set
+(e.g. local dry-runs in a worktree without a HEAD), and the second line
+falls back to a generic "Automated import of Playwright e2e results."
+when no `XRAY_BUILD_URL` is available. Pass an explicit `XRAY_DESCRIPTION`
+to override entirely.
+
+> **Test Execution workflow state.** The created issue stays in its default
+> "To Do" state — that's intentional. The per-test results (PASSED / FAILED
+> rows on each linked Test's "Test Coverage" panel) are what consumers
+> actually look at; the Test Execution issue is a per-run log entry whose
+> workflow column nobody reads. Don't add a Jira API token just to flip the
+> badge.
 
 The Test Execution is created in the project of the referenced Tests (GKO),
 so no project key is needed.
@@ -60,6 +101,7 @@ orb from the Keeper record `so8_Jh2tP-AZSbtIYcbBvg` (custom fields
 pipeline is green (the orb command runs `on_success`). Generate a fresh
 key pair from Jira if needed: *Apps → Xray → Global Settings → API Keys →
 Create*.
+
 
 ## Local run
 

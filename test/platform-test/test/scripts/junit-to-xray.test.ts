@@ -15,7 +15,14 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { parseTestcases, toTests, buildPayload } from "../../scripts/xray/junit-to-xray.mjs";
+import {
+  parseTestcases,
+  toTests,
+  buildPayload,
+  tally,
+  defaultSummary,
+  defaultDescription,
+} from "../../scripts/xray/junit-to-xray.mjs";
 
 const tc = (name: string, body = "") =>
   `<testcase name="${name}" classname="suite.test.ts" time="1.0">${body}</testcase>`;
@@ -66,12 +73,91 @@ describe("junit-to-xray transform", () => {
   });
 });
 
+describe("tally", () => {
+  it("counts passed / failed / skipped from parsed cases", () => {
+    const xml =
+      tc("a @GKO-1") +
+      tc("b @GKO-2", "<failure>x</failure>") +
+      tc("c @GKO-3", "<skipped/>") +
+      tc("untagged");
+    expect(tally(parseTestcases(xml))).toEqual({ passed: 2, failed: 1, skipped: 1 });
+  });
+});
+
+describe("defaultSummary", () => {
+  it("includes branch, totals, and CircleCI build number", () => {
+    expect(
+      defaultSummary({ passed: 355, failed: 0, skipped: 0 }, { branch: "master", buildNum: "85230" }),
+    ).toBe("GKO Playwright e2e on master — 355 passed, 0 failed (CircleCI #85230)");
+  });
+
+  it("surfaces skipped count when non-zero", () => {
+    expect(
+      defaultSummary({ passed: 12, failed: 2, skipped: 3 }, { branch: "feature/x", buildNum: "1" }),
+    ).toBe("GKO Playwright e2e on feature/x — 12 passed, 2 failed, 3 skipped (CircleCI #1)");
+  });
+
+  it("falls back to '(local)' when no build number is supplied", () => {
+    expect(defaultSummary({ passed: 1, failed: 0, skipped: 0 }, { branch: "master" })).toBe(
+      "GKO Playwright e2e on master — 1 passed, 0 failed (local)",
+    );
+  });
+
+  it("omits the branch segment when no branch is supplied", () => {
+    expect(defaultSummary({ passed: 1, failed: 0, skipped: 0 }, { buildNum: "1" })).toBe(
+      "GKO Playwright e2e — 1 passed, 0 failed (CircleCI #1)",
+    );
+  });
+});
+
+describe("defaultDescription", () => {
+  it("returns just the CircleCI import line when only buildUrl is supplied", () => {
+    expect(defaultDescription({ buildUrl: "https://x.test/1" })).toBe(
+      "Automated import from CircleCI: https://x.test/1",
+    );
+  });
+
+  it("prepends 'Commit: ...' when a commitSubject is supplied", () => {
+    expect(
+      defaultDescription({
+        buildUrl: "https://x.test/1",
+        commitSubject: "test: readable Test Execution title (GKO-2906)",
+      }),
+    ).toBe(
+      "Commit: test: readable Test Execution title (GKO-2906)\nAutomated import from CircleCI: https://x.test/1",
+    );
+  });
+
+  it("falls back to a generic line when no buildUrl is supplied", () => {
+    expect(defaultDescription({})).toBe("Automated import of Playwright e2e results.");
+  });
+});
+
 describe("buildPayload", () => {
-  it("wraps tests with default info when none supplied", () => {
-    const payload = buildPayload(tc("t @GKO-1"));
+  it("wraps tests with auto-templated summary/description when none supplied", () => {
+    const payload = buildPayload(tc("t @GKO-1"), {
+      branch: "master",
+      buildNum: "42",
+      buildUrl: "https://x.test/42",
+    });
     expect(payload.tests).toEqual([{ testKey: "GKO-1", status: "PASSED" }]);
-    expect(payload.info.summary).toBeTruthy();
+    expect(payload.info.summary).toBe(
+      "GKO Playwright e2e on master — 1 passed, 0 failed (CircleCI #42)",
+    );
+    expect(payload.info.description).toBe("Automated import from CircleCI: https://x.test/42");
     expect(payload.info).not.toHaveProperty("testPlanKey");
+  });
+
+  it("includes the commit subject in the auto-templated description when supplied", () => {
+    const payload = buildPayload(tc("t @GKO-1"), {
+      branch: "master",
+      buildNum: "42",
+      buildUrl: "https://x.test/42",
+      commitSubject: "fix: handle empty result file (GKO-2999)",
+    });
+    expect(payload.info.description).toBe(
+      "Commit: fix: handle empty result file (GKO-2999)\nAutomated import from CircleCI: https://x.test/42",
+    );
   });
 
   it("uses provided summary/description and adds testPlanKey only when set", () => {

@@ -27,7 +27,14 @@
 // test.fixme'd cases are omitted entirely so a temporarily-disabled test does
 // not overwrite a Test's previously recorded result with TODO.
 //
-// Env (all optional): XRAY_SUMMARY, XRAY_DESCRIPTION, XRAY_TEST_PLAN_KEY.
+// Env (all optional):
+//   XRAY_SUMMARY         explicit Test Execution summary; overrides the auto-templated one
+//   XRAY_DESCRIPTION     explicit description; overrides the auto-templated one
+//   XRAY_TEST_PLAN_KEY   existing Test Plan key to link the Execution to
+//   XRAY_BRANCH          branch name woven into the default summary (e.g. "master")
+//   XRAY_BUILD_NUM       CircleCI build number woven into the default summary
+//   XRAY_BUILD_URL       CircleCI build URL woven into the default description
+//   XRAY_COMMIT_SUBJECT  git commit subject; prepended to the default description as "Commit: <subject>"
 
 import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -74,11 +81,54 @@ export function toTests(cases) {
   return [...byKey].map(([testKey, status]) => ({ testKey, status }));
 }
 
-export function buildPayload(xml, { summary, description, testPlanKey } = {}) {
-  const tests = toTests(parseTestcases(xml));
+export function tally(cases) {
+  // Count cases from the raw parsed list so the summary reflects what
+  // *actually ran* (including untagged ones), independent of testKey dedup.
+  let passed = 0,
+    failed = 0,
+    skipped = 0;
+  for (const c of cases) {
+    if (c.skipped) skipped++;
+    else if (c.failed) failed++;
+    else passed++;
+  }
+  return { passed, failed, skipped };
+}
+
+export function defaultSummary({ passed, failed, skipped }, { branch, buildNum } = {}) {
+  // Format the Test Execution title so it's readable at a glance in the
+  // Jira/Xray list view — branch and outcome up front, build number as a
+  // parenthetical for click-through traceability.
+  const where = branch ? ` on ${branch}` : "";
+  const skippedPart = skipped > 0 ? `, ${skipped} skipped` : "";
+  const buildPart = buildNum ? ` (CircleCI #${buildNum})` : " (local)";
+  return `GKO Playwright e2e${where} — ${passed} passed, ${failed} failed${skippedPart}${buildPart}`;
+}
+
+export function defaultDescription({ buildUrl, commitSubject } = {}) {
+  // Keep the description deliberately small — the Xray-generated "Tests" panel
+  // already shows totals + per-test rundown inside the issue body, so anything
+  // we add here that duplicates it is noise. Two pieces of context that aren't
+  // visible anywhere else on the page:
+  //   1. The CircleCI build URL (one click to logs / artifacts).
+  //   2. The commit subject (what change was being tested, in plain English).
+  // Falls back to the original merged-master one-liner when either is missing.
+  const base = buildUrl
+    ? `Automated import from CircleCI: ${buildUrl}`
+    : "Automated import of Playwright e2e results.";
+  return commitSubject ? `Commit: ${commitSubject}\n${base}` : base;
+}
+
+export function buildPayload(
+  xml,
+  { summary, description, testPlanKey, branch, buildNum, buildUrl, commitSubject } = {},
+) {
+  const cases = parseTestcases(xml);
+  const tests = toTests(cases);
+  const totals = tally(cases);
   const info = {
-    summary: summary || "GKO e2e — automated import",
-    description: description || "Automated import of Playwright e2e results",
+    summary: summary || defaultSummary(totals, { branch, buildNum }),
+    description: description || defaultDescription({ buildUrl, commitSubject }),
   };
   if (testPlanKey) info.testPlanKey = testPlanKey;
   return { info, tests };
@@ -91,6 +141,10 @@ function main() {
     summary: process.env.XRAY_SUMMARY,
     description: process.env.XRAY_DESCRIPTION,
     testPlanKey: process.env.XRAY_TEST_PLAN_KEY,
+    branch: process.env.XRAY_BRANCH,
+    buildNum: process.env.XRAY_BUILD_NUM,
+    buildUrl: process.env.XRAY_BUILD_URL,
+    commitSubject: process.env.XRAY_COMMIT_SUBJECT,
   });
   process.stdout.write(JSON.stringify(payload, null, 2) + "\n");
 }
