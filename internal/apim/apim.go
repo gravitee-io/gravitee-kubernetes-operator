@@ -38,6 +38,7 @@ type APIM struct {
 	Subscription      *service.Subscriptions
 	SharedPolicyGroup *service.SharedPolicyGroup
 	Dictionaries      *service.Dictionaries
+	Portals           *service.Portals
 	Env               *service.Env
 
 	Context core.ContextModel
@@ -85,6 +86,7 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		Subscription:      service.NewSubscriptions(c),
 		SharedPolicyGroup: service.NewSharedPolicyGroup(c),
 		Dictionaries:      service.NewDictionaries(c),
+		Portals:           service.NewPortals(c),
 		Env:               service.NewEnv(c),
 		Context:           context,
 	}, nil

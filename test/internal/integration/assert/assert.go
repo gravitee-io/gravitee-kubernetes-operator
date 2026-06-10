@@ -172,6 +172,11 @@ func DictionaryAccepted(dict *v1alpha1.Dictionary) error {
 		k8s.MapConditions(dict.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
+func PortalAccepted(prtl *v1alpha1.Portal) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(prtl.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func NotificationCompleted(notification *v1alpha1.Notification) error {
 	return Equals(reconcileCondition, false, notification.Status.IsFailed())
 }

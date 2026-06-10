@@ -50,6 +50,7 @@ const (
 	SPGContextField              IndexField = "spg-context"
 	GroupContextField            IndexField = "group-context"
 	DictionaryContextField       IndexField = "dictionary-context"
+	PortalContextField           IndexField = "portal-context"
 )
 
 func (f IndexField) String() string {
@@ -92,6 +93,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 	collect(newIndexer(ctx, cache, &v1alpha1.Group{}, GroupContextField, indexGroupManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.Dictionary{}, DictionaryContextField,
 		indexDictionaryManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.Portal{}, PortalContextField,
+		indexPortalManagementContexts))
 
 	return errors.NewAggregate(errs)
 }
@@ -321,6 +324,14 @@ func indexDictionaryManagementContexts(dict *v1alpha1.Dictionary, fields *[]stri
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(dict, dict.Spec.Context))
+}
+
+func indexPortalManagementContexts(prtl *v1alpha1.Portal, fields *[]string) {
+	if prtl.Spec.Context == nil {
+		return
+	}
+
+	*fields = append(*fields, ensureNamespacedRef(prtl, prtl.Spec.Context))
 }
 
 func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {
