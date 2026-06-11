@@ -32,6 +32,8 @@ run:
 # This file contains only configs which differ from defaults.
 # All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
 linters-settings:
+  lll:
+    line-length: 140
   stylecheck:
     dot-import-whitelist:
     - github.com/onsi/ginkgo/v2
