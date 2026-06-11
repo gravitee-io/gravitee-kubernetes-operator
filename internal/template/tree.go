@@ -45,13 +45,9 @@ func traverse(ctx context.Context, obj client.Object, updateObjectMetadata bool)
 	cp["status"] = nil
 	cp["metadata"] = nil
 
-	isDeleted, err := isResourceDeleted(inner)
-	if err != nil {
-		return nil, gerrors.NewCompileTemplateError(fmt.Errorf("failed to check if resource is deleted: %w", err))
-	}
 	result, err := doTraverse(cp, func(val interface{}) (interface{}, error) {
 		if v, ok := val.(string); ok {
-			return exec(ctx, v, ns, isDeleted, updateObjectMetadata)
+			return exec(ctx, v, ns, updateObjectMetadata)
 		}
 
 		return val, nil
@@ -69,16 +65,6 @@ func traverse(ctx context.Context, obj client.Object, updateObjectMetadata bool)
 	inner["spec"] = resultMap["spec"]
 
 	return inner, nil
-}
-
-func isResourceDeleted(obj map[string]interface{}) (bool, error) {
-	metadata, ok := obj["metadata"].(map[string]interface{})
-	if !ok {
-		return false, fmt.Errorf("missing object metadata or unsupported type")
-	}
-
-	_, ok = metadata["deletionTimestamp"]
-	return ok, nil
 }
 
 func doTraverse(obj interface{}, mapper valMapper) (interface{}, error) {

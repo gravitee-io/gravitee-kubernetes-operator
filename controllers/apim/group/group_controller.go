@@ -58,13 +58,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 
 	k8s.ResetConditionsExceptAutomationAPI(group)
+
 	dc := group.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), group, func() error {
 		util.AddFinalizer(group, core.GroupFinalizer)
 		k8s.AddAnnotation(group, core.LastSpecHashAnnotation, hash.Calculate(&group.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if group.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, group); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			group.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}

@@ -69,13 +69,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 
 	k8s.ResetConditionsExceptAutomationAPI(spg)
+
 	dc := spg.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, spg, func() error {
 		util.AddFinalizer(spg, core.SharedPolicyGroupFinalizer)
 		k8s.AddAnnotation(spg, core.LastSpecHashAnnotation, hash.Calculate(&spg.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if spg.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, spg); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			spg.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
