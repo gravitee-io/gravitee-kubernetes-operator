@@ -67,13 +67,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	events := event.NewRecorder(r.Recorder)
 
 	managementContext.SetConditions([]metav1.Condition{})
+
 	dc := managementContext.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, managementContext, func() error {
 		util.AddFinalizer(managementContext, core.ManagementContextFinalizer)
 		k8s.AddAnnotation(managementContext, core.LastSpecHashAnnotation, hash.Calculate(&managementContext.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if managementContext.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, managementContext); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			return err
 		}
 

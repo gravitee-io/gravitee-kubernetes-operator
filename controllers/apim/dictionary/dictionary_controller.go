@@ -66,7 +66,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(dict, core.DictionaryFinalizer)
 		k8s.AddAnnotation(dict, core.LastSpecHashAnnotation, hash.Calculate(&dict.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if dict.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, dict); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			return err
 		}
 

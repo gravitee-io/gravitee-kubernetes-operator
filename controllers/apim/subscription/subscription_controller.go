@@ -71,7 +71,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(subscription, core.SubscriptionFinalizer)
 		k8s.AddAnnotation(subscription, core.LastSpecHashAnnotation, hash.Calculate(&subscription.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if subscription.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, subscription); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			subscription.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}

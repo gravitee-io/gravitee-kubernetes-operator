@@ -80,13 +80,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	k8s.ResetConditionsExceptAutomationAPI(application)
+
 	dc := application.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, r.Client, application, func() error {
 		util.AddFinalizer(application, core.ApplicationFinalizer)
 		k8s.AddAnnotation(application, core.LastSpecHashAnnotation, hash.Calculate(&application.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if application.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, application); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			application.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
