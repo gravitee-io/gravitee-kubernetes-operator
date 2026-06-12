@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package portal
+package portallisting
 
 import (
 	"context"
@@ -33,47 +33,45 @@ var _ = Describe("Create", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 
-	It("should create portal in APIM and persist navigation in list order", func() {
+	It("should create portal listing in APIM and persist apis in list order", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
+			WithAPIv4(constants.ApiV4WithContextFile).
 			WithPortal(constants.PortalFile).
+			WithPortalListing(constants.PortalListingFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
 
-		By("expecting portal status to be completed")
+		By("expecting portal listing status to be completed")
 
-		Expect(assert.PortalAccepted(fixtures.Portal)).To(Succeed())
-		Expect(assert.ManagedByAutomationAPI(fixtures.Portal)).To(Succeed())
+		Expect(assert.PortalListingAccepted(fixtures.PortalListing)).To(Succeed())
+		Expect(assert.ManagedByAutomationAPI(fixtures.PortalListing)).To(Succeed())
 
-		By("calling rest API, expecting navigation to round-trip in the same order")
+		By("calling rest API, expecting apis to round-trip in the same order")
 
 		apim := apim.NewClient(ctx)
-		hrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		listingHrid := refs.NewNamespacedNameFromObject(fixtures.PortalListing).HRID()
 
-		expectedPaths := make([]string, 0, len(fixtures.Portal.Spec.Navigation))
-		for _, nav := range fixtures.Portal.Spec.Navigation {
-			expectedPaths = append(expectedPaths, nav.Path)
+		expectedLocations := make([]string, 0, len(fixtures.PortalListing.Spec.APIs))
+		for _, entry := range fixtures.PortalListing.Spec.APIs {
+			expectedLocations = append(expectedLocations, entry.Location)
 		}
 
 		Eventually(func() error {
-			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
-			if prtlErr != nil {
-				return prtlErr
+			listing, listingErr := apim.Listings.GetByHRID(portalHrid, listingHrid)
+			if listingErr != nil {
+				return listingErr
 			}
-			if err := assert.NotEmptyString("id", prtl.ID); err != nil {
+			if err := assert.NotEmptyString("id", listing.ID); err != nil {
 				return err
 			}
-			paths := make([]string, 0, len(prtl.Navigation))
-			for _, nav := range prtl.Navigation {
-				paths = append(paths, nav.Path)
+			locations := make([]string, 0, len(listing.APIs))
+			for _, entry := range listing.APIs {
+				locations = append(locations, entry.Location)
 			}
-			// APIM materialises implicit intermediate parent folders in the GET
-			// /portals/{hrid} response (e.g. /projects, /archive), so the round-trip
-			// is not lossless. The authored entries are asserted as an ordered
-			// subsequence: they must appear in list order, with the implicit folders
-			// tolerated in between.
-			return assert.ContainsInOrder("Portal navigation", expectedPaths, paths)
-		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+			return assert.Equals("Portal listing locations", expectedLocations, locations)
+		}, timeout, interval).Should(Succeed(), fixtures.PortalListing.Name)
 	})
 })

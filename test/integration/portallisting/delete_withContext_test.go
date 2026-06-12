@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package portal
+package portallisting
 
 import (
 	"context"
@@ -26,54 +26,57 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/labels"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/manager"
 )
 
-var _ = Describe("Create", labels.WithContext, func() {
+var _ = Describe("Delete", labels.WithContext, func() {
 	timeout := constants.EventualTimeout
 	interval := constants.Interval
 	ctx := context.Background()
 
-	It("should create portal in APIM and persist navigation in list order", func() {
+	It("should delete portal listing in APIM", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).
+			WithAPIv4(constants.ApiV4WithContextFile).
 			WithPortal(constants.PortalFile).
+			WithPortalListing(constants.PortalListingFile).
 			WithContext(constants.ContextWithSecretFile).
 			Build().
 			Apply()
 
-		By("expecting portal status to be completed")
+		By("expecting portal listing status to be completed")
 
-		Expect(assert.PortalAccepted(fixtures.Portal)).To(Succeed())
-		Expect(assert.ManagedByAutomationAPI(fixtures.Portal)).To(Succeed())
+		Expect(assert.PortalListingAccepted(fixtures.PortalListing)).To(Succeed())
 
-		By("calling rest API, expecting navigation to round-trip in the same order")
+		By("calling rest API, expecting to find portal listing")
 
 		apim := apim.NewClient(ctx)
-		hrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
-
-		expectedPaths := make([]string, 0, len(fixtures.Portal.Spec.Navigation))
-		for _, nav := range fixtures.Portal.Spec.Navigation {
-			expectedPaths = append(expectedPaths, nav.Path)
-		}
+		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
+		listingHrid := refs.NewNamespacedNameFromObject(fixtures.PortalListing).HRID()
 
 		Eventually(func() error {
-			prtl, prtlErr := apim.Portals.GetByHRID(hrid)
-			if prtlErr != nil {
-				return prtlErr
+			listing, listingErr := apim.Listings.GetByHRID(portalHrid, listingHrid)
+			if listingErr != nil {
+				return listingErr
 			}
-			if err := assert.NotEmptyString("id", prtl.ID); err != nil {
-				return err
-			}
-			paths := make([]string, 0, len(prtl.Navigation))
-			for _, nav := range prtl.Navigation {
-				paths = append(paths, nav.Path)
-			}
-			// APIM materialises implicit intermediate parent folders in the GET
-			// /portals/{hrid} response (e.g. /projects, /archive), so the round-trip
-			// is not lossless. The authored entries are asserted as an ordered
-			// subsequence: they must appear in list order, with the implicit folders
-			// tolerated in between.
-			return assert.ContainsInOrder("Portal navigation", expectedPaths, paths)
-		}, timeout, interval).Should(Succeed(), fixtures.Portal.Name)
+			return assert.NotEmptyString("id", listing.ID)
+		}, timeout, interval).Should(Succeed(), fixtures.PortalListing.Name)
+
+		By("deleting portal listing")
+
+		Expect(manager.Client().Delete(ctx, fixtures.PortalListing.DeepCopy())).To(Succeed())
+
+		By("expecting portal listing to be deleted from k8s")
+
+		Eventually(func() error {
+			return assert.Deleted(ctx, "PortalListing", fixtures.PortalListing)
+		}, timeout, interval).Should(Succeed(), fixtures.PortalListing.Name)
+
+		By("calling rest API, expecting not to find portal listing")
+
+		Eventually(func() error {
+			_, listingErr := apim.Listings.GetByHRID(portalHrid, listingHrid)
+			return assert.NotFoundError(listingErr)
+		}, timeout, interval).Should(Succeed(), fixtures.PortalListing.Name)
 	})
 })

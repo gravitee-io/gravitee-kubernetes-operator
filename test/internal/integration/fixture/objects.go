@@ -39,6 +39,7 @@ type Objects struct {
 	Notification      *v1alpha1.Notification
 	Dictionary        *v1alpha1.Dictionary
 	Portal            *v1alpha1.Portal
+	PortalListing     *v1alpha1.PortalListing
 
 	randomSuffix string
 }

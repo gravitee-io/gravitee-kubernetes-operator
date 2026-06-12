@@ -166,6 +166,8 @@ const (
 
 	PortalFile = "apim/portal/portal.yml"
 
+	PortalListingFile = "apim/portal/portal-listing.yml"
+
 	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"
 
