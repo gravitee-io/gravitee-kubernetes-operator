@@ -5,8 +5,8 @@ Playwright (TypeScript) end-to-end suite that drives a **real** local Kubernetes
 cluster running APIM + Gateway + the GKO operator, plus the Terraform APIM
 provider. There are **no mocks**: every test mutates live cluster + APIM state.
 
-> Read this before editing or adding tests. For environment bootstrap (Kind,
-> Helm, `sew`, pre-flight checks) read [`e2e/README.md`](e2e/README.md) instead,
+> Read this before editing or adding tests. For environment bootstrap (`gck`,
+> Helm, pre-flight checks) read [`e2e/README.md`](e2e/README.md) instead,
 > do not duplicate that here. For the assertion library API read
 > [`README.md`](README.md).
 
@@ -117,7 +117,7 @@ backend**. Two consequences agents must respect:
   name** over reusing an existing fixture's name.
 - **APIM/MongoDB state persists across cluster restarts.** Only `kind delete
   cluster` or a full Helm uninstall + PV delete wipes it. A half-cleaned test
-  leaves rows behind that survive `make start-cluster`.
+  leaves rows behind that survive `make start-e2e-cluster`.
 
 ### Safety-net cleanup pattern
 
