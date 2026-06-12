@@ -452,10 +452,17 @@ jobs:
           registry: graviteeio.azurecr.io
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      # Must run after docker-login: the gck image preload pulls the APIM
+      # master nightlies from graviteeio.azurecr.io.
+      - run:
+          name: Install gck
+          command: |
+            go install github.com/gravitee-io-labs/gck@v1.0.2
+            echo 'export PATH="$HOME/go/bin:$PATH"' >> "$BASH_ENV"
       - run:
           name: Start cluster
           command: |
-            make start-cluster
+            make start-e2e-cluster
       - run:
           name: Prepare coverage storage
           command: |
