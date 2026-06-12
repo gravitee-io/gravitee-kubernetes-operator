@@ -8,6 +8,11 @@ start-cluster: ## Init and start a local cluster
 start-cluster-ui: ## Init and start a local cluster
 	@APIM_UI=true npx zx ./hack/scripts/run-kind.mjs
 
+.PHONY: start-e2e-cluster
+start-e2e-cluster: ## Init and start the e2e (platform-test) cluster via gck. Fails if the cluster exists: run delete-cluster first
+	@gck create --config test/platform-test/gck.yaml --disable-es --disable-portal \
+		--set imagePrefix=graviteeio.azurecr.io --set imageTag=master-latest
+
 .PHONY: start-conformance-cluster
 start-conformance-cluster: ## Init and start a local cluster for gateway-api conformance tests
 	kind create cluster --config hack/kind/kind.conformance.yaml
