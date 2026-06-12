@@ -34,6 +34,10 @@ func Delete(ctx context.Context, prtl *v1alpha1.Portal) error {
 		return err
 	}
 
+	if err := search.AssertNoPortalDocumentationRef(ctx, prtl); err != nil {
+		return err
+	}
+
 	if !prtl.HasContext() {
 		// Nothing was ever synced to APIM without a context; let the finalizer be removed.
 		return nil

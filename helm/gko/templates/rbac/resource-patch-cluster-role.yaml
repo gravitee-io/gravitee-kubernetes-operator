@@ -60,6 +60,7 @@ rules:
       - dictionaries.gravitee.io
       - portals.gravitee.io
       - portallistings.gravitee.io
+      - documentations.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
       - gatewayclassparameters.gravitee.io
       - kafkaroutes.gravitee.io
