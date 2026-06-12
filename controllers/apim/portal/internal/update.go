@@ -16,6 +16,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -23,9 +24,13 @@ import (
 )
 
 func CreateOrUpdate(ctx context.Context, prtl *v1alpha1.Portal) error {
-	ns := prtl.Namespace
+	if !prtl.HasContext() {
+		return gerrors.NewIllegalStateError(
+			fmt.Errorf("portal [%s] has no management context", prtl.GetName()),
+		)
+	}
 
-	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), ns)
+	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
 	if err != nil {
 		return err
 	}

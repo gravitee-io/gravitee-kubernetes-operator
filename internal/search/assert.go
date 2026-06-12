@@ -220,6 +220,32 @@ func assertNoPortals(ctx context.Context, ctxRef refs.NamespacedName, contextNam
 	return nil
 }
 
+func AssertNoPortalListingRef(ctx context.Context, prtl *v1alpha1.Portal) error {
+	nsn := refs.NewNamespacedName(prtl.Namespace, prtl.Name)
+
+	listings := &v1alpha1.PortalListingList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		PortalListingPortalField,
+		nsn,
+		listings,
+	); err != nil {
+		return err
+	}
+
+	if len(listings.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d portal listings are relying on this portal. "+
+				reviewMessage+
+				"kubectl get portallistings.gravitee.io "+
+				"-A -o jsonpath='{.items[?(@.spec.portalRef.name==\"%s\")].metadata.name}'",
+			prtl.Name, len(listings.Items), prtl.Name,
+		)
+	}
+
+	return nil
+}
+
 func AssertNoSharedPolicyGroupRef(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error {
 	nsn := refs.NewNamespacedName(spg.Namespace, spg.Name)
 
