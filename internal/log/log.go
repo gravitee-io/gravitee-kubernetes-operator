@@ -69,6 +69,10 @@ func (w *raw) Warn(message string) {
 	w.sink.Warn(message)
 }
 
+func (w *raw) Warnf(s string, args ...any) {
+	w.Warn(fmt.Sprintf(s, args...))
+}
+
 func (w *raw) Error(err error, message string) {
 	w.sink.Error(message, zap.Error(err))
 }
