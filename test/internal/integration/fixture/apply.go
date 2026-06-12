@@ -83,6 +83,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyPortalListing(ctx, cli)
 	}
 
+	if o.Documentation != nil {
+		o.applyDocumentation(ctx, cli)
+	}
+
 	if o.SharedPolicyGroup != nil {
 		o.applySharedPolicyGroup(cli, ctx)
 	}
@@ -248,6 +252,17 @@ func (o *Objects) applyPortalListing(ctx context.Context, cli client.Client) {
 		}
 		return assert.PortalListingAccepted(o.PortalListing)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.PortalListing.Name)
+}
+
+func (o *Objects) applyDocumentation(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.Documentation)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Documentation)
+		if err != nil {
+			return err
+		}
+		return assert.DocumentationAccepted(o.Documentation)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Documentation.Name)
 }
 
 func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {

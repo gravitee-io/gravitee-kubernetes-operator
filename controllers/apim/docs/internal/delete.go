@@ -16,44 +16,40 @@ package internal
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
-	if !util.ContainsFinalizer(api, core.ApiDefinitionFinalizer) {
+func Delete(ctx context.Context, doc *v1alpha1.Documentation) error {
+	if !util.ContainsFinalizer(doc, core.DocumentationFinalizer) {
 		return nil
 	}
 
-	if err := search.AssertNoApiDocumentationRef(ctx, api); err != nil {
-		return err
-	}
-
-	if api.HasContext() {
-		if err := deleteWithContext(ctx, api); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func deleteWithContext(ctx context.Context, api core.ApiDefinitionObject) error {
-	apimClient, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+	parent, err := resolveParent(ctx, doc)
 	if err != nil {
 		return err
 	}
-	switch {
-	case api.GetDefinitionVersion() == core.ApiV2:
-		return errors.IgnoreNotFound(apimClient.APIs.DeleteV2(api.GetID()))
-	case api.GetDefinitionVersion() == core.ApiV4:
-		return errors.IgnoreNotFound(apimClient.APIs.DeleteV4(api))
-	default:
-		return fmt.Errorf("unknown version %s", api.GetDefinitionVersion())
+
+	if !parent.hasContext {
+		// Nothing was ever synced to APIM without a context; let the finalizer be removed.
+		return nil
 	}
+
+	apimClient, err := apim.FromContextRef(ctx, parent.contextRef, parent.contextNs)
+	if err != nil {
+		return err
+	}
+
+	docHrid := refs.NewNamespacedNameFromObject(doc).HRID()
+
+	if err := gerrors.IgnoreNotFound(apimClient.Documentations.Delete(parent.parent, docHrid)); err != nil {
+		return gerrors.NewControlPlaneError(err)
+	}
+
+	return nil
 }
