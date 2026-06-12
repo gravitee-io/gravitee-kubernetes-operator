@@ -32,6 +32,11 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 		return errs
 	}
 
+	if !prtl.HasContext() {
+		errs.AddSevere("a management context reference (spec.contextRef) is required")
+		return errs
+	}
+
 	errs.Add(ctxref.Validate(ctx, prtl))
 	if errs.IsSevere() {
 		return errs

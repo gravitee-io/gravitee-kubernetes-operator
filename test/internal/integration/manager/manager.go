@@ -36,6 +36,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -194,6 +196,20 @@ func init() {
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("dictionary-controller"),
 		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.DictionaryList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&portal.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portal-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&portallisting.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portallisting-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalListingList{}),
 	}).SetupWithManager(mgr))
 
 	go func() {

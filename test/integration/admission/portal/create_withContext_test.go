@@ -44,4 +44,18 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 			return assert.NotNil("admission error", err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
+
+	It("should return severe error when contextRef is missing", func() {
+		prtl := fixture.
+			Builder().
+			WithPortal(constants.PortalFile).
+			Build()
+
+		prtl.Portal.Spec.Context = nil
+
+		Eventually(func() error {
+			_, err := admissionCtrl.ValidateCreate(ctx, prtl.Portal)
+			return assert.NotNil("admission error", err)
+		}, constants.EventualTimeout, interval).Should(Succeed())
+	})
 })

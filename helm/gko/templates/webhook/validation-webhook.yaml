@@ -361,6 +361,42 @@ webhooks:
     timeoutSeconds: 10
     admissionReviewVersions:
       - v1
+  - name: v1alpha1.gravitee.io.portallisting
+    clientConfig:
+      service:
+        namespace: {{ .Release.Namespace }}
+        name: {{ .Values.manager.webhook.service.name }}
+        path: /validate-gravitee-io-v1alpha1-portallisting
+        port: {{ .Values.manager.webhook.service.port }}
+    rules:
+      - operations:
+          - CREATE
+          - UPDATE
+          - DELETE
+        apiGroups:
+          - gravitee.io
+        apiVersions:
+          - v1alpha1
+        resources:
+          - 'portallistings'
+        scope: '*'
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    {{ if .Values.manager.webhook.configuration.useAutoUniqueNames }}
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: "In"
+          values:
+            - {{ .Release.Namespace }}
+    {{ else }}
+    namespaceSelector: {}
+    {{ end }}
+    objectSelector: {}
+    sideEffects: None
+    timeoutSeconds: 10
+    admissionReviewVersions:
+      - v1
   - name: v1alpha1.gravitee.io.sharedpolicygroups
     clientConfig:
       service:
