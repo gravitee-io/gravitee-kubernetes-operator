@@ -5,6 +5,7 @@
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
 - [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
+- [gravitee.io/v1alpha1/docs](#graviteeiov1alpha1docs)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
@@ -32,6 +33,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ApiV4Definition](#apiv4definition)
 - [Application](#application)
 - [Dictionary](#dictionary)
+- [Documentation](#documentation)
 - [GatewayClassParameters](#gatewayclassparameters)
 - [Group](#group)
 - [KafkaRoute](#kafkaroute)
@@ -362,6 +364,70 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `errors` _[Errors](#errors)_ | When dictionary has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Documentation
+
+
+
+Documentation is a single page of documentation (Gravitee Markdown, OpenAPI
+or AsyncAPI) for the next-gen developer portal. A Documentation page is
+attached to exactly one of a Portal or an API; the APIM management context is
+derived from the referenced resource.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `Documentation` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[DocumentationSpec](#documentationspec)_ |  |  |  |
+| `status` _[DocumentationStatus](#documentationstatus)_ |  |  |  |
+
+
+#### DocumentationSpec
+
+
+
+DocumentationSpec defines the desired state of a Documentation.
+
+
+
+_Appears in:_
+- [Documentation](#documentation)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the documentation page. |  | Required: \{\} <br /> |
+| `type` _[PageType](#pagetype)_ | The type of the documentation page. |  | Enum: [GRAVITEE_MARKDOWN OPENAPI ASYNCAPI] <br />Required: \{\} <br /> |
+| `content` _string_ | The content of the documentation page. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+| `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+
+
+#### DocumentationStatus
+
+
+
+DocumentationStatus defines the observed state of a Documentation.
+
+
+
+_Appears in:_
+- [Documentation](#documentation)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Documentation page in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the documentation page has been created regardless of errors, this<br />field is used to persist the error message encountered during admission |  |  |
 
 
 #### GatewayClassParameters
@@ -2071,6 +2137,78 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/docs
+
+Package docs holds the domain model for the Documentation CRD.
+
+
+
+#### PageType
+
+_Underlying type:_ _string_
+
+PageType is the type of a Documentation page.
+
+_Validation:_
+- Enum: [GRAVITEE_MARKDOWN OPENAPI ASYNCAPI]
+
+_Appears in:_
+- [DocumentationSpec](#documentationspec)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `GRAVITEE_MARKDOWN` |  |
+| `OPENAPI` |  |
+| `ASYNCAPI` |  |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [DocumentationStatus](#documentationstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Documentation page in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the documentation page has been created regardless of errors, this<br />field is used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a Documentation resource.
+A Documentation page is attached to exactly one of a Portal (portalRef) or
+an API (apiRef) and is placed at a chosen location in the owning resource's
+navigation hierarchy.
+
+
+
+_Appears in:_
+- [DocumentationSpec](#documentationspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the documentation page. |  | Required: \{\} <br /> |
+| `type` _[PageType](#pagetype)_ | The type of the documentation page. |  | Enum: [GRAVITEE_MARKDOWN OPENAPI ASYNCAPI] <br />Required: \{\} <br /> |
+| `content` _string_ | The content of the documentation page. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+| `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/gateway
 
 
@@ -2873,6 +3011,7 @@ _Appears in:_
 - [Cloud](#cloud)
 - [Console](#console)
 - [DictionarySpec](#dictionaryspec)
+- [DocumentationSpec](#documentationspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
 - [PortalListingSpec](#portallistingspec)
@@ -2880,6 +3019,7 @@ _Appears in:_
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
 - [Type](#type)
 - [Type](#type)
 
@@ -3011,10 +3151,12 @@ _Appears in:_
 - [ApplicationStatus](#applicationstatus)
 - [AutomationStatus](#automationstatus)
 - [DictionaryStatus](#dictionarystatus)
+- [DocumentationStatus](#documentationstatus)
 - [GroupStatus](#groupstatus)
 - [PortalListingStatus](#portallistingstatus)
 - [PortalStatus](#portalstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)

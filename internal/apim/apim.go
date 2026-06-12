@@ -40,6 +40,7 @@ type APIM struct {
 	Dictionaries      *service.Dictionaries
 	Portals           *service.Portals
 	Listings          *service.Listings
+	Documentations    *service.Documentations
 	Env               *service.Env
 
 	Context core.ContextModel
@@ -89,6 +90,7 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		Dictionaries:      service.NewDictionaries(c),
 		Portals:           service.NewPortals(c),
 		Listings:          service.NewListings(c),
+		Documentations:    service.NewDocumentations(c),
 		Env:               service.NewEnv(c),
 		Context:           context,
 	}, nil

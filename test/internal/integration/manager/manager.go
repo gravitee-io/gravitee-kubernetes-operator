@@ -33,6 +33,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
@@ -210,6 +211,13 @@ func init() {
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("portallisting-controller"),
 		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.PortalListingList{}),
+	}).SetupWithManager(mgr))
+
+	runtimeUtil.Must((&documentation.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("documentation-controller"),
+		Watcher:  watch.New(context.Background(), Client(), &v1alpha1.DocumentationList{}),
 	}).SetupWithManager(mgr))
 
 	go func() {
