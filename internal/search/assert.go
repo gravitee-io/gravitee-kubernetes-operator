@@ -246,6 +246,49 @@ func AssertNoPortalListingRef(ctx context.Context, prtl *v1alpha1.Portal) error 
 	return nil
 }
 
+// AssertNoPortalDocumentationRef blocks deletion of a Portal while any
+// Documentation page is still attached to it.
+func AssertNoPortalDocumentationRef(ctx context.Context, prtl *v1alpha1.Portal) error {
+	nsn := refs.NewNamespacedName(prtl.Namespace, prtl.Name)
+	return assertNoDocumentations(ctx, DocumentationPortalField, nsn, "portal", prtl.Name, "portalRef")
+}
+
+// AssertNoApiDocumentationRef blocks deletion of an API while any Documentation
+// page is still attached to it.
+func AssertNoApiDocumentationRef(ctx context.Context, api core.ApiDefinitionObject) error {
+	nsn := refs.NewNamespacedName(api.GetNamespace(), api.GetName())
+	return assertNoDocumentations(ctx, DocumentationApiField, nsn, "API", api.GetName(), "apiRef")
+}
+
+func assertNoDocumentations(
+	ctx context.Context,
+	field IndexField,
+	nsn refs.NamespacedName,
+	ownerKind, ownerName, jsonPathRef string,
+) error {
+	docs := &v1alpha1.DocumentationList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		field,
+		nsn,
+		docs,
+	); err != nil {
+		return err
+	}
+
+	if len(docs.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d documentation pages are relying on this %s. "+
+				reviewMessage+
+				"kubectl get documentations.gravitee.io "+
+				"-A -o jsonpath='{.items[?(@.spec.%s.name==\"%s\")].metadata.name}'",
+			ownerName, len(docs.Items), ownerKind, jsonPathRef, ownerName,
+		)
+	}
+
+	return nil
+}
+
 func AssertNoSharedPolicyGroupRef(ctx context.Context, spg *v1alpha1.SharedPolicyGroup) error {
 	nsn := refs.NewNamespacedName(spg.Namespace, spg.Name)
 
