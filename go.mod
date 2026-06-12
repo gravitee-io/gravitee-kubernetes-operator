@@ -7,6 +7,7 @@ require (
 	github.com/moby/moby v27.5.1+incompatible
 	github.com/onsi/ginkgo/v2 v2.28.0
 	github.com/onsi/gomega v1.39.1
+	github.com/zeebo/assert v1.3.0
 	github.com/zeebo/xxh3 v1.0.2
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a
 	gopkg.in/yaml.v2 v2.4.0
