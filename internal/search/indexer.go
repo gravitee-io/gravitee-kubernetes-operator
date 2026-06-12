@@ -51,6 +51,8 @@ const (
 	GroupContextField            IndexField = "group-context"
 	DictionaryContextField       IndexField = "dictionary-context"
 	PortalContextField           IndexField = "portal-context"
+	PortalListingPortalField     IndexField = "portallisting-portal"
+	PortalListingApiField        IndexField = "portallisting-api"
 )
 
 func (f IndexField) String() string {
@@ -95,6 +97,10 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexDictionaryManagementContexts))
 	collect(newIndexer(ctx, cache, &v1alpha1.Portal{}, PortalContextField,
 		indexPortalManagementContexts))
+	collect(newIndexer(ctx, cache, &v1alpha1.PortalListing{}, PortalListingPortalField,
+		indexPortalListingPortal))
+	collect(newIndexer(ctx, cache, &v1alpha1.PortalListing{}, PortalListingApiField,
+		indexPortalListingApis))
 
 	return errors.NewAggregate(errs)
 }
@@ -332,6 +338,16 @@ func indexPortalManagementContexts(prtl *v1alpha1.Portal, fields *[]string) {
 	}
 
 	*fields = append(*fields, ensureNamespacedRef(prtl, prtl.Spec.Context))
+}
+
+func indexPortalListingPortal(listing *v1alpha1.PortalListing, fields *[]string) {
+	*fields = append(*fields, ensureNamespacedRef(listing, listing.GetPortalRef()))
+}
+
+func indexPortalListingApis(listing *v1alpha1.PortalListing, fields *[]string) {
+	for _, apiRef := range listing.GetApiRefs() {
+		*fields = append(*fields, ensureNamespacedRef(listing, apiRef))
+	}
 }
 
 func ensureNamespacedRef(obj client.Object, ref core.ObjectRef) string {

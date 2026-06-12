@@ -12,6 +12,7 @@
 - [gravitee.io/v1alpha1/navigation](#graviteeiov1alpha1navigation)
 - [gravitee.io/v1alpha1/notification](#graviteeiov1alpha1notification)
 - [gravitee.io/v1alpha1/portal](#graviteeiov1alpha1portal)
+- [gravitee.io/v1alpha1/portallisting](#graviteeiov1alpha1portallisting)
 - [gravitee.io/v1alpha1/refs](#graviteeiov1alpha1refs)
 - [gravitee.io/v1alpha1/sharedpolicygroups](#graviteeiov1alpha1sharedpolicygroups)
 - [gravitee.io/v1alpha1/status](#graviteeiov1alpha1status)
@@ -37,6 +38,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ManagementContext](#managementcontext)
 - [Notification](#notification)
 - [Portal](#portal)
+- [PortalListing](#portallisting)
 - [SharedPolicyGroup](#sharedpolicygroup)
 - [Subscription](#subscription)
 
@@ -642,6 +644,64 @@ A Portal is an environment-level object carrying its own navigation hierarchy.
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[PortalSpec](#portalspec)_ |  |  |  |
 | `status` _[PortalStatus](#portalstatus)_ |  |  |  |
+
+
+#### PortalListing
+
+
+
+PortalListing publishes one or more APIs to a Portal at chosen locations in
+the portal's navigation hierarchy. The APIM management context is derived
+from the referenced Portal.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `PortalListing` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[PortalListingSpec](#portallistingspec)_ |  |  |  |
+| `status` _[PortalListingStatus](#portallistingstatus)_ |  |  |  |
+
+
+#### PortalListingSpec
+
+
+
+PortalListingSpec defines the desired state of a PortalListing.
+
+
+
+_Appears in:_
+- [PortalListing](#portallisting)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this listing publishes APIs to. |  | Required: \{\} <br /> |
+| `apis` _[ApiEntry](#apientry) array_ | The APIs to publish to the portal, each at a chosen location in the<br />portal's navigation. The order of entries in the list is preserved and<br />also determines display order relative to siblings sharing the same<br />location when no explicit order is set. |  | MinItems: 1 <br />Required: \{\} <br /> |
+
+
+#### PortalListingStatus
+
+
+
+PortalListingStatus defines the observed state of a PortalListing.
+
+
+
+_Appears in:_
+- [PortalListing](#portallisting)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalListing in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the portal listing has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
 
 
 #### PortalSpec
@@ -2725,6 +2785,70 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/portallisting
+
+
+
+
+#### ApiEntry
+
+
+
+ApiEntry places one API at a location in the portal's navigation.
+
+
+
+_Appears in:_
+- [PortalListingSpec](#portallistingspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `ref` _[NamespacedName](#namespacedname)_ | Reference to the API to publish. Only v4 APIs (ApiV4Definition) are<br />supported by the next-gen portal; the referenced kind defaults to<br />ApiV4Definition when left empty. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the portal's navigation where this API should appear.<br />The API is only visible on the portal if this matches a path defined<br />in the Portal's navigation. |  | Pattern: `^/` <br />Required: \{\} <br /> |
+| `order` _integer_ | Optional display order of this API relative to its siblings at the same<br />location. The position in the list is also preserved. |  | Optional: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [PortalListingStatus](#portallistingstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalListing in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the portal listing has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a PortalListing resource.
+It publishes one or more APIs to a portal at chosen locations in the
+portal's navigation hierarchy.
+
+
+
+_Appears in:_
+- [PortalListingSpec](#portallistingspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this listing publishes APIs to. |  | Required: \{\} <br /> |
+| `apis` _[ApiEntry](#apientry) array_ | The APIs to publish to the portal, each at a chosen location in the<br />portal's navigation. The order of entries in the list is preserved and<br />also determines display order relative to siblings sharing the same<br />location when no explicit order is set. |  | MinItems: 1 <br />Required: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/refs
 
 
@@ -2741,6 +2865,7 @@ _Appears in:_
 _Appears in:_
 - [ApiBase](#apibase)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
+- [ApiEntry](#apientry)
 - [ApiRef](#apiref)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
 - [ApplicationSpec](#applicationspec)
@@ -2750,10 +2875,12 @@ _Appears in:_
 - [DictionarySpec](#dictionaryspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
+- [PortalListingSpec](#portallistingspec)
 - [PortalSpec](#portalspec)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
 - [Type](#type)
 
 | Field | Description | Default | Validation |
@@ -2885,8 +3012,10 @@ _Appears in:_
 - [AutomationStatus](#automationstatus)
 - [DictionaryStatus](#dictionarystatus)
 - [GroupStatus](#groupstatus)
+- [PortalListingStatus](#portallistingstatus)
 - [PortalStatus](#portalstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
