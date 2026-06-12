@@ -44,6 +44,7 @@ import (
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
+	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
@@ -66,6 +67,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
+	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
@@ -349,6 +351,16 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for portal listings")
 		os.Exit(1)
 	}
+
+	if err := (&documentation.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("documentation-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.DocumentationList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for documentations")
+		os.Exit(1)
+	}
 }
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
@@ -544,6 +556,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (portalListingAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (documentationAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

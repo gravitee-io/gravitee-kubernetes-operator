@@ -110,6 +110,11 @@ func PortalListingAccepted(listing *v1alpha1.PortalListing) error {
 		k8s.MapConditions(listing.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
+func DocumentationAccepted(doc *v1alpha1.Documentation) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(doc.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func ApiV4Rejected(apiDefinition *v1alpha1.ApiV4Definition) error {
 	return Equals(reconcileCondition, true,
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)
