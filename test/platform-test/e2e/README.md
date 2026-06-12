@@ -20,10 +20,11 @@ Host tools (install before bootstrapping the cluster):
 |------|---------|-------|
 | Node.js | ≥ 18 | per `package.json#engines` |
 | `kubectl` | recent | tests shell out to it (`helpers/kubectl.ts`) |
-| `kind` | recent | local Kubernetes cluster |
+| `gck` | recent | provisions the Kind cluster + APIM stack ([docs](https://gravitee-io-labs.github.io/gck/)) |
+| `kind` | recent | `kind load` of the locally built operator image |
 | `helm` | recent | installs the GKO chart |
 | `terraform` | 1.12.1 | matches CI; Terraform tests assume it on `PATH` |
-| Docker | recent | required by Kind and by `sew` |
+| Docker | recent | required by Kind and by `gck` |
 
 The suite also expects:
 
@@ -37,15 +38,28 @@ test runs — see [Pre-flight checks](#pre-flight-checks).
 
 ## Bring up the cluster + APIM + GKO
 
-Two supported paths. Pick one.
+The cluster + APIM stack is provisioned with
+[`gck`](https://gravitee-io-labs.github.io/gck/) (Gravitee Cluster Kit) from
+the checked-in [`gck.yaml`](../gck.yaml): it composes the registry context
+`gravitee-io/oss/apim/mongodb` with suite-specific overrides (APIM master
+nightlies from azurecr, gateway sync across all namespaces, coverage mount,
+Elasticsearch and portal disabled).
 
-### Option A — CI-blessed path (recommended)
+Install gck (same version CI pins in `.circleci/config.yml`):
+
+```bash
+go install github.com/gravitee-io-labs/gck@v1.0.2
+```
 
 Mirrors what CI runs in `.circleci/config.yml` (`job-e2e-tests`):
 
 ```bash
-# From the repo root
-make start-cluster                       # Kind + APIM CE via hack/scripts/run-kind.mjs
+# From the repo root. The image preload pulls APIM master nightlies:
+docker login graviteeio.azurecr.io
+
+# Kind cluster `gravitee` + APIM + MongoDB into namespace `gravitee`.
+# Errors if the cluster already exists — `make delete-cluster` first.
+make start-e2e-cluster
 
 # Build the operator image, load it into Kind, install via Helm
 IMG=gko TAG=latest make docker-build \
@@ -57,46 +71,22 @@ IMG=gko TAG=latest make docker-build \
 kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
 ```
 
-### Option B — `sew` (one-shot stack composer)
-
-[`sew`](https://a-cordier.github.io/sew/) is a third-party Kubernetes stack
-composer that brings up APIM + GKO in a single command from its registry.
-It is **not** part of this repo — you author your own `sew.yaml` and run
-`sew create`.
-
-Install (macOS):
+Useful gck commands:
 
 ```bash
-brew install sew
+gck info --config test/platform-test/gck.yaml   # preview composition + flags
+gck list                                        # show gck-managed clusters
+make delete-cluster                             # tear the cluster down
 ```
 
-Pick a starter composition for E2E:
-
-```yaml
-# sew.yaml — minimal: APIM (DB-less) + GKO
-from:
-  - gravitee-io/oss/apim/dbless
-```
-
-```yaml
-# sew.yaml — full stack: APIM + MongoDB + Elasticsearch + GKO (closer to CI)
-from:
-  - gravitee-io/oss/apim/mongodb
-```
-
-Then:
-
-```bash
-sew info --from gravitee-io/oss/apim/mongodb   # preview the composition
-sew create                                     # bring up the stack
-sew delete                                     # tear it down
-```
-
-`sew` installs GKO into the `gravitee` namespace, while Option A uses
-`default`. The suite probes all namespaces (`kubectl get deploy -A`), so both
-work. EE registry variants (`gravitee-io/ee/apim/*`) exist but require a
-licence file and are out of scope here — see the
-[sew registry](https://a-cordier.github.io/sew/registry/).
+APIM lives in the `gravitee` namespace (in-cluster management API URL:
+`http://apim-api.gravitee.svc:83`, hardcoded in the management-context
+fixtures); the operator lives in `default`. The suite probes all namespaces
+(`kubectl get deploy -A`), so both work. The integration-test (Ginkgo) suite
+and `make start-cluster` still use the legacy
+`hack/scripts/run-kind.mjs` flow, which installs the `apim3` chart into
+`default` — the two cluster flavors share the name `gravitee`, so delete one
+before creating the other.
 
 ## Build platform-test
 
