@@ -65,6 +65,10 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *v1alpha1.Dictionary:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.Portal:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
+	case *v1alpha1.PortalListing:
+		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *netV1.Ingress:
 		return e.Object.GetAnnotations()[core.LastSpecHashAnnotation] != hash.Calculate(&t.Spec)
 	case *corev1.Secret:
@@ -129,6 +133,12 @@ func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *v1alpha1.Dictionary:
 		oo, _ := e.ObjectOld.(*v1alpha1.Dictionary)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *v1alpha1.Portal:
+		oo, _ := e.ObjectOld.(*v1alpha1.Portal)
+		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
+	case *v1alpha1.PortalListing:
+		oo, _ := e.ObjectOld.(*v1alpha1.PortalListing)
 		return hash.Calculate(&no.Spec) != hash.Calculate(&oo.Spec)
 	case *netV1.Ingress:
 		oo, _ := e.ObjectOld.(*netV1.Ingress)

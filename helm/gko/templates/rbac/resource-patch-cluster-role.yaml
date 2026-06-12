@@ -59,6 +59,7 @@ rules:
       - notifications.gravitee.io
       - dictionaries.gravitee.io
       - portals.gravitee.io
+      - portallistings.gravitee.io
 {{- if .Values.gatewayAPI.controller.enabled }}
       - gatewayclassparameters.gravitee.io
       - kafkaroutes.gravitee.io

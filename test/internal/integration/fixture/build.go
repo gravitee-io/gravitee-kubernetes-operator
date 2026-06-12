@@ -44,6 +44,7 @@ type Files struct {
 	Notification       string
 	Dictionary         string
 	Portal             string
+	PortalListing      string
 }
 
 type FSBuilder struct {
@@ -107,6 +108,12 @@ func (b *FSBuilder) Build() *Objects {
 
 	if prtl := decodeIfDefined(f.Portal, &v1alpha1.Portal{}, portalKind); prtl != nil {
 		setupPortal(obj, prtl, suffix)
+	}
+
+	if listing := decodeIfDefined(
+		f.PortalListing, &v1alpha1.PortalListing{}, portalListingKind,
+	); listing != nil {
+		setupPortalListing(obj, listing, suffix)
 	}
 
 	if notif := decodeIfDefined(f.Notification, &v1alpha1.Notification{}, notificationKind); notif != nil {
@@ -304,6 +311,16 @@ func setupPortal(obj *Objects, prtl **v1alpha1.Portal, suffix string) {
 	obj.Portal.Namespace = constants.Namespace
 }
 
+func setupPortalListing(obj *Objects, listing **v1alpha1.PortalListing, suffix string) {
+	obj.PortalListing = *listing
+	obj.PortalListing.Name += suffix
+	obj.PortalListing.Namespace = constants.Namespace
+	obj.PortalListing.Spec.Portal.Name += suffix
+	for i := range obj.PortalListing.Spec.APIs {
+		obj.PortalListing.Spec.APIs[i].Ref.Name += suffix
+	}
+}
+
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
 	obj.SharedPolicyGroup = *sub
 	obj.SharedPolicyGroup.Name += suffix
@@ -418,6 +435,11 @@ func (b *FSBuilder) WithDictionary(file string) *FSBuilder {
 
 func (b *FSBuilder) WithPortal(file string) *FSBuilder {
 	b.files.Portal = file
+	return b
+}
+
+func (b *FSBuilder) WithPortalListing(file string) *FSBuilder {
+	b.files.PortalListing = file
 	return b
 }
 
