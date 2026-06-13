@@ -22,6 +22,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	xErrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	kErrors "k8s.io/apimachinery/pkg/util/errors"
 )
 
@@ -53,5 +55,19 @@ var _ = Describe("Errors", func() {
 		Entry("With aggregate not containing any context error",
 			kErrors.NewAggregate([]error{errRaw}), false),
 		Entry("With empty aggregate", kErrors.NewAggregate([]error{}), false),
+	)
+
+	// A ReconcileError wraps the underlying cause; it must stay unwrappable so the
+	// standard errors machinery (and apierrors.IsNotFound, on which the delete-path
+	// finalizer guards rely) can inspect the wrapped k8s error.
+	DescribeTable("apierrors.IsNotFound sees through ReconcileError",
+		func(given error, expected bool) {
+			Expect(apierrors.IsNotFound(given)).To(Equal(expected))
+		},
+		Entry("With wrapped k8s NotFound",
+			xErrors.NewResolveRefError(
+				apierrors.NewNotFound(schema.GroupResource{Group: "gravitee.io", Resource: "portals"}, "p"),
+			), true),
+		Entry("With wrapped non-NotFound error", xErrors.NewResolveRefError(errRaw), false),
 	)
 })
