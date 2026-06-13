@@ -21,12 +21,17 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 	if !util.ContainsFinalizer(api, core.ApiDefinitionFinalizer) {
 		return nil
+	}
+
+	if err := search.AssertNoApiDocumentationRef(ctx, api); err != nil {
+		return err
 	}
 
 	if api.HasContext() {

@@ -53,6 +53,10 @@ func AssertNoContextRef(ctx context.Context, mCtx core.ContextObject) error {
 		return err
 	}
 
+	if err := assertNoPortals(ctx, ctxRef, mCtx.GetName()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -190,6 +194,98 @@ func assertNoDictionaries(ctx context.Context, ctxRef refs.NamespacedName, conte
 			contextName, len(dictionaries.Items), contextName,
 		)
 	}
+	return nil
+}
+
+func assertNoPortals(ctx context.Context, ctxRef refs.NamespacedName, contextName string) error {
+	portals := &v1alpha1.PortalList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		PortalContextField,
+		ctxRef,
+		portals,
+	); err != nil {
+		return err
+	}
+
+	if len(portals.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d portals are relying on this context. "+
+				reviewMessage+
+				"kubectl get portals.gravitee.io "+
+				kubectlCommand,
+			contextName, len(portals.Items), contextName,
+		)
+	}
+	return nil
+}
+
+func AssertNoPortalListingRef(ctx context.Context, prtl *v1alpha1.Portal) error {
+	nsn := refs.NewNamespacedName(prtl.Namespace, prtl.Name)
+
+	listings := &v1alpha1.PortalListingList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		PortalListingPortalField,
+		nsn,
+		listings,
+	); err != nil {
+		return err
+	}
+
+	if len(listings.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d portal listings are relying on this portal. "+
+				reviewMessage+
+				"kubectl get portallistings.gravitee.io "+
+				"-A -o jsonpath='{.items[?(@.spec.portalRef.name==\"%s\")].metadata.name}'",
+			prtl.Name, len(listings.Items), prtl.Name,
+		)
+	}
+
+	return nil
+}
+
+// AssertNoPortalDocumentationRef blocks deletion of a Portal while any
+// Documentation page is still attached to it.
+func AssertNoPortalDocumentationRef(ctx context.Context, prtl *v1alpha1.Portal) error {
+	nsn := refs.NewNamespacedName(prtl.Namespace, prtl.Name)
+	return assertNoDocumentations(ctx, DocumentationPortalField, nsn, "portal", prtl.Name, "portalRef")
+}
+
+// AssertNoApiDocumentationRef blocks deletion of an API while any Documentation
+// page is still attached to it.
+func AssertNoApiDocumentationRef(ctx context.Context, api core.ApiDefinitionObject) error {
+	nsn := refs.NewNamespacedName(api.GetNamespace(), api.GetName())
+	return assertNoDocumentations(ctx, DocumentationApiField, nsn, "API", api.GetName(), "apiRef")
+}
+
+func assertNoDocumentations(
+	ctx context.Context,
+	field IndexField,
+	nsn refs.NamespacedName,
+	ownerKind, ownerName, jsonPathRef string,
+) error {
+	docs := &v1alpha1.DocumentationList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		field,
+		nsn,
+		docs,
+	); err != nil {
+		return err
+	}
+
+	if len(docs.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d documentation pages are relying on this %s. "+
+				reviewMessage+
+				"kubectl get documentations.gravitee.io "+
+				"-A -o jsonpath='{.items[?(@.spec.%s.name==\"%s\")].metadata.name}'",
+			ownerName, len(docs.Items), ownerKind, jsonPathRef, ownerName,
+		)
+	}
+
 	return nil
 }
 

@@ -43,6 +43,9 @@ type Files struct {
 	Group              string
 	Notification       string
 	Dictionary         string
+	Portal             string
+	PortalListing      string
+	Documentation      string
 }
 
 type FSBuilder struct {
@@ -102,6 +105,22 @@ func (b *FSBuilder) Build() *Objects {
 
 	if dict := decodeIfDefined(f.Dictionary, &v1alpha1.Dictionary{}, dictionaryKind); dict != nil {
 		setupDictionary(obj, dict, suffix)
+	}
+
+	if prtl := decodeIfDefined(f.Portal, &v1alpha1.Portal{}, portalKind); prtl != nil {
+		setupPortal(obj, prtl, suffix)
+	}
+
+	if listing := decodeIfDefined(
+		f.PortalListing, &v1alpha1.PortalListing{}, portalListingKind,
+	); listing != nil {
+		setupPortalListing(obj, listing, suffix)
+	}
+
+	if doc := decodeIfDefined(
+		f.Documentation, &v1alpha1.Documentation{}, documentationKind,
+	); doc != nil {
+		setupDocumentation(obj, doc, suffix)
 	}
 
 	if notif := decodeIfDefined(f.Notification, &v1alpha1.Notification{}, notificationKind); notif != nil {
@@ -209,6 +228,9 @@ func setupMgmtContext(obj *Objects, ctx **v1alpha1.ManagementContext, suffix str
 	if obj.Dictionary != nil {
 		obj.Dictionary.Spec.Context = obj.Context.GetNamespacedName()
 	}
+	if obj.Portal != nil {
+		obj.Portal.Spec.Context = obj.Context.GetNamespacedName()
+	}
 }
 
 func ensureNilContexts(obj *Objects) {
@@ -287,6 +309,35 @@ func setupDictionary(obj *Objects, dict **v1alpha1.Dictionary, suffix string) {
 	obj.Dictionary.Name += suffix
 	obj.Dictionary.Spec.Name += suffix
 	obj.Dictionary.Namespace = constants.Namespace
+}
+
+func setupPortal(obj *Objects, prtl **v1alpha1.Portal, suffix string) {
+	obj.Portal = *prtl
+	obj.Portal.Name += suffix
+	obj.Portal.Spec.Name += suffix
+	obj.Portal.Namespace = constants.Namespace
+}
+
+func setupPortalListing(obj *Objects, listing **v1alpha1.PortalListing, suffix string) {
+	obj.PortalListing = *listing
+	obj.PortalListing.Name += suffix
+	obj.PortalListing.Namespace = constants.Namespace
+	obj.PortalListing.Spec.Portal.Name += suffix
+	for i := range obj.PortalListing.Spec.APIs {
+		obj.PortalListing.Spec.APIs[i].Ref.Name += suffix
+	}
+}
+
+func setupDocumentation(obj *Objects, doc **v1alpha1.Documentation, suffix string) {
+	obj.Documentation = *doc
+	obj.Documentation.Name += suffix
+	obj.Documentation.Namespace = constants.Namespace
+	if obj.Documentation.Spec.Portal != nil {
+		obj.Documentation.Spec.Portal.Name += suffix
+	}
+	if obj.Documentation.Spec.API != nil {
+		obj.Documentation.Spec.API.Name += suffix
+	}
 }
 
 func setupSharedPolicyGroup(obj *Objects, sub **v1alpha1.SharedPolicyGroup, suffix string) {
@@ -398,6 +449,21 @@ func (b *FSBuilder) WithIngress(file string) *FSBuilder {
 
 func (b *FSBuilder) WithDictionary(file string) *FSBuilder {
 	b.files.Dictionary = file
+	return b
+}
+
+func (b *FSBuilder) WithPortal(file string) *FSBuilder {
+	b.files.Portal = file
+	return b
+}
+
+func (b *FSBuilder) WithPortalListing(file string) *FSBuilder {
+	b.files.PortalListing = file
+	return b
+}
+
+func (b *FSBuilder) WithDocumentation(file string) *FSBuilder {
+	b.files.Documentation = file
 	return b
 }
 

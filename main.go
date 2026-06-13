@@ -44,9 +44,12 @@ import (
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
 	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
+	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
+	portalAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portal"
+	portalListingAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallisting"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -64,7 +67,10 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
+	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -325,6 +331,36 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for dictionaries")
 		os.Exit(1)
 	}
+
+	if err := (&portal.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portal-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.PortalList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for portals")
+		os.Exit(1)
+	}
+
+	if err := (&portallisting.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portallisting-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.PortalListingList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for portal listings")
+		os.Exit(1)
+	}
+
+	if err := (&documentation.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("documentation-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.DocumentationList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for documentations")
+		os.Exit(1)
+	}
 }
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
@@ -514,6 +550,15 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (dictAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (portalAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (portalListingAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (documentationAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

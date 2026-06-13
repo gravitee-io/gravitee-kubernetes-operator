@@ -26,6 +26,7 @@ const (
 	CRDResourceSharedPolicyGroupsResource = "sharedpolicygroups"
 	CRDResourceNotification               = "notifications"
 	CRDResourceGroup                      = "groups"
+	CRDPortalResource                     = "portals"
 
 	GraviteeComponentLabel      = "gravitee.io/component"
 	IngressLabel                = "gravitee.io/ingress"
@@ -51,6 +52,9 @@ const (
 	SubscriptionFinalizer            = "finalizers.gravitee.io/subscriptions"
 	GroupFinalizer                   = "finalizers.gravitee.io/groups"
 	DictionaryFinalizer              = "finalizers.gravitee.io/dictionaries"
+	PortalFinalizer                  = "finalizers.gravitee.io/portals"
+	PortalListingFinalizer           = "finalizers.gravitee.io/portallistings"
+	DocumentationFinalizer           = "finalizers.gravitee.io/documentations"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"
 	GraviteeClassParametersFinalizer = "finalizers.gravitee.io/gatewayclassparameters"
