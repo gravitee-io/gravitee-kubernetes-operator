@@ -18,7 +18,11 @@ metadata:
   name: e2e-ctx-bearer
   namespace: default
 spec:
-  baseUrl: http://apim-apim-rest-api.apim.svc:83
+  # Intentionally NOT the real management API service: the admission webhook
+  # fails open when the host is unreachable, but would reject this context's
+  # dummy bearer token with 401 if it could actually reach APIM. This test
+  # only verifies that the token is templated from the Secret into the CR.
+  baseUrl: http://apim-api-unreachable.gravitee.svc:83
   environmentId: DEFAULT
   organizationId: DEFAULT
   auth:

@@ -17,7 +17,7 @@ kind: ManagementContext
 metadata:
   name: e2e-bad-org-ctx
 spec:
-  baseUrl: http://apim-apim3-api.default.svc:83
+  baseUrl: http://apim-api.gravitee.svc:83
   environmentId: DEFAULT
   organizationId: NON_EXISTING_ORG
   auth:
