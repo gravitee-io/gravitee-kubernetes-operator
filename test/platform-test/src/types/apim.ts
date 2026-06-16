@@ -365,6 +365,10 @@ export interface GenericPlan {
 export interface PlanV4 extends GenericPlan {
   definitionVersion: "V4";
   flows?: FlowV4[];
+  /** Port-based routing fields, native Kafka APIs only  */
+  bootstrapPort?: number;
+  brokerRangeStart?: number;
+  brokerRangeEnd?: number;
 }
 
 export interface PlanV2 extends GenericPlan {
