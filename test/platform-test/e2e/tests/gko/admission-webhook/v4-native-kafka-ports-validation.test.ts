@@ -25,12 +25,26 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { TAGS } from "../../../helpers/tags.js";
+import type { PlanV4 } from "../../../../src/types/apim.js";
 
 test.describe("Native Kafka API — Plan ports validation", () => {
-  test(`Valid native kafka plan ports are accepted ${TAGS.REGRESSION}`, async ({ kubectl }) => {
+  test(`Valid native kafka plan ports are accepted ${TAGS.REGRESSION}`, async ({ kubectl, mapi }) => {
+    const API_NAME = "e2e-v4-native-kafka-ports";
     const f = fixture("crds/api-v4-definitions/v4-native-kafka-ports-valid.yaml");
     await kubectl.apply(f);
-    await kubectl.waitForCondition("apiv4definition", "e2e-v4-native-kafka-ports", "Accepted");
+    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
+
+    // Beyond passing admission, the port-based-routing fields must round-trip
+    // through the management API GET endpoint (GKO-2919 / PR #1684).
+    const apiId = (await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME)).id;
+    await expect
+      .poll(async () => ((await mapi.listApiPlans(apiId)) as PlanV4[])[0])
+      .toMatchObject({
+        bootstrapPort: 9092,
+        brokerRangeStart: 9100,
+        brokerRangeEnd: 9102,
+      });
+
     await kubectl.del(f).catch(() => {});
   });
 
