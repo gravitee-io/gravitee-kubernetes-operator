@@ -103,13 +103,11 @@ test.describe("V4 Import/Export — Extended", () => {
   // or produces an unimportable CRD, the apply will fail or the reconciliation
   // will move off Accepted.
 
-  // Skipped pending GKO-2919: the GKO ApiV4Definition CRD does not declare
-  // `spec.allowedInApiProducts` or `spec.allowMultiJwtOauth2Subscriptions`,
-  // but APIM PR #17029 (commit d3c94cd7) added both to the v2 CRD export spec,
-  // so re-applying the exported YAML fails strict field validation on
-  // CircleCI. Re-enable once GKO adds the two fields to ApiV4Definition and
-  // regenerates the CRD.
-  test.skip(`V4 CRD export/import round-trip preserves identity ${XRAY.IMPORT_EXPORT.V4_EXPORT_IMPORT_ROUND_TRIP} ${TAGS.REGRESSION}`, async ({
+  // Re-enabled after GKO-2919: the ApiV4Definition CRD now declares
+  // `spec.allowedInApiProducts` and `spec.allowMultiJwtOauth2Subscriptions`
+  // (PR #1684), so the exported YAML no longer trips strict field validation
+  // on re-apply.
+  test(`V4 CRD export/import round-trip preserves identity ${XRAY.IMPORT_EXPORT.V4_EXPORT_IMPORT_ROUND_TRIP} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
