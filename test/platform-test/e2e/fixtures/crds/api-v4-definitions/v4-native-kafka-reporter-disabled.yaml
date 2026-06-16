@@ -20,8 +20,11 @@ spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-native-kafka-ports"
-  description: "E2E test: Native Kafka API plan ports validation"
+  # Unique identity (name + Kafka host + broker port range). This fixture used
+  # to share spec.name/host/ports with v4-native-kafka-ports-valid.yaml, which
+  # mapped both to the same APIM API and made the suite order-dependent.
+  name: "e2e-v4-native-kafka-reporter-disabled"
+  description: "E2E test: Native Kafka API with reporter metrics disabled"
   version: "1.0.0"
   type: NATIVE
   state: STOPPED
@@ -33,7 +36,7 @@ spec:
     syncFrom: MANAGEMENT
   listeners:
     - type: KAFKA
-      host: "kafka.example.local"
+      host: "kafka-reporter.example.local"
       port: 9092
       entrypoints:
         - type: native-kafka
@@ -46,7 +49,7 @@ spec:
           type: native-kafka
           inheritConfiguration: false
           configuration:
-            bootstrapServers: "kafka.example.local:9092"
+            bootstrapServers: "kafka-reporter.example.local:9092"
           secondary: false
           sharedConfigurationOverride:
             security:
@@ -57,7 +60,7 @@ spec:
       name: "Free plan"
       security:
         type: "KEY_LESS"
-      bootstrapPort: 9092
-      brokerRangeStart: 9100
-      brokerRangeEnd: 9102
+      bootstrapPort: 9292
+      brokerRangeStart: 9300
+      brokerRangeEnd: 9302
 
