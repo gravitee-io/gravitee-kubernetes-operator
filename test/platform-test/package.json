@@ -22,6 +22,10 @@
       "types": "./dist/assertions/am/index.d.ts",
       "default": "./dist/assertions/am/index.js"
     },
+    "./provisioners": {
+      "types": "./dist/provisioners/index.d.ts",
+      "default": "./dist/provisioners/index.js"
+    },
     "./utils/http": {
       "types": "./dist/utils/http/index.d.ts",
       "default": "./dist/utils/http/index.js"
@@ -44,8 +48,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "e2e": "npx playwright test --config e2e/playwright.config.ts",
-    "e2e:regression": "npx playwright test --config e2e/playwright.config.ts --grep @regression"
+    "typecheck:e2e": "tsc --noEmit -p e2e/tsconfig.json",
+    "e2e": "node scripts/e2e.mjs",
+    "e2e:regression": "node scripts/e2e.mjs --grep @regression",
+    "e2e:gko": "node scripts/e2e.mjs --provision-with gko",
+    "e2e:terraform": "node scripts/e2e.mjs --provision-with terraform"
   },
   "dependencies": {
     "yaml": "^2"
