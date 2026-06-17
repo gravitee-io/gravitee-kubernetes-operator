@@ -39,6 +39,7 @@
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
+import type { ApiV4 } from "../../../../src/types/apim.js";
 
 test.describe("Message APIs — Lifecycle", () => {
   // Safety-net cleanup: runs even if a test times out before its inline
@@ -76,7 +77,7 @@ test.describe("Message APIs — Lifecycle", () => {
 
     await test.step("API is STARTED in APIM with type MESSAGE", async () => {
       await mapi.assertApiMatches(apiId, { name: API_NAME, state: "STARTED" });
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api.type).toBe("MESSAGE");
     });
 
@@ -102,7 +103,7 @@ test.describe("Message APIs — Lifecycle", () => {
 
     await test.step("API is STARTED in APIM with type MESSAGE", async () => {
       await mapi.assertApiMatches(apiId, { name: API_NAME, state: "STARTED" });
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api.type).toBe("MESSAGE");
     });
 
@@ -127,7 +128,7 @@ test.describe("Message APIs — Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api).toBeTruthy();
       expect(api.type).toBe("MESSAGE");
     });
@@ -153,7 +154,7 @@ test.describe("Message APIs — Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api).toBeTruthy();
       expect(api.type).toBe("MESSAGE");
     });
@@ -179,7 +180,7 @@ test.describe("Message APIs — Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api).toBeTruthy();
       expect(api.type).toBe("MESSAGE");
     });
@@ -205,7 +206,7 @@ test.describe("Message APIs — Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api).toBeTruthy();
       expect(api.type).toBe("MESSAGE");
     });
@@ -231,7 +232,7 @@ test.describe("Message APIs — Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api).toBeTruthy();
       expect(api.type).toBe("MESSAGE");
     });
@@ -283,7 +284,7 @@ test.describe("Message APIs — Lifecycle", () => {
     const apiId = status.id;
 
     await test.step("API has flows configured in APIM", async () => {
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api).toBeTruthy();
       if ("flows" in api && api.flows) {
         expect(api.flows.length).toBeGreaterThanOrEqual(1);
