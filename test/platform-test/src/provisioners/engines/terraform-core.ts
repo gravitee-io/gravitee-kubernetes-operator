@@ -1,0 +1,221 @@
+/**
+ * Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Pure, runner-agnostic Terraform workspace mechanics. This module has NO
+ * dependency on the e2e harness (no config loading, no fixture-path
+ * resolution): the caller supplies an already-resolved fixture directory and a
+ * base environment. The e2e adapter (`e2e/helpers/terraform.ts`) wires those
+ * up from `config.yaml` + `fixture()`.
+ */
+
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import path from "node:path";
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * Per-process timeout for a single `terraform` invocation (init, plan, apply,
+ * output, destroy). When exceeded, execFile SIGTERM-kills the child; terraform
+ * releases the .tfstate lock on SIGTERM.
+ */
+export const TF_TIMEOUT_MS = 60_000;
+
+/**
+ * Playwright timeout that every hook or test driving a terraform workspace
+ * MUST allow, via `test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS)`.
+ *
+ * The ordering matters. Playwright does not kill child processes when a hook
+ * or test times out — it only abandons the pending promise. If the Playwright
+ * timeout is *smaller* than the terraform process still running underneath,
+ * Playwright moves on while that `terraform` child keeps running, orphaned and
+ * still holding the .tfstate lock. The next test's `destroy` then fails with
+ * "Error acquiring the state lock".
+ *
+ * Sizing this above {@link TF_TIMEOUT_MS} × (the number of sequential
+ * terraform calls a workspace lifecycle makes: init, apply/plan, output,
+ * destroy, plus the safety-net destroy in destroyWorkspace) guarantees
+ * terraform's own per-process timeout always fires first and cleans up its
+ * child — Playwright's timeout becomes the outer bound it should be.
+ */
+export const TF_WORKSPACE_TIMEOUT_MS = TF_TIMEOUT_MS * 6;
+
+export interface TfWorkspace {
+  dir: string;
+  env: Record<string, string>;
+}
+
+/**
+ * Resolve the plugin-cache directory Terraform should use across all test
+ * workspaces. Each initWorkspace call otherwise creates a fresh temp dir and
+ * redownloads the APIM provider from GitHub, which is slow and flaky: it
+ * regularly exceeds the 30 s beforeAll timeout and occasionally hits GitHub
+ * rate-limiting or transient network errors ("context deadline exceeded").
+ *
+ * Respects TF_PLUGIN_CACHE_DIR if the caller already set one. Otherwise tries
+ * the standard ~/.terraform.d/plugin-cache location, and falls back to a
+ * tmpdir-scoped cache when the home directory is read-only or otherwise
+ * unwritable (CI containers, synthetic HOME). The fallback is still shared
+ * across workspaces within a single test run.
+ */
+async function resolvePluginCacheDir(env: Record<string, string>): Promise<string> {
+  const existing = env["TF_PLUGIN_CACHE_DIR"];
+  if (existing) return existing;
+
+  const preferred = path.join(homedir(), ".terraform.d", "plugin-cache");
+  try {
+    await mkdir(preferred, { recursive: true });
+    return preferred;
+  } catch {
+    const fallback = path.join(tmpdir(), "e2e-tf-plugin-cache");
+    await mkdir(fallback, { recursive: true });
+    return fallback;
+  }
+}
+
+/**
+ * Create a Terraform workspace from an already-resolved fixture directory and a
+ * base environment (the caller supplies APIM_* auth/server vars). Copies the
+ * fixture to a temp dir, augments the env with the local provider mirror /
+ * plugin cache, and runs `terraform init`.
+ */
+export async function initWorkspace(
+  fixtureDir: string,
+  baseEnv: Record<string, string>,
+): Promise<TfWorkspace> {
+  const env: Record<string, string> = { ...baseEnv };
+
+  // Auto-pickup the locally-built provider mirror (see
+  // scripts/build-tf-provider.sh) so e2e tests can exercise unreleased
+  // provider features without each developer needing to export
+  // TF_CLI_CONFIG_FILE by hand. An explicit caller-set TF_CLI_CONFIG_FILE
+  // wins, matching the usual CLI-override convention.
+  const mirrorDefault = path.join(homedir(), ".terraform.d", "gko-e2e-mirror", ".terraformrc");
+  const tfCliConfig =
+    env["TF_CLI_CONFIG_FILE"] ?? (existsSync(mirrorDefault) ? mirrorDefault : undefined);
+
+  if (tfCliConfig) {
+    env["TF_CLI_CONFIG_FILE"] = tfCliConfig;
+    // Drop TF_PLUGIN_CACHE_DIR for the mirror: it may have been inherited
+    // from the spread of process.env, so it must be deleted, not just left
+    // unset. The mirror serves the apim provider straight from local disk (no
+    // registry download), so the cache adds nothing — and combining
+    // TF_PLUGIN_CACHE_DIR with a filesystem_mirror of an unpacked provider
+    // triggers intermittent "provider ... still not detected in plugin-cache"
+    // init failures, a known Terraform bug. The fixtures use no other
+    // provider, so dropping the cache costs nothing.
+    delete env["TF_PLUGIN_CACHE_DIR"];
+  } else {
+    // No mirror: fall back to the public registry, with a shared plugin
+    // cache so each initWorkspace call doesn't redownload the provider.
+    env["TF_PLUGIN_CACHE_DIR"] = await resolvePluginCacheDir(env);
+  }
+
+  const dir = await mkdtemp(path.join(tmpdir(), "e2e-tf-"));
+  await cp(fixtureDir, dir, { recursive: true });
+  await tf({ dir, env }, ["init", "-no-color"]);
+
+  return { dir, env };
+}
+
+/** Run an arbitrary terraform command in a workspace. */
+export async function tf(
+  ws: TfWorkspace,
+  args: string[],
+): Promise<{ stdout: string; stderr: string }> {
+  return execFileAsync("terraform", args, {
+    cwd: ws.dir,
+    env: ws.env,
+    timeout: TF_TIMEOUT_MS,
+  });
+}
+
+/** Run `terraform apply -auto-approve`. Returns stdout. */
+export async function apply(ws: TfWorkspace): Promise<string> {
+  const { stdout } = await tf(ws, ["apply", "-auto-approve", "-no-color"]);
+  return stdout;
+}
+
+/** Run `terraform plan -detailed-exitcode`. Handles exit code 2 (changes detected). */
+export async function plan(ws: TfWorkspace): Promise<{ stdout: string; hasChanges: boolean }> {
+  try {
+    const { stdout } = await tf(ws, ["plan", "-detailed-exitcode", "-no-color"]);
+    return { stdout, hasChanges: false };
+  } catch (err: unknown) {
+    const e = err as { code?: number; stdout?: string };
+    if (e.code === 2) {
+      return { stdout: e.stdout ?? "", hasChanges: true };
+    }
+    throw err;
+  }
+}
+
+/**
+ * Write `*.auto.tfvars.json` into the workspace so subsequent `apply`/`plan`
+ * runs pick up the variable values without needing -var flags. Single file is
+ * overwritten between calls — callers don't need to clean up.
+ *
+ * Use this for tests that drive multi-step rotations through the same
+ * workspace (apply with keys=[A], then apply with keys=[B], etc.).
+ */
+export async function writeVars(
+  ws: TfWorkspace,
+  vars: Record<string, unknown>,
+): Promise<void> {
+  const file = path.join(ws.dir, "e2e.auto.tfvars.json");
+  await writeFile(file, JSON.stringify(vars, null, 2), "utf8");
+}
+
+/**
+ * Like {@link apply} but expects terraform to fail. Returns the combined
+ * stdout+stderr so callers can assert on the error message (e.g. for
+ * server-side validation of api-key length).
+ */
+export async function applyExpectFailure(ws: TfWorkspace): Promise<string> {
+  try {
+    await tf(ws, ["apply", "-auto-approve", "-no-color"]);
+  } catch (err: unknown) {
+    const e = err as { stderr?: string; stdout?: string; message?: string };
+    return `${e.stdout ?? ""}\n${e.stderr ?? ""}\n${e.message ?? ""}`;
+  }
+  throw new Error("expected terraform apply to fail, but it succeeded");
+}
+
+/** Get a terraform output value by name. */
+export async function output(ws: TfWorkspace, name: string): Promise<string> {
+  const { stdout } = await tf(ws, ["output", "-raw", name]);
+  return stdout.trim();
+}
+
+/** Run `terraform destroy -auto-approve`. */
+export async function destroy(ws: TfWorkspace): Promise<void> {
+  await tf(ws, ["destroy", "-auto-approve", "-no-color"]);
+}
+
+/** Destroy resources and remove the temp directory. */
+export async function destroyWorkspace(ws: TfWorkspace): Promise<void> {
+  await destroy(ws).catch((err: unknown) => {
+    console.error(
+      `[terraform] destroy failed — APIM resources in workspace "${ws.dir}" may be orphaned.\n`,
+      err,
+    );
+  });
+  await rm(ws.dir, { recursive: true, force: true });
+}

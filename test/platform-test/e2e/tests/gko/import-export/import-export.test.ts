@@ -33,6 +33,7 @@
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
+import type { ApiV4 } from "../../../../src/types/apim.js";
 
 test.describe("Import/Export — CRD Round-trips", () => {
   // Safety-net cleanup: runs even if a test times out before its inline
@@ -188,7 +189,7 @@ test.describe("Import/Export — CRD Round-trips", () => {
     const apiId = status.id;
 
     await test.step("API in APIM has flows with policies", async () => {
-      const api = await mapi.fetchApi(apiId);
+      const api = (await mapi.fetchApi(apiId)) as ApiV4;
       expect(api.flows).toBeTruthy();
       expect(api.flows!.length).toBeGreaterThanOrEqual(1);
     });
