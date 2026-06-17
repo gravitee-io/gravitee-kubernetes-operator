@@ -44,20 +44,29 @@ provider. There are **no mocks**: every test mutates live cluster + APIM state.
 
 ```
 test/platform-test/
-  src/                            # @gravitee/platform-test assertion library (mapi, gateway, poll, match)
+  src/                            # @gravitee/platform-test library (runner-agnostic, typechecked by `npm run typecheck`)
+    assertions/apim/              # mapi, gateway (shared, driver-agnostic assertions)
+    utils/match/                  # poll, deepPartialMatch
+    provisioners/                 # provisioner layer: one pluggable Provisioner per creation path
+      types.ts                    #   Provisioner / Provisioned / ResourceRef / DriverId / ProvisionerChecks
+      engines/kubectl.ts          #   kubectl CLI wrapper (moved here from e2e/helpers)
+      engines/terraform-core.ts   #   pure Terraform workspace mechanics (no config/fixture coupling)
+      gko/  terraform/            #   one folder per provisioner: GkoProvisioner + GkoChecks, etc. (add more here)
   e2e/
-    playwright.config.ts          # serial: workers=1, retries=0, timeout=30s
+    playwright.config.ts          # serial: workers=1, retries=0, 30s; testMatch *.test.ts + *.scenario.ts
     global-setup.ts               # pre-flight: APIM, Gateway, K8s, GKO reachable
     setup.ts                      # Playwright fixtures: { mapi, gateway, kubectl, mtlsGatewayBaseUrl } + fixture()
     helpers/
-      kubectl.ts                  # kubectl CLI wrapper (apply, del, waitForCondition, getStatus, ...)
-      terraform.ts                # Terraform workspace lifecycle
+      kubectl.ts terraform.ts     # thin shims/adapters over src/provisioners/engines (existing imports still work)
+      for-provisioners.ts         # forProvisioners(): expand a scenario into 1 tagged test per provisioner
+      provisioner-env.ts          # gkoScenario()/tfScenario(): bind engines + config + fixture() to provisioners
       tags.ts                     # XRAY.* test-ID constants + TAGS.REGRESSION
     fixtures/<domain>/<scenario>/ # one folder per scenario, referenced via fixture("<domain>/<scenario>/...")
       crd.yaml                    # GKO CRD manifest(s), often multi-doc (---) for paired resources
-      main.tf                     # Terraform provider config (Terraform scenarios)
-    tests/gko/<area>/             # GKO operator tests
-    tests/terraform/              # Terraform provider tests
+      main.tf                     # Terraform provider config; outputs api_id / sub_id / api_context_path (+ <role>_id)
+    tests/gko/<area>/             # GKO-only operator tests
+    tests/terraform/              # Terraform-only provider tests
+    tests/scenarios/<domain>/     # <name>.scenario.ts: one shared intent, run across every supported provisioner
 ```
 
 > Fixtures are organised **by domain then scenario** (e.g.
@@ -82,6 +91,76 @@ test/platform-test/
   readable reports.
 - **One test = one concern.** Prefer many small tests over a mega-scenario; it
   localises failures and shrinks the blast radius of a leaked resource.
+
+## Provisioner layer: one intent, every provisioner
+
+For behaviour that should hold no matter how a resource was created, write it ONCE as a
+`*.scenario.ts` under `tests/scenarios/<domain>/` and let `forProvisioners` run it against every
+provisioner the scenario supports. The current provisioners are GKO and Terraform, and the layer is
+built to grow: adding another (e.g. a UI path) means implementing the `Provisioner` interface under
+`src/provisioners/` and listing it in the scenario, with no change to the scenario bodies or the
+shared assertions. The shared body uses only the provisioner-agnostic handle (`provision`) plus
+`mapi`/`gateway`; each generated test's title carries its provisioner tag (e.g. `@gko`, `@terraform`)
+and the per-provisioner Xray id.
+
+**Selecting a provisioner lane:** `npm run e2e -- --provision-with gko` (or the `npm run e2e:gko` /
+`e2e:terraform` shortcuts) runs only that provisioner's tests — the matrix arms plus the
+`*-gko-only` / `*-tf-only` files, which carry the tag on their `describe`. Do **not** use
+`--grep @gko`: Playwright's CLI `--grep` is case-insensitive, so `@gko` also matches every `@GKO-NNNN`
+Xray tag and selects the whole suite. The lane filter is a case-sensitive grep applied in
+`playwright.config.ts` from the `E2E_PROVISIONER` env var (which `--provision-with` sets); `--grep
+@GKO-NNNN` still works for selecting a single test. The `scripts/e2e.mjs` wrapper also accepts
+`--run-up-to-version <semver>` as a reserved seam for future version-gating (accepted but not yet
+enforced).
+
+```ts
+import { forProvisioners } from "../../../../helpers/for-provisioners.js";
+import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
+
+forProvisioners<MyParams>(
+  {
+    title: "API is started and reachable",
+    provisioners: {
+      gko: gkoScenario<MyParams>({
+        manifests: ["plans/v4-keyless/crd.yaml"],   // fixture-relative
+        roles: { api: "e2e-v4-keyless" },           // role -> CR name (kind by convention)
+        contextPath: "/e2e-v4-keyless",
+      }),
+      terraform: tfScenario<MyParams>({ fixture: "plans/v4-keyless" }), // folder with main.tf
+    },
+    xray: { gko: XRAY.X.GKO_ID, terraform: XRAY.X.TF_ID }, // a list is allowed per provisioner
+    tags: [TAGS.REGRESSION],
+    timeoutMs: { gko: 60_000 },                     // TF defaults to TF_WORKSPACE_TIMEOUT_MS
+  },
+  async ({ provision, mapi, gateway }) => {
+    await mapi.waitForApiStarted(await provision.id("api"));
+    await gateway.assertResponds(await provision.contextPath(), { status: 200 });
+  },
+  {} as MyParams,                                   // initial params
+);
+```
+
+Rules of thumb:
+- **Handle surface:** `provision.id(role?)`, `provision.ref(role?)`, `provision.contextPath()`,
+  `provision.update(params)` (rotation-style re-provision), `provision.destroy()`. `id`/`contextPath`
+  are resolved once then cached. The generator destroys the handle for you, with an `afterEach` safety
+  net that survives a test timeout.
+- **Roles -> ids:** GKO reads `.status.id` of the role's CR (kind derived by convention:
+  `api`->apiv4definition, `application`->application, `subscription`->subscription; use the full
+  `{ kind, name }` form otherwise). Terraform reads `terraform output` (`api`->`api_id`,
+  `subscription`->`sub_id`, `application`->`app_id`; override via `outputs`). Paired TF fixtures MUST
+  expose `api_id`, `sub_id`, `api_context_path` (and `<role>_id` for extra roles).
+- **Parameterization** that differs structurally per provisioner (e.g. "set the api-keys") lives in a
+  small co-located `params.ts` exposing one shared param type plus the per-provisioner apply closures
+  (the GKO `applyParams` closure, the TF `toVars` closure). See
+  `tests/scenarios/subscriptions/apikey/` for the reference pilot.
+- **Provisioner-specific assertions** (no shared-layer home) go in `provision.checks`, narrowed by a
+  per-provisioner type guard (`isGko(...)` / `isTerraform(...)`): GKO conditions/events/`.status`, TF
+  drift/idempotency/redaction. Behaviour whose *assertion* (not just provisioning) is
+  provisioner-specific stays in a plain `*-gko-only.test.ts` / `*-tf-only.test.ts` rather than the matrix.
+- **Gaps without noise:** a planned-but-unimplemented provisioner goes in
+  `pending: { terraform: "<reason or tracking ref>" }` and renders as a visible `test.fixme`, never a
+  silent skip. A provisioner simply absent from `provisioners`/`pending` emits nothing (N/A by design).
 
 ## Polling & eventual consistency
 
@@ -215,6 +294,8 @@ on this prose.
 ```bash
 npm run e2e                          # all E2E tests (runs globalSetup)
 npm run e2e:regression               # @regression suite only
+npm run e2e -- --provision-with gko  # only the GKO provisioner lane (matrix + *-gko-only)
+npm run e2e:terraform                # only the Terraform lane (shortcut for --provision-with terraform)
 npm run e2e -- --grep @GKO-176       # single test by Xray tag
 npm run typecheck                    # tsc --noEmit, run before committing
 ```
