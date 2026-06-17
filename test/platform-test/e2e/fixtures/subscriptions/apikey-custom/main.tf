@@ -52,6 +52,14 @@ variable "keys" {
   default = []
 }
 
+# Toggle the subscription resource on/off so a test can remove it the way a user
+# would: drop the resource from the desired state and `terraform apply`. Default
+# true keeps every other scenario unchanged.
+variable "create_subscription" {
+  type    = bool
+  default = true
+}
+
 resource "apim_apiv4" "test" {
   environment_id  = var.environment_id
   organization_id = var.organization_id
@@ -127,6 +135,7 @@ resource "apim_application" "test" {
 }
 
 resource "apim_subscription" "test" {
+  count            = var.create_subscription ? 1 : 0
   environment_id   = var.environment_id
   organization_id  = var.organization_id
   hrid             = "e2e-tf-apikey-sub-${var.hrid_suffix}"
@@ -141,7 +150,7 @@ output "api_id" {
 }
 
 output "sub_id" {
-  value = apim_subscription.test.id
+  value = one(apim_subscription.test[*].id)
 }
 
 output "api_context_path" {
