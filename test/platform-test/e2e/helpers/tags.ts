@@ -153,6 +153,14 @@ export const XRAY = {
     CROSS_VERSION_SCHEDULERS_FETCHERS: "@GKO-1475",
     CROSS_VERSION_PARENT_PATH: "@GKO-1477",
   },
+  // GKO-2934: the CRD schema must reject enum values the Automation API no
+  // longer manages (V4 EDGE api type; SPG NATIVE apiType + the
+  // INTERACT/CONNECT/ENTRYPOINT_CONNECT flow phases).
+  ENUM_VALIDATION: {
+    V4_EDGE_TYPE_REJECTED: "@GKO-2965",
+    SPG_APITYPE_NATIVE_REJECTED: "@GKO-2966",
+    SPG_REMOVED_PHASE_REJECTED: "@GKO-2967",
+  },
   APPLICATIONS: {
     APP_WITH_METADATA: "@GKO-194",
     CREATE_APP: "@GKO-335",
