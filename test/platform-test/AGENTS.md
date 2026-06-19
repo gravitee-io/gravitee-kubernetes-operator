@@ -58,7 +58,7 @@ test/platform-test/
     setup.ts                      # Playwright fixtures: { mapi, gateway, kubectl, mtlsGatewayBaseUrl } + fixture()
     helpers/
       kubectl.ts terraform.ts     # thin shims/adapters over src/provisioners/engines (existing imports still work)
-      for-provisioners.ts         # forProvisioners(): expand a scenario into 1 tagged test per provisioner
+      for-each-provisioner.ts     # forEachProvisioner(): expand a scenario into 1 tagged test per provisioner
       provisioner-env.ts          # gkoScenario()/tfScenario(): bind engines + config + fixture() to provisioners
       tags.ts                     # XRAY.* test-ID constants + TAGS.REGRESSION
     fixtures/<domain>/<scenario>/ # one folder per scenario, referenced via fixture("<domain>/<scenario>/...")
@@ -95,11 +95,11 @@ test/platform-test/
 ## Provisioner layer: one intent, every provisioner
 
 For behaviour that should hold no matter how a resource was created, write it ONCE as a
-`*.scenario.ts` under `tests/scenarios/<domain>/` and let `forProvisioners` run it against every
+`*.scenario.ts` under `tests/scenarios/<domain>/` and let `forEachProvisioner` run it against every
 provisioner the scenario supports. The current provisioners are GKO and Terraform, and the layer is
 built to grow: adding another (e.g. a UI path) means implementing the `Provisioner` interface under
 `src/provisioners/` and listing it in the scenario, with no change to the scenario bodies or the
-shared assertions. The shared body uses only the provisioner-agnostic handle (`provision`) plus
+shared assertions. The shared body uses only the provisioner-agnostic handle (`provisioned`) plus
 `mapi`/`gateway`; each generated test's title carries its provisioner tag (e.g. `@gko`, `@terraform`)
 and the per-provisioner Xray id.
 
@@ -114,10 +114,10 @@ Xray tag and selects the whole suite. The lane filter is a case-sensitive grep a
 enforced).
 
 ```ts
-import { forProvisioners } from "../../../../helpers/for-provisioners.js";
+import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
 
-forProvisioners<MyParams>(
+forEachProvisioner<MyParams>(
   {
     title: "API is started and reachable",
     provisioners: {
@@ -132,29 +132,32 @@ forProvisioners<MyParams>(
     tags: [TAGS.REGRESSION],
     timeoutMs: { gko: 60_000 },                     // TF defaults to TF_WORKSPACE_TIMEOUT_MS
   },
-  async ({ provision, mapi, gateway }) => {
-    await mapi.waitForApiStarted(await provision.id("api"));
-    await gateway.assertResponds(await provision.contextPath(), { status: 200 });
+  async ({ provisioned, mapi, gateway }) => {
+    await mapi.waitForApiStarted(await provisioned.apiId());
+    await gateway.assertResponds(await provisioned.contextPath(), { status: 200 });
   },
   {} as MyParams,                                   // initial params
 );
 ```
 
 Rules of thumb:
-- **Handle surface:** `provision.id(role?)`, `provision.ref(role?)`, `provision.contextPath()`,
-  `provision.update(params)` (rotation-style re-provision), `provision.destroy()`. `id`/`contextPath`
-  are resolved once then cached. The generator destroys the handle for you, with an `afterEach` safety
-  net that survives a test timeout.
-- **Roles -> ids:** GKO reads `.status.id` of the role's CR (kind derived by convention:
-  `api`->apiv4definition, `application`->application, `subscription`->subscription; use the full
-  `{ kind, name }` form otherwise). Terraform reads `terraform output` (`api`->`api_id`,
-  `subscription`->`sub_id`, `application`->`app_id`; override via `outputs`). Paired TF fixtures MUST
-  expose `api_id`, `sub_id`, `api_context_path` (and `<role>_id` for extra roles).
+- **Handle surface:** `provisioned.apiId()` / `subscriptionId()` / `applicationId()` / `groupId()` return
+  the resource's APIM UUID (pass an optional label like `apiId("two-plans")` only when a scenario has
+  two of the same kind). Plus `provisioned.contextPath()`, `provisioned.update(params)` (rotation-style
+  re-provision), `provisioned.remove(role)`, `provisioned.destroy()`. Ids/contextPath are resolved once then
+  cached. The generator destroys the handle for you, with an `afterEach` safety net that survives a test
+  timeout.
+- **Adding a kind's getter / roles -> ids:** the getters live once in `BaseProvisioned` and delegate to
+  each provisioner's `resolveId(role)` (the "role" string stays internal). GKO reads `.status.id` of the
+  role's CR (kind by convention: `api`->apiv4definition, `application`->application,
+  `subscription`->subscription, `group`->group; use the full `{ kind, name }` role form otherwise).
+  Terraform reads `terraform output` (`api`->`api_id`, `subscription`->`sub_id`, `application`->`app_id`,
+  `group`->`group_id`; override via `outputs`). Gateway scenarios expose `api_context_path`.
 - **Parameterization** that differs structurally per provisioner (e.g. "set the api-keys") lives in a
   small co-located `params.ts` exposing one shared param type plus the per-provisioner apply closures
   (the GKO `applyParams` closure, the TF `toVars` closure). See
   `tests/scenarios/subscriptions/apikey/` for the reference pilot.
-- **Provisioner-specific assertions** (no shared-layer home) go in `provision.checks`, narrowed by a
+- **Provisioner-specific assertions** (no shared-layer home) go in `provisioned.checks`, narrowed by a
   per-provisioner type guard (`isGko(...)` / `isTerraform(...)`): GKO conditions/events/`.status`, TF
   drift/idempotency/redaction. Behaviour whose *assertion* (not just provisioning) is
   provisioner-specific stays in a plain `*-gko-only.test.ts` / `*-tf-only.test.ts` rather than the matrix.

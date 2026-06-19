@@ -17,7 +17,7 @@
 /**
  * V4 API-Key plan subscriptions, exercised through every supported provisioner
  * (currently GKO and Terraform) from a single shared intent. Each
- * `forProvisioners` block defines the platform behaviour once; the matrix runs
+ * `forEachProvisioner` block defines the platform behaviour once; the matrix runs
  * it against each provisioner, tags the arms (e.g. `@gko` / `@terraform`), and
  * carries the original per-provisioner Xray ids so coverage tracking is unchanged.
  *
@@ -29,7 +29,7 @@
 
 import { test, expect } from "../../../../setup.js";
 import { XRAY, TAGS } from "../../../../helpers/tags.js";
-import { forProvisioners } from "../../../../helpers/for-provisioners.js";
+import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
 import { subscriptionYaml } from "../../../../../src/provisioners/index.js";
 import {
@@ -61,7 +61,7 @@ function apikeyTfCustom(hridSuffix: string) {
   return tfScenario<ApiKeyParams>({
     fixture: "subscriptions/apikey-custom",
     toVars: tfApiKeyVars(hridSuffix),
-    // Lets provision.remove("subscription") drop the subscription from the
+    // Lets provisioned.remove("subscription") drop the subscription from the
     // desired state and re-apply (the count-gated resource in apikey-custom).
     removeVars: { subscription: { create_subscription: false } },
   });
@@ -72,7 +72,7 @@ const REGRESSION = [TAGS.REGRESSION];
 // ── Auto-generated single key, reachable via gateway ──────────────────────────
 // GKO splits this into a count check (2825) + a gateway check (2826); the TF
 // auto test (2879) does both. The shared body covers both, for every provisioner arm.
-forProvisioners<ApiKeyParams>(
+forEachProvisioner<ApiKeyParams>(
   {
     title: "Single api-key generated on api-key plan subscription, reachable via gateway",
     provisioners: {
@@ -86,10 +86,10 @@ forProvisioners<ApiKeyParams>(
     tags: REGRESSION,
     timeoutMs: { gko: 60_000 },
   },
-  async ({ provision, mapi, gateway }) => {
-    const apiId = await provision.id("api");
-    const subId = await provision.id("subscription");
-    const ctx = await provision.contextPath();
+  async ({ provisioned, mapi, gateway }) => {
+    const apiId = await provisioned.apiId();
+    const subId = await provisioned.subscriptionId();
+    const ctx = await provisioned.contextPath();
 
     // Exactly one active key, and no asynchronous second insert (APIM-13686).
     const [active] = await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
@@ -112,7 +112,7 @@ forProvisioners<ApiKeyParams>(
 // ── Custom api-key value honored end-to-end ───────────────────────────────────
 {
   const CUSTOM_KEY = uniqueKey("custom-apikey");
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Custom api-key value is honored end-to-end",
       provisioners: {
@@ -123,10 +123,10 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 60_000 },
     },
-    async ({ provision, mapi, gateway }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
-      const ctx = await provision.contextPath();
+    async ({ provisioned, mapi, gateway }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
+      const ctx = await provisioned.contextPath();
 
       // The discriminator: APIM persists exactly the declared value.
       const [active] = await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
@@ -149,7 +149,7 @@ forProvisioners<ApiKeyParams>(
   const KEY = uniqueKey("expire-apikey");
   // 30 min keeps the test deterministic (admission rejects expireAt < 1 min).
   const expireAt = new Date(Date.now() + 30 * 60 * 1_000).toISOString();
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "expireAt on a custom api-key is propagated to APIM",
       provisioners: {
@@ -160,9 +160,9 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 60_000 },
     },
-    async ({ provision, mapi }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
+    async ({ provisioned, mapi }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
 
       const [active] = await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
       expect(active.key).toBe(KEY);
@@ -181,7 +181,7 @@ forProvisioners<ApiKeyParams>(
   const k32 = uniqueKey("bnd-32"); // padded to exactly 32 chars
   const prefix = `bnd-256-${RUN_ID}-`;
   const k256 = prefix + "y".repeat(256 - prefix.length);
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Api-keys at the 32 and 256 char boundaries are accepted",
       provisioners: {
@@ -192,9 +192,9 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 90_000 },
     },
-    async ({ provision, mapi }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
+    async ({ provisioned, mapi }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
 
       await test.step("32-char key accepted (lower boundary)", async () => {
         expect(k32).toHaveLength(32);
@@ -204,7 +204,7 @@ forProvisioners<ApiKeyParams>(
 
       await test.step("256-char key accepted (upper boundary)", async () => {
         expect(k256).toHaveLength(256);
-        await provision.update({ keys: [{ key: k256 }] });
+        await provisioned.update({ keys: [{ key: k256 }] });
         await expect
           .poll(
             async () => {
@@ -224,7 +224,7 @@ forProvisioners<ApiKeyParams>(
 {
   const KEY_A = uniqueKey("rot-instant-A");
   const KEY_B = uniqueKey("rot-instant-B");
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Instant api-key rotation revokes old key and activates new key",
       provisioners: {
@@ -235,17 +235,17 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 150_000 },
     },
-    async ({ provision, mapi, gateway }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
-      const ctx = await provision.contextPath();
+    async ({ provisioned, mapi, gateway }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
+      const ctx = await provisioned.contextPath();
 
       const [active] = await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
       expect(active.key).toBe(KEY_A);
       await gateway.assertResponds(ctx, { status: 200, headers: { "X-Gravitee-Api-Key": KEY_A } });
 
       await test.step("Replace KEY_A with KEY_B", async () => {
-        await provision.update({ keys: [{ key: KEY_B }] });
+        await provisioned.update({ keys: [{ key: KEY_B }] });
         await expect
           .poll(
             async () => {
@@ -273,7 +273,7 @@ forProvisioners<ApiKeyParams>(
 {
   const KEY_A = uniqueKey("rot-gradual-A");
   const KEY_B = uniqueKey("rot-gradual-B");
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Gradual api-key rotation supports two active keys then deprecates the old",
       provisioners: {
@@ -284,21 +284,21 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 180_000 },
     },
-    async ({ provision, mapi, gateway }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
-      const ctx = await provision.contextPath();
+    async ({ provisioned, mapi, gateway }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
+      const ctx = await provisioned.contextPath();
       await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
 
       await test.step("Add KEY_B alongside KEY_A; both active", async () => {
-        await provision.update({ keys: [{ key: KEY_A }, { key: KEY_B }] });
+        await provisioned.update({ keys: [{ key: KEY_A }, { key: KEY_B }] });
         await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 2, { timeoutMs: 30_000 });
         await gateway.assertResponds(ctx, { status: 200, headers: { "X-Gravitee-Api-Key": KEY_A } });
         await gateway.assertResponds(ctx, { status: 200, headers: { "X-Gravitee-Api-Key": KEY_B } });
       });
 
       await test.step("Remove KEY_A; APIM revokes it and keeps KEY_B active", async () => {
-        await provision.update({ keys: [{ key: KEY_B }] });
+        await provisioned.update({ keys: [{ key: KEY_B }] });
         await expect
           .poll(
             async () => {
@@ -323,7 +323,7 @@ forProvisioners<ApiKeyParams>(
 {
   const KEY_A = uniqueKey("reactivation-A");
   const KEY_B = uniqueKey("reactivation-B");
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Previously revoked api-key is reactivated when re-added to spec",
       provisioners: {
@@ -334,14 +334,14 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 180_000 },
     },
-    async ({ provision, mapi, gateway }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
-      const ctx = await provision.contextPath();
+    async ({ provisioned, mapi, gateway }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
+      const ctx = await provisioned.contextPath();
       await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
 
       await test.step("Replace KEY_A with KEY_B; KEY_A becomes revoked", async () => {
-        await provision.update({ keys: [{ key: KEY_B }] });
+        await provisioned.update({ keys: [{ key: KEY_B }] });
         await expect
           .poll(
             async () => {
@@ -357,7 +357,7 @@ forProvisioners<ApiKeyParams>(
       });
 
       await test.step("Re-add KEY_A alongside KEY_B; KEY_A is reactivated", async () => {
-        await provision.update({ keys: [{ key: KEY_A }, { key: KEY_B }] });
+        await provisioned.update({ keys: [{ key: KEY_A }, { key: KEY_B }] });
         await expect
           .poll(
             async () => {
@@ -384,7 +384,7 @@ forProvisioners<ApiKeyParams>(
   const KEY_V3 = uniqueKey("stagger-v3");
   const expireV1 = new Date(Date.now() + 30 * 60 * 1_000).toISOString();
   const expireV2 = new Date(Date.now() + 90 * 60 * 1_000).toISOString();
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Multi-key subscription with staggered expirations supports zero-downtime rotation",
       provisioners: {
@@ -395,10 +395,10 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 180_000 },
     },
-    async ({ provision, mapi, gateway }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
-      const ctx = await provision.contextPath();
+    async ({ provisioned, mapi, gateway }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
+      const ctx = await provisioned.contextPath();
       await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 3, { timeoutMs: 30_000 });
 
       await test.step("APIM stores each key with the correct expireAt (or none)", async () => {
@@ -423,7 +423,7 @@ forProvisioners<ApiKeyParams>(
       });
 
       await test.step("Drop KEY_V1; APIM revokes it while v2 and v3 stay active", async () => {
-        await provision.update({ keys: [{ key: KEY_V2, expireAt: expireV2 }, { key: KEY_V3 }] });
+        await provisioned.update({ keys: [{ key: KEY_V2, expireAt: expireV2 }, { key: KEY_V3 }] });
         await expect
           .poll(
             async () => {
@@ -449,7 +449,7 @@ forProvisioners<ApiKeyParams>(
 // ── Mixed: api-key plan coexists with a keyless plan on the same API ──────────
 {
   const CUSTOM_KEY = uniqueKey("mixed-apikey");
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Api-key plan coexists with keyless plan on the same API",
       provisioners: {
@@ -483,10 +483,10 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 90_000 },
     },
-    async ({ provision, mapi, gateway }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
-      const ctx = await provision.contextPath();
+    async ({ provisioned, mapi, gateway }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
+      const ctx = await provisioned.contextPath();
       const [active] = await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
       expect(active.key).toBe(CUSTOM_KEY);
 
@@ -516,7 +516,7 @@ forProvisioners<ApiKeyParams>(
 // endpoint vanished.
 {
   const CUSTOM_KEY = uniqueKey("revoke-apikey");
-  forProvisioners<ApiKeyParams>(
+  forEachProvisioner<ApiKeyParams>(
     {
       title: "Removing the subscription revokes its api-key while the API stays up",
       provisioners: {
@@ -527,15 +527,15 @@ forProvisioners<ApiKeyParams>(
       tags: REGRESSION,
       timeoutMs: { gko: 90_000 },
     },
-    async ({ provision, mapi, gateway }) => {
-      const apiId = await provision.id("api");
-      const subId = await provision.id("subscription");
-      const ctx = await provision.contextPath();
+    async ({ provisioned, mapi, gateway }) => {
+      const apiId = await provisioned.apiId();
+      const subId = await provisioned.subscriptionId();
+      const ctx = await provisioned.contextPath();
       await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
       await gateway.assertResponds(ctx, { status: 200, headers: { "X-Gravitee-Api-Key": CUSTOM_KEY } });
 
       await test.step("Remove only the subscription; the key stops working, the API stays up", async () => {
-        await provision.remove("subscription");
+        await provisioned.remove("subscription");
         await gateway.assertNotResponds(ctx, { notStatus: 200, headers: { "X-Gravitee-Api-Key": CUSTOM_KEY } });
       });
     },

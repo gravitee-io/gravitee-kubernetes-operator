@@ -144,8 +144,8 @@ test.describe(`GKO-only: api-key admission, templating, idempotency ${PROVISIONE
     await kubectl.applyString(apiKeySecretYaml(secretName, secretValue));
     const h = await provisionTracked(fullGko(sub), { keys: [{ key: templateRef }] });
 
-    const apiId = await h.id("api");
-    const subId = await h.id("subscription");
+    const apiId = await h.apiId();
+    const subId = await h.subscriptionId();
 
     // The discriminator: APIM stores the RESOLVED secret value, not the literal
     // `[[ secret ... ]]`. A templating regression would leave the literal (or
@@ -171,8 +171,8 @@ test.describe(`GKO-only: api-key admission, templating, idempotency ${PROVISIONE
     const KEY = uniqueKey("idempotent-key");
     const h = await provisionTracked(fullGko("e2e-sub-apikey-idempotent"), { keys: [{ key: KEY }] });
 
-    const apiId = await h.id("api");
-    const subId = await h.id("subscription");
+    const apiId = await h.apiId();
+    const subId = await h.subscriptionId();
     const [active] = await mapi.waitForSubscriptionApiKeyCount(apiId, subId, 1);
     expect(active.key).toBe(KEY);
 

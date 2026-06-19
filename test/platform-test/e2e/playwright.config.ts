@@ -35,7 +35,7 @@ export default defineConfig({
   globalSetup: "./global-setup.ts",
   testDir: "./tests",
   // `*.test.ts` are plain test files; `*.scenario.ts` are provisioner-matrix
-  // files that expand into one test per provisioner via forProvisioners.
+  // files that expand into one test per provisioner via forEachProvisioner.
   testMatch: ["**/*.test.ts", "**/*.scenario.ts"],
   grep: provisioner ? new RegExp(String.raw`@${provisioner}\b`) : undefined,
   timeout: 30_000,

@@ -23,7 +23,7 @@
  * Scenario authors use `gkoScenario(...)` / `tfScenario(...)` with
  * fixture-RELATIVE paths; this module resolves them to the absolute paths /
  * env the provisioner constructors expect, and returns the `() => Provisioner`
- * factories that `forProvisioners` consumes.
+ * factories that `forEachProvisioner` consumes.
  */
 
 import { fixture as resolveFixture } from "../setup.js";

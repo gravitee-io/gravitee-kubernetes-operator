@@ -225,7 +225,7 @@ e2e/
   helpers/
     kubectl.ts           # kubectl CLI wrapper (shim over src/provisioners/engines/kubectl.ts)
     terraform.ts         # Terraform workspace lifecycle (adapter over src/provisioners/engines)
-    for-provisioners.ts  # forProvisioners(): one scenario -> one tagged test per provisioner
+    for-each-provisioner.ts  # forEachProvisioner(): one scenario -> one tagged test per provisioner
     provisioner-env.ts   # gkoScenario()/tfScenario(): build provisioners from fixture-relative specs
     tags.ts              # Xray test ID constants
   fixtures/              # one folder per domain; see "Fixture convention" below
@@ -239,7 +239,7 @@ e2e/
   tests/
     gko/                 # GKO-only operator tests
     terraform/           # Terraform-only provider tests
-    scenarios/           # *.scenario.ts: one shared intent run across every provisioner via forProvisioners
+    scenarios/           # *.scenario.ts: one shared intent run across every provisioner via forEachProvisioner
 ```
 
 ## Fixture convention
