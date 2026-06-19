@@ -457,7 +457,7 @@ jobs:
       - run:
           name: Install gck
           command: |
-            go install github.com/gravitee-io-labs/gck@v1.0.2
+            go install github.com/gravitee-io-labs/gck@v1.1.1
             echo 'export PATH="$HOME/go/bin:$PATH"' >> "$BASH_ENV"
       - run:
           name: Start cluster
@@ -556,6 +556,71 @@ jobs:
       - store_artifacts:
           path: /tmp/xray-test-execution.txt
           destination: xray-test-execution.txt
+
+  job-e2e-upgrade-tests:
+    machine:
+      image: ubuntu-2204:2024.01.2
+      docker_layer_caching: true
+    resource_class: large
+    steps:
+      - checkout
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - kubernetes/install_kubectl:
+          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - run:
+          name: Install kind
+          command: |
+            curl -Lo /tmp/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      - run:
+          name: Install gck
+          command: |
+            go install github.com/gravitee-io-labs/gck@v1.1.1
+            echo 'export PATH="$HOME/go/bin:$PATH"' >> "$BASH_ENV"
+      - run:
+          name: Build platform-test CLI
+          command: npm --prefix test/platform-test install && npm --prefix test/platform-test run build
+      # Before/after-upgrade e2e: stand up APIM on the OLD line, run the suite "up to
+      # OLD", upgrade APIM in place with `gck patch` (which, since gck v1.1.1, inherits
+      # the create-time --disable-es/--disable-portal/imagePrefix/from), then run "up
+      # to NEW". GKO lane only. Bump the version pair per release.
+      #
+      # The operator is built from source and installed from the branch helm/gko chart
+      # (chart + CRDs + local image), reusing the same manual install as job-e2e-tests
+      # for consistency. That is why the kubectl/helm/kind installs above stay (the
+      # suite also shells kubectl on PATH).
+      - run:
+          name: Run before/after-upgrade e2e (GKO lane, 4.11 -> 4.12)
+          command: |
+            set -e
+            gck create --config test/platform-test/gck.yaml --disable-es --disable-portal \
+              --set imagePrefix=graviteeio.azurecr.io --set imageTag=4.11.x-latest \
+              --set 'helmVersion=>=4.11.0-0 <4.12.0-0'
+            IMG=gko TAG=latest make docker-build \
+              && kind load docker-image gko:latest --name gravitee \
+              && helm upgrade --install gko helm/gko -n default \
+                --set manager.image.repository=gko --set manager.image.tag=latest
+            kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
+            npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-version 4.11
+            gck patch --config test/platform-test/gck.yaml --name gravitee \
+              --set imageTag=master-latest --set 'helmVersion=>=4.12.0-0 <4.13.0-0'
+            npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-version 4.12
+      - store_test_results:
+          path: test/platform-test/playwright-results
+      - store_artifacts:
+          path: test/platform-test/playwright-results
+          destination: playwright-results
+      - store_artifacts:
+          path: test/platform-test/playwright-report
+          destination: playwright-report
 
   job-stage-helm-chart:
     docker:
@@ -1120,6 +1185,19 @@ workflows:
                   channel: C098YUEDMGE
                   event: pass
                   template: basic_success_1
+                  branch_pattern: ".+"
+      - job-e2e-upgrade-tests:
+          name: Run upgrade end to end tests
+          context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - master
+          post-steps:
+              - slack/notify:
+                  channel: C098YUEDMGE
+                  event: fail
+                  template: basic_fail_1
                   branch_pattern: ".+"
       - job-install-go-tools:
           name: Install GO tools (master)
