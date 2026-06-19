@@ -63,16 +63,8 @@ test.describe("Terraform — Groups · Resource lifecycle", () => {
     if (ws) await terraform.destroyWorkspace(ws);
   });
 
-  test(`terraform apply creates the group in APIM ${XRAY.TERRAFORM.GROUP_CREATE} ${TAGS.REGRESSION}`, async ({
-    mapi,
-  }) => {
-    // The provider writes through the Automation API, so the group lands with
-    // origin KUBERNETES — the discriminator that it was not console-created.
-    await mapi.waitForGroupMatches(groupHrid, {
-      name: "e2e-tf-group",
-      origin: "KUBERNETES",
-    });
-  });
+  // Moved to the terraform arm of the shared tests/scenarios/groups/groups.scenario.ts
+  // (create group -> lands in APIM with origin KUBERNETES), tagged @GKO-2865.
 
   test(`notify_members is propagated to APIM ${XRAY.TERRAFORM.GROUP_NOTIFY_MEMBERS} ${TAGS.REGRESSION}`, async ({
     mapi,

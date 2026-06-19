@@ -415,6 +415,35 @@ export class Mapi {
     );
   }
 
+  /** Fetch a single group directly by its APIM id (UUID). @throws if not found. */
+  async fetchGroupById(id: string): Promise<Group> {
+    const path = this.http.managementV1Path(`/configuration/groups/${id}`);
+    const res = await this.http.get<Group>(path);
+    if (res.status !== 200) {
+      throw new Error(
+        `Failed to fetch group ${id}: ${res.status} ${res.statusText} - ${JSON.stringify(res.body)}`,
+      );
+    }
+    return res.body;
+  }
+
+  /** Fetch a group by APIM id and assert it partially matches the expected shape. */
+  async assertGroupMatchesById(id: string, expected: DeepPartial<Group>): Promise<void> {
+    const group = await this.fetchGroupById(id);
+    throwIfFailed(deepPartialMatch(group, expected));
+  }
+
+  async waitForGroupMatchesById(
+    id: string,
+    expected: DeepPartial<Group>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertGroupMatchesById(id, expected),
+      { description: `group ${id} matches expected shape`, ...options },
+    );
+  }
+
   /** List the resolved members of a group (v1 management API). */
   async fetchGroupMembers(groupId: string): Promise<GroupMember[]> {
     const path = this.http.managementV1Path(`/configuration/groups/${groupId}/members`);
