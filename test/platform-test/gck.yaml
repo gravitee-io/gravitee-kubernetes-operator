@@ -26,6 +26,15 @@
 #
 # Unlike run-kind.mjs, `gck create` errors if the cluster already exists —
 # run `make delete-cluster` first.
+#
+# `helmVersion` is the apim recipe's own var for the chart version constraint. The
+# default targets the 4.12 line, so the normal `make start-e2e-cluster` flow is
+# unchanged; the upgrade flow drives it with `--set helmVersion=...` to stand up an
+# older line and then `gck patch` forward.
+vars:
+  helmVersion:
+    default: ">=4.12.0-0 <4.13.0-0"
+
 from:
   - gravitee-io/oss/apim/mongodb
 
@@ -44,9 +53,9 @@ components:
   # differences from the recipe are declared here.
   - name: apim
     helm:
-      # Pin to the 4.12 line; the "-0" prerelease bound is required to match
-      # milestone builds (currently resolves to 4.12.0-milestone.2).
-      version: ">=4.12.0-0 <4.13.0-0"
+      # Chart version comes from the `helmVersion` var (default = the 4.12 line).
+      # The "-0" prerelease bound is required to match milestone builds.
+      version: "{{ .helmVersion }}"
       values:
         gateway:
           managedServiceAccount: false

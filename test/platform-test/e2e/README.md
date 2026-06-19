@@ -48,7 +48,7 @@ Elasticsearch and portal disabled).
 Install gck (same version CI pins in `.circleci/config.yml`):
 
 ```bash
-go install github.com/gravitee-io-labs/gck@v1.0.2
+go install github.com/gravitee-io-labs/gck@v1.1.1
 ```
 
 Mirrors what CI runs in `.circleci/config.yml` (`job-e2e-tests`):
@@ -143,8 +143,9 @@ npm run e2e -- --grep @GKO-110
 
 ### Run one provisioner lane
 
-`npm run e2e` runs every provisioner. To run only one (the matrix arms for that
-provisioner plus its `*-gko-only` / `*-tf-only` tests):
+`npm run e2e` runs every provisioner. To run only one lane (all tests under
+`tests/<provisioner>/` plus the matching arm of every shared scenario in
+`tests/scenarios/`):
 
 ```bash
 npm run e2e -- --provision-with gko          # GKO only
@@ -156,15 +157,56 @@ npm run e2e:terraform                        # shortcut for --provision-with ter
 The flags are parsed by [`scripts/e2e.mjs`](../scripts/e2e.mjs), which sets
 `E2E_PROVISIONER` and forwards everything else (e.g. `--grep`, `--headed`) to
 Playwright. The env var works directly too, which is what the CI matrix uses:
-`E2E_PROVISIONER=gko npm run e2e`.
+`E2E_PROVISIONER=gko npm run e2e`. Under the hood the config ignores the other
+provisioner's `tests/` folder and drops its arm from shared scenarios via a
+case-sensitive `grepInvert`.
 
 > Do **not** select a lane with `--grep @gko`: Playwright's CLI `--grep` is
 > case-insensitive, so `@gko` also matches every `@GKO-NNNN` Xray tag and runs
-> the whole suite. `--grep @GKO-NNNN` for a single test is fine.
+> the whole suite. Use `--provision-with`. `--grep @GKO-NNNN` for a single test is fine.
 
-`scripts/e2e.mjs` also accepts `--run-up-to-version <semver>` as a reserved seam
-for future version-gating; today it is accepted but not enforced (it prints a
-notice and runs the full selection).
+### Run up to an APIM version
+
+`scripts/e2e.mjs` also accepts `--run-up-to-version <semver>` to cap a run at an
+APIM version. Tests tagged `@since-<newer>` (via `since()` in
+[`helpers/tags.ts`](helpers/tags.ts)) are skipped; untagged tests are baseline and
+always run. Enforced by an auto fixture in [`setup.ts`](setup.ts). Combine it with
+a lane:
+
+```bash
+npm run e2e -- --provision-with gko --run-up-to-version 4.11   # GKO suite, up to 4.11
+npm run e2e -- --run-up-to-version 4.12                        # whole suite, up to 4.12
+```
+
+### Upgrade testing (before / after an APIM upgrade)
+
+The upgrade flow is a short sequence of `gck` + `e2e` commands (it runs in the
+post-merge CI job `job-e2e-upgrade-tests`; reproduce it locally with the same steps,
+run from the repo root). It stands up APIM on the OLD line, runs the suite "up to OLD",
+upgrades APIM in place with `gck patch`, then runs "up to NEW". Since gck v1.1.1,
+`gck patch` inherits the create-time `--disable-es` / `imagePrefix` / `from`, so the
+upgrade only passes the version deltas:
+
+```bash
+# Stand up APIM 4.11 + the branch operator.
+gck create --config test/platform-test/gck.yaml --disable-es --disable-portal \
+  --set imagePrefix=graviteeio.azurecr.io --set imageTag=4.11.x-latest \
+  --set 'helmVersion=>=4.11.0-0 <4.12.0-0'
+IMG=gko TAG=latest make docker-build && kind load docker-image gko:latest --name gravitee
+helm upgrade --install gko helm/gko -n default \
+  --set manager.image.repository=gko --set manager.image.tag=latest
+
+# Baseline on 4.11.
+npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-version 4.11
+
+# Upgrade APIM to 4.12 in place (Mongo preserved), then regress on 4.12.
+gck patch --config test/platform-test/gck.yaml --name gravitee \
+  --set imageTag=master-latest --set 'helmVersion=>=4.12.0-0 <4.13.0-0'
+npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-version 4.12
+```
+
+For a different pair (e.g. 4.12 -> 4.13), change the `imageTag` / `helmVersion` values
+on the `create` and `patch` lines and the `--run-up-to-version` arguments.
 
 ### CI: run the lanes in parallel
 
