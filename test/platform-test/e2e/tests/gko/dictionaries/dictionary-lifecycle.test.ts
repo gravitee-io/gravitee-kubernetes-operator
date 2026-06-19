@@ -46,7 +46,7 @@ async function gatewayBaseUrl(): Promise<string> {
   return config.gateway?.baseUrl ?? "http://localhost:30082";
 }
 
-test.describe("Dictionaries — Lifecycle", () => {
+test.describe("Dictionaries — Lifecycle @since-4.12", () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. Each del() ignores errors (the resource may already be gone).
   test.afterEach(async () => {

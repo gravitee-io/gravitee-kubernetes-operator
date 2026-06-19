@@ -50,7 +50,7 @@ function fullGko(subName: string): Provisioner<ApiKeyParams> {
   })();
 }
 
-test.describe(`GKO-only: api-key admission, templating, idempotency ${PROVISIONER.GKO}`, () => {
+test.describe(`GKO-only: api-key admission, templating, idempotency ${PROVISIONER.GKO} @since-4.12`, () => {
   let handle: Provisioned<ApiKeyParams> | undefined;
   let provisioner: Provisioner<ApiKeyParams> | undefined;
   let secretName: string | undefined;

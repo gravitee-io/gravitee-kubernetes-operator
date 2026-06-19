@@ -30,7 +30,7 @@ import { tfScenario } from "../../../../helpers/provisioner-env.js";
 import { isTerraform, type Provisioned } from "../../../../../src/provisioners/index.js";
 import { tfApiKeyVars, uniqueKey, RUN_ID, type ApiKeyParams } from "./params.js";
 
-test.describe(`Terraform-only: api-key provider behaviour ${PROVISIONER.TERRAFORM}`, () => {
+test.describe(`Terraform-only: api-key provider behaviour ${PROVISIONER.TERRAFORM} @since-4.12`, () => {
   let handle: Provisioned<ApiKeyParams> | undefined;
   let ws: terraform.TfWorkspace | undefined;
 
