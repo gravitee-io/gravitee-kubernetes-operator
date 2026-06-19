@@ -596,7 +596,7 @@ export const TAGS = {
 
 /**
  * Provisioner-lane tags. The matrix arms get these automatically from
- * `forProvisioners`; single-provisioner (`*-gko-only` / `*-tf-only`) tests carry
+ * `forEachProvisioner`; single-provisioner (`*-gko-only` / `*-tf-only`) tests carry
  * them on their describe so `npm run e2e -- --provision-with <p>` selects them.
  * Lowercase on purpose, distinct from the uppercase `@GKO-` Xray prefix.
  */

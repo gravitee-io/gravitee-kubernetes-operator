@@ -47,11 +47,10 @@ export { HttpClient, createTlsFetch } from "./utils/http/index.js";
 // ── Config / CLI helpers ──────────────────────────────────────
 export { loadGraviteeConfig, createMapiFromConfig, applyEnvVars } from "./cmd/config.js";
 
-// ── Provisioners (GKO-2915) ───────────────────────────────────
+// ── Provisioners ──────────────────────────────────────────────
 export type {
   ProvisionerId,
   Role,
-  ResourceRef,
   Provisioned,
   Provisioner,
   ProvisionerChecks,

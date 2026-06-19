@@ -20,7 +20,6 @@
 export type {
   ProvisionerId,
   Role,
-  ResourceRef,
   Provisioned,
   Provisioner,
   ProvisionerChecks,

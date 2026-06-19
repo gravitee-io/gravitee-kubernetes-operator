@@ -15,9 +15,9 @@
  */
 
 /**
- * Playwright binding for the provisioner layer. `forProvisioners` expands ONE
+ * Playwright binding for the provisioner layer. `forEachProvisioner` expands ONE
  * scenario into ONE tagged test per provisioner. The body is
- * provisioner-agnostic: it gets a `provision` handle plus the shared mapi/gateway
+ * provisioner-agnostic: it gets a `provisioned` handle plus the shared mapi/gateway
  * fixtures and runs the SAME assertions regardless of how the resource was
  * created. Each test's provisioner tag (e.g. `@gko`/`@terraform`) and its
  * per-provisioner Xray id are appended to the title so `--grep` selection keeps
@@ -55,7 +55,7 @@ export interface ScenarioDef<P> {
 
 export interface ScenarioBodyArgs<P> {
   /** Live handle to the provisioned scenario for the current provisioner. */
-  provision: Provisioned<P>;
+  provisioned: Provisioned<P>;
   mapi: Mapi;
   gateway: Gateway;
 }
@@ -64,7 +64,7 @@ export type ScenarioBody<P> = (args: ScenarioBodyArgs<P>) => Promise<void>;
 
 interface ActiveProvision {
   provisioner: Provisioner<unknown>;
-  provision?: Provisioned<unknown>;
+  provisioned?: Provisioned<unknown>;
 }
 
 /**
@@ -82,8 +82,8 @@ async function teardownActive(): Promise<void> {
   if (!current) return;
   // destroy()/cleanup() are documented to never throw, but guard anyway so a
   // teardown failure never masks the test's own result.
-  if (current.provision) {
-    await current.provision.destroy().catch(() => {});
+  if (current.provisioned) {
+    await current.provisioned.destroy().catch(() => {});
   } else if (current.provisioner.cleanup) {
     await current.provisioner.cleanup().catch(() => {});
   }
@@ -106,10 +106,19 @@ function buildTitle<P>(scenario: ScenarioDef<P>, provisionerId: ProvisionerId): 
  *   never a silent skip, never red).
  * - A provisioner absent from both is N/A and emits nothing.
  */
-export function forProvisioners<P>(
+// Overloads: a param-free scenario omits initialParams; a parameterized one must
+// pass it (so `forEachProvisioner<ApiKeyParams>(s, body)` is a compile error, not
+// an `undefined` params crash at runtime).
+export function forEachProvisioner(scenario: ScenarioDef<void>, body: ScenarioBody<void>): void;
+export function forEachProvisioner<P>(
   scenario: ScenarioDef<P>,
   body: ScenarioBody<P>,
   initialParams: P,
+): void;
+export function forEachProvisioner<P>(
+  scenario: ScenarioDef<P>,
+  body: ScenarioBody<P>,
+  initialParams?: P,
 ): void {
   // Safety net, file-scoped (this runs during the scenario file's load).
   // Registered per call; redundant hooks are harmless no-ops once `active` is
@@ -139,9 +148,9 @@ export function forProvisioners<P>(
       const tracked: ActiveProvision = { provisioner };
       active = tracked;
       try {
-        const provision = (await provisioner.provision(initialParams)) as Provisioned<P>;
-        tracked.provision = provision;
-        await body({ provision, mapi, gateway });
+        const provisioned = (await provisioner.provision(initialParams)) as Provisioned<P>;
+        tracked.provisioned = provisioned;
+        await body({ provisioned, mapi, gateway });
       } finally {
         await teardownActive();
       }

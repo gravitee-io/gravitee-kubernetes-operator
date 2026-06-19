@@ -16,7 +16,8 @@
 
 import * as tfCore from "../engines/terraform-core.js";
 import type { TfWorkspace } from "../engines/terraform-core.js";
-import type { Provisioned, Provisioner, ResourceRef, Role } from "../types.js";
+import type { Provisioned, Provisioner, Role } from "../types.js";
+import { BaseProvisioned } from "../base.js";
 import type { TerraformChecks } from "./checks.js";
 
 /** Convention mapping a role to a default `terraform output` name. */
@@ -24,6 +25,7 @@ const DEFAULT_OUTPUT_BY_ROLE: Record<string, string> = {
   api: "api_id",
   subscription: "sub_id",
   application: "app_id",
+  group: "group_id",
 };
 const DEFAULT_CONTEXT_PATH_OUTPUT = "api_context_path";
 
@@ -85,7 +87,7 @@ function buildTerraformChecks(ws: TfWorkspace): TerraformChecks {
   };
 }
 
-class TerraformProvisioned<P> implements Provisioned<P> {
+class TerraformProvisioned<P> extends BaseProvisioned<P> {
   readonly provisionerId = "terraform" as const;
   readonly checks: TerraformChecks;
   private readonly idCache = new Map<string, string>();
@@ -96,19 +98,16 @@ class TerraformProvisioned<P> implements Provisioned<P> {
     private readonly spec: TfScenarioSpec<P>,
     private lastVars: Record<string, unknown>,
   ) {
+    super();
     this.checks = buildTerraformChecks(ws);
   }
 
-  async id(role: Role = "api"): Promise<string> {
+  protected async resolveId(role: Role): Promise<string> {
     const cached = this.idCache.get(role);
     if (cached) return cached;
     const value = await tfCore.output(this.ws, outputNameFor(this.spec, role));
     this.idCache.set(role, value);
     return value;
-  }
-
-  async ref(role: Role = "api"): Promise<ResourceRef> {
-    return { id: await this.id(role) };
   }
 
   async contextPath(): Promise<string> {

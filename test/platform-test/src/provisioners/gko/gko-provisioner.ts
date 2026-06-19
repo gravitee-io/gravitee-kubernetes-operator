@@ -15,7 +15,8 @@
  */
 
 import * as kubectl from "../engines/kubectl.js";
-import type { Provisioned, Provisioner, ResourceRef, Role } from "../types.js";
+import type { Provisioned, Provisioner, Role } from "../types.js";
+import { BaseProvisioned } from "../base.js";
 import type { GkoChecks } from "./checks.js";
 
 /** The kubectl engine surface a parameterized apply step receives. */
@@ -36,6 +37,7 @@ const DEFAULT_KIND_BY_ROLE: Record<string, string> = {
   api: "apiv4definition",
   application: "application",
   subscription: "subscription",
+  group: "group",
 };
 
 /**
@@ -55,8 +57,8 @@ export interface GkoScenarioSpec<P = unknown> {
    * awaited right after the static manifests.
    */
   dynamicRoles?: Role[];
-  /** Gateway context path (GKO has no output to read it from). */
-  contextPath: string;
+  /** Gateway context path (GKO has no output to read it from). Omit when the scenario never hits the gateway. */
+  contextPath?: string;
   /**
    * Optional parameterized apply (e.g. a Subscription with a given key set).
    * Runs at provision() after the static manifests, and again on every update().
@@ -70,7 +72,7 @@ interface ResolvedGkoSpec<P> {
   manifests: string[];
   roles: Record<string, GkoRoleBinding>;
   dynamicRoles: Role[];
-  contextPath: string;
+  contextPath?: string;
   applyParams?: (k: KubectlEngine, params: P) => Promise<void>;
   namespace?: string;
 }
@@ -140,16 +142,17 @@ async function teardownGko<P>(spec: ResolvedGkoSpec<P>): Promise<void> {
   }
 }
 
-class GkoProvisioned<P> implements Provisioned<P> {
+class GkoProvisioned<P> extends BaseProvisioned<P> {
   readonly provisionerId = "gko" as const;
   readonly checks: GkoChecks;
   private readonly idCache = new Map<string, string>();
 
   constructor(private readonly spec: ResolvedGkoSpec<P>) {
+    super();
     this.checks = buildGkoChecks(spec);
   }
 
-  async id(role: Role = "api"): Promise<string> {
+  protected async resolveId(role: Role): Promise<string> {
     const cached = this.idCache.get(role);
     if (cached) return cached;
     const b = resolveBinding(this.spec, role);
@@ -161,18 +164,10 @@ class GkoProvisioned<P> implements Provisioned<P> {
     return status.id;
   }
 
-  async ref(role: Role = "api"): Promise<ResourceRef> {
-    const b = resolveBinding(this.spec, role);
-    const id = await this.id(role);
-    return {
-      id,
-      name: b.name,
-      kind: b.kind,
-      hrid: `${this.spec.namespace ?? "default"}-${b.name}`,
-    };
-  }
-
   async contextPath(): Promise<string> {
+    if (this.spec.contextPath === undefined) {
+      throw new Error("GKO scenario has no contextPath; declare it to use gateway assertions");
+    }
     return this.spec.contextPath;
   }
 

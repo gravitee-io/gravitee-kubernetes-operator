@@ -34,22 +34,6 @@ export type ProvisionerId = "gko" | "terraform";
  */
 export type Role = "api" | "application" | "subscription" | "plan" | (string & {});
 
-/** A resolved reference to a provisioned APIM resource. */
-export interface ResourceRef {
-  /** APIM id (UUID). GKO reads `.status.id`; Terraform reads `terraform output`. */
-  id: string;
-  /** Human-readable name where known (CR metadata.name, or TF resource name). */
-  name?: string;
-  /**
-   * Stable cross-lifecycle identifier (k8s namespace+name, or TF hrid). Drives
-   * upgrade-style re-attachment: APIM derives a deterministic UUIDv3 from the
-   * HRID, so a handle can be rebuilt from this alone. See {@link Provisioner.attach}.
-   */
-  hrid?: string;
-  /** The provisioner-native kind, e.g. "ApiV4Definition" | "apim_apiv4". Diagnostic. */
-  kind?: string;
-}
-
 /**
  * Provisioner-specific assertion surface, reached via {@link Provisioned.checks}
  * and narrowed by the `isGko`/`isTerraform` type guards. The base only carries
@@ -67,11 +51,15 @@ export interface Provisioned<P = unknown> {
   /** Which provisioner produced this handle. */
   readonly provisionerId: ProvisionerId;
 
-  /** APIM id for a logical role (default "api"). Resolved once, then cached. */
-  id(role?: Role): Promise<string>;
-
-  /** Full ref for a role (id + name/hrid/kind where available). */
-  ref(role?: Role): Promise<ResourceRef>;
+  /**
+   * The resource's APIM id (UUID), by kind. Pass an optional `label` only for
+   * the rare scenario that has two of the same kind (e.g. `apiId("two-plans")`);
+   * omit it for the usual single-resource case. Resolved once, then cached.
+   */
+  apiId(label?: string): Promise<string>;
+  subscriptionId(label?: string): Promise<string>;
+  applicationId(label?: string): Promise<string>;
+  groupId(label?: string): Promise<string>;
 
   /** The API gateway context path (e.g. "/e2e-...") for data-plane assertions. */
   contextPath(): Promise<string>;
