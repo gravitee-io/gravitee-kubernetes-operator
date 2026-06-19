@@ -68,7 +68,7 @@ function headerValue(headers: Record<string, string> | undefined, name: string):
   return headers[name] ?? headers[name.toLowerCase()];
 }
 
-test.describe("Dictionaries — Dynamic lifecycle", () => {
+test.describe("Dictionaries — Dynamic lifecycle @since-4.12", () => {
   // Safety-net cleanup: if any test times out before its inline cleanup runs,
   // these still execute. Each del() ignores errors because the resource may
   // already have been removed by the test itself.

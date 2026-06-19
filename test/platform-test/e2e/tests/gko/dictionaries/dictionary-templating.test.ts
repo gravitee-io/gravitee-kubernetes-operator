@@ -45,7 +45,7 @@ async function gatewayBaseUrl(): Promise<string> {
   return config.gateway?.baseUrl ?? "http://localhost:30082";
 }
 
-test.describe("Dictionaries — Templating", () => {
+test.describe("Dictionaries — Templating @since-4.12", () => {
   test(`Dynamic dictionary with secret templates resolves in API header ${XRAY.DICTIONARIES.DYNAMIC_TEMPLATE_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {

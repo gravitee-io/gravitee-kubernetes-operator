@@ -28,7 +28,7 @@
  */
 
 import { test, expect } from "../../../../setup.js";
-import { XRAY, TAGS } from "../../../../helpers/tags.js";
+import { XRAY, TAGS, since } from "../../../../helpers/tags.js";
 import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
 import { subscriptionYaml } from "../../../../../src/provisioners/index.js";
@@ -67,7 +67,8 @@ function apikeyTfCustom(hridSuffix: string) {
   });
 }
 
-const REGRESSION = [TAGS.REGRESSION];
+// api-key plan subscriptions ship in APIM 4.12, for both provisioners.
+const REGRESSION = [TAGS.REGRESSION, since("4.12")];
 
 // ── Auto-generated single key, reachable via gateway ──────────────────────────
 // GKO splits this into a count check (2825) + a gateway check (2826); the TF
