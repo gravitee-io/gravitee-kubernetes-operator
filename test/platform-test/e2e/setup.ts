@@ -22,6 +22,7 @@ import {
   type Gateway,
 } from "../src/index.js";
 import * as kubectl from "./helpers/kubectl.js";
+import { versionSkipReason } from "../src/utils/version/index.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -55,7 +56,23 @@ async function initClients(): Promise<{ mapi: Mapi; gateway: Gateway; mtlsGatewa
   return { mapi: sharedMapi, gateway: sharedGateway, mtlsGatewayBaseUrl: sharedMtlsGatewayBaseUrl };
 }
 
-export const test = base.extend<E2EFixtures>({
+export const test = base.extend<E2EFixtures & { runUpToVersion: void }>({
+  /**
+   * Enforce `--run-up-to-version` (E2E_MAX_VERSION): skip any test whose
+   * `@since-<version>` title tag is newer than the cap. Declared as an automatic,
+   * value-less fixture so it applies to every test (matrix and plain) with no
+   * per-file hook. A test with no @since tag is baseline and always runs.
+   */
+  runUpToVersion: [
+    async ({}, use) => {
+      // titlePath includes the describe blocks + test title, so a `@since-<v>` tag
+      // can sit on a single describe() to gate a whole file/feature, or on one test.
+      const reason = versionSkipReason(test.info().titlePath.join(" "), process.env["E2E_MAX_VERSION"]);
+      test.skip(reason !== undefined, reason ?? "");
+      await use();
+    },
+    { auto: true },
+  ],
   mapi: async ({}, use) => {
     const { mapi } = await initClients();
     await use(mapi);

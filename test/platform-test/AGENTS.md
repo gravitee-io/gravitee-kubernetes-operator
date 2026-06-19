@@ -104,14 +104,17 @@ shared assertions. The shared body uses only the provisioner-agnostic handle (`p
 and the per-provisioner Xray id.
 
 **Selecting a provisioner lane:** `npm run e2e -- --provision-with gko` (or the `npm run e2e:gko` /
-`e2e:terraform` shortcuts) runs only that provisioner's tests — the matrix arms plus the
-`*-gko-only` / `*-tf-only` files, which carry the tag on their `describe`. Do **not** use
-`--grep @gko`: Playwright's CLI `--grep` is case-insensitive, so `@gko` also matches every `@GKO-NNNN`
-Xray tag and selects the whole suite. The lane filter is a case-sensitive grep applied in
-`playwright.config.ts` from the `E2E_PROVISIONER` env var (which `--provision-with` sets); `--grep
-@GKO-NNNN` still works for selecting a single test. The `scripts/e2e.mjs` wrapper also accepts
-`--run-up-to-version <semver>` as a reserved seam for future version-gating (accepted but not yet
-enforced).
+`e2e:terraform` shortcuts) runs that provisioner's whole lane: every test under `tests/gko/` (or
+`tests/terraform/`) PLUS the matching arm of each shared `tests/scenarios/` file. The config
+implements this from the `E2E_PROVISIONER` env var by ignoring the OTHER provisioner's `tests/` folder
+(`testIgnore`) and dropping its arm from shared scenarios with a case-sensitive `grepInvert`. Do
+**not** use `--grep @gko`: Playwright's CLI `--grep` is case-insensitive, so `@gko` also matches every
+`@GKO-NNNN` Xray tag and selects the whole suite; `--grep @GKO-NNNN` still works for a single test.
+
+**Capping at a version:** `scripts/e2e.mjs` also accepts `--run-up-to-version <semver>`, which skips
+tests tagged `@since-<newer>` (declare with `since("4.12")` from `e2e/helpers/tags.ts`; untagged tests
+are baseline and always run). Enforced by an automatic fixture in `e2e/setup.ts`. The two flags
+combine, e.g. `--provision-with gko --run-up-to-version 4.11`.
 
 ```ts
 import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";

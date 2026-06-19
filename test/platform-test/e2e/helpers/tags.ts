@@ -604,3 +604,18 @@ export const PROVISIONER = {
   GKO: "@gko",
   TERRAFORM: "@terraform",
 } as const;
+
+/**
+ * Version-gating tag. `since("4.12")` -> "@since-4.12". Append it to a test title
+ * to declare the oldest APIM version the test needs (i.e. the version a feature
+ * was introduced in):
+ *
+ *   test(`Deploy new 4.12 thing ${XRAY.AREA.ID} ${since("4.12")}`, ...)
+ *
+ * A test with no @since tag is treated as available on the baseline and always
+ * runs. With `npm run e2e -- --run-up-to-version <v>`, any test whose @since
+ * version is newer than <v> is skipped. Enforcement lives in `e2e/setup.ts`.
+ */
+export function since(version: string): string {
+  return `@since-${version}`;
+}
