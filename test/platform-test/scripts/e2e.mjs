@@ -24,9 +24,9 @@
  *
  *   --provision-with <gko|terraform>  Run only one provisioner lane.
  *                                     -> E2E_PROVISIONER (case-sensitive @tag grep).
- *   --run-up-to-version <semver>      Run only features available at that version.
- *                                     -> E2E_MAX_VERSION. STUBBED: accepted but not
- *                                        enforced yet (version-gating is future work).
+ *   --run-up-to-version <semver>      Run only features available at that version,
+ *                                     i.e. skip tests tagged @since-<newer>.
+ *                                     -> E2E_MAX_VERSION (enforced in e2e/setup.ts).
  *   <anything else>                   Forwarded verbatim to `playwright test`
  *                                     (e.g. --grep @GKO-2828, --headed, a file path).
  *
@@ -83,9 +83,8 @@ for (let i = 0; i < args.length; i++) {
 }
 
 if (env.E2E_MAX_VERSION) {
-  console.warn(
-    `[e2e] --run-up-to-version=${env.E2E_MAX_VERSION} is accepted but NOT enforced yet: ` +
-      `version-gating (@since-<semver> tags + skip) is not implemented. Running the full selection.`,
+  console.log(
+    `[e2e] capping at APIM version ${env.E2E_MAX_VERSION}: skipping tests tagged @since-<newer>`,
   );
 }
 

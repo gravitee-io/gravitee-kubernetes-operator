@@ -51,6 +51,14 @@ export interface ScenarioDef<P> {
   pending?: Partial<Record<ProvisionerId, string>>;
   /** Per-provisioner Playwright timeout override (ms). */
   timeoutMs?: Partial<Record<ProvisionerId, number>>;
+  /**
+   * Per-provisioner minimum APIM version (the version a feature shipped in). The
+   * arm's title gets `@since-<v>`, so `--run-up-to-version` skips it on older
+   * clusters. Per-provisioner on purpose: a feature can land in each driver at a
+   * different version (e.g. the Terraform `apim_group` resource is newer than the
+   * GKO Group CRD).
+   */
+  since?: Partial<Record<ProvisionerId, string>>;
 }
 
 export interface ScenarioBodyArgs<P> {
@@ -94,7 +102,14 @@ function buildTitle<P>(scenario: ScenarioDef<P>, provisionerId: ProvisionerId): 
   let xrayIds: string[] = [];
   if (Array.isArray(xray)) xrayIds = xray;
   else if (xray) xrayIds = [xray];
-  const tokens = [scenario.title, ...xrayIds, `@${provisionerId}`, ...(scenario.tags ?? [])];
+  const sinceVersion = scenario.since?.[provisionerId];
+  const tokens = [
+    scenario.title,
+    ...xrayIds,
+    `@${provisionerId}`,
+    ...(scenario.tags ?? []),
+    ...(sinceVersion ? [`@since-${sinceVersion}`] : []),
+  ];
   return tokens.filter((t): t is string => Boolean(t)).join(" ");
 }
 
