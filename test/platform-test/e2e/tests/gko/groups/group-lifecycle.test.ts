@@ -50,24 +50,8 @@ test.describe("Groups — Lifecycle", () => {
 
   // ── GKO-983: Create Group with existing user ────────────────
 
-  test(`Create Group with existing user ${XRAY.GROUPS.CREATE_WITH_MEMBER} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const GROUP_NAME = "e2e-group-simple";
-    const fixturePath = fixture("groups/lifecycle/crd.yaml");
-
-    await test.step("Apply group CRD", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-    });
-
-    await test.step("Group has an ID in status", async () => {
-      const status = await kubectl.getStatus<{ id: string }>("group", GROUP_NAME);
-      expect(status.id).toBeTruthy();
-    });
-
-    await kubectl.del(fixturePath);
-  });
+  // Moved to the gko arm of the shared tests/scenarios/groups/groups.scenario.ts
+  // (create group -> lands in APIM with origin KUBERNETES), tagged @GKO-983.
 
   // ── GKO-984: Create Group with non-existing user ────────────
 
