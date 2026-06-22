@@ -18,5 +18,4 @@ apim:
     version: 4.12.x-latest
   chart:
     registry: oci://graviteeio.azurecr.io/helm/apim3
-    # 4.13.x chart renders allowMultiplePortalPerEnv; the 4.12.x image (above) carries the gating code
-    version: 4.13.*
+    version: 4.12.*
