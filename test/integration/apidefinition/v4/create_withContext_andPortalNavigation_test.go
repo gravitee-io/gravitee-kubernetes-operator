@@ -38,7 +38,6 @@ var _ = Describe("Create with portalNavigation", labels.WithContext, func() {
 	ctx := context.Background()
 
 	It("should persist the portalNavigation tree in list order", func() {
-		Skip("portalNavigation is not yet supported by the APIM automation API")
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4WithContextFile).
 			WithContext(constants.ContextWithSecretFile).
