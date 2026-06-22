@@ -51,12 +51,11 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("calling rest API, expecting to find the documentation page")
 
 		apimClient := apim.NewClient(ctx)
-		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
 		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
 
 		Eventually(func() error {
 			doc, docErr := apimClient.Documentations.GetByHRID(
-				service.DocumentationParent{Portal: portalHrid}, docHrid,
+				service.DocumentationParent{Portal: fixtures.Portal}, docHrid,
 			)
 			if docErr != nil {
 				return docErr
@@ -82,12 +81,11 @@ var _ = Describe("Create", labels.WithContext, func() {
 		By("calling rest API, expecting to find the documentation page")
 
 		apimClient := apim.NewClient(ctx)
-		apiHrid := refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID()
 		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
 
 		Eventually(func() error {
 			doc, docErr := apimClient.Documentations.GetByHRID(
-				service.DocumentationParent{API: apiHrid}, docHrid,
+				service.DocumentationParent{API: fixtures.APIv4}, docHrid,
 			)
 			if docErr != nil {
 				return docErr

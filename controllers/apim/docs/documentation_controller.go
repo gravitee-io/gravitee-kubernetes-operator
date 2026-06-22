@@ -66,7 +66,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(doc, core.DocumentationFinalizer)
 		k8s.AddAnnotation(doc, core.LastSpecHashAnnotation, hash.Calculate(&doc.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if doc.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, doc); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			return err
 		}
 

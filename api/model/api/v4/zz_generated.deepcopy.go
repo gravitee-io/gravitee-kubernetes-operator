@@ -22,6 +22,7 @@ package v4
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 )
 
@@ -1306,11 +1307,11 @@ func (in *V4BaseApi) DeepCopyInto(out *V4BaseApi) {
 	}
 	if in.PortalNavigation != nil {
 		in, out := &in.PortalNavigation, &out.PortalNavigation
-		*out = make([]*NavigationPath, len(*in))
+		*out = make([]*navigation.NavigationPath, len(*in))
 		for i := range *in {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
-				*out = new(NavigationPath)
+				*out = new(navigation.NavigationPath)
 				(*in).DeepCopyInto(*out)
 			}
 		}

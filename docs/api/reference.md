@@ -784,7 +784,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
-| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | MaxItems: 50 <br />Optional: \{\} <br /> |
+| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | Optional: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this portal is synced to. |  |  |
 
 
@@ -2781,12 +2781,13 @@ NavigationPath is a single entry in a portal or API definition navigation tree.
 _Appears in:_
 - [PortalSpec](#portalspec)
 - [Type](#type)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `path` _string_ | A slash-separated path defining the navigation hierarchy.<br />Intermediate folders are implicitly created by APIM if not listed explicitly. |  | Pattern: `^/` <br />Required: \{\} <br /> |
-| `displayName` _string_ | Optional human-friendly label for this node. Listing a path explicitly<br />is the only way to attach a display name to it. |  |  |
-| `order` _integer_ | Optional display order of this node relative to its siblings at the same level.<br />Listing a path explicitly is the only way to attach an order. |  |  |
+| `displayName` _string_ | Optional human-friendly label for this node. Listing a path explicitly<br />is the only way to attach a display name to it. |  | Optional: \{\} <br /> |
+| `order` _integer_ | Optional display order of this node relative to its siblings at the same level.<br />Listing a path explicitly is the only way to attach an order. |  | Optional: \{\} <br /> |
 
 
 
@@ -2919,7 +2920,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
-| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | MaxItems: 50 <br />Optional: \{\} <br /> |
+| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | Optional: \{\} <br /> |
 
 
 
@@ -4577,6 +4578,20 @@ _Appears in:_
 | `response` _boolean_ | Should the response phase of the request roundtrip be included in the log payload or not ? |  |  |
 
 
+#### OtelLogs
+
+
+
+
+
+
+
+_Appears in:_
+- [Analytics](#analytics)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enable OpenTelemetry log export for this API. |  | Optional: \{\} <br /> |
 
 
 #### Page
@@ -4794,7 +4809,7 @@ _Appears in:_
 | `allowMultiJwtOauth2Subscriptions` _boolean_ | Allow an application to subscribe to more than one JWT/OAuth2 plan (V4 only). |  | Optional: \{\} <br /> |
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `failover` _[Failover](#failover)_ | API Failover |  |  |
-| `portalNavigation` _[NavigationPath](#navigationpath) array_ | The API's internal documentation navigation tree for the next-gen portal.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. Has no effect on the<br />classic portal (see `pages`). Not applicable to V2 APIs. |  | Optional: \{\} <br /> |
+| `portalNavigation` _NavigationPath array_ | The API's internal documentation navigation tree for the next-gen portal.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. Has no effect on the<br />classic portal (see `pages`). Not applicable to V2 APIs. |  | Optional: \{\} <br /> |
 | `consoleNotification` _[AutomationConsoleNotification](#automationconsolenotification)_ | ConsoleNotification struct sent to the Automation API, not part of the CRD spec. |  |  |
 
 

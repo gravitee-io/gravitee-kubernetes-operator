@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -45,6 +46,10 @@ func Delete(ctx context.Context, prtl *v1alpha1.Portal) error {
 
 	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
 	if err != nil {
+		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 

@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -49,9 +50,8 @@ var _ = Describe("Update", labels.WithContext, func() {
 		Expect(assert.DocumentationAccepted(fixtures.Documentation)).To(Succeed())
 
 		apimClient := apim.NewClient(ctx)
-		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
 		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
-		parent := service.DocumentationParent{Portal: portalHrid}
+		parent := service.DocumentationParent{Portal: fixtures.Portal}
 
 		Eventually(func() error {
 			doc, docErr := apimClient.Documentations.GetByHRID(parent, docHrid)
@@ -64,7 +64,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("updating the documentation location to another portal navigation path")
 
 		updated := fixtures.Documentation.DeepCopy()
-		updated.Spec.Location = "/projects/beta"
+		updated.Spec.Location = utils.ToReference("/projects/beta")
 
 		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 

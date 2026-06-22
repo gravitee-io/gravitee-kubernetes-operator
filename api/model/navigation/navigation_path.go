@@ -23,8 +23,10 @@ type NavigationPath struct {
 	Path string `json:"path"`
 	// Optional human-friendly label for this node. Listing a path explicitly
 	// is the only way to attach a display name to it.
+	// +kubebuilder:validation:Optional
 	DisplayName *string `json:"displayName,omitempty"`
 	// Optional display order of this node relative to its siblings at the same level.
 	// Listing a path explicitly is the only way to attach an order.
+	// +kubebuilder:validation:Optional
 	Order *int32 `json:"order,omitempty"`
 }
