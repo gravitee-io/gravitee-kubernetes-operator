@@ -118,6 +118,9 @@ api:
     repository: gravitee-apim-management-api
     tag: dev
     pullPolicy: IfNotPresent
+  automation:
+    portal:
+      allowMultiplePortalPerEnv: true
   ingress:
     enabled: false
   service:
