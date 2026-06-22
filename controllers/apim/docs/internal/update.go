@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
@@ -32,6 +31,7 @@ import (
 // the parent identifier injected into the automation endpoint path.
 type resolvedParent struct {
 	name       string
+	kind       string
 	hasContext bool
 	contextRef core.ObjectRef
 	contextNs  string
@@ -65,10 +65,11 @@ func resolveParent(ctx context.Context, doc *v1alpha1.Documentation) (*resolvedP
 		}
 		return &resolvedParent{
 			name:       prtl.GetName(),
+			kind:       "portal",
 			hasContext: prtl.HasContext(),
 			contextRef: prtl.ContextRef(),
 			contextNs:  prtl.GetNamespace(),
-			parent:     service.DocumentationParent{Portal: refs.NewNamespacedNameFromObject(prtl).HRID()},
+			parent:     service.DocumentationParent{Portal: prtl},
 		}, nil
 	}
 
@@ -76,13 +77,13 @@ func resolveParent(ctx context.Context, doc *v1alpha1.Documentation) (*resolvedP
 	if err != nil {
 		return nil, err
 	}
-	apiRef := refs.NewNamespacedName(api.GetNamespace(), api.GetName())
 	return &resolvedParent{
 		name:       api.GetName(),
+		kind:       "API",
 		hasContext: api.HasContext(),
 		contextRef: api.ContextRef(),
 		contextNs:  api.GetNamespace(),
-		parent:     service.DocumentationParent{API: apiRef.HRID()},
+		parent:     service.DocumentationParent{API: api},
 	}, nil
 }
 
@@ -94,7 +95,7 @@ func CreateOrUpdate(ctx context.Context, doc *v1alpha1.Documentation) error {
 
 	if !parent.hasContext {
 		return gerrors.NewIllegalStateError(
-			fmt.Errorf("documentation parent [%s] has no management context", parent.name),
+			fmt.Errorf("documentation %s parent [%s] has no management context", parent.kind, parent.name),
 		)
 	}
 

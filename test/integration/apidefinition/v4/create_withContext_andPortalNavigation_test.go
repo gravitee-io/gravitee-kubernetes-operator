@@ -17,7 +17,7 @@ package v4
 import (
 	"context"
 
-	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 
@@ -44,7 +44,7 @@ var _ = Describe("Create with portalNavigation", labels.WithContext, func() {
 			WithContext(constants.ContextWithSecretFile).
 			Build()
 
-		navigation := []*v4.NavigationPath{
+		navigation := []*nav.NavigationPath{
 			{Path: "/projects/alpha", DisplayName: utils.ToReference("Alpha"), Order: utils.ToReference(int32(1))},
 			{Path: "/projects/alpha/docs"},
 			{Path: "/projects/alpha/src"},

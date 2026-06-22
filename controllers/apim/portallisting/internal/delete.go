@@ -17,12 +17,12 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -35,6 +35,10 @@ func Delete(ctx context.Context, listing *v1alpha1.PortalListing) error {
 
 	prtl, err := dynamic.ResolvePortal(ctx, listing.GetPortalRef(), ns)
 	if err != nil {
+		// Parent Portal already gone: nothing left to sync against, let the finalizer be removed.
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -45,13 +49,14 @@ func Delete(ctx context.Context, listing *v1alpha1.PortalListing) error {
 
 	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
 	if err != nil {
+		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
-	portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
-	listingHrid := refs.NewNamespacedNameFromObject(listing).HRID()
-
-	if err := gerrors.IgnoreNotFound(apimClient.Listings.Delete(portalHrid, listingHrid)); err != nil {
+	if err := gerrors.IgnoreNotFound(apimClient.Listings.Delete(listing, prtl)); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 

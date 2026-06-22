@@ -17,7 +17,6 @@ package portallisting
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -100,8 +99,8 @@ func validateApiKinds(listing *v1alpha1.PortalListing) *errors.AdmissionErrors {
 		}
 		if dynamic.ResourceFromKind(kind) != core.CRDApiV4DefinitionResource {
 			errs.AddSeveref(
-				"API [%s] kind must be ApiV4Definition (the next-gen portal is v4-only), got [%s]",
-				listing.Spec.APIs[i].Ref.Name, kind,
+				"API [%s] must be of kind ApiV4Definition (next-gen portal only supports those)",
+				listing.Spec.APIs[i].Ref.Name,
 			)
 		}
 	}
@@ -165,9 +164,7 @@ func validateDryRun(ctx context.Context, listing *v1alpha1.PortalListing) *error
 		return errs
 	}
 
-	portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
-
-	status, err := apimClient.Listings.DryRunCreateOrUpdate(cp, portalHrid)
+	status, err := apimClient.Listings.DryRunCreateOrUpdate(cp, prtl)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

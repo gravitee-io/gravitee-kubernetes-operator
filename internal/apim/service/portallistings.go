@@ -35,23 +35,24 @@ func NewListings(client *client.Client) *Listings {
 
 func (svc *Listings) CreateOrUpdate(
 	listing *v1alpha1.PortalListing,
-	portalHrid string,
+	prtl *v1alpha1.Portal,
 ) (portallisting.Status, error) {
-	return svc.createOrUpdate(listing, portalHrid, false)
+	return svc.createOrUpdate(listing, prtl, false)
 }
 
 func (svc *Listings) DryRunCreateOrUpdate(
 	listing *v1alpha1.PortalListing,
-	portalHrid string,
+	prtl *v1alpha1.Portal,
 ) (portallisting.Status, error) {
-	return svc.createOrUpdate(listing, portalHrid, true)
+	return svc.createOrUpdate(listing, prtl, true)
 }
 
 func (svc *Listings) createOrUpdate(
 	listing *v1alpha1.PortalListing,
-	portalHrid string,
+	prtl *v1alpha1.Portal,
 	dryRun bool,
 ) (portallisting.Status, error) {
+	portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
 	url := svc.AutomationTarget("portals").
 		WithPath(portalHrid).
 		WithPath("listings").
@@ -69,7 +70,9 @@ func (svc *Listings) createOrUpdate(
 	return *importStatus, nil
 }
 
-func (svc *Listings) Delete(portalHrid, listingHrid string) error {
+func (svc *Listings) Delete(listing *v1alpha1.PortalListing, prtl *v1alpha1.Portal) error {
+	portalHrid := refs.NewNamespacedNameFromObject(prtl).HRID()
+	listingHrid := refs.NewNamespacedNameFromObject(listing).HRID()
 	url := svc.AutomationTarget("portals").
 		WithPath(portalHrid).
 		WithPath("listings").

@@ -20,6 +20,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
@@ -92,7 +94,7 @@ type V4BaseApi struct {
 	// The order of entries in the list is preserved. Intermediate folders are
 	// implicitly created by APIM if not listed explicitly. Has no effect on the
 	// classic portal (see `pages`). Not applicable to V2 APIs.
-	PortalNavigation []*NavigationPath `json:"portalNavigation,omitempty"`
+	PortalNavigation []*nav.NavigationPath `json:"portalNavigation,omitempty"`
 	// ConsoleNotification struct sent to the Automation API, not part of the CRD spec.
 	// +kubebuilder:skipversion
 	ConsoleNotification *AutomationConsoleNotification `json:"consoleNotification,omitempty"`
