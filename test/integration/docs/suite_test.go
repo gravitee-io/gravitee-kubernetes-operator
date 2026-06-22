@@ -30,10 +30,6 @@ func TestResources(t *testing.T) {
 	RunSpecs(t, "Documentation Suite")
 }
 
-var _ = BeforeSuite(func() {
-	Skip("Documentation is not yet supported by the APIM automation API")
-})
-
 var _ = SynchronizedAfterSuite(func() {
 	By("Tearing down the test environment")
 	gexec.KillAndWait(5 * time.Second)
