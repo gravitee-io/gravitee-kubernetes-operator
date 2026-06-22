@@ -42,11 +42,16 @@ type Objects struct {
 	PortalListing     *v1alpha1.PortalListing
 	Documentation     *v1alpha1.Documentation
 
-	randomSuffix string
+	randomSuffix   string
+	navigationRoot string
 }
 
 func (o *Objects) GetGeneratedSuffix() string {
 	return o.randomSuffix
+}
+
+func (o *Objects) GetNavigationRoot() string {
+	return o.navigationRoot
 }
 
 func (o *Objects) GetIngressPEMRegistryKey() string {

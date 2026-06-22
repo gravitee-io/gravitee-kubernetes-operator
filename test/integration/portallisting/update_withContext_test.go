@@ -65,7 +65,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("updating the listing location to another portal navigation path")
 
 		updated := fixtures.PortalListing.DeepCopy()
-		updated.Spec.APIs[0].Location = "/projects/beta"
+		updated.Spec.APIs[0].Location = fixtures.GetNavigationRoot() + "/projects/beta"
 
 		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
@@ -79,7 +79,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			if len(listing.APIs) == 0 {
 				return assert.NotEmptyString("apis", "")
 			}
-			return assert.Equals("Portal listing location", "/projects/beta", listing.APIs[0].Location)
+			return assert.Equals("Portal listing location", fixtures.GetNavigationRoot()+"/projects/beta", listing.APIs[0].Location)
 		}, timeout, interval).Should(Succeed(), fixtures.PortalListing.Name)
 	})
 })

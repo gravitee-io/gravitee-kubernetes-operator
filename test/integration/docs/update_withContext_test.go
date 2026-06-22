@@ -64,7 +64,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 		By("updating the documentation location to another portal navigation path")
 
 		updated := fixtures.Documentation.DeepCopy()
-		updated.Spec.Location = utils.ToReference("/projects/beta")
+		updated.Spec.Location = utils.ToReference(fixtures.GetNavigationRoot() + "/projects/beta")
 
 		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
 
@@ -75,7 +75,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 			if docErr != nil {
 				return docErr
 			}
-			return assert.Equals("Documentation location", "/projects/beta", doc.Location)
+			return assert.Equals("Documentation location", fixtures.GetNavigationRoot()+"/projects/beta", doc.Location)
 		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
 	})
 })
