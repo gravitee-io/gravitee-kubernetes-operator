@@ -22,6 +22,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -159,6 +160,28 @@ func (app *Application) GetConditions() map[string]metav1.Condition {
 func (app *Application) SetConditions(conditions []metav1.Condition) {
 	app.Status.Conditions = conditions
 }
+
+func (app *Application) ToDTO() model.ApplicationDTO {
+	spec := app.Spec
+	return model.ApplicationDTO{
+		ID:            spec.ID,
+		HRID:          spec.HRID,
+		Name:          spec.Name,
+		Status:        "",
+		Description:   spec.Description,
+		Settings:      spec.Settings,
+		Background:    utils.ToStringValue(spec.Background),
+		Domain:        utils.ToStringValue(spec.Domain),
+		Groups:        spec.Groups,
+		Picture:       utils.ToStringValue(spec.Picture),
+		PictureURL:    utils.ToStringValue(spec.PictureURL),
+		NotifyMembers: spec.NotifyMembers,
+		Metadata:      utils.SafeDereference(spec.Metadata),
+		Members:       utils.SafeDereference(spec.Members),
+	}
+}
+
+
 
 func (spec *ApplicationSpec) Hash() string {
 	return hash.Calculate(spec)

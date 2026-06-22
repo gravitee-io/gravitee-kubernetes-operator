@@ -28,20 +28,19 @@ type registry struct {
 	registry map[registryEntry]EquivalenceFunc
 }
 
-func (r *registry) Get(name string, t reflect.Kind) EquivalenceFunc {
+func (r *registry) Get(name string, k reflect.Kind) EquivalenceFunc {
 	if f, ok := r.registry[registryEntry{
 		name: name,
-		kind: t,
+		kind: k,
 	}]; ok {
 		return f
+	} else if name != "" {
+		log.Panicf("drift function '%s' not found for kind '%s'", name, k)
 	}
-	if name != "" {
-		log.Panicf("drift function '%s' not found", name)
-	}
-	if t == reflect.Array || t == reflect.Slice {
+	if k == reflect.Array || k == reflect.Slice {
 		return defaultSliceArrayEquivalence
 	}
-	if t == reflect.Struct {
+	if k == reflect.Struct {
 		return defaultStructEquivalence
 	}
 	return defaultEquivalence

@@ -20,6 +20,8 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
@@ -95,6 +97,10 @@ func validateUpdate(
 		return errs
 	}
 	errs.MergeWith(validateDryRun(ctx, newApp))
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(validateDriftDetection(ctx, oldApp))
 	return errs
 }
 
@@ -213,6 +219,57 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 		errs.AddWarning(warning)
 	}
 	return errs
+}
+
+func validateDriftDetection(ctx context.Context, oldApp core.ApplicationObject) *errors.AdmissionErrors {
+
+	errs := errors.NewAdmissionErrors()
+
+	// skip is disabled
+	// global
+	if !env.Config.DriftDetection {
+		return errs
+	}
+	// CRD level
+	enabled, ok := oldApp.GetAnnotations()[core.DriftDetectionAnnotation]
+	if ok && enabled == "off" {
+		return errs
+	}
+
+	// work on a copy to avoid affecting runtime in any ways
+	cp, _ := oldApp.DeepCopyObject().(*v1alpha1.Application)
+
+	// We need template to be compiled
+	if err := admission.CompileAndValidateTemplate(ctx, cp); err != nil {
+		errs.AddWarningf("could not compile templates of existing CRD, drift might be detected: %s", err.Error())
+	}
+
+	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
+	if err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+
+	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(cp))
+
+	err = appResolve.ResolveClientCertificates(ctx, cp.Spec.Settings, cp.GetNamespace(), cp.GetName())
+	if err != nil {
+		errs.AddWarningf("could not resolve certificates, drift might be detected on certificates: %s", err.Error())
+	}
+
+	remoteApp, err := apimClient.Applications.GetByHRID(cp.Spec.HRID)
+	if err != nil {
+		errs.AddSeveref("cannot get Application during drift detection from HRID %s: %s", cp.Spec.HRID, err.Error())
+		return errs
+	}
+
+	result := drift.Detect(cp.ToDTO(), remoteApp)
+	if result.DriftDetected() {
+		errs.AddSeveref("drift detected:\n%s", result.String())
+	}
+
+	return errs
+
 }
 
 func validateCertEndDatesVsSubscriptionEndDates(

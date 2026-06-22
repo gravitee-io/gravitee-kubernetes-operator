@@ -17,3 +17,8 @@ func expectNoDrift(r drift.Result) {
 	Expect(r.String()).To(BeEmpty())
 	Expect(r.DriftDetected()).To(BeFalse())
 }
+
+func ptr[T any](v T) *T {
+	GinkgoHelper()
+	return &v
+}

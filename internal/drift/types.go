@@ -28,7 +28,7 @@ const (
 
 type Equivalence struct {
 	Equivalent EquivalentStatus
-	FuncName   string
+	Reason     any
 	Skip       bool
 }
 

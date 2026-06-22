@@ -134,10 +134,6 @@ type withAnyField struct {
 	Value any `json:"value" drift:"type-check-panic"`
 }
 
-func ptr[T any](v T) *T {
-	return &v
-}
-
 var _ = Describe("Detect", func() {
 
 	Describe("when drift is detected", func() {

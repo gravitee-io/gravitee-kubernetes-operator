@@ -39,8 +39,14 @@ func formatValue(this *Result, b *strings.Builder, indent int) {
 	} else {
 		b.WriteString(fmt.Sprintf("%s: %v != %v", this.Property, resolve(this.CRDValue), resolve(this.APIValue)))
 	}
-	if this.FuncName != "" {
-		b.WriteString(fmt.Sprintf(" (%s)", this.FuncName))
+	switch r := this.Reason.(type) {
+	case string:
+		if r != "" {
+			b.WriteString(fmt.Sprintf(" (%s)", this.Reason))
+		}
+	case error:
+		b.WriteString(fmt.Sprintf(" (error: %s)", this.Reason))
+	default:
 	}
 	b.WriteString("\n")
 }

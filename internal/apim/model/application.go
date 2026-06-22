@@ -18,18 +18,21 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 )
 
-type Application struct {
-	ID          string               `json:"id,omitempty"`
-	HRID        string               `json:"hrid,omitempty"`
-	Name        string               `json:"name,omitempty"`
-	Status      string               `json:"status,omitempty"`
-	Description string               `json:"description,omitempty"`
-	Settings    *application.Setting `json:"settings,omitempty"`
-	Background  string               `json:"background,omitempty"`
-	Domain      string               `json:"domain,omitempty"`
-	Groups      []string             `json:"groups,omitempty"`
-	Picture     string               `json:"picture,omitempty"`
-	AppType     string               `json:"type,omitempty"`
+type ApplicationDTO struct {
+	ID            string                 `json:"id,omitempty"`
+	HRID          string                 `json:"hrid,omitempty" drift:"ignore"`
+	Name          string                 `json:"name,omitempty"`
+	Status        string                 `json:"status,omitempty" drift:"ignore"`
+	Description   string                 `json:"description,omitempty"`
+	Settings      *application.Setting   `json:"settings,omitempty" drift:"empty-is-nil"`
+	Background    string                 `json:"background,omitempty"`
+	Domain        string                 `json:"domain,omitempty"`
+	Groups        []string               `json:"groups,omitempty" drift:"empty-is-nil"`
+	Picture       string                 `json:"picture,omitempty"`
+	PictureURL    string                 `json:"pictureUrl,omitempty"`
+	NotifyMembers *bool                  `json:"notifyMembers" drift:"empty-is-nil"`
+	Metadata      []application.Metadata `json:"metadata" drift:"empty-is-nil"`
+	Members       []application.Member   `json:"members" drift:"empty-is-nil"`
 }
 
 type ApplicationMetaData struct {

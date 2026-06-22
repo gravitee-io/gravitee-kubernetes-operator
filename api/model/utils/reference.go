@@ -37,3 +37,11 @@ func ToNumberValue[T constraints.Float | constraints.Integer | constraints.Unsig
 
 	return *t
 }
+
+
+func SafeDereference[T any](v *T) T {
+	if v == nil {
+		v = new(T)
+	}
+	return *v
+}

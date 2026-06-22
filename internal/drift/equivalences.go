@@ -14,20 +14,33 @@
 
 package drift
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+	"time"
+)
 
 const (
 	emptyIsNilName = "empty-is-nil"
+	ignoreName     = "ignore"
 )
 
 func Init() {
 	Register(emptyIsNilName, reflect.String, EmptyIsNilString)
+	Register(ignoreName, reflect.String, Ignore)
+	Register("trimmed", reflect.String, Trimmed)
+	Register("rfc3339", reflect.String, RFC3339)
 	Register(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
 	Register(emptyIsNilName, reflect.Int, EmptyIsNilInt)
 	Register(emptyIsNilName, reflect.Uint, EmptyIsNilUint)
 	Register(emptyIsNilName, reflect.Slice, EmptyIsNilLen)
 	Register(emptyIsNilName, reflect.Map, EmptyIsNilLen)
 	Register(emptyIsNilName, reflect.Struct, EmptyIsNilStruct)
+	Register(ignoreName, reflect.Struct, IgnoreSkip)
+}
+
+func Ignore(_ any, _ any) Equivalence {
+	return Equivalence{Equivalent: Equivalent}
 }
 
 func EmptyIsNilString(crd any, api any) Equivalence {
@@ -38,6 +51,41 @@ func EmptyIsNilString(crd any, api any) Equivalence {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return FromDeepEqual(crd, api)
+}
+
+func Trimmed(crd any, api any) Equivalence {
+	// the registry protects us from casting panics
+	crdString, _ := crd.(string)
+	apiString, _ := api.(string)
+	if strings.TrimSpace(crdString) == strings.TrimSpace(apiString) {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	return Equivalence{Equivalent: Inequivalent}
+}
+
+func RFC3339(crd any, api any) Equivalence {
+	// the registry protects us from casting panics
+	crdString, _ := crd.(string)
+	apiString, _ := api.(string)
+	// avoid parsing error
+	if (crdString != "") != (apiString != "") {
+		return Equivalence{Equivalent: Inequivalent}
+	}
+	if crdString == "" && apiString == "" {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	crdRFC3339time, err := time.Parse(time.RFC3339, crdString)
+	if err != nil {
+		return Equivalence{Equivalent: Inequivalent, Reason: err}
+	}
+	apiRFC3339time, err := time.Parse(time.RFC3339, apiString)
+	if err != nil {
+		return Equivalence{Equivalent: Inequivalent, Reason: err}
+	}
+	if crdRFC3339time.Equal(apiRFC3339time) {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	return Equivalence{Equivalent: Inequivalent}
 }
 
 func EmptyIsNilInt(crd any, api any) Equivalence {
@@ -98,6 +146,10 @@ func EmptyIsNilStruct(crd any, api any) Equivalence {
 		}
 	}
 	return Equivalence{Equivalent: CannotCompare}
+}
+
+func IgnoreSkip(_ any, _ any) Equivalence {
+	return Equivalence{Equivalent: Equivalent, Skip: true}
 }
 
 func toZero(v any) any {

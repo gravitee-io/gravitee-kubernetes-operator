@@ -124,7 +124,7 @@ var _ = Describe("Registry", func() {
 					registryUnknownSliceTag{Items: []string{"a"}},
 					registryUnknownSliceTag{Items: []string{"b"}},
 				)
-			}).To(PanicWith("drift function 'registry-test-unknown-slice' not found"))
+			}).To(PanicWith("drift function 'registry-test-unknown-slice' not found for kind 'slice'"))
 		})
 
 		It("uses a registered slice equivalence func when name is known", func() {
