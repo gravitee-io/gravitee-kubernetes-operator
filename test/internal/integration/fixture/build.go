@@ -70,6 +70,7 @@ func (b *FSBuilder) Build() *Objects {
 
 	suffix := random.GetSuffix()
 	obj.randomSuffix = suffix
+	obj.navigationRoot = "/" + random.GetName()
 
 	if api := decodeIfDefined(f.API, &v1alpha1.ApiDefinition{}, apiKind); api != nil {
 		setupAPI(obj, api, suffix)
@@ -316,6 +317,9 @@ func setupPortal(obj *Objects, prtl **v1alpha1.Portal, suffix string) {
 	obj.Portal.Name += suffix
 	obj.Portal.Spec.Name += suffix
 	obj.Portal.Namespace = constants.Namespace
+	for i := range obj.Portal.Spec.Navigation {
+		obj.Portal.Spec.Navigation[i].Path = obj.navigationRoot + obj.Portal.Spec.Navigation[i].Path
+	}
 }
 
 func setupPortalListing(obj *Objects, listing **v1alpha1.PortalListing, suffix string) {
@@ -325,6 +329,7 @@ func setupPortalListing(obj *Objects, listing **v1alpha1.PortalListing, suffix s
 	obj.PortalListing.Spec.Portal.Name += suffix
 	for i := range obj.PortalListing.Spec.APIs {
 		obj.PortalListing.Spec.APIs[i].Ref.Name += suffix
+		obj.PortalListing.Spec.APIs[i].Location = obj.navigationRoot + obj.PortalListing.Spec.APIs[i].Location
 	}
 }
 
@@ -334,6 +339,9 @@ func setupDocumentation(obj *Objects, doc **v1alpha1.Documentation, suffix strin
 	obj.Documentation.Namespace = constants.Namespace
 	if obj.Documentation.Spec.Portal != nil {
 		obj.Documentation.Spec.Portal.Name += suffix
+		if obj.Documentation.Spec.Location != nil {
+			*obj.Documentation.Spec.Location = obj.navigationRoot + *obj.Documentation.Spec.Location
+		}
 	}
 	if obj.Documentation.Spec.API != nil {
 		obj.Documentation.Spec.API.Name += suffix
