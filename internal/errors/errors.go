@@ -39,6 +39,13 @@ type ReconcileError struct {
 	Type ErrorType
 }
 
+// Unwrap exposes the wrapped error so the standard errors.Is/errors.As machinery
+// (and helpers built on it, such as apierrors.IsNotFound) can inspect the
+// underlying cause through the ReconcileError envelope.
+func (err ReconcileError) Unwrap() error {
+	return err.error
+}
+
 func NewCompileTemplateError(err error) error {
 	return ReconcileError{err, CompileTemplateError}
 }

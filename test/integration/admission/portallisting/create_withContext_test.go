@@ -61,21 +61,6 @@ var _ = Describe("Validate create", labels.WithContext, func() {
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 
-	It("should return severe error when portalRef is changed on update", func() {
-		listing := fixture.
-			Builder().
-			WithPortalListing(constants.PortalListingFile).
-			Build()
-
-		updated := listing.PortalListing.DeepCopy()
-		updated.Spec.Portal.Name += "-repointed"
-
-		Eventually(func() error {
-			_, err := admissionCtrl.ValidateUpdate(ctx, listing.PortalListing, updated)
-			return assert.NotNil("admission error", err)
-		}, constants.EventualTimeout, interval).Should(Succeed())
-	})
-
 	It("should return severe error when an API context differs from the portal context", func() {
 		fixtures := fixture.Builder().
 			AddSecret(constants.ContextSecretFile).

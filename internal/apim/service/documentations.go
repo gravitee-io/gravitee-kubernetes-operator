@@ -19,21 +19,24 @@ import (
 
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gohttp "github.com/gravitee-io/gravitee-kubernetes-operator/internal/http"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 // DocumentationParent identifies the owning resource of a documentation page.
 // A page is attached to exactly one of a portal or an API; the parent
-// determines which automation endpoint the page is synced to.
+// determines which automation endpoint the page is synced to. The HRID is
+// computed from the resolved object here in the service layer.
 type DocumentationParent struct {
-	// Portal is the HRID of the owning portal, or "" when attached to an API.
-	Portal string
-	// API is the HRID of the owning API, or "" when attached to a portal.
-	API string
+	// Portal is the owning portal, or nil when attached to an API.
+	Portal *v1alpha1.Portal
+	// API is the owning API, or nil when attached to a portal.
+	API core.ApiDefinitionObject
 }
 
 type Documentations struct {
@@ -78,7 +81,8 @@ func (svc *Documentations) createOrUpdate(
 	return *importStatus, nil
 }
 
-func (svc *Documentations) Delete(parent DocumentationParent, docHrid string) error {
+func (svc *Documentations) Delete(doc *v1alpha1.Documentation, parent DocumentationParent) error {
+	docHrid := refs.NewNamespacedNameFromObject(doc).HRID()
 	url := svc.documentationsTarget(parent).WithPath(docHrid)
 	return svc.HTTP.Delete(url.String(), nil)
 }
@@ -94,15 +98,17 @@ func (svc *Documentations) GetByHRID(parent DocumentationParent, docHrid string)
 }
 
 // documentationsTarget builds the documentations collection URL nested under
-// the owning portal or API.
+// the owning portal or API, computing the parent HRID from the resolved object.
 func (svc *Documentations) documentationsTarget(parent DocumentationParent) *gohttp.URL {
-	if parent.API != "" {
+	if parent.API != nil {
+		apiRef := refs.NewNamespacedName(parent.API.GetNamespace(), parent.API.GetName())
 		return svc.AutomationTarget("apis").
-			WithPath(parent.API).
+			WithPath(apiRef.HRID()).
 			WithPath("documentations")
 	}
+	portalHrid := refs.NewNamespacedNameFromObject(parent.Portal).HRID()
 	return svc.AutomationTarget("portals").
-		WithPath(parent.Portal).
+		WithPath(portalHrid).
 		WithPath("documentations")
 }
 
@@ -112,7 +118,7 @@ func toDocumentationDTO(doc *v1alpha1.Documentation) *model.DocumentationDTO {
 		Name:     doc.Spec.Name,
 		PageType: doc.Spec.PageType,
 		Content:  doc.Spec.Content,
-		Location: doc.Spec.Location,
+		Location: utils.ToStringValue(doc.Spec.Location),
 		Order:    doc.Spec.Order,
 	}
 }

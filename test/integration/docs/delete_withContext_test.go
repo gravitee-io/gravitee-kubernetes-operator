@@ -51,9 +51,8 @@ var _ = Describe("Delete", labels.WithContext, func() {
 		By("calling rest API, expecting to find documentation")
 
 		apimClient := apim.NewClient(ctx)
-		portalHrid := refs.NewNamespacedNameFromObject(fixtures.Portal).HRID()
 		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
-		parent := service.DocumentationParent{Portal: portalHrid}
+		parent := service.DocumentationParent{Portal: fixtures.Portal}
 
 		Eventually(func() error {
 			doc, docErr := apimClient.Documentations.GetByHRID(parent, docHrid)
