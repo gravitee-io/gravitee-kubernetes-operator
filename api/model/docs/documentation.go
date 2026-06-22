@@ -48,7 +48,7 @@ type Type struct {
 	// in the Portal's or API's navigation.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Pattern=`^/`
-	Location string `json:"location,omitempty"`
+	Location *string `json:"location,omitempty"`
 	// Optional display order of this page relative to its siblings at the same
 	// location.
 	// +kubebuilder:validation:Optional

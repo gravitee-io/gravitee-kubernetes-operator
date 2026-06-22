@@ -27,7 +27,6 @@ type Type struct {
 	// The order of entries in the list is preserved. Intermediate folders are
 	// implicitly created by APIM if not listed explicitly.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:MaxItems=50
 	// +listType=map
 	// +listMapKey=path
 	Navigation []*nav.NavigationPath `json:"navigation,omitempty"`

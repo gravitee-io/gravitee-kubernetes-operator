@@ -27,64 +27,69 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validate create", labels.WithContext, func() {
+var _ = Describe("Validate update", labels.WithContext, func() {
 	interval := constants.Interval
 	ctx := context.Background()
 	admissionCtrl := adm.AdmissionCtrl{}
 
-	It("should return severe error when neither portalRef nor apiRef is set", func() {
+	It("should return severe error when a portal documentation is reassigned to an API", func() {
 		doc := fixture.
 			Builder().
 			WithDocumentation(constants.DocumentationPortalFile).
 			Build()
 
-		doc.Documentation.Spec.Portal = nil
-		doc.Documentation.Spec.API = nil
+		updated := doc.Documentation.DeepCopy()
+		updated.Spec.Portal = nil
+		updated.Spec.API = &refs.NamespacedName{Name: "some-api"}
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, doc.Documentation)
+			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
 			return assert.NotNil("admission error", err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 
-	It("should return severe error when both portalRef and apiRef are set", func() {
-		doc := fixture.
-			Builder().
-			WithDocumentation(constants.DocumentationPortalFile).
-			Build()
-
-		doc.Documentation.Spec.API = &refs.NamespacedName{Name: "some-api"}
-
-		Eventually(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, doc.Documentation)
-			return assert.NotNil("admission error", err)
-		}, constants.EventualTimeout, interval).Should(Succeed())
-	})
-
-	It("should return severe error when apiRef is not a v4 API kind", func() {
+	It("should return severe error when an API documentation is reassigned to a portal", func() {
 		doc := fixture.
 			Builder().
 			WithDocumentation(constants.DocumentationApiFile).
 			Build()
 
-		doc.Documentation.Spec.API.Kind = "ApiDefinition"
+		updated := doc.Documentation.DeepCopy()
+		updated.Spec.API = nil
+		updated.Spec.Portal = &refs.NamespacedName{Name: "some-portal"}
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, doc.Documentation)
+			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
 			return assert.NotNil("admission error", err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})
 
-	It("should return severe error when portalRef cannot be resolved", func() {
+	It("should return severe error when portalRef is changed", func() {
 		doc := fixture.
 			Builder().
 			WithDocumentation(constants.DocumentationPortalFile).
 			Build()
 
-		doc.Documentation.Spec.Portal.Name = "unresolved"
+		updated := doc.Documentation.DeepCopy()
+		updated.Spec.Portal.Name += "-repointed"
 
 		Eventually(func() error {
-			_, err := admissionCtrl.ValidateCreate(ctx, doc.Documentation)
+			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
+			return assert.NotNil("admission error", err)
+		}, constants.EventualTimeout, interval).Should(Succeed())
+	})
+
+	It("should return severe error when apiRef is changed", func() {
+		doc := fixture.
+			Builder().
+			WithDocumentation(constants.DocumentationApiFile).
+			Build()
+
+		updated := doc.Documentation.DeepCopy()
+		updated.Spec.API.Name += "-repointed"
+
+		Eventually(func() error {
+			_, err := admissionCtrl.ValidateUpdate(ctx, doc.Documentation, updated)
 			return assert.NotNil("admission error", err)
 		}, constants.EventualTimeout, interval).Should(Succeed())
 	})

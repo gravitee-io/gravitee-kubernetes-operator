@@ -17,11 +17,11 @@ package internal
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -32,6 +32,10 @@ func Delete(ctx context.Context, doc *v1alpha1.Documentation) error {
 
 	parent, err := resolveParent(ctx, doc)
 	if err != nil {
+		// Parent Portal/API already gone: nothing left to sync against, let the finalizer be removed.
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -42,12 +46,14 @@ func Delete(ctx context.Context, doc *v1alpha1.Documentation) error {
 
 	apimClient, err := apim.FromContextRef(ctx, parent.contextRef, parent.contextNs)
 	if err != nil {
+		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
-	docHrid := refs.NewNamespacedNameFromObject(doc).HRID()
-
-	if err := gerrors.IgnoreNotFound(apimClient.Documentations.Delete(parent.parent, docHrid)); err != nil {
+	if err := gerrors.IgnoreNotFound(apimClient.Documentations.Delete(doc, parent.parent)); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 
