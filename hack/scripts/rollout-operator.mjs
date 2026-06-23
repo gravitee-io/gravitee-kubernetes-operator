@@ -111,6 +111,6 @@ async function getEnv() {
     return "dev";
   }
   if (BRANCH == STABLE.getBranch()) {
-    return "stable;";
+    return "stable";
   }
 }

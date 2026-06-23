@@ -100,6 +100,21 @@ func ApiV4Accepted(apiDefinition *v1alpha1.ApiV4Definition) error {
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
+func ManagedByAutomationAPI(conditionAware core.ConditionAwareObject) error {
+	return Equals(reconcileCondition, true,
+		conditionAware.GetConditions()[k8s.AutomationAPIManaged].Status == metav1.ConditionTrue)
+}
+
+func PortalListingAccepted(listing *v1alpha1.PortalListing) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(listing.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func DocumentationAccepted(doc *v1alpha1.Documentation) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(doc.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func ApiV4Rejected(apiDefinition *v1alpha1.ApiV4Definition) error {
 	return Equals(reconcileCondition, true,
 		k8s.MapConditions(apiDefinition.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionFalse)
@@ -160,6 +175,16 @@ func GroupAccepted(group *v1alpha1.Group) error {
 
 func GroupFailed(group *v1alpha1.Group) error {
 	return Equals(reconcileStatus, core.ProcessingStatusFailed, group.Status.ProcessingStatus)
+}
+
+func DictionaryAccepted(dict *v1alpha1.Dictionary) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(dict.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
+func PortalAccepted(prtl *v1alpha1.Portal) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(prtl.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
 func IDPGroupMappingCompleted(idpGroupMapping *v1alpha1.IDPGroupMapping) error {
@@ -255,6 +280,22 @@ func NotEmptySlice[T any](field string, value []T) error {
 func SliceOfSize[T any](field string, value []T, size int) error {
 	if len(value) != size {
 		return fmt.Errorf("expected %s to have len %d, got %d", field, size, len(value))
+	}
+	return nil
+}
+
+// ContainsInOrder asserts that every element of expected appears in given in the
+// same relative order. Extra elements in given (e.g. APIM-injected implicit
+// navigation folders) are tolerated.
+func ContainsInOrder[E comparable](field string, expected, given []E) error {
+	i := 0
+	for _, g := range given {
+		if i < len(expected) && g == expected[i] {
+			i++
+		}
+	}
+	if i != len(expected) {
+		return newAssertEqualError(field+" (ordered subsequence)", expected, given)
 	}
 	return nil
 }

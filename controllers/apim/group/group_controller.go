@@ -26,8 +26,9 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -38,11 +39,17 @@ import (
 type Reconciler struct {
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+	Watcher  watch.Interface
+	Client   client.Client
 }
 
+// +kubebuilder:rbac:groups=gravitee.io,resources=groups,verbs=get;list;watch;create;update;patch;delete;deletecollection
+// +kubebuilder:rbac:groups=gravitee.io,resources=groups/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=gravitee.io,resources=groups/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	group := &v1alpha1.Group{}
-	if err := k8s.GetClient().Get(ctx, req.NamespacedName, group); err != nil {
+	if err := r.Client.Get(ctx, req.NamespacedName, group); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
@@ -50,14 +57,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	events := event.NewRecorder(r.Recorder)
 
-	group.SetConditions([]metav1.Condition{})
+	k8s.ResetConditionsExceptAutomationAPI(group)
+
 	dc := group.DeepCopy()
 
 	_, err := util.CreateOrUpdate(ctx, k8s.GetClient(), group, func() error {
 		util.AddFinalizer(group, core.GroupFinalizer)
-		k8s.AddAnnotation(group, core.LastSpecHashAnnotation, hash.Calculate(&dc.Spec))
+		k8s.AddAnnotation(group, core.LastSpecHashAnnotation, hash.Calculate(&group.Spec))
 
-		if err := template.Compile(ctx, dc, true); err != nil {
+		if group.IsBeingDeleted() {
+			if err := template.ReleaseReferences(ctx, group); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			group.Status.ProcessingStatus = core.ProcessingStatusFailed
 			return err
 		}
@@ -107,5 +119,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Group{}).
 		WithEventFilter(predicate.LastSpecHashPredicate{}).
+		Watches(&v1alpha1.ManagementContext{}, r.Watcher.WatchContexts(search.GroupContextField)).
 		Complete(r)
 }

@@ -17,6 +17,7 @@ package sharedpolicygroups
 import (
 	"context"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -43,13 +44,15 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 		Expect(assert.SharedPolicyGroupCompleted(fixtures.SharedPolicyGroup)).To(Succeed())
 		Expect(assert.SharedPolicyGroupAccepted(fixtures.SharedPolicyGroup)).To(Succeed())
+		Expect(assert.ManagedByAutomationAPI(fixtures.SharedPolicyGroup)).To(Succeed())
 
 		By("calling rest API, expecting SPG to match status cross ID")
 
 		apim := apim.NewClient(ctx)
+		hrid := refs.NewNamespacedNameFromObject(fixtures.SharedPolicyGroup).HRID()
 
 		Eventually(func() error {
-			spg, apiErr := apim.SharedPolicyGroup.GetByID(fixtures.SharedPolicyGroup.Status.ID)
+			spg, apiErr := apim.SharedPolicyGroup.GetByHRID(hrid)
 			if apiErr != nil {
 				return apiErr
 			}

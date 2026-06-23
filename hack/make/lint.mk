@@ -49,6 +49,6 @@ lint: $(ALL_LINT)
 
 .PHONY: lint-fix
 lint-fix: ## Fix whatever golangci-lint can fix and add licenses headers
-	@$(GOLANGCILINT) run ./... --fix
+	@$(GOLANGCILINT) run ./... --fix --exclude-dirs "e2e|platform-test"
 	@$(MAKE) add-license
 	@npx --yes prettier --write hack/scripts

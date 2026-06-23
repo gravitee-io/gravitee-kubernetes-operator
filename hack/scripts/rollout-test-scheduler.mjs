@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { rolloutTestScheduller } from "./lib/rollout-test-scheduler.mjs";
+import { rolloutTestScheduler } from "./lib/rollout-test-scheduler.mjs";
 
 const version = argv.version;
 
-await rolloutTestScheduller(version);
+await rolloutTestScheduler(version);

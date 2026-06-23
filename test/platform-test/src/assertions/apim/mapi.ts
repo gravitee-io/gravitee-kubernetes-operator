@@ -17,12 +17,13 @@
 import { AssertionError } from "node:assert";
 import { HttpClient } from "../../utils/http/http.js";
 import { deepPartialMatch } from "../../utils/match/partial.js";
+import { poll } from "../../utils/match/poll.js";
 import { throwIfFailed } from "../../utils/match/result.js";
 import type { FetchFn } from "../../types/http.js";
-import type { DeepPartial, AssertionReport } from "../../types/match.js";
+import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Plan, Subscription } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -39,8 +40,8 @@ export class Mapi {
   /** @internal */
   readonly http: HttpClient;
 
-  constructor(config: MapiConfig, fetchFn?: FetchFn) {
-    this.http = new HttpClient(config, fetchFn);
+  constructor(config: MapiConfig) {
+    this.http = new HttpClient(config);
   }
 
   // ── API Assertions ──────────────────────────────────────────
@@ -53,6 +54,20 @@ export class Mapi {
     const api = await this.fetchApi(apiId);
     const report = deepPartialMatch(api, expected);
     throwIfFailed(report);
+  }
+
+  async waitForApiMatches(
+    apiId: string,
+    expected: DeepPartial<Api>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertApiMatches(apiId, expected),
+      {
+        description: `API ${apiId} matches expected shape`,
+        ...options,
+      },
+    );
   }
 
   /** Non-throwing variant — returns the report for soft assertions. */
@@ -69,8 +84,30 @@ export class Mapi {
     return this.assertApiState(apiId, "STARTED");
   }
 
+  async waitForApiStarted(apiId: string, options: PollOptions = {}): Promise<void> {
+    await this.waitForApiMatches(
+      apiId,
+      { state: "STARTED" },
+      {
+        description: `API ${apiId} is STARTED`,
+        ...options,
+      },
+    );
+  }
+
   async assertApiStopped(apiId: string): Promise<void> {
     return this.assertApiState(apiId, "STOPPED");
+  }
+
+  async waitForApiStopped(apiId: string, options: PollOptions = {}): Promise<void> {
+    await this.waitForApiMatches(
+      apiId,
+      { state: "STOPPED" },
+      {
+        description: `API ${apiId} is STOPPED`,
+        ...options,
+      },
+    );
   }
 
   /**
@@ -148,7 +185,61 @@ export class Mapi {
     return new Gateway(config, fetchFn);
   }
 
+  // ── Application Assertions ──────────────────────────────────
+
+  async assertApplicationMatches(appId: string, expected: DeepPartial<Application>): Promise<void> {
+    const app = await this.fetchApplication(appId);
+    throwIfFailed(deepPartialMatch(app, expected));
+  }
+
+  async waitForApplicationMatches(
+    appId: string,
+    expected: DeepPartial<Application>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertApplicationMatches(appId, expected),
+      {
+        description: `Application ${appId} matches expected shape`,
+        ...options,
+      },
+    );
+  }
+
+  async assertApplicationHttpStatus(appId: string, expectedStatus: number): Promise<void> {
+    const path = this.http.managementV1Path(`/applications/${appId}`);
+    const res = await this.http.get<unknown>(path);
+    if (res.status !== expectedStatus) {
+      throw new AssertionError({
+        message: `Expected HTTP ${expectedStatus} but got ${res.status} for Application ${appId}`,
+        expected: expectedStatus,
+        actual: res.status,
+        operator: "assertApplicationHttpStatus",
+      });
+    }
+  }
+
+  // ── Plan List Helpers ──────────────────────────────────────
+
+  async listApiPlans(apiId: string): Promise<Plan[]> {
+    const path = this.http.managementV2Path(`/apis/${apiId}/plans?page=1&perPage=100`);
+    const res = await this.http.get<PaginatedResult<Plan>>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list plans for API ${apiId}: ${res.status}`);
+    }
+    return res.body.data;
+  }
+
   // ── Fetch Helpers ───────────────────────────────────────────
+
+  async fetchApplication(appId: string): Promise<Application> {
+    const path = this.http.managementV1Path(`/applications/${appId}`);
+    const res = await this.http.get<Application>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to fetch Application ${appId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
+    }
+    return res.body;
+  }
 
   async fetchApi(apiId: string): Promise<Api> {
     const path = this.http.managementV2Path(`/apis/${apiId}`);
@@ -176,9 +267,251 @@ export class Mapi {
     }
     return res.body;
   }
+
+  // ── Subscription API Keys ──────────────────────────────────
+
+  async listSubscriptionApiKeys(
+    apiId: string,
+    subscriptionId: string,
+  ): Promise<PaginatedResult<SubscriptionApiKey>> {
+    const path = this.http.managementV2Path(
+      `/apis/${apiId}/subscriptions/${subscriptionId}/api-keys`,
+    );
+    const res = await this.http.get<PaginatedResult<SubscriptionApiKey>>(path);
+    if (res.status !== 200) {
+      throw new Error(
+        `Failed to list API keys for subscription ${subscriptionId}: ${res.status} ${res.statusText}`,
+      );
+    }
+    return res.body;
+  }
+
+  // The /api-keys listing returns active + revoked + expired keys with no
+  // server-side filter. Combined with deterministic subscription HRIDs and
+  // persistent APIM MongoDB across runs, the raw count is unstable. Active
+  // keys are the only ones that matter for behavioural assertions.
+  async listActiveSubscriptionApiKeys(
+    apiId: string,
+    subscriptionId: string,
+  ): Promise<SubscriptionApiKey[]> {
+    const result = await this.listSubscriptionApiKeys(apiId, subscriptionId);
+    return result.data.filter((k) => !k.revoked && !k.expired);
+  }
+
+  async waitForSubscriptionApiKeyCount(
+    apiId: string,
+    subscriptionId: string,
+    expectedCount: number,
+    options: PollOptions = {},
+  ): Promise<SubscriptionApiKey[]> {
+    let active: SubscriptionApiKey[] = [];
+    await poll(
+      async () => {
+        active = await this.listActiveSubscriptionApiKeys(apiId, subscriptionId);
+        if (active.length !== expectedCount) {
+          throw new AssertionError({
+            message: `Expected ${expectedCount} active API key(s) for subscription ${subscriptionId}, got ${active.length}`,
+          });
+        }
+      },
+      {
+        description: `subscription ${subscriptionId} has ${expectedCount} active API key(s)`,
+        ...options,
+      },
+    );
+    return active;
+  }
+
+  // ── Delete API ─────────────────────────────────────────────
+
+  /** Delete an API directly from APIM (for orphan cleanup tests). */
+  async deleteApi(apiId: string, closePlans = true): Promise<void> {
+    const suffix = closePlans ? "?closePlans=true" : "";
+    const path = this.http.managementV2Path(`/apis/${apiId}${suffix}`);
+    const res = await this.http.delete(path);
+    if (res.status !== 204 && res.status !== 202) {
+      throw new Error(`Failed to delete API ${apiId}: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  // ── Notification Settings ──────────────────────────────────
+
+  /** Fetch notification settings for an API (v1 management API). */
+  async fetchApiNotificationSettings(apiId: string): Promise<NotificationSetting[]> {
+    const path = this.http.managementV1Path(`/apis/${apiId}/notificationsettings`);
+    const res = await this.http.get<NotificationSetting[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to fetch notification settings for API ${apiId}: ${res.status}`);
+    }
+    return res.body;
+  }
+
+  // ── CRD Export ─────────────────────────────────────────────
+
+  /**
+   * Export an API as a CRD YAML string and return the raw text.
+   *
+   * Uses a plain fetch without `Accept: application/json` because
+   * the APIM export endpoint returns YAML and rejects JSON requests.
+   */
+  async exportApiCrd(apiId: string): Promise<string> {
+    const path = this.http.managementV2Path(`/apis/${apiId}/_export/crd`);
+    const url = `${this.http["baseUrl"]}${path}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.http["authHeader"],
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (response.status !== 200) {
+      throw new Error(`Failed to export CRD for API ${apiId}: ${response.status}`);
+    }
+    return response.text();
+  }
+
+  // ── Groups ─────────────────────────────────────────────────
+
+  /**
+   * List all groups in the environment via the v1 management API.
+   *
+   * The v1 `/configuration/groups` endpoint returns full group objects
+   * (including `hrid`, `origin` and `disable_membership_notifications`) as a
+   * plain array — unlike the v2 list, which is paginated and omits `hrid`.
+   */
+  async listGroups(): Promise<Group[]> {
+    const path = this.http.managementV1Path("/configuration/groups");
+    const res = await this.http.get<Group[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list groups: ${res.status} ${res.statusText}`);
+    }
+    return res.body;
+  }
+
+  /** Fetch a single group by its human-readable id. @throws if not found. */
+  async fetchGroupByHrid(hrid: string): Promise<Group> {
+    const groups = await this.listGroups();
+    const group = groups.find((g) => g.hrid === hrid);
+    if (!group) {
+      throw new Error(
+        `Group with hrid "${hrid}" not found. Known hrids: ${groups.map((g) => g.hrid).join(", ")}`,
+      );
+    }
+    return group;
+  }
+
+  /** Fetch a group by hrid and assert it partially matches the expected shape. */
+  async assertGroupMatches(hrid: string, expected: DeepPartial<Group>): Promise<void> {
+    const group = await this.fetchGroupByHrid(hrid);
+    throwIfFailed(deepPartialMatch(group, expected));
+  }
+
+  async waitForGroupMatches(
+    hrid: string,
+    expected: DeepPartial<Group>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertGroupMatches(hrid, expected),
+      { description: `group "${hrid}" matches expected shape`, ...options },
+    );
+  }
+
+  /** Fetch a single group directly by its APIM id (UUID). @throws if not found. */
+  async fetchGroupById(id: string): Promise<Group> {
+    const path = this.http.managementV1Path(`/configuration/groups/${id}`);
+    const res = await this.http.get<Group>(path);
+    if (res.status !== 200) {
+      throw new Error(
+        `Failed to fetch group ${id}: ${res.status} ${res.statusText} - ${JSON.stringify(res.body)}`,
+      );
+    }
+    return res.body;
+  }
+
+  /** Fetch a group by APIM id and assert it partially matches the expected shape. */
+  async assertGroupMatchesById(id: string, expected: DeepPartial<Group>): Promise<void> {
+    const group = await this.fetchGroupById(id);
+    throwIfFailed(deepPartialMatch(group, expected));
+  }
+
+  async waitForGroupMatchesById(
+    id: string,
+    expected: DeepPartial<Group>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertGroupMatchesById(id, expected),
+      { description: `group ${id} matches expected shape`, ...options },
+    );
+  }
+
+  /** List the resolved members of a group (v1 management API). */
+  async fetchGroupMembers(groupId: string): Promise<GroupMember[]> {
+    const path = this.http.managementV1Path(`/configuration/groups/${groupId}/members`);
+    const res = await this.http.get<GroupMember[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list members for group ${groupId}: ${res.status} ${res.statusText}`);
+    }
+    return res.body;
+  }
+
+  /** Assert no group with the given hrid exists (e.g. after `terraform destroy`). */
+  async assertGroupAbsent(hrid: string): Promise<void> {
+    const groups = await this.listGroups();
+    const found = groups.find((g) => g.hrid === hrid);
+    if (found) {
+      throw new AssertionError({
+        message: `Expected no group with hrid "${hrid}", but found one (id ${found.id})`,
+      });
+    }
+  }
+
+  async waitForGroupAbsent(hrid: string, options: PollOptions = {}): Promise<void> {
+    await poll(
+      () => this.assertGroupAbsent(hrid),
+      { description: `group "${hrid}" is absent`, ...options },
+    );
+  }
+
+  /**
+   * Delete a group directly from APIM by its id.
+   *
+   * Used to simulate an out-of-band change so a subsequent `terraform plan`
+   * has to detect the drift and propose recreating the group.
+   */
+  async deleteGroup(groupId: string): Promise<void> {
+    const path = this.http.managementV1Path(`/configuration/groups/${groupId}`);
+    const res = await this.http.delete(path);
+    if (res.status !== 204 && res.status !== 200) {
+      throw new Error(`Failed to delete group ${groupId}: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  /**
+   * Idempotently create a `gravitee`-source user (service account) in APIM.
+   *
+   * Group member tests need a member that actually resolves to a user. The
+   * only pre-existing memory-source user is `admin`, the org primary owner —
+   * and APIM rejects adding the primary owner as a group member (it surfaces
+   * as an HTTP 500). A dedicated service account is a non-PO user that
+   * resolves cleanly. A 400/409 is treated as "already exists" so the call
+   * is safe to repeat across runs.
+   */
+  async createServiceAccount(name: string): Promise<void> {
+    const path = this.http.managementV1Path("/users");
+    const res = await this.http.post(path, {
+      firstname: name,
+      lastname: "Service",
+      email: `${name}@gravitee.io`,
+      source: "gravitee",
+      sourceId: name,
+    });
+    if (![200, 201, 400, 409].includes(res.status)) {
+      throw new Error(`Failed to create service account ${name}: ${res.status} ${res.statusText}`);
+    }
+  }
 }
 
 /** Convenience factory */
-export function createMapi(config: MapiConfig, fetchFn?: FetchFn): Mapi {
-  return new Mapi(config, fetchFn);
+export function createMapi(config: MapiConfig): Mapi {
+  return new Mapi(config);
 }

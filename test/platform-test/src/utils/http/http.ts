@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import type { FetchFn, HttpClientConfig, HttpResponse } from "../../types/http.js";
+import type { HttpClientConfig, HttpResponse } from "../../types/http.js";
 
 /**
  * Internal HTTP client for Gravitee management APIs.
  *
- * Uses native fetch by default. The fetch function can be replaced
- * (e.g. with undici's fetch for TLS client certificates in GKO scenarios)
- * via the `fetchFn` option — but this is never exposed to library consumers.
+ * Uses native fetch. The management API is always reached over plain HTTP
+ * with basic/bearer/cookie auth in our test scenarios — mTLS only applies
+ * to the data plane, which has its own injectable fetch on `Gateway`.
  */
 export class HttpClient {
   private readonly baseUrl: string;
@@ -29,14 +29,12 @@ export class HttpClient {
   private readonly timeoutMs: number;
   private readonly defaultHeaders: Record<string, string>;
   private readonly authHeader: Record<string, string>;
-  private readonly fetchImpl: FetchFn;
 
-  constructor(config: HttpClientConfig, fetchFn?: FetchFn) {
+  constructor(config: HttpClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/+$/, "");
     this.envId = config.envId ?? "DEFAULT";
     this.timeoutMs = config.timeoutMs ?? 10_000;
     this.defaultHeaders = config.headers ?? {};
-    this.fetchImpl = fetchFn ?? globalThis.fetch;
 
     // Pre-compute auth header
     const { auth } = config;
@@ -67,6 +65,11 @@ export class HttpClient {
     return this.request<T>("DELETE", path);
   }
 
+  /** Build v1 management API path for the configured environment */
+  managementV1Path(resource: string): string {
+    return `/management/organizations/DEFAULT/environments/${this.envId}${resource}`;
+  }
+
   /** Build v2 management API path for the configured environment */
   managementV2Path(resource: string): string {
     return `/management/v2/environments/${this.envId}${resource}`;
@@ -87,7 +90,7 @@ export class HttpClient {
 
     const start = performance.now();
 
-    const response = await this.fetchImpl(url, {
+    const response = await fetch(url, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,

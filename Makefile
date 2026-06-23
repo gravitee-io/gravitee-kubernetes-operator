@@ -19,6 +19,7 @@ include hack/make/dev.mk
 include hack/make/lint.mk
 include hack/make/test.mk
 include hack/make/doc.mk
+include hack/make/bundle.mk
 
 .PHONY: all
 all: build

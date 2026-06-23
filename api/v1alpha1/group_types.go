@@ -80,6 +80,7 @@ func (s *GroupStatus) SetProcessingStatus(status core.ProcessingStatus) {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Members at",type=string,JSONPath=`.status.members`,description="The number of members added to the group"
 // +kubebuilder:storageversion
+// +kubebuilder:resource:shortName=graviteegroups
 type Group struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -133,8 +134,21 @@ func (g *Group) GetOrgID() string {
 	return g.Status.OrgID
 }
 
-func (g *Group) PopulateIDs(mCtx core.ContextModel) {
-	g.Spec.ID = g.pickID(mCtx)
+func (g *Group) PopulateIDs(mCtx core.ContextModel, automationAPIManaged bool) {
+	if g.GetID() == "" || automationAPIManaged {
+		g.Spec.HRID = refs.NewNamespacedNameFromObject(g).HRID()
+		return
+	}
+
+	// Legacy mode => managed by UUIDs
+	// Generated GKO side
+	if g.Status.ID != "" {
+		g.Spec.ID = g.Status.ID
+	}
+
+	if g.Spec.ID == "" {
+		g.Spec.ID = g.pickID(mCtx)
+	}
 }
 
 func (g *Group) pickID(mCtx core.ContextModel) string {

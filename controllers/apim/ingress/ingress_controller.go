@@ -74,11 +74,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		util.AddFinalizer(ingress, core.IngressFinalizer)
 		k8s.AddAnnotation(ingress, core.LastSpecHashAnnotation, hash.Calculate(&ingress.Spec))
 
-		err := template.Compile(ctx, dc, true)
-		if err != nil {
+		if !ingress.DeletionTimestamp.IsZero() {
+			if err := template.ReleaseReferences(ctx, ingress); err != nil {
+				return err
+			}
+		} else if err := template.Compile(ctx, dc, true); err != nil {
 			return err
 		}
 
+		var err error
 		if !ingress.DeletionTimestamp.IsZero() {
 			err = events.Record(e.Delete, ingress, func() error {
 				if err := internal.Delete(ctx, dc); err != nil {

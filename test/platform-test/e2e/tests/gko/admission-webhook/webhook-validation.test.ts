@@ -22,6 +22,7 @@
  *     WHEN an invalid or unsupported CR is submitted
  *     THEN the admission webhook rejects it with a clear error message
  *     AND the resource is never created in APIM
+ *     Test cases: missing required fields, invalid enum values, deprecated fields
  *
  * Preconditions:
  *   - GKO operator is running with admission webhooks enabled
@@ -31,7 +32,7 @@
 import { test, expect, fixture } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 
-const INVALID_FIXTURE = fixture("crds/api-v4-definitions/v4-proxy-api-invalid.yaml");
+const INVALID_FIXTURE = fixture("admission-webhook/v4-invalid-spec/crd.yaml");
 
 test.describe("Webhooks — Admission validation", () => {
   test.afterAll(async ({ kubectl }) => {

@@ -4,12 +4,17 @@
 - [gravitee.io/v1alpha1](#graviteeiov1alpha1)
 - [gravitee.io/v1alpha1/application](#graviteeiov1alpha1application)
 - [gravitee.io/v1alpha1/base](#graviteeiov1alpha1base)
+- [gravitee.io/v1alpha1/dictionary](#graviteeiov1alpha1dictionary)
+- [gravitee.io/v1alpha1/docs](#graviteeiov1alpha1docs)
 - [gravitee.io/v1alpha1/gateway](#graviteeiov1alpha1gateway)
 - [gravitee.io/v1alpha1/group](#graviteeiov1alpha1group)
 - [gravitee.io/v1alpha1/idpgroupmapping](#graviteeiov1alpha1idpgroupmapping)
 - [gravitee.io/v1alpha1/kafka](#graviteeiov1alpha1kafka)
 - [gravitee.io/v1alpha1/management](#graviteeiov1alpha1management)
+- [gravitee.io/v1alpha1/navigation](#graviteeiov1alpha1navigation)
 - [gravitee.io/v1alpha1/notification](#graviteeiov1alpha1notification)
+- [gravitee.io/v1alpha1/portal](#graviteeiov1alpha1portal)
+- [gravitee.io/v1alpha1/portallisting](#graviteeiov1alpha1portallisting)
 - [gravitee.io/v1alpha1/refs](#graviteeiov1alpha1refs)
 - [gravitee.io/v1alpha1/sharedpolicygroups](#graviteeiov1alpha1sharedpolicygroups)
 - [gravitee.io/v1alpha1/status](#graviteeiov1alpha1status)
@@ -28,12 +33,16 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ApiResource](#apiresource)
 - [ApiV4Definition](#apiv4definition)
 - [Application](#application)
+- [Dictionary](#dictionary)
+- [Documentation](#documentation)
 - [GatewayClassParameters](#gatewayclassparameters)
 - [Group](#group)
 - [IDPGroupMapping](#idpgroupmapping)
 - [KafkaRoute](#kafkaroute)
 - [ManagementContext](#managementcontext)
 - [Notification](#notification)
+- [Portal](#portal)
+- [PortalListing](#portallisting)
 - [SharedPolicyGroup](#sharedpolicygroup)
 - [Subscription](#subscription)
 
@@ -78,9 +87,9 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
-| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 
 
 #### ApiDefinitionV2Spec
@@ -114,6 +123,7 @@ _Appears in:_
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
 | `execution_mode` _string_ | Execution mode that eventually runs the API in the gateway | v4-emulation-engine | Enum: [v3 v4-emulation-engine] <br /> |
+| `consoleNotificationConfiguration` _[ConsoleNotificationConfiguration](#consolenotificationconfiguration)_ | ConsoleNotification struct sent to the mAPI, not part of the CRD spec. |  |  |
 | `contextRef` _[NamespacedName](#namespacedname)_ |  |  |  |
 | `local` _boolean_ | local defines if the api is local or not.<br />If true, the Operator will create the ConfigMaps for the Gateway and pushes the API to the Management API<br />but without setting the update flag in the datastore.<br />If false, the Operator will not create the ConfigMaps for the Gateway.<br />Instead, it pushes the API to the Management API and forces it to update the event in the datastore.<br />This will cause Gateways to fetch the APIs from the datastore | false | Optional: \{\} <br /> |
 
@@ -195,22 +205,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `description` _string_ | API description |  | Optional: \{\} <br /> |
-| `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
-| `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
-| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED] <br />Optional: \{\} <br /> |
-| `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY] <br />Required: \{\} <br /> |
-| `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
-| `flowExecution` _[FlowExecution](#flowexecution)_ | API Flow Execution (Not applicable for Native API) |  |  |
-| `flows` _[Flow](#flow) array_ | List of flows for the API | \{  \} | Optional: \{\} <br /> |
-| `analytics` _[Analytics](#analytics)_ | API Analytics (Not applicable for Native API) |  |  |
-| `services` _[ApiServices](#apiservices)_ | API Services (Not applicable for Native API) |  |  |
-| `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
-| `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
-| `failover` _[Failover](#failover)_ | API Failover |  |  |
+| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
 | `contextRef` _[NamespacedName](#namespacedname)_ |  |  |  |
 
 
@@ -234,9 +230,9 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
-| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 
 
 #### Application
@@ -274,6 +270,7 @@ _Appears in:_
 | `name` _string_ | Application name |  | Required: \{\} <br /> |
 | `description` _string_ | Application Description |  | Required: \{\} <br /> |
 | `id` _string_ | io.gravitee.definition.model.Application<br />Application ID |  |  |
+| `hrid` _string_ |  |  |  |
 | `background` _string_ | The base64 encoded background to use for this application when displaying it on the portal |  | Optional: \{\} <br /> |
 | `domain` _string_ | Application domain |  | Optional: \{\} <br /> |
 | `groups` _string array_ | Application groups |  | Optional: \{\} <br /> |
@@ -306,6 +303,133 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Dictionary
+
+
+
+Dictionary is a Gravitee APIM dictionary managed as a Kubernetes resource.
+Dictionaries provide key/value data that can be referenced in API policies
+using Gravitee EL expressions: `{#dictionaries['hrid']['key']}`.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `Dictionary` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[DictionarySpec](#dictionaryspec)_ |  |  |  |
+| `status` _[DictionaryStatus](#dictionarystatus)_ |  |  |  |
+
+
+#### DictionarySpec
+
+
+
+DictionarySpec defines the desired state of a Dictionary.
+
+
+
+_Appears in:_
+- [Dictionary](#dictionary)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the dictionary. |  | Required: \{\} <br /> |
+| `description` _string_ | Detailed description of the dictionary. |  | Optional: \{\} <br /> |
+| `deployed` _boolean_ | If true, a MANUAL dictionary is deployed in the gateway and a DYNAMIC dictionary is started.<br />Setting this back to false will stop or undeploy the dictionary. |  | Required: \{\} <br /> |
+| `type` _[DictionaryType](#dictionarytype)_ |  |  | Enum: [MANUAL DYNAMIC] <br />Required: \{\} <br /> |
+| `manual` _[ManualSpec](#manualspec)_ | Manual dictionary specification. Required when type is MANUAL, forbidden when type is DYNAMIC. |  | Optional: \{\} <br /> |
+| `dynamic` _[DynamicSpec](#dynamicspec)_ | Dynamic dictionary specification. Required when type is DYNAMIC, forbidden when type is MANUAL. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this dictionary is synced to. |  |  |
+
+
+#### DictionaryStatus
+
+
+
+DictionaryStatus defines the observed state of a Dictionary.
+
+
+
+_Appears in:_
+- [Dictionary](#dictionary)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Dictionary in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When dictionary has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Documentation
+
+
+
+Documentation is a single page of documentation (Gravitee Markdown, OpenAPI
+or AsyncAPI) for the next-gen developer portal. A Documentation page is
+attached to exactly one of a Portal or an API; the APIM management context is
+derived from the referenced resource.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `Documentation` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[DocumentationSpec](#documentationspec)_ |  |  |  |
+| `status` _[DocumentationStatus](#documentationstatus)_ |  |  |  |
+
+
+#### DocumentationSpec
+
+
+
+DocumentationSpec defines the desired state of a Documentation.
+
+
+
+_Appears in:_
+- [Documentation](#documentation)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the documentation page. |  | Required: \{\} <br /> |
+| `type` _[PageType](#pagetype)_ | The type of the documentation page. |  | Enum: [GRAVITEE_MARKDOWN OPENAPI ASYNCAPI] <br />Required: \{\} <br /> |
+| `content` _string_ | The content of the documentation page. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+| `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+
+
+#### DocumentationStatus
+
+
+
+DocumentationStatus defines the observed state of a Documentation.
+
+
+
+_Appears in:_
+- [Documentation](#documentation)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Documentation page in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the documentation page has been created regardless of errors, this<br />field is used to persist the error message encountered during admission |  |  |
 
 
 #### GatewayClassParameters
@@ -627,6 +751,122 @@ _Appears in:_
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions are the condition that must be met by the Notification<br />"Accepted" condition is used to indicate if the `Notification` can be used by another resource.<br />"ResolveRef" condition is used to indicate if an error occurred while resolving console groups. | \{  \} |  |
 
 
+#### Portal
+
+
+
+Portal is a Gravitee next-gen developer portal managed as a Kubernetes resource.
+A Portal is an environment-level object carrying its own navigation hierarchy.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `Portal` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[PortalSpec](#portalspec)_ |  |  |  |
+| `status` _[PortalStatus](#portalstatus)_ |  |  |  |
+
+
+#### PortalListing
+
+
+
+PortalListing publishes one or more APIs to a Portal at chosen locations in
+the portal's navigation hierarchy. The APIM management context is derived
+from the referenced Portal.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `PortalListing` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[PortalListingSpec](#portallistingspec)_ |  |  |  |
+| `status` _[PortalListingStatus](#portallistingstatus)_ |  |  |  |
+
+
+#### PortalListingSpec
+
+
+
+PortalListingSpec defines the desired state of a PortalListing.
+
+
+
+_Appears in:_
+- [PortalListing](#portallisting)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this listing publishes APIs to. |  | Required: \{\} <br /> |
+| `apis` _[ApiEntry](#apientry) array_ | The APIs to publish to the portal, each at a chosen location in the<br />portal's navigation. The order of entries in the list is preserved and<br />also determines display order relative to siblings sharing the same<br />location when no explicit order is set. |  | MinItems: 1 <br />Required: \{\} <br /> |
+
+
+#### PortalListingStatus
+
+
+
+PortalListingStatus defines the observed state of a PortalListing.
+
+
+
+_Appears in:_
+- [PortalListing](#portallisting)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalListing in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the portal listing has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
+
+
+#### PortalSpec
+
+
+
+PortalSpec defines the desired state of a Portal.
+
+
+
+_Appears in:_
+- [Portal](#portal)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
+| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | Optional: \{\} <br /> |
+| `contextRef` _[NamespacedName](#namespacedname)_ | Reference to a ManagementContext that determines which APIM instance this portal is synced to. |  |  |
+
+
+#### PortalStatus
+
+
+
+PortalStatus defines the observed state of a Portal.
+
+
+
+_Appears in:_
+- [Portal](#portal)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Portal in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When portal has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
 #### SharedPolicyGroup
 
 
@@ -721,6 +961,8 @@ _Appears in:_
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
+| `apiKeys` _[ApiKeySpec](#apikeyspec) array_ |  |  | Optional: \{\} <br /> |
+| `consumerConfiguration` _[ConsumerConfiguration](#consumerconfiguration)_ |  |  | Optional: \{\} <br /> |
 
 
 #### SubscriptionStatus
@@ -765,6 +1007,7 @@ _Appears in:_
 | `name` _string_ | Application name |  | Required: \{\} <br /> |
 | `description` _string_ | Application Description |  | Required: \{\} <br /> |
 | `id` _string_ | io.gravitee.definition.model.Application<br />Application ID |  |  |
+| `hrid` _string_ |  |  |  |
 | `background` _string_ | The base64 encoded background to use for this application when displaying it on the portal |  | Optional: \{\} <br /> |
 | `domain` _string_ | Application domain |  | Optional: \{\} <br /> |
 | `groups` _string array_ | Application groups |  | Optional: \{\} <br /> |
@@ -1033,9 +1276,8 @@ _Appears in:_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1055,7 +1297,6 @@ _Appears in:_
 | `categories` _string array_ | The list of categories the API belongs to.<br />Categories are reflected in APIM portal so that consumers can easily find the APIs they need. | \{  \} | Optional: \{\} <br /> |
 | `notifyMembers` _boolean_ | If true, new members added to the API spec will<br />be notified when the API is synced with APIM. | true | Optional: \{\} <br /> |
 | `notificationsRefs` _[NamespacedName](#namespacedname) array_ | References to Notification custom resources to setup notifications.<br />For an API Notification CRD `eventType` field must be set to `api`<br />and only events set via `apiEvents` attributes are used.<br />Only one notification with `target` equals to `console` is admitted. | \{  \} | Optional: \{\} <br /> |
-| `consoleNotificationConfiguration` _[ConsoleNotificationConfiguration](#consolenotificationconfiguration)_ | ConsoleNotification struct sent to the mAPI, not part of the CRD spec. |  |  |
 
 
 #### ApiState
@@ -1070,13 +1311,42 @@ _Validation:_
 _Appears in:_
 - [ApiBase](#apibase)
 - [ApiDefinitionStatus](#apidefinitionstatus)
+- [ApiStatus](#apistatus)
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
+- [AutomationStatus](#automationstatus)
 - [Status](#status)
 
 | Field | Description |
 | --- | --- |
 | `STARTED` |  |
 | `STOPPED` |  |
+
+
+#### ApiStatus
+
+
+
+
+
+
+
+_Appears in:_
+- [ApiDefinitionStatus](#apidefinitionstatus)
+- [ApiV4DefinitionStatus](#apiv4definitionstatus)
+- [AutomationStatus](#automationstatus)
+- [Status](#status)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `organizationId` _string_ | The organization ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  | Optional: \{\} <br /> |
+| `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
+| `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
+| `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
+| `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
+| `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
 #### ApiVisibility
@@ -1102,7 +1372,8 @@ ConsoleNotificationConfiguration mAPI object to update notification settings.
 
 
 _Appears in:_
-- [ApiBase](#apibase)
+- [Api](#api)
+- [ApiDefinitionV2Spec](#apidefinitionv2spec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1148,9 +1419,8 @@ _Underlying type:_ _string_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description |
 | --- | --- |
@@ -1372,9 +1642,8 @@ _Appears in:_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1476,9 +1745,11 @@ _Appears in:_
 | `homepage` _boolean_ | If true, this page will be displayed as the homepage of your API documentation. | false | Optional: \{\} <br /> |
 | `parent` _string_ | If your page contains a folder, setting this field to the map key associated to the<br />folder entry will be reflected into APIM by making the page a child of this folder. |  | Optional: \{\} <br /> |
 | `parentId` _string_ | The parent ID of the page. This field is mostly required when you are applying<br />an API exported from APIM to make the operator take control over it. Use `Parent`<br />in any other case. |  | Optional: \{\} <br /> |
+| `parentHrid` _string_ |  |  |  |
 | `api` _string_ | The API of the page. If empty, will be set automatically to the generated ID of the API. |  | Optional: \{\} <br /> |
 | `source` _[PageSource](#pagesource)_ | Source allow you to fetch pages from various external sources, overriding page content<br />each time the source is fetched. |  | Optional: \{\} <br /> |
 | `configuration` _map[string]string_ | Custom page configuration (e.g. page rendering can be changed to use Redoc instead of Swagger ui) |  | Optional: \{\} <br /> |
+| `hrid` _string_ |  |  |  |
 
 
 #### PageSource
@@ -1684,9 +1955,8 @@ _Appears in:_
 
 _Appears in:_
 - [Api](#api)
-- [Api](#api)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -1719,9 +1989,9 @@ _Appears in:_
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
 | `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
-| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+| `plans` _object (keys:string, values:string)_ | This field is used to store the list of plans that have been created<br />for the API definition if a management context has been defined<br />to sync the API with an APIM instance |  | Optional: \{\} <br /> |
 
 
 #### TrustStore
@@ -1741,6 +2011,260 @@ _Appears in:_
 | `path` _string_ |  |  | Optional: \{\} <br /> |
 | `content` _string_ | The base64 encoded trustStore content, if not relying on a path to a file |  | Optional: \{\} <br /> |
 | `password` _string_ | TrustStore password (Not applicable for PEM TrustStore) |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/dictionary
+
+
+
+
+#### DictionaryType
+
+_Underlying type:_ _string_
+
+DictionaryType is the type of dictionary.
+MANUAL is to be updated manually, DYNAMIC is updated and deployed automatically.
+
+_Validation:_
+- Enum: [MANUAL DYNAMIC]
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `MANUAL` |  |
+| `DYNAMIC` |  |
+
+
+#### DynamicSpec
+
+
+
+DynamicSpec defines a dynamic dictionary populated from an external provider on a schedule.
+
+
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `provider` _[Provider](#provider)_ | HTTP provider configuration for fetching dictionary data. |  | Required: \{\} <br /> |
+| `trigger` _[Trigger](#trigger)_ | Renewal schedule controlling how often the provider is polled. |  | Required: \{\} <br /> |
+
+
+#### ManualSpec
+
+
+
+ManualSpec defines a manual dictionary with static key/value properties.
+
+
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `properties` _object (keys:string, values:string)_ | Key/value pairs that constitute the dictionary data. |  | Required: \{\} <br /> |
+
+
+#### Provider
+
+
+
+Provider defines the HTTP provider configuration for a DYNAMIC dictionary.
+
+
+
+_Appears in:_
+- [DynamicSpec](#dynamicspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _string_ | Type of dictionary provider. |  | Enum: [HTTP] <br />Required: \{\} <br /> |
+| `url` _string_ | URL of the provider to fetch data from. |  | Required: \{\} <br /> |
+| `method` _string_ | HTTP method used to call the provider. |  | Enum: [GET POST PUT PATCH DELETE HEAD OPTIONS TRACE CONNECT] <br />Required: \{\} <br /> |
+| `specification` _string_ | JOLT specification to transform the returned payload into dictionary entries. |  | Required: \{\} <br /> |
+| `body` _string_ | Optional request payload sent to the provider. |  | Optional: \{\} <br /> |
+| `useSystemProxy` _boolean_ | Use the system proxy for outbound requests to the provider. |  | Optional: \{\} <br /> |
+| `headers` _[ProviderHeader](#providerheader) array_ | HTTP headers sent with the provider request. |  | Optional: \{\} <br /> |
+
+
+#### ProviderHeader
+
+
+
+ProviderHeader is an HTTP header sent with a provider request.
+
+
+
+_Appears in:_
+- [Provider](#provider)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Header name. |  | Required: \{\} <br /> |
+| `value` _string_ | Header value. |  | Required: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [DictionaryStatus](#dictionarystatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Dictionary in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When dictionary has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Trigger
+
+
+
+Trigger defines the renewal configuration for a DYNAMIC dictionary.
+
+
+
+_Appears in:_
+- [DynamicSpec](#dynamicspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `rate` _integer_ | Polling interval value (used with Unit to define the schedule). |  | Required: \{\} <br /> |
+| `unit` _[TriggerUnit](#triggerunit)_ | Time unit for the polling interval. |  | Enum: [MICROSECONDS MILLISECONDS SECONDS MINUTES HOURS DAYS] <br />Required: \{\} <br /> |
+
+
+#### TriggerUnit
+
+_Underlying type:_ _string_
+
+TriggerUnit is the time unit for a dictionary trigger schedule.
+
+_Validation:_
+- Enum: [MICROSECONDS MILLISECONDS SECONDS MINUTES HOURS DAYS]
+
+_Appears in:_
+- [Trigger](#trigger)
+
+| Field | Description |
+| --- | --- |
+| `MICROSECONDS` |  |
+| `MILLISECONDS` |  |
+| `SECONDS` |  |
+| `MINUTES` |  |
+| `HOURS` |  |
+| `DAYS` |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a dictionary resource.
+Dictionaries can be used in Gravitee EL expressions:
+`{#dictionaries['hrid']['property key']}`.
+
+
+
+_Appears in:_
+- [DictionarySpec](#dictionaryspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the dictionary. |  | Required: \{\} <br /> |
+| `description` _string_ | Detailed description of the dictionary. |  | Optional: \{\} <br /> |
+| `deployed` _boolean_ | If true, a MANUAL dictionary is deployed in the gateway and a DYNAMIC dictionary is started.<br />Setting this back to false will stop or undeploy the dictionary. |  | Required: \{\} <br /> |
+| `type` _[DictionaryType](#dictionarytype)_ |  |  | Enum: [MANUAL DYNAMIC] <br />Required: \{\} <br /> |
+| `manual` _[ManualSpec](#manualspec)_ | Manual dictionary specification. Required when type is MANUAL, forbidden when type is DYNAMIC. |  | Optional: \{\} <br /> |
+| `dynamic` _[DynamicSpec](#dynamicspec)_ | Dynamic dictionary specification. Required when type is DYNAMIC, forbidden when type is MANUAL. |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/docs
+
+Package docs holds the domain model for the Documentation CRD.
+
+
+
+#### PageType
+
+_Underlying type:_ _string_
+
+PageType is the type of a Documentation page.
+
+_Validation:_
+- Enum: [GRAVITEE_MARKDOWN OPENAPI ASYNCAPI]
+
+_Appears in:_
+- [DocumentationSpec](#documentationspec)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `GRAVITEE_MARKDOWN` |  |
+| `OPENAPI` |  |
+| `ASYNCAPI` |  |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [DocumentationStatus](#documentationstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Documentation page in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the documentation page has been created regardless of errors, this<br />field is used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a Documentation resource.
+A Documentation page is attached to exactly one of a Portal (portalRef) or
+an API (apiRef) and is placed at a chosen location in the owning resource's
+navigation hierarchy.
+
+
+
+_Appears in:_
+- [DocumentationSpec](#documentationspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the documentation page. |  | Required: \{\} <br /> |
+| `type` _[PageType](#pagetype)_ | The type of the documentation page. |  | Enum: [GRAVITEE_MARKDOWN OPENAPI ASYNCAPI] <br />Required: \{\} <br /> |
+| `content` _string_ | The content of the documentation page. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
+| `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 
 
 
@@ -2006,6 +2530,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `id` _string_ |  |  | Optional: \{\} <br /> |
+| `hrid` _string_ |  |  |  |
 | `name` _string_ |  |  | Required: \{\} <br /> |
 | `notifyMembers` _boolean_ | If true, new members added to the API spec will<br />be notified when the API is synced with APIM. | true | Optional: \{\} <br /> |
 | `members` _[Member](#member) array_ |  |  |  |
@@ -2346,6 +2871,32 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/navigation
+
+
+
+
+#### NavigationPath
+
+
+
+NavigationPath is a single entry in a portal or API definition navigation tree.
+
+
+
+_Appears in:_
+- [PortalSpec](#portalspec)
+- [Type](#type)
+- [V4BaseApi](#v4baseapi)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `path` _string_ | A slash-separated path defining the navigation hierarchy.<br />Intermediate folders are implicitly created by APIM if not listed explicitly. |  | Pattern: `^/` <br />Required: \{\} <br /> |
+| `displayName` _string_ | Optional human-friendly label for this node. Listing a path explicitly<br />is the only way to attach a display name to it. |  | Optional: \{\} <br /> |
+| `order` _integer_ | Optional display order of this node relative to its siblings at the same level.<br />Listing a path explicitly is the only way to attach an order. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/notification
 
 
@@ -2436,6 +2987,113 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/portal
+
+
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [PortalStatus](#portalstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the Portal in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When portal has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a Portal resource (next-gen developer portal).
+
+
+
+_Appears in:_
+- [PortalSpec](#portalspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Display name of the portal. |  | Required: \{\} <br /> |
+| `navigation` _NavigationPath array_ | The portal's navigation hierarchy as an ordered, flat list of paths.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. |  | Optional: \{\} <br /> |
+
+
+
+## gravitee.io/v1alpha1/portallisting
+
+
+
+
+#### ApiEntry
+
+
+
+ApiEntry places one API at a location in the portal's navigation.
+
+
+
+_Appears in:_
+- [PortalListingSpec](#portallistingspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `ref` _[NamespacedName](#namespacedname)_ | Reference to the API to publish. Only v4 APIs (ApiV4Definition) are<br />supported by the next-gen portal; the referenced kind defaults to<br />ApiV4Definition when left empty. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the portal's navigation where this API should appear.<br />The API is only visible on the portal if this matches a path defined<br />in the Portal's navigation. |  | Pattern: `^/` <br />Required: \{\} <br /> |
+| `order` _integer_ | Optional display order of this API relative to its siblings at the same<br />location. The position in the list is also preserved. |  | Optional: \{\} <br /> |
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [PortalListingStatus](#portallistingstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalListing in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `errors` _[Errors](#errors)_ | When the portal listing has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a PortalListing resource.
+It publishes one or more APIs to a portal at chosen locations in the
+portal's navigation hierarchy.
+
+
+
+_Appears in:_
+- [PortalListingSpec](#portallistingspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this listing publishes APIs to. |  | Required: \{\} <br /> |
+| `apis` _[ApiEntry](#apientry) array_ | The APIs to publish to the portal, each at a chosen location in the<br />portal's navigation. The order of entries in the list is preserved and<br />also determines display order relative to siblings sharing the same<br />location when no explicit order is set. |  | MinItems: 1 <br />Required: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/refs
 
 
@@ -2452,18 +3110,25 @@ _Appears in:_
 _Appears in:_
 - [ApiBase](#apibase)
 - [ApiDefinitionV2Spec](#apidefinitionv2spec)
+- [ApiEntry](#apientry)
 - [ApiRef](#apiref)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
 - [ApplicationSpec](#applicationspec)
 - [Auth](#auth)
 - [Cloud](#cloud)
 - [Console](#console)
+- [DictionarySpec](#dictionaryspec)
+- [DocumentationSpec](#documentationspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
+- [PortalListingSpec](#portallistingspec)
+- [PortalSpec](#portalspec)
 - [IDPGroupMappingSpec](#idpgroupmappingspec)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
+- [Type](#type)
 - [Type](#type)
 
 | Field | Description | Default | Validation |
@@ -2486,7 +3151,7 @@ _Underlying type:_ _string_
 
 
 _Validation:_
-- Enum: [MESSAGE PROXY NATIVE]
+- Enum: [MESSAGE PROXY]
 
 _Appears in:_
 - [SharedPolicyGroup](#sharedpolicygroup)
@@ -2500,7 +3165,7 @@ _Underlying type:_ _string_
 
 
 _Validation:_
-- Enum: [REQUEST RESPONSE INTERACT CONNECT PUBLISH SUBSCRIBE]
+- Enum: [REQUEST RESPONSE PUBLISH SUBSCRIBE]
 
 _Appears in:_
 - [SharedPolicyGroup](#sharedpolicygroup)
@@ -2520,12 +3185,13 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
+| `hrid` _string_ |  |  |  |
 | `crossId` _string_ | CrossID to export SharedPolicyGroup into different environments |  |  |
 | `name` _string_ | SharedPolicyGroup name |  | Required: \{\} <br /> |
 | `description` _string_ | SharedPolicyGroup description |  |  |
 | `prerequisiteMessage` _string_ | SharedPolicyGroup prerequisite Message |  |  |
-| `apiType` _[ApiType](#apitype)_ | Specify the SharedPolicyGroup ApiType |  | Enum: [MESSAGE PROXY NATIVE] <br />Required: \{\} <br /> |
-| `phase` _[FlowPhase](#flowphase)_ | SharedPolicyGroup phase (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE) |  | Enum: [REQUEST RESPONSE INTERACT CONNECT PUBLISH SUBSCRIBE] <br />Required: \{\} <br /> |
+| `apiType` _[ApiType](#apitype)_ | Specify the SharedPolicyGroup ApiType |  | Enum: [MESSAGE PROXY] <br />Required: \{\} <br /> |
+| `phase` _[FlowPhase](#flowphase)_ | SharedPolicyGroup phase (REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE) |  | Enum: [REQUEST RESPONSE PUBLISH SUBSCRIBE] <br />Required: \{\} <br /> |
 | `steps` _[Step](#step) array_ | SharedPolicyGroup Steps |  |  |
 
 
@@ -2588,11 +3254,21 @@ _Appears in:_
 
 _Appears in:_
 - [ApiDefinitionStatus](#apidefinitionstatus)
+- [ApiStatus](#apistatus)
 - [ApiV4DefinitionStatus](#apiv4definitionstatus)
 - [ApplicationStatus](#applicationstatus)
+- [AutomationStatus](#automationstatus)
+- [DictionaryStatus](#dictionarystatus)
+- [DocumentationStatus](#documentationstatus)
 - [GroupStatus](#groupstatus)
+- [PortalListingStatus](#portallistingstatus)
+- [PortalStatus](#portalstatus)
 - [IDPGroupMappingStatus](#idpgroupmappingstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
+- [Status](#status)
+- [Status](#status)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)
@@ -2611,6 +3287,63 @@ _Appears in:_
 
 
 
+#### ApiKeySpec
+
+
+
+
+
+
+
+_Appears in:_
+- [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ |  |  | MaxLength: 256 <br />MinLength: 32 <br />Required: \{\} <br /> |
+| `expireAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
+
+
+
+
+#### AutomationApiKeySpec
+
+
+
+
+
+
+
+_Appears in:_
+- [AutomationSubscription](#automationsubscription)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `key` _string_ |  |  |  |
+| `expireAt` _string_ |  |  |  |
+
+
+
+
+#### ConsumerConfiguration
+
+
+
+
+
+
+
+_Appears in:_
+- [AutomationSubscription](#automationsubscription)
+- [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `entrypointId` _string_ |  |  | Required: \{\} <br /> |
+| `channel` _string_ |  |  | Optional: \{\} <br /> |
+| `entrypointConfiguration` _[GenericStringMap](#genericstringmap)_ |  |  | Optional: \{\} <br /> |
 
 
 
@@ -2633,6 +3366,8 @@ _Appears in:_
 | `plan` _string_ |  |  | Required: \{\} <br /> |
 | `endingAt` _string_ |  |  | Format: date-time <br />Optional: \{\} <br /> |
 | `metadata` _object (keys:string, values:string)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  | Optional: \{\} <br /> |
+| `apiKeys` _[ApiKeySpec](#apikeyspec) array_ |  |  | Optional: \{\} <br /> |
+| `consumerConfiguration` _[ConsumerConfiguration](#consumerconfiguration)_ |  |  | Optional: \{\} <br /> |
 
 
 
@@ -2650,6 +3385,7 @@ _Appears in:_
 
 
 _Appears in:_
+- [ConsumerConfiguration](#consumerconfiguration)
 - [DynamicPropertyService](#dynamicpropertyservice)
 - [Endpoint](#endpoint)
 - [EndpointDiscoveryService](#endpointdiscoveryservice)
@@ -2709,6 +3445,7 @@ _Appears in:_
 | `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
 | `execution_mode` _string_ | Execution mode that eventually runs the API in the gateway | v4-emulation-engine | Enum: [v3 v4-emulation-engine] <br /> |
+| `consoleNotificationConfiguration` _[ConsoleNotificationConfiguration](#consolenotificationconfiguration)_ | ConsoleNotification struct sent to the mAPI, not part of the CRD spec. |  |  |
 
 
 #### Consumer
@@ -3397,12 +4134,13 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Analytics Enabled or not? | true |  |
+| `reporterMetricsEnabled` _boolean_ | Enable the connection-metrics reporter on the gateway.<br />Only applicable to Native v4 APIs. |  | Optional: \{\} <br /> |
+| `otelLogs` _[OtelLogs](#otellogs)_ | OpenTelemetry log export configuration. |  | Optional: \{\} <br /> |
 | `sampling` _[Sampling](#sampling)_ | Analytics Sampling |  |  |
 | `logging` _[Logging](#logging)_ | Analytics Logging |  |  |
 | `tracing` _[Tracing](#tracing)_ | Analytics Tracing |  |  |
@@ -3422,22 +4160,8 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `description` _string_ | API description |  | Optional: \{\} <br /> |
-| `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
-| `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
-| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED] <br />Optional: \{\} <br /> |
-| `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY] <br />Required: \{\} <br /> |
-| `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
-| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
-| `flowExecution` _[FlowExecution](#flowexecution)_ | API Flow Execution (Not applicable for Native API) |  |  |
-| `flows` _[Flow](#flow) array_ | List of flows for the API | \{  \} | Optional: \{\} <br /> |
-| `analytics` _[Analytics](#analytics)_ | API Analytics (Not applicable for Native API) |  |  |
-| `services` _[ApiServices](#apiservices)_ | API Services (Not applicable for Native API) |  |  |
-| `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
-| `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
 | `pages` _[map[string]*Page](#map[string]*page)_ | A map of pages objects.<br />Keys uniquely identify pages and are used to keep them in sync<br />with APIM when using a management context.<br />Renaming a key is the equivalent of deleting the page and recreating<br />it holding a new ID in APIM. |  | Optional: \{\} <br /> |
-| `failover` _[Failover](#failover)_ | API Failover |  |  |
+| `plans` _[map[string]*Plan](#map[string]*plan)_ | A map of plan identifiers to plan<br />Keys uniquely identify plans and are used to keep them in sync<br />when using a management context. |  | Optional: \{\} <br /> |
 
 
 #### ApiServices
@@ -3449,8 +4173,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3467,8 +4190,7 @@ _Validation:_
 - Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY]
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 
 
@@ -3482,8 +4204,28 @@ _Validation:_
 - Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED]
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
+
+
+
+
+
+#### AutomationConsoleNotification
+
+
+
+AutomationConsoleNotification is the Automation API object to update notification settings for v4 APIs.
+
+
+
+_Appears in:_
+- [V4BaseApi](#v4baseapi)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `events` _string array_ |  |  |  |
+| `groups` _string array_ |  |  |  |
+
 
 
 
@@ -3514,8 +4256,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3579,7 +4320,7 @@ _Appears in:_
 | `configuration` _[GenericStringMap](#genericstringmap)_ | Endpoint Configuration, arbitrary map of key-values |  | Optional: \{\} <br /> |
 | `sharedConfigurationOverride` _[GenericStringMap](#genericstringmap)_ | Endpoint Configuration Override, arbitrary map of key-values |  | Optional: \{\} <br /> |
 | `services` _[EndpointServices](#endpointservices)_ | Endpoint Services |  |  |
-| `secondary` _boolean_ | Endpoint is secondary or not? |  |  |
+| `secondary` _boolean_ | Endpoint is secondary or not? | false | Optional: \{\} <br /> |
 | `tenants` _string array_ | List of endpoint tenants | \{  \} | Optional: \{\} <br /> |
 
 
@@ -3592,8 +4333,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3675,8 +4415,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3697,9 +4436,8 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
 - [Plan](#plan)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3725,8 +4463,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -3810,8 +4547,7 @@ _Appears in:_
 
 
 _Appears in:_
-- [Api](#api)
-- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [V4BaseApi](#v4baseapi)
 
 
 
@@ -3951,6 +4687,22 @@ _Appears in:_
 | `response` _boolean_ | Should the response phase of the request roundtrip be included in the log payload or not ? |  |  |
 
 
+#### OtelLogs
+
+
+
+
+
+
+
+_Appears in:_
+- [Analytics](#analytics)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enable OpenTelemetry log export for this API. |  | Optional: \{\} <br /> |
+
+
 #### Page
 
 
@@ -3962,6 +4714,7 @@ _Appears in:_
 _Appears in:_
 - [Api](#api)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [AutomationApi](#automationapi)
 
 
 
@@ -3993,6 +4746,8 @@ _Appears in:_
 _Appears in:_
 - [Api](#api)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [AutomationApi](#automationapi)
+- [AutomationStatus](#automationstatus)
 - [GatewayDefinitionPlan](#gatewaydefinitionplan)
 
 | Field | Description | Default | Validation |
@@ -4006,6 +4761,11 @@ _Appears in:_
 | `flows` _[Flow](#flow) array_ | List of plan flows | \{  \} | Optional: \{\} <br /> |
 | `excludedGroups` _string array_ |  | \{  \} | Optional: \{\} <br /> |
 | `generalConditions` _string_ | The general conditions defined to use this plan |  | Optional: \{\} <br /> |
+| `generalConditionsHrid` _string_ |  |  |  |
+| `hrid` _string_ |  |  |  |
+| `bootstrapPort` _integer_ | Bootstrap port for port-based routing (native Kafka APIs only).<br />When set, BrokerRangeStart must be strictly lower than BrokerRangeEnd, and<br />BootstrapPort must NOT be within the [BrokerRangeStart, BrokerRangeEnd] range (inclusive). |  | Optional: \{\} <br /> |
+| `brokerRangeStart` _integer_ | Start of the broker port range for port-based routing (native Kafka APIs only).<br />Must be strictly lower than BrokerRangeEnd.<br />See BootstrapPort for full validation rules. |  | Optional: \{\} <br /> |
+| `brokerRangeEnd` _integer_ | End of broker port range for port-based routing (native Kafka APIs only).<br />Must be strictly greater	than BrokerRangeStart.<br />See BootstrapPort for full validation rules. |  | Optional: \{\} <br /> |
 
 
 #### PlanMode
@@ -4124,5 +4884,41 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Specify if Tracing is Enabled or not |  |  |
 | `verbose` _boolean_ | Specify if Tracing is Verbose or not |  |  |
+
+
+#### V4BaseApi
+
+
+
+
+
+
+
+_Appears in:_
+- [Api](#api)
+- [ApiV4DefinitionSpec](#apiv4definitionspec)
+- [AutomationApi](#automationapi)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `hrid` _string_ |  |  |  |
+| `description` _string_ | API description |  | Optional: \{\} <br /> |
+| `definitionVersion` _[DefinitionVersion](#definitionversion)_ | The definition version of the API. | V4 | Enum: [V4] <br /> |
+| `definitionContext` _[DefinitionContext](#definitioncontext)_ | The API Definition context is used to identify the Kubernetes origin of the API,<br />and define whether the API definition should be synchronized<br />from an API instance or from a config map created in the cluster (which is the default) |  |  |
+| `lifecycleState` _[ApiV4LifecycleState](#apiv4lifecyclestate)_ | API life cycle state can be one of the values PUBLISHED, UNPUBLISHED, DEPRECATED, ARCHIVED | UNPUBLISHED | Enum: [PUBLISHED UNPUBLISHED DEPRECATED ARCHIVED] <br />Optional: \{\} <br /> |
+| `type` _[ApiType](#apitype)_ | Api Type (proxy or message) |  | Enum: [PROXY MESSAGE NATIVE LLM_PROXY MCP_PROXY A2A_PROXY] <br />Required: \{\} <br /> |
+| `listeners` _[GenericListener](#genericlistener) array_ | List of listeners for this API |  | MinItems: 1 <br />Required: \{\} <br /> |
+| `endpointGroups` _[EndpointGroup](#endpointgroup) array_ | List of Endpoint groups |  | MinItems: 1 <br />Required: \{\} <br /> |
+| `flowExecution` _[FlowExecution](#flowexecution)_ | API Flow Execution (Not applicable for Native API) |  |  |
+| `flows` _[Flow](#flow) array_ | List of flows for the API | \{  \} | Optional: \{\} <br /> |
+| `analytics` _[Analytics](#analytics)_ | API Analytics (Not applicable for Native API) |  |  |
+| `services` _[ApiServices](#apiservices)_ | API Services (Not applicable for Native API) |  |  |
+| `responseTemplates` _[ResponseTemplate](#responsetemplate)_ | A list of Response Templates for the API (Not applicable for Native API) |  | Optional: \{\} <br /> |
+| `allowedInApiProducts` _boolean_ | Indicates whether this API is allowed to be used in API Products.<br />Only applicable for V4 HTTP Proxy APIs. |  | Optional: \{\} <br /> |
+| `allowMultiJwtOauth2Subscriptions` _boolean_ | Allow an application to subscribe to more than one JWT/OAuth2 plan (V4 only). |  | Optional: \{\} <br /> |
+| `members` _Member array_ | List of members associated with the API |  | Optional: \{\} <br /> |
+| `failover` _[Failover](#failover)_ | API Failover |  |  |
+| `portalNavigation` _NavigationPath array_ | The API's internal documentation navigation tree for the next-gen portal.<br />The order of entries in the list is preserved. Intermediate folders are<br />implicitly created by APIM if not listed explicitly. Has no effect on the<br />classic portal (see `pages`). Not applicable to V2 APIs. |  | Optional: \{\} <br /> |
+| `consoleNotification` _[AutomationConsoleNotification](#automationconsolenotification)_ | ConsoleNotification struct sent to the Automation API, not part of the CRD spec. |  |  |
 
 

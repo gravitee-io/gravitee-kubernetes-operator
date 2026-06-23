@@ -43,7 +43,7 @@ var _ = Describe("Update", labels.WithContext, func() {
 
 	ctx := context.Background()
 
-	It("should delete config map and sync from management API", func() {
+	It("should delete config map and sync from automation API", func() {
 		fixtures := fixture.Builder().
 			WithAPIv4(constants.ApiV4).
 			WithContext(constants.ContextWithSecretFile).

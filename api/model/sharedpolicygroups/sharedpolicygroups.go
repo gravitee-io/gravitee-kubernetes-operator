@@ -18,13 +18,15 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 )
 
-// +kubebuilder:validation:Enum=MESSAGE;PROXY;NATIVE;
+// +kubebuilder:validation:Enum=MESSAGE;PROXY;
 type ApiType string
 
-// +kubebuilder:validation:Enum=REQUEST;RESPONSE;INTERACT;CONNECT;PUBLISH;SUBSCRIBE;
+// +kubebuilder:validation:Enum=REQUEST;RESPONSE;PUBLISH;SUBSCRIBE;
 type FlowPhase string
 
 type SharedPolicyGroup struct {
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 	// CrossID to export SharedPolicyGroup into different environments
 	CrossID *string `json:"crossId,omitempty"`
 	// SharedPolicyGroup name

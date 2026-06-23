@@ -46,3 +46,26 @@ export { HttpClient, createTlsFetch } from "./utils/http/index.js";
 
 // ── Config / CLI helpers ──────────────────────────────────────
 export { loadGraviteeConfig, createMapiFromConfig, applyEnvVars } from "./cmd/config.js";
+
+// ── Provisioners ──────────────────────────────────────────────
+export type {
+  ProvisionerId,
+  Role,
+  Provisioned,
+  Provisioner,
+  ProvisionerChecks,
+  GkoChecks,
+  GkoScenarioSpec,
+  GkoRoles,
+  GkoRoleBinding,
+  TerraformChecks,
+  TfScenarioSpec,
+} from "./provisioners/index.js";
+export {
+  GkoProvisioner,
+  isGko,
+  subscriptionYaml,
+  apiKeySecretYaml,
+  TerraformProvisioner,
+  isTerraform,
+} from "./provisioners/index.js";

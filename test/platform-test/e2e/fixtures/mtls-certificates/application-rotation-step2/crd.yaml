@@ -1,0 +1,70 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: gravitee.io/v1alpha1
+kind: Application
+metadata:
+  name: e2e-mtls-rotation-app
+spec:
+  contextRef:
+    name: "dev-ctx"
+    namespace: default
+  name: "e2e-mtls-rotation-app"
+  description: "Application with client 1 and 2"
+  settings:
+    app:
+      type: WEB
+    tls:
+      clientCertificates:
+        - name: client1
+          content: |
+            -----BEGIN CERTIFICATE-----
+            MIIC9zCCAd+gAwIBAgIUX2VAL31BGWMotcLtfpAfU/NKIiowDQYJKoZIhvcNAQEL
+            BQAwDjEMMAoGA1UEAwwDR0tPMB4XDTI2MDMxMjE3NDMwM1oXDTM2MDMwOTE3NDMw
+            M1owGTEXMBUGA1UEAwwOY2xpZW50MS1pbmxpbmUwggEiMA0GCSqGSIb3DQEBAQUA
+            A4IBDwAwggEKAoIBAQDYCjaKhFWg2YS/H/TXVRzK9nynow8EPNJqpU0q062y5wf1
+            zWbR2aFu1/dFTrQkkjZUbJuJtSbGJ83LEPfHwp4wg8+gHUN2woI0ed6e8boiWrLf
+            uGxFB1fq0gj7l2Y0wawr2QpuMt7X/QNKHT7aR3bdGw5F4Z07Ox/Tr0u5VWOqzg90
+            pTV89mPejHBTukiMbQ8MYMyJ9z8Z+AIkWfuxqNfv5F5zC2RU1+Bygg7SA+Vk8jvW
+            iV769pg6AkSh5mdHniv6cRuRk0o3qxaufeGBpCGv/D9N9pzvAIhvfyj69MMD9bE3
+            8p3mzm+WHQXevmcc0IP9A4/KShZvd2EUB66SO2DnAgMBAAGjQjBAMB0GA1UdDgQW
+            BBQ/ClzVIceOzCsU687ATltTEqbAbzAfBgNVHSMEGDAWgBTZBbf+1GWQzFWeeZXD
+            Q1Qwkea76DANBgkqhkiG9w0BAQsFAAOCAQEAA38rlemKVyYX7dTc89bK0ChOAcW0
+            Rx3ofiShlq/YMluafYqQcnNRIERPvByPb4ZJ5yZuKlVR7m4lP/bUPciTXQSOeTPk
+            xmwL8PjQp5gXNt8mkrrlj4xqFlYDsv6z+uxl13sUkuMa3N9HOqLDL0DxMEaIi/sZ
+            4ebgpBWXbVgm1nDs093DV2un5x9Rt3DwpWNdvgh7aBNN+LpRBfRGgfNZ+zuEKQS4
+            OFVOCshklQS8NsXA0NGntEDai+XtH8mxa+V/dxmj+muNPvXJaXostnbutEh+NQJU
+            f+F8mc+Q78aperq0ozL+uAb3bRlQvbfkY/oTpn9kkfdOrtDg6hH7TAbCGQ==
+            -----END CERTIFICATE-----
+        - name: client2
+          content: |
+            -----BEGIN CERTIFICATE-----
+
+            MIIC9zCCAd+gAwIBAgIUX2VAL31BGWMotcLtfpAfU/NKIiswDQYJKoZIhvcNAQEL
+            BQAwDjEMMAoGA1UEAwwDR0tPMB4XDTI2MDMxMjE3NDMwM1oXDTM2MDMwOTE3NDMw
+            M1owGTEXMBUGA1UEAwwOY2xpZW50Mi1pbmxpbmUwggEiMA0GCSqGSIb3DQEBAQUA
+            A4IBDwAwggEKAoIBAQDNMTSPLwqIoIQ6f3o6uMiJjt14XZTmGFXeKbZ7oZfHLRuY
+            Kb0beb3bVqH7nXfwVSyleDD2WjAe/FvqE6zZNXS1Xf3RfB2SK83nJRhiaZ618dYz
+            hL3j2qXGClxtiiMYc/MijiJcFLugOmWk8UbYBLCDnxLc8ckmSsk7oLd51m0Fru/K
+            rBfzAZWYFXB4I7zksnw7oe1P3cpayuoqGvSsUWdoqHMlE7smCyTPOeZX5l9Y2rre
+            t35WR4Oe3+VgJLGz0awOezd23BFdK3CrhGiNK8Ny3XmJZRTPXISZyU2y+BYVjSIm
+            O1uee7z1pQz6zYvLCl3G4+AcmEDejqN+gD+jWbZPAgMBAAGjQjBAMB0GA1UdDgQW
+            BBQbbG5K1OWe1yhf5uWUHJfurFZQpjAfBgNVHSMEGDAWgBTZBbf+1GWQzFWeeZXD
+            Q1Qwkea76DANBgkqhkiG9w0BAQsFAAOCAQEALG0QrC0X9g+22LwYmKKKtcJ7Iz5A
+            sgbVH/+Hdf65g8foaLoVttE7pPwkotJCM4ceRftiQzHe7ICLx5VptMLvp0WdrBVL
+            uxto8mKNpUjY9EICklnUq30kNK4Mg6bAzOEtotJhHJ5TjUXoqkTSADxzSlRq4Bx3
+            KcFvZs2YBycx5+ygcGw35KRnxou34TJkV14axS5h6joquo+rLzsO9Dmyr7Yqh+1d
+            sYPEguKN8173vOxs3xfZYYdE0MYsKMDf6mgMMjwq+upMLdyQQqa2riprhKCX2yuo
+            zH7pNqKS8rDLkPcLnEGaclWNA+MvL+FJbf9cnfN1Y7Fh1zlON96oKX0O1g==
+            -----END CERTIFICATE-----

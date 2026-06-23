@@ -75,6 +75,22 @@ func (o *Objects) Apply() *Objects {
 		o.applySubscription(cli, ctx)
 	}
 
+	if o.Dictionary != nil {
+		o.applyDictionary(ctx, cli)
+	}
+
+	if o.Portal != nil {
+		o.applyPortal(ctx, cli)
+	}
+
+	if o.PortalListing != nil {
+		o.applyPortalListing(ctx, cli)
+	}
+
+	if o.Documentation != nil {
+		o.applyDocumentation(ctx, cli)
+	}
+
 	if o.SharedPolicyGroup != nil {
 		o.applySharedPolicyGroup(cli, ctx)
 	}
@@ -221,6 +237,50 @@ func (o *Objects) applyNotification(ctx context.Context, cli client.Client) {
 		}
 		return nil
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Notification.Name)
+}
+
+func (o *Objects) applyDictionary(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.Dictionary)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Dictionary)
+		if err != nil {
+			return err
+		}
+		return assert.DictionaryAccepted(o.Dictionary)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Dictionary.Name)
+}
+
+func (o *Objects) applyPortal(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.Portal)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Portal)
+		if err != nil {
+			return err
+		}
+		return assert.PortalAccepted(o.Portal)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Portal.Name)
+}
+
+func (o *Objects) applyPortalListing(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.PortalListing)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.PortalListing)
+		if err != nil {
+			return err
+		}
+		return assert.PortalListingAccepted(o.PortalListing)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.PortalListing.Name)
+}
+
+func (o *Objects) applyDocumentation(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.Documentation)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.Documentation)
+		if err != nil {
+			return err
+		}
+		return assert.DocumentationAccepted(o.Documentation)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.Documentation.Name)
 }
 
 func (o *Objects) applySharedPolicyGroup(cli client.Client, ctx context.Context) {

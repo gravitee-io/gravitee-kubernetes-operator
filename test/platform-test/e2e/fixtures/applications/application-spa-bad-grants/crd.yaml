@@ -1,0 +1,38 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# GKO-579: The original Xray scenario describes "SPA" (Single-Page Application)
+# accepting only authorization_code / implicit grants. APIM no longer exposes
+# a distinct SPA application type — the supported values are BACKEND_TO_BACKEND,
+# NATIVE, BROWSER, and WEB. BROWSER is the current equivalent of a SPA
+# (browser-hosted public client) and has the same grant-type restriction: any
+# other grant (e.g. client_credentials) should be rejected by the admission
+# webhook / APIM dryRun.
+apiVersion: gravitee.io/v1alpha1
+kind: Application
+metadata:
+  name: e2e-app-579-spa-bad
+spec:
+  contextRef:
+    name: dev-ctx
+    namespace: default
+  name: e2e-app-579-spa-bad
+  description: "E2E test: browser-hosted app with disallowed grant_type"
+  settings:
+    oauth:
+      applicationType: BROWSER
+      grantTypes:
+        - client_credentials
+      redirectUris:
+        - "https://example.com/callback"

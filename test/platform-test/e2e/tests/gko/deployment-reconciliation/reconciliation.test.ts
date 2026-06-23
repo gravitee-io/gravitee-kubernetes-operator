@@ -31,9 +31,21 @@
 
 import { test, expect, fixture } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 const API_NAME = "e2e-v4-reconcile";
 const API_PATH = "/e2e-v4-reconcile";
+
+// Safety-net cleanup: runs even if a test times out before its inline
+// cleanup. Each del() ignores errors (the resource may already be gone).
+test.afterEach(async () => {
+  for (const f of [
+    "crds/api-v4-definitions/v4-proxy-api-reconcile.yaml",
+    "crds/api-v4-definitions/v4-proxy-api-reconcile-updated.yaml",
+  ]) {
+    await kubectl.del(fixture(f)).catch(() => {});
+  }
+});
 
 test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API_CONFIG} ${TAGS.REGRESSION}`, async ({
   kubectl,
@@ -41,7 +53,7 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
   gateway,
 }) => {
   await test.step("Initial CRD apply creates API in APIM", async () => {
-    await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-reconcile.yaml"));
+    await kubectl.apply(fixture("api-lifecycle/v4-reconcile/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
   });
 
@@ -49,7 +61,7 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
   const apiId = status.id;
 
   await test.step("API is created and reachable", async () => {
-    await mapi.assertApiMatches(apiId, {
+    await mapi.waitForApiMatches(apiId, {
       name: API_NAME,
       state: "STARTED",
     });
@@ -57,10 +69,10 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
   });
 
   await test.step("Updated CRD is reconciled in APIM", async () => {
-    await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-reconcile-updated.yaml"));
+    await kubectl.apply(fixture("api-lifecycle/v4-reconcile-updated/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
-    await mapi.assertApiMatches(apiId, {
+    await mapi.waitForApiMatches(apiId, {
       name: "e2e-v4-reconcile-updated",
     });
   });
@@ -76,5 +88,5 @@ test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API
     expect(acceptedCondition!.status).toBe("True");
   });
 
-  await kubectl.del(fixture("crds/api-v4-definitions/v4-proxy-api-reconcile.yaml"));
+  await kubectl.del(fixture("api-lifecycle/v4-reconcile/crd.yaml"));
 });

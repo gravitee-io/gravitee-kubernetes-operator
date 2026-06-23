@@ -25,18 +25,17 @@ import (
 	"strings"
 	"text/template"
 
-	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	kErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/sets"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	v1 "k8s.io/api/core/v1"
+	kErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -81,14 +80,67 @@ func doCompile(ctx context.Context, obj client.Object, updateObjectMetadata bool
 	return runtime.DefaultUnstructuredConverter.FromUnstructured(objData, obj)
 }
 
-func exec(ctx context.Context, text, ns string, parentResourceDeleted,
-	updateObjectMetadata bool) (string, error) {
+// ReleaseReferences removes templating annotations and finalizers from Secrets and ConfigMaps
+// that still reference obj. obj must be the live object from the mutate func.
+func ReleaseReferences(ctx context.Context, obj client.Object) error {
+	if !env.Config.EnableTemplating {
+		return nil
+	}
+	if obj.GetDeletionTimestamp().IsZero() {
+		return nil
+	}
+
+	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return fmt.Errorf("failed to convert object to unstructured: %w", err)
+	}
+
+	objID := getUnstructuredObjectID(u)
+	ns := obj.GetNamespace()
+	annotationKey := getObjectAnnotationName(u)
+	releaseCtx := context.WithValue(
+		context.WithValue(ctx, objectIDCtxKey, objID),
+		objectAnnotationKey, annotationKey,
+	)
+
+	secretList := &v1.SecretList{}
+	if err := k8s.GetClient().List(ctx, secretList, client.InNamespace(ns)); err != nil {
+		return err
+	}
+	for i := range secretList.Items {
+		sec := &secretList.Items[i]
+		if !referencesObject(sec, annotationKey, objID) {
+			continue
+		}
+		if err := releaseFromSource(releaseCtx, sec); err != nil {
+			return err
+		}
+	}
+
+	configMapList := &v1.ConfigMapList{}
+	if err := k8s.GetClient().List(ctx, configMapList, client.InNamespace(ns)); err != nil {
+		return err
+	}
+	for i := range configMapList.Items {
+		cm := &configMapList.Items[i]
+		if !referencesObject(cm, annotationKey, objID) {
+			continue
+		}
+		if err := releaseFromSource(releaseCtx, cm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func exec(ctx context.Context, text, ns string, updateObjectMetadata bool) (string, error) {
 	funcMap := map[string]interface{}{
 		"configmap": func(name string) (string, error) {
-			return resolveConfigmap(ctx, ns, name, parentResourceDeleted, updateObjectMetadata)
+			return resolveConfigmap(ctx, ns, name, updateObjectMetadata)
 		},
 		"secret": func(name string) (string, error) {
-			return resolveSecret(ctx, ns, name, parentResourceDeleted, updateObjectMetadata)
+			return resolveSecret(ctx, ns, name, updateObjectMetadata)
 		},
 	}
 
@@ -111,8 +163,7 @@ func exec(ctx context.Context, text, ns string, parentResourceDeleted,
 	return buf.String(), nil
 }
 
-func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDeleted,
-	updateObjectMetadata bool) (string, error) {
+func resolveConfigmap(ctx context.Context, ns, name string, updateObjectMetadata bool) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("empty configmap name")
 	}
@@ -145,13 +196,13 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 		return v, nil
 	}
 
-	totalReference, updated, err := updateAnnotation(ctx, cm, parentResourceDeleted)
+	_, updated, err := updateAnnotation(ctx, cm, false)
 	if err != nil {
 		return "", err
 	}
 
 	if updated {
-		updateFinalizer(ctx, cm, parentResourceDeleted && totalReference == 0)
+		updateFinalizer(ctx, cm, false)
 		if err := k8s.Update(ctx, cm); err != nil {
 			return "", err
 		}
@@ -160,8 +211,7 @@ func resolveConfigmap(ctx context.Context, ns, name string, parentResourceDelete
 	return v, nil
 }
 
-func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
-	updateObjectMetadata bool) (string, error) {
+func resolveSecret(ctx context.Context, ns, name string, updateObjectMetadata bool) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("empty secret name")
 	}
@@ -195,13 +245,13 @@ func resolveSecret(ctx context.Context, ns, name string, parentResourceDeleted,
 		return string(v), nil
 	}
 
-	totalReference, updated, err := updateAnnotation(ctx, sec, parentResourceDeleted)
+	_, updated, err := updateAnnotation(ctx, sec, false)
 	if err != nil {
 		return "", err
 	}
 
 	if updated {
-		updateFinalizer(ctx, sec, parentResourceDeleted && totalReference == 0)
+		updateFinalizer(ctx, sec, false)
 		if err := k8s.Update(ctx, sec); err != nil {
 			return "", err
 		}
@@ -221,7 +271,7 @@ func updateFinalizer(_ context.Context, obj client.Object, unreferenced bool) {
 	}
 }
 
-func updateAnnotation(ctx context.Context, obj client.Object, parentResourceDeleted bool) (int, bool, error) {
+func updateAnnotation(ctx context.Context, obj client.Object, release bool) (int, bool, error) {
 	annotationKey, _ := ctx.Value(objectAnnotationKey).(string)
 	objID, _ := ctx.Value(objectIDCtxKey).(string)
 	annotationValue, ok := obj.GetAnnotations()[annotationKey]
@@ -243,7 +293,7 @@ func updateAnnotation(ctx context.Context, obj client.Object, parentResourceDele
 
 	updated := false
 	valueSet := sets.New(values...)
-	if parentResourceDeleted {
+	if release {
 		updated = true
 		if totalReference > 0 {
 			totalReference--
@@ -282,4 +332,36 @@ func getUnstructuredObjectID(unstructured map[string]interface{}) string {
 func getObjectAnnotationName(unstructured map[string]interface{}) string {
 	kind := unstructured["kind"]
 	return "gravitee.io/" + strings.ToLower(fmt.Sprintf("%v", kind)) + "s"
+}
+
+func referencesObject(obj client.Object, annotationKey, objID string) bool {
+	if !util.ContainsFinalizer(obj, core.TemplatingFinalizer) {
+		return false
+	}
+
+	annotationValue, ok := obj.GetAnnotations()[annotationKey]
+	if !ok {
+		return false
+	}
+
+	values := make([]string, 0)
+	if err := json.Unmarshal([]byte(annotationValue), &values); err != nil {
+		return false
+	}
+
+	return sets.New(values...).Has(objID)
+}
+
+func releaseFromSource(ctx context.Context, source client.Object) error {
+	totalReference, updated, err := updateAnnotation(ctx, source, true)
+	if err != nil {
+		return err
+	}
+	if !updated {
+		return nil
+	}
+
+	updateFinalizer(ctx, source, totalReference == 0)
+
+	return k8s.Update(ctx, source)
 }

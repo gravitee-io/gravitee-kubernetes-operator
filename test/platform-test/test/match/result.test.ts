@@ -29,7 +29,7 @@ describe("throwIfFailed", () => {
       throwIfFailed({
         pass: false,
         failures: [
-          { path: "$.name", message: "mismatch", expected: "foo", actual: "bar" },
+          { jsonPath: "$.name", message: "mismatch", expected: "foo", actual: "bar" },
         ],
         actual: { name: "bar" },
       }),
@@ -41,8 +41,8 @@ describe("throwIfFailed", () => {
       throwIfFailed({
         pass: false,
         failures: [
-          { path: "$.name", message: "m1", expected: "a", actual: "b" },
-          { path: "$.state", message: "m2", expected: "STARTED", actual: "STOPPED" },
+          { jsonPath: "$.name", message: "m1", expected: "a", actual: "b" },
+          { jsonPath: "$.state", message: "m2", expected: "STARTED", actual: "STOPPED" },
         ],
         actual: { name: "b", state: "STOPPED" },
       });

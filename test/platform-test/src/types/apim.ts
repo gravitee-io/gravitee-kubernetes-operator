@@ -75,6 +75,7 @@ export interface ApiV4 extends ApiBase {
   flows?: FlowV4[];
   services?: ApiServices;
   allowedInApiProducts?: boolean;
+  allowMultiJwtOauth2Subscriptions?: boolean;
 }
 
 export interface ApiV2 extends ApiBase {
@@ -364,6 +365,10 @@ export interface GenericPlan {
 export interface PlanV4 extends GenericPlan {
   definitionVersion: "V4";
   flows?: FlowV4[];
+  /** Port-based routing fields, native Kafka APIs only  */
+  bootstrapPort?: number;
+  brokerRangeStart?: number;
+  brokerRangeEnd?: number;
 }
 
 export interface PlanV2 extends GenericPlan {
@@ -430,6 +435,17 @@ export interface Subscription {
 export type SubscriptionStatus = "PENDING" | "ACCEPTED" | "CLOSED" | "REJECTED" | "PAUSED" | "RESUMED";
 export type SubscriptionConsumerStatus = "STARTED" | "STOPPED" | "FAILURE";
 
+export interface SubscriptionApiKey {
+  id: string;
+  key: string;
+  createdAt: string;
+  updatedAt?: string;
+  expireAt?: string;
+  revoked: boolean;
+  paused: boolean;
+  expired: boolean;
+}
+
 /** @deprecated Use SubscriptionConsumerStatus instead */
 export type ConsumerStatus = SubscriptionConsumerStatus;
 
@@ -457,6 +473,76 @@ export interface BaseApplication {
   type?: string;
   primaryOwner?: PrimaryOwner;
   apiKeyMode?: "SHARED" | "UNSPECIFIED" | "EXCLUSIVE";
+}
+
+/** Full Application resource from APIM management API. */
+export interface Application extends BaseApplication {
+  applicationType?: string;
+  status?: string;
+  groups?: string[];
+  settings?: ApplicationSettings;
+  metadata?: Record<string, ApplicationMetadataValue>;
+  disableMembershipNotifications?: boolean;
+  originContext?: OriginContext;
+  /** Legacy flat origin field returned by the v1 Management API. */
+  origin?: "KUBERNETES" | "MANAGEMENT" | "INTEGRATION";
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ApplicationSettings {
+  app?: ApplicationSimpleSettings;
+  oauth?: ApplicationOAuthSettings;
+  tls?: ApplicationTlsSettings;
+}
+
+/**
+ * mTLS settings for an application, as returned by the v1/v2 management API.
+ * Wire format is snake_case; epoch-millisecond timestamps are used for
+ * validity windows.
+ */
+export interface ApplicationTlsSettings {
+  client_certificates?: ApplicationClientCertificateView[];
+  certificate_count?: number;
+}
+
+export interface ApplicationClientCertificateView {
+  name?: string;
+  startsAt?: number;
+  endsAt?: number;
+  certificate?: string;
+}
+
+export interface ApplicationSimpleSettings {
+  clientId?: string;
+  type?: string;
+}
+
+export interface ApplicationOAuthSettings {
+  clientId?: string;
+  clientSecret?: string;
+  applicationType?: string;
+  grantTypes?: string[];
+  redirectUris?: string[];
+}
+
+export interface ApplicationMetadataValue {
+  name?: string;
+  value?: string;
+  format?: string;
+  defaultValue?: string;
+}
+
+/** Paginated list response from APIM. */
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination?: {
+    page: number;
+    perPage: number;
+    pageCount: number;
+    pageItemsCount: number;
+    totalCount: number;
+  };
 }
 
 export interface BaseApiProduct {
@@ -743,9 +829,15 @@ export interface TracingV4 {
 
 export interface Analytics {
   enabled?: boolean;
+  reporterMetricsEnabled?: boolean;
+  otelLogs?: OtelLogs;
   sampling?: Sampling;
   logging?: LoggingV4;
   tracing?: TracingV4;
+}
+
+export interface OtelLogs {
+  enabled?: boolean;
 }
 
 export interface Sampling {
@@ -754,3 +846,44 @@ export interface Sampling {
 }
 
 export type SamplingType = "PROBABILITY" | "TEMPORAL" | "COUNT" | "WINDOWED_COUNT";
+
+// ── Notification Types ───────────────────────────────────────
+
+export interface NotificationSetting {
+  config_type: "PORTAL" | "GENERIC";
+  referenceType: string;
+  referenceId: string;
+  hooks: string[];
+  groups: string[];
+  name?: string;
+  origin?: "KUBERNETES" | "MANAGEMENT" | null;
+}
+
+// ── Group Types ──────────────────────────────────────────────
+
+/**
+ * A Group as returned by the v1 management API
+ * (`/configuration/groups` list and `/configuration/groups/{id}` detail).
+ *
+ * Field naming is the raw wire shape: `disable_membership_notifications`
+ * is snake_case (it is the inverse of the Automation API / Terraform
+ * `notify_members` flag) and `origin` reflects the write path
+ * (`KUBERNETES` for groups written via the Automation API / Terraform).
+ */
+export interface Group {
+  id: string;
+  hrid?: string;
+  name: string;
+  origin?: "KUBERNETES" | "MANAGEMENT" | null;
+  environmentId?: string;
+  manageable?: boolean;
+  primary_owner?: boolean;
+  disable_membership_notifications?: boolean;
+}
+
+/** A resolved member of a group (`/configuration/groups/{id}/members`). */
+export interface GroupMember {
+  id: string;
+  displayName?: string;
+  roles?: Record<string, string>;
+}

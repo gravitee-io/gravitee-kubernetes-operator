@@ -107,7 +107,14 @@ func (s *SharedPolicyGroup) GetID() string {
 	return s.Status.CrossID
 }
 
-func (s *SharedPolicyGroup) PopulateIDs(_ core.ContextModel) {
+func (s *SharedPolicyGroup) PopulateIDs(_ core.ContextModel, automationAPiManaged bool) {
+	if s.GetID() == "" || automationAPiManaged {
+		s.Spec.HRID = refs.NewNamespacedNameFromObject(s).HRID()
+		return
+	}
+
+	// Legacy mode => managed by UUIDs
+	// Generated GKO side
 	if s.Spec.CrossID != nil {
 		return
 	}

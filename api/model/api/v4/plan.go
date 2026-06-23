@@ -68,6 +68,25 @@ type Plan struct {
 	// The general conditions defined to use this plan
 	// +kubebuilder:validation:Optional
 	GeneralConditions *string `json:"generalConditions,omitempty"`
+	// +kubebuilder:skipversion
+	GeneralConditionsHRID *string `json:"generalConditionsHrid,omitempty"`
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
+	// Bootstrap port for port-based routing (native Kafka APIs only).
+	// When set, BrokerRangeStart must be strictly lower than BrokerRangeEnd, and
+	// BootstrapPort must NOT be within the [BrokerRangeStart, BrokerRangeEnd] range (inclusive).
+	// +kubebuilder:validation:Optional
+	BootstrapPort *int `json:"bootstrapPort,omitempty"`
+	// Start of the broker port range for port-based routing (native Kafka APIs only).
+	// Must be strictly lower than BrokerRangeEnd.
+	// See BootstrapPort for full validation rules.
+	// +kubebuilder:validation:Optional
+	BrokerRangeStart *int `json:"brokerRangeStart,omitempty"`
+	// End of broker port range for port-based routing (native Kafka APIs only).
+	// Must be strictly greater	than BrokerRangeStart.
+	// See BootstrapPort for full validation rules.
+	// +kubebuilder:validation:Optional
+	BrokerRangeEnd *int `json:"brokerRangeEnd,omitempty"`
 }
 
 type GatewayDefinitionPlan struct {
@@ -81,7 +100,11 @@ func (plan *Plan) GetSecurityType() string {
 
 func NewPlan() *Plan {
 	return &Plan{
-		Plan: base.NewPlan(),
+		Plan:              base.NewPlan(),
+		DefinitionVersion: PlanDefinitionVersion,
+		Mode:              "STANDARD",
+		Flows:             []*Flow{},
+		ExcludedGroups:    []string{},
 	}
 }
 

@@ -18,8 +18,12 @@ import (
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/status"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 )
 
 type Env struct {
@@ -42,23 +46,41 @@ func (svc *Env) CreateCategory(category *model.Category) error {
 	return svc.HTTP.Post(url.String(), category, category)
 }
 
-func (svc *Env) DryRunImportGroup(spec *group.Type) (*group.Status, error) {
-	return svc.importGroup(spec, true)
+func (svc *Env) DryRunImportGroup(grp *v1alpha1.Group) (*group.Status, error) {
+	return svc.importGroup(grp, true)
 }
 
-func (svc *Env) ImportGroup(spec *group.Type) (*group.Status, error) {
-	return svc.importGroup(spec, false)
+func (svc *Env) ImportGroup(grp *v1alpha1.Group) (*group.Status, error) {
+	return svc.importGroup(grp, false)
 }
 
-func (svc *Env) importGroup(spec *group.Type, dryRun bool) (*group.Status, error) {
-	url := svc.EnvV2Target("groups").
-		WithPath("_import").WithPath("crd").
-		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
-	status := new(group.Status)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+func (svc *Env) importGroup(grp *v1alpha1.Group, dryRun bool) (*group.Status, error) {
+	url := svc.AutomationTarget("groups").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
+
+	setHridWithUUID := grp.Spec.ID != "" && !k8s.IsAutomationAPIManaged(grp)
+	if setHridWithUUID {
+		grp.Spec.HRID = grp.Spec.ID
+		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	}
+
+	importStatus := struct {
+		ID          string        `json:"id"`
+		MemberCount uint          `json:"memberCount"`
+		Errors      status.Errors `json:"errors,omitempty"`
+	}{}
+	if err := svc.HTTP.Put(url.String(), grp.Spec.Type, &importStatus); err != nil {
 		return nil, err
 	}
-	return status, nil
+
+	if !setHridWithUUID {
+		k8s.AddAutomationAPIManagedCondition(grp)
+	}
+
+	return &group.Status{
+		ID:      importStatus.ID,
+		Members: importStatus.MemberCount,
+		Errors:  importStatus.Errors,
+	}, nil
 }
 
 func (svc *Env) FindGroup(name string) (*model.Group, error) {
@@ -79,9 +101,19 @@ func (svc *Env) FindGroup(name string) (*model.Group, error) {
 	return &paginatedGroup.Data[0], nil
 }
 
-func (svc *Env) DeleteGroup(id string) error {
-	url := svc.EnvV1Target("configuration").WithPath("groups").WithPath(id)
+func (svc *Env) DeleteGroup(grp *v1alpha1.Group) error {
+	id, hridContainsUUID := getGroupID(grp)
+	url := svc.AutomationTarget("groups").
+		WithPath(id).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(hridContainsUUID))
 	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func getGroupID(grp *v1alpha1.Group) (string, bool) {
+	if k8s.IsAutomationAPIManaged(grp) {
+		return refs.NewNamespacedNameFromObject(grp).HRID(), false
+	}
+	return grp.GetID(), true
 }
 
 func (svc *Env) Get() (*model.Env, error) {

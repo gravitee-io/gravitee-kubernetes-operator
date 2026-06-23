@@ -28,9 +28,21 @@
 
 import { test, fixture } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
+import * as kubectl from "../../../helpers/kubectl.js";
 
 const API_NAME = "e2e-v4-start-stop";
 const API_PATH = "/e2e-v4-start-stop";
+
+// Safety-net cleanup: runs even if a test times out before its inline
+// cleanup. Each del() ignores errors (the resource may already be gone).
+test.afterEach(async () => {
+  for (const f of [
+    "crds/api-v4-definitions/v4-proxy-api-started.yaml",
+    "crds/api-v4-definitions/v4-proxy-api-stopped.yaml",
+  ]) {
+    await kubectl.del(fixture(f)).catch(() => {});
+  }
+});
 
 test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${XRAY.API_LIFECYCLE.START_STOP_V2_V4_NATIVE} ${TAGS.REGRESSION}`, async ({
   kubectl,
@@ -38,7 +50,7 @@ test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${
   gateway,
 }) => {
   await test.step("Deploy V4 Proxy API with syncFrom Kubernetes", async () => {
-    await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml"));
+    await kubectl.apply(fixture("api-lifecycle/v4-started/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
   });
 
@@ -46,7 +58,7 @@ test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${
   const apiId = status.id;
 
   await test.step("API responds 200 when STARTED", async () => {
-    await mapi.assertApiMatches(apiId, {
+    await mapi.waitForApiMatches(apiId, {
       name: API_NAME,
       state: "STARTED",
     });
@@ -54,20 +66,20 @@ test(`API Lifecycle — Start / Stop ${XRAY.API_LIFECYCLE.DEPLOY_V4_SYNC_K8S} ${
   });
 
   await test.step("API responds 404 when STOPPED", async () => {
-    await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-stopped.yaml"));
+    await kubectl.apply(fixture("api-lifecycle/v4-stopped/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
-    await mapi.assertApiStopped(apiId);
+    await mapi.waitForApiStopped(apiId);
     await gateway.assertResponds(API_PATH, { status: 404 });
   });
 
   await test.step("API responds 200 again when re-STARTED", async () => {
-    await kubectl.apply(fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml"));
+    await kubectl.apply(fixture("api-lifecycle/v4-started/crd.yaml"));
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
-    await mapi.assertApiStarted(apiId);
+    await mapi.waitForApiStarted(apiId);
     await gateway.assertResponds(API_PATH, { status: 200 });
   });
 
-  await kubectl.del(fixture("crds/api-v4-definitions/v4-proxy-api-started.yaml"));
+  await kubectl.del(fixture("api-lifecycle/v4-started/crd.yaml"));
 });

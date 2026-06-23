@@ -32,6 +32,8 @@ const (
 type Type struct {
 	// +kubebuilder:validation:Optional
 	ID string `json:"id,omitempty"`
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
 	// +kubebuilder:validation:Optional

@@ -51,17 +51,19 @@ func newAPI(meta metav1.ObjectMeta) *v1alpha1.ApiV4Definition {
 		ObjectMeta: metav1.ObjectMeta{Name: meta.Name, Namespace: meta.Namespace},
 		Spec: v1alpha1.ApiV4DefinitionSpec{
 			Api: v4.Api{
-				Type: "NATIVE",
+				V4BaseApi: &v4.V4BaseApi{
+					Type: "NATIVE",
+					ApiBase: &base.ApiBase{
+						Name:    buildAPIName(meta),
+						Version: "v1alpha1",
+					},
+					DefinitionContext: &v4.DefinitionContext{
+						Origin:   v4.OriginKubernetes,
+						SyncFrom: v4.OriginKubernetes,
+					},
+				},
 				Plans: &map[string]*v4.Plan{
 					"default": newKeyLessPlan(),
-				},
-				ApiBase: &base.ApiBase{
-					Name:    buildAPIName(meta),
-					Version: "v1alpha1",
-				},
-				DefinitionContext: &v4.DefinitionContext{
-					Origin:   v4.OriginKubernetes,
-					SyncFrom: v4.OriginKubernetes,
 				},
 			},
 		},
@@ -71,17 +73,19 @@ func newAPI(meta metav1.ObjectMeta) *v1alpha1.ApiV4Definition {
 func newAPISpec(meta metav1.ObjectMeta) v1alpha1.ApiV4DefinitionSpec {
 	return v1alpha1.ApiV4DefinitionSpec{
 		Api: v4.Api{
-			Type: "NATIVE",
+			V4BaseApi: &v4.V4BaseApi{
+				Type: "NATIVE",
+				ApiBase: &base.ApiBase{
+					Name:    buildAPIName(meta),
+					Version: "v1alpha1",
+				},
+				DefinitionContext: &v4.DefinitionContext{
+					Origin:   v4.OriginKubernetes,
+					SyncFrom: v4.OriginKubernetes,
+				},
+			},
 			Plans: &map[string]*v4.Plan{
 				"default": newKeyLessPlan(),
-			},
-			ApiBase: &base.ApiBase{
-				Name:    buildAPIName(meta),
-				Version: "v1alpha1",
-			},
-			DefinitionContext: &v4.DefinitionContext{
-				Origin:   v4.OriginKubernetes,
-				SyncFrom: v4.OriginKubernetes,
 			},
 		},
 	}
@@ -109,7 +113,5 @@ func buildTag(route *v1alpha1.KafkaRoute, ref gwAPIv1.ParentReference) string {
 }
 
 func newKeyLessPlan() *v4.Plan {
-	plan := v4.NewPlan().WithSecurity(&keyLessSecurity)
-	plan.Status = base.PublishedPlanStatus
-	return plan
+	return v4.NewPlan().WithSecurity(&keyLessSecurity)
 }

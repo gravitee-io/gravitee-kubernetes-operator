@@ -148,27 +148,28 @@ describe("createMapiFromConfig", () => {
         headers: { "Content-Type": "application/json" },
       }),
     );
+    vi.stubGlobal("fetch", mockFetch);
 
-    const config = {
-      apim: {
-        baseUrl: "http://testhost:8083",
-        envId: "MY_ENV",
-        auth: { username: "user", password: "pass" },
-      },
-    };
+    try {
+      const config = {
+        apim: {
+          baseUrl: "http://testhost:8083",
+          envId: "MY_ENV",
+          auth: { username: "user", password: "pass" },
+        },
+      };
 
-    // Pass mockFetch to Mapi directly for this test
-    const mapi = new Mapi(
-      {
+      const mapi = new Mapi({
         baseUrl: config.apim.baseUrl,
         envId: config.apim.envId,
         auth: { type: "basic", username: config.apim.auth.username, password: config.apim.auth.password },
-      },
-      mockFetch,
-    );
+      });
 
-    await mapi.fetchApi("api-1");
-    const url = mockFetch.mock.calls[0][0] as string;
-    expect(url).toBe("http://testhost:8083/management/v2/environments/MY_ENV/apis/api-1");
+      await mapi.fetchApi("api-1");
+      const url = mockFetch.mock.calls[0][0] as string;
+      expect(url).toBe("http://testhost:8083/management/v2/environments/MY_ENV/apis/api-1");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

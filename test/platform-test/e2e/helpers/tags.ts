@@ -30,23 +30,577 @@
 export const XRAY = {
   API_LIFECYCLE: {
     DEPLOY_V4_SYNC_K8S: "@GKO-69",
+    DEPLOY_V4_SYNC_FROM_MGMT: "@GKO-71",
+    DEPLOY_V4_DB_LESS: "@GKO-81",
+    DEPLOY_V4_WITH_LABELS_CATEGORIES: "@GKO-83",
+    STOP_V4_API: "@GKO-124",
+    START_STOPPED_V4_API: "@GKO-126",
+    DELETE_V4_API: "@GKO-140",
+    UPDATE_V4_MESSAGE_API: "@GKO-141",
+    UPDATE_V4_MESSAGE_MISSING_FIELDS: "@GKO-142",
+    RECREATE_DELETED_V4_CLOSED_PLAN: "@GKO-159",
+    MISSING_REQUIRED_FIELDS_V4_PROXY: "@GKO-165",
+    NO_DEPLOY_WHEN_NO_CHANGES: "@GKO-176",
+    REDEPLOY_AFTER_DELETE: "@GKO-212",
+    CONTEXT_PATH_CONFLICT_V4: "@GKO-469",
+    NO_PLANS_STARTED_V4: "@GKO-502",
+    NO_PLANS_STOPPED_V4: "@GKO-503",
+    FAILOVER_V4_PROXY: "@GKO-859",
+    V4_SURVIVES_UPGRADE: "@GKO-1061",
     START_STOP_V2_V4_NATIVE: "@GKO-1464",
+    POLICY_ON_API_WITHOUT_PLANS: "@GKO-1465",
+    ENTRYPOINT_POLICY_MATRIX: "@GKO-1474",
+    V2_V4_COMPATIBILITY: "@GKO-1448",
+    // visibility & lifecycleState
+    V4_VISIBILITY_PRIVATE: "@GKO-172",
+    V4_VISIBILITY_PUBLIC: "@GKO-173",
+    V4_PUBLISHED_IN_PORTAL: "@GKO-179",
+    V4_UNPUBLISHED_NOT_IN_PORTAL: "@GKO-180",
+    V4_PORTAL_VISIBILITY_RULES: "@GKO-1466",
+    // GKO-1220 (auto-associated groups preserved across updates) — not
+    // covered: depends on an APIM env-level "auto-associate group to
+    // new APIs" setting that is not exposed via mAPI or the test harness.
+    // Re-evaluate when the setting is configurable through the test
+    // cluster bootstrap.
+  },
+  MESSAGE_APIS: {
+    DEPLOY_V4_MSG_SYNC_MGMT: "@GKO-72",
+    DEPLOY_V4_MSG_SYNC_K8S: "@GKO-73",
+    HTTP_GET_ENTRYPOINT: "@GKO-129",
+    HTTP_POST_ENTRYPOINT: "@GKO-130",
+    SSE_ENTRYPOINT: "@GKO-132",
+    WEBHOOK_ENTRYPOINT: "@GKO-133",
+    WEBSOCKET_ENTRYPOINT: "@GKO-134",
+    MOCK_ENDPOINT: "@GKO-136",
+    MQTT_ENDPOINT: "@GKO-137",
+    MSG_API_WITH_POLICY: "@GKO-164",
   },
   PLANS: {
     KEYLESS_PLAN_V4: "@GKO-110",
+    DELETE_PLAN_SYNC_MGMT: "@GKO-113",
+    DELETE_PLAN_SYNC_K8S: "@GKO-117",
+    MULTIPLE_PLANS: "@GKO-160",
+    APIKEY_PLAN_V4: "@GKO-161",
+    OAUTH2_PLAN_V4: "@GKO-162",
+    JWT_PLAN_V4: "@GKO-163",
+    PUBLISHED_PLAN: "@GKO-169",
+    FAIL_NON_PUBLISHED_STATUS: "@GKO-170",
+    FAIL_CHANGE_PUBLISHED_STATUS: "@GKO-171",
+    PLAN_PUBLISHED_WHEN_API_STOPPED: "@GKO-174",
+    GENERAL_CONDITIONS: "@GKO-238",
+    PLAN_LIFECYCLE_VIA_CR: "@GKO-1459",
+    NATIVE_KAFKA_KEYLESS_PLAN: "@GKO-856",
+    NATIVE_ADD_PLAN: "@GKO-918",
+    NATIVE_REMOVE_PLAN: "@GKO-919",
+    NATIVE_UPDATE_PLAN: "@GKO-920",
+    NATIVE_MULTIPLE_PLANS: "@GKO-921",
+    NATIVE_NO_PLAN: "@GKO-922",
   },
-  TERRAFORM: {
-    APPLY_COMPLEX_CONFIG: "@GKO-1926",
-    IDEMPOTENT_CONFIG: "@GKO-1932",
+  VALIDATION: {
+    V4_CONTEXT_PATH_CONFLICT: "@GKO-1476",
+    V4_OAS_COMPLIANCE_WEBHOOK: "@GKO-1479",
+    V4_DEFAULT_VALUES: "@GKO-1480",
+    NON_EXISTING_GROUP_MESSAGE: "@GKO-1478",
+    // GKO-283 ("V4 doc page visibility only accepts PUBLIC") — not covered:
+    // APIM 4.12 actually accepts and stores `visibility: PRIVATE` on V4 API
+    // doc pages. Verified 2026-04-29 against the kind cluster + APIM 4.12.
+    // The Xray scenario is either outdated or describes a product gap.
   },
-  DEPLOYMENT_RECONCILIATION: {
-    RECONCILE_API_CONFIG: "@GKO-1444",
+  V2_API_LIFECYCLE: {
+    V2_UPDATE_API_PATH: "@GKO-1065",
+    V2_MEMBER_ROLE_CHANGE_DUPLICATE_KEY: "@GKO-260",
+    V2_MGMT_CTX_VALID_ON_CREATE: "@GKO-594",
+    V2_MGMT_CTX_VALID_ON_UPDATE: "@GKO-597",
+    V2_IMPORT_NON_EXISTING_CATEGORY_DRYRUN: "@GKO-605",
+    V2_NO_PLANS_STARTED: "@GKO-606",
+    V2_NO_PLANS_STOPPED: "@GKO-607",
+    // GKO-653 (V2 exported read-only round-trip) — not covered: APIM does
+    // not support CRD export for V2 APIs (/management/v2/.../_export/crd
+    // returns 400 "definition version 2.0.0 is not supported anymore").
+  },
+  APPLICATIONS_MEMBERS: {
+    APP_NON_EXISTING_MEMBER: "@GKO-533",
+    APP_MEMBER_NO_ROLE: "@GKO-535",
+    APP_MEMBER_NO_SOURCE: "@GKO-536",
+    APP_NON_EXISTING_GROUP: "@GKO-548",
+    APP_MEMBER_NON_EXISTING_ROLE: "@GKO-555",
+    APP_WEB_REQUIRES_AUTH_CODE: "@GKO-581",
+    APP_NON_EXISTING_ROLE: "@GKO-531",
+    APP_REMOVE_MEMBER: "@GKO-534",
+    APP_ADD_MEMBER_ROLE_NAME: "@GKO-538",
+    APP_CHANGE_MEMBER_ROLE: "@GKO-539",
   },
   WEBHOOKS: {
     REJECT_INVALID_CRS: "@GKO-1447",
+    NON_OAS_ERRORS_V4: "@GKO-77",
+    NON_OAS_COMPLIANT_V4: "@GKO-76",
+    INVALID_CREDENTIALS_CONTEXT: "@GKO-78",
+    V2_PARENT_PATH_NOT_FOUND: "@GKO-153",
+    MISSING_FIELDS_V4_MESSAGE: "@GKO-166",
+    V4_PARENT_PATH_NOT_FOUND: "@GKO-281",
+    NON_EXISTING_CONTEXT_V4: "@GKO-414",
+    NON_EXISTING_MGMT_CONTEXT: "@GKO-465",
+    MGMT_CONTEXT_INVALID_CREDS: "@GKO-474",
+    RESOURCE_NO_NAME: "@GKO-515",
+    RESOURCE_NO_TYPE: "@GKO-516",
+    RESOURCE_NO_CONFIG: "@GKO-518",
+    RESOURCE_INVALID_CONFIG: "@GKO-519",
+    V4_INVALID_CRON: "@GKO-520",
+    V2_CONTEXT_PATH_DUPLICATE: "@GKO-590",
+    V2_CONTEXT_PATH_CONFLICT_V4: "@GKO-591",
+    V2_CONTEXT_PATH_EXISTS_LOCAL_FALSE: "@GKO-609",
+    V2_INVALID_CRON: "@GKO-614",
+    CROSS_VERSION_SCHEDULERS_FETCHERS: "@GKO-1475",
+    CROSS_VERSION_PARENT_PATH: "@GKO-1477",
+  },
+  // GKO-2934: the CRD schema must reject enum values the Automation API no
+  // longer manages (V4 EDGE api type; SPG NATIVE apiType + the
+  // INTERACT/CONNECT/ENTRYPOINT_CONNECT flow phases).
+  ENUM_VALIDATION: {
+    V4_EDGE_TYPE_REJECTED: "@GKO-2965",
+    SPG_APITYPE_NATIVE_REJECTED: "@GKO-2966",
+    SPG_REMOVED_PHASE_REJECTED: "@GKO-2967",
+  },
+  APPLICATIONS: {
+    APP_WITH_METADATA: "@GKO-194",
+    CREATE_APP: "@GKO-335",
+    UPDATE_APP: "@GKO-336",
+    DELETE_APP: "@GKO-337",
+    APP_NO_MGMT_CONTEXT: "@GKO-526",
+    APP_NEW_CRD_ATTRIBUTES: "@GKO-527",
+    APP_BOTH_SETTINGS_ERROR: "@GKO-550",
+    APP_CONFIGURE_SETTINGS: "@GKO-552",
+    APP_PO_IN_MEMBERS_ERROR: "@GKO-558",
+    APP_SWITCH_SETTINGS_TYPE: "@GKO-561",
+    APP_UPDATE_OAUTH_TYPE: "@GKO-562",
+    APP_CLIENT_ID_OPTIONAL: "@GKO-563",
+    APP_CLIENT_ID_UNIQUE: "@GKO-564",
+    APP_PO_ROLE_OVERWRITE: "@GKO-567",
+    // admission edge cases & lifecycle
+    APP_READ_ONLY_IN_APIM: "@GKO-505",
+    APP_BROWSER_VALID_URIS: "@GKO-578",
+    APP_SPA_GRANT_TYPES: "@GKO-579",
+    APP_NAME_LENGTH_EDGE: "@GKO-1382",
+    APP_DELETE_SUCCESS: "@GKO-1383",
+  },
+  SUBSCRIPTIONS: {
+    ENDING_BEFORE_START: "@GKO-807",
+    SYNC_FROM_K8S_ERROR_V4: "@GKO-816",
+    AUTO_VALIDATE_V2: "@GKO-797",
+    V2_JWT_SUBSCRIPTION: "@GKO-799",
+    V4_JWT_SUBSCRIPTION: "@GKO-800",
+    V2_GATEWAY_JWT_CALL: "@GKO-808",
+    AUTO_VALIDATE_V4: "@GKO-815",
+    V4_GATEWAY_JWT_CALL: "@GKO-817",
+    V2_OAUTH2_SUBSCRIPTION: "@GKO-818",
+    V4_OAUTH2_SUBSCRIPTION: "@GKO-819",
+    API_MUST_BE_STARTED: "@GKO-840",
+    PLAN_MUST_MATCH_V2: "@GKO-842",
+    PLAN_MUST_MATCH_V4: "@GKO-843",
+    SECURITY_TYPE_JWT_OAUTH2: "@GKO-844",
+    API_KIND_DEFAULT: "@GKO-845",
+    ERROR_UPDATE_PLAN_WITH_SUB: "@GKO-848",
+    ERROR_DELETE_API_WITH_SUB: "@GKO-849",
+    ERROR_DELETE_APP_WITH_SUB: "@GKO-853",
+    DELETE_API_WITH_OTHER_PLAN: "@GKO-854",
+    MTLS_PLAN_V4: "@GKO-869",
+    V4_SUBSCRIPTION_READ_ONLY: "@GKO-795",
+    SUBSCRIPTION_IMMUTABILITY: "@GKO-1460",
+    V4_JWT_PLAN_DELETION_WITH_SUB: "@GKO-822",
+    V4_OAUTH2_PLAN_DELETION_WITH_SUB: "@GKO-826",
+    CROSS_MGMT_CONTEXT_ERROR: "@GKO-796",
+    V2_LOCAL_SUBSCRIPTION_ERROR: "@GKO-798",
+    V2_JWT_DELETE: "@GKO-821",
+    V2_OAUTH2_DELETE: "@GKO-825",
+    API_APP_SYNCED_LAST_RECONCILE: "@GKO-839",
+    V4_APIKEY_SINGLE_KEY: "@GKO-2825",
+    V4_APIKEY_GATEWAY_CALL: "@GKO-2826",
+    V4_APIKEY_WEBHOOK_ACCEPTED: "@GKO-2827",
+    V4_APIKEY_KEY_REVOKED_ON_DELETE: "@GKO-2828",
+    V4_APIKEY_MIXED_WITH_KEYLESS: "@GKO-2829",
+    // Custom api-key + rotation coverage for GKO-2550 / commit 84b17fb8.
+    // @parent: GKO-2550
+    V4_APIKEY_CUSTOM_KEY: "@GKO-2892",
+    V4_APIKEY_LENGTH_REJECTED: "@GKO-2893",
+    V4_APIKEY_LENGTH_BOUNDARIES: "@GKO-2894",
+    V4_APIKEY_EXPIRE_AT: "@GKO-2895",
+    V4_APIKEY_SECRET_SOURCED: "@GKO-2896",
+    V4_APIKEY_ROTATION_INSTANT: "@GKO-2897",
+    V4_APIKEY_ROTATION_GRADUAL: "@GKO-2898",
+    V4_APIKEY_REACTIVATION: "@GKO-2899",
+    V4_APIKEY_IDEMPOTENT: "@GKO-2900",
+    V4_APIKEY_STAGGERED_EXPIRY: "@GKO-2901",
+  },
+  // NATIVE_APIS group removed — 10 tests were never committed due to the
+  // APIM native-plan serialization bug. GKO-874 and GKO-875 were listed
+  // but their test files were also never committed; they are tracked as
+  // not-yet-covered.
+  GROUPS: {
+    CREATE_WITH_MEMBER: "@GKO-983",
+    CREATE_NON_EXISTING_USER: "@GKO-984",
+    DELETE_GROUP: "@GKO-985",
+    MODIFY_GROUP: "@GKO-986",
+    CREATE_WITHOUT_ROLES: "@GKO-987",
+    PREVENT_PO_GROUP_AS_MEMBER: "@GKO-974",
+  },
+  DICTIONARIES: {
+    // @parent: GKO-2562
+    CREATE_AND_RESOLVE: "@GKO-2903",
+    DELETE_DICTIONARY: "@GKO-2905",
+    DYNAMIC_RESOLVE: "@GKO-2904",
+    // DYNAMIC_TEMPLATE_RESOLVE is currently skipped pending GKO-2858 — templated
+    // Dictionary cannot be deleted because secret-resolve runs during the delete
+    // reconcile.
+    DYNAMIC_TEMPLATE_RESOLVE: "@GKO-2902",
+    // DYNAMIC lifecycle coverage for GKO-2565 (start/stop semantics).
+    // @parent: GKO-2565
+    DYNAMIC_DELETE_STOPS: "@GKO-2909",
+    DYNAMIC_UPDATE_PROPAGATES: "@GKO-2910",
+    // DYNAMIC_DEPLOYED_FALSE_STOPS is currently skipped pending GKO-2908 —
+    // setting deployed=false on a DYNAMIC dict doesn't stop gateway resolution.
+    DYNAMIC_DEPLOYED_FALSE_STOPS: "@GKO-2911",
+    // @parent: GKO-2563 (admission webhook)
+    ADMISSION_REJECTS_DYNAMIC_WITH_MANUAL: "@GKO-2912",
+  },
+  SHARED_POLICY_GROUPS: {
+    ADD_SPG_TO_API: "@GKO-976",
+    REMOVE_SPG_FROM_API: "@GKO-980",
+    UPDATE_SPG: "@GKO-981",
+    SPG_LIFECYCLE: "@GKO-1462",
+  },
+  DEPLOYMENT_RECONCILIATION: {
+    RECONCILE_API_CONFIG: "@GKO-1444",
+    ACCEPTED_FALSE_ON_FAILURE: "@GKO-1387",
+    ACCEPTED_NOT_FALSE_ON_SUCCESS: "@GKO-1388",
+    ACCEPTED_UPDATES_ON_CHANGE: "@GKO-1389",
+    PROCESSING_STATUS_PRESENT: "@GKO-1390",
+    IDEMPOTENT_RECONCILIATION: "@GKO-1445",
+    STATUS_CONDITIONS_REFLECT_STATE: "@GKO-1446",
+    MGMT_CTX_CONDITION_VOCABULARY: "@GKO-1282",
+    CONSISTENT_CONDITION_STRUCTURE: "@GKO-1283",
+    PROCESSING_STATUS_DEPRECATED: "@GKO-1391",
+    AUDITABILITY_EVENTS: "@GKO-1463",
+    RECOVERY_REAPPLY: "@GKO-1808",
+    CR_MANAGED_READ_ONLY: "@GKO-1456",
+    OPERATOR_RESTART_RECOVERY: "@GKO-1451",
+    // GKO-1392 (ResolvedRefs absence) — still not covered: the GKO
+    // operator continues to emit the ResolvedRefs condition. Re-add
+    // when the operator stops populating that condition.
+  },
+  MANAGEMENT_CONTEXT: {
+    NON_EXISTING_ENV: "@GKO-472",
+    NON_EXISTING_ORG: "@GKO-473",
+    INVALID_CREDENTIALS: "@GKO-474",
+    DELETE_WITH_V2_API_REF: "@GKO-892",
+    DELETE_WITH_V4_API_REF: "@GKO-893",
+    DELETE_WITH_APP_REF: "@GKO-894",
+    DELETE_NO_REFS: "@GKO-895",
+  },
+  TEMPLATING: {
+    V2_MISSING_CONFIGMAP: "@GKO-676",
+    V2_MISSING_KEY: "@GKO-677",
+    V4_MISSING_CONFIGMAP: "@GKO-678",
+    V4_MISSING_KEY: "@GKO-679",
+    V2_SECRET_VALUE: "@GKO-682",
+    V4_CONFIGMAP_VALUE: "@GKO-683",
+    APP_CONFIGMAP_VALUE: "@GKO-684",
+    MGMT_CONTEXT_BEARER_TOKEN: "@GKO-781",
+  },
+  IMPORT_EXPORT: {
+    EXPORTED_POLICIES_V4: "@GKO-93",
+    IMPORT_V4_CRD: "@GKO-218",
+    EXPORT_V4_CRD: "@GKO-229",
+    K8S_COMPLIANT_NAMES: "@GKO-231",
+    EXPORT_V2_CRD: "@GKO-301",
+    IMPORT_V2_CRD: "@GKO-303",
+    V4_NO_EMAIL_ON_EXPORT: "@GKO-237",
+    V4_METADATA_ON_IMPORT: "@GKO-239",
+    V4_EXPORT_IMPORT_ROUND_TRIP: "@GKO-1472",
+    V4_TERRAFORM_IMPORT_EXPORT_PARITY: "@GKO-1927",
+    // GKO-1471 (V2 import/export round-trip) — not covered: APIM does not
+    // support CRD export for V2 APIs.
+  },
+  MEMBERS: {
+    V4_NON_EXISTING_MEMBER: "@GKO-251",
+    V4_NON_EXISTING_GROUP: "@GKO-252",
+    V4_REMOVE_MEMBER: "@GKO-253",
+    V4_MEMBER_NO_ROLE: "@GKO-254",
+    V4_MEMBER_NO_SOURCE: "@GKO-255",
+    V4_NON_EXISTING_MEMBERS_CRD: "@GKO-470",
+    V4_PO_NOT_ALLOWED: "@GKO-569",
+    V4_PO_CANT_OVERWRITE: "@GKO-571",
+    V4_REMOVE_MEMBER_VARIANT: "@GKO-213",
+    V4_PO_DEFINED_IN_CRD: "@GKO-244",
+    V4_ADD_MEMBER_WITH_ROLE_NAME: "@GKO-247",
+    V4_ADD_MEMBER_NO_ROLE: "@GKO-249",
+    V4_CREATE_NON_EXISTING_GROUP: "@GKO-256",
+    V4_CREATE_EXISTING_GROUP: "@GKO-257",
+    V4_DUPLICATE_KEY_ON_ROLE_CHANGE: "@GKO-259",
+    V4_PO_VIA_MGMT_CONTEXT: "@GKO-306",
+    V4_TRANSFER_PRIMARY_OWNER: "@GKO-307",
+    V4_ADD_GROUP_REFS: "@GKO-314",
+    V4_NOTIFY_MEMBERS_ENABLED: "@GKO-402",
+    V4_TAKE_OVER_PO_VIA_MGMT_CTX: "@GKO-658",
+    V4_ADD_GROUP_REFS_VARIANT: "@GKO-1004",
+    V2_ADD_MEMBER_WITH_ROLE: "@GKO-202",
+    V2_NON_EXISTING_ROLE: "@GKO-204",
+    V2_NON_EXISTING_MEMBER: "@GKO-205",
+    V2_NON_EXISTING_GROUP: "@GKO-207",
+    V2_EXISTING_GROUP: "@GKO-208",
+    V2_REMOVE_MEMBER: "@GKO-216",
+    V2_PO_IN_MEMBERS: "@GKO-258",
+    V2_CHANGE_MEMBER_ROLE: "@GKO-308",
+    V2_MEMBER_NO_ROLE: "@GKO-393",
+    V2_ADD_GROUP_HRID: "@GKO-398",
+    V2_MULTIPLE_GROUPS: "@GKO-399",
+    V2_REMOVE_GROUP: "@GKO-400",
+    V2_NOTIFY_MEMBERS: "@GKO-401",
+    V2_PO_NOT_OVERWRITEABLE: "@GKO-601",
+    // GKO-602 (V2 API with a different PRIMARY_OWNER is rejected) — not
+    // covered: GKO admission does not enforce this (product gap). The
+    // webhook accepts the CR and the API is created in APIM.
+    V2_TAKE_OVER_PO: "@GKO-657",
+    // GKO-659 (adding PO to members has no effect) — not covered: the
+    // companion GKO-602 scenario is also not covered, and GKO-601 already
+    // verifies that re-declaring the mgmt-ctx user as PO is a no-op.
+    V2_ADD_GROUP_REFS: "@GKO-1003",
+    PRIMARY_OWNER_VISIBILITY: "@GKO-1457",
+  },
+  DEFAULTS: {
+    NAMESPACE_DEFAULT: "@GKO-463",
+    VALID_NAME_NAMESPACE: "@GKO-466",
+    V2_LOCAL_FALSE_DEFAULT: "@GKO-765",
+    V4_SYNC_FROM_MGMT_DEFAULT: "@GKO-770",
+  },
+  POLICIES: {
+    DEPLOY_V4_WITH_POLICY: "@GKO-94",
+    REMOVE_POLICY: "@GKO-95",
+    UPDATE_POLICY: "@GKO-96",
+  },
+  CATEGORIES: {
+    VALID_CATEGORY_V4: "@GKO-267",
+    NON_EXISTING_CATEGORY_V4: "@GKO-269",
+    REMOVE_CATEGORY_V4: "@GKO-270",
+    V4_MANY_CATEGORIES: "@GKO-268",
+    V4_CATEGORY_REMOVED_FROM_APIM: "@GKO-271",
+    V4_CATEGORY_RENAME_REDEPLOY: "@GKO-272",
+    V4_NON_EXISTING_GROUP_REF: "@GKO-471",
+    V4_DEPLOY_NON_EXISTING_CATEGORY: "@GKO-412",
+    V4_IMPORT_NON_EXISTING_CATEGORY_DRYRUN: "@GKO-415",
+    V4_IMPORT_NON_EXISTING_CATEGORY_APPLY: "@GKO-416",
+    V2_VALID_CATEGORY: "@GKO-187",
+    V2_MANY_CATEGORIES: "@GKO-189",
+    V2_NON_EXISTING_CATEGORY: "@GKO-190",
+    V2_REMOVE_CATEGORY: "@GKO-191",
+    V2_CATEGORY_REMOVED_FROM_APIM: "@GKO-192",
+    V2_CATEGORY_RENAME_REDEPLOY: "@GKO-261",
+    V4_LABELS_LIFECYCLE: "@GKO-1473",
+  },
+  // TCP_FAILOVER group removed — tcp-failover.test.ts was never committed
+  // (GKO-79 depended on TCP proxy setup that the test cluster does not
+  // provide).
+  TERRAFORM: {
+    APPLY_COMPLEX_CONFIG: "@GKO-1926",
+    APIM_CONTAINS_ALL_ENTITIES: "@GKO-1929",
+    PAGE_HIERARCHY_PRESERVED: "@GKO-1931",
+    IDEMPOTENT_CONFIG: "@GKO-1932",
+    ADD_APPLICATION: "@GKO-1373",
+    ADD_SUBSCRIPTION: "@GKO-1374",
+    APP_MISSING_FIELDS: "@GKO-1375",
+    INVALID_SUBSCRIPTION_FORMAT: "@GKO-1376",
+    REMOVE_APPLICATION: "@GKO-1378",
+    CREATE_APP_AND_SUBSCRIPTION: "@GKO-1379",
+    VALID_AND_MALFORMED_HCL: "@GKO-1453",
+    GENERAL_CONDITIONS_PAGE: "@GKO-1930",
+    // error handling in TF + delete-via-TF lifecycle.
+    // GKO-1381 (Role-specific access for managing Apps and subscriptions
+    // via Terraform) is not covered: the test harness has no
+    // mechanism to provision a non-admin APIM user, so role scoping cannot
+    // be exercised. Re-evaluate when the bootstrap supports multi-user
+    // accounts (the same blocker as GKO-1541).
+    INVALID_SUBSCRIPTION_CONFIG: "@GKO-1380",
+    DELETE_APPLICATION_TF: "@GKO-1383",
+    // ── GKO-2560: api_keys list on apim_subscription ───────────────
+    // @parent: GKO-2560
+    APIKEY_AUTO_GENERATED: "@GKO-2879",
+    APIKEY_CUSTOM_VALUE: "@GKO-2880",
+    APIKEY_EXPIRE_AT: "@GKO-2881",
+    APIKEY_MIXED_WITH_KEYLESS: "@GKO-2882",
+    APIKEY_LENGTH_BOUNDARIES: "@GKO-2883",
+    APIKEY_LENGTH_REJECTED: "@GKO-2884",
+    APIKEY_ROTATION_INSTANT: "@GKO-2885",
+    APIKEY_ROTATION_GRADUAL: "@GKO-2886",
+    APIKEY_REACTIVATION: "@GKO-2887",
+    APIKEY_STAGGERED_EXPIRY: "@GKO-2888",
+    APIKEY_REVOKED_ON_DESTROY: "@GKO-2889",
+    APIKEY_PLAN_NO_DRIFT: "@GKO-2890",
+    APIKEY_SENSITIVE_IN_PLAN: "@GKO-2891",
+    // ── GKO-2564: apim_group resource + data source ────────────────
+    // Built on GKO-2551 (Automation API group endpoints).
+    // @parent: GKO-2564
+    GROUP_CREATE: "@GKO-2865",
+    GROUP_IDEMPOTENT: "@GKO-2867",
+    GROUP_UPDATE: "@GKO-2868",
+    GROUP_NOTIFY_MEMBERS: "@GKO-2866",
+    GROUP_DESTROY: "@GKO-2869",
+    GROUP_WITH_MEMBER: "@GKO-2872",
+    GROUP_MEMBER_LIFECYCLE: "@GKO-2870",
+    GROUP_MEMBERS_PERPETUAL_DIFF: "@GKO-2871",
+    GROUP_HRID_REPLACEMENT: "@GKO-2873",
+    GROUP_DRIFT: "@GKO-2874",
+    GROUP_IMPORT: "@GKO-2875",
+    GROUP_INVALID_HRID: "@GKO-2876",
+    GROUP_INVALID_NAME: "@GKO-2877",
+    GROUP_DATA_SOURCE: "@GKO-2878",
+  },
+  PAGES: {
+    MARKDOWN_PAGE_CRUD_V4: "@GKO-277",
+    MARKDOWN_PAGE_UPDATE_V4: "@GKO-278",
+    FETCHER_PAGE_V4: "@GKO-279",
+    AUTOFETCH_PRESERVED: "@GKO-1933",
+    DOC_CRUD_ACROSS_VERSIONS: "@GKO-1468",
+    V4_DOC_OPERATIONS: "@GKO-236",
+    V4_READ_ONLY_DOC: "@GKO-280",
+    V4_DOC_VISIBILITY_PUBLIC: "@GKO-282",
+    V4_DOC_RECONCILED: "@GKO-1470",
+    V2_DOC_CRUD: "@GKO-146",
+    V2_DOC_OVERSIZE: "@GKO-147",
+    V2_DOC_INLINE_UPDATE: "@GKO-148",
+    V2_DOC_FETCHER: "@GKO-151",
+    V2_DOC_PUBLIC: "@GKO-199",
+    V2_DOC_PRIVATE_NO_GROUPS: "@GKO-200",
+    V2_DOC_PRIVATE_GROUPS: "@GKO-315",
+    V2_DOC_PRIVATE_EXCLUDED: "@GKO-316",
+    // GKO-662 (delete fetched ROOT pages) — not covered: APIM rejects V2
+    // ROOT fetchers backed by http-fetcher with "The plugin does not
+    // support to import a directory". ROOT pages need a directory-listing
+    // fetcher (e.g. github-fetcher) which in turn requires real GitHub
+    // credentials.
+    V2_DOC_RENAME: "@GKO-699",
+    V2_WEB_FETCHER_NO_URL: "@GKO-620",
+    V2_WEB_FETCHER_WARNING: "@GKO-621",
+    V2_GITHUB_FETCHER_REQUIRED_FIELDS: "@GKO-622",
+    V2_GITHUB_FETCHER_WARNING: "@GKO-623",
+    V4_WEB_FETCHER_NO_URL: "@GKO-629",
+    V4_WEB_FETCHER_WARNING: "@GKO-628",
+    V4_GITHUB_FETCHER_REQUIRED_FIELDS: "@GKO-636",
+    V4_GITHUB_FETCHER_WARNING: "@GKO-637",
+    V4_DOC_RENAME: "@GKO-1469",
+    DOC_PUBLIC_ACCESS_CROSS_VERSION: "@GKO-1467",
+    // folder + page rename within a deployed API
+    V4_DOC_FOLDER_RENAME: "@GKO-700",
+    // GKO-626, 675, 689, 692 — not covered because the GKO admission
+    // webhook pre-fetches github-fetcher pages at apply time and the test
+    // cluster has no real GitHub credentials, so any positive
+    // github-fetcher test is rejected by admission with "Page cannot be
+    // fetched, this can come from either invalid / missing github
+    // credentials or an invalid file path".
+  },
+  NOTIFICATIONS: {
+    REMOVE_NOTIFICATION: "@GKO-1238",
+    NOTIFICATION_HOOKS_GROUPS: "@GKO-1231",
+    API_REF_NOTIFICATION: "@GKO-1232",
+    NOTIFICATIONS_VIA_CRS: "@GKO-1461",
+    // GKO-1236 (cannot delete Notification CR if referenced) — not
+    // covered: GKO does not enforce an in-use protection on Notification
+    // CRs. The delete succeeds even when an API references it (product
+    // gap).
+    WORKS_WITH_V2_AND_V4: "@GKO-1237",
+    NOT_IN_EXPORT: "@GKO-1233",
+    DUPLICATE_CONSOLE_REJECTED: "@GKO-1235",
+    CR_READONLY_VIA_MAPI: "@GKO-1234",
+    // recipient & label assertions via mAPI
+    VIEW_NOTIFICATION_SETTINGS: "@GKO-1194",
+    NOTIFICATION_LABEL: "@GKO-1195",
+    DEFAULT_RECIPIENT_OWNER: "@GKO-1196",
+    PORTAL_NOTIFIER_TARGET_USER: "@GKO-1219",
+    GROUP_MEMBERS_NOTIFIED: "@GKO-1239",
+  },
+  LOCAL_CONFIGMAP: {
+    LOCAL_FALSE_NO_CONFIGMAP: "@GKO-765",
+    DELETION_FINALIZER_CLEANUP: "@GKO-1452",
+  },
+  MTLS_CERTIFICATES: {
+    ADD_MULTIPLE_CERTS: "@GKO-2243",
+    DEPRECATED_FIELD: "@GKO-2244",
+    CERT_ROTATION: "@GKO-2231",
+    MTLS_SUBSCRIPTION: "@GKO-2248",
+    CERT_VALID_DATES: "@GKO-2255",
+    CERT_END_DATE: "@GKO-2221",
+    ADD_SINGLE_CERT: "@GKO-2212",
+    REMOVE_CERT: "@GKO-2247",
+    REMOVE_MULTI_CERTS: "@GKO-2250",
+    DEPENDENCY_RESOLUTION: "@GKO-1449",
+    // ── Application clientCertificates admission rejections ─────
+    // GKO has no standalone MTLSCertificate CRD; these scenarios are
+    // exercised through the Application CR's spec.settings.app.tls.
+    CRD_BAD_PEM: "@GKO-2117",
+    CRD_FORBIDDEN_FIELD_UPDATE: "@GKO-2118",
+    CRD_START_EQ_END: "@GKO-2122",
+    CRD_NAME_TOO_LONG: "@GKO-2124",
+    CRD_MISSING_FIELDS: "@GKO-2125",
+    CRD_EXPIRED_REJECTED: "@GKO-2131",
+    CRD_INVALID_CHARS: "@GKO-2133",
+    CRD_END_BEFORE_START: "@GKO-2135",
+    CRD_MISSING_NAME: "@GKO-2143",
+    CRD_MISSING_CERT_FIELD: "@GKO-2146",
+    CRD_INVALID_DATA_DATES: "@GKO-2148",
+    // ── Application clientCertificates visibility ─────
+    // Implemented as mAPI assertions on the application's settings.tls:
+    NO_ACTIVE_CERTS_DISPLAY: "@GKO-2219",
+    CERT_INFO_DISPLAY: "@GKO-2223",
+    ACTIVE_CERT_DISPLAY: "@GKO-2246",
+    EXPIRED_CERT_DISPLAY: "@GKO-2251",
+    // ── Application clientCertificates lifecycle ─────
+    // CR-driven cert lifecycle scenarios verified through mAPI assertions
+    // on `application.settings.tls.client_certificates[]`.
+    CERT_FUTURE_START_DATE: "@GKO-2228",
+    CERT_NAMING_CONVENTION: "@GKO-2264",
+    CERT_UPDATE_END_DATE: "@GKO-2241",
+    CERT_UPDATE_START_DATE: "@GKO-2214",
+    CERT_CHANGE_NEW_ENTITY: "@GKO-2215",
+    CERT_UPDATE_VIA_CR: "@GKO-2261",
+    CERT_DUPLICATE_REJECTED: "@GKO-2235",
+    // ── Application clientCertificates date-acceptance ────────
+    // CR-driven scenarios verifying the operator accepts various date
+    // combinations and the cert lands as ACTIVE in mAPI. The wire format
+    // uses epoch-millisecond timestamps; the ACTIVE / SCHEDULED /
+    // ACTIVE_WITH_END status string is APIM-derived and not exposed via
+    // the mAPI Application response, so these tests assert cert presence
+    // rather than the literal status name. Future-start (SCHEDULED)
+    // scenarios are NOT here — APIM filters scheduled certs from the v1
+    // application response, so they're unobservable. GKO-2228 (future
+    // startsAt accepted by operator) is a smoke test in the lifecycle
+    // group above.
+    CERT_PAST_START_NULL_END: "@GKO-2121",
+    CERT_NULL_BOTH_DATES: "@GKO-2130",
+    CERT_NO_DATE_FIELDS: "@GKO-2141",
+    CERT_NULL_START_FUTURE_END: "@GKO-2149",
+    // Still deferred (require subscription orchestration, fault injection,
+    // or a dedicated upgrade lane):
+    //   Lifecycle: 2213, 2218, 2222, 2226, 2227, 2232, 2233, 2238, 2239,
+    //              2249, 2252, 2254, 2257, 2258, 2260
+    //   Upgrader-only paths (no GKO equivalent): 2236, 2263
+    //   Upgrade-flow only: 2216, 2217, 2224, 2245
+    //   PKCS7 (no GKO analog; clientCertificates accepts PEM only):
+    //              2220, 2229, 2230, 2253, 2259
+    //   Future-start (SCHEDULED, not observable in mAPI): 2126, 2129
+    //   Duplicates of admission tests:
+    //              2237, 2240, 2242, 2256, 2262
   },
 } as const;
 
 export const TAGS = {
   REGRESSION: "@regression",
+} as const;
+
+/**
+ * Provisioner-lane tags. The matrix arms get these automatically from
+ * `forEachProvisioner`; single-provisioner (`*-gko-only` / `*-tf-only`) tests carry
+ * them on their describe so `npm run e2e -- --provision-with <p>` selects them.
+ * Lowercase on purpose, distinct from the uppercase `@GKO-` Xray prefix.
+ */
+export const PROVISIONER = {
+  GKO: "@gko",
+  TERRAFORM: "@terraform",
 } as const;

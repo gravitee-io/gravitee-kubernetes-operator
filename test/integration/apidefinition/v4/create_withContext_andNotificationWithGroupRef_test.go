@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4Model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
@@ -78,16 +79,25 @@ var _ = Describe("Create", labels.WithContext, func() {
 		apiFixture = apiFixture.Apply()
 
 		client := apim.NewClient(ctx)
+
+		hrid := refs.NewNamespacedNameFromObject(apiFixture.APIv4).HRID()
+		var apiFromAPIM *v4Model.AutomationApi
+		Eventually(func() error {
+			a, err := client.APIs.GetV4ByHRID(hrid)
+			apiFromAPIM = a
+			return err
+		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
+
 		var console *base.ConsoleNotificationConfiguration
 		Eventually(func() error {
-			c, err := client.Notification.GetConsoleNotificationConfiguration(apiFixture.APIv4.GetID())
+			c, err := client.Notification.GetConsoleNotificationConfiguration(apiFromAPIM.ID)
 			console = c
 			return err
 		}, constants.EventualTimeout, constants.Interval).Should(Succeed())
 
 		Expect(console).NotTo(BeNil())
 		Expect(console.Origin).To(Equal("KUBERNETES"))
-		Expect(console.ReferenceID).To(Equal(apiFixture.APIv4.Status.ID))
+		Expect(console.ReferenceID).To(Equal(apiFromAPIM.ID))
 		Expect(console.ReferenceType).To(Equal("API"))
 		Expect(console.Groups).To(ContainElements(groupFixture.Group.GetID()))
 		Expect(console.Hooks).To(ContainElements("API_STARTED", "API_STOPPED"))

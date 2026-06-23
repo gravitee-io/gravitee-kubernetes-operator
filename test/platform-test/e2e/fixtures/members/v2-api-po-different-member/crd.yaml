@@ -1,0 +1,44 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# GKO-602: V2 API attempting to add a *different* user as PRIMARY_OWNER.
+# Operator must reject this at admission (per the contract of GKO-602).
+apiVersion: gravitee.io/v1alpha1
+kind: ApiDefinition
+metadata:
+  name: e2e-v2-po-different
+spec:
+  contextRef:
+    name: "dev-ctx"
+    namespace: "default"
+  name: "e2e-v2-po-different"
+  description: "E2E test: V2 API declaring a different PRIMARY_OWNER"
+  version: "1.0.0"
+  local: false
+  proxy:
+    virtual_hosts:
+      - path: "/e2e-v2-po-different"
+    groups:
+      - endpoints:
+          - name: Default
+            target: https://api.gravitee.io/echo
+  plans:
+    - name: "Free plan"
+      description: "Open access plan"
+      security: KEY_LESS
+      status: PUBLISHED
+  members:
+    - source: gravitee
+      sourceId: "not-admin-user"
+      role: "PRIMARY_OWNER"

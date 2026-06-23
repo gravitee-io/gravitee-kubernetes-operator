@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  gravitee: gravitee-io/gravitee@4.17.0
+  gravitee: gravitee-io/gravitee@4.18.1
   kubernetes: circleci/kubernetes@2.0.2
   helm: circleci/helm@3.2.0
   go: circleci/go@3.0.4
@@ -29,11 +29,8 @@ parameters:
       - e2e
       - rollout-apim
       - release
+      - freeze
       - none
-  apim-version:
-    type: string
-    default: ""
-    description: "The version of APIM to use when we run a test suite. Leave empty to use the version defined in the hack/apim.yaml file."
   apim-source-branch:
     type: string
     default: ""
@@ -50,6 +47,10 @@ parameters:
     type: string
     default: ""
     description: "The version being released when the release trigger is used"
+  freeze-version:
+    type: string
+    default: ""
+    description: "The version being frozen when the freeze trigger is used"
   latest:
     type: boolean
     default: false
@@ -64,7 +65,7 @@ parameters:
 executors:
   azure-cli:
     docker:
-      - image: mcr.microsoft.com/azure-cli:2.84.0
+      - image: mcr.microsoft.com/azure-cli:2.85.0
     resource_class: small
 
 commands:
@@ -108,12 +109,13 @@ jobs:
       - run:
           name: Install GO tools
           command: make install-go-tools
+          no_output_timeout: 30m
       - go/save-mod-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - save_cache:
-          key: gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+          key: gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
           paths:
             - /home/circleci/project/bin
 
@@ -131,7 +133,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Lint sources
           command: make lint-sources
@@ -152,7 +154,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Lint licenses
           command: make lint-licenses
@@ -174,23 +176,6 @@ jobs:
               -x @commitlint/config-conventional \
               --from $(git describe --tags --abbrev=0)
 
-  job-lint-e2e-lib:
-    docker:
-      - image: cimg/node:24.12.0
-    working_directory: ~/project/test/e2e/lib
-    steps:
-      - checkout:
-          path: ~/project      
-      - run:
-          name: Install dependencies
-          command: corepack yarn@4.10.3 install --immutable
-      - run:
-          name: Check e2e library format
-          command: corepack yarn@4.10.3 format:check
-      - run:
-          name: Lint e2e library
-          command: corepack yarn@4.10.3 lint
-
   job-lint-resources:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
@@ -206,7 +191,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Check that `make generate` has been executed
           command: |
@@ -244,7 +229,7 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Run unit tests
           command: |
@@ -256,6 +241,9 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-unit.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-unit.out
+          destination: cover-unit.out
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
@@ -277,7 +265,10 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -347,6 +338,9 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-conformance.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-conformance.out
+          destination: cover-conformance.out
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
@@ -359,7 +353,6 @@ jobs:
       ginkgo-filter:
         type: enum
         enum:
-          - integration
           - withContext
           - withoutContext
     steps:
@@ -375,7 +368,10 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -403,9 +399,11 @@ jobs:
                 command: echo 'export APIM_VALUES=values-dbless.yaml' >> $BASH_ENV
       - run:
           name: Start cluster
+          no_output_timeout: 30m
           command: make start-cluster
       - run:
           name: Run IT with filter << parameters.ginkgo-filter >>
+          no_output_timeout: 30m
           command: |
             export SAFE_RANDOM=true
             export GKO_MANAGER_SILENT_LOG=true
@@ -416,6 +414,9 @@ jobs:
           root: /tmp/junit/reports
           paths:
             - cover-<< parameters.ginkgo-filter >>.out
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-<< parameters.ginkgo-filter >>.out
+          destination: cover-<< parameters.ginkgo-filter >>.out
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
@@ -423,7 +424,7 @@ jobs:
     machine:
       image: ubuntu-2204:2024.01.2
       docker_layer_caching: true
-    resource_class: medium
+    resource_class: large
     steps:
       - checkout
       - go/install:
@@ -433,7 +434,10 @@ jobs:
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - run:
+          name: Install GO tools if not cached
+          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -448,10 +452,24 @@ jobs:
           registry: graviteeio.azurecr.io
           username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
           password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      # Must run after docker-login: the gck image preload pulls the APIM
+      # master nightlies from graviteeio.azurecr.io.
+      - run:
+          name: Install gck
+          command: |
+            go install github.com/gravitee-io-labs/gck@v1.0.2
+            echo 'export PATH="$HOME/go/bin:$PATH"' >> "$BASH_ENV"
       - run:
           name: Start cluster
           command: |
-            make start-cluster
+            make start-e2e-cluster
+      - run:
+          name: Prepare coverage storage
+          command: |
+            sudo chmod -R 777 /tmp/coverage
+      - run:
+          name: Create coverage persistent volume
+          command: kubectl apply -f ./test/e2e/coverage.yaml
       - run:
           name: Helm install GKO
           command: |
@@ -459,17 +477,11 @@ jobs:
               && kind load docker-image gko:latest --name gravitee \
               && helm upgrade --install gko helm/gko -n default \
                 --set manager.image.repository=gko \
-                --set manager.image.tag=latest
-      - run:
-          name: Install libs
-          command: yarn --cwd test/e2e/lib install
+                --set manager.image.tag=latest \
+                -f ./test/e2e/operator.values.yaml
       - run:
           name: Build platform-test CLI
           command: npm --prefix test/platform-test install && npm --prefix test/platform-test run build
-      - run:
-          name: Install Chainsaw
-          command: |
-            GOBIN=$(pwd)/bin go install github.com/kyverno/chainsaw@v0.2.14
       - run:
           name: Install Terraform
           command: |
@@ -477,17 +489,73 @@ jobs:
             sudo unzip -o /tmp/terraform.zip -d /usr/local/bin/
             terraform version
       - run:
-          name: Run Chainsaw tests
+          name: Build Gravitee Terraform provider from source
+          # Some e2e tests exercise provider features merged to main but not
+          # yet on registry.terraform.io. The script builds the provider from
+          # source and stages it into a filesystem mirror that
+          # helpers/terraform.ts auto-detects via TF_CLI_CONFIG_FILE.
+          # Override the ref via the TF_PROVIDER_REF pipeline env var when a
+          # specific commit/tag must be tested instead of main.
           command: |
-            bin/chainsaw test --quiet --config test/e2e/chainsaw/config.yaml
+            bash test/platform-test/scripts/build-tf-provider.sh "${TF_PROVIDER_REF:-main}"
+      - run:
+          name: Wait for operator to be ready
+          command: |
+            kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
+      # Export the Xray Cloud API credentials BEFORE the e2e run. keeper/env-export
+      # runs on_success, so placing it here (while the pipeline is still green)
+      # guarantees the creds are in BASH_ENV for the `when: always` push step below
+      # even when the e2e run itself fails.
+      - keeper/env-export:
+          secret-url: keeper://so8_Jh2tP-AZSbtIYcbBvg/custom_field/CLIENT ID
+          var-name: XRAY_CLIENT_ID
+      - keeper/env-export:
+          secret-url: keeper://so8_Jh2tP-AZSbtIYcbBvg/custom_field/CLIENT SECRET
+          var-name: XRAY_CLIENT_SECRET
       - run:
           name: Run Playwright E2E tests
           command: npm --prefix test/platform-test run e2e
+      - run:
+          name: Scale down operator
+          command: |
+            kubectl scale deployment gko-controller-manager -n default --replicas=0
+            kubectl wait --for=delete pod -l control-plane=controller-manager --timeout=60s
+      - run:
+          name: Generate coverage
+          command: |
+            mkdir -p /tmp/junit/reports
+            go tool covdata textfmt -i=/tmp/coverage -o /tmp/junit/reports/cover-e2e.out
+      - persist_to_workspace:
+          root: /tmp/junit/reports
+          paths:
+            - cover-e2e.out
       - store_test_results:
-          path: test/platform-test/playwright-results.xml
+          path: test/platform-test/playwright-results
+      - store_artifacts:
+          path: test/platform-test/playwright-results
+          destination: playwright-results
       - store_artifacts:
           path: test/platform-test/playwright-report
           destination: playwright-report
+      - store_artifacts:
+          path: /tmp/junit/reports/cover-e2e.out
+          destination: cover-e2e.out
+      # Best-effort push of the Playwright JUnit results to Xray Cloud so the
+      # "Test Coverage" panel on each linked Jira Test reflects the latest run.
+      # See test/platform-test/scripts/xray/README.md for env-var setup. Runs
+      # `when: always` so failed test runs still surface their failures in Jira
+      # instead of leaving the panel stuck at TO DO. The XRAY_CLIENT_* creds are
+      # exported earlier (before the e2e run) by keeper/env-export.
+      - run:
+          name: Push results to Xray Cloud
+          when: always
+          command: ./test/platform-test/scripts/xray/push-results.sh
+      # Note: store_artifacts can't take `when: always`; if e2e fails this
+      # step is skipped — the Test Execution key is still in the build log
+      # of the "Push results to Xray Cloud" step above.
+      - store_artifacts:
+          path: /tmp/xray-test-execution.txt
+          destination: xray-test-execution.txt
 
   job-stage-helm-chart:
     docker:
@@ -595,7 +663,7 @@ jobs:
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -711,13 +779,34 @@ jobs:
                 command: |
                   npx zx hack/scripts/release-helm-chart.mjs --version << pipeline.parameters.release-version >>
       - run:
-          name: Commit and tag release
+          name: Generate OLM bundle
+          command: |
+            MINOR=$(echo "<< pipeline.parameters.release-version >>" | cut -d. -f1,2)
+            make olm-bundle \
+              VERSION=<< pipeline.parameters.release-version >> \
+              IMG=docker.io/graviteeio/kubernetes-operator \
+              CHANNELS=stable-v${MINOR},alpha \
+              DEFAULT_CHANNEL=stable-v${MINOR}
+      - run:
+          name: Build OLM bundle image
+          command: |
+            make olm-bundle-build BUNDLE_IMG=graviteeio/gko-bundle:<< pipeline.parameters.release-version >>
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Push OLM bundle image
+                command: |
+                  make olm-bundle-push BUNDLE_IMG=graviteeio/gko-bundle:<< pipeline.parameters.release-version >>
+      - run:
+          name: Commit release
           command: |
             make add-license > /dev/null
             git add helm/gko/Chart.yaml
             git add crds
+            git add olm/bundle
             git commit -m "ci: release version << pipeline.parameters.release-version >> [skip ci]"
-            git tag << pipeline.parameters.release-version >>
             echo
             git diff HEAD~1 HEAD
       - when:
@@ -725,11 +814,10 @@ jobs:
             not: << pipeline.parameters.dry-run >>
           steps:
             - run:
-                name: Push release tag and commit
+                name: Push release commit
                 command: |
                   export RELEASE_BRANCH=$(npx zx hack/scripts/get-release-branch.mjs --version << pipeline.parameters.release-version >>)
                   git push -u origin $RELEASE_BRANCH
-                  git push --tags origin $RELEASE_BRANCH
       - run:
           name: Generate Changelog
           command: npx zx hack/scripts/generate-changelog.mjs --version << pipeline.parameters.release-version >> > /tmp/CHANGELOG.md
@@ -756,7 +844,9 @@ jobs:
             - run:
                 name: Publish Github Release << pipeline.parameters.release-version >> as latest
                 command: |
-                  gh release create --latest << pipeline.parameters.release-version >> \
+                  gh release create --latest \
+                    --target "$(git rev-parse HEAD)" \
+                    << pipeline.parameters.release-version >> \
                     /tmp/custom-resource-definitions.zip \
                     -F /tmp/CHANGELOG.md
       - when:
@@ -769,7 +859,9 @@ jobs:
             - run:
                 name: Publish Github Release << pipeline.parameters.release-version >>
                 command: |
-                  gh release create << pipeline.parameters.release-version >> \
+                  gh release create \
+                    --target "$(git rev-parse HEAD)" \
+                    << pipeline.parameters.release-version >> \
                     /tmp/custom-resource-definitions.zip \
                     -F /tmp/CHANGELOG.md
       - when:
@@ -783,32 +875,17 @@ jobs:
                   npx zx hack/scripts/submit-changelog.mjs \
                     --version << pipeline.parameters.release-version >> \
                     --file /tmp/CHANGELOG.md --output /tmp/pr.txt
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - run:
+                name: Submit OLM bundle to community-operators
+                command: |
+                  npx zx hack/scripts/submit-community-operators.mjs \
+                    --version << pipeline.parameters.release-version >> || true
 
-  job-notify-release-slack:
-    docker:
-      - image: cimg/base:stable
-    resource_class: small
-    steps:
-      - keeper/env-export:
-          secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
-          var-name: SLACK_ACCESS_TOKEN
-      - slack/notify:
-          channel: C02NGT20S4W
-          event: pass
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":kubernetes: Gravitee Kubernetes Operator - <https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/${CIRCLE_TAG}|Version ${CIRCLE_TAG}> has been released 🎉"
-                  }
-                }
-              ]
-            }
-
-  job-prepare-next-release:
+  job-freeze:
     docker:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
@@ -818,7 +895,7 @@ jobs:
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
       - restore_cache:
           keys:
-            - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
+            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -840,10 +917,39 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - gh/setup
       - run:
-          name: Prepare next release
+          name: Freeze version << pipeline.parameters.freeze-version >>
           command: |
-            npx zx hack/scripts/prepare-next-release.mjs
+            npx zx hack/scripts/freeze.mjs --version << pipeline.parameters.freeze-version >>
+
+  job-notify-release-slack:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - when:
+          condition:
+            not: << pipeline.parameters.dry-run >>
+          steps:
+            - keeper/env-export:
+                secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+                var-name: SLACK_ACCESS_TOKEN
+            - slack/notify:
+                channel: C02NGT20S4W
+                event: pass
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":kubernetes: Gravitee Kubernetes Operator - <https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/<< pipeline.parameters.release-version >>|Version << pipeline.parameters.release-version >>> has been released 🎉"
+                        }
+                      }
+                    ]
+                  }
 
   job-helm-lint:
     docker:
@@ -892,7 +998,7 @@ jobs:
             sonar-scanner \
               -Dsonar.projectVersion=$(npx zx hack/scripts/get-chart-version.mjs)
 workflows:
-  pull-request:
+  pre-merge:
     when:
       equal:
         - none
@@ -910,8 +1016,6 @@ workflows:
             - Install GO tools
       - job-lint-commits:
           name: Lint commits
-      - job-lint-e2e-lib:
-          name: Lint E2E library
       - job-lint-resources:
           name: Lint resources
           requires:
@@ -921,17 +1025,14 @@ workflows:
           requires:
             - Install GO tools
       - job-integration-test:
-          name: Run IT with context
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
           requires:
             - Install GO tools
-          ginkgo-filter: withContext
-      - job-integration-test:
-          name: Run IT without context
-          context: cicd-orchestrator
-          requires:
-            - Install GO tools
-          ginkgo-filter: withoutContext
       - job-conformance-test:
           name: Run Conformance Test
           context: cicd-orchestrator
@@ -943,13 +1044,6 @@ workflows:
           name: Test Helm chart
           requires:
             - Lint Helm chart
-      - job-sonarcloud-analysis:
-          name: Sonarcloud analysis
-          context: cicd-orchestrator
-          requires:
-            - Run IT with context
-            - Run IT without context
-            - Run Conformance Test
       - aquasec/fs_scan:
           context: cicd-orchestrator
           pre-steps:
@@ -1026,7 +1120,55 @@ workflows:
                   channel: C098YUEDMGE
                   event: pass
                   template: basic_success_1
-                  branch_pattern: ".+"      
+                  branch_pattern: ".+"
+      - job-install-go-tools:
+          name: Install GO tools (master)
+          filters:
+            branches:
+              only:
+                - master
+      - job-unit-test:
+          name: Run unit tests (master)
+          requires:
+            - Install GO tools (master)
+          filters:
+            branches:
+              only:
+                - master
+      - job-integration-test:
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
+          context: cicd-orchestrator
+          requires:
+            - Install GO tools (master)
+          filters:
+            branches:
+              only:
+                - master
+      - job-conformance-test:
+          name: Run Conformance Test (master)
+          context: cicd-orchestrator
+          requires:
+            - Install GO tools (master)
+          filters:
+            branches:
+              only:
+                - master
+      - job-sonarcloud-analysis:
+          name: Sonarcloud analysis
+          context: cicd-orchestrator
+          requires:
+            - job-integration-test-withContext
+            - job-integration-test-withoutContext
+            - Run Conformance Test (master)
+            - Run end to end tests
+          filters:
+            branches:
+              only:
+                - master
 
       - aquasec/register_artifact:
           name: Register staged image for scanning
@@ -1092,62 +1234,59 @@ workflows:
       - job-release:
           name: Release
           context: cicd-orchestrator
-  post-release:
-    when:
-      equal:
-        - none
-        - << pipeline.parameters.trigger >>
-    jobs:
       - job-notify-release-slack:
-          name: Notify gravitee-release-alerts slack channel
+          name: Notify release on Slack
           context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
-      - job-prepare-next-release:
-          name: Prepare next release
-          context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
+          requires:
+            - Release
       - aquasec/register_artifact:
-          name: Register artifact
+          name: Register release artifact
           context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
+          requires:
+            - Release
           built_docker_image_file: /tmp/docker-image.txt
           pre-steps:
+            - run:
+                name: Skip on dry run
+                command: |
+                  if [ "<< pipeline.parameters.dry-run >>" = "true" ]; then
+                    circleci-agent step halt
+                  fi
             - cmd-setup-aqua-scan
             - run:
                 name: Store docker image version
-                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+                command: echo "graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>" > /tmp/docker-image.txt
       - aquasec/docker_image_scan:
-          name: Scan docker image
+          name: Scan release image
           context: cicd-orchestrator
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /\d+\.\d+\.\d+/
           requires:
-            - Register artifact
+            - Register release artifact
           scanner_url: https://82fb8f75da.cloud.aquasec.com
           built_docker_image_file: /tmp/docker-image.txt
           pre-steps:
+            - run:
+                name: Skip on dry run
+                command: |
+                  if [ "<< pipeline.parameters.dry-run >>" = "true" ]; then
+                    circleci-agent step halt
+                  fi
             - cmd-setup-aqua-scan
             - run:
                 name: Store docker image version
-                command: echo "graviteeio/kubernetes-operator:${CIRCLE_TAG}" > /tmp/docker-image.txt
+                command: echo "graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>" > /tmp/docker-image.txt
             - run:
                 name: Pull docker image
-                command: docker pull "graviteeio/kubernetes-operator:${CIRCLE_TAG}"
+                command: docker pull "graviteeio/kubernetes-operator:<< pipeline.parameters.release-version >>"
+
+  freeze:
+    when:
+      equal:
+        - freeze
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-freeze:
+          name: Freeze
+          context: cicd-orchestrator
 
   test:
     when:
@@ -1155,18 +1294,18 @@ workflows:
         - test
         - << pipeline.parameters.trigger >>
     jobs:
+      - job-install-go-tools:
+          name: Install GO tools
       - job-integration-test:
-          name:  Run integration tests with APIM version << pipeline.parameters.apim-version >>
+          matrix:
+            parameters:
+              ginkgo-filter:
+                - withContext
+                - withoutContext
           context: cicd-orchestrator
-          ginkgo-filter: integration
+          requires:
+            - Install GO tools
           pre-steps:
-            - checkout
-            - run:
-                name: Generate cache keys for Go tools
-                command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-            - restore_cache:
-                keys:
-                  - gotools-{{ checksum "/tmp/gomod_checksum.md5" }}
             - keeper/env-export:
                 secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
                 var-name: SLACK_ACCESS_TOKEN

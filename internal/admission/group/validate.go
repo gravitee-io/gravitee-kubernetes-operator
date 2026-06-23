@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -47,9 +48,9 @@ func validateDryRun(ctx context.Context, group *v1alpha1.Group) *errors.Admissio
 		return errs
 	}
 
-	cp.PopulateIDs(apim.Context)
+	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(group))
 
-	status, err := apim.Env.DryRunImportGroup(cp.Spec.Type)
+	status, err := apim.Env.DryRunImportGroup(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

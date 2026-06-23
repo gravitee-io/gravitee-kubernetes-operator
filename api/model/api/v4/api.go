@@ -20,6 +20,8 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 
+	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 )
@@ -32,8 +34,10 @@ type ApiV4LifecycleState string
 
 var _ core.ApiDefinitionModel = &Api{}
 
-type Api struct {
+type V4BaseApi struct {
 	*base.ApiBase `json:",inline"`
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 	// API description
 	// +kubebuilder:validation:Optional
 	Description *string `json:"description,omitempty"`
@@ -60,11 +64,6 @@ type Api struct {
 	// +kubebuilder:validation:MinItems:=1
 	// List of Endpoint groups
 	EndpointGroups []*EndpointGroup `json:"endpointGroups"`
-	// A map of plan identifiers to plan
-	// Keys uniquely identify plans and are used to keep them in sync
-	// when using a management context.
-	// +kubebuilder:validation:Optional
-	Plans *map[string]*Plan `json:"plans,omitempty"`
 	// API Flow Execution (Not applicable for Native API)
 	FlowExecution *FlowExecution `json:"flowExecution,omitempty"`
 	// +kubebuilder:validation:Optional
@@ -78,9 +77,31 @@ type Api struct {
 	// A list of Response Templates for the API (Not applicable for Native API)
 	// +kubebuilder:validation:Optional
 	ResponseTemplates *map[string]map[string]*base.ResponseTemplate `json:"responseTemplates,omitempty"`
+	// Indicates whether this API is allowed to be used in API Products.
+	// Only applicable for V4 HTTP Proxy APIs.
+	// +kubebuilder:validation:Optional
+	AllowedInApiProducts *bool `json:"allowedInApiProducts,omitempty"`
+	// Allow an application to subscribe to more than one JWT/OAuth2 plan (V4 only).
+	// +kubebuilder:validation:Optional
+	AllowMultiJwtOauth2Subscriptions *bool `json:"allowMultiJwtOauth2Subscriptions,omitempty"`
 	// List of members associated with the API
 	// +kubebuilder:validation:Optional
 	Members []*base.Member `json:"members,omitempty"`
+	// API Failover
+	Failover *Failover `json:"failover,omitempty"`
+	// +kubebuilder:validation:Optional
+	// The API's internal documentation navigation tree for the next-gen portal.
+	// The order of entries in the list is preserved. Intermediate folders are
+	// implicitly created by APIM if not listed explicitly. Has no effect on the
+	// classic portal (see `pages`). Not applicable to V2 APIs.
+	PortalNavigation []*nav.NavigationPath `json:"portalNavigation,omitempty"`
+	// ConsoleNotification struct sent to the Automation API, not part of the CRD spec.
+	// +kubebuilder:skipversion
+	ConsoleNotification *AutomationConsoleNotification `json:"consoleNotification,omitempty"`
+}
+
+type Api struct {
+	*V4BaseApi `json:",inline"`
 	// +kubebuilder:validation:Optional
 	// A map of pages objects.
 	//
@@ -90,8 +111,44 @@ type Api struct {
 	// Renaming a key is the equivalent of deleting the page and recreating
 	// it holding a new ID in APIM.
 	Pages *map[string]*Page `json:"pages"`
-	// API Failover
-	Failover *Failover `json:"failover,omitempty"`
+	// A map of plan identifiers to plan
+	// Keys uniquely identify plans and are used to keep them in sync
+	// when using a management context.
+	// +kubebuilder:validation:Optional
+	Plans *map[string]*Plan `json:"plans,omitempty"`
+}
+
+type AutomationApi struct {
+	*V4BaseApi `json:",inline"`
+	// that is the main change from the API model
+	Pages []*Page `json:"pages"`
+	Plans []*Plan `json:"plans"`
+}
+
+func (api *Api) ToAutomation() AutomationApi {
+	autoAPI := AutomationApi{
+		V4BaseApi: api.V4BaseApi,
+	}
+
+	// mapping plans map to list
+	if api.Plans != nil {
+		autoAPI.Plans = make([]*Plan, 0, len(*api.Plans))
+		for hrid, plan := range *api.Plans {
+			plan.HRID = hrid
+			autoAPI.Plans = append(autoAPI.Plans, plan)
+		}
+	}
+
+	// mapping pages map to list
+	if api.Pages != nil {
+		autoAPI.Pages = make([]*Page, 0, len(*api.Pages))
+		for hrid, page := range *api.Pages {
+			page.HRID = hrid
+			autoAPI.Pages = append(autoAPI.Pages, page)
+		}
+	}
+
+	return autoAPI
 }
 
 func (api *Api) GetType() string {
@@ -126,7 +183,7 @@ func (api *Api) GetNotificationRefs() []core.ObjectRef {
 func (api *Api) SetConsoleNotification(consoleNotification core.ConsoleNotificationSettingsObject) {
 	if consoleNotification == nil {
 		api.ConsoleNotification = nil
-	} else if impl, ok := consoleNotification.(*base.ConsoleNotificationConfiguration); ok {
+	} else if impl, ok := consoleNotification.(*AutomationConsoleNotification); ok {
 		api.ConsoleNotification = impl
 	}
 }

@@ -184,21 +184,21 @@ func validateSettingsUpdate(oldApp, newApp core.ApplicationObject) *errors.Admis
 func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	cp, _ := app.DeepCopyObject().(core.ApplicationObject)
+	cp, _ := app.DeepCopyObject().(*v1alpha1.Application)
 
 	apim, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
 	if err != nil {
 		errs.AddSevere(err.Error())
 	}
 
-	cp.PopulateIDs(apim.Context)
+	cp.PopulateIDs(apim.Context, k8s.IsAutomationAPIManaged(app))
 
 	impl, ok := cp.GetModel().(*application.Application)
 	if !ok {
 		errs.AddSeveref("unable to call dry run (unknown type %T)", impl)
 	}
 
-	status, err := apim.Applications.DryRunCreateOrUpdate(impl)
+	status, err := apim.Applications.DryRunCreateOrUpdate(cp)
 	if err != nil {
 		errs.AddSevere(err.Error())
 		return errs

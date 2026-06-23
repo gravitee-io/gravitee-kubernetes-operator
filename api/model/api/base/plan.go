@@ -66,6 +66,9 @@ func NewPlan() *Plan {
 	return &Plan{
 		Tags:            []string{},
 		Characteristics: []string{},
+		Status:          PublishedPlanStatus,
+		Validation:      "AUTO",
+		Type:            "API",
 	}
 }
 

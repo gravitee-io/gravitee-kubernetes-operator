@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/notification"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -60,13 +61,20 @@ func mapNotificationSettings(
 	ctx context.Context,
 	api core.ApiDefinitionObject,
 	notif *v1alpha1.Notification,
-) (*base.ConsoleNotificationConfiguration, error) {
+) (core.ConsoleNotificationSettingsObject, error) {
 	console := notif.Spec.Console
-	settings := base.ToAPIConsoleNotificationSettings(console)
-	if groups, err := ResolveGroupRefs(ctx, api, console.GetGroupRefs()); err != nil {
+	groups := console.Groups
+	if resolvedGroups, err := ResolveGroupRefs(ctx, api, console.GetGroupRefs()); err != nil {
 		return nil, err
 	} else {
-		settings.Groups = append(settings.Groups, groups...)
+		groups = append(groups, resolvedGroups...)
 	}
+
+	if api.GetDefinitionVersion() == core.ApiV4 {
+		return v4.ToAutomationConsoleNotification(console, groups), nil
+	}
+
+	settings := base.ToAPIConsoleNotificationSettings(console)
+	settings.Groups = groups
 	return settings, nil
 }

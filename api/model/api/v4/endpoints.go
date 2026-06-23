@@ -55,7 +55,9 @@ type Endpoint struct {
 	Services *EndpointServices `json:"services,omitempty"`
 
 	// Endpoint is secondary or not?
-	Secondary bool `json:"secondary"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=false
+	Secondary *bool `json:"secondary,omitempty"`
 
 	// List of endpoint tenants
 	// +kubebuilder:validation:Optional

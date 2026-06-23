@@ -217,7 +217,7 @@ func (api *ApiDefinition) IsBeingDeleted() bool {
 	return !api.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-func (api *ApiDefinition) PopulateIDs(_ core.ContextModel) {
+func (api *ApiDefinition) PopulateIDs(core.ContextModel, bool) {
 	api.Spec.ID = api.pickID()
 	api.Spec.CrossID = api.pickCrossID()
 	api.generateEmptyPlanIDs()

@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -60,6 +61,7 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 		By("calling rest API, expecting to find an application")
 
 		apim := apim.NewClient(ctx)
+		// TODO remove this and create actual Application!!!
 		apps, err := apim.Applications.Search("", "ACTIVE")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(apps).NotTo(BeEmpty())
@@ -68,16 +70,29 @@ var _ = Describe("Subscribe", labels.WithContext, func() {
 		By("calling rest API expecting to find API V4 with plan")
 
 		Expect(fixtures.APIv4.Status.Plans).ToNot(BeEmpty())
-		planID := fixtures.APIv4.Status.Plans["API_KEY"]
+
+		By("fetching API UUID from Automation API via HRID")
+
+		hrid := refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID()
+		apiFromAPIM, err := apim.APIs.GetV4ByHRID(hrid)
+		Expect(err).ToNot(HaveOccurred())
 
 		By("calling rest API expecting to application to subscribe to API")
 
-		subscription, err := apim.Subscriptions.Subscribe(fixtures.APIv4.Status.ID, app.ID, planID)
+		planID := "not found yet"
+		for _, plan := range apiFromAPIM.Plans {
+			if plan.HRID == "API_KEY" {
+				planID = plan.ID
+				break
+			}
+		}
+
+		subscription, err := apim.Subscriptions.Subscribe(apiFromAPIM.ID, app.ID, planID)
 		Expect(err).ToNot(HaveOccurred())
 
 		By("calling rest API expecting to find subscription API key")
 
-		keys, err := apim.Subscriptions.GetApiKeys(fixtures.APIv4.Status.ID, subscription.ID)
+		keys, err := apim.Subscriptions.GetApiKeys(apiFromAPIM.ID, subscription.ID)
 		Expect(err).ToNot(HaveOccurred(), fixtures.APIv4.Name)
 		Expect(keys).ToNot(BeEmpty())
 		key := keys[0].Key

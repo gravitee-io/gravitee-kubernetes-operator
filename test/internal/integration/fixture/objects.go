@@ -38,12 +38,21 @@ type Objects struct {
 	IDPGroupMapping   *v1alpha1.IDPGroupMapping
 	SharedPolicyGroup *v1alpha1.SharedPolicyGroup
 	Notification      *v1alpha1.Notification
+	Dictionary        *v1alpha1.Dictionary
+	Portal            *v1alpha1.Portal
+	PortalListing     *v1alpha1.PortalListing
+	Documentation     *v1alpha1.Documentation
 
-	randomSuffix string
+	randomSuffix   string
+	navigationRoot string
 }
 
 func (o *Objects) GetGeneratedSuffix() string {
 	return o.randomSuffix
+}
+
+func (o *Objects) GetNavigationRoot() string {
+	return o.navigationRoot
 }
 
 func (o *Objects) GetIngressPEMRegistryKey() string {

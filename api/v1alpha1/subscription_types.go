@@ -152,6 +152,10 @@ func (s *Subscription) GetMetadata() map[string]string {
 	return clone
 }
 
+func (s *Subscription) GetApiKeys() []core.ApiKeyModel {
+	return s.Spec.GetApiKeys()
+}
+
 // +kubebuilder:object:root=true
 type SubscriptionList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -169,6 +173,14 @@ func (s *Subscription) GetConditions() map[string]metav1.Condition {
 
 func (s *Subscription) SetConditions(conditions []metav1.Condition) {
 	s.Status.Conditions = conditions
+}
+
+func (s *Subscription) StatusIsZero() bool {
+	return s.Status.ID == "" &&
+		s.Status.StartedAt == "" &&
+		s.Status.EndingAt == "" &&
+		len(s.Status.Conditions) == 0 &&
+		s.Status.ProcessingStatus == ""
 }
 
 func init() {

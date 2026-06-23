@@ -20,6 +20,7 @@ import (
 	apiV4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/assert"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -45,7 +46,7 @@ var _ = Describe("Validate update", labels.WithContext, func() {
 		By("preparing API for import")
 
 		fixtures.APIv4.Spec.DefinitionContext = apiV4.NewDefaultKubernetesContext()
-		fixtures.APIv4.PopulateIDs(fixtures.Context)
+		fixtures.APIv4.PopulateIDs(fixtures.Context, k8s.IsAutomationAPIManaged(fixtures.APIv4))
 
 		By("adding an unknown category to the API")
 

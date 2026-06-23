@@ -38,6 +38,7 @@ const (
 	EnableIngress                        = "ENABLE_INGRESS"
 	EnableWebhook                        = "ENABLE_WEBHOOK"
 	EnableGatewayAPI                     = "ENABLE_GATEWAY_API"
+	GatewayAPISkipAPIDefinition          = "GATEWAY_API_SKIP_API_DEFINITION"
 	ApplyGatewayAPICRDs                  = "APPLY_GATEWAY_API_CRDS"
 	WebhookNS                            = "WEBHOOK_NAMESPACE"
 	WebhookServiceName                   = "WEBHOOK_SERVICE_NAME"
@@ -93,6 +94,7 @@ var Config = struct {
 	EnableIngress                        bool
 	EnableWebhook                        bool
 	EnableGatewayAPI                     bool
+	GatewayAPISkipAPIDefinition          bool
 	ApplyGatewayAPICRDs                  bool
 	WebhookNS                            string
 	WebhookService                       string
@@ -152,6 +154,7 @@ func init() {
 	Config.EnableIngress = os.Getenv(EnableIngress) == TrueString
 	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
 	Config.EnableGatewayAPI = os.Getenv(EnableGatewayAPI) == TrueString
+	Config.GatewayAPISkipAPIDefinition = os.Getenv(GatewayAPISkipAPIDefinition) == TrueString
 	Config.ApplyGatewayAPICRDs = os.Getenv(ApplyGatewayAPICRDs) == TrueString
 	Config.WebhookNS = os.Getenv(WebhookNS)
 	Config.WebhookService = os.Getenv(WebhookServiceName)

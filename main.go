@@ -26,7 +26,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
@@ -38,9 +43,13 @@ import (
 	v2Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
 	v4Admission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	appAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/application"
+	dictAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/dictionary"
+	documentationAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/docs"
 	groupAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/group"
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
+	portalAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portal"
+	portalListingAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallisting"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -57,13 +66,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/dictionary"
+	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
 	idpgroupmapping "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/idpgroupmapping"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-	v1 "k8s.io/api/networking/v1"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
@@ -75,9 +85,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apidefinition"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/managementcontext"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -107,16 +114,7 @@ func init() {
 func main() {
 	var webhookServer webhook.Server
 	if env.Config.EnableWebhook {
-		patchAdmissionWebhook()
-		webhookServer = webhook.NewServer(webhook.Options{
-			CertDir:  "/tmp/webhook-server/certs",
-			Port:     env.Config.WebhookPort,
-			CertName: wk.CertName,
-			KeyName:  wk.KeyName,
-			TLSOpts: []func(*tls.Config){func(config *tls.Config) {
-				config.InsecureSkipVerify = true
-			}},
-		})
+		webhookServer = createWebhookServer()
 	}
 
 	if env.Config.HTTPClientInsecureSkipVerify {
@@ -217,26 +215,6 @@ func buildCacheOptions(ns string) cache.Options {
 }
 
 func registerControllers(mgr manager.Manager) {
-	if err := (&apidefinition.Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiDefinitionList{}),
-	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for API definitions")
-		os.Exit(1)
-	}
-
-	if err := (&apidefinition.V4Reconciler{
-		Client:   k8s.GetClient(),
-		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
-		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
-	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for API v4 definitions")
-		os.Exit(1)
-	}
-
 	if err := (&managementcontext.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
@@ -244,6 +222,16 @@ func registerControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ManagementContextList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for management contexts")
+		os.Exit(1)
+	}
+
+	if err := (&apidefinition.Reconciler{
+		Client:   k8s.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apidefinitionv2-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiDefinitionList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for API definitions")
 		os.Exit(1)
 	}
 
@@ -267,6 +255,34 @@ func registerControllers(mgr manager.Manager) {
 		log.Global.Error(err, "Unable to create controller for API resources")
 		os.Exit(1)
 	}
+
+	if err := (&notification.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("notification-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for notification")
+		os.Exit(1)
+	}
+
+	registerAutomationAPIControllers(mgr)
+
+	if env.Config.EnableGatewayAPI {
+		registerGatewayAPIsControllers(mgr)
+	}
+}
+
+func registerAutomationAPIControllers(mgr manager.Manager) {
+	if err := (&apidefinition.V4Reconciler{
+		Client:   k8s.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("apiv4definition-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.ApiV4DefinitionList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for API v4 definitions")
+		os.Exit(1)
+	}
+
 	if err := (&application.Reconciler{
 		Client:   k8s.GetClient(),
 		Scheme:   mgr.GetScheme(),
@@ -281,6 +297,7 @@ func registerControllers(mgr manager.Manager) {
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("subscription-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.SubscriptionList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for subscriptions")
 		os.Exit(1)
@@ -288,7 +305,9 @@ func registerControllers(mgr manager.Manager) {
 
 	if err := (&group.Reconciler{
 		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
 		Recorder: mgr.GetEventRecorderFor("group-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.GroupList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for groups")
 		os.Exit(1)
@@ -312,17 +331,44 @@ func registerControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 
-	if err := (&notification.Reconciler{
+	if err := (&dictionary.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
-		Recorder: mgr.GetEventRecorderFor("notification-controller"),
+		Recorder: mgr.GetEventRecorderFor("dictionary-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.DictionaryList{}),
 	}).SetupWithManager(mgr); err != nil {
-		log.Global.Error(err, "Unable to create controller for notification")
+		log.Global.Error(err, "Unable to create controller for dictionaries")
 		os.Exit(1)
 	}
 
-	if env.Config.EnableGatewayAPI {
-		registerGatewayAPIsControllers(mgr)
+	if err := (&portal.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portal-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.PortalList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for portals")
+		os.Exit(1)
+	}
+
+	if err := (&portallisting.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portallisting-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.PortalListingList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for portal listings")
+		os.Exit(1)
+	}
+
+	if err := (&documentation.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("documentation-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.DocumentationList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for documentations")
+		os.Exit(1)
 	}
 }
 
@@ -424,6 +470,29 @@ func shouldSkipGatewayCRDs() bool {
 	return !env.Config.EnableGatewayAPI || !env.Config.ApplyGatewayAPICRDs
 }
 
+func createWebhookServer() webhook.Server {
+	tlsOpts := []func(*tls.Config){func(config *tls.Config) {
+		config.InsecureSkipVerify = true
+	}}
+
+	if env.Config.WebhookCertSecret != "" {
+		patchAdmissionWebhook()
+		return webhook.NewServer(webhook.Options{
+			CertDir:  "/tmp/webhook-server/certs",
+			Port:     env.Config.WebhookPort,
+			CertName: wk.CertName,
+			KeyName:  wk.KeyName,
+			TLSOpts:  tlsOpts,
+		})
+	}
+
+	log.Global.Info("Webhook certs managed externally (OLM or cert-manager)")
+	return webhook.NewServer(webhook.Options{
+		Port:    env.Config.WebhookPort,
+		TLSOpts: tlsOpts,
+	})
+}
+
 func patchAdmissionWebhook() {
 	log.Global.Debug("Setting up Admission Webhook Server")
 	webhookPatcher := wk.NewWebhookPatcher()
@@ -487,6 +556,18 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (groupAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (dictAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (portalAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (portalListingAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (documentationAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	return nil

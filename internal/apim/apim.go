@@ -25,8 +25,10 @@ import (
 )
 
 const (
-	defaultBasePath = "/management"
-	cloudBasePath   = "/apim/rest"
+	managementBasePath      = "/management"
+	cloudManagementBasePath = "/apim/rest"
+	automationBasePath      = "/automation"
+	cloudAutomationBasePath = "/apim/automation"
 )
 
 // APIM wraps services needed to sync resources with a given environment on a Gravitee.io APIM instance.
@@ -35,6 +37,10 @@ type APIM struct {
 	Applications      *service.Applications
 	Subscription      *service.Subscriptions
 	SharedPolicyGroup *service.SharedPolicyGroup
+	Dictionaries      *service.Dictionaries
+	Portals           *service.Portals
+	Listings          *service.Listings
+	Documentations    *service.Documentations
 	Env               *service.Env
 	Configuration     *service.Configuration
 
@@ -53,10 +59,12 @@ func (apim *APIM) OrgID() string {
 
 // FromContext returns a new APIM instance from a given reconcile context and management context.
 func FromContext(ctx context.Context, context core.ContextObject, parentNs string) (*APIM, error) {
-	path := getBasePath(context)
+	managementPath := getManagementPath(context)
+	automationPath := getAutomationPath(context)
+
 	orgID, envID := context.GetOrgID(), context.GetEnvID()
 
-	urls, err := client.NewURLs(context.GetURL(), path, orgID, envID)
+	urls, err := client.NewURLs(context.GetURL(), managementPath, automationPath, orgID, envID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,20 +88,34 @@ func FromContext(ctx context.Context, context core.ContextObject, parentNs strin
 		Applications:      service.NewApplications(c),
 		Subscription:      service.NewSubscriptions(c),
 		SharedPolicyGroup: service.NewSharedPolicyGroup(c),
+		Dictionaries:      service.NewDictionaries(c),
+		Portals:           service.NewPortals(c),
+		Listings:          service.NewListings(c),
+		Documentations:    service.NewDocumentations(c),
 		Env:               service.NewEnv(c),
 		Configuration:     service.NewConfiguration(c),
 		Context:           context,
 	}, nil
 }
 
-func getBasePath(context core.ContextModel) string {
+func getAutomationPath(context core.ContextModel) string {
 	if context.GetPath() != nil {
 		return *context.GetPath()
 	}
 	if context.HasCloud() {
-		return cloudBasePath
+		return cloudAutomationBasePath
 	}
-	return defaultBasePath
+	return automationBasePath
+}
+
+func getManagementPath(context core.ContextModel) string {
+	if context.GetPath() != nil {
+		return *context.GetPath()
+	}
+	if context.HasCloud() {
+		return cloudManagementBasePath
+	}
+	return managementBasePath
 }
 
 func FromContextRef(ctx context.Context, ref core.ObjectRef, parentNs string) (*APIM, error) {

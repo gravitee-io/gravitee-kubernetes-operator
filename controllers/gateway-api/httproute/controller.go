@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal/mapper"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
@@ -99,8 +100,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 				ctx = mapper.WithGatewayCache(ctx, mapper.GatewayCache(cache))
 
-				if err := internal.Program(ctx, dc); err != nil {
-					return err
+				if env.Config.GatewayAPISkipAPIDefinition {
+					if err := internal.ProgramConfigMap(ctx, dc); err != nil {
+						return err
+					}
+				} else {
+					if err := internal.Program(ctx, dc); err != nil {
+						return err
+					}
 				}
 				return nil
 			})

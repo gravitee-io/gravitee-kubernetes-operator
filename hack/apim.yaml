@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 apim:
   image:
     registry: graviteeio.azurecr.io
     version: master-latest
   chart:
     registry: oci://graviteeio.azurecr.io/helm/apim3
-    version: 4.11.*
+    version: 4.13.*

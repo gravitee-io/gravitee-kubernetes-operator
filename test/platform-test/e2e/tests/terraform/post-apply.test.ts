@@ -43,12 +43,19 @@ const apiPath = "/e2e-tf-post-apply/";
 
 test.describe("Terraform — Post-apply & Idempotency", () => {
   test.beforeAll(async () => {
-    ws = await terraform.initWorkspace("terraform");
+    // initWorkspace (terraform init) + apply + output are sequential terraform
+    // invocations, each capped at terraform.TF_TIMEOUT_MS. The hook timeout
+    // must exceed their combined ceiling so terraform's own timeout fires
+    // first instead of Playwright orphaning a running terraform process (which
+    // would leak the .tfstate lock). See terraform.TF_WORKSPACE_TIMEOUT_MS.
+    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
+    ws = await terraform.initWorkspace("subscriptions/v4-full-stack");
     await terraform.apply(ws);
     apiId = await terraform.output(ws, "api_id");
   });
 
   test.afterAll(async () => {
+    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
     if (ws) await terraform.destroyWorkspace(ws);
   });
 

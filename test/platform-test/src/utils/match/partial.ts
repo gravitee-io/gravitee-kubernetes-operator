@@ -23,24 +23,23 @@ import type { AssertionFailure, AssertionReport } from "../../types/match.js";
 export function deepPartialMatch(
   actual: unknown,
   expected: unknown,
-  path: string = "$",
 ): AssertionReport {
   const failures: AssertionFailure[] = [];
-  collect(actual, expected, path, failures);
+  collect(actual, expected, "$", failures);
   return { pass: failures.length === 0, failures, actual };
 }
 
 function collect(
   actual: unknown,
   expected: unknown,
-  path: string,
+  jsonPath: string,
   failures: AssertionFailure[],
 ): void {
   // Primitives and null: strict equality
   if (expected === null || expected === undefined || typeof expected !== "object") {
     if (!Object.is(actual, expected)) {
       failures.push({
-        path,
+        jsonPath,
         message: `Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`,
         expected,
         actual,
@@ -52,7 +51,7 @@ function collect(
   // Expected is object but actual isn't
   if (actual === null || actual === undefined || typeof actual !== "object") {
     failures.push({
-      path,
+      jsonPath,
       message: `Expected an object but got ${JSON.stringify(actual)}`,
       expected,
       actual,
@@ -64,7 +63,7 @@ function collect(
   if (Array.isArray(expected)) {
     if (!Array.isArray(actual)) {
       failures.push({
-        path,
+        jsonPath,
         message: `Expected an array but got ${typeof actual}`,
         expected,
         actual,
@@ -74,14 +73,14 @@ function collect(
     for (let i = 0; i < expected.length; i++) {
       if (i >= actual.length) {
         failures.push({
-          path: `${path}[${i}]`,
+          jsonPath: `${jsonPath}[${i}]`,
           message: `Array index ${i} missing (array has ${actual.length} elements)`,
           expected: expected[i],
           actual: undefined,
         });
         continue;
       }
-      collect(actual[i], expected[i], `${path}[${i}]`, failures);
+      collect(actual[i], expected[i], `${jsonPath}[${i}]`, failures);
     }
     return;
   }
@@ -91,10 +90,10 @@ function collect(
   const actualObj = actual as Record<string, unknown>;
 
   for (const key of Object.keys(expectedObj)) {
-    const childPath = path === "$" ? `$.${key}` : `${path}.${key}`;
+    const childPath = jsonPath === "$" ? `$.${key}` : `${jsonPath}.${key}`;
     if (!(key in actualObj)) {
       failures.push({
-        path: childPath,
+        jsonPath: childPath,
         message: `Property "${key}" missing from actual object`,
         expected: expectedObj[key],
         actual: undefined,

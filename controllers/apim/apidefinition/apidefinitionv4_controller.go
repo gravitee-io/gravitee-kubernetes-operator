@@ -19,14 +19,12 @@ package apidefinition
 import (
 	"context"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/go-logr/logr"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/predicate"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -57,7 +55,7 @@ func (r *V4Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	apiDefinition.SetConditions([]metav1.Condition{})
+	k8s.ResetConditionsExceptAutomationAPI(apiDefinition)
 	return Reconcile(ctx, apiDefinition, r.Recorder)
 }
 

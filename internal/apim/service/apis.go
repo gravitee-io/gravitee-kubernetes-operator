@@ -17,6 +17,11 @@ package service
 import (
 	"strconv"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
@@ -47,6 +52,7 @@ func NewAPIs(client *client.Client) *APIs {
 	return &APIs{Client: client}
 }
 
+// GetByCrossID for test purposes only.
 func (svc *APIs) GetByCrossID(crossID string) (*model.ApiListItem, error) {
 	url := svc.EnvV1Target("apis").WithQueryParam(crossIDParam, crossID)
 	apis := new([]model.ApiListItem)
@@ -85,6 +91,19 @@ func (svc *APIs) GetV4ByID(apiID string) (*v4.Api, error) {
 	return resp, nil
 }
 
+// GetV4ByHRID fetches a V4 API from the Automation API by HRID. For test purposes only.
+func (svc *APIs) GetV4ByHRID(hrid string) (*v4.AutomationApi, error) {
+	url := svc.AutomationTarget("apis").WithPath(hrid)
+
+	resp := new(v4.AutomationApi)
+
+	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func (svc *APIs) ImportV2(spec *v2.Api) (*base.Status, error) {
 	return svc.importV2(spec, false)
 }
@@ -104,23 +123,45 @@ func (svc *APIs) importV2(spec *v2.Api, dryRun bool) (*base.Status, error) {
 	return status, nil
 }
 
-func (svc *APIs) ImportV4(spec *v4.Api) (*base.Status, error) {
-	return svc.importV4(spec, false)
+func (svc *APIs) ImportV4(api *v1alpha1.ApiV4Definition) (*base.Status, error) {
+	return svc.applyV4(api, false)
 }
 
-func (svc *APIs) DryRunImportV4(spec *v4.Api) (*base.Status, error) {
-	return svc.importV4(spec, true)
+func (svc *APIs) DryRunImportV4(api *v1alpha1.ApiV4Definition) (*base.Status, error) {
+	return svc.applyV4(api, true)
 }
 
-func (svc *APIs) importV4(spec *v4.Api, dryRun bool) (*base.Status, error) {
-	url := svc.EnvV2Target("apis/_import/crd").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
+func (svc *APIs) applyV4(api *v1alpha1.ApiV4Definition, dryRun bool) (*base.Status, error) {
+	url := svc.AutomationTarget("apis").WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	status := new(base.Status)
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	// populateIDs only set this if it an upgraded API
+	setHridWithUUID := api.Spec.ID != ""
+
+	automation := api.Spec.ToAutomation()
+
+	// If an ID is set, it can be:
+	// 1. export/import case (user is trying to manage an existing API)
+	// 2. CRD created before upgrade to AutomationAPI (prior to 4.12)
+	// Anyhow, use HRID to store ID and pass setHridWithUUID query param
+	// To tell AutomationAPI that this it is not an HRID-managed resource
+	// UUIDs are already computed
+	if setHridWithUUID {
+		automation.HRID = api.Spec.ID
+		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	}
+
+	status := new(v4.AutomationStatus)
+	if err := svc.HTTP.Put(url.String(), automation, status); err != nil {
 		return nil, err
 	}
 
-	return status, nil
+	if !setHridWithUUID {
+		k8s.AddAutomationAPIManagedCondition(api)
+	}
+	return &base.Status{
+		ApiStatus: status.ApiStatus,
+		Plans:     status.PlansAsMap(),
+	}, nil
 }
 
 func (svc *APIs) UpdateState(apiID string, action model.Action) error {
@@ -133,8 +174,10 @@ func (svc *APIs) DeleteV2(apiID string) error {
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
-func (svc *APIs) DeleteV4(apiID string) error {
-	url := svc.EnvV2Target("apis").WithPath(apiID).WithQueryParams(deleteParams)
+func (svc *APIs) DeleteV4(api core.ApiDefinitionObject) error {
+	apiID, hridContainsUUID := getApiID(api)
+	url := svc.AutomationTarget("apis").WithPath(apiID).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(hridContainsUUID))
 	return svc.HTTP.Delete(url.String(), nil)
 }
 
@@ -146,4 +189,11 @@ func (svc *APIs) SetKubernetesContext(apiID string) error {
 func (svc *APIs) Deploy(id string) error {
 	url := svc.EnvV1Target("apis").WithPath(id).WithPath("deploy")
 	return svc.HTTP.Post(url.String(), new(model.ApiDeployment), nil)
+}
+
+func getApiID(api core.ApiDefinitionObject) (string, bool) {
+	if k8s.IsAutomationAPIManaged(api) {
+		return refs.NewNamespacedNameFromObject(api).HRID(), false
+	}
+	return api.GetID(), true
 }

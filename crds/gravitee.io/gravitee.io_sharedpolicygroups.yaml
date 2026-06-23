@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    gravitee.io/operator.version: 4.11.0-rc
+    gravitee.io/operator.version: 4.13.0-rc
   name: sharedpolicygroups.gravitee.io
 spec:
   group: gravitee.io
@@ -63,7 +63,6 @@ spec:
                   enum:
                     - MESSAGE
                     - PROXY
-                    - NATIVE
                   type: string
                 contextRef:
                   properties:
@@ -82,6 +81,8 @@ spec:
                 description:
                   description: SharedPolicyGroup description
                   type: string
+                hrid:
+                  type: string
                 name:
                   description: SharedPolicyGroup name
                   type: string
@@ -91,8 +92,6 @@ spec:
                   enum:
                     - REQUEST
                     - RESPONSE
-                    - INTERACT
-                    - CONNECT
                     - PUBLISH
                     - SUBSCRIBE
                   type: string

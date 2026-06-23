@@ -14,97 +14,66 @@
  * limitations under the License.
  */
 
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { cp, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+/**
+ * Terraform workspace lifecycle for the e2e suite.
+ *
+ * The pure mechanics live in the runner-agnostic `@gravitee/platform-test`
+ * library (`src/provisioners/engines/terraform-core.ts`) so the Terraform
+ * provisioner can reuse them. This adapter keeps the e2e-specific bits the core
+ * must not own: loading `config.yaml` for the APIM auth env, and resolving
+ * fixture folder names via `fixture()`. It preserves the original
+ * `initWorkspace(fixtureName)` signature and re-exports the rest unchanged so
+ * existing terraform tests keep working.
+ */
+
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadGraviteeConfig } from "../../src/cmd/config.js";
 import { fixture } from "../setup.js";
+import {
+  initWorkspace as initWorkspaceCore,
+  type TfWorkspace,
+} from "../../src/provisioners/engines/terraform-core.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const execFileAsync = promisify(execFile);
-const TF_TIMEOUT_MS = 60_000;
 
-export interface TfWorkspace {
-  dir: string;
-  env: Record<string, string>;
-}
+export {
+  TF_TIMEOUT_MS,
+  TF_WORKSPACE_TIMEOUT_MS,
+  tf,
+  apply,
+  plan,
+  writeVars,
+  applyExpectFailure,
+  output,
+  destroy,
+  destroyWorkspace,
+} from "../../src/provisioners/engines/terraform-core.js";
+export type { TfWorkspace } from "../../src/provisioners/engines/terraform-core.js";
 
 /**
- * Create a Terraform workspace from a fixture directory.
- * Copies the fixture to a temp dir, loads APIM env vars, and runs `terraform init`.
+ * Build the APIM auth/server environment terraform needs, from `config.yaml`
+ * (env vars override config fields, same as the rest of the suite).
  */
-export async function initWorkspace(fixtureName: string): Promise<TfWorkspace> {
+export async function terraformEnv(): Promise<Record<string, string>> {
   const configPath = path.resolve(__dirname, "../../config.yaml");
   const config = await loadGraviteeConfig(configPath);
   const baseUrl = config.apim?.baseUrl ?? "http://localhost:30083";
 
-  const env: Record<string, string> = {
+  return {
     ...(process.env as Record<string, string>),
     APIM_SERVER_URL: `${baseUrl}/automation`,
     APIM_USERNAME: config.apim?.auth?.username ?? "admin",
     APIM_PASSWORD: config.apim?.auth?.password ?? "admin",
   };
-
-  const dir = await mkdtemp(path.join(tmpdir(), "e2e-tf-"));
-  await cp(fixture(fixtureName), dir, { recursive: true });
-  await tf({ dir, env }, ["init", "-no-color"]);
-
-  return { dir, env };
 }
 
-/** Run an arbitrary terraform command in a workspace. */
-export async function tf(
-  ws: TfWorkspace,
-  args: string[],
-): Promise<{ stdout: string; stderr: string }> {
-  return execFileAsync("terraform", args, {
-    cwd: ws.dir,
-    env: ws.env,
-    timeout: TF_TIMEOUT_MS,
-  });
-}
-
-/** Run `terraform apply -auto-approve`. Returns stdout. */
-export async function apply(ws: TfWorkspace): Promise<string> {
-  const { stdout } = await tf(ws, ["apply", "-auto-approve", "-no-color"]);
-  return stdout;
-}
-
-/** Run `terraform plan -detailed-exitcode`. Handles exit code 2 (changes detected). */
-export async function plan(ws: TfWorkspace): Promise<{ stdout: string; hasChanges: boolean }> {
-  try {
-    const { stdout } = await tf(ws, ["plan", "-detailed-exitcode", "-no-color"]);
-    return { stdout, hasChanges: false };
-  } catch (err: unknown) {
-    const e = err as { code?: number; stdout?: string };
-    if (e.code === 2) {
-      return { stdout: e.stdout ?? "", hasChanges: true };
-    }
-    throw err;
-  }
-}
-
-/** Get a terraform output value by name. */
-export async function output(ws: TfWorkspace, name: string): Promise<string> {
-  const { stdout } = await tf(ws, ["output", "-raw", name]);
-  return stdout.trim();
-}
-
-/** Run `terraform destroy -auto-approve`. */
-export async function destroy(ws: TfWorkspace): Promise<void> {
-  await tf(ws, ["destroy", "-auto-approve", "-no-color"]);
-}
-
-/** Destroy resources and remove the temp directory. */
-export async function destroyWorkspace(ws: TfWorkspace): Promise<void> {
-  await destroy(ws).catch((err: unknown) => {
-    console.error(
-      `[terraform] destroy failed — APIM resources in workspace "${ws.dir}" may be orphaned.\n`,
-      err,
-    );
-  });
-  await rm(ws.dir, { recursive: true, force: true });
+/**
+ * Create a Terraform workspace from a fixture folder name (e.g.
+ * "subscriptions/apikey-auto"). Resolves the fixture dir + APIM env, then
+ * delegates to the core engine.
+ */
+export async function initWorkspace(fixtureName: string): Promise<TfWorkspace> {
+  const env = await terraformEnv();
+  return initWorkspaceCore(fixture(fixtureName), env);
 }

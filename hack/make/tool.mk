@@ -10,7 +10,6 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 GINKGO ?= $(LOCALBIN)/ginkgo
 GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
-CHAINSAW ?= $(LOCALBIN)/chainsaw
 GOTESTSUM ?= $(LOCALBIN)/gotestsum
 CLOUD_LB ?= $(LOCALBIN)/cloud-provider-kind
 

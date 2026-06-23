@@ -161,6 +161,16 @@ const (
 
 	GroupFile = "apim/group/group.yml"
 
+	DictionaryManualFile  = "apim/dictionary/dictionary-manual.yml"
+	DictionaryDynamicFile = "apim/dictionary/dictionary-dynamic.yml"
+
+	PortalFile = "apim/portal/portal.yml"
+
+	PortalListingFile = "apim/portal/portal-listing.yml"
+
+	DocumentationPortalFile = "apim/portal/documentation-portal.yml"
+	DocumentationApiFile    = "apim/portal/documentation-api.yml"
+
 	IDPGroupMappingFile             = "apim/idpgroupmapping/idpgroupmapping.yml"
 	IDPGroupMappingMultipleGroups   = "apim/idpgroupmapping/idpgroupmapping-multiple-groups.yml"
 

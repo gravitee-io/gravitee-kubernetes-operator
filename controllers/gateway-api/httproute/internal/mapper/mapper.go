@@ -80,21 +80,23 @@ func newAPI(route *gwAPIv1.HTTPRoute) *v1alpha1.ApiV4Definition {
 func newAPISpec(route *gwAPIv1.HTTPRoute) v1alpha1.ApiV4DefinitionSpec {
 	return v1alpha1.ApiV4DefinitionSpec{
 		Api: v4.Api{
-			Type: "PROXY",
+			V4BaseApi: &v4.V4BaseApi{
+				Type: "PROXY",
+				FlowExecution: &v4.FlowExecution{
+					Mode:          v4.FlowModeBestMatch,
+					MatchRequired: true,
+				},
+				ApiBase: &base.ApiBase{
+					Name:    buildAPIName(route),
+					Version: "v1alpha1",
+				},
+				DefinitionContext: &v4.DefinitionContext{
+					Origin:   v4.OriginKubernetes,
+					SyncFrom: v4.OriginKubernetes,
+				},
+			},
 			Plans: &map[string]*v4.Plan{
 				"default": newKeyLessPlan(),
-			},
-			FlowExecution: &v4.FlowExecution{
-				Mode:          v4.FlowModeBestMatch,
-				MatchRequired: true,
-			},
-			ApiBase: &base.ApiBase{
-				Name:    buildAPIName(route),
-				Version: "v1alpha1",
-			},
-			DefinitionContext: &v4.DefinitionContext{
-				Origin:   v4.OriginKubernetes,
-				SyncFrom: v4.OriginKubernetes,
 			},
 		},
 	}
@@ -105,9 +107,7 @@ func buildAPIName(route *gwAPIv1.HTTPRoute) string {
 }
 
 func newKeyLessPlan() *v4.Plan {
-	plan := v4.NewPlan().WithSecurity(&keyLessSecurity)
-	plan.Status = base.PublishedPlanStatus
-	return plan
+	return v4.NewPlan().WithSecurity(&keyLessSecurity)
 }
 
 func buildTags(route *gwAPIv1.HTTPRoute) []string {

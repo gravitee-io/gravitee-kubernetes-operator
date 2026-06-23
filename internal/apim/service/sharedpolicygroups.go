@@ -17,7 +17,11 @@ package service
 import (
 	"strconv"
 
-	spg "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
@@ -53,29 +57,68 @@ func (svc *SharedPolicyGroup) GetByID(id string) (*model.SharedPolicyGroup, erro
 	return sg, nil
 }
 
-func (svc *SharedPolicyGroup) CreateOrUpdate(spec *spg.SharedPolicyGroup) (*spg.Status, error) {
-	return svc.createOrUpdate(spec, false)
+// GetByHRID For test purposes only.
+func (svc *SharedPolicyGroup) GetByHRID(hrid string) (*model.SharedPolicyGroup, error) {
+	url := svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(hrid)
+	sg := new(model.SharedPolicyGroup)
+
+	if err := svc.HTTP.Get(url.String(), sg); err != nil {
+		return nil, err
+	}
+
+	return sg, nil
 }
 
-func (svc *SharedPolicyGroup) DryRunCreateOrUpdate(spec *spg.SharedPolicyGroup) (*spg.Status, error) {
-	return svc.createOrUpdate(spec, true)
+func (svc *SharedPolicyGroup) CreateOrUpdate(spg *v1alpha1.SharedPolicyGroup) (*sharedpolicygroups.Status, error) {
+	return svc.createOrUpdate(spg, false)
 }
 
-func (svc *SharedPolicyGroup) createOrUpdate(spec *spg.SharedPolicyGroup, dryRun bool) (*spg.Status, error) {
-	url := svc.EnvV2Target(sharedPolicyGroupsPath).
-		WithPath("_import/crd").
+func (svc *SharedPolicyGroup) DryRunCreateOrUpdate(
+	spg *v1alpha1.SharedPolicyGroup,
+) (*sharedpolicygroups.Status, error) {
+	return svc.createOrUpdate(spg, true)
+}
+
+func (svc *SharedPolicyGroup) createOrUpdate(
+	spg *v1alpha1.SharedPolicyGroup,
+	dryRun bool,
+) (*sharedpolicygroups.Status, error) {
+	url := svc.AutomationTarget(sharedPolicyGroupsPath).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	status := new(spg.Status)
+	setHridWithUUID := spg.GetID() != "" && !k8s.IsAutomationAPIManaged(spg)
 
-	if err := svc.HTTP.Put(url.String(), spec, status); err != nil {
+	// If we are updating and CRD was created before upgrade to AutomationAPI
+	// Then, set HRID to the ID and pass hridContainsUUID query param
+	if setHridWithUUID {
+		spg.Spec.HRID = spg.GetID()
+		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
+	}
+
+	status := new(sharedpolicygroups.Status)
+
+	if err := svc.HTTP.Put(url.String(), spg.Spec, status); err != nil {
 		return nil, err
+	}
+
+	if !setHridWithUUID {
+		k8s.AddAutomationAPIManagedCondition(spg)
 	}
 
 	return status, nil
 }
 
-func (svc *SharedPolicyGroup) Delete(id string) error {
-	url := svc.EnvV2Target(sharedPolicyGroupsPath).WithPath(id)
+func (svc *SharedPolicyGroup) Delete(spg *v1alpha1.SharedPolicyGroup) error {
+	id, hridContainsUUID := getSPGID(spg)
+	url := svc.AutomationTarget(sharedPolicyGroupsPath).
+		WithPath(id).
+		WithQueryParam("hridContainsUUID", strconv.FormatBool(hridContainsUUID))
 	return svc.HTTP.Delete(url.String(), nil)
+}
+
+func getSPGID(spg *v1alpha1.SharedPolicyGroup) (string, bool) {
+	if k8s.IsAutomationAPIManaged(spg) {
+		return refs.NewNamespacedNameFromObject(spg).HRID(), false
+	}
+	return spg.GetID(), true
 }

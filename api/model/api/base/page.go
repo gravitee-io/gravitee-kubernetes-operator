@@ -82,6 +82,8 @@ type Page struct {
 	// an API exported from APIM to make the operator take control over it. Use `Parent`
 	// in any other case.
 	ParentID *string `json:"parentId,omitempty"`
+	// +kubebuilder:skipversion
+	ParentHRID *string `json:"parentHrid,omitempty"`
 	// +kubebuilder:validation:Optional
 	// The API of the page. If empty, will be set automatically to the generated ID of the API.
 	API *string `json:"api,omitempty"`
@@ -92,4 +94,6 @@ type Page struct {
 	// +kubebuilder:validation:Optional
 	// Custom page configuration (e.g. page rendering can be changed to use Redoc instead of Swagger ui)
 	Configuration *map[string]string `json:"configuration,omitempty"`
+	// +kubebuilder:skipversion
+	HRID string `json:"hrid,omitempty"`
 }

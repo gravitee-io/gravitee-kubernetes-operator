@@ -22,13 +22,14 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var allowedPlanSecurities = []string{"JWT", "OAUTH2", "MTLS"}
+var allowedPlanSecurities = []string{"API_KEY", "JWT", "OAUTH2", "MTLS"}
 
 func validateUpdate(
 	ctx context.Context,
@@ -36,6 +37,10 @@ func validateUpdate(
 	newObj runtime.Object,
 ) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
 	oldSub, ook := oldObj.(core.SubscriptionObject)
 	newSub, nok := newObj.(core.SubscriptionObject)
 	if ook && nok {
@@ -46,6 +51,11 @@ func validateUpdate(
 		errs.Add(validateEndingAt(newSub.GetEndingAt()))
 
 		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+		if errs.IsSevere() {
+			return errs
+		}
+
+		errs.Add(validateApiKeys(plan, newSub.GetApiKeys()))
 		if errs.IsSevere() {
 			return errs
 		}
@@ -86,6 +96,10 @@ func validateImmutableProperties(
 
 func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
+	errs.Add(admission.CompileAndValidateTemplate(ctx, obj))
+	if errs.IsSevere() {
+		return errs
+	}
 
 	sub, ok := obj.(core.SubscriptionObject)
 	if !ok {
@@ -113,6 +127,11 @@ func validateCreate(ctx context.Context, obj runtime.Object) *errors.AdmissionEr
 	}
 
 	errs.Add(validatePlan(sub, api))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(validateApiKeys(plan, sub.GetApiKeys()))
 	if errs.IsSevere() {
 		return errs
 	}
@@ -228,6 +247,41 @@ func validatePlanSecurityType(plan core.PlanModel, planName string) *errors.Admi
 	return nil
 }
 
+func validateApiKeys(plan core.PlanModel, apiKeys []core.ApiKeyModel) *errors.AdmissionError {
+	if len(apiKeys) == 0 {
+		return nil
+	}
+
+	if plan.GetSecurityType() != "API_KEY" {
+		return errors.NewSeveref(
+			"apiKeys can only be set when subscribing to an API_KEY plan, got [%s]",
+			plan.GetSecurityType(),
+		)
+	}
+
+	seen := make(map[string]bool, len(apiKeys))
+	for _, k := range apiKeys {
+		if seen[k.GetKey()] {
+			return errors.NewSeveref(
+				"duplicate key [%s] in apiKeys",
+				k.GetKey(),
+			)
+		}
+		seen[k.GetKey()] = true
+
+		if k.GetExpireAt() != nil {
+			if err := validateEndingAt(k.GetExpireAt()); err != nil {
+				return errors.NewSeveref(
+					"invalid expireAt for key [%s]: %s",
+					k.GetKey(), err.Message,
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
 func validateApiSyncMode(api core.ApiDefinitionObject) *errors.AdmissionError {
 	if !api.IsSyncFromManagement() {
 		return errors.NewSeveref(
@@ -242,7 +296,7 @@ func validateApiSyncMode(api core.ApiDefinitionObject) *errors.AdmissionError {
 func validateApplicationSettings(plan core.PlanModel, app core.ApplicationObject) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if slices.Contains([]string{"JWT", "OAUTH"}, plan.GetSecurityType()) {
+	if slices.Contains([]string{"JWT", "OAUTH2"}, plan.GetSecurityType()) {
 		errs.Add(validateClientID(app))
 	}
 

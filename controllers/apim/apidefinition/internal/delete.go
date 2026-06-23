@@ -21,12 +21,21 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 	if !util.ContainsFinalizer(api, core.ApiDefinitionFinalizer) {
 		return nil
+	}
+
+	if err := search.AssertNoApiDocumentationRef(ctx, api); err != nil {
+		return err
+	}
+
+	if err := search.AssertNoApiPortalListingRef(ctx, api); err != nil {
+		return err
 	}
 
 	if api.HasContext() {
@@ -39,15 +48,15 @@ func Delete(ctx context.Context, api core.ApiDefinitionObject) error {
 }
 
 func deleteWithContext(ctx context.Context, api core.ApiDefinitionObject) error {
-	apim, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
+	apimClient, err := apim.FromContextRef(ctx, api.ContextRef(), api.GetNamespace())
 	if err != nil {
 		return err
 	}
 	switch {
 	case api.GetDefinitionVersion() == core.ApiV2:
-		return errors.IgnoreNotFound(apim.APIs.DeleteV2(api.GetID()))
+		return errors.IgnoreNotFound(apimClient.APIs.DeleteV2(api.GetID()))
 	case api.GetDefinitionVersion() == core.ApiV4:
-		return errors.IgnoreNotFound(apim.APIs.DeleteV4(api.GetID()))
+		return errors.IgnoreNotFound(apimClient.APIs.DeleteV4(api))
 	default:
 		return fmt.Errorf("unknown version %s", api.GetDefinitionVersion())
 	}

@@ -35,14 +35,12 @@ gko-config-default.yml
 
 # K8S OLM 
 cache/
-bundle/
 bundle.yml
+bundle_tmp*/
 
 # MacOS
 .DS_Store
 
-# Kyverno Chainsaw E2E tests
-chainsaw/reports/
 node_modules
 
 # Gravitee internal
@@ -54,7 +52,15 @@ https.ca.crt
 # Kubernetes Gateway API report
 test/conformance/.*/standard-.*-default-report.yaml
 
+# Terraform provider cache (created when someone runs `terraform init` in a
+# fixture dir; the e2e helper copies the fixture to a temp dir so this should
+# never end up in the committed fixture).
+test/platform-test/e2e/fixtures/**/.terraform/
+test/platform-test/e2e/fixtures/**/.terraform.lock.hcl
+
 CLAUDE.md
 prompts
 plans
 /.claude/settings.local.json
+/test/platform-test/playwright-results/results.xml
+/package-lock.json

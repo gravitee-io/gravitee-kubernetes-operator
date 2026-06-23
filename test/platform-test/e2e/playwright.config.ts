@@ -15,18 +15,36 @@
  */
 
 import { defineConfig } from "@playwright/test";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Optional provisioner-lane filter, set by `scripts/e2e.mjs` from
+// `--provision-with <p>` (or directly via the env var in CI). Built as a
+// CASE-SENSITIVE RegExp on purpose: Playwright's --grep CLI flag is
+// case-insensitive, so a bare `@gko` there would also match every `@GKO-1234`
+// Xray tag and select the whole suite. A case-sensitive `@gko` matches only the
+// lowercase provisioner tag that the matrix arms and *-gko-only files carry.
+const provisioner = process.env["E2E_PROVISIONER"]?.trim().toLowerCase();
+if (provisioner) {
+  console.log(`[e2e] provisioner lane: @${provisioner}`);
+}
 
 export default defineConfig({
   globalSetup: "./global-setup.ts",
   testDir: "./tests",
-  testMatch: "**/*.test.ts",
+  // `*.test.ts` are plain test files; `*.scenario.ts` are provisioner-matrix
+  // files that expand into one test per provisioner via forEachProvisioner.
+  testMatch: ["**/*.test.ts", "**/*.scenario.ts"],
+  grep: provisioner ? new RegExp(String.raw`@${provisioner}\b`) : undefined,
   timeout: 30_000,
   retries: 0,
   workers: 1,
   reporter: [
     ["html", { open: "never" }],
     ["list"],
-    ["junit", { outputFile: "playwright-results.xml" }],
+    ["junit", { outputFile: path.join(__dirname, "../playwright-results/results.xml") }],
   ],
   projects: [
     {

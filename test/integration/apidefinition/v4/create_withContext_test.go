@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -54,6 +55,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 			Expect(assert.ApiV4Completed(fixtures.APIv4)).To(Succeed())
 			Expect(assert.ApiV4Accepted(fixtures.APIv4)).To(Succeed())
+			Expect(assert.ManagedByAutomationAPI(fixtures.APIv4)).To(Succeed())
 
 			By("expecting to find config map")
 
@@ -77,8 +79,9 @@ var _ = Describe("Create", labels.WithContext, func() {
 
 			apim := apim.NewClient(ctx)
 
+			hrid := refs.NewNamespacedNameFromObject(fixtures.APIv4).HRID()
 			Eventually(func() error {
-				api, apiErr := apim.APIs.GetV4ByID(fixtures.APIv4.Status.ID)
+				api, apiErr := apim.APIs.GetV4ByHRID(hrid)
 				if apiErr != nil {
 					return apiErr
 				}

@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 
@@ -62,7 +63,7 @@ func validateDryRun(ctx context.Context, api core.ApiDefinitionObject) *errors.A
 		return errs
 	}
 
-	cp.PopulateIDs(apimClient.Context)
+	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 
 	impl, ok := cp.GetDefinition().(*v2.Api)
 	if !ok {

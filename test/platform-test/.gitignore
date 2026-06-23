@@ -4,3 +4,5 @@ dist/
 .vitest/
 test-results/
 playwright-report/
+playwright-results/
+e2e/playwright-results/

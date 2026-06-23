@@ -42,6 +42,7 @@ const APIM_CHART_VERSION = await getAPIMChartVersion();
 const MONGO_IMAGE_TAG = await Mongo.getImageTag();
 
 const APIM_VALUES = `${$.env.APIM_VALUES || "values.yaml"}`;
+const APIM_UI = $.env.APIM_UI === "true";
 
 const IMAGES = new Map([
   [
@@ -58,11 +59,14 @@ const IMAGES = new Map([
   ],
   [`mongo:${MONGO_IMAGE_TAG}`, `mongo:${MONGO_IMAGE_TAG}`],
   [`mccutchen/go-httpbin:latest`, `go-httpbin:dev`],
+  [`redis:7.4.4-alpine`, `redis:dev`],
 ]);
 
 if (APIM_VALUES.includes("dbless")) {
   IMAGES.delete(`mongo:${MONGO_IMAGE_TAG}`);
   IMAGES.delete(`${APIM_IMAGE_REGISTRY}/apim-management-api:${APIM_IMAGE_TAG}`);
+  IMAGES.delete(`${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`);
+} else if (!APIM_UI) {
   IMAGES.delete(`${APIM_IMAGE_REGISTRY}/apim-management-ui:${APIM_IMAGE_TAG}`);
 }
 
@@ -100,6 +104,12 @@ async function getAPIMChartVersion() {
 
 async function createKindCluster() {
   setNoQuoteEscape();
+  const clusters = await $`kind get clusters`.quiet();
+  if (clusters.toString().split("\n").includes("gravitee")) {
+    LOG.blue(`Kind cluster 'gravitee' already exists. Skipping creation...`);
+    setQuoteEscape();
+    return;
+  }
   await $`kind create cluster --config ${KIND_CONFIG}/kind.yaml ${REDIRECT}`;
   setQuoteEscape();
 }
@@ -132,21 +142,25 @@ async function pullAndTag([image, tag]) {
 }
 
 async function createGraviteeNamespace() {
-  await $`kubectl create ns gravitee`;
+  await $`kubectl create ns gravitee --dry-run=client -o yaml | kubectl apply -f -`;
 }
 
 async function createTLSSecret() {
-  await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key`;
+  await $`kubectl create secret tls tls-server --cert=${PKI}/server.crt --key=${PKI}/server.key --dry-run=client -o yaml | kubectl apply -f -`;
 }
 
 async function helmInstallAPIM() {
   await $`helm repo add graviteeio https://helm.gravitee.io`;
   await $`helm repo update graviteeio`;
-  await $`helm install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --version ${APIM_CHART_VERSION}`;
+  await $`helm upgrade --install apim ${APIM_CHART_REGISTRY} -f ${KIND_CONFIG}/apim/${APIM_VALUES} --set ui.enabled=${APIM_UI} --version ${APIM_CHART_VERSION}`;
 }
 
 async function deployHTTPBin() {
   await $`kubectl apply -f ${KIND_CONFIG}/httpbin`;
+}
+
+async function deployRedis() {
+  await $`kubectl apply -f ${KIND_CONFIG}/redis`;
 }
 
 async function waitForApim() {
@@ -189,6 +203,12 @@ LOG.blue(`
 
 await time(deployHTTPBin);
 
+LOG.blue(`
+  ☸ Deploying Redis
+`);
+
+await time(deployRedis);
+
 LOG.magenta(`
     APIM containers are starting ...
 
@@ -205,5 +225,4 @@ LOG.blue(`Waiting for services to be ready ...
     
     Press ctrl+c to exit this script without waiting ...
 `);
-
 await time(waitForApim);
