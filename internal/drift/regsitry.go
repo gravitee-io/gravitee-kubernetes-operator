@@ -28,6 +28,12 @@ type registry struct {
 	registry map[registryEntry]EquivalenceFunc
 }
 
+// Get returns the EquivalenceFunc function for the given kind.
+// If no function is registered for the given kind and name, it panics.
+// If no name is given (no drift tag), it returns a default function for the given kind:
+// - For slices and arrays, it returns a function that always returns CannotCompare
+// - For structs, it returns a function that returns Inequivalent if one of the fields is exclusively nil or returns CannotCompare
+// - For other types, it returns a function that calls reflect.DeepEqual.
 func (r *registry) Get(name string, k reflect.Kind) EquivalenceFunc {
 	if f, ok := r.registry[registryEntry{
 		name: name,
@@ -43,22 +49,9 @@ func (r *registry) Get(name string, k reflect.Kind) EquivalenceFunc {
 	if k == reflect.Struct {
 		return defaultStructEquivalence
 	}
-	return defaultEquivalence
+	return FromDeepEqual
 }
 
-func defaultStructEquivalence(crd any, api any) Equivalence {
-	// xor
-	if (crd == nil) != (api == nil) {
-		return Equivalence{
-			Equivalent: Inequivalent,
-			Skip:       true,
-		}
-	}
-	return Equivalence{
-		Equivalent: CannotCompare,
-		Skip:       false,
-	}
-}
 
 var equivalenceRegistry = &registry{
 	registry: make(map[registryEntry]EquivalenceFunc),
@@ -94,8 +87,18 @@ func assertTypes(crd any, api any) {
 	}
 }
 
-func defaultEquivalence(crd any, api any) Equivalence {
-	return FromDeepEqual(crd, api)
+func defaultStructEquivalence(crd any, api any) Equivalence {
+	// xor
+	if (crd == nil) != (api == nil) {
+		return Equivalence{
+			Equivalent: Inequivalent,
+			Skip:       true,
+		}
+	}
+	return Equivalence{
+		Equivalent: CannotCompare,
+		Skip:       false,
+	}
 }
 
 func defaultSliceArrayEquivalence(any, any) Equivalence {

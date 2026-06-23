@@ -26,6 +26,12 @@ type valuePair struct {
 	Interface any
 }
 
+// Detect detects the drift between two structs.
+// Goes recursively through the structs and detects the drift.
+// It uses the drift.EquivalenceFunc to determine if the two values are equivalent.
+// Each field is tagged with a drift.EquivalenceFunc name to determine which EquivalenceFunc to use.
+// By default, the EquivalenceFunc is reflect.DeepEqual.
+// The result is a tree of Result. It can be printed in a pseudo-yaml format.
 func Detect(crd any, api any) Result {
 	res := Result{Children: []*Result{}}
 	if crd != nil || api != nil {
@@ -48,14 +54,6 @@ func assertRootIsStruct(crd any, api any) {
 	}
 }
 
-func FromDeepEqual(crd any, api any) Equivalence {
-	eq := reflect.DeepEqual(api, crd)
-	if eq {
-		return Equivalence{Equivalent: Equivalent}
-	}
-	return Equivalence{Equivalent: Inequivalent}
-}
-
 func detectStruct(crd any, api any, this *Result) {
 	t, skip := getTypeOrSkip(crd, api)
 	if skip {
@@ -66,8 +64,13 @@ func detectStruct(crd any, api any, this *Result) {
 		// get info to find an Equivalence func
 		field := t.Field(i)
 		funcName := field.Tag.Get("drift")
+		// use json tag or infer the name of the field
 		property := getProperty(field)
+
+		// remove pointer type if present
 		fieldType := dereferenced(field.Type)
+
+		// get the value of the field
 		crdPair := fromField(crd, i, fieldType)
 		apiPair := fromField(api, i, fieldType)
 
@@ -84,6 +87,7 @@ func detectStruct(crd any, api any, this *Result) {
 		if fieldType.Kind() == reflect.Map {
 			equivalenceFunc := equivalenceRegistry.Get(funcName, fieldType.Kind())
 			equivalent := equivalenceFunc(crdPair.Interface, apiPair.Interface)
+			// if the equivalence on the map does not skip items
 			if !equivalent.Skip {
 				detectMapItems(property, funcName, crdPair.Value, apiPair.Value, this)
 			}
@@ -92,9 +96,10 @@ func detectStruct(crd any, api any, this *Result) {
 		if fieldType.Kind() == reflect.Struct {
 			handleStructField(property, funcName, field, crdPair.Interface, apiPair.Interface, this)
 		} else {
+			// handle the field as a simple value
 			equivalenceFunc := equivalenceRegistry.Get(funcName, fieldType.Kind())
 			equivalent := equivalenceFunc(crdPair.Interface, apiPair.Interface)
-			this.Children = append(this.Children, &Result{
+			this.AppendChild(&Result{
 				Property:    property,
 				Equivalence: equivalent,
 				CRDValue:    crdPair.Interface,
@@ -217,15 +222,14 @@ func detectAsymmetrical(property string, crdItems reflect.Value, apiItems reflec
 
 func detectItem(property string, i int, crdItem reflect.Value, apiItem reflect.Value, parent *Result) {
 	if crdItem.Kind() == reflect.Struct {
-		child := &Result{Property: property, Children: []*Result{}, Index: &i}
-		parent.Children = append(parent.Children, child)
+		child := parent.AppendChild(&Result{Property: property, Children: []*Result{}, Index: &i})
 		detectStruct(asInterface(crdItem), asInterface(apiItem), child)
 	} else {
 		crdValue := asInterface(crdItem)
 		apiValue := asInterface(apiItem)
 		equivalenceFunc := equivalenceRegistry.Get("", crdItem.Kind())
 		equivalence := equivalenceFunc(crdValue, apiValue)
-		parent.Children = append(parent.Children, &Result{
+		parent.AppendChild(&Result{
 			Property:    property,
 			Index:       &i,
 			CRDValue:    crdValue,
@@ -243,8 +247,7 @@ func detectMapItems(property string, funcName string, crdEntries reflect.Value, 
 	}
 
 	// create the result for the whole map
-	child := &Result{Property: property, Children: []*Result{}}
-	parent.Children = append(parent.Children, child)
+	child := parent.AppendChild(&Result{Property: property, Children: []*Result{}})
 
 	all := make(map[string]reflect.Value)
 	collectKeys(crdKeyValues, all)
@@ -294,8 +297,7 @@ func detectEntry(key, funcName string, typ reflect.Type, crd, api valuePair, par
 	case typ.Kind() == reflect.Struct:
 		crd.setZeroIfNilValue(typ)
 		api.setZeroIfNilValue(typ)
-		child := &Result{Property: key, Children: []*Result{}}
-		parent.Children = append(parent.Children, child)
+		child := parent.AppendChild(&Result{Property: key, Children: []*Result{}})
 		detectStruct(crd.Interface, api.Interface, child)
 	case typ.Kind() == reflect.Slice:
 		crd.setEmptySliceIfNilValue(typ)
@@ -308,7 +310,7 @@ func detectEntry(key, funcName string, typ reflect.Type, crd, api valuePair, par
 	default:
 		equivalenceFunc := equivalenceRegistry.Get(funcName, typ.Kind())
 		equivalent := equivalenceFunc(crd.Interface, api.Interface)
-		parent.Children = append(parent.Children, &Result{
+		parent.AppendChild(&Result{
 			Property:    key,
 			Equivalence: equivalent,
 			CRDValue:    crd.Interface,

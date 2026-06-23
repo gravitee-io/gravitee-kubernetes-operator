@@ -25,6 +25,7 @@ const (
 	ignoreName     = "ignore"
 )
 
+// Init initializes the equivalence registry.
 func Init() {
 	Register(emptyIsNilName, reflect.String, EmptyIsNilString)
 	Register(ignoreName, reflect.String, Ignore)
@@ -150,6 +151,14 @@ func EmptyIsNilStruct(crd any, api any) Equivalence {
 
 func IgnoreSkip(_ any, _ any) Equivalence {
 	return Equivalence{Equivalent: Equivalent, Skip: true}
+}
+
+func FromDeepEqual(crd any, api any) Equivalence {
+	eq := reflect.DeepEqual(api, crd)
+	if eq {
+		return Equivalence{Equivalent: Equivalent}
+	}
+	return Equivalence{Equivalent: Inequivalent}
 }
 
 func toZero(v any) any {

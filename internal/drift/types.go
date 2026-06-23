@@ -18,6 +18,7 @@ import (
 	"strings"
 )
 
+// EquivalentStatus represents the status of the equivalence.
 type EquivalentStatus byte
 
 const (
@@ -26,14 +27,19 @@ const (
 	Inequivalent  EquivalentStatus = 2
 )
 
+// Equivalence represents the equivalence between a CRD and an API.
 type Equivalence struct {
 	Equivalent EquivalentStatus
 	Reason     any
 	Skip       bool
 }
 
+// EquivalenceFunc is a function that compares two values and returns an Equivalence.
 type EquivalenceFunc func(crd any, api any) Equivalence
 
+// Result represents the result of the drift detection.
+// It contains the equivalence status, the property name, optionally the index of the property,
+// the CRD value, the API value, and the children results.
 type Result struct {
 	Equivalence
 	Property string
@@ -43,12 +49,15 @@ type Result struct {
 	Children []*Result
 }
 
+// String returns a string representation of the result as a pseudo-yaml tree.
 func (r *Result) String() string {
 	var builder strings.Builder
 	format(r, &builder, -2)
 	return strings.TrimSpace(strings.TrimRight(builder.String(), "\n"))
 }
 
+
+// DriftDetected returns true if the result is equivalent and all of its children are equivalent.
 func (r *Result) DriftDetected() bool {
 	if r.Equivalent == Inequivalent {
 		return true
@@ -61,4 +70,10 @@ func (r *Result) DriftDetected() bool {
 		}
 	}
 	return false
+}
+
+// AppendChild adds a child to the result.
+func (r *Result) AppendChild(child *Result) *Result {
+	r.Children = append(r.Children, child)
+	return child
 }
