@@ -81,7 +81,7 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
 
   // ── GKO-398: Add group using name (hrid) ────────────────────
 
-  test(`V2 API references group by hrid ${XRAY.MEMBERS.V2_ADD_GROUP_HRID} ${TAGS.REGRESSION}`, async ({
+  test(`V2 API references group by hrid ${XRAY.MEMBERS.V2_ADD_GROUP_HRID} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -102,7 +102,7 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
 
   // ── GKO-399: Multiple groups ────────────────────────────────
 
-  test(`V2 API references multiple groups by hrid ${XRAY.MEMBERS.V2_MULTIPLE_GROUPS} ${TAGS.REGRESSION}`, async ({
+  test(`V2 API references multiple groups by hrid ${XRAY.MEMBERS.V2_MULTIPLE_GROUPS} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -126,7 +126,7 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
 
   // ── GKO-400: Remove group from V2 API ───────────────────────
 
-  test(`Remove group from V2 API on re-apply ${XRAY.MEMBERS.V2_REMOVE_GROUP} ${TAGS.REGRESSION}`, async ({
+  test(`Remove group from V2 API on re-apply ${XRAY.MEMBERS.V2_REMOVE_GROUP} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -215,7 +215,7 @@ test.describe("V2 API Groups, Members & PO — Extended", () => {
 
   // ── GKO-1003: Add GroupRefs to V2 API ───────────────────────
 
-  test(`V2 API references a group via groupRefs ${XRAY.MEMBERS.V2_ADD_GROUP_REFS} ${TAGS.REGRESSION}`, async ({
+  test(`V2 API references a group via groupRefs ${XRAY.MEMBERS.V2_ADD_GROUP_REFS} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {

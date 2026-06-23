@@ -142,7 +142,7 @@ test.describe("Notifications — recipients & visibility", () => {
 
   // ── GKO-1219: Customise the portal-notifier target user ──────
 
-  test(`Custom group is set as portal-notifier recipient via Notification CR ${XRAY.NOTIFICATIONS.PORTAL_NOTIFIER_TARGET_USER} ${TAGS.REGRESSION}`, async ({
+  test(`Custom group is set as portal-notifier recipient via Notification CR ${XRAY.NOTIFICATIONS.PORTAL_NOTIFIER_TARGET_USER} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -175,7 +175,7 @@ test.describe("Notifications — recipients & visibility", () => {
 
   // ── GKO-1239: Group members are notified via groupRefs ───────
 
-  test(`Notification CR with groupRefs propagates to PORTAL groups ${XRAY.NOTIFICATIONS.GROUP_MEMBERS_NOTIFIED} ${TAGS.REGRESSION}`, async ({
+  test(`Notification CR with groupRefs propagates to PORTAL groups ${XRAY.NOTIFICATIONS.GROUP_MEMBERS_NOTIFIED} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {

@@ -104,7 +104,7 @@ test.describe("Subscriptions — Security Plans", () => {
 
   // ── GKO-799: V2 JWT subscription ───────────────────────────────
 
-  test(`V2 JWT subscription ${XRAY.SUBSCRIPTIONS.V2_JWT_SUBSCRIPTION} ${TAGS.REGRESSION}`, async ({
+  test(`V2 JWT subscription ${XRAY.SUBSCRIPTIONS.V2_JWT_SUBSCRIPTION} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -169,7 +169,7 @@ test.describe("Subscriptions — Security Plans", () => {
 
   // ── GKO-818: V2 OAuth2 subscription ────────────────────────────
 
-  test(`V2 OAuth2 subscription ${XRAY.SUBSCRIPTIONS.V2_OAUTH2_SUBSCRIPTION} ${TAGS.REGRESSION}`, async ({
+  test(`V2 OAuth2 subscription ${XRAY.SUBSCRIPTIONS.V2_OAUTH2_SUBSCRIPTION} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -234,7 +234,7 @@ test.describe("Subscriptions — Security Plans", () => {
 
   // ── GKO-797: Auto-validate V2 subscription despite manual approval ──
 
-  test(`Auto-validate V2 subscription despite manual approval ${XRAY.SUBSCRIPTIONS.AUTO_VALIDATE_V2} ${TAGS.REGRESSION}`, async ({
+  test(`Auto-validate V2 subscription despite manual approval ${XRAY.SUBSCRIPTIONS.AUTO_VALIDATE_V2} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -301,7 +301,7 @@ test.describe("Subscriptions — Security Plans", () => {
 
   // ── GKO-808: Call V2 gateway with JWT plan ──────────────────────
 
-  test(`Call V2 gateway with JWT plan ${XRAY.SUBSCRIPTIONS.V2_GATEWAY_JWT_CALL} ${TAGS.REGRESSION}`, async ({
+  test(`Call V2 gateway with JWT plan ${XRAY.SUBSCRIPTIONS.V2_GATEWAY_JWT_CALL} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     gateway,
   }) => {

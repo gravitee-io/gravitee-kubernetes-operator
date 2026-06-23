@@ -61,7 +61,7 @@ test.describe("V2 Subscriptions — Advanced", () => {
 
   // ── GKO-796: Cross-mgmt-context subscription is rejected ────
 
-  test(`Subscription across different mgmt contexts is rejected ${XRAY.SUBSCRIPTIONS.CROSS_MGMT_CONTEXT_ERROR} ${TAGS.REGRESSION}`, async ({
+  test(`Subscription across different mgmt contexts is rejected ${XRAY.SUBSCRIPTIONS.CROSS_MGMT_CONTEXT_ERROR} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
   }) => {
     test.slow(); // V2 API + two mgmt contexts takes extra reconcile time.
@@ -127,7 +127,7 @@ test.describe("V2 Subscriptions — Advanced", () => {
 
   // ── GKO-821: Delete V2 JWT subscription ─────────────────────
 
-  test(`Delete V2 JWT subscription closes access ${XRAY.SUBSCRIPTIONS.V2_JWT_DELETE} ${TAGS.REGRESSION}`, async ({
+  test(`Delete V2 JWT subscription closes access ${XRAY.SUBSCRIPTIONS.V2_JWT_DELETE} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     gateway,
   }) => {
@@ -154,7 +154,7 @@ test.describe("V2 Subscriptions — Advanced", () => {
 
   // ── GKO-825: Delete V2 OAuth2 subscription ──────────────────
 
-  test(`Delete V2 OAuth2 subscription closes access ${XRAY.SUBSCRIPTIONS.V2_OAUTH2_DELETE} ${TAGS.REGRESSION}`, async ({
+  test(`Delete V2 OAuth2 subscription closes access ${XRAY.SUBSCRIPTIONS.V2_OAUTH2_DELETE} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
   }) => {
     test.slow();

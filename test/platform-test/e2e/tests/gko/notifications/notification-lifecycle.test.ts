@@ -48,7 +48,7 @@ async function createServiceAccount(mapi: { http: { managementV1Path(r: string):
 }
 
 
-test.describe("Notification Lifecycle", () => {
+test.describe("Notification Lifecycle @since-4.12", () => {
   test(`Remove notification from API ${XRAY.NOTIFICATIONS.REMOVE_NOTIFICATION}`, async ({
     kubectl,
     mapi,

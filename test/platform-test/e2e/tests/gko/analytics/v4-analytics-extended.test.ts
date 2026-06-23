@@ -24,7 +24,7 @@
 import { test, fixture, expect } from "../../../setup.js";
 import { TAGS } from "../../../helpers/tags.js";
 
-test.describe("V4 API Analytics — Extended", () => {
+test.describe("V4 API Analytics — Extended @since-4.12", () => {
   test(`V4 API analytics fields are accepted by admission ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,

@@ -328,7 +328,7 @@ test.describe("V2 API Documentation — Extended", () => {
 
   // ── GKO-315: Private page with groups ───────────────────────
 
-  test(`V2 PRIVATE page with group access control ${XRAY.PAGES.V2_DOC_PRIVATE_GROUPS} ${TAGS.REGRESSION}`, async ({
+  test(`V2 PRIVATE page with group access control ${XRAY.PAGES.V2_DOC_PRIVATE_GROUPS} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -353,7 +353,7 @@ test.describe("V2 API Documentation — Extended", () => {
 
   // ── GKO-316: Private page with excluded groups ──────────────
 
-  test(`V2 PRIVATE page with excluded group ${XRAY.PAGES.V2_DOC_PRIVATE_EXCLUDED} ${TAGS.REGRESSION}`, async ({
+  test(`V2 PRIVATE page with excluded group ${XRAY.PAGES.V2_DOC_PRIVATE_EXCLUDED} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {

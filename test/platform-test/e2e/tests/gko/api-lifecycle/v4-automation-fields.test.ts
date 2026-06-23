@@ -23,7 +23,7 @@
 import { test, fixture } from "../../../setup.js";
 import { TAGS } from "../../../helpers/tags.js";
 
-test.describe("V4 API — Automation API fields", () => {
+test.describe("V4 API — Automation API fields @since-4.12", () => {
   test(`Automation API fields are applied in APIM ${TAGS.REGRESSION}`, async ({ kubectl, mapi }) => {
     const API_NAME = "e2e-v4-new-fields";
     const f = fixture("crds/api-v4-definitions/v4-proxy-api-new-fields.yaml");
