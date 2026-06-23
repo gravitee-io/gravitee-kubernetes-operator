@@ -1,4 +1,4 @@
-package drift_test
+package drift
 
 // Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 //

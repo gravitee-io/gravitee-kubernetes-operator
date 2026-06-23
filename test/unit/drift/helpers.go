@@ -1,4 +1,4 @@
-package drift_test
+package drift
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
