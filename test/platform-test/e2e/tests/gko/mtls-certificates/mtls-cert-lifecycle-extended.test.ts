@@ -292,7 +292,7 @@ test.describe("mTLS — Application cert lifecycle", () => {
   // New Entity") collapse to the same observable: after a content change
   // the mAPI cert reflects the new PEM.
 
-  test(`Replacing cert content via CR updates the entity ${XRAY.MTLS_CERTIFICATES.CERT_UPDATE_VIA_CR} ${XRAY.MTLS_CERTIFICATES.CERT_CHANGE_NEW_ENTITY} ${TAGS.REGRESSION}`, async ({
+  test(`Replacing cert content via CR updates the entity ${XRAY.MTLS_CERTIFICATES.CERT_UPDATE_VIA_CR} ${XRAY.MTLS_CERTIFICATES.CERT_CHANGE_NEW_ENTITY} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -315,7 +315,7 @@ test.describe("mTLS — Application cert lifecycle", () => {
 
   // ── GKO-2264: cert name auto-generation convention ───────────────────
 
-  test(`Unnamed cert is auto-named "<app>-<index>" in mAPI ${XRAY.MTLS_CERTIFICATES.CERT_NAMING_CONVENTION} ${TAGS.REGRESSION}`, async ({
+  test(`Unnamed cert is auto-named "<app>-<index>" in mAPI ${XRAY.MTLS_CERTIFICATES.CERT_NAMING_CONVENTION} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -439,7 +439,7 @@ const STATUS_APPS = [
   "e2e-mtls-2149",
 ];
 
-test.describe("mTLS — cert date acceptance", () => {
+test.describe("mTLS — cert date acceptance @since-4.12", () => {
   let pem: string;
 
   test.beforeAll(async () => {

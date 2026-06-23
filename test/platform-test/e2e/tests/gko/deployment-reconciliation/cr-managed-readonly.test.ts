@@ -84,7 +84,7 @@ test.describe("CR-managed resources are read-only in APIM", () => {
 
   // ── GKO-1234: Notification settings tagged origin=KUBERNETES
 
-  test(`Notification settings created via CR are origin=KUBERNETES ${XRAY.NOTIFICATIONS.CR_READONLY_VIA_MAPI} ${TAGS.REGRESSION}`, async ({
+  test(`Notification settings created via CR are origin=KUBERNETES ${XRAY.NOTIFICATIONS.CR_READONLY_VIA_MAPI} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {

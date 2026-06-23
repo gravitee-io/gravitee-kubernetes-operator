@@ -41,9 +41,10 @@ forEachProvisioner(
     },
     xray: { gko: XRAY.GROUPS.CREATE_WITH_MEMBER, terraform: XRAY.TERRAFORM.GROUP_CREATE },
     tags: [TAGS.REGRESSION],
-    // The Terraform apim_group resource ships in 4.12; the GKO Group CRD is older,
-    // so only the Terraform arm is version-gated.
-    since: { terraform: "4.12" },
+    // Both arms write the group through the Automation API, whose `groups`
+    // endpoint ships in 4.12 (the GKO admission webhook dry-runs against it and
+    // the Terraform apim_group resource targets it), so both arms are gated.
+    since: { gko: "4.12", terraform: "4.12" },
   },
   async ({ provisioned, mapi }) => {
     // The shared invariant: both provisioners write the group through the

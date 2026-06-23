@@ -73,7 +73,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI", () => {
     expect(certs).toEqual([]);
   });
 
-  test(`Cert startsAt and endsAt round-trip from CRD to mAPI ${XRAY.MTLS_CERTIFICATES.CERT_INFO_DISPLAY} ${TAGS.REGRESSION}`, async ({
+  test(`Cert startsAt and endsAt round-trip from CRD to mAPI ${XRAY.MTLS_CERTIFICATES.CERT_INFO_DISPLAY} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -103,7 +103,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI", () => {
       });
   });
 
-  test(`Active certificate is visible on the application via mAPI ${XRAY.MTLS_CERTIFICATES.ACTIVE_CERT_DISPLAY} ${TAGS.REGRESSION}`, async ({
+  test(`Active certificate is visible on the application via mAPI ${XRAY.MTLS_CERTIFICATES.ACTIVE_CERT_DISPLAY} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {
@@ -124,7 +124,7 @@ test.describe("mTLS — clientCertificates visibility via mAPI", () => {
       .toBeGreaterThanOrEqual(1);
   });
 
-  test(`Past-end-date certificate is filtered out of the active cert list ${XRAY.MTLS_CERTIFICATES.EXPIRED_CERT_DISPLAY} ${TAGS.REGRESSION}`, async ({
+  test(`Past-end-date certificate is filtered out of the active cert list ${XRAY.MTLS_CERTIFICATES.EXPIRED_CERT_DISPLAY} ${TAGS.REGRESSION} @since-4.12`, async ({
     kubectl,
     mapi,
   }) => {

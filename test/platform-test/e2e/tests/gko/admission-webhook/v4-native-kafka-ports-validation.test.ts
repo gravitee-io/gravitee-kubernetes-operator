@@ -28,7 +28,7 @@ import { TAGS } from "../../../helpers/tags.js";
 import type { PlanV4 } from "../../../../src/types/apim.js";
 
 test.describe("Native Kafka API — Plan ports validation", () => {
-  test(`Valid native kafka plan ports are accepted ${TAGS.REGRESSION}`, async ({ kubectl, mapi }) => {
+  test(`Valid native kafka plan ports are accepted ${TAGS.REGRESSION} @since-4.12`, async ({ kubectl, mapi }) => {
     const API_NAME = "e2e-v4-native-kafka-ports";
     const f = fixture("crds/api-v4-definitions/v4-native-kafka-ports-valid.yaml");
     await kubectl.apply(f);
