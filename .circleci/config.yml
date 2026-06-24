@@ -27,6 +27,7 @@ parameters:
     enum:
       - test
       - e2e
+      - upgrade-e2e
       - rollout-apim
       - release
       - freeze
@@ -1186,19 +1187,6 @@ workflows:
                   event: pass
                   template: basic_success_1
                   branch_pattern: ".+"
-      - job-e2e-upgrade-tests:
-          name: Run upgrade end to end tests
-          context: cicd-orchestrator
-          filters:
-            branches:
-              only:
-                - master
-          post-steps:
-              - slack/notify:
-                  channel: C098YUEDMGE
-                  event: fail
-                  template: basic_fail_1
-                  branch_pattern: ".+"
       - job-install-go-tools:
           name: Install GO tools (master)
           filters:
@@ -1411,6 +1399,34 @@ workflows:
     jobs:
       - job-e2e-tests:
           name: Run end to end tests
+          context: cicd-orchestrator
+          post-steps:
+            - when:
+                condition: << pipeline.parameters.notify >>
+                steps:
+                  - slack/notify:
+                      channel: C098YUEDMGE
+                      event: fail
+                      template: basic_fail_1
+                      branch_pattern: ".+"
+                  - slack/notify:
+                      channel: C098YUEDMGE
+                      event: pass
+                      template: basic_success_1
+                      branch_pattern: ".+"
+
+  # Upgrade e2e is manual-only (on-demand via the "Trigger Upgrade E2E" GitHub
+  # Action, which sets trigger=upgrade-e2e). It is intentionally NOT in the
+  # post-merge workflow: it is resource-heavy (runs the suite twice across an
+  # in-place APIM upgrade) and not needed on every merge.
+  upgrade-e2e-test:
+    when:
+      equal:
+        - upgrade-e2e
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-e2e-upgrade-tests:
+          name: Run upgrade end to end tests
           context: cicd-orchestrator
           post-steps:
             - when:
