@@ -589,31 +589,61 @@ jobs:
       - run:
           name: Build platform-test CLI
           command: npm --prefix test/platform-test install && npm --prefix test/platform-test run build
-      # Before/after-upgrade e2e: stand up APIM on the OLD line, run the suite "up to
-      # OLD", upgrade APIM in place with `gck patch` (which, since gck v1.1.1, inherits
-      # the create-time --disable-es/--disable-portal/imagePrefix/from), then run "up
-      # to NEW". GKO lane only. Bump the version pair per release.
+      # Export Xray Cloud creds before the run (keeper/env-export runs on_success), so
+      # the `when: always` push step below has them even if the survival run fails.
+      - keeper/env-export:
+          secret-url: keeper://so8_Jh2tP-AZSbtIYcbBvg/custom_field/CLIENT ID
+          var-name: XRAY_CLIENT_ID
+      - keeper/env-export:
+          secret-url: keeper://so8_Jh2tP-AZSbtIYcbBvg/custom_field/CLIENT SECRET
+          var-name: XRAY_CLIENT_SECRET
+      # Upgrade SURVIVAL check (GKO-2983). Provision resources on the OLD line
+      # (RELEASED GKO 4.11 + APIM 4.11), upgrade BOTH the operator (-> branch, built
+      # from source) and APIM (-> 4.12) in place, then re-attach to the SAME resources
+      # and assert they survived, can still be updated by the new operator, and delete
+      # cleanly. Version-matched (operator + APIM together) so CRD field evolution is
+      # actually exercised, not just APIM data migration. GKO lane only; bump the
+      # version pair + the released-GKO pin per release.
       #
-      # The operator is built from source and installed from the branch helm/gko chart
-      # (chart + CRDs + local image), reusing the same manual install as job-e2e-tests
-      # for consistency. That is why the kubectl/helm/kind installs above stay (the
-      # suite also shells kubectl on PATH).
+      # The branch operator is built from source (helm/gko chart + local image), which
+      # is why the kubectl/helm/kind installs above stay (the suite also shells kubectl).
       - run:
-          name: Run before/after-upgrade e2e (GKO lane, 4.11 -> 4.12)
+          name: Upgrade survival e2e (GKO 4.11 -> branch, APIM 4.11 -> 4.12)
           command: |
             set -e
-            gck create --config test/platform-test/gck.yaml --disable-es --disable-portal \
+            # Retry gck's registry fetch (transient gravitee-io-labs.github.io DNS blips).
+            retry() { for i in 1 2 3; do "$@" && return 0; echo "retry $i/3 failed: $*"; sleep 10; done; return 1; }
+
+            # 1. APIM 4.11 + the RELEASED GKO 4.11 (the version-matched old line).
+            retry gck create --config test/platform-test/gck.yaml --disable-es --disable-portal \
               --set imagePrefix=graviteeio.azurecr.io --set imageTag=4.11.x-latest \
               --set 'helmVersion=>=4.11.0-0 <4.12.0-0'
+            # Install the RELEASED graviteeio/gko chart AND image (not the branch
+            # chart), so the before phase matches a real 4.11 install (RBAC, webhooks,
+            # Deployment surface) and the upgrade below also exercises the chart change.
+            helm repo add graviteeio https://helm.gravitee.io && helm repo update graviteeio
+            docker pull graviteeio/kubernetes-operator:4.11.10
+            kind load docker-image graviteeio/kubernetes-operator:4.11.10 --name gravitee
+            helm upgrade --install gko graviteeio/gko --version 4.11.10 -n default
+            kubectl rollout status deployment/gko-controller-manager -n default --timeout=180s
+            kubectl wait --for=condition=established crd/apiv4definitions.gravitee.io --timeout=90s
+
+            # 2. Provision the survival resources on the old line; leave them running.
+            npm --prefix test/platform-test run e2e:upgrade:before
+
+            # 3. Upgrade BOTH in place: APIM 4.11 -> 4.12 and GKO 4.11 -> branch.
+            retry gck patch --config test/platform-test/gck.yaml --name gravitee \
+              --set imageTag=4.12.x-latest --set 'helmVersion=>=4.12.0-0 <4.13.0-0'
             IMG=gko TAG=latest make docker-build \
               && kind load docker-image gko:latest --name gravitee \
               && helm upgrade --install gko helm/gko -n default \
                 --set manager.image.repository=gko --set manager.image.tag=latest
-            kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
-            npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-version 4.11
-            gck patch --config test/platform-test/gck.yaml --name gravitee \
-              --set imageTag=4.12.x-latest --set 'helmVersion=>=4.12.0-0 <4.13.0-0'
-            npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-version 4.12
+            kubectl rollout status deployment/gko-controller-manager -n default --timeout=180s
+
+            # 4. Re-attach to the carried-over resources; assert survival, update, delete.
+            #    E2E_MAX_VERSION = the NEW line gates the 4.12-only steps (mTLS, V2
+            #    subscription) so older target pairs skip them cleanly (GKO-2985).
+            E2E_MAX_VERSION=4.12 npm --prefix test/platform-test run e2e:upgrade:after
       - store_test_results:
           path: test/platform-test/playwright-results
       - store_artifacts:
@@ -622,6 +652,16 @@ jobs:
       - store_artifacts:
           path: test/platform-test/playwright-report
           destination: playwright-report
+      # Push the survival after-phase results to Xray Cloud (the @GKO-tagged tests).
+      # `when: always` so a failed run still surfaces in Jira. The after-phase is the
+      # last `npm run e2e` invocation, so results.xml holds its JUnit.
+      - run:
+          name: Push results to Xray Cloud
+          when: always
+          command: ./test/platform-test/scripts/xray/push-results.sh
+      - store_artifacts:
+          path: /tmp/xray-test-execution.txt
+          destination: xray-test-execution.txt
 
   job-stage-helm-chart:
     docker:

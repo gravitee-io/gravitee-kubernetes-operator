@@ -32,10 +32,15 @@ const execFileAsync = promisify(execFile);
  * longer than a steady-state call. That cold cost otherwise lands on whichever
  * terraform test happens to run first, where it can blow the hook timeout.
  *
- * This issues a few authenticated GETs against the same Automation API path
- * the provider uses (`.../apis`), priming that stack so the first real test
- * sees a warm server. Best-effort: any failure is logged, never thrown — a
- * genuinely unreachable APIM is already caught by the infrastructure checks.
+ * This issues authenticated GETs against the Automation API paths the writers
+ * use (`.../apis` and `.../applications`), blocking until each answers quickly
+ * so the first real request sees a warm server. The `applications` path matters
+ * for the upgrade after-phase: the GKO admission webhook dry-run-validates
+ * Applications against it, and after an in-place APIM upgrade the gateway is up
+ * long before the Automation controllers are, so an un-warmed endpoint makes the
+ * webhook -> APIM call time out. Best-effort: failures are logged, never thrown
+ * (a genuinely unreachable APIM is already caught by the infrastructure checks),
+ * and a global cap keeps a stubbornly-cold APIM from blocking the suite forever.
  */
 async function warmUpApim(
   mapiUrl: string,
@@ -43,24 +48,30 @@ async function warmUpApim(
   auth: { username: string; password: string },
 ): Promise<void> {
   // org is "DEFAULT" to match the terraform fixtures' Automation API path.
-  const url = `${mapiUrl}/automation/organizations/DEFAULT/environments/${envId}/apis`;
-  const headers = {
-    Authorization: `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString("base64")}`,
-  };
-  const ATTEMPTS = 5;
+  const base = `${mapiUrl}/automation/organizations/DEFAULT/environments/${envId}`;
+  const paths = ["apis", "applications"];
+  const credentials = Buffer.from(`${auth.username}:${auth.password}`).toString("base64");
+  const headers = { Authorization: `Basic ${credentials}` };
   const WARM_ENOUGH_MS = 1_500;
+  const MAX_WAIT_MS = 120_000;
   const started = Date.now();
 
-  for (let i = 1; i <= ATTEMPTS; i++) {
-    const t0 = Date.now();
-    try {
-      await fetch(url, { headers, signal: AbortSignal.timeout(20_000) });
-    } catch {
-      // Best-effort: a slow/failed warm-up request still exercised the path.
+  // Block until every endpoint answers quickly (warm) or the cap elapses. When
+  // APIM is already warm (the normal suite, the before-phase) each loop exits on
+  // the first fast response, so this stays near-instant.
+  for (const path of paths) {
+    for (;;) {
+      const t0 = Date.now();
+      try {
+        await fetch(`${base}/${path}`, { headers, signal: AbortSignal.timeout(20_000) });
+      } catch {
+        // A slow/failed warm-up request still exercised the path.
+      }
+      if (Date.now() - t0 < WARM_ENOUGH_MS || Date.now() - started >= MAX_WAIT_MS) {
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
     }
-    const elapsed = Date.now() - t0;
-    if (elapsed < WARM_ENOUGH_MS) break;
-    await new Promise((r) => setTimeout(r, 500));
   }
 
   console.log(`APIM Automation API warm-up completed in ${Date.now() - started}ms.`);
