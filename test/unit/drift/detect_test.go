@@ -427,6 +427,13 @@ values:
 				expectDrift(drift.Detect(crd, api), `values:
   x: 42 != <nil>`)
 			})
+			It("detects map drift, partial api nil", func() {
+				crd := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
+				api := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"y": ptr(42)}}
+				expectDrift(drift.Detect(crd, api), `values:
+  x: 42 != <nil>
+  y: <nil> != 42`)
+			})
 
 			It(" detect map of struct drift, partial", func() {
 				crd := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("foo"), Order: ptr(66)}}}
@@ -756,36 +763,40 @@ values:
 				withMapOfPrimitive{},
 			),
 			Entry("struct with map of a simple type, equal",
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}},
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"foo": ptr(5), "bar": ptr(7), "baz": ptr(11)}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"foo": ptr(5), "bar": ptr(7), "baz": ptr(11)}},
 			),
 			Entry("struct with map of a simple type, equivalent",
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": nil}},
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0)}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": nil, "y": nil, "z": nil}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0), "y": ptr(0), "z": ptr(0)}},
 			),
 			Entry("struct with map of a simple type, equivalent crd missing",
 				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{}},
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0)}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0), "y": ptr(0), "z": ptr(0)}},
 			),
 			Entry("struct with map of a simple type, equivalent api missing",
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0)}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0), "y": ptr(0), "z": ptr(0)}},
 				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{}},
 			),
 			Entry("struct with map of a simple type, no map",
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0)}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0), "y": ptr(0), "z": ptr(0)}},
 				withMapOfPrimitive{Name: ptr("test"), Values: nil},
 			),
 			Entry("struct with map of a simple type, no map",
 				withMapOfPrimitive{Name: ptr("test"), Values: nil},
-				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0)}},
+				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0), "y": ptr(0), "z": ptr(0)}},
 			),
 			Entry("struct with map of struct, equal",
 				withMapOfStruct{},
 				withMapOfStruct{},
 			),
 			Entry("struct with map of struct, equal",
-				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("foo"), Order: ptr(66)}}},
-				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("foo"), Order: ptr(66)}}},
+				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{
+					"x": {Name: ptr("foo"), Order: ptr(66)},
+					"y": {Name: ptr("bar"), Order: ptr(22)}}},
+				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{
+					"x": {Name: ptr("foo"), Order: ptr(66)},
+					"y": {Name: ptr("bar"), Order: ptr(22)}}},
 			),
 			Entry("struct with map of struct, equivalent",
 				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr(""), Order: nil}}},
@@ -804,32 +815,39 @@ values:
 				withMapOfArray{},
 			),
 			Entry("struct with map of array, equal",
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}}},
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}}},
-			),
-			Entry("struct with map of array, equivalent",
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}}},
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": nil}},
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}, "y": {66}}},
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}, "y": {66}}},
+			), Entry("struct with map of array, equivalent",
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}, "y": {66}}},
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": nil, "y": {66}}},
 			),
 			Entry("struct with map of array, equivalent missing api",
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}}},
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{}},
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}, "y": {66}}},
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"y": {66}}},
 			),
 			Entry("struct with map of array, equivalent missing crd",
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{}},
-				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}}},
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"y": {66}}},
+				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}, "y": {66}}},
 			),
 			Entry("struct with map of struct array, equal",
 				withMapOfStructArray{},
 				withMapOfStructArray{},
 			),
 			Entry("struct with map of struct array, equal",
-				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {MultipleWithPtr{Name: ptr("foo"), Order: ptr(66)}}}},
-				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {MultipleWithPtr{Name: ptr("foo"), Order: ptr(66)}}}},
+				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{
+					"x": {MultipleWithPtr{Name: ptr("foo"), Order: ptr(66)}},
+					"y": {MultipleWithPtr{Name: ptr("bar"), Order: ptr(22)}}}},
+				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{
+					"x": {MultipleWithPtr{Name: ptr("foo"), Order: ptr(66)}},
+					"y": {MultipleWithPtr{Name: ptr("bar"), Order: ptr(22)}}}},
 			),
 			Entry("struct with map of struct array, equivalent",
-				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {MultipleWithPtr{Name: ptr(""), Order: ptr(0)}}}},
-				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {MultipleWithPtr{Name: nil, Order: nil}}}},
+				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{
+					"x": {MultipleWithPtr{Name: ptr(""), Order: ptr(0)}},
+					"y": {MultipleWithPtr{Name: ptr(""), Order: ptr(0)}}}},
+				withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{
+					"x": {MultipleWithPtr{Name: nil, Order: nil}},
+					"y": {MultipleWithPtr{Name: nil, Order: nil}}}},
 			),
 			Entry("struct with map of map, equal",
 				withMapOfMap{},
@@ -890,5 +908,184 @@ values:
 			}).To(PanicWith(MatchRegexp(`drift detection only work comparing values of same type`)))
 		})
 	})
+
+})
+
+var _ = Describe("Merge", func() {
+
+	DescribeTable("no drift",
+		func(oldCRD, newCRD, api any) {
+			or := drift.Detect(oldCRD, api)
+			nr := drift.Detect(newCRD, api)
+			result := drift.Merge(or, nr)
+			expectNoDrift(result)
+		},
+		// Case 1 (AAA)
+		Entry("case 1 simple",
+			MultipleWithPtr{Name: ptr("foo"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("foo"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("foo")},
+		),
+		Entry("case 1 deep nested",
+			nestedDeepWithPtr{Tag: "test", Nested: nil},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title: ptr("")}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:       nil,
+				Multiple:    &MultipleWithPtr{Name: nil, Order: nil},
+				Description: nil}},
+		),
+		Entry("case 1 maps",
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}, "y": {66}, "z": {12}}},
+		),
+		// case 2 CRD change matches remote change (ABB)
+		Entry("case 2 simple",
+			MultipleWithPtr{Name: ptr("Old Name"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("New Name"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("New Name")},
+		),
+		Entry("case 2 deep nested",
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title: ptr("Old Title")}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title: ptr("New Title")}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:       ptr("New Title"),
+				Multiple:    &MultipleWithPtr{Name: nil, Order: nil},
+				Description: nil}},
+		),
+		Entry("case 2 maps",
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {0}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}, "y": {66}, "z": {12}}},
+		),
+		// case 4 Only CRD changes (ABA)
+		Entry("case 2 simple",
+			MultipleWithPtr{Name: ptr("Old Name"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("New Name"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("Old Name")},
+		),
+		Entry("case 2 deep nested",
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title: ptr("Old Title")}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title: ptr("New Title")}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:       ptr("Old Title"),
+				Multiple:    &MultipleWithPtr{Name: nil, Order: nil},
+				Description: nil}},
+		),
+		Entry("case 2 maps",
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {0}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {0}, "y": {66}, "z": {12}}},
+		),
+	)
+	DescribeTable("expect drift",
+		func(oldCRD, newCRD, api any, output string) {
+			or := drift.Detect(oldCRD, api)
+			nr := drift.Detect(newCRD, api)
+			result := drift.Merge(or, nr)
+			expectDrift(result, output)
+		},
+		// case 2 on order, case 3 on name (AAB)
+		Entry("case 3 simple",
+			MultipleWithPtr{Name: ptr("CRD Name"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("CRD Name"), Order: ptr(1)},
+			MultipleWithPtr{Name: ptr("Remote Name"), Order: ptr(0)},
+			`name: "CRD Name" != "Remote Name"`,
+		),
+		// case 2 on nested name, case 3 on title (AAB)
+		Entry("case 3 deep nested",
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:    ptr("Old Title"),
+				Multiple: &MultipleWithPtr{Name: ptr("CRD Name"), Order: ptr(0)},
+			}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:    ptr("New Title"),
+				Multiple: &MultipleWithPtr{Name: ptr("CRD Name"), Order: ptr(0)},
+			}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:    ptr("Old Title"),
+				Multiple: &MultipleWithPtr{Name: ptr("Remote Name"), Order: ptr(0)},
+			}},
+			`nested:
+  multiple:
+    name: "CRD Name" != "Remote Name"`,
+		),
+		// case 2 on x, case 3 on y (AAB)
+		Entry("case 3 maps",
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {0}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {42}, "y": {66, 67}, "z": {12}}},
+			`values:
+  y[1]: 0 != 67`,
+		),
+		// case 2 on order, case 5 on name (ABC)
+		Entry("case 5 simple",
+			MultipleWithPtr{Name: ptr("Old Name"), Order: ptr(0)},
+			MultipleWithPtr{Name: ptr("New Name"), Order: ptr(1)},
+			MultipleWithPtr{Name: ptr("Remote Name"), Order: ptr(0)},
+			`name: "New Name" != "Remote Name"`,
+		),
+		// case 2 on nested name, case 5 on title (ABC)
+		Entry("case 5 deep nested",
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:    ptr("Old Title"),
+				Multiple: &MultipleWithPtr{Name: ptr("Old Name"), Order: ptr(0)},
+			}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:    ptr("New Title"),
+				Multiple: &MultipleWithPtr{Name: ptr("New Name"), Order: ptr(0)},
+			}},
+			nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{
+				Title:    ptr("Old Title"),
+				Multiple: &MultipleWithPtr{Name: ptr("Remote Name"), Order: ptr(0)},
+			}},
+			`nested:
+  multiple:
+    name: "New Name" != "Remote Name"`,
+		),
+		// case 2 on x, case 5 on y (ABC)
+		Entry("case 5 maps",
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"a": {42}, "b": {11}, "c": {0}, "x": {0}, "y": {66}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"a": {0}, "b": {11}, "c": {42}, "x": {42}, "y": {67}, "z": {12}}},
+			withMapOfArray{Name: ptr("test"), Values: map[string][]int{"a": {42}, "b": {11}, "c": {42}, "x": {42}, "y": {68}, "z": {12}}},
+			`values:
+  y[0]: 67 != 68`,
+		),
+
+		Entry("case 1AAA (tag), 2ABB (title), 3AAB (name) => drift, 4(order), 5ABC(description) => drift deep nested",
+			nestedDeepWithPtr{
+				Tag: "Same", Nested: &NestedWithPointer{
+					Title: ptr("Old Title"),
+					Multiple: &MultipleWithPtr{
+						Name:  ptr("Old Name"),
+						Order: ptr(2)},
+					Description: ptr("Old Description"),
+				}},
+			nestedDeepWithPtr{
+				Tag: "Same", Nested: &NestedWithPointer{
+					Title: ptr("New Title"),
+					Multiple: &MultipleWithPtr{
+						Name:  ptr("New Name"),
+						Order: ptr(30)},
+					Description: ptr("New Description"),
+				}},
+			nestedDeepWithPtr{Tag: "Same", Nested: &NestedWithPointer{
+				Title: ptr("New Title"),
+				Multiple: &MultipleWithPtr{
+					Name:  ptr("Remote Name"),
+					Order: ptr(2)},
+				Description: ptr("Remote Description"),
+			}},
+			`nested:
+  multiple:
+    name: "New Name" != "Remote Name"
+  description: "New Description" != "Remote Description"`,
+		),
+	)
 
 })

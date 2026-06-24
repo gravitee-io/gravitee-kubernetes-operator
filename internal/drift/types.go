@@ -15,6 +15,8 @@
 package drift
 
 import (
+	"cmp"
+	"slices"
 	"strings"
 )
 
@@ -56,7 +58,6 @@ func (r *Result) String() string {
 	return strings.TrimSpace(strings.TrimRight(builder.String(), "\n"))
 }
 
-
 // DriftDetected returns true if the result is equivalent and all of its children are equivalent.
 func (r *Result) DriftDetected() bool {
 	if r.Equivalent == Inequivalent {
@@ -72,8 +73,66 @@ func (r *Result) DriftDetected() bool {
 	return false
 }
 
+// Merge merges Result with one another.
+// The first argument is the Result of detecting drift between "Old CRD" (in etcd) vs. Remote (O/R).
+// The second argument is the Result of detecting drift between "New CRD" (applied) vs. Remote (N/R).
+// O/R N/R have the same structure as they ran on the same struct
+// 5 cases can happen:
+// Case 1: Nothing changed  => Ok
+// Case 2: CRD change is equivalent to remote change (O/R diff, N/R equivalent) => Ok
+// Case 3: Only remote changed (O/R diff, N/R diff) => Drift
+// Case 4: Only CRD changed (O/R equivalent, N/R diff) => Ok
+// Case 5: CRD change but is not equivalent to remote change (O/R diff, N/R diff)  => Drift
+// As a result: when both O/R and N/R are drifted, the result is a drift.
+func Merge(or Result, nr Result) Result {
+	m := Result{}
+	merge(or, nr, &m)
+	return m
+}
+
+func merge(or Result, nr Result, merger *Result) {
+	result := evaluateDrift(or, nr)
+	merger.Equivalence = result.Equivalence
+	merger.Property = result.Property
+	merger.Index = result.Index
+	merger.CRDValue = result.CRDValue
+	merger.APIValue = result.APIValue
+	if len(or.Children) > 0 {
+		merger.Children = make([]*Result, len(or.Children))
+		for i, orChild := range or.Children {
+			nrChild := nr.Children[i]
+			merger.Children[i] = &Result{}
+			merge(*orChild, *nrChild, merger.Children[i])
+		}
+	}
+}
+
+func evaluateDrift(or Result, nr Result) Result {
+	// Case 1, both are Equivalent => Equivalent
+	// Case 3 & 5, both are Inequivalent => Inequivalent
+	if or.Equivalent == nr.Equivalent {
+		return nr
+	}
+	// Rest is no drift, so we return the result without drift to have a clean result (reason could be filled)
+	// Case 2
+	if nr.Equivalent == Equivalent {
+		return nr
+	}
+	// Case 4
+	if or.Equivalent == Equivalent {
+		return or
+	}
+	// should not happen but just in case
+	return Result{}
+}
+
 // AppendChild adds a child to the result.
-func (r *Result) AppendChild(child *Result) *Result {
+func (r *Result) AppendChild(child *Result, ordered bool) *Result {
 	r.Children = append(r.Children, child)
+	if ordered {
+		r.Children = slices.SortedFunc(slices.Values(r.Children), func(e1 *Result, e2 *Result) int {
+			return cmp.Compare(e1.Property, e2.Property)
+		})
+	}
 	return child
 }

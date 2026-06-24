@@ -36,7 +36,7 @@ func Detect(crd any, api any) Result {
 	res := Result{Children: []*Result{}}
 	if crd != nil || api != nil {
 		assertRootIsStruct(crd, api)
-		detectStruct(crd, api, &res)
+		detectStruct(crd, api, &res, false)
 	}
 	return res
 }
@@ -54,7 +54,7 @@ func assertRootIsStruct(crd any, api any) {
 	}
 }
 
-func detectStruct(crd any, api any, this *Result) {
+func detectStruct(crd any, api any, this *Result, ordered bool) {
 	t, skip := getTypeOrSkip(crd, api)
 	if skip {
 		return
@@ -80,7 +80,7 @@ func detectStruct(crd any, api any, this *Result) {
 			// if the equivalence on the slice does not skip items
 			if !equivalent.Skip {
 				// process all items
-				detectItems(property, crdPair.Value, apiPair.Value, this)
+				detectItems(property, crdPair.Value, apiPair.Value, this, ordered)
 			}
 		}
 
@@ -104,7 +104,7 @@ func detectStruct(crd any, api any, this *Result) {
 				Equivalence: equivalent,
 				CRDValue:    crdPair.Interface,
 				APIValue:    apiPair.Interface,
-			})
+			}, ordered)
 		}
 	}
 }
@@ -171,28 +171,28 @@ func asInterface(v reflect.Value) any {
 	return v.Interface()
 }
 
-func detectItems(property string, crdItems reflect.Value, apiItems reflect.Value, parent *Result) {
+func detectItems(property string, crdItems reflect.Value, apiItems reflect.Value, parent *Result, ordered bool) {
 	crdSize := crdItems.Len()
 	apiSize := apiItems.Len()
 
 	if crdSize == apiSize {
 		if crdSize > 0 {
-			detectSymmetrical(property, crdItems, apiItems, parent)
+			detectSymmetrical(property, crdItems, apiItems, parent, ordered)
 		}
 	} else {
-		detectAsymmetrical(property, crdItems, apiItems, crdSize > apiSize, parent)
+		detectAsymmetrical(property, crdItems, apiItems, crdSize > apiSize, parent, ordered)
 	}
 }
 
-func detectSymmetrical(property string, crdItems reflect.Value, apiItems reflect.Value, parent *Result) {
+func detectSymmetrical(property string, crdItems reflect.Value, apiItems reflect.Value, parent *Result, ordered bool) {
 	for i := 0; i < crdItems.Len(); i++ {
 		crdItem := crdItems.Index(i)
 		apiItem := apiItems.Index(i)
-		detectItem(property, i, crdItem, apiItem, parent)
+		detectItem(property, i, crdItem, apiItem, parent, ordered)
 	}
 }
 
-func detectAsymmetrical(property string, crdItems reflect.Value, apiItems reflect.Value, crdIsLarger bool, parent *Result) {
+func detectAsymmetrical(property string, crdItems reflect.Value, apiItems reflect.Value, crdIsLarger bool, parent *Result, ordered bool) {
 	var leader reflect.Value
 	var follower reflect.Value
 	if crdIsLarger {
@@ -213,17 +213,17 @@ func detectAsymmetrical(property string, crdItems reflect.Value, apiItems reflec
 			followerItem = reflect.Zero(leaderItem.Type())
 		}
 		if crdIsLarger {
-			detectItem(property, i, leaderItem, followerItem, parent)
+			detectItem(property, i, leaderItem, followerItem, parent, ordered)
 		} else {
-			detectItem(property, i, followerItem, leaderItem, parent)
+			detectItem(property, i, followerItem, leaderItem, parent, ordered)
 		}
 	}
 }
 
-func detectItem(property string, i int, crdItem reflect.Value, apiItem reflect.Value, parent *Result) {
+func detectItem(property string, i int, crdItem reflect.Value, apiItem reflect.Value, parent *Result, ordered bool) {
 	if crdItem.Kind() == reflect.Struct {
-		child := parent.AppendChild(&Result{Property: property, Children: []*Result{}, Index: &i})
-		detectStruct(asInterface(crdItem), asInterface(apiItem), child)
+		child := parent.AppendChild(&Result{Property: property, Children: []*Result{}, Index: &i}, ordered)
+		detectStruct(asInterface(crdItem), asInterface(apiItem), child, false)
 	} else {
 		crdValue := asInterface(crdItem)
 		apiValue := asInterface(apiItem)
@@ -235,7 +235,7 @@ func detectItem(property string, i int, crdItem reflect.Value, apiItem reflect.V
 			CRDValue:    crdValue,
 			APIValue:    apiValue,
 			Equivalence: equivalence,
-		})
+		}, ordered)
 	}
 }
 
@@ -247,7 +247,7 @@ func detectMapItems(property string, funcName string, crdEntries reflect.Value, 
 	}
 
 	// create the result for the whole map
-	child := parent.AppendChild(&Result{Property: property, Children: []*Result{}})
+	child := parent.AppendChild(&Result{Property: property, Children: []*Result{}}, false)
 
 	all := make(map[string]reflect.Value)
 	collectKeys(crdKeyValues, all)
@@ -297,12 +297,12 @@ func detectEntry(key, funcName string, typ reflect.Type, crd, api valuePair, par
 	case typ.Kind() == reflect.Struct:
 		crd.setZeroIfNilValue(typ)
 		api.setZeroIfNilValue(typ)
-		child := parent.AppendChild(&Result{Property: key, Children: []*Result{}})
-		detectStruct(crd.Interface, api.Interface, child)
+		child := parent.AppendChild(&Result{Property: key, Children: []*Result{}}, true)
+		detectStruct(crd.Interface, api.Interface, child, true)
 	case typ.Kind() == reflect.Slice:
 		crd.setEmptySliceIfNilValue(typ)
 		api.setEmptySliceIfNilValue(typ)
-		detectItems(key, crd.Value, api.Value, parent)
+		detectItems(key, crd.Value, api.Value, parent, true)
 	case typ.Kind() == reflect.Map:
 		crd.setEmptyMapIfNilValue(typ)
 		api.setEmptyMapIfNilValue(typ)
@@ -315,7 +315,7 @@ func detectEntry(key, funcName string, typ reflect.Type, crd, api valuePair, par
 			Equivalence: equivalent,
 			CRDValue:    crd.Interface,
 			APIValue:    api.Interface,
-		})
+		}, true)
 	}
 }
 
@@ -341,7 +341,7 @@ func (p *valuePair) setEmptySliceIfNilValue(typ reflect.Type) {
 
 func handleStructField(property string, funcName string, field reflect.StructField, crd any, api any, this *Result) {
 	if isEmbeddedStruct(field) {
-		detectStruct(crd, api, this)
+		detectStruct(crd, api, this, false)
 	} else {
 		equivalenceFunc := equivalenceRegistry.Get(funcName, reflect.Struct)
 		this.Equivalence = equivalenceFunc(crd, api)
@@ -349,7 +349,7 @@ func handleStructField(property string, funcName string, field reflect.StructFie
 		if !this.Equivalence.Skip {
 			child := &Result{Property: property, Children: []*Result{}}
 			this.Children = append(this.Children, child)
-			detectStruct(crd, api, child)
+			detectStruct(crd, api, child, false)
 		}
 	}
 }
