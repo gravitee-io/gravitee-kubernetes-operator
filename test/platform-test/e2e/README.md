@@ -201,7 +201,7 @@ npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-vers
 
 # Upgrade APIM to 4.12 in place (Mongo preserved), then regress on 4.12.
 gck patch --config test/platform-test/gck.yaml --name gravitee \
-  --set imageTag=master-latest --set 'helmVersion=>=4.12.0-0 <4.13.0-0'
+  --set imageTag=4.12.x-latest --set 'helmVersion=>=4.12.0-0 <4.13.0-0'
 npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-version 4.12
 ```
 
