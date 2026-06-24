@@ -167,7 +167,6 @@ func (app *Application) ToDTO() model.ApplicationDTO {
 		ID:            spec.ID,
 		HRID:          spec.HRID,
 		Name:          spec.Name,
-		Status:        "",
 		Description:   spec.Description,
 		Settings:      spec.Settings,
 		Background:    utils.ToStringValue(spec.Background),
@@ -180,8 +179,6 @@ func (app *Application) ToDTO() model.ApplicationDTO {
 		Members:       utils.SafeDereference(spec.Members),
 	}
 }
-
-
 
 func (spec *ApplicationSpec) Hash() string {
 	return hash.Calculate(spec)

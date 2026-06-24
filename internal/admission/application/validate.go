@@ -19,14 +19,12 @@ import (
 	"encoding/pem"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -96,11 +94,14 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(validateDryRun(ctx, newApp))
+	if oldApp.GetSpec().Hash() != newApp.GetSpec().Hash() {
+		errs.MergeWith(validateDryRun(ctx, newApp))
+	}
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(validateDriftDetection(ctx, oldApp))
+	errs.MergeWith(drift.ValidateDrift(ctx, oldApp, newApp, resolveAppRefs, getRemoteApp, toDTO))
+
 	return errs
 }
 
@@ -221,55 +222,36 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 	return errs
 }
 
-func validateDriftDetection(ctx context.Context, oldApp core.ApplicationObject) *errors.AdmissionErrors {
-
-	errs := errors.NewAdmissionErrors()
-
-	// skip is disabled
-	// global
-	if !env.Config.DriftDetection {
-		return errs
-	}
-	// CRD level
-	enabled, ok := oldApp.GetAnnotations()[core.DriftDetectionAnnotation]
-	if ok && enabled == "off" {
-		return errs
-	}
-
-	// work on a copy to avoid affecting runtime in any ways
-	cp, _ := oldApp.DeepCopyObject().(*v1alpha1.Application)
-
-	// We need template to be compiled
-	if err := admission.CompileAndValidateTemplate(ctx, cp); err != nil {
-		errs.AddWarningf("could not compile templates of existing CRD, drift might be detected: %s", err.Error())
-	}
-
-	apimClient, err := apim.FromContextRef(ctx, cp.ContextRef(), cp.GetNamespace())
-	if err != nil {
-		errs.AddSevere(err.Error())
-		return errs
-	}
-
-	cp.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(cp))
-
-	err = appResolve.ResolveClientCertificates(ctx, cp.Spec.Settings, cp.GetNamespace(), cp.GetName())
-	if err != nil {
+func resolveAppRefs(ctx context.Context, o core.ContextAwareObject, errs *errors.AdmissionErrors) {
+	app, _ := o.(*v1alpha1.Application)
+	if err := appResolve.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.GetName()); err != nil {
 		errs.AddWarningf("could not resolve certificates, drift might be detected on certificates: %s", err.Error())
 	}
+}
 
-	remoteApp, err := apimClient.Applications.GetByHRID(cp.Spec.HRID)
+func getRemoteApp(apimClient *apim.APIM, o core.ContextAwareObject, errs *errors.AdmissionErrors) (any, bool) {
+	app, _ := o.(*v1alpha1.Application)
+
+	if app.Spec.HRID != "" {
+		remoteApp, err := apimClient.Applications.GetByHRID(app.Spec.HRID)
+		if err != nil {
+			errs.AddSeveref("cannot fetch Application during drift detection from HRID %s: %s", app.Spec.HRID, err.Error())
+			return nil, false
+		}
+		return *remoteApp, true
+	}
+	// prior to 4.11 resources
+	remoteApp, err := apimClient.Applications.GetByID(app.Spec.ID)
 	if err != nil {
-		errs.AddSeveref("cannot get Application during drift detection from HRID %s: %s", cp.Spec.HRID, err.Error())
-		return errs
+		errs.AddSeveref("cannot fetch Application during drift detection from ID %s: %s", app.Spec.ID, err.Error())
+		return nil, false
 	}
+	return *remoteApp, true
+}
 
-	result := drift.Detect(cp.ToDTO(), remoteApp)
-	if result.DriftDetected() {
-		errs.AddSeveref("drift detected:\n%s", result.String())
-	}
-
-	return errs
-
+func toDTO(o any) any {
+	app, _ := o.(*v1alpha1.Application)
+	return app.ToDTO()
 }
 
 func validateCertEndDatesVsSubscriptionEndDates(
@@ -301,11 +283,7 @@ func validateCertEndDatesVsSubscriptionEndDates(
 		if endingAt == nil {
 			continue
 		}
-		subEnd, err := time.Parse(time.RFC3339, *endingAt)
-		if err != nil {
-			continue
-		}
-		if !subEnd.After(*maxCertEnd) {
+		if subEnd, err := time.Parse(time.RFC3339, *endingAt); err != nil || !subEnd.After(*maxCertEnd) {
 			continue
 		}
 		api := fetchAPI(ctx, sub)

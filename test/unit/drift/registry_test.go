@@ -37,10 +37,6 @@ type registryInitBoolField struct {
 	Flag *bool `drift:"empty-is-nil" json:"flag"`
 }
 
-type registryIntFallback struct {
-	Count int `drift:"registry-test-unknown-func" json:"count"`
-}
-
 type registryFloatFallback struct {
 	Score float64 `json:"score"`
 }

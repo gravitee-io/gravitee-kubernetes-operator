@@ -52,7 +52,6 @@ func (r *registry) Get(name string, k reflect.Kind) EquivalenceFunc {
 	return FromDeepEqual
 }
 
-
 var equivalenceRegistry = &registry{
 	registry: make(map[registryEntry]EquivalenceFunc),
 }

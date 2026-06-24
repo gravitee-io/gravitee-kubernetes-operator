@@ -19,11 +19,11 @@ import (
 )
 
 type ApplicationDTO struct {
-	ID            string                 `json:"id,omitempty"`
+	ID            string                 `json:"id,omitempty" drift:"ignore"`
 	HRID          string                 `json:"hrid,omitempty" drift:"ignore"`
 	Name          string                 `json:"name,omitempty"`
 	Status        string                 `json:"status,omitempty" drift:"ignore"`
-	Description   string                 `json:"description,omitempty"`
+	Description   string                 `json:"description,omitempty" drift:"trimmed"`
 	Settings      *application.Setting   `json:"settings,omitempty" drift:"empty-is-nil"`
 	Background    string                 `json:"background,omitempty"`
 	Domain        string                 `json:"domain,omitempty"`

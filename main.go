@@ -196,7 +196,6 @@ func main() {
 	}
 }
 
-
 func buildCacheOptions(ns string) cache.Options {
 	if ns == "" {
 		log.Global.Info("Listening to all namespaces")
@@ -563,7 +562,6 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 	}
 	return nil
 }
-
 
 func AddZChecks(mgr manager.Manager) {
 	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
