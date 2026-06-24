@@ -249,11 +249,12 @@ test.describe("V4 API Lifecycle — Extended", () => {
     await kubectl.del(fixturePath);
   });
 
-  // ── GKO-1061: API survives a reconcile cycle ────────────────
-  // Proxy for an operator upgrade: re-apply the CRD and verify the APIM-side
-  // id is unchanged, i.e. state survives an operator-initiated reconciliation.
+  // ── GKO-2984: API state survives a reconcile cycle ──────────
+  // Re-apply the CRD and verify the APIM-side id is unchanged (reconcile
+  // idempotency). This is a lighter proxy; GKO-1061 ("V4 still works after
+  // upgrade") moved to the real version-matched survival test (e2e/tests/upgrade).
 
-  test(`V4 API state survives a reconcile cycle ${XRAY.API_LIFECYCLE.V4_SURVIVES_UPGRADE} ${TAGS.REGRESSION}`, async ({
+  test(`V4 API state survives a reconcile cycle ${XRAY.API_LIFECYCLE.V4_RECONCILE_CYCLE_SURVIVES} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
