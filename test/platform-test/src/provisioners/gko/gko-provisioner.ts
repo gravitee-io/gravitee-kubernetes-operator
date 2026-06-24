@@ -250,4 +250,35 @@ export class GkoProvisioner<P = unknown> implements Provisioner<P> {
   async cleanup(): Promise<void> {
     await teardownGko(this.spec);
   }
+
+  /**
+   * Rebuild a live handle for a scenario provisioned in an EARLIER process,
+   * used by the upgrade survival flow (provision before the upgrade, attach
+   * after it, in a fresh `npm run e2e`). GKO resources are Kubernetes CRs that
+   * persist across an in-place APIM upgrade, so there is no in-memory state to
+   * carry: we confirm each referenced role's CR is still present (a missing one
+   * means it did not survive) and return a fresh handle that re-resolves
+   * `.status.id` on demand. The `hrid` in `refs` is not needed here because the
+   * CR kind/name from the spec already locates the resource; `refs` declares
+   * which roles the caller expects to have survived.
+   */
+  async attach(refs: Partial<Record<Role, { hrid: string }>>): Promise<Provisioned<P>> {
+    const ns = this.spec.namespace;
+    // Poll for a settle window rather than a single-shot check: just after the
+    // operator + CRD re-apply, a one-off `get` can transiently fail (API-server
+    // settle, CRD discovery refresh) even though the CR is present. A resource
+    // that genuinely did not survive never reappears, so this still fails after
+    // the window - it avoids a false "did not survive" without masking a real one.
+    const SETTLE_MS = 30_000;
+    for (const role of Object.keys(refs) as Role[]) {
+      const b = resolveBinding(this.spec, role);
+      if (!(await kubectl.waitForExists(b.kind, b.name, ns, SETTLE_MS))) {
+        throw new Error(
+          `GKO ${b.kind}/${b.name} (role "${role}") did not survive the upgrade: ` +
+            `not found in the cluster after ${SETTLE_MS / 1_000}s`,
+        );
+      }
+    }
+    return new GkoProvisioned<P>(this.spec);
+  }
 }

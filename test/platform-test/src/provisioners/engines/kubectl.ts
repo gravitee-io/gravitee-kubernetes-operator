@@ -196,6 +196,34 @@ export async function exists(
   }
 }
 
+/**
+ * Poll until a resource exists, or the timeout elapses. Returns true if it
+ * appeared within the window, false otherwise.
+ *
+ * Unlike a single-shot {@link exists}, this rides over transient `get` failures
+ * (API-server settle, CRD discovery refresh right after a CRD re-apply) that
+ * would otherwise be misread as "absent". A resource that is genuinely gone
+ * never reappears, so this still returns false after the full window - it adds
+ * settle tolerance without hiding a real absence.
+ */
+export async function waitForExists(
+  kind: string,
+  name: string,
+  namespace = NAMESPACE,
+  timeoutMs = 30_000,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    if (await exists(kind, name, namespace)) {
+      return true;
+    }
+    if (Date.now() >= deadline) {
+      return false;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+}
+
 /** Trigger a rolling restart of a workload (deployment, daemonset, statefulset). */
 export async function rolloutRestart(
   kind: string,
