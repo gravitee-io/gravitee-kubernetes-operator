@@ -222,14 +222,14 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 	return errs
 }
 
-func resolveAppRefs(ctx context.Context, o core.ContextAwareObject, errs *errors.AdmissionErrors) {
+func resolveAppRefs(ctx context.Context, o runtime.Object, errs *errors.AdmissionErrors) {
 	app, _ := o.(*v1alpha1.Application)
 	if err := appResolve.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.GetName()); err != nil {
 		errs.AddWarningf("could not resolve certificates, drift might be detected on certificates: %s", err.Error())
 	}
 }
 
-func getRemoteApp(apimClient *apim.APIM, o core.ContextAwareObject, errs *errors.AdmissionErrors) (any, bool) {
+func getRemoteApp(apimClient *apim.APIM, o runtime.Object, errs *errors.AdmissionErrors) (any, bool) {
 	app, _ := o.(*v1alpha1.Application)
 
 	if app.Spec.HRID != "" {
@@ -251,7 +251,7 @@ func getRemoteApp(apimClient *apim.APIM, o core.ContextAwareObject, errs *errors
 
 func toDTO(o any) any {
 	app, _ := o.(*v1alpha1.Application)
-	return app.ToDTO()
+	return app.Spec.ToDTO()
 }
 
 func validateCertEndDatesVsSubscriptionEndDates(

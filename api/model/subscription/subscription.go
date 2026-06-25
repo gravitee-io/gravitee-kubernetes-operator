@@ -42,7 +42,7 @@ type ConsumerConfiguration struct {
 	// +kubebuilder:validation:Optional
 	Channel string `json:"channel,omitempty"`
 	// +kubebuilder:validation:Optional
-	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty"`
+	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty" drift:"json"` // TODO
 }
 
 func (k *ApiKeySpec) GetKey() string {
@@ -114,22 +114,4 @@ func (t *Type) GetApiKeys() []core.ApiKeyModel {
 		keys[i] = &t.ApiKeys[i]
 	}
 	return keys
-}
-
-type AutomationApiKeySpec struct {
-	Key      string  `json:"key"`
-	ExpireAt *string `json:"expireAt,omitempty"`
-}
-
-type AutomationSubscription struct {
-	HRID                  string                 `json:"hrid"`
-	ApplicationHrid       string                 `json:"applicationHrid"`
-	PlanHrid              string                 `json:"planHrid"`
-	ApiHrid               string                 `json:"apiHrid"`
-	Status                string                 `json:"status"`
-	StartingAt            string                 `json:"startingAt"`
-	EndingAt              string                 `json:"endingAt"`
-	Metadata              map[string]string      `json:"metadata,omitempty"`
-	ApiKeys               []AutomationApiKeySpec `json:"apiKeys,omitempty"`
-	ConsumerConfiguration *ConsumerConfiguration `json:"consumerConfiguration,omitempty"`
 }

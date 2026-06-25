@@ -23,24 +23,51 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
+	"k8s.io/apimachinery/pkg/runtime"
 )
+
+// RefResolver is a function that resolves all references in the CRD;
+// it used on old and new CRD to compare the content that will be sent to the remote API.
+type RefResolver func(ctx context.Context, obj runtime.Object, errs *errors.AdmissionErrors)
+
+// RemoteObjectGetter is a function that returns the remote object that will be compared with the local ones;
+// it must make sure to use either Automation API or Management API.
+// it returns the remote object and a boolean indicating if the object was found.
+type RemoteObjectGetter func(*apim.APIM, runtime.Object, *errors.AdmissionErrors) (any, bool)
+
+// DTOMapper is a function that converts the CRD into a DTO that can be compared with the remote object.
+type DTOMapper func(any) any
+
+type ContextResolver func(ctx context.Context) (*apim.APIM, error)
 
 func ValidateDrift(
 	ctx context.Context,
 	oldCRD core.ContextAwareObject,
 	newCRD core.ContextAwareObject,
-	resolveRefs func(context.Context, core.ContextAwareObject, *errors.AdmissionErrors),
-	getRemoteObject func(*apim.APIM, core.ContextAwareObject, *errors.AdmissionErrors) (any, bool),
-	dtoMapper func(any) any) *errors.AdmissionErrors {
+	resolveRefs RefResolver,
+	getRemoteObject RemoteObjectGetter,
+	dtoMapper DTOMapper) *errors.AdmissionErrors {
+	return ValidateDriftWithContext(ctx, oldCRD, newCRD, func(ctx context.Context) (*apim.APIM, error) {
+		return apim.FromContextRef(ctx, newCRD.ContextRef(), newCRD.GetNamespace())
+	}, resolveRefs, getRemoteObject, dtoMapper)
+}
+
+func ValidateDriftWithContext(
+	ctx context.Context,
+	oldCRD runtime.Object,
+	newCRD runtime.Object,
+	resolveContext ContextResolver,
+	resolveRefs RefResolver,
+	getRemoteObject RemoteObjectGetter,
+	mapDTO DTOMapper) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if !isDriftEnabled(newCRD) {
+	if isDriftEnabled(newCRD) {
 		return errs
 	}
 
-	oldCopy, _ := oldCRD.DeepCopyObject().(core.ContextAwareObject)
-	newCopy, _ := newCRD.DeepCopyObject().(core.ContextAwareObject)
+	oldCopy := oldCRD.DeepCopyObject()
+	newCopy := newCRD.DeepCopyObject()
 
 	// We need template to be compiled
 	if err := admission.CompileAndValidateTemplate(ctx, oldCopy); err != nil {
@@ -50,30 +77,23 @@ func ValidateDrift(
 		errs.AddWarningf("could not compile templates of updated CRD, drift might be detected: %s", err.Error())
 	}
 
-	// We must have a context to perform drift detection
-	apimClient, err := apim.FromContextRef(ctx, newCopy.ContextRef(), newCopy.GetNamespace())
-	if err != nil {
-		errs.AddSeveref("Cannot perform drift detection without context: %s", err.Error())
-		return errs
-	}
-
-	// We need to populate IDs so that remote object can be fetched
-	oldAware, _ := oldCopy.(core.ConditionAware)
-	newAware, _ := newCopy.(core.ConditionAware)
-	oldCopy.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(oldAware))
-	newCopy.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(newAware))
-
 	// We need to resolve all references to compare the content that sent to the remote API
 	resolveRefs(ctx, oldCopy, errs)
 	resolveRefs(ctx, newCopy, errs)
+
+	apimClient, err := resolveContext(ctx)
+	if err != nil {
+		errs.AddSeveref("could not resolve context for CRD: %s", err.Error())
+		return errs
+	}
 
 	remoteObject, ok := getRemoteObject(apimClient, newCopy, errs)
 	if !ok {
 		return errs
 	}
 
-	oldDTO := dtoMapper(oldCopy)
-	newDTO := dtoMapper(newCopy)
+	oldDTO := mapDTO(oldCopy)
+	newDTO := mapDTO(newCopy)
 
 	oldVsRemoteResult := drift.Detect(oldDTO, remoteObject)
 	newVsRemoteResult := drift.Detect(newDTO, remoteObject)
@@ -85,8 +105,9 @@ func ValidateDrift(
 	return errs
 }
 
-func isDriftEnabled(newCRD core.Object) bool {
-	driftAnnot, ok := newCRD.GetAnnotations()[core.DriftDetectionAnnotation]
+func isDriftEnabled(newCRD runtime.Object) bool {
+	coreObj, _ := newCRD.(core.Object)
+	driftAnnot, ok := coreObj.GetAnnotations()[core.DriftDetectionAnnotation]
 	if ok && driftAnnot == env.TrueString {
 		return true
 	} else if ok && driftAnnot == env.FalseString {

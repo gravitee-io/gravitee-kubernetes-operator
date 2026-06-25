@@ -33,12 +33,12 @@ var _ = Describe("Application Drift detection", func() {
 			model.ApplicationDTO{},
 		),
 		Entry("equal struct",
-			completeApplication(),
-			completeApplication(),
+			completeDTO(),
+			completeDTO(),
 		),
 		Entry("equal struct",
-			completeApplication(),
-			completeSpec().ToDTO(),
+			completeDTO(),
+			completeCRD().Spec.ToDTO(),
 		),
 		Entry("equivalent struct",
 			model.ApplicationDTO{},
@@ -160,7 +160,7 @@ var _ = Describe("Application Drift detection", func() {
 	)
 })
 
-func completeApplication() model.ApplicationDTO {
+func completeDTO() model.ApplicationDTO {
 	GinkgoHelper()
 	return model.ApplicationDTO{
 		ID:          "123456",
@@ -199,7 +199,7 @@ func completeApplication() model.ApplicationDTO {
 	}
 }
 
-func completeSpec() *v1alpha1.Application {
+func completeCRD() *v1alpha1.Application {
 	GinkgoHelper()
 	return &v1alpha1.Application{
 		Spec: v1alpha1.ApplicationSpec{

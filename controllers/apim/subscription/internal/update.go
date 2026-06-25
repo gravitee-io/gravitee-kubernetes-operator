@@ -20,8 +20,7 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	submodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
-
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -57,7 +56,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 
 	api.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(subscription))
 
-	sub := &model.Subscription{}
+	sub := &model.SubscriptionDTO{}
 
 	setHridWithSubscriptionUUID := setSubscriptionID(subscription, sub)
 	setHridWithApiUUID := setApiIDAndPlan(api, sub, spec)
@@ -67,9 +66,9 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 		sub.EndingAt = *spec.EndingAt
 	}
 	for _, k := range spec.ApiKeys {
-		sub.ApiKeys = append(sub.ApiKeys, submodel.AutomationApiKeySpec(k))
+		sub.ApiKeys = append(sub.ApiKeys, model.ApiKeySpec(k))
 	}
-	sub.ConsumerConfiguration = spec.ConsumerConfiguration
+	sub.ConsumerConfiguration = utils.SafeDereference(spec.ConsumerConfiguration)
 
 	status, err := apimClient.Subscription.Import(*sub,
 		subscription,
@@ -111,7 +110,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 	return nil
 }
 
-func setApiIDAndPlan(api core.ApiDefinitionObject, sub *model.Subscription, spec v1alpha1.SubscriptionSpec) bool {
+func setApiIDAndPlan(api core.ApiDefinitionObject, sub *model.SubscriptionDTO, spec v1alpha1.SubscriptionSpec) bool {
 	if api.GetID() == "" || k8s.IsAutomationAPIManaged(api) {
 		sub.ApiID = refs.NewNamespacedNameFromObject(api).HRID()
 		sub.PlanID = spec.Plan
@@ -122,7 +121,7 @@ func setApiIDAndPlan(api core.ApiDefinitionObject, sub *model.Subscription, spec
 	return true
 }
 
-func setSubscriptionID(subscription *v1alpha1.Subscription, sub *model.Subscription) bool {
+func setSubscriptionID(subscription *v1alpha1.Subscription, sub *model.SubscriptionDTO) bool {
 	if subscription.Status.ID == "" || k8s.IsAutomationAPIManaged(subscription) {
 		sub.ID = refs.NewNamespacedNameFromObject(subscription).HRID()
 		return false
@@ -137,7 +136,7 @@ func setSubscriptionID(subscription *v1alpha1.Subscription, sub *model.Subscript
 	return true
 }
 
-func setApplicationID(app core.ApplicationObject, sub *model.Subscription) bool {
+func setApplicationID(app core.ApplicationObject, sub *model.SubscriptionDTO) bool {
 	if app.GetID() == "" || k8s.IsAutomationAPIManaged(app) {
 		sub.AppID = refs.NewNamespacedNameFromObject(app).HRID()
 		return false

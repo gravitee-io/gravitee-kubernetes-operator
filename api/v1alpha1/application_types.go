@@ -161,8 +161,7 @@ func (app *Application) SetConditions(conditions []metav1.Condition) {
 	app.Status.Conditions = conditions
 }
 
-func (app *Application) ToDTO() model.ApplicationDTO {
-	spec := app.Spec
+func (spec *ApplicationSpec) ToDTO() model.ApplicationDTO {
 	return model.ApplicationDTO{
 		ID:            spec.ID,
 		HRID:          spec.HRID,

@@ -22,9 +22,17 @@ import (
 	"time"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -50,7 +58,7 @@ func validateUpdate(
 		}
 		errs.Add(validateEndingAt(newSub.GetEndingAt()))
 
-		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+		api, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
 		if errs.IsSevere() {
 			return errs
 		}
@@ -61,7 +69,10 @@ func validateUpdate(
 		}
 
 		validateMTLS(newSub, plan, app, errs)
+
+		drift.ValidateDriftWithContext(ctx, oldSub, newSub, resolveContext(app), resolveRefs, remoteSubscriptionGetter(api), dtoMapper(api, app))
 	}
+
 	return errs
 }
 
@@ -423,4 +434,90 @@ func validateEndingAt(endingAt *string) *errors.AdmissionError {
 		}
 	}
 	return nil
+}
+
+func remoteSubscriptionGetter(api core.ApiDefinitionObject) drift.RemoteObjectGetter {
+	return func(apimClient *apim.APIM, object runtime.Object, admissionErrors *errors.AdmissionErrors) (any, bool) {
+		condAwareSub, _ := object.(core.ConditionAwareObject)
+		sub, _ := object.(core.SubscriptionObject)
+		if k8s.IsAutomationAPIManaged(condAwareSub) {
+			apiNSName := refs.NewNamespacedName(api.GetName(), api.GetNamespace())
+			subNSName := refs.NewNamespacedName(sub.GetName(), sub.GetNamespace())
+			remoteSub, err := apimClient.Subscription.GetByHRID(apiNSName.HRID(), subNSName.HRID())
+			if err != nil {
+				admissionErrors.AddSeveref("cannot fetch Subscription during drift detection from Api HRID %s and Subscription HRID %s: %s",
+					apiNSName.HRID(),
+					subNSName.HRID(),
+					err.Error())
+				return nil, false
+			}
+			return *remoteSub, true
+		}
+		crdSub, _ := object.(*v1alpha1.Subscription)
+		remoteSub, err := apimClient.Subscription.GetByID(api.GetID(), crdSub.Status.ID)
+		if err != nil {
+			admissionErrors.AddSeveref("cannot fetch Subscription during drift detection from Api ID %s and Subscription ID %s: %s",
+				api.GetID(),
+				crdSub.Status.ID,
+				err.Error())
+			return nil, false
+		}
+
+		return *remoteSub, true
+	}
+}
+
+func resolveRefs(context.Context, runtime.Object, *errors.AdmissionErrors) {
+	// no op here, no need to resolve refs
+}
+
+func resolveContext(app core.ContextAwareObject) drift.ContextResolver {
+	return func(ctx context.Context) (*apim.APIM, error) {
+		return apim.FromContextRef(ctx, app.ContextRef(), app.GetNamespace())
+	}
+}
+
+func dtoMapper(api core.ApiDefinitionObject, app core.ApplicationObject) drift.DTOMapper {
+	return func(crd any) any {
+		sub, _ := crd.(*v1alpha1.Subscription)
+		if k8s.IsAutomationAPIManaged(sub) {
+			apiNSName := refs.NewNamespacedName(api.GetName(), api.GetNamespace())
+			appNSName := refs.NewNamespacedName(app.GetName(), app.GetNamespace())
+			subNSName := refs.NewNamespacedName(sub.GetName(), sub.GetNamespace())
+			return model.SubscriptionDTO{
+				ID:                    subNSName.HRID(),
+				ApiID:                 apiNSName.HRID(),
+				AppID:                 appNSName.HRID(),
+				PlanID:                sub.Spec.Plan,
+				StartingAt:            sub.Status.StartedAt,
+				EndingAt:              utils.SafeDereference(sub.Spec.EndingAt),
+				Metadata:              sub.Spec.Metadata,
+				ApiKeys:               mapApiKey(sub.Spec.ApiKeys),
+				ConsumerConfiguration: utils.SafeDereference(sub.Spec.ConsumerConfiguration),
+			}
+		}
+		// Legacy
+		return model.SubscriptionDTO{
+			ID:                    sub.Status.ID,
+			ApiID:                 api.GetID(),
+			AppID:                 app.GetID(),
+			PlanID:                api.GetPlan(sub.GetPlan()).GetID(),
+			StartingAt:            sub.Status.StartedAt,
+			EndingAt:              utils.SafeDereference(sub.Spec.EndingAt),
+			Metadata:              sub.Spec.Metadata,
+			ApiKeys:               mapApiKey(sub.Spec.ApiKeys),
+			ConsumerConfiguration: utils.SafeDereference(sub.Spec.ConsumerConfiguration),
+		}
+	}
+}
+
+func mapApiKey(keys []subscription.ApiKeySpec) []model.ApiKeySpec {
+	apiKeys := make([]model.ApiKeySpec, len(keys))
+	for i, key := range keys {
+		apiKeys[i] = model.ApiKeySpec{
+			Key:      key.Key,
+			ExpireAt: key.ExpireAt,
+		}
+	}
+	return apiKeys
 }
