@@ -32,30 +32,30 @@ type valuePair struct {
 // Each field is tagged with a drift.EquivalenceFunc name to determine which EquivalenceFunc to use.
 // By default, the EquivalenceFunc is reflect.DeepEqual.
 // The result is a tree of Result. It can be printed in a pseudo-yaml format.
-func Detect(crd any, api any) Result {
+func Detect(crd any, remote any) Result {
 	res := Result{Children: []*Result{}}
-	if crd != nil || api != nil {
-		assertRootIsStruct(crd, api)
-		detectStruct(crd, api, &res, false)
+	if crd != nil || remote != nil {
+		assertRootIsStruct(crd, remote)
+		detectStruct(crd, remote, &res, false)
 	}
 	return res
 }
 
-func assertRootIsStruct(crd any, api any) {
+func assertRootIsStruct(crd any, remote any) {
 	if crd != nil {
 		if reflect.TypeOf(crd).Kind() != reflect.Struct {
 			log.Panicf("detect drift only supports structs, crd was '%T'.", crd)
 		}
 	}
-	if api != nil {
-		if reflect.TypeOf(api).Kind() != reflect.Struct {
-			log.Panicf("detect drift only supports structs, api was '%T'.", api)
+	if remote != nil {
+		if reflect.TypeOf(remote).Kind() != reflect.Struct {
+			log.Panicf("detect drift only supports structs, remote was '%T'.", remote)
 		}
 	}
 }
 
-func detectStruct(crd any, api any, this *Result, ordered bool) {
-	t, skip := getTypeOrSkip(crd, api)
+func detectStruct(crd any, remote any, this *Result, ordered bool) {
+	t, skip := getTypeOrSkip(crd, remote)
 	if skip {
 		return
 	}
@@ -72,49 +72,49 @@ func detectStruct(crd any, api any, this *Result, ordered bool) {
 
 		// get the value of the field
 		crdPair := fromField(crd, i, fieldType)
-		apiPair := fromField(api, i, fieldType)
+		remotePair := fromField(remote, i, fieldType)
 
 		if fieldType.Kind() == reflect.Slice {
 			equivalenceFunc := equivalenceRegistry.Get(funcName, fieldType.Kind())
-			equivalent := equivalenceFunc(crdPair.Interface, apiPair.Interface)
+			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface)
 			// if the equivalence on the slice does not skip items
 			if !equivalent.Skip {
 				// process all items
-				detectItems(property, crdPair.Value, apiPair.Value, this, ordered)
+				detectItems(property, crdPair.Value, remotePair.Value, this, ordered)
 			}
 		}
 
 		if fieldType.Kind() == reflect.Map {
 			equivalenceFunc := equivalenceRegistry.Get(funcName, fieldType.Kind())
-			equivalent := equivalenceFunc(crdPair.Interface, apiPair.Interface)
+			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface)
 			// if the equivalence on the map does not skip items
 			if !equivalent.Skip {
-				detectMapItems(property, funcName, crdPair.Value, apiPair.Value, this)
+				detectMapItems(property, funcName, crdPair.Value, remotePair.Value, this)
 			}
 		}
 
 		if fieldType.Kind() == reflect.Struct {
-			handleStructField(property, funcName, field, crdPair.Interface, apiPair.Interface, this)
+			handleStructField(property, funcName, field, crdPair.Interface, remotePair.Interface, this)
 		} else {
 			// handle the field as a simple value
 			equivalenceFunc := equivalenceRegistry.Get(funcName, fieldType.Kind())
-			equivalent := equivalenceFunc(crdPair.Interface, apiPair.Interface)
+			equivalent := equivalenceFunc(crdPair.Interface, remotePair.Interface)
 			this.AppendChild(&Result{
 				Property:    property,
 				Equivalence: equivalent,
 				CRDValue:    crdPair.Interface,
-				APIValue:    apiPair.Interface,
+				APIValue:    remotePair.Interface,
 			}, ordered)
 		}
 	}
 }
 
-func getTypeOrSkip(crd any, api any) (reflect.Type, bool) {
+func getTypeOrSkip(crd any, remote any) (reflect.Type, bool) {
 	t := reflect.TypeOf(crd)
 	if t == nil {
-		t = reflect.TypeOf(api)
+		t = reflect.TypeOf(remote)
 	}
-	if crd == nil && api == nil {
+	if crd == nil && remote == nil {
 		return nil, true
 	}
 	return t, false
@@ -171,35 +171,36 @@ func asInterface(v reflect.Value) any {
 	return v.Interface()
 }
 
-func detectItems(property string, crdItems reflect.Value, apiItems reflect.Value, parent *Result, ordered bool) {
+func detectItems(property string, crdItems reflect.Value, remoteItems reflect.Value, parent *Result, ordered bool) {
 	crdSize := crdItems.Len()
-	apiSize := apiItems.Len()
+	remoteSize := remoteItems.Len()
 
-	if crdSize == apiSize {
+	if crdSize == remoteSize {
 		if crdSize > 0 {
-			detectSymmetrical(property, crdItems, apiItems, parent, ordered)
+			detectSymmetrical(property, crdItems, remoteItems, parent, ordered)
 		}
 	} else {
-		detectAsymmetrical(property, crdItems, apiItems, crdSize > apiSize, parent, ordered)
+		detectAsymmetrical(property, crdItems, remoteItems, crdSize > remoteSize, parent, ordered)
 	}
 }
 
-func detectSymmetrical(property string, crdItems reflect.Value, apiItems reflect.Value, parent *Result, ordered bool) {
+func detectSymmetrical(property string, crdItems reflect.Value, remoteItems reflect.Value, parent *Result, ordered bool) {
 	for i := 0; i < crdItems.Len(); i++ {
 		crdItem := crdItems.Index(i)
-		apiItem := apiItems.Index(i)
-		detectItem(property, i, crdItem, apiItem, parent, ordered)
+		remoteItem := remoteItems.Index(i)
+		detectItem(property, i, crdItem, remoteItem, parent, ordered)
 	}
 }
 
-func detectAsymmetrical(property string, crdItems reflect.Value, apiItems reflect.Value, crdIsLarger bool, parent *Result, ordered bool) {
+func detectAsymmetrical(property string, crdItems reflect.Value, remoteItems reflect.Value,
+	crdIsLarger bool, parent *Result, ordered bool) {
 	var leader reflect.Value
 	var follower reflect.Value
 	if crdIsLarger {
 		leader = crdItems
-		follower = apiItems
+		follower = remoteItems
 	} else {
-		leader = apiItems
+		leader = remoteItems
 		follower = crdItems
 	}
 	followerSize := follower.Len()
@@ -220,29 +221,29 @@ func detectAsymmetrical(property string, crdItems reflect.Value, apiItems reflec
 	}
 }
 
-func detectItem(property string, i int, crdItem reflect.Value, apiItem reflect.Value, parent *Result, ordered bool) {
+func detectItem(property string, i int, crdItem reflect.Value, remoteItem reflect.Value, parent *Result, ordered bool) {
 	if crdItem.Kind() == reflect.Struct {
 		child := parent.AppendChild(&Result{Property: property, Children: []*Result{}, Index: &i}, ordered)
-		detectStruct(asInterface(crdItem), asInterface(apiItem), child, false)
+		detectStruct(asInterface(crdItem), asInterface(remoteItem), child, false)
 	} else {
 		crdValue := asInterface(crdItem)
-		apiValue := asInterface(apiItem)
+		remoteValue := asInterface(remoteItem)
 		equivalenceFunc := equivalenceRegistry.Get("", crdItem.Kind())
-		equivalence := equivalenceFunc(crdValue, apiValue)
+		equivalence := equivalenceFunc(crdValue, remoteValue)
 		parent.AppendChild(&Result{
 			Property:    property,
 			Index:       &i,
 			CRDValue:    crdValue,
-			APIValue:    apiValue,
+			APIValue:    remoteValue,
 			Equivalence: equivalence,
 		}, ordered)
 	}
 }
 
-func detectMapItems(property string, funcName string, crdEntries reflect.Value, apiEntries reflect.Value, parent *Result) {
+func detectMapItems(property string, funcName string, crdEntries reflect.Value, remoteEntries reflect.Value, parent *Result) {
 	crdKeyValues := crdEntries.MapKeys()
-	apiKeyValues := apiEntries.MapKeys()
-	if len(crdKeyValues) == 0 && len(apiKeyValues) == 0 {
+	remoteKeyValues := remoteEntries.MapKeys()
+	if len(crdKeyValues) == 0 && len(remoteKeyValues) == 0 {
 		return
 	}
 
@@ -251,7 +252,7 @@ func detectMapItems(property string, funcName string, crdEntries reflect.Value, 
 
 	all := make(map[string]reflect.Value)
 	collectKeys(crdKeyValues, all)
-	collectKeys(apiKeyValues, all)
+	collectKeys(remoteKeyValues, all)
 
 	for key, keyValue := range all {
 		var typ reflect.Type
@@ -261,17 +262,17 @@ func detectMapItems(property string, funcName string, crdEntries reflect.Value, 
 		if ok {
 			typ = dereferenced(crdValue.Type())
 		}
-		apiValue, apiInterface, ok := getValue(apiEntries, keyValue)
+		remoteValue, remoteInterface, ok := getValue(remoteEntries, keyValue)
 		if ok {
-			typ = dereferenced(apiValue.Type())
+			typ = dereferenced(remoteValue.Type())
 		}
 
 		// both are nil, skip
-		if crdInterface == nil && apiInterface == nil {
+		if crdInterface == nil && remoteInterface == nil {
 			continue
 		}
 
-		detectEntry(key, funcName, typ, valuePair{crdValue, crdInterface}, valuePair{apiValue, apiInterface}, child)
+		detectEntry(key, funcName, typ, valuePair{crdValue, crdInterface}, valuePair{remoteValue, remoteInterface}, child)
 	}
 }
 
@@ -292,29 +293,29 @@ func getValue(crdEntries reflect.Value, keyValue reflect.Value) (reflect.Value, 
 	return reflect.Value{}, nil, false
 }
 
-func detectEntry(key, funcName string, typ reflect.Type, crd, api valuePair, parent *Result) {
+func detectEntry(key, funcName string, typ reflect.Type, crd, remote valuePair, parent *Result) {
 	switch {
 	case typ.Kind() == reflect.Struct:
 		crd.setZeroIfNilValue(typ)
-		api.setZeroIfNilValue(typ)
+		remote.setZeroIfNilValue(typ)
 		child := parent.AppendChild(&Result{Property: key, Children: []*Result{}}, true)
-		detectStruct(crd.Interface, api.Interface, child, true)
+		detectStruct(crd.Interface, remote.Interface, child, true)
 	case typ.Kind() == reflect.Slice:
 		crd.setEmptySliceIfNilValue(typ)
-		api.setEmptySliceIfNilValue(typ)
-		detectItems(key, crd.Value, api.Value, parent, true)
+		remote.setEmptySliceIfNilValue(typ)
+		detectItems(key, crd.Value, remote.Value, parent, true)
 	case typ.Kind() == reflect.Map:
 		crd.setEmptyMapIfNilValue(typ)
-		api.setEmptyMapIfNilValue(typ)
-		detectMapItems(key, funcName, crd.Value, api.Value, parent)
+		remote.setEmptyMapIfNilValue(typ)
+		detectMapItems(key, funcName, crd.Value, remote.Value, parent)
 	default:
 		equivalenceFunc := equivalenceRegistry.Get(funcName, typ.Kind())
-		equivalent := equivalenceFunc(crd.Interface, api.Interface)
+		equivalent := equivalenceFunc(crd.Interface, remote.Interface)
 		parent.AppendChild(&Result{
 			Property:    key,
 			Equivalence: equivalent,
 			CRDValue:    crd.Interface,
-			APIValue:    api.Interface,
+			APIValue:    remote.Interface,
 		}, true)
 	}
 }
@@ -339,17 +340,17 @@ func (p *valuePair) setEmptySliceIfNilValue(typ reflect.Type) {
 	}
 }
 
-func handleStructField(property string, funcName string, field reflect.StructField, crd any, api any, this *Result) {
+func handleStructField(property string, funcName string, field reflect.StructField, crd any, remote any, this *Result) {
 	if isEmbeddedStruct(field) {
-		detectStruct(crd, api, this, false)
+		detectStruct(crd, remote, this, false)
 	} else {
 		equivalenceFunc := equivalenceRegistry.Get(funcName, reflect.Struct)
-		this.Equivalence = equivalenceFunc(crd, api)
+		this.Equivalence = equivalenceFunc(crd, remote)
 		// if the equivalence on the struct does not skip items
 		if !this.Equivalence.Skip {
 			child := &Result{Property: property, Children: []*Result{}}
 			this.Children = append(this.Children, child)
-			detectStruct(crd, api, child, false)
+			detectStruct(crd, remote, child, false)
 		}
 	}
 }

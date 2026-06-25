@@ -37,7 +37,7 @@ type Equivalence struct {
 }
 
 // EquivalenceFunc is a function that compares two values and returns an Equivalence.
-type EquivalenceFunc func(crd any, api any) Equivalence
+type EquivalenceFunc func(crd any, remote any) Equivalence
 
 // Result represents the result of the drift detection.
 // It contains the equivalence status, the property name, optionally the index of the property,

@@ -44,102 +44,102 @@ func Ignore(_ any, _ any) Equivalence {
 	return Equivalence{Equivalent: Equivalent}
 }
 
-func EmptyIsNilString(crd any, api any) Equivalence {
-	if crd == nil && api != nil && api == "" {
+func EmptyIsNilString(crd any, remote any) Equivalence {
+	if crd == nil && remote != nil && remote == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	if api == nil && crd != nil && crd == "" {
+	if remote == nil && crd != nil && crd == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, api)
+	return FromDeepEqual(crd, remote)
 }
 
-func Trimmed(crd any, api any) Equivalence {
+func Trimmed(crd any, remote any) Equivalence {
 	// the registry protects us from casting panics
 	crdString, _ := crd.(string)
-	apiString, _ := api.(string)
-	if strings.TrimSpace(crdString) == strings.TrimSpace(apiString) {
+	remoteString, _ := remote.(string)
+	if strings.TrimSpace(crdString) == strings.TrimSpace(remoteString) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return Equivalence{Equivalent: Inequivalent}
 }
 
-func RFC3339(crd any, api any) Equivalence {
+func RFC3339(crd any, remote any) Equivalence {
 	// the registry protects us from casting panics
 	crdString, _ := crd.(string)
-	apiString, _ := api.(string)
+	remoteString, _ := remote.(string)
 	// avoid parsing error
-	if (crdString != "") != (apiString != "") {
+	if (crdString != "") != (remoteString != "") {
 		return Equivalence{Equivalent: Inequivalent}
 	}
-	if crdString == "" && apiString == "" {
+	if crdString == "" && remoteString == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	crdRFC3339time, err := time.Parse(time.RFC3339, crdString)
 	if err != nil {
 		return Equivalence{Equivalent: Inequivalent, Reason: err}
 	}
-	apiRFC3339time, err := time.Parse(time.RFC3339, apiString)
+	remoteRFC3339time, err := time.Parse(time.RFC3339, remoteString)
 	if err != nil {
 		return Equivalence{Equivalent: Inequivalent, Reason: err}
 	}
-	if crdRFC3339time.Equal(apiRFC3339time) {
+	if crdRFC3339time.Equal(remoteRFC3339time) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return Equivalence{Equivalent: Inequivalent}
 }
 
-func EmptyIsNilInt(crd any, api any) Equivalence {
-	if crd == nil && api != nil && reflect.DeepEqual(api, 0) {
+func EmptyIsNilInt(crd any, remote any) Equivalence {
+	if crd == nil && remote != nil && reflect.DeepEqual(remote, 0) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	if api == nil && crd != nil && reflect.DeepEqual(crd, 0) {
+	if remote == nil && crd != nil && reflect.DeepEqual(crd, 0) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, api)
+	return FromDeepEqual(crd, remote)
 }
 
-func EmptyIsNilUint(crd any, api any) Equivalence {
-	if crd == nil && api != nil && reflect.DeepEqual(api, uint(0)) {
+func EmptyIsNilUint(crd any, remote any) Equivalence {
+	if crd == nil && remote != nil && reflect.DeepEqual(remote, uint(0)) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	if api == nil && crd != nil && reflect.DeepEqual(crd, uint(0)) {
+	if remote == nil && crd != nil && reflect.DeepEqual(crd, uint(0)) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, api)
+	return FromDeepEqual(crd, remote)
 }
-func EmptyIsNilBool(crd any, api any) Equivalence {
-	if crd == nil && api != nil && reflect.DeepEqual(api, false) {
+func EmptyIsNilBool(crd any, remote any) Equivalence {
+	if crd == nil && remote != nil && reflect.DeepEqual(remote, false) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	if api == nil && crd != nil && reflect.DeepEqual(crd, false) {
+	if remote == nil && crd != nil && reflect.DeepEqual(crd, false) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, api)
+	return FromDeepEqual(crd, remote)
 }
 
-func EmptyIsNilLen(crd any, api any) Equivalence {
+func EmptyIsNilLen(crd any, remote any) Equivalence {
 	crdLen := reflect.ValueOf(crd).Len()
-	apiLen := reflect.ValueOf(api).Len()
-	if crdLen == apiLen {
+	remoteLen := reflect.ValueOf(remote).Len()
+	if crdLen == remoteLen {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	return Equivalence{Equivalent: CannotCompare}
 }
 
-func EmptyIsNilStruct(crd any, api any) Equivalence {
-	if crd == nil && api != nil {
-		crd = toZero(api)
-		e := FromDeepEqual(crd, api)
+func EmptyIsNilStruct(crd any, remote any) Equivalence {
+	if crd == nil && remote != nil {
+		crd = toZero(remote)
+		e := FromDeepEqual(crd, remote)
 		if e.Equivalent == Equivalent {
 			// don't need to go further
 			e.Skip = true
 			return e
 		}
 	}
-	if crd != nil && api == nil {
-		api = toZero(crd)
-		e := FromDeepEqual(crd, api)
+	if crd != nil && remote == nil {
+		remote = toZero(crd)
+		e := FromDeepEqual(crd, remote)
 		if e.Equivalent == Equivalent {
 			// don't need to go further
 			e.Skip = true
@@ -153,8 +153,8 @@ func IgnoreSkip(_ any, _ any) Equivalence {
 	return Equivalence{Equivalent: Equivalent, Skip: true}
 }
 
-func FromDeepEqual(crd any, api any) Equivalence {
-	eq := reflect.DeepEqual(api, crd)
+func FromDeepEqual(crd any, remote any) Equivalence {
+	eq := reflect.DeepEqual(remote, crd)
 	if eq {
 		return Equivalence{Equivalent: Equivalent}
 	}

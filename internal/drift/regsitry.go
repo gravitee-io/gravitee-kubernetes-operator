@@ -65,30 +65,30 @@ func Register(name string, k reflect.Kind, f EquivalenceFunc) {
 	equivalenceRegistry.registry[registryEntry{
 		kind: k,
 		name: name,
-	}] = func(crd any, api any) Equivalence {
-		assertTypes(crd, api)
-		e := f(crd, api)
+	}] = func(crd any, remote any) Equivalence {
+		assertTypes(crd, remote)
+		e := f(crd, remote)
 		return e
 	}
 }
 
-func assertTypes(crd any, api any) {
+func assertTypes(crd any, remote any) {
 	crdType := reflect.TypeOf(crd)
-	apiType := reflect.TypeOf(api)
-	if crdType != nil && apiType != nil && crdType != apiType {
-		log.Panicf("drift detection only work comparing values of same type, crd=%T api=%T", crd, api)
+	remoteType := reflect.TypeOf(remote)
+	if crdType != nil && remoteType != nil && crdType != remoteType {
+		log.Panicf("drift detection only work comparing values of same type, crd=%T remote=%T", crd, remote)
 	}
 	if crdType != nil && crdType.Kind() == reflect.Interface {
 		log.Panicf("drift detection only compare non interface types")
 	}
-	if apiType != nil && apiType.Kind() == reflect.Interface {
+	if remoteType != nil && remoteType.Kind() == reflect.Interface {
 		log.Panicf("drift detection only compare non interface types")
 	}
 }
 
-func defaultStructEquivalence(crd any, api any) Equivalence {
+func defaultStructEquivalence(crd any, remote any) Equivalence {
 	// xor
-	if (crd == nil) != (api == nil) {
+	if (crd == nil) != (remote == nil) {
 		return Equivalence{
 			Equivalent: Inequivalent,
 			Skip:       true,
