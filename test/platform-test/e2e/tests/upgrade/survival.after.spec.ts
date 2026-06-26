@@ -36,6 +36,7 @@ import * as kubectl from "../../helpers/kubectl.js";
 import { signJwt } from "../../helpers/jwt.js";
 import { createTlsFetch } from "../../../src/utils/http/tls.js";
 import { compareVersions } from "../../../src/utils/version/index.js";
+import type { ApiV4 } from "../../../src/types/apim.js";
 import { XRAY } from "../../helpers/tags.js";
 import {
   survivalScenario,
@@ -100,6 +101,55 @@ test(`upgrade survival: reconnect, verify, update, delete on the new line ${XRAY
     await mapi.assertSubscriptionAccepted(apiId, subId);
     // Still reachable through the gateway after the operator + APIM upgrade.
     await gateway.assertResponds(ctx, { status: 401 });
+    await gateway.assertResponds(ctx, { status: 200, headers: bearer() });
+  });
+
+  await test.step("the carried-over API kept its full configuration", async () => {
+    // Survival is more than "still answers 200": the API's whole definition must
+    // come through the data migration intact. Assert the core fields, the plan,
+    // and the policy - a dropped plan, flipped origin, or lost policy would slip
+    // past a reachability-only check.
+    await mapi.assertApiMatches(apiId, {
+      name: SURVIVAL.apiName,
+      apiVersion: "1.0",
+      definitionVersion: "V4",
+      type: "PROXY",
+      analytics: { enabled: true },
+      originContext: { origin: "KUBERNETES" },
+      // APIM normalises the context path with a trailing slash.
+      listeners: [{ type: "HTTP", paths: [{ path: `${SURVIVAL.contextPath}/` }] }],
+      endpointGroups: [{ endpoints: [{ configuration: { target: "https://api.gravitee.io/echo" } }] }],
+    });
+
+    // Exactly one plan survived, still JWT and still PUBLISHED.
+    const plans = await mapi.listApiPlans(apiId);
+    expect(plans).toHaveLength(1);
+    expect(plans[0]).toMatchObject({ status: "PUBLISHED", security: { type: "JWT" } });
+
+    // The transform-headers policy is still part of the API definition.
+    const api = (await mapi.fetchApi(apiId)) as ApiV4;
+    const policies = (api.flows ?? []).flatMap((f) => f.response ?? []).map((s) => s.policy);
+    expect(policies).toContain("transform-headers");
+  });
+
+  await test.step("the new operator does not churn the carried-over API", async () => {
+    // Re-applying the UNCHANGED 4.11 manifest on the new operator must be a no-op:
+    // an identical spec must not bump metadata.generation. A bump means the new
+    // operator's admission/defaulting diverged from the old one, which would churn
+    // every carried-over resource on the first reconcile after an upgrade.
+    const generation = () =>
+      kubectl.getField<number>("apiv4definition", SURVIVAL.apiName, "{.metadata.generation}");
+    const genBefore = Number(await generation());
+
+    await kubectl.apply(fixture("upgrade/api-legacy.yaml"));
+    await kubectl.waitForCondition("apiv4definition", SURVIVAL.apiName, "Accepted");
+
+    expect(
+      Number(await generation()),
+      "an identical re-apply must not bump metadata.generation (operator churn)",
+    ).toBe(genBefore);
+    // Ownership stayed with Kubernetes and the data plane was not disrupted.
+    await mapi.assertApiMatches(apiId, { originContext: { origin: "KUBERNETES" } });
     await gateway.assertResponds(ctx, { status: 200, headers: bearer() });
   });
 
@@ -197,6 +247,16 @@ test(`upgrade survival (V2): keyless V2 API survives the upgrade ${XRAY.API_LIFE
 
   await test.step("V2 API survived the upgrade (control plane + gateway)", async () => {
     await mapi.assertApiHttpStatus(apiId, 200); // still present in the management API
+    // Its definition came through intact: still a Kubernetes-owned V2 API with
+    // its keyless plan, not just a reachable context path.
+    await mapi.assertApiMatches(apiId, {
+      name: SURVIVAL_V2.apiName,
+      definitionVersion: "V2",
+      originContext: { origin: "KUBERNETES" },
+    });
+    const plans = await mapi.listApiPlans(apiId);
+    expect(plans).toHaveLength(1);
+    expect(plans[0]).toMatchObject({ status: "PUBLISHED", security: { type: "KEY_LESS" } });
     await gateway.assertResponds(ctx, { status: 200 });
   });
 
