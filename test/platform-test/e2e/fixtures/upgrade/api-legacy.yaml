@@ -44,6 +44,27 @@ spec:
           secondary: false
   analytics:
     enabled: true
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  # An API-level response policy. The survival check asserts this policy is still
+  # part of the API definition after the upgrade (the "policies survive" dimension),
+  # alongside the plan, analytics and endpoint configuration.
+  flows:
+    - name: "Stamp survivor header"
+      enabled: true
+      selectors:
+        - type: HTTP
+          path: "/"
+          pathOperator: STARTS_WITH
+      response:
+        - name: "Transform Headers"
+          enabled: true
+          policy: transform-headers
+          configuration:
+            addHeaders:
+              - name: "X-Upgrade-Survivor"
+                value: "legacy-api"
   plans:
     JWT:
       name: "JWT plan"

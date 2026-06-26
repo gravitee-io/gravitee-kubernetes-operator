@@ -47,6 +47,26 @@ spec:
           secondary: false
   analytics:
     enabled: true
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  # Same response policy as api-legacy.yaml - kept here so the post-upgrade
+  # description update does not drop the carried-over policy.
+  flows:
+    - name: "Stamp survivor header"
+      enabled: true
+      selectors:
+        - type: HTTP
+          path: "/"
+          pathOperator: STARTS_WITH
+      response:
+        - name: "Transform Headers"
+          enabled: true
+          policy: transform-headers
+          configuration:
+            addHeaders:
+              - name: "X-Upgrade-Survivor"
+                value: "legacy-api"
   plans:
     JWT:
       name: "JWT plan"
