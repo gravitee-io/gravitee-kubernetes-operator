@@ -45,6 +45,18 @@ export const SURVIVAL = {
 } as const;
 
 /**
+ * Shared constants for the datastore-continuity check: the before-phase records
+ * the MongoDB pod identity into a ConfigMap, the after-phase reads it back and
+ * asserts the same pod survived the in-place upgrade (it was neither replaced nor
+ * restarted). The pod is matched by name substring so the check does not depend
+ * on the cluster recipe's MongoDB labels.
+ */
+export const DATASTORE = {
+  podNamePattern: "mongo",
+  stateConfigMap: "upgrade-survival-datastore",
+} as const;
+
+/**
  * Factory for the survival scenario's GKO provisioner. Both phases call this to
  * get a provisioner bound to the same CRs: the before-phase calls `provision()`,
  * the after-phase calls `attach()` (rebuilding the handle from the still-present

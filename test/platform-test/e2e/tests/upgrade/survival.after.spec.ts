@@ -45,6 +45,7 @@ import {
   SURVIVAL_V2,
   survivalV2SubScenario,
   SURVIVAL_V2_SUB,
+  DATASTORE,
 } from "./survival-scenario.js";
 
 /**
@@ -71,6 +72,37 @@ test.afterAll(async () => {
   for (const f of order) {
     await kubectl.del(fixture(`upgrade/${f}.yaml`)).catch(() => {});
   }
+  await kubectl.deleteResource("configmap", DATASTORE.stateConfigMap).catch(() => {});
+});
+
+// Runs FIRST, on purpose: it reads the before-phase snapshot ConfigMap, which the
+// afterAll deletes. Playwright restarts the worker after a test failure (firing the
+// file-scoped afterAll early), so a later API-survival failure would otherwise wipe
+// the snapshot and make this skip. Ordering it before the API tests keeps it
+// independent of their outcome.
+test(`upgrade survival: the datastore survived the upgrade in place ${XRAY.API_LIFECYCLE.DATASTORE_SURVIVES_UPGRADE} @upgrade @after`, async () => {
+  // The whole survival check rests on APIM's data surviving the upgrade, which
+  // lives in MongoDB. This proves the upgrade was truly in-place: the same Mongo
+  // pod recorded by the before-phase is still here, neither replaced (same uid)
+  // nor restarted (same restartCount). A wiped or rolled datastore that APIM
+  // happened to re-seed would still pass the reachability checks but is a real
+  // upgrade defect this catches.
+  const recorded = await kubectl.readConfigMap(DATASTORE.stateConfigMap);
+  test.skip(
+    recorded === null,
+    `no datastore snapshot (ConfigMap ${DATASTORE.stateConfigMap}) from the before-phase`,
+  );
+  if (recorded === null) return; // narrow for the type-checker (test.skip already bailed)
+
+  const current = await kubectl.findPod(DATASTORE.podNamePattern);
+  if (current === null) {
+    throw new Error("the MongoDB pod recorded before the upgrade is gone");
+  }
+  expect(current.uid, "the MongoDB pod was replaced during the upgrade").toBe(recorded["uid"]);
+  expect(
+    current.restartCount,
+    "the MongoDB container restarted during the upgrade",
+  ).toBe(Number(recorded["restartCount"]));
 });
 
 test(`upgrade survival: reconnect, verify, update, delete on the new line ${XRAY.API_LIFECYCLE.V4_SURVIVES_UPGRADE} @upgrade @after`, async ({
