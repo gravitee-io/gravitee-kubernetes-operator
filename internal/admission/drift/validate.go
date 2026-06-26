@@ -62,7 +62,7 @@ func ValidateDriftWithContext(
 	mapDTO DTOMapper) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if isDriftEnabled(newCRD) {
+	if !isDriftEnabled(newCRD) {
 		return errs
 	}
 

@@ -225,22 +225,39 @@ func detectItem(property string, i int, crdItem reflect.Value, remoteItem reflec
 	if crdItem.Kind() == reflect.Struct {
 		child := parent.AppendChild(&Result{Property: property, Children: []*Result{}, Index: &i}, ordered)
 		detectStruct(asInterface(crdItem), asInterface(remoteItem), child, false)
+	} else if crdItem.Kind() == reflect.Map {
+		detectIndexedMapItems(property, &i, "", crdItem, remoteItem, parent)
 	} else {
-		crdValue := asInterface(crdItem)
-		remoteValue := asInterface(remoteItem)
-		equivalenceFunc := equivalenceRegistry.Get("", crdItem.Kind())
-		equivalence := equivalenceFunc(crdValue, remoteValue)
-		parent.AppendChild(&Result{
-			Property:    property,
-			Index:       &i,
-			CRDValue:    crdValue,
-			APIValue:    remoteValue,
-			Equivalence: equivalence,
-		}, ordered)
+		runEquivalence := true
+		if crdItem.Kind() == reflect.Interface {
+			runEquivalence = detectAny(property, "",
+				valuePair{crdItem, asInterface(crdItem)},
+				valuePair{remoteItem, asInterface(remoteItem)},
+				parent)
+		}
+		if runEquivalence {
+			crdValue := asInterface(crdItem)
+			remoteValue := asInterface(remoteItem)
+			equivalenceFunc := equivalenceRegistry.Get("", crdItem.Kind())
+			equivalence := equivalenceFunc(crdValue, remoteValue)
+			parent.AppendChild(&Result{
+				Property:    property,
+				Index:       &i,
+				CRDValue:    crdValue,
+				APIValue:    remoteValue,
+				Equivalence: equivalence,
+			}, ordered)
+		}
 	}
 }
 
-func detectMapItems(property string, funcName string, crdEntries reflect.Value, remoteEntries reflect.Value, parent *Result) {
+func detectIndexedMapItems(
+	property string,
+	i *int,
+	funcName string,
+	crdEntries reflect.Value,
+	remoteEntries reflect.Value,
+	parent *Result) {
 	crdKeyValues := crdEntries.MapKeys()
 	remoteKeyValues := remoteEntries.MapKeys()
 	if len(crdKeyValues) == 0 && len(remoteKeyValues) == 0 {
@@ -248,7 +265,7 @@ func detectMapItems(property string, funcName string, crdEntries reflect.Value, 
 	}
 
 	// create the result for the whole map
-	child := parent.AppendChild(&Result{Property: property, Children: []*Result{}}, false)
+	child := parent.AppendChild(&Result{Property: property, Index: i, Children: []*Result{}}, false)
 
 	all := make(map[string]reflect.Value)
 	collectKeys(crdKeyValues, all)
@@ -274,6 +291,10 @@ func detectMapItems(property string, funcName string, crdEntries reflect.Value, 
 
 		detectEntry(key, funcName, typ, valuePair{crdValue, crdInterface}, valuePair{remoteValue, remoteInterface}, child)
 	}
+}
+
+func detectMapItems(property string, funcName string, crdEntries reflect.Value, remoteEntries reflect.Value, parent *Result) {
+	detectIndexedMapItems(property, nil, funcName, crdEntries, remoteEntries, parent)
 }
 
 func collectKeys(keyValues []reflect.Value, recipient map[string]reflect.Value) {
@@ -309,15 +330,58 @@ func detectEntry(key, funcName string, typ reflect.Type, crd, remote valuePair, 
 		remote.setEmptyMapIfNilValue(typ)
 		detectMapItems(key, funcName, crd.Value, remote.Value, parent)
 	default:
-		equivalenceFunc := equivalenceRegistry.Get(funcName, typ.Kind())
-		equivalent := equivalenceFunc(crd.Interface, remote.Interface)
-		parent.AppendChild(&Result{
-			Property:    key,
-			Equivalence: equivalent,
-			CRDValue:    crd.Interface,
-			APIValue:    remote.Interface,
-		}, true)
+		runEquivalence := true
+		if typ.Kind() == reflect.Interface {
+			runEquivalence = detectAny(key, funcName, crd, remote, parent)
+		}
+		if runEquivalence {
+			equivalenceFunc := equivalenceRegistry.Get(funcName, typ.Kind())
+			equivalent := equivalenceFunc(crd.Interface, remote.Interface)
+			parent.AppendChild(&Result{
+				Property:    key,
+				Equivalence: equivalent,
+				CRDValue:    crd.Interface,
+				APIValue:    remote.Interface,
+			}, true)
+		}
 	}
+}
+
+func detectAny(key string, funcName string, crd valuePair, remote valuePair, parent *Result) bool {
+	crdElem := reflect.ValueOf(crd.Interface)
+	remoteElem := reflect.ValueOf(remote.Interface)
+	if crdElem.Kind() == reflect.Struct || remoteElem.Kind() == reflect.Struct {
+		// create a zero struct with the same type so it can be introspected
+		if remoteElem.Kind() == reflect.Invalid {
+			remote.setZeroIfNilValue(crdElem.Type())
+		} else if crdElem.Kind() == reflect.Invalid {
+			crd.setZeroIfNilValue(remoteElem.Type())
+		}
+		child := parent.AppendChild(&Result{Property: key, Children: []*Result{}}, true)
+		detectStruct(crd.Interface, remote.Interface, child, true)
+		return false
+	}
+	if crdElem.Kind() == reflect.Map || remoteElem.Kind() == reflect.Map {
+		// create a map with the same type so it can be introspected
+		if remoteElem.Kind() == reflect.Invalid {
+			remoteElem = reflect.MakeMap(crdElem.Type())
+		} else if crdElem.Kind() == reflect.Invalid {
+			crdElem = reflect.MakeMap(remoteElem.Type())
+		}
+		detectMapItems(key, funcName, crdElem, remoteElem, parent)
+		return false
+	}
+	if crdElem.Kind() == reflect.Slice || remoteElem.Kind() == reflect.Slice {
+		// create a slice with the same type so it can be introspected
+		if remoteElem.Kind() == reflect.Invalid {
+			remoteElem = reflect.MakeSlice(crdElem.Type(), 0, 0)
+		} else if crdElem.Kind() == reflect.Invalid {
+			crdElem = reflect.MakeSlice(remoteElem.Type(), 0, 0)
+		}
+		detectItems(key, crdElem, remoteElem, parent, true)
+		return false
+	}
+	return true
 }
 
 func (p *valuePair) setZeroIfNilValue(typ reflect.Type) {
@@ -333,6 +397,7 @@ func (p *valuePair) setEmptyMapIfNilValue(typ reflect.Type) {
 		p.Interface = asInterface(p.Value)
 	}
 }
+
 func (p *valuePair) setEmptySliceIfNilValue(typ reflect.Type) {
 	if p.Interface == nil {
 		p.Value = reflect.MakeSlice(typ, 0, 0)
@@ -351,6 +416,9 @@ func handleStructField(property string, funcName string, field reflect.StructFie
 			child := &Result{Property: property, Children: []*Result{}}
 			this.Children = append(this.Children, child)
 			detectStruct(crd, remote, child, false)
+			if this.PostFunc != nil {
+				this.PostFunc(child)
+			}
 		}
 	}
 }

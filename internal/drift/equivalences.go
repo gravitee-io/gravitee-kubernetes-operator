@@ -16,6 +16,7 @@ package drift
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 )
@@ -25,19 +26,20 @@ const (
 	ignoreName     = "ignore"
 )
 
-// Init initializes the equivalence registry.
+// InitEquivalences initializes the equivalence registry.
 func Init() {
-	Register(emptyIsNilName, reflect.String, EmptyIsNilString)
-	Register(ignoreName, reflect.String, Ignore)
-	Register("trimmed", reflect.String, Trimmed)
-	Register("rfc3339", reflect.String, RFC3339)
-	Register(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
-	Register(emptyIsNilName, reflect.Int, EmptyIsNilInt)
-	Register(emptyIsNilName, reflect.Uint, EmptyIsNilUint)
-	Register(emptyIsNilName, reflect.Slice, EmptyIsNilLen)
-	Register(emptyIsNilName, reflect.Map, EmptyIsNilLen)
-	Register(emptyIsNilName, reflect.Struct, EmptyIsNilStruct)
-	Register(ignoreName, reflect.Struct, IgnoreSkip)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.String, EmptyIsNilString)
+	RegisterEquivalenceFunc(ignoreName, reflect.String, Ignore)
+	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
+	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int, EmptyIsNilInt)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Uint, EmptyIsNilUint)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Slice, EmptyIsNilLen)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Map, EmptyIsNilLen)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Struct, EmptyIsNilStruct)
+	RegisterEquivalenceFunc(ignoreName, reflect.Struct, IgnoreSkip)
+	RegisterEquivalenceFunc("unstructured", reflect.Struct, DefaultEquivalencePostPullUpObjectChildren)
 }
 
 func Ignore(_ any, _ any) Equivalence {
@@ -151,6 +153,29 @@ func EmptyIsNilStruct(crd any, remote any) Equivalence {
 
 func IgnoreSkip(_ any, _ any) Equivalence {
 	return Equivalence{Equivalent: Equivalent, Skip: true}
+}
+
+func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any) Equivalence {
+	e := defaultStructEquivalence(crd, remote)
+	e.PostFunc = func(r *Result) {
+		var objectChild *Result
+		r.Children = slices.DeleteFunc(r.Children, func(e *Result) bool {
+			if e.Property == "object" {
+				if len(e.Children) > 0 {
+					objectChild = e
+				}
+				return true
+			}
+			return false
+		})
+
+		if objectChild != nil {
+			for _, c := range objectChild.Children {
+				r.AppendChild(c, true)
+			}
+		}
+	}
+	return e
 }
 
 func FromDeepEqual(crd any, remote any) Equivalence {

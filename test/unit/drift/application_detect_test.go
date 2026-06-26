@@ -25,20 +25,20 @@ import (
 var _ = Describe("Application Drift detection", func() {
 
 	DescribeTable("equivalent values",
-		func(crd, api any) {
-			expectNoDrift(drift.Detect(crd, api))
+		func(crd, remote any) {
+			expectNoDrift(drift.Detect(crd, remote))
 		},
 		Entry("empty struct",
 			model.ApplicationDTO{},
 			model.ApplicationDTO{},
 		),
 		Entry("equal struct",
-			completeDTO(),
-			completeDTO(),
+			completeApplicationDTO(),
+			completeApplicationDTO(),
 		),
 		Entry("equal struct",
-			completeDTO(),
-			completeCRD().Spec.ToDTO(),
+			completeApplicationDTO(),
+			completeApplicationCRD().Spec.ToDTO(),
 		),
 		Entry("equivalent struct",
 			model.ApplicationDTO{},
@@ -160,7 +160,7 @@ var _ = Describe("Application Drift detection", func() {
 	)
 })
 
-func completeDTO() model.ApplicationDTO {
+func completeApplicationDTO() model.ApplicationDTO {
 	GinkgoHelper()
 	return model.ApplicationDTO{
 		ID:          "123456",
@@ -199,7 +199,7 @@ func completeDTO() model.ApplicationDTO {
 	}
 }
 
-func completeCRD() *v1alpha1.Application {
+func completeApplicationCRD() *v1alpha1.Application {
 	GinkgoHelper()
 	return &v1alpha1.Application{
 		Spec: v1alpha1.ApplicationSpec{

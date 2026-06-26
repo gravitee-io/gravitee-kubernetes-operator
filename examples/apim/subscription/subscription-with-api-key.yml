@@ -16,13 +16,15 @@ apiVersion: gravitee.io/v1alpha1
 kind: Subscription
 metadata:
   name: api-key-subscription
+  annotations:
+    "gravitee.io/drift-detection": "true"
 spec:
   api:
     name: api-v4-with-api-key
   application:
     name: simple-application
   plan: API_KEY
-  endingAt: "2040-12-25T09:12:28Z"
+  endingAt: "2041-12-25T09:12:28Z"
   apiKeys:
     - key: "my-custom-api-key-1-at-least-32c"
       expireAt: "2040-12-25T09:12:28Z"

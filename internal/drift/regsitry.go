@@ -28,6 +28,10 @@ type registry struct {
 	registry map[registryEntry]EquivalenceFunc
 }
 
+var equivalenceRegistry = &registry{
+	registry: make(map[registryEntry]EquivalenceFunc),
+}
+
 // Get returns the EquivalenceFunc function for the given kind.
 // If no function is registered for the given kind and name, it panics.
 // If no name is given (no drift tag), it returns a default function for the given kind:
@@ -52,12 +56,8 @@ func (r *registry) Get(name string, k reflect.Kind) EquivalenceFunc {
 	return FromDeepEqual
 }
 
-var equivalenceRegistry = &registry{
-	registry: make(map[registryEntry]EquivalenceFunc),
-}
-
-// Register registers a named EquivalenceFunc function 'f' to compare value of kind 'k'.
-func Register(name string, k reflect.Kind, f EquivalenceFunc) {
+// RegisterEquivalenceFunc registers a named EquivalenceFunc function 'f' to compare value of kind 'k'.
+func RegisterEquivalenceFunc(name string, k reflect.Kind, f EquivalenceFunc) {
 	if k == reflect.Pointer {
 		panic("cannot register a pointer to a struct, use a concrete type or an interface")
 	}

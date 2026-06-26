@@ -70,7 +70,13 @@ func validateUpdate(
 
 		validateMTLS(newSub, plan, app, errs)
 
-		drift.ValidateDriftWithContext(ctx, oldSub, newSub, resolveContext(app), resolveRefs, remoteSubscriptionGetter(api), dtoMapper(api, app))
+		errs.MergeWith(
+			drift.ValidateDriftWithContext(ctx, oldSub, newSub,
+				resolveContext(app),
+				resolveRefs,
+				remoteSubscriptionGetter(api),
+				dtoMapper(api, app)),
+		)
 	}
 
 	return errs
@@ -441,8 +447,8 @@ func remoteSubscriptionGetter(api core.ApiDefinitionObject) drift.RemoteObjectGe
 		condAwareSub, _ := object.(core.ConditionAwareObject)
 		sub, _ := object.(core.SubscriptionObject)
 		if k8s.IsAutomationAPIManaged(condAwareSub) {
-			apiNSName := refs.NewNamespacedName(api.GetName(), api.GetNamespace())
-			subNSName := refs.NewNamespacedName(sub.GetName(), sub.GetNamespace())
+			apiNSName := refs.NewNamespacedNameFromObject(api)
+			subNSName := refs.NewNamespacedNameFromObject(sub)
 			remoteSub, err := apimClient.Subscription.GetByHRID(apiNSName.HRID(), subNSName.HRID())
 			if err != nil {
 				admissionErrors.AddSeveref("cannot fetch Subscription during drift detection from Api HRID %s and Subscription HRID %s: %s",

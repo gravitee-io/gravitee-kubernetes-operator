@@ -23,8 +23,8 @@ import (
 
 var _ = Describe("EmptyIsNilString", func() {
 	DescribeTable("should report equivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilString(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilString(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -35,8 +35,8 @@ var _ = Describe("EmptyIsNilString", func() {
 	)
 
 	DescribeTable("should report inequivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilString(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilString(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -50,8 +50,8 @@ var _ = Describe("EmptyIsNilString", func() {
 
 var _ = Describe("EmptyIsNilInt", func() {
 	DescribeTable("should report equivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilInt(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilInt(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -63,8 +63,8 @@ var _ = Describe("EmptyIsNilInt", func() {
 	)
 
 	DescribeTable("should report inequivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilInt(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilInt(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -82,8 +82,8 @@ var _ = Describe("EmptyIsNilInt", func() {
 
 var _ = Describe("EmptyIsNilUint", func() {
 	DescribeTable("should report equivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilUint(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilUint(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -95,8 +95,8 @@ var _ = Describe("EmptyIsNilUint", func() {
 	)
 
 	DescribeTable("should report inequivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilUint(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilUint(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -114,8 +114,8 @@ var _ = Describe("EmptyIsNilUint", func() {
 
 var _ = Describe("EmptyIsNilBool", func() {
 	DescribeTable("should report equivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilBool(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilBool(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -127,8 +127,8 @@ var _ = Describe("EmptyIsNilBool", func() {
 	)
 
 	DescribeTable("should report inequivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilBool(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilBool(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -141,8 +141,8 @@ var _ = Describe("EmptyIsNilBool", func() {
 
 var _ = Describe("EmptyIsNilLen", func() {
 	DescribeTable("should report equivalence",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilLen(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilLen(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -155,8 +155,8 @@ var _ = Describe("EmptyIsNilLen", func() {
 	)
 
 	DescribeTable("should report cannot compare",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilLen(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilLen(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.CannotCompare},
 			))
 		},
@@ -174,8 +174,8 @@ type emptyIsNilStructFixture struct {
 
 var _ = Describe("EmptyIsNilStruct", func() {
 	DescribeTable("should report equivalence and skip",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilStruct(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilStruct(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent, Skip: true},
 			))
 		},
@@ -184,8 +184,8 @@ var _ = Describe("EmptyIsNilStruct", func() {
 	)
 
 	DescribeTable("should report cannot compare",
-		func(crd, api any) {
-			Expect(drift.EmptyIsNilStruct(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.EmptyIsNilStruct(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.CannotCompare},
 			))
 		},
@@ -199,8 +199,8 @@ var _ = Describe("EmptyIsNilStruct", func() {
 
 var _ = Describe("FromDeepEqual", func() {
 	DescribeTable("should report equivalence",
-		func(crd, api any) {
-			Expect(drift.FromDeepEqual(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.FromDeepEqual(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -211,8 +211,8 @@ var _ = Describe("FromDeepEqual", func() {
 	)
 
 	DescribeTable("should report inequivalence",
-		func(crd, api any) {
-			Expect(drift.FromDeepEqual(crd, api)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.FromDeepEqual(crd, remote)).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},

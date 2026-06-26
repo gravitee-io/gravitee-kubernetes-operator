@@ -27,7 +27,7 @@ type SubscriptionRequest struct {
 
 type ApiKeySpec struct {
 	Key      string  `json:"key"`
-	ExpireAt *string `json:"expireAt,omitempty"`
+	ExpireAt *string `json:"expireAt,omitempty" drift:"rfc3339"`
 }
 
 type SubscriptionDTO struct {
@@ -43,7 +43,7 @@ type SubscriptionDTO struct {
 	ConsumerConfiguration subscription.ConsumerConfiguration `json:"consumerConfiguration,omitempty"`
 }
 
-type AutomationSubscription struct {
+type AutomationSubscriptionDTO struct {
 	HRID                  string                             `json:"hrid"`
 	ApplicationHrid       string                             `json:"applicationHrid"`
 	PlanHrid              string                             `json:"planHrid"`
@@ -56,14 +56,29 @@ type AutomationSubscription struct {
 	ConsumerConfiguration subscription.ConsumerConfiguration `json:"consumerConfiguration,omitempty"`
 }
 
+func (a *AutomationSubscriptionDTO) ToLegacy() *SubscriptionDTO {
+	return &SubscriptionDTO{
+		ID:                    a.HRID,
+		ApiID:                 a.ApiHrid,
+		AppID:                 a.ApplicationHrid,
+		PlanID:                a.PlanHrid,
+		Status:                a.Status,
+		StartingAt:            a.StartingAt,
+		EndingAt:              a.EndingAt,
+		Metadata:              a.Metadata,
+		ApiKeys:               a.ApiKeys,
+		ConsumerConfiguration: a.ConsumerConfiguration,
+	}
+}
+
 type SubscriptionStatus struct {
 	ID         string `json:"id,omitempty"`
 	StartingAt string `json:"startingAt,omitempty"`
 	EndingAt   string `json:"endingAt,omitempty"`
 }
 
-func (s *SubscriptionDTO) ToAutomation() AutomationSubscription {
-	return AutomationSubscription{
+func (s *SubscriptionDTO) ToAutomation() AutomationSubscriptionDTO {
+	return AutomationSubscriptionDTO{
 		HRID:                  s.ID,
 		ApiHrid:               s.ApiID,
 		ApplicationHrid:       s.AppID,

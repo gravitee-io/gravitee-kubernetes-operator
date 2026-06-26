@@ -17,14 +17,15 @@ apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
   name: simple-application
+  annotations:
+    "gravitee.io/drift-detection": "true"
 spec:
   contextRef:
     name: "dev-ctx"
   name: "simple-app"
   domain: "https://example.com"
   description: |
-    A hands-free application. 
-    Using this type, you will be able to define the client_id by your own.
+    A hands-free application. Define the client_id on your own!
   settings:
     app:
       type: WEB

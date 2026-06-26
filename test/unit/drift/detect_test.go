@@ -17,10 +17,10 @@ package drift
 import (
 	"reflect"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type SingleWithPtr struct {
@@ -70,6 +70,11 @@ type embeddedAndNested struct {
 	Title          TitleString
 	Embedded       `json:",inline"`
 	NestedEmbedded Embedded
+}
+
+type withUnstructured struct {
+	Name   string                    `json:"name,omitempty"`
+	Config unstructured.Unstructured `json:"config,omitempty" drift:"unstructured"`
 }
 
 type singleNoPtr struct {
@@ -139,8 +144,8 @@ var _ = Describe("Detect", func() {
 	Describe("when drift is detected", func() {
 
 		DescribeTable("simple properties",
-			func(crd, api any, expectedString string) {
-				expectDrift(drift.Detect(crd, api), expectedString)
+			func(crd, remote any, expectedString string) {
+				expectDrift(drift.Detect(crd, remote), expectedString)
 			},
 			Entry("single pointer property with different values",
 				SingleWithPtr{Value: ptr("foo")},
@@ -179,15 +184,15 @@ order: 1 != 2`,
 
 			It("detects partial drift", func() {
 				crd := Nested{Name: ptr("foo"), Multiple: MultipleWithPtr{Name: ptr("foo"), Order: ptr(1)}, Description: ptr("bar")}
-				api := Nested{Name: ptr("foo"), Multiple: MultipleWithPtr{Name: ptr("foo"), Order: ptr(2)}, Description: ptr("bar")}
-				expectDrift(drift.Detect(crd, api), `multiple:
+				remote := Nested{Name: ptr("foo"), Multiple: MultipleWithPtr{Name: ptr("foo"), Order: ptr(2)}, Description: ptr("bar")}
+				expectDrift(drift.Detect(crd, remote), `multiple:
   order: 1 != 2`)
 			})
 
 			It("detects drift on all props", func() {
 				crd := Nested{Name: ptr("foo"), Multiple: MultipleWithPtr{Name: ptr("foo"), Order: ptr(1)}, Description: ptr("foo")}
-				api := Nested{Name: ptr("bar"), Multiple: MultipleWithPtr{Name: ptr("bar"), Order: ptr(2)}, Description: ptr("bar")}
-				expectDrift(drift.Detect(crd, api), `name: "foo" != "bar"
+				remote := Nested{Name: ptr("bar"), Multiple: MultipleWithPtr{Name: ptr("bar"), Order: ptr(2)}, Description: ptr("bar")}
+				expectDrift(drift.Detect(crd, remote), `name: "foo" != "bar"
 multiple:
   name: "foo" != "bar"
   order: 1 != 2
@@ -199,11 +204,11 @@ description: "foo" != "bar"`)
 					First:  Nested{Name: ptr("First CRD"), Multiple: MultipleWithPtr{Name: ptr("foo"), Order: ptr(1)}},
 					Second: &Nested{Name: ptr("Second CRD"), Multiple: MultipleWithPtr{Name: ptr("bar"), Order: ptr(1)}, Description: ptr("Second CRD")},
 				}
-				api := nestedDeep{Title: "API",
+				remote := nestedDeep{Title: "API",
 					First:  Nested{Name: ptr("First API"), Multiple: MultipleWithPtr{Name: ptr("baz"), Order: ptr(1)}},
 					Second: &Nested{Name: ptr("Second API"), Multiple: MultipleWithPtr{Name: ptr("bar"), Order: ptr(2)}, Description: ptr("Second API")},
 				}
-				expectDrift(drift.Detect(crd, api), `title: "CRD" != "API"
+				expectDrift(drift.Detect(crd, remote), `title: "CRD" != "API"
 first:
   name: "First CRD" != "First API"
   multiple:
@@ -217,18 +222,18 @@ second:
 
 			It("detects drifts in nested with pointers", func() {
 				crd := NestedWithPointer{Title: ptr("test"), Multiple: &MultipleWithPtr{Name: ptr("foo")}, Description: ptr("Test")}
-				api := NestedWithPointer{Title: ptr("test"), Multiple: nil, Description: ptr("Test")}
-				expectDrift(drift.Detect(crd, api), `multiple:
+				remote := NestedWithPointer{Title: ptr("test"), Multiple: nil, Description: ptr("Test")}
+				expectDrift(drift.Detect(crd, remote), `multiple:
   name: "foo" != <nil>`)
 			})
 
 			It("detects drifts in deep nested with structs with pointer", func() {
 				crd := nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{Title: ptr(""), Multiple: nil, Description: nil}}
-				api := nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{Title: nil, Multiple: &MultipleWithPtr{
+				remote := nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{Title: nil, Multiple: &MultipleWithPtr{
 					Name:  ptr("x"),
 					Order: ptr(1),
 				}, Description: ptr("")}}
-				expectDrift(drift.Detect(crd, api), `nested:
+				expectDrift(drift.Detect(crd, remote), `nested:
   multiple:
     name: <nil> != "x"
     order: <nil> != 1`)
@@ -236,11 +241,11 @@ second:
 
 			It("detects drifts in deep nested with structs with pointer", func() {
 				crd := nestedDeepWithPtr{Tag: "test", Nested: nil}
-				api := nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{Title: nil, Multiple: &MultipleWithPtr{
+				remote := nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{Title: nil, Multiple: &MultipleWithPtr{
 					Name:  ptr("x"),
 					Order: ptr(1),
 				}, Description: ptr("")}}
-				expectDrift(drift.Detect(crd, api), `nested:
+				expectDrift(drift.Detect(crd, remote), `nested:
   multiple:
     name: <nil> != "x"
     order: <nil> != 1`)
@@ -251,8 +256,8 @@ second:
 					Name:  ptr("x"),
 					Order: ptr(1),
 				}, Description: ptr("")}}
-				api := nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{Title: ptr(""), Multiple: nil, Description: nil}}
-				expectDrift(drift.Detect(crd, api), `nested:
+				remote := nestedDeepWithPtr{Tag: "test", Nested: &NestedWithPointer{Title: ptr(""), Multiple: nil, Description: nil}}
+				expectDrift(drift.Detect(crd, remote), `nested:
   multiple:
     name: "x" != <nil>
     order: 1 != <nil>`)
@@ -263,8 +268,8 @@ second:
 					Name:  ptr("x"),
 					Order: ptr(1),
 				}, Description: ptr("")}}
-				api := nestedDeepWithPtr{Tag: "test", Nested: nil}
-				expectDrift(drift.Detect(crd, api), `nested:
+				remote := nestedDeepWithPtr{Tag: "test", Nested: nil}
+				expectDrift(drift.Detect(crd, remote), `nested:
   multiple:
     name: "x" != <nil>
     order: 1 != <nil>`)
@@ -276,27 +281,27 @@ second:
 
 			It("detects partial drift", func() {
 				crd := Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("foo"), Order: ptr(1)}, Description: ptr("bar")}
-				api := Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("foo"), Order: ptr(2)}, Description: ptr("bar")}
-				expectDrift(drift.Detect(crd, api), "order: 1 != 2")
+				remote := Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("foo"), Order: ptr(2)}, Description: ptr("bar")}
+				expectDrift(drift.Detect(crd, remote), "order: 1 != 2")
 			})
 
 			It("detects drift on all props", func() {
 				crd := Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("foo"), Order: ptr(1)}, Description: ptr("foo")}
-				api := Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("bar"), Order: ptr(2)}, Description: ptr("bar")}
-				expectDrift(drift.Detect(crd, api), `name: "foo" != "bar"
+				remote := Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("bar"), Order: ptr(2)}, Description: ptr("bar")}
+				expectDrift(drift.Detect(crd, remote), `name: "foo" != "bar"
 order: 1 != 2
 description: "foo" != "bar"`)
 			})
 			It("detects partial drift", func() {
 				crd := embeddedWithPtr{MultipleWithPtr: &MultipleWithPtr{Name: ptr("foo"), Order: ptr(1)}, Description: ptr("bar")}
-				api := embeddedWithPtr{MultipleWithPtr: &MultipleWithPtr{Name: ptr("foo"), Order: ptr(2)}, Description: ptr("bar")}
-				expectDrift(drift.Detect(crd, api), "order: 1 != 2")
+				remote := embeddedWithPtr{MultipleWithPtr: &MultipleWithPtr{Name: ptr("foo"), Order: ptr(2)}, Description: ptr("bar")}
+				expectDrift(drift.Detect(crd, remote), "order: 1 != 2")
 			})
 
 			It("detects drift on all props", func() {
 				crd := embeddedWithPtr{MultipleWithPtr: &MultipleWithPtr{Name: ptr("foo"), Order: ptr(1)}, Description: ptr("foo")}
-				api := embeddedWithPtr{MultipleWithPtr: &MultipleWithPtr{Name: ptr("bar"), Order: ptr(2)}, Description: ptr("bar")}
-				expectDrift(drift.Detect(crd, api), `name: "foo" != "bar"
+				remote := embeddedWithPtr{MultipleWithPtr: &MultipleWithPtr{Name: ptr("bar"), Order: ptr(2)}, Description: ptr("bar")}
+				expectDrift(drift.Detect(crd, remote), `name: "foo" != "bar"
 order: 1 != 2
 description: "foo" != "bar"`)
 			})
@@ -306,11 +311,11 @@ description: "foo" != "bar"`)
 					MultipleWithPtr: MultipleWithPtr{Name: ptr("x"), Order: ptr(10)}, Description: ptr("coming soon"),
 				},
 					NestedEmbedded: Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("foo")}, Description: nil}}
-				api := embeddedAndNested{Title: "Test", Embedded: Embedded{
+				remote := embeddedAndNested{Title: "Test", Embedded: Embedded{
 					MultipleWithPtr: MultipleWithPtr{Name: ptr("y"), Order: ptr(42)}, Description: ptr("coming soon"),
 				},
 					NestedEmbedded: Embedded{MultipleWithPtr: MultipleWithPtr{Name: ptr("bar")}, Description: ptr("baz")}}
-				expectDrift(drift.Detect(crd, api), `name: "x" != "y"
+				expectDrift(drift.Detect(crd, remote), `name: "x" != "y"
 order: 10 != 42
 nestedEmbedded:
   name: "foo" != "bar"
@@ -323,42 +328,42 @@ nestedEmbedded:
 
 			It("detects array drift", func() {
 				crd := withStringArray{Name: "test", Tags: []string{"bar", "bar"}}
-				api := withStringArray{Name: "test", Tags: []string{"foo", "bar"}}
-				expectDrift(drift.Detect(crd, api), `tags[0]: "bar" != "foo"`)
+				remote := withStringArray{Name: "test", Tags: []string{"foo", "bar"}}
+				expectDrift(drift.Detect(crd, remote), `tags[0]: "bar" != "foo"`)
 			})
 
 			It("detects array drift", func() {
 				crd := withStringArray{Name: "test", Tags: []string{"bar", "bar"}}
-				api := withStringArray{Name: "test", Tags: []string{"foo"}}
-				expectDrift(drift.Detect(crd, api), `tags[0]: "bar" != "foo"
+				remote := withStringArray{Name: "test", Tags: []string{"foo"}}
+				expectDrift(drift.Detect(crd, remote), `tags[0]: "bar" != "foo"
 tags[1]: "bar" != ""`)
 			})
 
 			It("detects array drift", func() {
 				crd := withStringArray{Name: "test", Tags: []string{"bar"}}
-				api := withStringArray{Name: "test", Tags: []string{"foo", "bar"}}
-				expectDrift(drift.Detect(crd, api), `tags[0]: "bar" != "foo"
+				remote := withStringArray{Name: "test", Tags: []string{"foo", "bar"}}
+				expectDrift(drift.Detect(crd, remote), `tags[0]: "bar" != "foo"
 tags[1]: "" != "bar"`)
 			})
 
 			It("detects array drift", func() {
 				crd := withStringArray{Name: "test"}
-				api := withStringArray{Name: "test", Tags: []string{"foo", "bar"}}
-				expectDrift(drift.Detect(crd, api), `tags[0]: "" != "foo"
+				remote := withStringArray{Name: "test", Tags: []string{"foo", "bar"}}
+				expectDrift(drift.Detect(crd, remote), `tags[0]: "" != "foo"
 tags[1]: "" != "bar"`)
 			})
 
 			It("detects array of struct drift against nil", func() {
 				crd := withStructArray{Name: ptr("test"), Values: []MultipleWithPtr{{Name: ptr("foo")}}}
-				api := withStructArray{Name: ptr("test"), Values: nil}
-				expectDrift(drift.Detect(crd, api), `values[0]:
+				remote := withStructArray{Name: ptr("test"), Values: nil}
+				expectDrift(drift.Detect(crd, remote), `values[0]:
   name: "foo" != <nil>`)
 			})
 
 			It("detects array of struct drift against nil", func() {
 				crd := withStructArray{Name: ptr("test"), Values: nil}
-				api := withStructArray{Name: ptr("test"), Values: []MultipleWithPtr{{Name: ptr("foo")}}}
-				expectDrift(drift.Detect(crd, api), `values[0]:
+				remote := withStructArray{Name: ptr("test"), Values: []MultipleWithPtr{{Name: ptr("foo")}}}
+				expectDrift(drift.Detect(crd, remote), `values[0]:
   name: <nil> != "foo"`)
 			})
 
@@ -370,14 +375,14 @@ tags[1]: "" != "bar"`)
 						{Name: ptr("foo"), Order: ptr(1)},
 					},
 				}
-				api := withStructArray{
+				remote := withStructArray{
 					Name: nil,
 					Values: []MultipleWithPtr{
 						{Name: ptr("foo"), Order: ptr(0)},
 						{Name: ptr("bar")},
 					},
 				}
-				expectDrift(drift.Detect(crd, api), `name: "test" != <nil>
+				expectDrift(drift.Detect(crd, remote), `name: "test" != <nil>
 values[0]:
   name: "bar" != "foo"
 values[1]:
@@ -389,64 +394,64 @@ values[1]:
 		Describe("struct with int maps", func() {
 			It("detects map drift, partial", func() {
 				crd := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
-				api := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0)}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0)}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x: 42 != 0`)
 			})
 
 			It("detects int map drift, complete", func() {
 				crd := withMapOfPrimitive{Name: ptr("foo"), Values: map[string]*int{"x": ptr(42)}}
-				api := withMapOfPrimitive{Name: ptr("bar"), Values: map[string]*int{"x": ptr(0)}}
-				expectDrift(drift.Detect(crd, api), `name: "foo" != "bar"
+				remote := withMapOfPrimitive{Name: ptr("bar"), Values: map[string]*int{"x": ptr(0)}}
+				expectDrift(drift.Detect(crd, remote), `name: "foo" != "bar"
 values:
   x: 42 != 0`)
 			})
 
-			It("detects map drift, partial api missing", func() {
+			It("detects map drift, partial remote missing", func() {
 				crd := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
-				api := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x: 42 != <nil>`)
 			})
 
 			It("detects map drift, partial crd missing", func() {
 				crd := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{}}
-				api := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x: <nil> != 42`)
 			})
 			It("detects map drift, partial crd nil", func() {
 				crd := withMapOfPrimitive{Name: ptr("test")}
-				api := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x: <nil> != 42`)
 			})
-			It("detects map drift, partial api nil", func() {
+			It("detects map drift, partial remote nil", func() {
 				crd := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
-				api := withMapOfPrimitive{Name: ptr("test")}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfPrimitive{Name: ptr("test")}
+				expectDrift(drift.Detect(crd, remote), `values:
   x: 42 != <nil>`)
 			})
-			It("detects map drift, partial api nil", func() {
+			It("detects map drift, partial remote nil", func() {
 				crd := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(42)}}
-				api := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"y": ptr(42)}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"y": ptr(42)}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x: 42 != <nil>
   y: <nil> != 42`)
 			})
 
 			It(" detect map of struct drift, partial", func() {
 				crd := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("foo"), Order: ptr(66)}}}
-				api := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("bar"), Order: ptr(66)}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("bar"), Order: ptr(66)}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     name: "foo" != "bar"`)
 			})
 
 			It(" detect map of struct drift, complete", func() {
 				crd := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("foo"), Order: ptr(66)}}}
-				api := withMapOfStruct{Name: ptr("prod"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("bar"), Order: ptr(66)}}}
-				expectDrift(drift.Detect(crd, api), `name: "test" != "prod"
+				remote := withMapOfStruct{Name: ptr("prod"), Values: map[string]MultipleWithPtr{"x": {Name: ptr("bar"), Order: ptr(66)}}}
+				expectDrift(drift.Detect(crd, remote), `name: "test" != "prod"
 values:
   x:
     name: "foo" != "bar"`)
@@ -454,71 +459,71 @@ values:
 
 			It(" detect map of struct drift, empty", func() {
 				crd := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Order: ptr(66)}}}
-				api := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     order: 66 != <nil>`)
 			})
 
-			It(" detect map of struct drift, missing api", func() {
+			It(" detect map of struct drift, missing remote", func() {
 				crd := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Order: ptr(66)}}}
-				api := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     order: 66 != <nil>`)
 			})
-			It(" detect map of struct drift, nil api", func() {
+			It(" detect map of struct drift, nil remote", func() {
 				crd := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Order: ptr(66)}}}
-				api := withMapOfStruct{Name: ptr("test")}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStruct{Name: ptr("test")}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     order: 66 != <nil>`)
 			})
 
 			It(" detect map of struct drift, missing crd", func() {
 				crd := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{}}
-				api := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Order: ptr(66)}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Order: ptr(66)}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     order: <nil> != 66`)
 			})
 			It(" detect map of struct drift, nil crd", func() {
 				crd := withMapOfStruct{Name: ptr("test")}
-				api := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Order: ptr(66)}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Order: ptr(66)}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     order: <nil> != 66`)
 			})
 
 			It(" detect map of arrays drift, missing crd", func() {
 				crd := withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {1, 2}}}
-				api := withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {1, 4, 5}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {1, 4, 5}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x[1]: 2 != 4
   x[2]: 0 != 5`)
 			})
 
-			It(" detect map of arrays drift, partial missing api", func() {
+			It(" detect map of arrays drift, partial missing remote", func() {
 				crd := withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {1, 2, 3}}}
-				api := withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {1, 4}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {1, 4}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x[1]: 2 != 4
   x[2]: 3 != 0`)
 			})
 
 			It(" detect map of struct arrays drift, not equal", func() {
 				crd := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: ptr("foo"), Order: ptr(66)}}}}
-				api := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: ptr("bar"), Order: ptr(67)}}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: ptr("bar"), Order: ptr(67)}}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x[0]:
     name: "foo" != "bar"
     order: 66 != 67`)
 			})
 
-			It(" detect map of struct arrays drift, missing api", func() {
+			It(" detect map of struct arrays drift, missing remote", func() {
 				crd := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: ptr("foo"), Order: ptr(66)}}}}
-				api := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x[0]:
     name: "foo" != <nil>
     order: 66 != <nil>`)
@@ -526,8 +531,8 @@ values:
 
 			It(" detect map of struct arrays drift, missing crd", func() {
 				crd := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{}}
-				api := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: ptr("foo"), Order: ptr(66)}}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: ptr("foo"), Order: ptr(66)}}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x[0]:
     name: <nil> != "foo"
     order: <nil> != 66`)
@@ -536,11 +541,11 @@ values:
 				crd := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {
 					{Name: ptr("foo"), Order: ptr(66)},
 				}}}
-				api := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {
+				remote := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {
 					{Name: ptr("foo"), Order: ptr(66)},
 					{Name: ptr("foo"), Order: ptr(66)},
 				}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				expectDrift(drift.Detect(crd, remote), `values:
   x[1]:
     name: <nil> != "foo"
     order: <nil> != 66`)
@@ -548,10 +553,10 @@ values:
 			It(" detect map of struct arrays drift, missing crd entry", func() {
 				crd := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{
 					"x": {{Name: ptr("foo"), Order: ptr(66)}}}}
-				api := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{
+				remote := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{
 					"x": {{Name: ptr("foo"), Order: ptr(66)}},
 					"y": {{Name: ptr("foo"), Order: ptr(66)}}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				expectDrift(drift.Detect(crd, remote), `values:
   y[0]:
     name: <nil> != "foo"
     order: <nil> != 66`)
@@ -559,50 +564,166 @@ values:
 
 			It(" detect map of struct arrays drift, partial equivalence equal", func() {
 				crd := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: ptr(""), Order: ptr(66)}}}}
-				api := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: nil, Order: ptr(67)}}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfStructArray{Name: ptr("test"), Values: map[string][]MultipleWithPtr{"x": {{Name: nil, Order: ptr(67)}}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x[0]:
     order: 66 != 67`)
 			})
 
 			It(" detect map of maps drift, partial", func() {
 				crd := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 1}}}
-				api := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 0}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 0}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     y: 1 != 0`)
 			})
 			It(" detect map of maps drift, complete", func() {
 				crd := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 1}}}
-				api := withMapOfMap{Name: ptr("prod"), Values: map[string]map[string]int{"x": {"y": 0}}}
-				expectDrift(drift.Detect(crd, api), `name: "test" != "prod"
+				remote := withMapOfMap{Name: ptr("prod"), Values: map[string]map[string]int{"x": {"y": 0}}}
+				expectDrift(drift.Detect(crd, remote), `name: "test" != "prod"
 values:
   x:
     y: 1 != 0`)
 			})
 
-			It(" detect map of maps drift, partial missing api", func() {
+			It(" detect map of maps drift, partial missing remote", func() {
 				crd := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 1}}}
-				api := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     y: 1 != <nil>`)
 			})
 
 			It(" detect map of maps drift, partial missing crd", func() {
 				crd := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {}}}
-				api := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 1}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 1}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     y: <nil> != 1`)
 			})
 
 			It(" detect map of maps of struct drift, partial", func() {
 				crd := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {}}}
-				api := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 1}}}
-				expectDrift(drift.Detect(crd, api), `values:
+				remote := withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {"y": 1}}}
+				expectDrift(drift.Detect(crd, remote), `values:
   x:
     y: <nil> != 1`)
+			})
+		})
+		Describe("with unstructured data", func() {
+			It("detects map drift, complete remote nil", func() {
+				crd := withUnstructured{
+					Name: "test",
+					Config: unstructured.Unstructured{Object: map[string]interface{}{
+						"int":                  map[string]int{"response": 42},
+						"string":               map[string]string{"response": "42"},
+						"struct":               map[string]SingleWithPtr{"response": {Value: ptr("42")}},
+						"int_array":            map[string][]int{"response": {42}},
+						"string_array":         map[string][]string{"response": {"42"}},
+						"struct_array":         map[string][]SingleWithPtr{"response": {{Value: ptr("42")}}},
+						"map_string":           map[string]map[string]string{"response": {"it": "42"}},
+						"map_int":              map[string]map[string]int{"response": {"it": 42}},
+						"map_string_array":     map[string]map[string][]string{"response": {"it": {"42"}}},
+						"map_int_array":        map[string]map[string][]int{"response": {"it": {42}}},
+						"map_struct_array":     map[string]map[string][]SingleWithPtr{"response": {"it": {{Value: ptr("42")}}}},
+						"map_struct_array_map": map[string]map[string][]map[string]*string{"response": {"it": {{"value": ptr("42")}}}},
+					}}}
+				remote := withUnstructured{
+					Name: "test",
+				}
+
+				expectDrift(drift.Detect(crd, remote), `config:
+  int:
+    response: 42 != <nil>
+  int_array:
+    response[0]: 42 != 0
+  map_int:
+    response:
+      it: 42 != <nil>
+  map_int_array:
+    response:
+      it[0]: 42 != 0
+  map_string:
+    response:
+      it: "42" != <nil>
+  map_string_array:
+    response:
+      it[0]: "42" != ""
+  map_struct_array:
+    response:
+      it[0]:
+        value: "42" != <nil>
+  map_struct_array_map:
+    response:
+      it[0]:
+        value: "42" != <nil>
+  string:
+    response: "42" != <nil>
+  string_array:
+    response[0]: "42" != ""
+  struct:
+    response:
+      value: "42" != <nil>
+  struct_array:
+    response[0]:
+      value: "42" != <nil>`)
+			})
+			It("detects map drift, complete crd nil", func() {
+				crd := withUnstructured{
+					Name: "test",
+				}
+				remote := withUnstructured{
+					Name: "test",
+					Config: unstructured.Unstructured{Object: map[string]interface{}{
+						"int":                  map[string]int{"response": 42},
+						"string":               map[string]string{"response": "42"},
+						"struct":               map[string]SingleWithPtr{"response": {Value: ptr("42")}},
+						"int_array":            map[string][]int{"response": {42}},
+						"string_array":         map[string][]string{"response": {"42"}},
+						"struct_array":         map[string][]SingleWithPtr{"response": {{Value: ptr("42")}}},
+						"map_string":           map[string]map[string]string{"response": {"it": "42"}},
+						"map_int":              map[string]map[string]int{"response": {"it": 42}},
+						"map_string_array":     map[string]map[string][]string{"response": {"it": {"42"}}},
+						"map_int_array":        map[string]map[string][]int{"response": {"it": {42}}},
+						"map_struct_array":     map[string]map[string][]SingleWithPtr{"response": {"it": {{Value: ptr("42")}}}},
+						"map_struct_array_map": map[string]map[string][]map[string]*string{"response": {"it": {{"value": ptr("42")}}}},
+					}}}
+
+				expectDrift(drift.Detect(crd, remote), `config:
+  int:
+    response: <nil> != 42
+  int_array:
+    response[0]: 0 != 42
+  map_int:
+    response:
+      it: <nil> != 42
+  map_int_array:
+    response:
+      it[0]: 0 != 42
+  map_string:
+    response:
+      it: <nil> != "42"
+  map_string_array:
+    response:
+      it[0]: "" != "42"
+  map_struct_array:
+    response:
+      it[0]:
+        value: <nil> != "42"
+  map_struct_array_map:
+    response:
+      it[0]:
+        value: <nil> != "42"
+  string:
+    response: <nil> != "42"
+  string_array:
+    response[0]: "" != "42"
+  struct:
+    response:
+      value: <nil> != "42"
+  struct_array:
+    response[0]:
+      value: <nil> != "42"`)
 			})
 		})
 	})
@@ -610,8 +731,8 @@ values:
 	Describe("when no drift is detected", func() {
 
 		DescribeTable("equivalent values",
-			func(crd, api any) {
-				expectNoDrift(drift.Detect(crd, api))
+			func(crd, remote any) {
+				expectNoDrift(drift.Detect(crd, remote))
 			},
 			Entry("empty-is-nil: no values",
 				singleNilablePtr{},
@@ -774,7 +895,7 @@ values:
 				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{}},
 				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0), "y": ptr(0), "z": ptr(0)}},
 			),
-			Entry("struct with map of a simple type, equivalent api missing",
+			Entry("struct with map of a simple type, equivalent remote missing",
 				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{"x": ptr(0), "y": ptr(0), "z": ptr(0)}},
 				withMapOfPrimitive{Name: ptr("test"), Values: map[string]*int{}},
 			),
@@ -802,7 +923,7 @@ values:
 				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: ptr(""), Order: nil}}},
 				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {Name: nil, Order: ptr(0)}}},
 			),
-			Entry("struct with map of struct, equivalent missing api",
+			Entry("struct with map of struct, equivalent missing remote",
 				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{"x": {}}},
 				withMapOfStruct{Name: ptr("test"), Values: map[string]MultipleWithPtr{}},
 			),
@@ -821,7 +942,7 @@ values:
 				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}, "y": {66}}},
 				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": nil, "y": {66}}},
 			),
-			Entry("struct with map of array, equivalent missing api",
+			Entry("struct with map of array, equivalent missing remote",
 				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"x": {}, "y": {66}}},
 				withMapOfArray{Name: ptr("test"), Values: map[string][]int{"y": {66}}},
 			),
@@ -861,50 +982,86 @@ values:
 				withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": {}}},
 				withMapOfMap{Name: ptr("test"), Values: map[string]map[string]int{"x": nil}},
 			),
+			Entry("struct with unstructured, equal",
+				withUnstructured{
+					Name: "test",
+					Config: unstructured.Unstructured{Object: map[string]interface{}{
+						"int":                  map[string]int{"response": 42},
+						"string":               map[string]string{"response": "42"},
+						"struct":               map[string]SingleWithPtr{"response": {Value: ptr("42")}},
+						"int_array":            map[string][]int{"response": {42}},
+						"string_array":         map[string][]string{"response": {"42"}},
+						"struct_array":         map[string][]SingleWithPtr{"response": {{Value: ptr("42")}}},
+						"map_string":           map[string]map[string]string{"response": {"it": "42"}},
+						"map_int":              map[string]map[string]int{"response": {"it": 42}},
+						"map_string_array":     map[string]map[string][]string{"response": {"it": {"42"}}},
+						"map_int_array":        map[string]map[string][]int{"response": {"it": {42}}},
+						"map_struct_array":     map[string]map[string][]SingleWithPtr{"response": {"it": {{Value: ptr("42")}}}},
+						"map_struct_array_map": map[string]map[string][]map[string]*string{"response": {"it": {{"value": ptr("42")}}}},
+					}},
+				},
+				withUnstructured{
+					Name: "test",
+					Config: unstructured.Unstructured{Object: map[string]interface{}{
+						"int":                  map[string]int{"response": 42},
+						"string":               map[string]string{"response": "42"},
+						"struct":               map[string]SingleWithPtr{"response": {Value: ptr("42")}},
+						"int_array":            map[string][]int{"response": {42}},
+						"string_array":         map[string][]string{"response": {"42"}},
+						"struct_array":         map[string][]SingleWithPtr{"response": {{Value: ptr("42")}}},
+						"map_string":           map[string]map[string]string{"response": {"it": "42"}},
+						"map_int":              map[string]map[string]int{"response": {"it": 42}},
+						"map_string_array":     map[string]map[string][]string{"response": {"it": {"42"}}},
+						"map_int_array":        map[string]map[string][]int{"response": {"it": {42}}},
+						"map_struct_array":     map[string]map[string][]SingleWithPtr{"response": {"it": {{Value: ptr("42")}}}},
+						"map_struct_array_map": map[string]map[string][]map[string]*string{"response": {"it": {{"value": ptr("42")}}}},
+					}},
+				},
+			),
 		)
 	})
 
 	Describe("when invalid inputs cause panic", func() {
 		DescribeTable("non-struct root values",
-			func(crd, api any) {
+			func(crd, remote any) {
 				Expect(func() {
-					drift.Detect(crd, api)
+					drift.Detect(crd, remote)
 				}).To(PanicWith(MatchRegexp(`detect drift only supports structs`)))
 			},
 			Entry("crd is a string", "not a struct", SingleWithPtr{}),
-			Entry("api is a string", SingleWithPtr{}, "not a struct"),
+			Entry("remote is a string", SingleWithPtr{}, "not a struct"),
 			Entry("crd is a pointer to struct", &SingleWithPtr{}, SingleWithPtr{}),
-			Entry("api is a pointer to struct", SingleWithPtr{}, &SingleWithPtr{}),
+			Entry("remote is a pointer to struct", SingleWithPtr{}, &SingleWithPtr{}),
 		)
 
 		It("panics when a map key is not a string", func() {
 			crd := withIntMapKey{Values: map[int]string{1: "a"}}
-			api := withIntMapKey{Values: map[int]string{1: "b"}}
+			remote := withIntMapKey{Values: map[int]string{1: "b"}}
 			Expect(func() {
-				drift.Detect(crd, api)
+				drift.Detect(crd, remote)
 			}).To(PanicWith(MatchRegexp(`map key must be of type string`)))
 		})
 
 		It("panics when a nested map key is not a string", func() {
 			crd := withNestedIntMapKey{Values: map[string]map[int]string{"outer": {1: "a"}}}
-			api := withNestedIntMapKey{Values: map[string]map[int]string{"outer": {1: "b"}}}
+			remote := withNestedIntMapKey{Values: map[string]map[int]string{"outer": {1: "b"}}}
 			Expect(func() {
-				drift.Detect(crd, api)
+				drift.Detect(crd, remote)
 			}).To(PanicWith(MatchRegexp(`map key must be of type string`)))
 		})
 
 		It("panics when registering an equivalence for pointer kind", func() {
 			Expect(func() {
-				drift.Register("pointer-kind", reflect.Pointer, drift.FromDeepEqual)
+				drift.RegisterEquivalenceFunc("pointer-kind", reflect.Pointer, drift.FromDeepEqual)
 			}).To(PanicWith("cannot register a pointer to a struct, use a concrete type or an interface"))
 		})
 
 		It("panics when comparing values of different types through a registered equivalence", func() {
-			drift.Register("type-check-panic", reflect.Interface, drift.FromDeepEqual)
+			drift.RegisterEquivalenceFunc("type-check-panic", reflect.Interface, drift.FromDeepEqual)
 			crd := withAnyField{Value: "foo"}
-			api := withAnyField{Value: 42}
+			remote := withAnyField{Value: 42}
 			Expect(func() {
-				drift.Detect(crd, api)
+				drift.Detect(crd, remote)
 			}).To(PanicWith(MatchRegexp(`drift detection only work comparing values of same type`)))
 		})
 	})
@@ -914,9 +1071,9 @@ values:
 var _ = Describe("Merge", func() {
 
 	DescribeTable("no drift",
-		func(oldCRD, newCRD, api any) {
-			or := drift.Detect(oldCRD, api)
-			nr := drift.Detect(newCRD, api)
+		func(oldCRD, newCRD, remote any) {
+			or := drift.Detect(oldCRD, remote)
+			nr := drift.Detect(newCRD, remote)
 			result := drift.Merge(or, nr)
 			expectNoDrift(result)
 		},
@@ -984,9 +1141,9 @@ var _ = Describe("Merge", func() {
 		),
 	)
 	DescribeTable("expect drift",
-		func(oldCRD, newCRD, api any, output string) {
-			or := drift.Detect(oldCRD, api)
-			nr := drift.Detect(newCRD, api)
+		func(oldCRD, newCRD, remote any, output string) {
+			or := drift.Detect(oldCRD, remote)
+			nr := drift.Detect(newCRD, remote)
 			result := drift.Merge(or, nr)
 			expectDrift(result, output)
 		},

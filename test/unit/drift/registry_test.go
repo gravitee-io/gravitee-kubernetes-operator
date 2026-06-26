@@ -61,12 +61,12 @@ var _ = Describe("Registry", func() {
 	Describe("Register", func() {
 		It("panics when registering a pointer kind", func() {
 			Expect(func() {
-				drift.Register("registry-test-pointer-kind", reflect.Pointer, drift.FromDeepEqual)
+				drift.RegisterEquivalenceFunc("registry-test-pointer-kind", reflect.Pointer, drift.FromDeepEqual)
 			}).To(PanicWith("cannot register a pointer to a struct, use a concrete type or an interface"))
 		})
 
 		It("stores a custom equivalence func retrievable via Detect", func() {
-			drift.Register(registryTestAlwaysEqualName, reflect.String, func(_, _ any) drift.Equivalence {
+			drift.RegisterEquivalenceFunc(registryTestAlwaysEqualName, reflect.String, func(_, _ any) drift.Equivalence {
 				return drift.Equivalence{Equivalent: drift.Equivalent}
 			})
 
@@ -77,7 +77,7 @@ var _ = Describe("Registry", func() {
 		})
 
 		It("wraps registered funcs with assertTypes", func() {
-			drift.Register(registryTestTypeCheckName, reflect.Interface, drift.FromDeepEqual)
+			drift.RegisterEquivalenceFunc(registryTestTypeCheckName, reflect.Interface, drift.FromDeepEqual)
 
 			Expect(func() {
 				drift.Detect(
@@ -124,7 +124,7 @@ var _ = Describe("Registry", func() {
 		})
 
 		It("uses a registered slice equivalence func when name is known", func() {
-			drift.Register(registryTestCustomSliceName, reflect.Slice, func(_, _ any) drift.Equivalence {
+			drift.RegisterEquivalenceFunc(registryTestCustomSliceName, reflect.Slice, func(_, _ any) drift.Equivalence {
 				return drift.Equivalence{Equivalent: drift.Equivalent, Skip: true}
 			})
 

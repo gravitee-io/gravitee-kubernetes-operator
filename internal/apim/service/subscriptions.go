@@ -84,13 +84,13 @@ func (svc *Subscriptions) GetByHRID(apiHRID, subscriptionHRID string) (*model.Su
 	url := svc.AutomationTarget("apis").WithPath(apiHRID).
 		WithPath("subscriptions").WithPath(subscriptionHRID)
 
-	sub := new(model.SubscriptionDTO)
+	sub := new(model.AutomationSubscriptionDTO)
 
 	if err := svc.HTTP.Get(url.String(), sub); err != nil {
 		return nil, err
 	}
 
-	return sub, nil
+	return sub.ToLegacy(), nil
 }
 
 // GetByHRIDWithLegacyAPI For tests purposes only.

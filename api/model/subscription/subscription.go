@@ -42,7 +42,7 @@ type ConsumerConfiguration struct {
 	// +kubebuilder:validation:Optional
 	Channel string `json:"channel,omitempty"`
 	// +kubebuilder:validation:Optional
-	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty" drift:"json"` // TODO
+	EntrypointConfiguration *utils.GenericStringMap `json:"entrypointConfiguration,omitempty" drift:"unstructured"`
 }
 
 func (k *ApiKeySpec) GetKey() string {

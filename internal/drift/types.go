@@ -34,10 +34,13 @@ type Equivalence struct {
 	Equivalent EquivalentStatus
 	Reason     any
 	Skip       bool
+	PostFunc   PostEquivalenceFunc
 }
 
 // EquivalenceFunc is a function that compares two values and returns an Equivalence.
 type EquivalenceFunc func(crd any, remote any) Equivalence
+
+type PostEquivalenceFunc func(r *Result)
 
 // Result represents the result of the drift detection.
 // It contains the equivalence status, the property name, optionally the index of the property,

@@ -231,7 +231,7 @@ func resolveAppRefs(ctx context.Context, o runtime.Object, errs *errors.Admissio
 
 func getRemoteApp(apimClient *apim.APIM, o runtime.Object, errs *errors.AdmissionErrors) (any, bool) {
 	app, _ := o.(*v1alpha1.Application)
-
+	app.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(app))
 	if app.Spec.HRID != "" {
 		remoteApp, err := apimClient.Applications.GetByHRID(app.Spec.HRID)
 		if err != nil {

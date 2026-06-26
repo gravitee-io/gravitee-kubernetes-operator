@@ -22,8 +22,8 @@ import (
 
 func expectDrift(r drift.Result, expected string) {
 	GinkgoHelper()
-	Expect(r.DriftDetected()).To(BeTrue())
 	Expect(r.String()).To(Equal(expected))
+	Expect(r.DriftDetected()).To(BeTrue())
 }
 
 func expectNoDrift(r drift.Result) {
