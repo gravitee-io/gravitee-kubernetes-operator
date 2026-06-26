@@ -254,6 +254,83 @@ export async function waitForRollout(
   );
 }
 
+/** Identity + restart counters for a single pod, used by the upgrade survival check. */
+export interface PodInfo {
+  name: string;
+  namespace: string;
+  /** Pod object uid - changes if the pod is replaced (e.g. a StatefulSet rollout). */
+  uid: string;
+  /** Sum of container restartCounts - increases if a container restarts in place. */
+  restartCount: number;
+  creationTimestamp: string;
+}
+
+/**
+ * Find the first pod whose name CONTAINS `namePattern`, across all namespaces
+ * (or a single one when `namespace` is given). Returns null if none match.
+ *
+ * Matching by name substring rather than a label keeps the datastore-continuity
+ * check independent of how a given cluster recipe labels its MongoDB pod.
+ */
+export async function findPod(
+  namePattern: string,
+  namespace?: string,
+): Promise<PodInfo | null> {
+  const scope = namespace ? ["-n", namespace] : ["--all-namespaces"];
+  const { stdout } = await run(["get", "pods", ...scope, "-o", "json"]);
+  const list = JSON.parse(stdout) as {
+    items: Array<{
+      metadata: { name: string; namespace: string; uid: string; creationTimestamp: string };
+      status?: { containerStatuses?: Array<{ restartCount?: number }> };
+    }>;
+  };
+  const pod = list.items.find((p) => p.metadata.name.includes(namePattern));
+  if (!pod) return null;
+  const restartCount = (pod.status?.containerStatuses ?? []).reduce(
+    (sum, c) => sum + (c.restartCount ?? 0),
+    0,
+  );
+  return {
+    name: pod.metadata.name,
+    namespace: pod.metadata.namespace,
+    uid: pod.metadata.uid,
+    restartCount,
+    creationTimestamp: pod.metadata.creationTimestamp,
+  };
+}
+
+/**
+ * Create (or overwrite) a ConfigMap carrying a small string map. Used to hand a
+ * snapshot from the before-phase to the after-phase of the upgrade survival
+ * check - a plain ConfigMap persists untouched across an in-place APIM upgrade.
+ */
+export async function writeConfigMap(
+  name: string,
+  data: Record<string, string>,
+  namespace = NAMESPACE,
+): Promise<void> {
+  const body = [
+    "apiVersion: v1",
+    "kind: ConfigMap",
+    "metadata:",
+    `  name: ${name}`,
+    "data:",
+    ...Object.entries(data).map(([k, v]) => `  ${k}: ${JSON.stringify(v)}`),
+    "",
+  ].join("\n");
+  await applyString(body, namespace);
+}
+
+/** Read a ConfigMap's `data` map, or null if the ConfigMap does not exist. */
+export async function readConfigMap(
+  name: string,
+  namespace = NAMESPACE,
+): Promise<Record<string, string> | null> {
+  if (!(await exists("configmap", name, namespace))) return null;
+  const cm = await get<{ data?: Record<string, string> }>("configmap", name, namespace);
+  return cm.data ?? {};
+}
+
 /** Apply a YAML string via stdin (useful for dynamically generated manifests). */
 export async function applyString(
   yamlContent: string,

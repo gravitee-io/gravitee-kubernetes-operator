@@ -28,8 +28,9 @@
  */
 
 import { test } from "../../setup.js";
+import * as kubectl from "../../helpers/kubectl.js";
 import { signJwt } from "../../helpers/jwt.js";
-import { survivalScenario, survivalV2Scenario } from "./survival-scenario.js";
+import { DATASTORE, survivalScenario, survivalV2Scenario } from "./survival-scenario.js";
 
 test("upgrade survival: provision and verify on the old line @upgrade @before", async ({
   mapi,
@@ -65,4 +66,26 @@ test("upgrade survival (V2): keyless V2 API reachable on the old line @upgrade @
   // provision() already waited for the V2 API CR to reconcile (Accepted); the
   // keyless plan means the gateway serves it without a token. Leave it running.
   await gateway.assertResponds(ctx, { status: 200 });
+});
+
+test("upgrade survival: record the datastore identity before the upgrade @upgrade @before", async () => {
+  // Snapshot the MongoDB pod's identity so the after-phase can prove the same
+  // pod survived the in-place upgrade (the APIM data lives there). Recorded in a
+  // ConfigMap because the two phases run in separate processes and only share
+  // state through the cluster. If no MongoDB pod is found, record nothing - the
+  // after-phase then skips rather than failing on a cluster shaped differently.
+  const mongo = await kubectl.findPod(DATASTORE.podNamePattern);
+  if (!mongo) {
+    console.warn(
+      `[upgrade] no pod matching "${DATASTORE.podNamePattern}" found; ` +
+        "skipping datastore-continuity recording",
+    );
+    return;
+  }
+  await kubectl.writeConfigMap(DATASTORE.stateConfigMap, {
+    uid: mongo.uid,
+    restartCount: String(mongo.restartCount),
+    name: mongo.name,
+    namespace: mongo.namespace,
+  });
 });
