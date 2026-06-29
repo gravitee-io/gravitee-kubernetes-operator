@@ -256,6 +256,28 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
+      - idpgroupmappings
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - idpgroupmappings/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - idpgroupmappings/status
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
       - sharedpolicygroups
     verbs:
       - get

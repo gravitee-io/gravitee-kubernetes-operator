@@ -71,6 +71,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
+	idpgroupmapping "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/idpgroupmapping"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
@@ -309,6 +310,14 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.GroupList{}),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for groups")
+		os.Exit(1)
+	}
+
+	if err := (&idpgroupmapping.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("idpgroupmapping-controller"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for IDP group mappings")
 		os.Exit(1)
 	}
 

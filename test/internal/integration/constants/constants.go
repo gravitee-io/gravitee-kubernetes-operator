@@ -171,6 +171,9 @@ const (
 	DocumentationPortalFile = "apim/portal/documentation-portal.yml"
 	DocumentationApiFile    = "apim/portal/documentation-api.yml"
 
+	IDPGroupMappingFile             = "apim/idpgroupmapping/idpgroupmapping.yml"
+	IDPGroupMappingMultipleGroups   = "apim/idpgroupmapping/idpgroupmapping-multiple-groups.yml"
+
 	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"
 
