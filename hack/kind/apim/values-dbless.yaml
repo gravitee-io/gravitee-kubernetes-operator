@@ -33,7 +33,12 @@ ratelimit:
     none
 
 gateway:
-  managedServixceAccount: false
+  managedServiceAccount: false
+  resources:
+    requests:
+      memory: 512Mi
+    limits:
+      memory: 1Gi
   image:
     repository: gravitee-apim-gateway
     tag: dev
