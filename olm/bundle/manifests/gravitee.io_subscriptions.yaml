@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    gravitee.io/operator.version: 4.11.0-rc
+    gravitee.io/operator.version: 4.12.0
   name: subscriptions.gravitee.io
 spec:
   group: gravitee.io
@@ -64,17 +64,6 @@ spec:
                   required:
                     - name
                   type: object
-                application:
-                  properties:
-                    kind:
-                      type: string
-                    name:
-                      type: string
-                    namespace:
-                      type: string
-                  required:
-                    - name
-                  type: object
                 apiKeys:
                   items:
                     properties:
@@ -89,6 +78,29 @@ spec:
                       - key
                     type: object
                   type: array
+                application:
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                    - name
+                  type: object
+                consumerConfiguration:
+                  properties:
+                    channel:
+                      type: string
+                    entrypointConfiguration:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                    entrypointId:
+                      type: string
+                  required:
+                    - entrypointId
+                  type: object
                 endingAt:
                   format: date-time
                   type: string

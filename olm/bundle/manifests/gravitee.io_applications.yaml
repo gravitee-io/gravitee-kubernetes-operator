@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    gravitee.io/operator.version: 4.11.0-rc
+    gravitee.io/operator.version: 4.12.0
   name: applications.gravitee.io
 spec:
   group: gravitee.io
@@ -80,6 +80,8 @@ spec:
                   items:
                     type: string
                   type: array
+                hrid:
+                  type: string
                 id:
                   description: |-
                     io.gravitee.definition.model.Application
