@@ -18,10 +18,12 @@
  * Shared Policy Groups Lifecycle tests.
  *
  * Xray tests:
- *   GKO-976:  Add SPG to V4 API
- *   GKO-980:  Remove SPG from V4 API
  *   GKO-981:  Update SPG
  *   GKO-1462: SPG lifecycle validation
+ *
+ * GKO-976 (add SPG to a V4 API) and GKO-980 (remove SPG from a V4 API) moved to
+ * the shared cross-provisioner journey tests/scenarios/reuse-shared-policy-group
+ * — SPG reuse (flow attach/detach) is now proven against GKO and Terraform.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -47,82 +49,8 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
     }
   });
 
-  // ── GKO-976: Add SPG to V4 API ─────────────────────────────
-
-  test(`Add SPG to V4 API ${XRAY.SHARED_POLICY_GROUPS.ADD_SPG_TO_API} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const SPG_NAME = "e2e-spg-proxy";
-    const API_NAME = "e2e-v4-with-spg";
-    const spgFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
-    const apiFixture = fixture("shared-policy-groups/v4-api-with-spg/crd.yaml");
-
-    await test.step("Deploy Shared Policy Group", async () => {
-      await kubectl.apply(spgFixture);
-      await kubectl.waitForCondition("sharedpolicygroup", SPG_NAME, "Accepted");
-    });
-
-    const spgStatus = await kubectl.getStatus<{ id: string }>("sharedpolicygroup", SPG_NAME);
-    expect(spgStatus.id).toBeTruthy();
-
-    await test.step("Deploy V4 API referencing the SPG", async () => {
-      await kubectl.apply(apiFixture);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const apiStatus = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = apiStatus.id;
-
-    await test.step("API has flows with SPG reference in APIM", async () => {
-      const api = await mapi.fetchApi(apiId);
-      expect(api).toBeTruthy();
-      if ("flows" in api && api.flows) {
-        expect(api.flows.length).toBeGreaterThanOrEqual(1);
-      }
-    });
-
-    await kubectl.del(apiFixture);
-    await kubectl.del(spgFixture);
-  });
-
-  // ── GKO-980: Remove SPG from V4 API ────────────────────────
-
-  test(`Remove SPG from V4 API ${XRAY.SHARED_POLICY_GROUPS.REMOVE_SPG_FROM_API} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const SPG_NAME = "e2e-spg-proxy";
-    const API_NAME = "e2e-v4-with-spg";
-    const spgFixture = fixture("shared-policy-groups/spg-proxy-request/crd.yaml");
-    const apiWithSpg = fixture("shared-policy-groups/v4-api-with-spg/crd.yaml");
-    const apiWithoutSpg = fixture("shared-policy-groups/v4-api-without-spg/crd.yaml");
-
-    await test.step("Deploy SPG and API with SPG reference", async () => {
-      await kubectl.apply(spgFixture);
-      await kubectl.waitForCondition("sharedpolicygroup", SPG_NAME, "Accepted");
-      await kubectl.apply(apiWithSpg);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const apiStatus = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = apiStatus.id;
-
-    await test.step("Remove SPG reference from API", async () => {
-      await kubectl.apply(apiWithoutSpg);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("API no longer has SPG flows in APIM", async () => {
-      const api = await mapi.fetchApi(apiId);
-      if ("flows" in api) {
-        expect(api.flows?.length ?? 0).toBe(0);
-      }
-    });
-
-    await kubectl.del(apiWithoutSpg);
-    await kubectl.del(spgFixture);
-  });
+  // GKO-976 (add SPG to a V4 API) and GKO-980 (remove SPG from a V4 API) are now
+  // covered by the cross-provisioner journey tests/scenarios/reuse-shared-policy-group.
 
   // ── GKO-981: Update SPG ────────────────────────────────────
 

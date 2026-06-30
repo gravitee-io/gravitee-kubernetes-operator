@@ -18,11 +18,13 @@
  * Application Lifecycle tests.
  *
  * Xray tests:
- *   GKO-335: Create an application using CRD
- *   GKO-336: Update an application using CRD
- *   GKO-337: Delete an application using CRD
  *   GKO-526: Application error if ManagementContext doesn't exist
  *   GKO-550: Error when both app and oauth specified in settings
+ *
+ * GKO-335/336/337 (create/update/delete an application) moved to the shared
+ * cross-provisioner journey tests/scenarios/register-and-retire-application —
+ * the create/update/archive lifecycle is now proven against both GKO and
+ * Terraform. The admission/settings/members tests below stay GKO-only.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -49,95 +51,8 @@ test.describe("Applications — Lifecycle", () => {
     }
   });
 
-  // ── GKO-335: Create application ──────────────────────────────
-
-  test(`Create an application using CRD ${XRAY.APPLICATIONS.CREATE_APP} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-simple";
-    const fixturePath = fixture("applications/application-simple/crd.yaml");
-
-    await test.step("Apply application CRD", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
-    const appId = status.id;
-
-    await test.step("Application exists in APIM", async () => {
-      await mapi.waitForApplicationMatches(appId, {
-        name: APP_NAME,
-        description: "E2E test: simple application",
-      });
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-336: Update application ──────────────────────────────
-
-  test(`Update an application using CRD ${XRAY.APPLICATIONS.UPDATE_APP} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-simple";
-    const createFixture = fixture("applications/application-simple/crd.yaml");
-    const updateFixture = fixture("applications/application-updated/crd.yaml");
-
-    await test.step("Create application", async () => {
-      await kubectl.apply(createFixture);
-      await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
-    const appId = status.id;
-
-    await test.step("Update application", async () => {
-      await kubectl.apply(updateFixture);
-      await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    });
-
-    await test.step("Updated description is reflected in APIM", async () => {
-      await mapi.waitForApplicationMatches(appId, {
-        description: "E2E test: updated application description",
-      });
-    });
-
-    await kubectl.del(updateFixture);
-  });
-
-  // ── GKO-337: Delete application ──────────────────────────────
-
-  test(`Delete an application using CRD ${XRAY.APPLICATIONS.DELETE_APP} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-simple";
-    const fixturePath = fixture("applications/application-simple/crd.yaml");
-
-    await test.step("Create application", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
-    const appId = status.id;
-
-    await test.step("Delete application CRD", async () => {
-      await kubectl.del(fixturePath);
-      await kubectl.waitForDeletion("application", APP_NAME);
-    });
-
-    await test.step("Application is ARCHIVED in APIM", async () => {
-      await mapi.waitForApplicationMatches(
-        appId,
-        { status: "ARCHIVED" },
-        { timeoutMs: 15_000 },
-      );
-    });
-  });
+  // GKO-335/336/337 (create / update / delete an application) are now covered by
+  // the cross-provisioner journey tests/scenarios/register-and-retire-application.
 
   // ── GKO-526: Non-existing ManagementContext ──────────────────
 
