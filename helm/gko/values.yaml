@@ -198,6 +198,9 @@ manager:
   templating:
     ## @param manager.templating.enabled If `false` string [templating](https://documentation.gravitee.io/gravitee-kubernetes-operator-gko/guides/templating) is not evaluated on resources and template markers will remain untouched.
     enabled: true
+  driftDetection:
+    ## @param manager.driftDetection.enabled If `false`, drift detection is disabled globally. Individual resources can override it via the `gravitee.io/drift-detection` annotation.
+    enabled: true
 
 ## @section Ingress Controller
 ## @descriptionStart

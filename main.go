@@ -30,6 +30,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/apiresource"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/ingress"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/notification"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
 	v1 "k8s.io/api/networking/v1"
 
@@ -178,17 +179,15 @@ func main() {
 		}
 	}
 
+	if env.Config.DriftDetection {
+		drift.Init()
+	} else {
+		log.Global.Warn("Drift detection is disabled")
+	}
+
 	//+kubebuilder:scaffold:builder
 
-	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
-		log.Global.Error(healthCheckErr, "Unable to set up health check")
-		os.Exit(1)
-	}
-
-	if readyCheckErr := mgr.AddReadyzCheck("readyz", healthz.Ping); readyCheckErr != nil {
-		log.Global.Error(readyCheckErr, "Unable to set up ready check")
-		os.Exit(1)
-	}
+	AddZChecks(mgr)
 
 	log.Global.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
@@ -562,4 +561,16 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	return nil
+}
+
+func AddZChecks(mgr manager.Manager) {
+	if healthCheckErr := mgr.AddHealthzCheck("healthz", healthz.Ping); healthCheckErr != nil {
+		log.Global.Error(healthCheckErr, "Unable to set up health check")
+		os.Exit(1)
+	}
+
+	if readyCheckErr := mgr.AddReadyzCheck("readyz", healthz.Ping); readyCheckErr != nil {
+		log.Global.Error(readyCheckErr, "Unable to set up ready check")
+		os.Exit(1)
+	}
 }

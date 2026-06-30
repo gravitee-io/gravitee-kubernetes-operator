@@ -36,6 +36,7 @@ const (
 	IngressTemplateAnnotation   = "gravitee.io/template"
 	GraviteePemRegistryLabel    = "kubernetes-pem-registry"
 	LastSpecHashAnnotation      = "gravitee.io/last-spec-hash"
+	DriftDetectionAnnotation    = "gravitee.io/drift-detection"
 
 	Extends = "gravitee.io/extends"
 

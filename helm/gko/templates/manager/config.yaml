@@ -124,3 +124,8 @@ data:
   {{- else }}
   ENABLE_TEMPLATING: "false"
   {{- end }}
+  {{- if .Values.manager.driftDetection.enabled }}
+  ENABLE_DRIFT_DETECTION: "true"
+  {{- else }}
+  ENABLE_DRIFT_DETECTION: "false"
+  {{- end }}
