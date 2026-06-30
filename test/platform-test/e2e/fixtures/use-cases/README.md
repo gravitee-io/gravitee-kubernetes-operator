@@ -15,7 +15,7 @@ A folder contains:
 | [`register-and-retire-application`](./register-and-retire-application/) | Register, update, and retire (archive) an application | GKO-335/336/337 · TF GKO-1383 + new |
 | [`publish-api-and-serve-traffic`](./publish-api-and-serve-traffic/) | Publish a V4 API (visibility + lifecycle), start/stop, gateway 200↔404 | GKO-69/1464 · TF new |
 | [`secure-api-with-plan`](./secure-api-with-plan/) | Secure an API with a JWT plan and an OAuth2 plan | GKO-162/163 · TF new |
-| [`reuse-shared-policy-group`](./reuse-shared-policy-group/) | Reuse a Shared Policy Group across a V4 API (attach/detach) | GKO-976/980 · TF new |
+| [`reuse-shared-policy-group`](./reuse-shared-policy-group/) | Reuse a Shared Policy Group across a V4 API (attach/detach) — ⛔ pending (GKO-3001 + TF crossId gap) | GKO-976/980 · TF GKO-3005 |
 | [`consume-message-api`](./consume-message-api/) | Stand up a V4 MESSAGE (event) API | GKO-72/73 · TF new |
 | [`label-an-api`](./label-an-api/) | Label a V4 API and strip the labels (inline `apim_apiv4.labels`) | GKO-1473 · TF new |
 

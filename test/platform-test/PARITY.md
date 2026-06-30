@@ -7,6 +7,22 @@ This is the analysis deliverable for GKO-2907 and the living backlog for GKO-291
 > Counts are regenerated from the tree, not hand-maintained. Re-count with the
 > snippet at the bottom.
 
+## Parity scorecard
+
+Measured against the **~80 customer-facing scenarios** GKO-2918 scopes as
+achievable — NOT the full ~300 GKO tests, roughly half of which are intentionally
+GKO-only or have no TF provider resource (see the buckets below).
+
+| Bucket | Approx | Detail |
+|---|--:|---|
+| ✅ Done via journey | ~9 areas | api-key subscriptions, dictionaries, groups, applications, V4 lifecycle/visibility, plans (JWT/OAuth2), message APIs, labels |
+| ⛔ Pending (blocked) | 1 | SPG reuse — GKO-3001 (admission) + TF `cross_id` gap |
+| 🟡 Feasible, not yet done | ~50 | subscription plan-types (JWT/OAuth2/mTLS), plan/policy lifecycle, application members, group members, API metadata / categories-assign / inline pages, more V4 lifecycle |
+| 🚫 Permanently GKO-only | ~150 | K8s/operator mechanics (~100: admission, status/reconcile, mTLS CRs, templating, import/export, mgmt-context) + TF-blocked APIM areas (~50: V2 lifecycle, pages/fetchers, notifications, category CRUD) |
+
+**Achievable parity: ~25–30% covered.** The foundation and pattern are in place, so
+each remaining journey is incremental. Full 1:1 is a non-goal (GKO-2918).
+
 ## Provider-resource reality (GKO-2918)
 
 The Terraform provider `gravitee-io/apim` registers exactly **6 standalone
@@ -47,23 +63,23 @@ lists them all), with the scenario under `e2e/tests/scenarios/<journey>/`.
 | register-and-retire-application | `apim_application` | GKO-335/336/337 · TF GKO-1383 + new |
 | publish-api-and-serve-traffic | `apim_apiv4` | GKO-69/1464 · TF new |
 | secure-api-with-plan | `apim_apiv4.plans[]` | GKO-162/163 · TF new |
-| reuse-shared-policy-group | `apim_shared_policy_group` | GKO-976/980 · TF new |
+| reuse-shared-policy-group | `apim_shared_policy_group` | GKO-976/980 · TF GKO-3005 — ⛔ both arms pending (blockers below) |
 | consume-message-api | `apim_apiv4` (MESSAGE) | GKO-72/73 · TF new |
 | label-an-api | `apim_apiv4.labels` (inline) | GKO-1473 · TF new |
 | subscribe-and-call (api-key) | `apim_subscription` | existing |
 | api-references-dictionary-property | `apim_dictionary` | existing |
 | create-group-with-member | `apim_group` | existing |
 
-> **Confirmed product bug (SPG HRID reference not resolved at the gateway).**
-> `reuse-shared-policy-group` asserts SPG reuse at the APIM config level. The
-> end-to-end gateway path is blocked by a bug, identical for both provisioners:
-> the SPG reaches `lifecycleState: DEPLOYED`; a `shared-policy-group-policy` step
-> whose `sharedPolicyGroupId` is the SPG **crossId** executes at the gateway
-> (header injected), but the documented HRID reference
-> `{#sharedPolicyGroup['<hrid>']}` (what the GKO fixtures use) is persisted **raw**
-> and never resolved to the crossId, so the gateway step silently no-ops while
-> APIM accepts and reconciles it cleanly. Affects GKO and Terraform equally →
-> APIM/operator SPG-reference resolution, not a provisioner difference.
+> **`reuse-shared-policy-group` is pending on two blockers** (both arms), so the
+> journey documents the correct form without green-washing:
+> - **GKO — GKO-3001:** the documented `sharedPolicyGroupRef` flow form is rejected
+>   by the admission webhook. The reconciler resolves the ref to the SPG crossId
+>   (`api_shared_policy_groups.go`), but the admission `validateDryRun` does not, so
+>   APIM's dry-run sees a flow step with no policy → 400. The SPG runs at the gateway
+>   fine when given the crossId (verified); the old GKO-976/980 only passed because
+>   their fixture used a bogus `{#sharedPolicyGroup['<hrid>']}` EL that no-ops.
+> - **Terraform:** `apim_shared_policy_group` exposes only `id`, not the crossId, and
+>   only the crossId executes the SPG at the gateway — so TF can't wire it either.
 
 We do **not** want full parity. A large share of GKO coverage exercises
 Kubernetes-only mechanics (admission, status conditions, templating, operator
@@ -96,7 +112,7 @@ Today only **subscriptions/apikey** (10 scenarios), **groups** (1), and
 | Applications (CRUD) | register-and-retire-application | 🟢 done via journey |
 | Subscriptions — api-key | subscribe-and-call (apikey) | 🟢 done via journey |
 | Plans (JWT / OAuth2 security types) | secure-api-with-plan | 🟢 done via journey |
-| Shared Policy Groups | reuse-shared-policy-group | 🟢 done via journey (config-level; gateway gap noted above) |
+| Shared Policy Groups | reuse-shared-policy-group | ⛔ pending — GKO-3001 (admission) + TF crossId gap (see above) |
 | Dictionaries | api-references-dictionary-property | 🟢 done via journey |
 | Message APIs (V4) | consume-message-api | 🟢 done via journey |
 | Groups + members | create-group-with-member | 🟡 TF-led; journey covers create |
@@ -165,12 +181,12 @@ dictionary, groups). What remains:
 | 2 | Applications (CRUD) | ✅ done — register-and-retire-application |
 | 3 | V4 API lifecycle / visibility | ✅ done — publish-api-and-serve-traffic |
 | 4 | Plans (JWT / OAuth2) | ✅ done — secure-api-with-plan |
-| 5 | Shared Policy Groups | ✅ done — reuse-shared-policy-group (config-level) |
+| 5 | Shared Policy Groups | ⛔ pending — journey authored (correct form), blocked by GKO-3001 (admission) + TF crossId gap |
 | 6 | Message APIs (V4) | ✅ done — consume-message-api |
 | 7 | Labels | ✅ done — label-an-api (inline `apim_apiv4.labels`) |
 | 8 | Categories (assign) · inline pages · group-assoc · metadata | ⏳ future journeys (inline `apim_apiv4` attrs, no standalone resource) |
 | 9 | mTLS plans, gateway JWT/OAuth2 enforcement | ⏳ future (subscription + token orchestration) |
-| 10 | SPG end-to-end gateway execution | 🔎 investigate (gap noted above; possible product bug) |
+| 10 | SPG reuse end-to-end | GKO-3001 (admission resolves ref before dry-run) + TF: expose `cross_id` on `apim_shared_policy_group` |
 | 11 | Notifications · standalone pages/fetchers · category CRUD · V2 lifecycle | ⛔ no TF path — stay GKO-only |
 | 12 | Relocate existing 3 scenarios into `fixtures/use-cases/` | ⏳ follow-up (consolidation only) |
 

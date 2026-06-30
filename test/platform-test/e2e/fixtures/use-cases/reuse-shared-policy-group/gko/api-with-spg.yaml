@@ -57,11 +57,11 @@ spec:
           path: "/"
           pathOperator: STARTS_WITH
       request:
-        - name: "SPG step"
-          enabled: true
-          policy: shared-policy-group-policy
-          configuration:
-            sharedPolicyGroupId: "{#sharedPolicyGroup['e2e-uc-spg']}"
+        # The operator resolves this reference to the SPG's crossId and injects
+        # the shared-policy-group-policy step (see controllers/.../api_shared_policy_groups.go).
+        - sharedPolicyGroupRef:
+            name: e2e-uc-spg
+            namespace: default
   plans:
     KeyLess:
       name: "Free plan"
