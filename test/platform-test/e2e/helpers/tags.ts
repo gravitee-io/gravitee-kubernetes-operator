@@ -456,6 +456,9 @@ export const XRAY = {
     GROUP_INVALID_HRID: "@GKO-2876",
     GROUP_INVALID_NAME: "@GKO-2877",
     GROUP_DATA_SOURCE: "@GKO-2878",
+    // ── GKO-2997: apim_dictionary resource (TF parity with the GKO Dictionary CRD) ──
+    // @parent: GKO-2997
+    DICTIONARY_MANUAL_RESOLVE: "@GKO-2998",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

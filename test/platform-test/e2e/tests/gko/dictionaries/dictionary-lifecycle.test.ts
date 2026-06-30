@@ -18,10 +18,13 @@
  * Dictionaries Lifecycle tests.
  *
  * Xray tests:
- *   GKO-2903: Create a manual dictionary and verify resolution in API response
  *   GKO-2904: Create a dynamic dictionary and verify resolution in API response
  *   GKO-2905: Delete a dictionary
  *   GKO-2912: Admission webhook rejects DYNAMIC dictionary with manual field set
+ *
+ * GKO-2903 (manual dictionary resolved at the gateway) is now the GKO arm of the
+ * cross-provisioner scenario tests/scenarios/dictionaries/dictionary.scenario.ts,
+ * so it is intentionally not duplicated here.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -38,8 +41,6 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DICT_NAME = "e2e-dict-manual";
-const API_NAME = "e2e-api-with-dict";
-const API_PATH = "/e2e-api-with-dict";
 
 async function gatewayBaseUrl(): Promise<string> {
   const config = await loadGraviteeConfig(path.resolve(__dirname, "../../../../config.yaml"));
@@ -58,45 +59,6 @@ test.describe("Dictionaries — Lifecycle @since-4.12", () => {
     ]) {
       await kubectl.del(fixture(f)).catch(() => {});
     }
-  });
-
-  test(`Create dictionary and resolve in API header ${XRAY.DICTIONARIES.CREATE_AND_RESOLVE} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const dictFixture = fixture("dictionaries/dictionary-manual/crd.yaml");
-    const apiFixture = fixture("dictionaries/api-with-dictionary/crd.yaml");
-
-    await test.step("Apply dictionary CRD", async () => {
-      await kubectl.apply(dictFixture);
-      await kubectl.waitForCondition("dictionary", DICT_NAME, "Accepted");
-    });
-
-    await test.step("Dictionary has an ID in status", async () => {
-      const status = await kubectl.getStatus<{ id: string }>("dictionary", DICT_NAME);
-      expect(status.id).toBeTruthy();
-    });
-
-    await test.step("Apply API that uses the dictionary in a header", async () => {
-      await kubectl.apply(apiFixture);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("Gateway resolves dictionary value in echo response", async () => {
-      const baseUrl = await gatewayBaseUrl();
-      await poll(
-        async () => {
-          const res = await fetch(`${baseUrl}${API_PATH}`);
-          expect(res.status).toBe(200);
-          const body = (await res.json()) as { headers?: Record<string, string> };
-          expect(body.headers).toBeDefined();
-          expect(body.headers!["X-Dict-Env"] ?? body.headers!["x-dict-env"]).toBe("test");
-        },
-        { timeoutMs: 30_000, intervalMs: 2_000, description: "dictionary header resolved" },
-      );
-    });
-
-    await kubectl.del(apiFixture);
-    await kubectl.del(dictFixture);
   });
 
   // ── GKO-2564: Dynamic dictionary — resolve echo header via JOLT ──
