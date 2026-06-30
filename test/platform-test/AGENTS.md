@@ -168,6 +168,33 @@ Rules of thumb:
   `pending: { terraform: "<reason or tracking ref>" }` and renders as a visible `test.fixme`, never a
   silent skip. A provisioner simply absent from `provisioners`/`pending` emits nothing (N/A by design).
 
+### Adding a cross-provisioner parity scenario
+
+The provisioner layer is how we close GKO↔Terraform coverage gaps. The current
+status and the prioritised backlog live in [PARITY.md](./PARITY.md) — pick a row there.
+
+1. **Confirm the resource exists on both drivers.** GKO has a CRD for it; the Terraform
+   provider must expose a matching resource (registry README lists `apim_apiv4`,
+   `apim_application`, `apim_subscription`, `apim_group`, `apim_dictionary`,
+   `apim_shared_policy_group`). If Terraform can't express it, leave the area GKO-only
+   in PARITY.md and move on.
+2. **Author one shared intent**, not two tests. Reuse the existing GKO fixtures; add a
+   sibling `main.tf` under the same `fixtures/<domain>/<scenario>/` folder.
+3. **Verify through a provisioner-agnostic invariant** — `mapi.*` (e.g. the resource
+   lands with `origin: KUBERNETES`) or `gateway` (data-plane resolution). The body must
+   not branch on `provisionerId` for the shared assertion.
+4. **De-dup:** once the GKO arm covers what a standalone GKO test did, **remove that
+   test from the `*-gko-only` / per-driver file** (keep its Xray id on the scenario's
+   GKO arm) so it does not run twice. Leave genuinely GKO-only behaviour in place.
+5. **Tag & sync:** each arm carries its own Xray id; add a `@GKO-TBD-*` placeholder for
+   the new driver in `helpers/tags.ts`, then run `/xray-sync-tests` to file the real
+   Jira Test. Update the PARITY.md row.
+
+Worked examples: `tests/scenarios/subscriptions/apikey/` (parameterized, `params.ts` +
+`*-only` files) and `tests/scenarios/dictionaries/dictionary.scenario.ts` (param-free,
+gateway-resolution — the dictionary value is injected by a `transform-headers` flow and
+asserted in the echo response; the TF arm proves an inline `flows` block is authorable).
+
 ## Polling & eventual consistency
 
 Both `kubectl apply` (GKO) and `terraform apply` (provider) return before
