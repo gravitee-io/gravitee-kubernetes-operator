@@ -60,12 +60,12 @@ type TLSSettings struct {
 	// This client certificate can be used to subscribe to a TLS plan.
 	// Cannot be used at the same time as ClientCertificates.
 	// +kubebuilder:validation:Optional
-	ClientCertificate string `json:"clientCertificate,omitempty"`
+	ClientCertificate string `json:"clientCertificate,omitempty" drift:"trimmed"`
 	// List of client certificates for mTLS plans.
 	// Supports inline PEM/Base64, template [[ ]] notation, and references to Secrets/ConfigMaps.
 	// Cannot be used at the same time as ClientCertificate.
 	// +kubebuilder:validation:Optional
-	ClientCertificates []ClientCertificate `json:"clientCertificates,omitempty"`
+	ClientCertificates []ClientCertificate `json:"clientCertificates,omitempty" drift:"empty-is-nil"`
 }
 
 type Setting struct {

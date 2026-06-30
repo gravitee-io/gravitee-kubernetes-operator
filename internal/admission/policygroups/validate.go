@@ -57,29 +57,35 @@ func validateUpdate(
 	errs := errors.NewAdmissionErrors()
 	oldSpg, ook := oldObj.(*v1alpha1.SharedPolicyGroup)
 	newSpg, nok := newObj.(*v1alpha1.SharedPolicyGroup)
-	if ook && nok {
-		if newSpg.IsBeingDeleted() {
-			return errs
-		}
-
-		// Should be the first validation, it will also compile the templates internally
-		errs.Add(admission.CompileAndValidateTemplate(ctx, newSpg))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		errs.Add(ctxref.Validate(ctx, newSpg))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		errs.Add(validateImmutableFields(ctx, oldSpg, newSpg))
-		if errs.IsSevere() {
-			return errs
-		}
-
-		errs.MergeWith(validateDryRun(ctx, newSpg))
+	if !ook || !nok {
+		return errs
 	}
+	if newSpg.IsBeingDeleted() {
+		return errs
+	}
+
+	// Should be the first validation, it will also compile the templates internally
+	errs.Add(admission.CompileAndValidateTemplate(ctx, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(ctxref.Validate(ctx, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.Add(validateImmutableFields(ctx, oldSpg, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+
+	errs.MergeWith(validateDryRun(ctx, newSpg))
+	if errs.IsSevere() {
+		return errs
+	}
+	mergeDriftValidation(ctx, oldSpg, newSpg, errs)
+
 	return errs
 }
 

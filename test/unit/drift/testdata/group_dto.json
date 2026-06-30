@@ -1,0 +1,17 @@
+{
+  "id": "123456",
+  "hrid": "my-group",
+  "name": "My Group",
+  "notifyMembers": true,
+  "members": [
+    {
+      "source": "memory",
+      "sourceId": "api1",
+      "roles": {
+        "API": "OWNER",
+        "APPLICATION": "OWNER",
+        "INTEGRATION": "USER"
+      }
+    }
+  ]
+}

@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -33,6 +34,7 @@ func TestResources(t *testing.T) {
 var _ = SynchronizedBeforeSuite(func() {
 	// NOSONAR mandatory noop
 }, func() {
+	drift.Init()
 })
 
 var _ = SynchronizedAfterSuite(func() {

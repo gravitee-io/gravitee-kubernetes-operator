@@ -1,0 +1,460 @@
+{
+  "id": "default-api-id",
+  "hrid": "my-api",
+  "crossId": "api-cross",
+  "name": "My API",
+  "version": "1.0.0",
+  "state": "STARTED",
+  "tags": [
+    "tag-a"
+  ],
+  "labels": [
+    "label-a"
+  ],
+  "visibility": "PRIVATE",
+  "properties": [
+    {
+      "key": "prop",
+      "value": "value",
+      "encrypted": true,
+      "dynamic": true,
+      "encryptable": true
+    }
+  ],
+  "metadata": [
+    {
+      "key": "meta-key",
+      "name": "Meta",
+      "format": "STRING",
+      "value": "meta-value",
+      "defaultValue": "meta-default"
+    }
+  ],
+  "resources": [
+    {
+      "enabled": true,
+      "name": "cache",
+      "type": "mock",
+      "configuration": {
+        "timeout": 42,
+        "enabled": true
+      }
+    }
+  ],
+  "groups": [
+    "group-a"
+  ],
+  "categories": [
+    "cat-a"
+  ],
+  "notifyMembers": true,
+  "description": "API description",
+  "definitionVersion": "V4",
+  "definitionContext": {
+    "origin": "KUBERNETES",
+    "syncFrom": "MANAGEMENT"
+  },
+  "lifecycleState": "PUBLISHED",
+  "type": "PROXY",
+  "listeners": [
+    {
+      "type": "HTTP",
+      "entrypoints": [
+        {
+          "type": "http-proxy",
+          "qos": "AUTO",
+          "dlq": {
+            "endpoint": "dlq-endpoint"
+          },
+          "configuration": {
+            "target": "https://example.com"
+          }
+        }
+      ],
+      "servers": [
+        "https://gateway.example.com"
+      ],
+      "paths": [
+        {
+          "host": "api.example.com",
+          "path": "/hello"
+        }
+      ],
+      "pathMappings": [
+        "/hello"
+      ]
+    }
+  ],
+  "endpointGroups": [
+    {
+      "name": "default-group",
+      "type": "http-proxy",
+      "loadBalancer": {
+        "type": "ROUND_ROBIN"
+      },
+      "sharedConfiguration": {
+        "basePath": "/"
+      },
+      "endpoints": [
+        {
+          "name": "default-endpoint",
+          "type": "http-proxy",
+          "inheritConfiguration": true,
+          "configuration": {
+            "target": "https://upstream"
+          },
+          "sharedConfigurationOverride": {
+            "path": "/v1"
+          },
+          "services": {
+            "healthCheck": {
+              "enabled": true,
+              "type": "health-check",
+              "overrideConfiguration": true,
+              "configuration": {
+                "schedule": "*/5 * * * * *"
+              }
+            }
+          },
+          "secondary": true,
+          "tenants": [
+            "tenant-a"
+          ],
+          "weight": 1
+        }
+      ],
+      "services": {
+        "discovery": {
+          "enabled": true,
+          "type": "discovery",
+          "overrideConfiguration": true,
+          "configuration": {
+            "provider": "consul"
+          }
+        },
+        "healthCheck": {
+          "enabled": true,
+          "type": "health-check",
+          "overrideConfiguration": true,
+          "configuration": {
+            "path": "/health"
+          }
+        }
+      },
+      "http": {
+        "idleTimeout": 1000,
+        "connectTimeout": 2000,
+        "keepAlive": true,
+        "keepAliveTimeout": 3000,
+        "readTimeout": 4000,
+        "pipelining": true,
+        "maxConcurrentConnections": 50,
+        "useCompression": true,
+        "propagateClientAcceptEncoding": true,
+        "followRedirects": true,
+        "clearTextUpgrade": true,
+        "version": "HTTP_2",
+        "maxHeaderSize": 8192,
+        "maxChunkSize": 4096
+      },
+      "ssl": {
+        "trustAll": true,
+        "hostnameVerifier": true,
+        "trustStore": {
+          "type": "PEM",
+          "path": "/tmp/truststore.pem",
+          "content": "dHJ1c3Q=",
+          "password": "trust-pass"
+        },
+        "keyStore": {
+          "type": "PEM",
+          "path": "/tmp/keystore.pem",
+          "content": "a2V5",
+          "password": "key-pass",
+          "keyPath": "/tmp/key.pem",
+          "keyContent": "a2V5LWNvbnRlbnQ=",
+          "certPath": "/tmp/cert.pem",
+          "certContent": "Y2VydC1jb250ZW50"
+        },
+        "headers": [
+          {
+            "name": "X-SSL",
+            "value": "enabled"
+          }
+        ]
+      },
+      "headers": {
+        "X-Group": "default"
+      }
+    }
+  ],
+  "flowExecution": {
+    "mode": "BEST_MATCH",
+    "matchRequired": true
+  },
+  "flows": [
+    {
+      "id": "flow-1",
+      "name": "Main flow",
+      "enabled": true,
+      "selectors": [
+        {
+          "type": "HTTP",
+          "path": "/hello",
+          "pathOperator": "STARTS_WITH",
+          "methods": [
+            "GET"
+          ]
+        }
+      ],
+      "request": [
+        {
+          "enabled": true,
+          "policy": "rate-limit",
+          "name": "Rate limit",
+          "description": "Request step",
+          "configuration": {
+            "limit": 100
+          },
+          "sharedPolicyGroupRef": {
+            "name": "shared-policy-group",
+            "namespace": "default"
+          },
+          "condition": "{#request.path == '/hello'}",
+          "messageCondition": "{#message != null}"
+        }
+      ],
+      "response": [
+        {
+          "enabled": true,
+          "policy": "assign-attributes",
+          "name": "Response step",
+          "description": "Response description",
+          "configuration": {
+            "header": "X-Test"
+          },
+          "condition": "{#response.status == 200}",
+          "messageCondition": "{#message != null}"
+        }
+      ],
+      "subscribe": [
+        {
+          "enabled": true,
+          "policy": "subscribe-policy",
+          "name": "Subscribe step",
+          "description": "Subscribe description",
+          "configuration": {
+            "header": "X-Test"
+          },
+          "condition": "{#response.status == 200}",
+          "messageCondition": "{#message != null}"
+        }
+      ],
+      "publish": [
+        {
+          "enabled": true,
+          "policy": "publish-policy",
+          "name": "Publish step",
+          "description": "Publish description",
+          "configuration": {
+            "header": "X-Test"
+          },
+          "condition": "{#response.status == 200}",
+          "messageCondition": "{#message != null}"
+        }
+      ],
+      "connect": [
+        {
+          "enabled": true,
+          "policy": "connect-policy",
+          "name": "Connect step",
+          "description": "Connect description",
+          "configuration": {
+            "header": "X-Test"
+          },
+          "condition": "{#response.status == 200}",
+          "messageCondition": "{#message != null}"
+        }
+      ],
+      "interact": [
+        {
+          "enabled": true,
+          "policy": "interact-policy",
+          "name": "Interact step",
+          "description": "Interact description",
+          "configuration": {
+            "header": "X-Test"
+          },
+          "condition": "{#response.status == 200}",
+          "messageCondition": "{#message != null}"
+        }
+      ],
+      "tags": [
+        "flow-tag"
+      ]
+    }
+  ],
+  "analytics": {
+    "enabled": true,
+    "reporterMetricsEnabled": true,
+    "otelLogs": {
+      "enabled": true
+    },
+    "sampling": {
+      "type": "COUNT",
+      "value": "10"
+    },
+    "logging": {
+      "condition": "{#request.path != null}",
+      "messageCondition": "{#message != null}",
+      "content": {
+        "headers": true,
+        "messageHeaders": true,
+        "payload": true,
+        "messagePayload": true,
+        "messageMetadata": true
+      },
+      "mode": {
+        "entrypoint": true,
+        "endpoint": true
+      },
+      "phase": {
+        "request": true,
+        "response": true
+      }
+    },
+    "tracing": {
+      "enabled": true,
+      "verbose": true
+    }
+  },
+  "services": {
+    "dynamicProperty": {
+      "enabled": true,
+      "type": "dynamic-property",
+      "overrideConfiguration": true,
+      "configuration": {
+        "schedule": "*/10 * * * * *"
+      }
+    }
+  },
+  "responseTemplates": {
+    "500": {
+      "application/json": {
+        "status": 500,
+        "headers": {
+          "X-Reason": "oops"
+        },
+        "body": "{\"message\":\"error\"}",
+        "propagateErrorKeyToLogs": true
+      }
+    }
+  },
+  "allowedInApiProducts": true,
+  "allowMultiJwtOauth2Subscriptions": true,
+  "members": [
+    {
+      "source": "memory",
+      "sourceId": "admin",
+      "role": "OWNER"
+    }
+  ],
+  "failover": {
+    "enabled": true,
+    "maxRetries": 2,
+    "slowCallDuration": 2000,
+    "openStateDuration": 10000,
+    "maxFailures": 5,
+    "perSubscription": true
+  },
+  "portalNavigation": [
+    {
+      "path": "/guides",
+      "displayName": "Guides",
+      "order": 1
+    }
+  ],
+  "consoleNotification": {
+    "events": [
+      "API_STARTED"
+    ],
+    "groups": [
+      "admins"
+    ]
+  },
+  "pages": [
+    {
+      "hrid": "guide-page",
+      "crossId": "page-cross",
+      "name": "Guide",
+      "type": "MARKDOWN",
+      "content": "# Guide",
+      "order": 1,
+      "published": true,
+      "visibility": "PUBLIC",
+      "homepage": true,
+      "api": "my-api",
+      "parentHrid": "parent",
+      "source": {
+        "type": "http-fetcher",
+        "configuration": {
+          "url": "https://example.com/page.md"
+        }
+      },
+      "configuration": {
+        "renderer": "markdown"
+      }
+    }
+  ],
+  "plans": [
+    {
+      "hrid": "keyless-plan",
+      "crossId": "plan-cross",
+      "tags": [
+        "plan-tag"
+      ],
+      "status": "PUBLISHED",
+      "characteristics": [
+        "public"
+      ],
+      "validation": "AUTO",
+      "comment_required": true,
+      "order": 1,
+      "type": "API",
+      "name": "Keyless",
+      "description": "Plan description",
+      "definitionVersion": "V4",
+      "security": {
+        "type": "KEY_LESS",
+        "configuration": {
+          "level": "open"
+        }
+      },
+      "mode": "STANDARD",
+      "selectionRule": "true",
+      "flows": [
+        {
+          "id": "plan-flow-1",
+          "name": "Plan flow",
+          "enabled": true,
+          "selectors": [
+            {
+              "type": "CONDITION",
+              "condition": "{#context.attributes['plan'] == 'gold'}"
+            }
+          ],
+          "tags": [
+            "plan-flow-tag"
+          ]
+        }
+      ],
+      "excludedGroups": [
+        "excluded-a"
+      ],
+      "generalConditionsHrid": "general-conditions",
+      "bootstrapPort": 9092,
+      "brokerRangeStart": 9093,
+      "brokerRangeEnd": 9094
+    }
+  ]
+}

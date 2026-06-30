@@ -50,7 +50,7 @@ func validateUpdate(
 		}
 		errs.Add(validateEndingAt(newSub.GetEndingAt()))
 
-		_, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
+		api, app, plan := resolveDependencies(ctx, newSub, newSub.GetNamespace(), errs)
 		if errs.IsSevere() {
 			return errs
 		}
@@ -61,7 +61,10 @@ func validateUpdate(
 		}
 
 		validateMTLS(newSub, plan, app, errs)
+
+		mergeDriftValidation(ctx, oldSub, newSub, api, app, plan, errs)
 	}
+
 	return errs
 }
 

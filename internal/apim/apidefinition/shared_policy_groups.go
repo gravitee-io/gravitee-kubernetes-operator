@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apidefinition
 
 import (
 	"context"
@@ -27,7 +27,8 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/template"
 )
 
-func resolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4DefinitionSpec) error {
+// ResolveSharedPolicyGroups inlines SharedPolicyGroup references into flow steps.
+func ResolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4DefinitionSpec) error {
 	err := resolveFLowSharedPolicyGroupsReferences(ctx, spec.Flows)
 	if err != nil {
 		return err

@@ -25,13 +25,10 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/apidefinition"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
 )
-
-type apiNamespaceKey string
-
-const nsKey = apiNamespaceKey("api-namespace")
 
 func CreateOrUpdate(ctx context.Context, apiDefinition client.Object) error {
 	switch t := apiDefinition.(type) {
@@ -48,11 +45,11 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 	spec := &apiDefinition.Spec
 	spec.EnsureDefinitionContext()
 
-	if err := resolveResources(ctx, spec.Resources); err != nil {
+	if err := apidefinition.ResolveResources(ctx, spec.Resources); err != nil {
 		return err
 	}
 
-	if groups, err := ResolveGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs()); err != nil {
+	if groups, err := apidefinition.ResolveGroupRefs(ctx, apiDefinition, apiDefinition.GetGroupRefs()); err != nil {
 		return err
 	} else {
 		spec.Groups = append(spec.Groups, groups...)
@@ -60,7 +57,7 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 
 	apiDefinition.PopulateIDs(nil, false)
 
-	err := ResolveConsoleNotificationRefs(ctx, apiDefinition)
+	err := apidefinition.ResolveConsoleNotificationRefs(ctx, apiDefinition)
 	if err != nil {
 		return err
 	}
@@ -103,27 +100,12 @@ func createOrUpdateV2(ctx context.Context, apiDefinition *v1alpha1.ApiDefinition
 }
 
 func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definition) error {
-	nsCtx := context.WithValue(ctx, nsKey, apiDefinition.Namespace)
-
 	spec := &apiDefinition.Spec
 
-	if err := resolveResources(ctx, spec.Resources); err != nil {
-		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
+	if err := apidefinition.PrepareV4SpecForAutomation(ctx, apiDefinition); err != nil {
+		log.Error(ctx, err, "Unable to prepare API spec for automation", log.KeyValues(apiDefinition)...)
 		return err
 	}
-
-	if err := resolveSharedPolicyGroups(nsCtx, spec); err != nil {
-		log.Error(ctx, err, "Unable to resolve API resources from references", log.KeyValues(apiDefinition)...)
-		return err
-	}
-
-	if groups, err := ResolveGroupRefs(ctx, apiDefinition, spec.GetGroupRefs()); err != nil {
-		return err
-	} else {
-		spec.Groups = append(spec.Groups, groups...)
-	}
-
-	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
 
 	if spec.Context != nil {
 		log.Debug(ctx, "Syncing API definition with control plane", log.KeyValues(apiDefinition)...)
@@ -132,11 +114,6 @@ func createOrUpdateV4(ctx context.Context, apiDefinition *v1alpha1.ApiV4Definiti
 			return err
 		}
 		apiDefinition.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(apiDefinition))
-
-		err = ResolveConsoleNotificationRefs(ctx, apiDefinition)
-		if err != nil {
-			return err
-		}
 
 		status, err := apimClient.APIs.ImportV4(apiDefinition)
 

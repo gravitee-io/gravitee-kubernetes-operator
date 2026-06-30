@@ -1,0 +1,58 @@
+{
+  "id": "123456",
+  "hrid": "my-app",
+  "name": "My Application",
+  "status": "ACTIVE",
+  "description": "This is my application",
+  "settings": {
+    "app": {
+      "type": "Web",
+      "clientId": "my-client"
+    },
+    "oauth": {
+      "applicationType": "M2M",
+      "grantTypes": ["client_credentials"],
+      "redirectUris": ["https://my-app"]
+    },
+    "tls": {
+      "clientCertificate": "CERTIFICATE",
+      "clientCertificates": [
+        {
+          "name": "Foo",
+          "content": "CERTIFICATE",
+          "startsAt": "2023-07-25T20:43:16-03:00",
+          "endsAt": "2024-07-25T20:43:16-03:00",
+          "encoded": true,
+          "ref": {
+            "kind": "secrets",
+            "name": "foo",
+            "key": "bar",
+            "namespace": "default"
+          }
+        }
+      ]
+    }
+  },
+  "background": "None",
+  "domain": "gravitee.io",
+  "groups": ["group1", "group2"],
+  "pictureUrl": "None",
+  "picture": "None",
+  "notifyMembers": true,
+  "metadata": [
+    {
+      "name": "Foo",
+      "value": "Bar",
+      "defaultValue": "nil",
+      "format": "STRING",
+      "hidden": true
+    }
+  ],
+  "members": [
+    {
+      "source": "memory",
+      "sourceId": "admin",
+      "role": "ADMIN"
+    }
+  ]
+}
