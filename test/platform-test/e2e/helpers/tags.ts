@@ -460,14 +460,13 @@ export const XRAY = {
     // @parent: GKO-2997
     DICTIONARY_MANUAL_RESOLVE: "@GKO-2998",
     // ── GKO-2918: use-case parity journeys (TF arms) ───────────────
-    // Placeholders synced to real Jira Tests by /xray-sync-tests.
     // @parent: GKO-2918
-    APPLICATION_LIFECYCLE_TF: "@GKO-TBD-tf-application-lifecycle",
-    API_PUBLISH_SERVE_TRAFFIC_TF: "@GKO-TBD-tf-api-publish-serve-traffic",
-    API_SECURE_WITH_PLAN_TF: "@GKO-TBD-tf-secure-api-with-plan",
-    SPG_REUSE_TF: "@GKO-TBD-tf-reuse-shared-policy-group",
-    MESSAGE_API_TF: "@GKO-TBD-tf-consume-message-api",
-    API_LABELS_TF: "@GKO-TBD-tf-label-an-api",
+    APPLICATION_LIFECYCLE_TF: "@GKO-3002",
+    API_PUBLISH_SERVE_TRAFFIC_TF: "@GKO-3003",
+    API_SECURE_WITH_PLAN_TF: "@GKO-3004",
+    SPG_REUSE_TF: "@GKO-3005",
+    MESSAGE_API_TF: "@GKO-3006",
+    API_LABELS_TF: "@GKO-3007",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",
