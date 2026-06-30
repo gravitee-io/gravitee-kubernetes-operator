@@ -129,8 +129,12 @@ resource "apim_apiv4" "api" {
           enabled = true
           name    = "SPG step"
           policy  = "shared-policy-group-policy"
+          # The SPG only executes at the gateway when sharedPolicyGroupId is the SPG
+          # crossId. apim_shared_policy_group exposes only `id` (not the crossId), so
+          # this reference is accepted by APIM but does NOT execute at the gateway.
+          # That is the Terraform-provider gap the journey's TF arm is pending on.
           configuration = jsonencode({
-            sharedPolicyGroupId = "{#sharedPolicyGroup['${apim_shared_policy_group.spg.hrid}']}"
+            sharedPolicyGroupId = apim_shared_policy_group.spg.id
           })
         }
       ]

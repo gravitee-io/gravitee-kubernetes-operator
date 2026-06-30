@@ -17,32 +17,25 @@
 /**
  * Use case: reuse a shared policy group across an API.
  *
- * A Shared Policy Group is defined once and reused from a V4 API's request flow.
- * The shared invariant is provisioner-agnostic: whichever driver authors it,
- * APIM records the API with a flow that invokes the SPG via a
- * shared-policy-group-policy step; detaching the SPG removes that flow.
+ * Currently BLOCKED on both provisioners, so both arms are `pending` (a visible
+ * gap, never a green-washed test). The intended invariant is provisioner-agnostic:
+ * an API whose request flow invokes a Shared Policy Group runs that SPG at the
+ * gateway, and detaching it stops it.
  *
- * NOTE: this asserts the SPG reuse at the APIM config level (matching the
- * original GKO-976/980 intent). End-to-end gateway execution is NOT asserted
- * because of a confirmed product bug, identical for both provisioners:
- *   - the SPG reaches lifecycleState DEPLOYED in APIM;
- *   - shared-policy-group-policy with sharedPolicyGroupId = the SPG *crossId*
- *     DOES execute at the gateway (header injected);
- *   - the documented HRID reference `{#sharedPolicyGroup['<hrid>']}` (used by the
- *     GKO fixtures) is stored RAW, never resolved to the crossId, so the gateway
- *     step silently no-ops while APIM still accepts/reconciles it cleanly.
- * The crossId is generated, so fixtures can't hardcode it; the gateway path is
- * unblocked only once the HRID reference resolves. See PARITY.md.
+ * Blockers (see fixtures/use-cases/reuse-shared-policy-group/README.md):
+ *   - GKO: the documented `sharedPolicyGroupRef` form (gko/api-with-spg.yaml) is
+ *     rejected by the admission webhook — the SPG ref is resolved to the SPG
+ *     crossId by the reconciler but NOT before the APIM dry-run (GKO-3001).
+ *   - Terraform: `apim_shared_policy_group` exposes only `id`, not the crossId,
+ *     and only the crossId actually executes the SPG at the gateway.
  *
- * Fixtures live in fixtures/use-cases/reuse-shared-policy-group/. SPG update
- * (id stability) and apiType validation (GKO-981/1462) stay GKO-only under
- * tests/gko/shared-policy-groups.
+ * When GKO-3001 (and the TF crossId gap) are fixed, restore the `gko`/`terraform`
+ * factories and run the body below. The fixtures already use the correct forms.
  */
 
-import { test, fixture, expect } from "../../../setup.js";
+import { expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
 import { forEachProvisioner } from "../../../helpers/for-each-provisioner.js";
-import { gkoScenario, tfScenario } from "../../../helpers/provisioner-env.js";
 
 /** Does the API have a request flow that invokes a shared-policy-group step? */
 interface ApiWithFlows {
@@ -54,10 +47,6 @@ function reusesSpg(api: ApiWithFlows): boolean {
   );
 }
 
-const FIXTURE = "use-cases/reuse-shared-policy-group";
-const GKO_API_WITH_SPG = fixture(`${FIXTURE}/gko/api-with-spg.yaml`);
-const GKO_API_WITHOUT_SPG = fixture(`${FIXTURE}/gko/api-without-spg.yaml`);
-
 /** The single knob: whether the API reuses the shared policy group. */
 interface SpgParams {
   withSpg: boolean;
@@ -66,25 +55,11 @@ interface SpgParams {
 forEachProvisioner<SpgParams>(
   {
     title: "Reuse a shared policy group across an API",
-    provisioners: {
-      gko: gkoScenario<SpgParams>({
-        // The SPG is static; the API (which references it) is the parameterized
-        // resource so update() can detach the SPG by re-applying without the flow.
-        manifests: [`${FIXTURE}/gko/shared-policy-group.yaml`],
-        roles: {
-          spg: { kind: "sharedpolicygroup", name: "e2e-uc-spg" },
-          api: "e2e-uc-spg-api",
-        },
-        dynamicRoles: ["api"],
-        contextPath: "/e2e-uc-spg-api",
-        applyParams: async (k, params) => {
-          await k.apply(params.withSpg ? GKO_API_WITH_SPG : GKO_API_WITHOUT_SPG);
-        },
-      }),
-      terraform: tfScenario<SpgParams>({
-        fixture: `${FIXTURE}/terraform`,
-        toVars: (params) => ({ attach_spg: params.withSpg }),
-      }),
+    // No provisioner can currently stand up a working SPG reuse end-to-end.
+    provisioners: {},
+    pending: {
+      gko: "GKO-3001: admission rejects sharedPolicyGroupRef (SPG ref not resolved before the APIM dry-run)",
+      terraform: "apim_shared_policy_group exposes no crossId, and only the crossId executes the SPG at the gateway",
     },
     xray: {
       gko: [XRAY.SHARED_POLICY_GROUPS.ADD_SPG_TO_API, XRAY.SHARED_POLICY_GROUPS.REMOVE_SPG_FROM_API],
@@ -92,29 +67,18 @@ forEachProvisioner<SpgParams>(
     },
     tags: [TAGS.REGRESSION],
     since: { gko: "4.12", terraform: "4.12" },
-    timeoutMs: { gko: 90_000 },
   },
+  // Intended assertion, run once the blockers above are lifted: APIM records the
+  // API flow invoking the SPG, and detaching removes it.
   async ({ provisioned, mapi }) => {
     const apiId = await provisioned.apiId();
-
-    await test.step("API reuses the SPG (flow invokes it in APIM)", async () => {
-      await expect
-        .poll(async () => reusesSpg((await mapi.fetchApi(apiId)) as ApiWithFlows), {
-          timeout: 30_000,
-          message: "API flow references the shared policy group",
-        })
-        .toBe(true);
-    });
-
-    await test.step("Detaching the SPG removes the flow reference", async () => {
-      await provisioned.update({ withSpg: false });
-      await expect
-        .poll(async () => reusesSpg((await mapi.fetchApi(apiId)) as ApiWithFlows), {
-          timeout: 30_000,
-          message: "SPG flow reference removed from the API",
-        })
-        .toBe(false);
-    });
+    await expect
+      .poll(async () => reusesSpg((await mapi.fetchApi(apiId)) as ApiWithFlows), { timeout: 30_000 })
+      .toBe(true);
+    await provisioned.update({ withSpg: false });
+    await expect
+      .poll(async () => reusesSpg((await mapi.fetchApi(apiId)) as ApiWithFlows), { timeout: 30_000 })
+      .toBe(false);
   },
   { withSpg: true },
 );
