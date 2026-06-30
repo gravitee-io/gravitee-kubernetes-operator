@@ -18,7 +18,6 @@ import (
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/client"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
@@ -36,7 +35,7 @@ func NewSubscriptions(client *client.Client) *Subscriptions {
 	return &Subscriptions{Client: client}
 }
 
-func (svc *Subscriptions) Import(spec model.Subscription,
+func (svc *Subscriptions) Import(spec model.SubscriptionDTO,
 	conditionAware core.ConditionAwareObject,
 	setHridWithUUID bool,
 	setHridWithApiUUID bool,
@@ -81,26 +80,26 @@ func (svc *Subscriptions) Subscribe(apiID, appID, planID string) (*model.Subscri
 }
 
 // GetByHRID For tests purposes only.
-func (svc *Subscriptions) GetByHRID(apiHRID, subscriptionHRID string) (*subscription.AutomationSubscription, error) {
+func (svc *Subscriptions) GetByHRID(apiHRID, subscriptionHRID string) (*model.SubscriptionDTO, error) {
 	url := svc.AutomationTarget("apis").WithPath(apiHRID).
 		WithPath("subscriptions").WithPath(subscriptionHRID)
 
-	sub := new(subscription.AutomationSubscription)
+	sub := new(model.AutomationSubscriptionDTO)
 
 	if err := svc.HTTP.Get(url.String(), sub); err != nil {
 		return nil, err
 	}
 
-	return sub, nil
+	return sub.ToLegacy(), nil
 }
 
 // GetByHRIDWithLegacyAPI For tests purposes only.
 func (svc *Subscriptions) GetByHRIDWithLegacyAPI(
-	apiUUID, subscriptionHRID string) (*subscription.AutomationSubscription, error) {
+	apiUUID, subscriptionHRID string) (*model.SubscriptionDTO, error) {
 	url := svc.AutomationTarget("apis").WithPath(apiUUID).
 		WithPath("subscriptions").WithPath(subscriptionHRID).WithQueryParam("hridContainsApiUUID", "true")
 
-	sub := new(subscription.AutomationSubscription)
+	sub := new(model.SubscriptionDTO)
 
 	if err := svc.HTTP.Get(url.String(), sub); err != nil {
 		return nil, err
@@ -110,11 +109,11 @@ func (svc *Subscriptions) GetByHRIDWithLegacyAPI(
 }
 
 // GetByID For tests purposes only.
-func (svc *Subscriptions) GetByID(apiID, subscriptionID string) (*model.Subscription, error) {
+func (svc *Subscriptions) GetByID(apiID, subscriptionID string) (*model.SubscriptionDTO, error) {
 	url := svc.EnvV2Target("apis").WithPath(apiID).
 		WithPath("subscriptions").WithPath(subscriptionID)
 
-	sub := new(model.Subscription)
+	sub := new(model.SubscriptionDTO)
 
 	if err := svc.HTTP.Get(url.String(), sub); err != nil {
 		return nil, err
