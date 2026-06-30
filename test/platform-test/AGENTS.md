@@ -168,32 +168,40 @@ Rules of thumb:
   `pending: { terraform: "<reason or tracking ref>" }` and renders as a visible `test.fixme`, never a
   silent skip. A provisioner simply absent from `provisioners`/`pending` emits nothing (N/A by design).
 
-### Adding a cross-provisioner parity scenario
+### Adding a cross-provisioner parity scenario (use-case journey)
 
-The provisioner layer is how we close GKO↔Terraform coverage gaps. The current
-status and the prioritised backlog live in [PARITY.md](./PARITY.md) — pick a row there.
+Parity is organised as **customer-journey** scenarios, not resource-isolation
+tests: the fixtures are living documentation, so someone can be pointed at one
+folder to see how to provision X through either driver. The status and backlog
+live in [PARITY.md](./PARITY.md); the journey catalog is
+[`fixtures/use-cases/README.md`](./e2e/fixtures/use-cases/README.md).
 
-1. **Confirm the resource exists on both drivers.** GKO has a CRD for it; the Terraform
-   provider must expose a matching resource (registry README lists `apim_apiv4`,
-   `apim_application`, `apim_subscription`, `apim_group`, `apim_dictionary`,
-   `apim_shared_policy_group`). If Terraform can't express it, leave the area GKO-only
-   in PARITY.md and move on.
-2. **Author one shared intent**, not two tests. Reuse the existing GKO fixtures; add a
-   sibling `main.tf` under the same `fixtures/<domain>/<scenario>/` folder.
-3. **Verify through a provisioner-agnostic invariant** — `mapi.*` (e.g. the resource
-   lands with `origin: KUBERNETES`) or `gateway` (data-plane resolution). The body must
-   not branch on `provisionerId` for the shared assertion.
-4. **De-dup:** once the GKO arm covers what a standalone GKO test did, **remove that
-   test from the `*-gko-only` / per-driver file** (keep its Xray id on the scenario's
-   GKO arm) so it does not run twice. Leave genuinely GKO-only behaviour in place.
-5. **Tag & sync:** each arm carries its own Xray id; add a `@GKO-TBD-*` placeholder for
-   the new driver in `helpers/tags.ts`, then run `/xray-sync-tests` to file the real
-   Jira Test. Update the PARITY.md row.
+1. **Confirm the resource exists on both drivers.** The Terraform provider exposes
+   exactly 6 resources: `apim_apiv4`, `apim_application`, `apim_subscription`,
+   `apim_group`, `apim_dictionary`, `apim_shared_policy_group`. If Terraform can't
+   express the journey, leave it GKO-only in PARITY.md and move on.
+2. **Author one self-contained journey folder** `fixtures/use-cases/<journey>/`:
+   `gko/*.yaml` (the GKO CRs), `terraform/main.tf` (the same journey), and a
+   `README.md` (what it demonstrates + the `--grep` to run it). Add it to the
+   catalog. The scenario goes in `tests/scenarios/<journey>/<journey>.scenario.ts`.
+3. **Author one shared intent**, not two tests, with `forEachProvisioner`. Verify a
+   provisioner-agnostic invariant — `mapi.*` (e.g. lands with `origin: KUBERNETES`)
+   or `gateway` (data-plane). The body must not branch on `provisionerId`. Assert
+   the specific fields that carry regression value (`visibility`, `lifecycleState`,
+   `security.type`) inside the journey so the use-case framing does not lose the
+   granularity the old resource-matrix tests had.
+4. **De-dup:** once the journey covers what a standalone GKO/TF test did, **remove
+   that test** (keep its Xray id on the journey arm) so it does not run twice.
+   Leave genuinely GKO-only behaviour (admission, status, templating, members) in place.
+5. **Tag & sync:** each arm carries its own Xray id; add a `@GKO-TBD-*` placeholder
+   for the new (usually Terraform) arm in `helpers/tags.ts`, then run
+   `/xray-sync-tests` to file the real Jira Test. Update PARITY.md + the catalog.
 
-Worked examples: `tests/scenarios/subscriptions/apikey/` (parameterized, `params.ts` +
-`*-only` files) and `tests/scenarios/dictionaries/dictionary.scenario.ts` (param-free,
-gateway-resolution — the dictionary value is injected by a `transform-headers` flow and
-asserted in the echo response; the TF arm proves an inline `flows` block is authorable).
+Worked examples (param-free): `tests/scenarios/consume-message-api/` and
+`tests/scenarios/secure-api-with-plan/`. Parameterized (re-provision with a knob,
+e.g. start/stop, attach/detach): `tests/scenarios/publish-api-and-serve-traffic/`
+and `tests/scenarios/reuse-shared-policy-group/`. Closure-heavy reference:
+`tests/scenarios/subscriptions/apikey/` (`params.ts` + `*-only` files).
 
 ## Polling & eventual consistency
 

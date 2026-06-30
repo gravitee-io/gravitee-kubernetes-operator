@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-1383 (TF variant): create an application via Terraform; the test will
-# subsequently `terraform destroy` and verify the application is gone in APIM.
+# Use case: register an application through the Terraform APIM provider. The
+# Terraform arm of the register-and-retire-application journey. `description` is
+# re-applied to exercise the update; `create_application = false` drops the
+# resource so a re-apply retires (archives) it the way a user would.
 terraform {
   required_providers {
     apim = {
@@ -34,20 +36,33 @@ variable "organization_id" {
   default = "DEFAULT"
 }
 
-resource "apim_application" "e2e_tf_1383_app" {
+variable "description" {
+  type    = string
+  default = "E2E use-case: application registered"
+}
+
+# Toggle the application on/off so a test can retire it the way a user would:
+# drop the resource from the desired state and `terraform apply`.
+variable "create_application" {
+  type    = bool
+  default = true
+}
+
+resource "apim_application" "app" {
+  count           = var.create_application ? 1 : 0
   environment_id  = var.environment_id
   organization_id = var.organization_id
-  hrid            = "e2e-tf-1383-app"
-  name            = "e2e-tf-1383-app"
-  description     = "E2E test: TF-based application delete lifecycle"
+  hrid            = "e2e-tf-uc-app-lifecycle"
+  name            = "e2e-tf-uc-app-lifecycle"
+  description     = var.description
   settings = {
     app = {
       type      = "SIMPLE"
-      client_id = "e2e-tf-1383-client"
+      client_id = "e2e-tf-uc-app-lifecycle-client"
     }
   }
 }
 
 output "app_id" {
-  value = apim_application.e2e_tf_1383_app.id
+  value = one(apim_application.app[*].id)
 }

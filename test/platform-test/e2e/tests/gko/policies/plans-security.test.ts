@@ -18,9 +18,12 @@
  * Plans — Security Types tests.
  *
  * Xray tests:
- *   GKO-162: Add OAuth2 plan to V4 API
- *   GKO-163: Add JWT plan to V4 API
  *   GKO-238: General conditions in V4 plan
+ *
+ * GKO-162/163 (OAuth2 / JWT plan security types) moved to the shared
+ * cross-provisioner journey tests/scenarios/secure-api-with-plan — both plan
+ * security types are now proven against GKO and Terraform. The admission test
+ * below stays GKO-only.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -29,75 +32,10 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS } from "../../../helpers/tags.js";
-import * as kubectl from "../../../helpers/kubectl.js";
 
 test.describe("Plans — Security Types", () => {
-  // Safety-net cleanup: runs even if a test times out before its inline
-  // cleanup. Each del() ignores errors (the resource may already be gone).
-  test.afterEach(async () => {
-    for (const f of [
-      "crds/api-v4-definitions/v4-proxy-api-oauth2-plan.yaml",
-      "crds/api-v4-definitions/v4-proxy-api-jwt-plan.yaml",
-    ]) {
-      await kubectl.del(fixture(f)).catch(() => {});
-    }
-  });
-
-  // ── GKO-162: Add OAuth2 plan to V4 API ──────────────────────
-
-  test(`Add OAuth2 plan to V4 API ${XRAY.PLANS.OAUTH2_PLAN_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-oauth2-plan";
-    const fixturePath = fixture("plans/v4-proxy-oauth2/crd.yaml");
-
-    await test.step("Deploy API with OAuth2 plan", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("Plan exists in APIM with security type OAUTH2", async () => {
-      const plans = await mapi.listApiPlans(apiId);
-      expect(plans.length).toBeGreaterThanOrEqual(1);
-      const oauth2Plan = plans.find((p: { security: { type: string } }) => p.security?.type === "OAUTH2");
-      expect(oauth2Plan).toBeTruthy();
-      expect(oauth2Plan!.name).toBe("OAuth2 plan");
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-163: Add JWT plan to V4 API ─────────────────────────
-
-  test(`Add JWT plan to V4 API ${XRAY.PLANS.JWT_PLAN_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-jwt-plan";
-    const fixturePath = fixture("plans/v4-proxy-jwt/crd.yaml");
-
-    await test.step("Deploy API with JWT plan", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("Plan exists in APIM with security type JWT", async () => {
-      const plans = await mapi.listApiPlans(apiId);
-      expect(plans.length).toBeGreaterThanOrEqual(1);
-      const jwtPlan = plans.find((p: { security: { type: string } }) => p.security?.type === "JWT");
-      expect(jwtPlan).toBeTruthy();
-      expect(jwtPlan!.name).toBe("JWT plan");
-    });
-
-    await kubectl.del(fixturePath);
-  });
+  // GKO-162 (OAuth2 plan) and GKO-163 (JWT plan) are now covered by the
+  // cross-provisioner journey tests/scenarios/secure-api-with-plan.
 
   // ── GKO-238: General conditions in V4 plan ──────────────────
   // Plan references a non-existing page as generalConditions.

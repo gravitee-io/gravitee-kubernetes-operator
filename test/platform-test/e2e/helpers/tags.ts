@@ -459,6 +459,15 @@ export const XRAY = {
     // ── GKO-2997: apim_dictionary resource (TF parity with the GKO Dictionary CRD) ──
     // @parent: GKO-2997
     DICTIONARY_MANUAL_RESOLVE: "@GKO-2998",
+    // ── GKO-2918: use-case parity journeys (TF arms) ───────────────
+    // Placeholders synced to real Jira Tests by /xray-sync-tests.
+    // @parent: GKO-2918
+    APPLICATION_LIFECYCLE_TF: "@GKO-TBD-tf-application-lifecycle",
+    API_PUBLISH_SERVE_TRAFFIC_TF: "@GKO-TBD-tf-api-publish-serve-traffic",
+    API_SECURE_WITH_PLAN_TF: "@GKO-TBD-tf-secure-api-with-plan",
+    SPG_REUSE_TF: "@GKO-TBD-tf-reuse-shared-policy-group",
+    MESSAGE_API_TF: "@GKO-TBD-tf-consume-message-api",
+    API_LABELS_TF: "@GKO-TBD-tf-label-an-api",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

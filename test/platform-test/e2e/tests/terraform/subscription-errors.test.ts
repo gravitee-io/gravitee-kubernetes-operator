@@ -20,9 +20,10 @@
  * Xray tests:
  *   GKO-1380: invalid subscription configuration in TF — apply fails with a
  *             clear message naming the offending api/plan reference.
- *   GKO-1383: TF-based deletion of an application — destroy removes the app
- *             from APIM (variant of the CRD-driven scenario in
- *             application-admission-extended.test.ts).
+ *
+ * GKO-1383 (TF-based deletion of an application archives it in APIM) moved to
+ * the shared cross-provisioner journey
+ * tests/scenarios/register-and-retire-application (its Terraform arm).
  *
  * GKO-1381 (role-specific access via TF) is dropped — the harness lacks a
  * non-admin user; see tags.ts for details.
@@ -69,48 +70,6 @@ test.describe("Terraform — subscription errors & app delete", () => {
     }
   });
 
-  // ── GKO-1383 (TF variant): destroy archives the application ──
-  // APIM soft-deletes applications on the DELETE endpoint (the same endpoint
-  // invoked by `terraform destroy`), marking them as ARCHIVED rather than
-  // returning 404. This mirrors the CRD-driven delete behavior covered in
-  // application-admission-extended.test.ts.
-
-  test(`Terraform destroy archives the application in APIM ${XRAY.TERRAFORM.DELETE_APPLICATION_TF} ${TAGS.REGRESSION}`, async ({
-    mapi,
-  }) => {
-    // init + apply + destroy + the safety-net destroyWorkspace are sequential
-    // terraform invocations, each capped at terraform.TF_TIMEOUT_MS. The test
-    // timeout must exceed their combined ceiling so terraform's own timeout
-    // fires first instead of Playwright orphaning a running terraform process
-    // (leaking the .tfstate lock).
-    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
-    const ws = await terraform.initWorkspace("applications/lifecycle-archive");
-    try {
-      await test.step("Apply creates the application", async () => {
-        await terraform.apply(ws);
-      });
-
-      const appId = await terraform.output(ws, "app_id");
-      expect(appId).toBeTruthy();
-
-      await test.step("Application is fetchable via mAPI before destroy", async () => {
-        await mapi.assertApplicationMatches(appId, { name: "e2e-tf-1383-app" });
-      });
-
-      await test.step("terraform destroy removes the application", async () => {
-        await terraform.destroy(ws);
-      });
-
-      await test.step("Application is ARCHIVED in APIM after destroy", async () => {
-        await mapi.waitForApplicationMatches(
-          appId,
-          { status: "ARCHIVED" },
-          { timeoutMs: 15_000 },
-        );
-      });
-    } finally {
-      // initWorkspace temp-dir cleanup (destroy already ran, but ensure removal)
-      await terraform.destroyWorkspace(ws).catch(() => {});
-    }
-  });
+  // GKO-1383 (Terraform destroy archives the application) is now covered by the
+  // Terraform arm of tests/scenarios/register-and-retire-application.
 });

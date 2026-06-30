@@ -18,8 +18,6 @@
  * Message APIs — Lifecycle tests.
  *
  * Xray tests:
- *   GKO-72:  Deploy V4 Message API with syncFrom Management
- *   GKO-73:  Deploy V4 Message API with syncFrom Kubernetes
  *   GKO-129: Deploy V4 message API with HTTP GET entrypoint
  *   GKO-130: Deploy V4 message API with HTTP POST entrypoint
  *   GKO-132: Deploy V4 message API with SSE entrypoint
@@ -27,6 +25,10 @@
  *   GKO-134: Deploy V4 message API with Websockets entrypoint
  *   GKO-136: Deploy V4 message API with Mock endpoint
  *   GKO-164: Deploy V4 message API with policy
+ *
+ * GKO-72/73 (deploy a MESSAGE API, type MESSAGE + STARTED) moved to the shared
+ * cross-provisioner journey tests/scenarios/consume-message-api. The
+ * entrypoint-type matrix below stays GKO-only.
  *
  * Removed:
  *   GKO-135: Kafka endpoint — APIM schema bug
@@ -58,57 +60,9 @@ test.describe("Message APIs — Lifecycle", () => {
       await kubectl.del(fixture(f)).catch(() => {});
     }
   });
-  // ── GKO-72: Deploy V4 Message API with syncFrom Management ──
-
-  test(`Deploy V4 Message API with syncFrom Management ${XRAY.MESSAGE_APIS.DEPLOY_V4_MSG_SYNC_MGMT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-sync-mgmt";
-    const fixturePath = fixture("message-apis/v4-message-api-sync-mgmt/crd.yaml");
-
-    await test.step("Apply CRD with syncFrom Management", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API is STARTED in APIM with type MESSAGE", async () => {
-      await mapi.assertApiMatches(apiId, { name: API_NAME, state: "STARTED" });
-      const api = (await mapi.fetchApi(apiId)) as ApiV4;
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-73: Deploy V4 Message API with syncFrom Kubernetes ──
-
-  test(`Deploy V4 Message API with syncFrom Kubernetes ${XRAY.MESSAGE_APIS.DEPLOY_V4_MSG_SYNC_K8S} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-sync-k8s";
-    const fixturePath = fixture("message-apis/v4-message-api-sync-k8s/crd.yaml");
-
-    await test.step("Apply CRD with syncFrom Kubernetes", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API is STARTED in APIM with type MESSAGE", async () => {
-      await mapi.assertApiMatches(apiId, { name: API_NAME, state: "STARTED" });
-      const api = (await mapi.fetchApi(apiId)) as ApiV4;
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
+  // GKO-72 (syncFrom Management) and GKO-73 (syncFrom Kubernetes) — deploy a
+  // MESSAGE API and assert type MESSAGE + STARTED — are now covered by the
+  // cross-provisioner journey tests/scenarios/consume-message-api.
 
   // ── GKO-129: Deploy V4 message API with HTTP GET entrypoint ─
 
