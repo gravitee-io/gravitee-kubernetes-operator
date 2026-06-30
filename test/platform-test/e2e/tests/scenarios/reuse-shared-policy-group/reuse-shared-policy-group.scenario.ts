@@ -23,11 +23,16 @@
  * shared-policy-group-policy step; detaching the SPG removes that flow.
  *
  * NOTE: this asserts the SPG reuse at the APIM config level (matching the
- * original GKO-976/980 intent). End-to-end gateway execution of an SPG step is
- * NOT asserted here: a stronger gateway check (the SPG's transform-headers value
- * reflected by the echo backend) did not resolve for EITHER provisioner, which
- * points at an SPG deployment-lifecycle gap rather than a provisioner difference.
- * Tracked as a follow-up; see PARITY.md.
+ * original GKO-976/980 intent). End-to-end gateway execution is NOT asserted
+ * because of a confirmed product bug, identical for both provisioners:
+ *   - the SPG reaches lifecycleState DEPLOYED in APIM;
+ *   - shared-policy-group-policy with sharedPolicyGroupId = the SPG *crossId*
+ *     DOES execute at the gateway (header injected);
+ *   - the documented HRID reference `{#sharedPolicyGroup['<hrid>']}` (used by the
+ *     GKO fixtures) is stored RAW, never resolved to the crossId, so the gateway
+ *     step silently no-ops while APIM still accepts/reconciles it cleanly.
+ * The crossId is generated, so fixtures can't hardcode it; the gateway path is
+ * unblocked only once the HRID reference resolves. See PARITY.md.
  *
  * Fixtures live in fixtures/use-cases/reuse-shared-policy-group/. SPG update
  * (id stability) and apiType validation (GKO-981/1462) stay GKO-only under

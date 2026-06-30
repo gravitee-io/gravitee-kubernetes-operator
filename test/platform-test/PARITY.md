@@ -54,11 +54,16 @@ lists them all), with the scenario under `e2e/tests/scenarios/<journey>/`.
 | api-references-dictionary-property | `apim_dictionary` | existing |
 | create-group-with-member | `apim_group` | existing |
 
-> **Follow-up gap:** `reuse-shared-policy-group` asserts SPG reuse at the APIM
-> config level (the API flow invokes the SPG). An end-to-end gateway check (the
-> SPG's injected header reflected by the echo backend) did **not** resolve for
-> EITHER provisioner, which points at an SPG deployment-lifecycle gap rather than
-> a provisioner difference. Worth a focused investigation / possible product bug.
+> **Confirmed product bug (SPG HRID reference not resolved at the gateway).**
+> `reuse-shared-policy-group` asserts SPG reuse at the APIM config level. The
+> end-to-end gateway path is blocked by a bug, identical for both provisioners:
+> the SPG reaches `lifecycleState: DEPLOYED`; a `shared-policy-group-policy` step
+> whose `sharedPolicyGroupId` is the SPG **crossId** executes at the gateway
+> (header injected), but the documented HRID reference
+> `{#sharedPolicyGroup['<hrid>']}` (what the GKO fixtures use) is persisted **raw**
+> and never resolved to the crossId, so the gateway step silently no-ops while
+> APIM accepts and reconciles it cleanly. Affects GKO and Terraform equally →
+> APIM/operator SPG-reference resolution, not a provisioner difference.
 
 We do **not** want full parity. A large share of GKO coverage exercises
 Kubernetes-only mechanics (admission, status conditions, templating, operator
