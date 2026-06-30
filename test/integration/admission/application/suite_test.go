@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
 
@@ -36,6 +37,7 @@ func TestResources(t *testing.T) {
 var _ = SynchronizedBeforeSuite(func() {
 	// NOSONAR mandatory noop
 }, func() {
+	drift.Init()
 	fixture.Builder().
 		AddSecret(constants.ContextSecretFile).
 		AddSecret(constants.ApiWithTemplatingSecretFile).

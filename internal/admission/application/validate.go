@@ -19,14 +19,15 @@ import (
 	"encoding/pem"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/drift"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
@@ -94,7 +95,18 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(validateDryRun(ctx, newApp))
+	if oldApp.GetSpec().Hash() != newApp.GetSpec().Hash() {
+		errs.MergeWith(validateDryRun(ctx, newApp))
+	}
+	if errs.IsSevere() {
+		return errs
+	}
+	errs.MergeWith(drift.ValidateDrift(ctx, oldApp, newApp, resolveAppRefs, getRemoteApp,
+		drift.MapDTO(func(app *v1alpha1.Application) model.ApplicationDTO {
+			return app.Spec.ToDTO()
+		}),
+	))
+
 	return errs
 }
 
@@ -213,6 +225,34 @@ func validateDryRun(ctx context.Context, app core.ApplicationObject) *errors.Adm
 		errs.AddWarning(warning)
 	}
 	return errs
+}
+
+func resolveAppRefs(ctx context.Context, o runtime.Object) error {
+	app, ok := o.(*v1alpha1.Application)
+	if !ok {
+		return nil
+	}
+	return appResolve.ResolveClientCertificates(ctx, app.Spec.Settings, app.GetNamespace(), app.GetName())
+}
+
+func getRemoteApp(apimClient *apim.APIM, o runtime.Object, errs *errors.AdmissionErrors) (any, bool) {
+	app, _ := o.(*v1alpha1.Application)
+	app.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(app))
+	if app.Spec.HRID != "" {
+		remoteApp, err := apimClient.Applications.GetByHRID(app.Spec.HRID)
+		if err != nil {
+			errs.AddSeveref("cannot fetch Application during drift detection from HRID %s: %s", app.Spec.HRID, err.Error())
+			return nil, false
+		}
+		return *remoteApp, true
+	}
+	// prior to 4.11 resources
+	remoteApp, err := apimClient.Applications.GetByID(app.Spec.ID)
+	if err != nil {
+		errs.AddSeveref("cannot fetch Application during drift detection from ID %s: %s", app.Spec.ID, err.Error())
+		return nil, false
+	}
+	return *remoteApp, true
 }
 
 func validateCertEndDatesVsSubscriptionEndDates(

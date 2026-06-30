@@ -27,9 +27,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// RefResolver is a function that resolves all references in the CRD;
-// it used on old and new CRD to compare the content that will be sent to the remote API.
-type RefResolver func(ctx context.Context, obj runtime.Object, errs *errors.AdmissionErrors)
+// RefResolver resolves references in the CRD before drift comparison.
+// It is called on old and new copies; a non-nil error aborts drift validation.
+type RefResolver func(ctx context.Context, obj runtime.Object) error
 
 // RemoteObjectGetter is a function that returns the remote object that will be compared with the local ones;
 // it must make sure to use either Automation API or Management API.
@@ -38,6 +38,13 @@ type RemoteObjectGetter func(*apim.APIM, runtime.Object, *errors.AdmissionErrors
 
 // DTOMapper is a function that converts the CRD into a DTO that can be compared with the remote object.
 type DTOMapper func(any) any
+
+// MapDTO wraps a typed mapper as a DTOMapper.
+func MapDTO[T any, D any](mapper func(T) D) DTOMapper {
+	return func(o any) any {
+		return mapper(o.(T)) //nolint:errcheck // with the generic use we are safe
+	}
+}
 
 type ContextResolver func(ctx context.Context) (*apim.APIM, error)
 
@@ -79,8 +86,14 @@ func ValidateDriftWithContext(
 	}
 
 	// We need to resolve all references to compare the content that sent to the remote API
-	resolveRefs(ctx, oldCopy, errs)
-	resolveRefs(ctx, newCopy, errs)
+	if err := resolveRefs(ctx, oldCopy); err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
+	if err := resolveRefs(ctx, newCopy); err != nil {
+		errs.AddSevere(err.Error())
+		return errs
+	}
 
 	apimClient, err := resolveContext(ctx)
 	if err != nil {

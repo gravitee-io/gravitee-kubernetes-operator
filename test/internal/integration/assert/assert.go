@@ -227,6 +227,13 @@ func Equals(field string, expected, given any) error {
 	return nil
 }
 
+func DriftDetected(expected string, err error) error {
+	if err != nil && strings.Contains(err.Error(), expected) {
+		return nil
+	}
+	return newAssertEqualError("partial content of drift error", expected, err)
+}
+
 func Deleted[T client.Object](ctx context.Context, kind string, obj T) error {
 	err := manager.GetLatest(ctx, obj)
 	if k8serr.IsNotFound(err) {

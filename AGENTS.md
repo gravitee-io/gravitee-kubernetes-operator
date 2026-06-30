@@ -65,6 +65,73 @@ Controllers use a **watch system** (`internal/watch/`) to react to changes in re
 
 Validation and mutation webhooks organized by resource type (`api/v2/`, `api/v4/`, `application/`, `mctx/`, `subscription/`, `group/`, `policygroups/`). Each has a `ctrl.go` (webhook handler) and `validate.go`.
 
+### Drift detection
+
+Drift detection rejects admission **updates** when APIM was changed outside the operator while the CRD still reflects the old desired state. It is enabled globally by default (`ENABLE_DRIFT_DETECTION`, Helm `manager.driftDetection.enabled`) and can be overridden per resource with the `gravitee.io/drift-detection` annotation (`true` / `false`).
+
+Two packages are involved:
+
+| Package | Role |
+|---------|------|
+| `internal/drift/` | Comparison engine: struct walk, equivalence registry, `Detect`, `Merge`, `Result.String` |
+| `internal/admission/drift/` | Admission glue: template compile, ref resolution, remote fetch, DTO mapping |
+
+`drift.Init()` must run at startup (`main.go`) and in unit/integration suites that exercise drift (`BeforeSuite`).
+
+#### Adding drift detection to a resource
+
+Hook into `validateUpdate` in `internal/admission/<resource>/validate.go`, after existing validations and before returning errors:
+
+```go
+errs.MergeWith(drift.ValidateDrift(ctx, oldObj, newObj, resolveRefs, getRemote, drift.MapDTO(toDTO)))
+// or, when the APIM client comes from a related resource (e.g. subscription uses the application's context):
+errs.MergeWith(drift.ValidateDriftWithContext(ctx, oldObj, newObj, resolveContext, resolveRefs, getRemote, dtoMapper))
+```
+
+Provide four callbacks:
+
+1. **`RefResolver`** (`func(ctx, runtime.Object) error`) — resolve inlined references (Secrets, ConfigMaps, templates) on **both** old and new deep copies before comparison. Return a non-nil error to abort with a severe admission error (e.g. application client-certificate resolution in `resolveAppRefs`).
+2. **`RemoteObjectGetter`** — fetch the live APIM object. Branch on `k8s.IsAutomationAPIManaged` (HRID + Automation API) vs legacy (UUID + Management API). Report fetch failures via `errs.AddSeveref`.
+3. **`DTOMapper`** — map each CRD copy to the **same struct type** returned by the remote getter. Use `drift.MapDTO(func(cr *v1alpha1.MyResource) model.MyDTO { ... })` for type safety. The DTO must represent what is (or would be) sent to APIM, not the raw CRD spec.
+4. **`ContextResolver`** (only for `ValidateDriftWithContext`) — when the CRD has no `ManagementContext` ref of its own but depends on a related resource's context (subscription → application).
+
+Reuse dependencies already resolved in `validateUpdate` (API, application, plan, etc.) inside closures passed to `getRemote` / `dtoMapper` — do not resolve them again (nil-deref risk).
+
+#### DTO design
+
+Define comparison DTOs in `internal/apim/model/` (e.g. `ApplicationDTO`, `SubscriptionDTO`). Tag fields with `drift:"<equivalence>"` struct tags:
+
+| Tag | Use for |
+|-----|---------|
+| `ignore` | Server-managed or identity fields not in the CRD payload (`id`, `hrid`, `status` on applications) |
+| `empty-is-nil` | Optional slices, maps, pointers, zero-value structs |
+| `trimmed` | Strings with insignificant whitespace |
+| `rfc3339` | Date-time strings (timezone-tolerant) |
+| `unstructured` | `GenericStringMap` / `unstructured.Unstructured` JSON blobs |
+
+Fields without a tag use `reflect.DeepEqual`. Only tag fields that are part of the **spec payload**; if APIM returns a field the DTO mapper never sets and both sides end up empty, comparison is a no-op — explicit `ignore` is optional belt-and-suspenders.
+
+Add drift tags on nested `api/model/` types when the same struct is embedded in the DTO (e.g. TLS certificate fields on `application.ClientCertificate`).
+
+Optionally add `Spec.ToDTO()` on the v1alpha1 type when the mapping is stable and reused by the controller.
+
+#### Merge semantics (why both old and new are compared)
+
+`ValidateDriftWithContext` compares **old CRD → remote** and **new CRD → remote**, then `drift.Merge`:
+
+- Remote-only change → **drift** (reject)
+- CRD update that realigns with remote → **ok** (allow)
+- Unchanged CRD, remote changed → **drift** (reject)
+
+See `internal/drift/types.go` (`Merge` comment) and `internal/drift/doc.go`.
+
+#### Testing
+
+- **Unit** (`test/unit/drift/`): table-driven `drift.Detect` tests for DTO equivalence / tag behaviour. Do not re-test the framework; test your DTO tags and `ToDTO()` parity. Call `drift.Init()` in the suite `BeforeSuite`.
+- **Integration** (`test/integration/admission/<resource>/`): apply fixtures, mutate APIM out-of-band, call `AdmissionCtrl.ValidateUpdate`, assert with `test/internal/integration/assert.DriftDetected`. Call `drift.Init()` in `SynchronizedBeforeSuite`. Use `labels.WithContext` when a `ManagementContext` is required.
+
+Reference implementations: `internal/admission/application/validate.go`, `internal/admission/subscription/validate.go`, `test/unit/drift/application_detect_test.go`, `test/unit/drift/subscription_detect_test.go`.
+
 ### Internal Packages (internal/)
 
 Key packages: `apim/` (APIM client logic), `core/` (shared interfaces), `env/` (config via env vars), `search/` (cache field indexers), `template/` (Go templating for CRD values), `watch/` (dynamic resource watching), `webhook/` (webhook server setup).
