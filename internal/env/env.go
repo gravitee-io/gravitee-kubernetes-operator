@@ -64,6 +64,7 @@ const (
 	LogsTimestampField                   = "LOGS_TIMESTAMP_FIELD"
 	LogsTimestampFormat                  = "LOGS_TIMESTAMP_FORMAT"
 	EnableTemplating                     = "ENABLE_TEMPLATING"
+	EnableDriftDetection                 = "ENABLE_DRIFT_DETECTION"
 
 	// This default are applied when running the app locally.
 	defaultWebhookPort       = 9443
@@ -118,6 +119,7 @@ var Config = struct {
 	LogsTimestampFormat                  string
 	ReconcileStrategy                    string
 	EnableTemplating                     bool
+	DriftDetection                       bool
 }{}
 
 func init() {
@@ -174,7 +176,8 @@ func init() {
 	Config.LogsTimestampField = os.Getenv(LogsTimestampField)
 	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
 	Config.ReconcileStrategy = os.Getenv(ReconcileStrategy)
-	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString // this will allow it to be enabled by default
+	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString   // enabled by default
+	Config.DriftDetection = os.Getenv(EnableDriftDetection) != FalseString // enabled by default
 }
 
 func GetMetricsAddr() string {

@@ -157,3 +157,11 @@ tests:
       - equal:
           path: data.HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY
           value: "true"
+  - it: Templating and drift detection enabled by default
+    asserts:
+      - equal:
+          path: data.ENABLE_TEMPLATING
+          value: "true"
+      - equal:
+          path: data.ENABLE_DRIFT_DETECTION
+          value: "true"
