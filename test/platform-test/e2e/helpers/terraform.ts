@@ -75,5 +75,8 @@ export async function terraformEnv(): Promise<Record<string, string>> {
  */
 export async function initWorkspace(fixtureName: string): Promise<TfWorkspace> {
   const env = await terraformEnv();
-  return initWorkspaceCore(fixture(fixtureName), env);
+  // Co-located journey fixtures are passed as absolute paths and pass through
+  // unchanged; legacy relative names are rooted at e2e/fixtures.
+  const dir = path.isAbsolute(fixtureName) ? fixtureName : fixture(fixtureName);
+  return initWorkspaceCore(dir, env);
 }

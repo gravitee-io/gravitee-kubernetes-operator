@@ -66,7 +66,7 @@ test/platform-test/
       main.tf                     # Terraform provider config; outputs api_id / sub_id / api_context_path (+ <role>_id)
     tests/gko/<area>/             # GKO-only operator tests
     tests/terraform/              # Terraform-only provider tests
-    tests/scenarios/<domain>/     # <name>.scenario.ts: one shared intent, run across every supported provisioner
+    tests/user-journeys/<domain>/     # <name>.scenario.ts: one shared intent, run across every supported provisioner
 ```
 
 > Fixtures are organised **by domain then scenario** (e.g.
@@ -95,7 +95,7 @@ test/platform-test/
 ## Provisioner layer: one intent, every provisioner
 
 For behaviour that should hold no matter how a resource was created, write it ONCE as a
-`*.scenario.ts` under `tests/scenarios/<domain>/` and let `forEachProvisioner` run it against every
+`*.scenario.ts` under `tests/user-journeys/<domain>/` and let `forEachProvisioner` run it against every
 provisioner the scenario supports. The current provisioners are GKO and Terraform, and the layer is
 built to grow: adding another (e.g. a UI path) means implementing the `Provisioner` interface under
 `src/provisioners/` and listing it in the scenario, with no change to the scenario bodies or the
@@ -105,7 +105,7 @@ and the per-provisioner Xray id.
 
 **Selecting a provisioner lane:** `npm run e2e -- --provision-with gko` (or the `npm run e2e:gko` /
 `e2e:terraform` shortcuts) runs that provisioner's whole lane: every test under `tests/gko/` (or
-`tests/terraform/`) PLUS the matching arm of each shared `tests/scenarios/` file. The config
+`tests/terraform/`) PLUS the matching arm of each shared `tests/user-journeys/` file. The config
 implements this from the `E2E_PROVISIONER` env var by ignoring the OTHER provisioner's `tests/` folder
 (`testIgnore`) and dropping its arm from shared scenarios with a case-sensitive `grepInvert`. Do
 **not** use `--grep @gko`: Playwright's CLI `--grep` is case-insensitive, so `@gko` also matches every
@@ -159,7 +159,7 @@ Rules of thumb:
 - **Parameterization** that differs structurally per provisioner (e.g. "set the api-keys") lives in a
   small co-located `params.ts` exposing one shared param type plus the per-provisioner apply closures
   (the GKO `applyParams` closure, the TF `toVars` closure). See
-  `tests/scenarios/subscriptions/apikey/` for the reference pilot.
+  `tests/user-journeys/subscriptions/apikey/` for the reference pilot.
 - **Provisioner-specific assertions** (no shared-layer home) go in `provisioned.checks`, narrowed by a
   per-provisioner type guard (`isGko(...)` / `isTerraform(...)`): GKO conditions/events/`.status`, TF
   drift/idempotency/redaction. Behaviour whose *assertion* (not just provisioning) is
@@ -174,16 +174,19 @@ Parity is organised as **customer-journey** scenarios, not resource-isolation
 tests: the fixtures are living documentation, so someone can be pointed at one
 folder to see how to provision X through either driver. The status and backlog
 live in [PARITY.md](./PARITY.md); the journey catalog is
-[`fixtures/use-cases/README.md`](./e2e/fixtures/use-cases/README.md).
+[`tests/user-journeys/README.md`](./e2e/tests/user-journeys/README.md).
 
 1. **Confirm the resource exists on both drivers.** The Terraform provider exposes
    exactly 6 resources: `apim_apiv4`, `apim_application`, `apim_subscription`,
    `apim_group`, `apim_dictionary`, `apim_shared_policy_group`. If Terraform can't
    express the journey, leave it GKO-only in PARITY.md and move on.
-2. **Author one self-contained journey folder** `fixtures/use-cases/<journey>/`:
-   `gko/*.yaml` (the GKO CRs), `terraform/main.tf` (the same journey), and a
-   `README.md` (what it demonstrates + the `--grep` to run it). Add it to the
-   catalog. The scenario goes in `tests/scenarios/<journey>/<journey>.scenario.ts`.
+2. **Author one self-contained, co-located journey folder**
+   `tests/user-journeys/<journey>/`: the `<journey>.scenario.ts`, `gko/*.yaml` (the
+   GKO CRs), `terraform/main.tf` (the same journey), and a `README.md` ("As a
+   <persona>, I …" + the `--grep` to run it). The scenario references its fixtures
+   with absolute paths from its own dir (`path.dirname(fileURLToPath(import.meta.url))`)
+   — see any journey. GKO CRs carry a `gravitee.io/e2e: "true"` label. Add it to the
+   [catalog](./e2e/tests/user-journeys/README.md).
 3. **Author one shared intent**, not two tests, with `forEachProvisioner`. Verify a
    provisioner-agnostic invariant — `mapi.*` (e.g. lands with `origin: KUBERNETES`)
    or `gateway` (data-plane). The body must not branch on `provisionerId`. Assert
@@ -197,11 +200,11 @@ live in [PARITY.md](./PARITY.md); the journey catalog is
    for the new (usually Terraform) arm in `helpers/tags.ts`, then run
    `/xray-sync-tests` to file the real Jira Test. Update PARITY.md + the catalog.
 
-Worked examples (param-free): `tests/scenarios/consume-message-api/` and
-`tests/scenarios/secure-api-with-plan/`. Parameterized (re-provision with a knob,
-e.g. start/stop, attach/detach): `tests/scenarios/publish-api-and-serve-traffic/`
-and `tests/scenarios/reuse-shared-policy-group/`. Closure-heavy reference:
-`tests/scenarios/subscriptions/apikey/` (`params.ts` + `*-only` files).
+Worked examples (param-free): `tests/user-journeys/consume-message-api/` and
+`tests/user-journeys/secure-api-with-plan/`. Parameterized (re-provision with a knob,
+e.g. start/stop, attach/detach): `tests/user-journeys/publish-api-and-serve-traffic/`
+and `tests/user-journeys/reuse-shared-policy-group/`. Closure-heavy reference:
+`tests/user-journeys/subscriptions/apikey/` (`params.ts` + `*-only` files).
 
 ## Polling & eventual consistency
 

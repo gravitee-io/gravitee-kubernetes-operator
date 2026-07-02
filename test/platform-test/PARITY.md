@@ -54,9 +54,10 @@ CRUD** and **notification configuration**.
 ## Use-case journeys (where parity lives)
 
 Parity is organised as **customer-journey** scenarios, authored once and run
-against both provisioners. Each journey is a self-contained, documented fixture
-folder under [`e2e/fixtures/use-cases/`](./e2e/fixtures/use-cases/) (the catalog
-lists them all), with the scenario under `e2e/tests/scenarios/<journey>/`.
+against both provisioners. Each journey is a **self-contained, co-located folder**
+under [`e2e/tests/user-journeys/<journey>/`](./e2e/tests/user-journeys/) holding
+the scenario, its `gko/` + `terraform/` fixtures, and a README (the
+[catalog](./e2e/tests/user-journeys/) lists them all).
 
 | Journey | Resources | GKO / TF Xray |
 |---|---|---|
@@ -86,7 +87,7 @@ Kubernetes-only mechanics (admission, status conditions, templating, operator
 restart) that have no Terraform equivalent, and Terraform has its own surface
 (drift, redaction, plan exit codes). Parity means: **the APIM resources every
 customer touches should be exercised through both drivers**, preferably once, as a
-shared scenario in the provisioner layer (`tests/scenarios/`).
+shared scenario in the provisioner layer (`tests/user-journeys/`).
 
 ---
 
@@ -99,8 +100,8 @@ provisioner-agnostic (`provisioned` + `mapi`/`gateway`); each arm carries its ow
 Xray id. See the worked example + authoring guide in
 [AGENTS.md](./AGENTS.md#adding-a-cross-provisioner-parity-scenario).
 
-Today only **subscriptions/apikey** (10 scenarios), **groups** (1), and
-**dictionaries** (1, this change) live there. Everything else is per-driver.
+All nine journeys are co-located under `tests/user-journeys/` (see the catalog).
+Everything else is per-driver (`tests/gko/`, `tests/terraform/`).
 
 ---
 
@@ -188,7 +189,7 @@ dictionary, groups). What remains:
 | 9 | mTLS plans, gateway JWT/OAuth2 enforcement | ⏳ future (subscription + token orchestration) |
 | 10 | SPG reuse end-to-end | GKO-3001 (admission resolves ref before dry-run) + TF: expose `cross_id` on `apim_shared_policy_group` |
 | 11 | Notifications · standalone pages/fetchers · category CRUD · V2 lifecycle | ⛔ no TF path — stay GKO-only |
-| 12 | Relocate existing 3 scenarios into `fixtures/use-cases/` | ⏳ follow-up (consolidation only) |
+| 12 | Co-locate all journeys under `tests/user-journeys/` (incl. the 3 pre-existing) | ✅ done |
 
 When picking up a row, prefer **a use-case journey** (one intent, two arms) over a
 standalone TF test, and follow the de-dup rule (remove the now-shared assertion

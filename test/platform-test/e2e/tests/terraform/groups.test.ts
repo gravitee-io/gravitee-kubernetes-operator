@@ -63,7 +63,7 @@ test.describe("Terraform — Groups · Resource lifecycle @since-4.12", () => {
     if (ws) await terraform.destroyWorkspace(ws);
   });
 
-  // Moved to the terraform arm of the shared tests/scenarios/groups/groups.scenario.ts
+  // Moved to the terraform arm of the shared tests/user-journeys/create-group-with-member/create-group-with-member.scenario.ts
   // (create group -> lands in APIM with origin KUBERNETES), tagged @GKO-2865.
 
   test(`notify_members is propagated to APIM ${XRAY.TERRAFORM.GROUP_NOTIFY_MEMBERS} ${TAGS.REGRESSION}`, async ({

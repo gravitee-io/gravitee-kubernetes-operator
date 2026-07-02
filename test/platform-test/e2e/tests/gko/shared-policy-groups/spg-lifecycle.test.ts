@@ -22,7 +22,7 @@
  *   GKO-1462: SPG lifecycle validation
  *
  * GKO-976 (add SPG to a V4 API) and GKO-980 (remove SPG from a V4 API) moved to
- * the shared cross-provisioner journey tests/scenarios/reuse-shared-policy-group
+ * the shared cross-provisioner journey tests/user-journeys/reuse-shared-policy-group
  * — SPG reuse (flow attach/detach) is now proven against GKO and Terraform.
  *
  * Preconditions:
@@ -50,7 +50,7 @@ test.describe("Shared Policy Groups — Lifecycle", () => {
   });
 
   // GKO-976 (add SPG to a V4 API) and GKO-980 (remove SPG from a V4 API) are now
-  // covered by the cross-provisioner journey tests/scenarios/reuse-shared-policy-group.
+  // covered by the cross-provisioner journey tests/user-journeys/reuse-shared-policy-group.
 
   // ── GKO-981: Update SPG ────────────────────────────────────
 

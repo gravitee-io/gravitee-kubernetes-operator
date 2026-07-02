@@ -1,0 +1,71 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# A V4 API that reuses the shared policy group transform-headers-spg in a request
+# flow. The SPG injects X-SPG-Test, which the echo endpoint reflects back.
+apiVersion: gravitee.io/v1alpha1
+kind: ApiV4Definition
+metadata:
+  name: spg-reuse-api
+  labels:
+    gravitee.io/e2e: "true"
+spec:
+  contextRef:
+    name: "dev-ctx"
+    namespace: "default"
+  name: "spg-reuse-api"
+  description: "V4 API reusing a shared policy group in a request flow"
+  version: "1.0.0"
+  type: PROXY
+  state: STARTED
+  definitionContext:
+    origin: KUBERNETES
+    syncFrom: MANAGEMENT
+  listeners:
+    - type: HTTP
+      paths:
+        - path: "/spg-reuse-api"
+      entrypoints:
+        - type: http-proxy
+          qos: AUTO
+  endpointGroups:
+    - name: Default HTTP proxy group
+      type: http-proxy
+      endpoints:
+        - name: Default HTTP proxy
+          type: http-proxy
+          inheritConfiguration: false
+          configuration:
+            target: https://api.gravitee.io/echo
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
+  flows:
+    - name: "Flow with SPG"
+      enabled: true
+      selectors:
+        - type: HTTP
+          path: "/"
+          pathOperator: STARTS_WITH
+      request:
+        # The operator resolves this reference to the SPG's crossId and injects
+        # the shared-policy-group-policy step (see controllers/.../api_shared_policy_groups.go).
+        - sharedPolicyGroupRef:
+            name: transform-headers-spg
+            namespace: default
+  plans:
+    KeyLess:
+      name: "Free plan"
+      security:
+        type: "KEY_LESS"

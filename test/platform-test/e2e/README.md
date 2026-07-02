@@ -145,7 +145,7 @@ npm run e2e -- --grep @GKO-110
 
 `npm run e2e` runs every provisioner. To run only one lane (all tests under
 `tests/<provisioner>/` plus the matching arm of every shared scenario in
-`tests/scenarios/`):
+`tests/user-journeys/`):
 
 ```bash
 npm run e2e -- --provision-with gko          # GKO only
