@@ -50,7 +50,7 @@ test.describe("Groups — Lifecycle @since-4.12", () => {
 
   // ── GKO-983: Create Group with existing user ────────────────
 
-  // Moved to the gko arm of the shared tests/scenarios/groups/groups.scenario.ts
+  // Moved to the gko arm of the shared tests/user-journeys/create-group-with-member/create-group-with-member.scenario.ts
   // (create group -> lands in APIM with origin KUBERNETES), tagged @GKO-983.
 
   // ── GKO-984: Create Group with non-existing user ────────────

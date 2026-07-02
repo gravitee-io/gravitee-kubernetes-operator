@@ -21,7 +21,7 @@
  *   GKO-238: General conditions in V4 plan
  *
  * GKO-162/163 (OAuth2 / JWT plan security types) moved to the shared
- * cross-provisioner journey tests/scenarios/secure-api-with-plan — both plan
+ * cross-provisioner journey tests/user-journeys/secure-api-with-plan — both plan
  * security types are now proven against GKO and Terraform. The admission test
  * below stays GKO-only.
  *
@@ -35,7 +35,7 @@ import { XRAY, TAGS } from "../../../helpers/tags.js";
 
 test.describe("Plans — Security Types", () => {
   // GKO-162 (OAuth2 plan) and GKO-163 (JWT plan) are now covered by the
-  // cross-provisioner journey tests/scenarios/secure-api-with-plan.
+  // cross-provisioner journey tests/user-journeys/secure-api-with-plan.
 
   // ── GKO-238: General conditions in V4 plan ──────────────────
   // Plan references a non-existing page as generalConditions.

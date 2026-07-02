@@ -22,7 +22,7 @@
  *   GKO-550: Error when both app and oauth specified in settings
  *
  * GKO-335/336/337 (create/update/delete an application) moved to the shared
- * cross-provisioner journey tests/scenarios/register-and-retire-application —
+ * cross-provisioner journey tests/user-journeys/register-and-retire-application —
  * the create/update/archive lifecycle is now proven against both GKO and
  * Terraform. The admission/settings/members tests below stay GKO-only.
  *
@@ -52,7 +52,7 @@ test.describe("Applications — Lifecycle", () => {
   });
 
   // GKO-335/336/337 (create / update / delete an application) are now covered by
-  // the cross-provisioner journey tests/scenarios/register-and-retire-application.
+  // the cross-provisioner journey tests/user-journeys/register-and-retire-application.
 
   // ── GKO-526: Non-existing ManagementContext ──────────────────
 

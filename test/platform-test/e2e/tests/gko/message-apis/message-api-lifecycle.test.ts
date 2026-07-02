@@ -27,7 +27,7 @@
  *   GKO-164: Deploy V4 message API with policy
  *
  * GKO-72/73 (deploy a MESSAGE API, type MESSAGE + STARTED) moved to the shared
- * cross-provisioner journey tests/scenarios/consume-message-api. The
+ * cross-provisioner journey tests/user-journeys/consume-message-api. The
  * entrypoint-type matrix below stays GKO-only.
  *
  * Removed:
@@ -62,7 +62,7 @@ test.describe("Message APIs — Lifecycle", () => {
   });
   // GKO-72 (syncFrom Management) and GKO-73 (syncFrom Kubernetes) — deploy a
   // MESSAGE API and assert type MESSAGE + STARTED — are now covered by the
-  // cross-provisioner journey tests/scenarios/consume-message-api.
+  // cross-provisioner journey tests/user-journeys/consume-message-api.
 
   // ── GKO-129: Deploy V4 message API with HTTP GET entrypoint ─
 

@@ -23,7 +23,7 @@
  *   GKO-2912: Admission webhook rejects DYNAMIC dictionary with manual field set
  *
  * GKO-2903 (manual dictionary resolved at the gateway) is now the GKO arm of the
- * cross-provisioner scenario tests/scenarios/dictionaries/dictionary.scenario.ts,
+ * cross-provisioner scenario tests/user-journeys/api-references-dictionary-property/api-references-dictionary-property.scenario.ts,
  * so it is intentionally not duplicated here.
  *
  * Preconditions:

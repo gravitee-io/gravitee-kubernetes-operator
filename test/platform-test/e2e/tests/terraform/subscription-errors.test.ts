@@ -23,7 +23,7 @@
  *
  * GKO-1383 (TF-based deletion of an application archives it in APIM) moved to
  * the shared cross-provisioner journey
- * tests/scenarios/register-and-retire-application (its Terraform arm).
+ * tests/user-journeys/register-and-retire-application (its Terraform arm).
  *
  * GKO-1381 (role-specific access via TF) is dropped — the harness lacks a
  * non-admin user; see tags.ts for details.
@@ -71,5 +71,5 @@ test.describe("Terraform — subscription errors & app delete", () => {
   });
 
   // GKO-1383 (Terraform destroy archives the application) is now covered by the
-  // Terraform arm of tests/scenarios/register-and-retire-application.
+  // Terraform arm of tests/user-journeys/register-and-retire-application.
 });

@@ -26,8 +26,18 @@
  * factories that `forEachProvisioner` consumes.
  */
 
+import path from "node:path";
 import { fixture as resolveFixture } from "../setup.js";
 import { terraformEnv } from "./terraform.js";
+
+/**
+ * Resolve a fixture path. Co-located journey fixtures are passed as ABSOLUTE paths
+ * (computed from the scenario's own directory via import.meta.url) and pass through
+ * unchanged; legacy relative paths are rooted at e2e/fixtures.
+ */
+function resolveFixturePath(p: string): string {
+  return path.isAbsolute(p) ? p : resolveFixture(p);
+}
 import {
   GkoProvisioner,
   TerraformProvisioner,
@@ -60,7 +70,7 @@ export function gkoScenario<P = unknown>(
   return () =>
     new GkoProvisioner<P>({
       ...input,
-      manifests: input.manifests.map((m) => resolveFixture(m)),
+      manifests: input.manifests.map(resolveFixturePath),
     });
 }
 
@@ -79,7 +89,7 @@ export function tfScenario<P = unknown>(
   return async () =>
     new TerraformProvisioner<P>({
       ...rest,
-      fixtureDir: resolveFixture(fixtureName),
+      fixtureDir: resolveFixturePath(fixtureName),
       env: await tfEnv(),
     });
 }
