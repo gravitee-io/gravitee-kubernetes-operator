@@ -256,12 +256,14 @@ export const XRAY = {
     // Dictionary cannot be deleted because secret-resolve runs during the delete
     // reconcile.
     DYNAMIC_TEMPLATE_RESOLVE: "@GKO-2902",
-    // DYNAMIC lifecycle coverage for GKO-2565 (start/stop semantics).
+    // DYNAMIC lifecycle coverage for GKO-2565 (start/stop semantics). These GKO
+    // arms now live in the manage-dynamic-dictionary cross-provisioner journey
+    // alongside their @terraform counterparts (see XRAY.TERRAFORM below).
     // @parent: GKO-2565
     DYNAMIC_DELETE_STOPS: "@GKO-2909",
     DYNAMIC_UPDATE_PROPAGATES: "@GKO-2910",
-    // DYNAMIC_DEPLOYED_FALSE_STOPS is currently skipped pending GKO-2908 —
-    // setting deployed=false on a DYNAMIC dict doesn't stop gateway resolution.
+    // deployed=false stop path: the underlying GKO-2908 gateway bug is fixed in
+    // APIM 4.12.x, so this is active (gated @since-4.12).
     DYNAMIC_DEPLOYED_FALSE_STOPS: "@GKO-2911",
     // @parent: GKO-2563 (admission webhook)
     ADMISSION_REJECTS_DYNAMIC_WITH_MANUAL: "@GKO-2912",
@@ -459,6 +461,12 @@ export const XRAY = {
     // ── GKO-2997: apim_dictionary resource (TF parity with the GKO Dictionary CRD) ──
     // @parent: GKO-2997
     DICTIONARY_MANUAL_RESOLVE: "@GKO-2998",
+    // GKO-2997: DYNAMIC + lifecycle parity (manage-dynamic-dictionary journey).
+    // TF arms of the GKO DYNAMIC tests @GKO-2904/2910/2911/2909.
+    DICTIONARY_DYNAMIC_RESOLVE: "@GKO-3014",
+    DICTIONARY_DYNAMIC_UPDATE: "@GKO-3015",
+    DICTIONARY_DYNAMIC_DEPLOYED_FALSE_STOPS: "@GKO-3016",
+    DICTIONARY_DYNAMIC_DELETE_STOPS: "@GKO-3017",
     // ── GKO-2918: use-case parity journeys (TF arms) ───────────────
     // @parent: GKO-2918
     APPLICATION_LIFECYCLE_TF: "@GKO-3002",
