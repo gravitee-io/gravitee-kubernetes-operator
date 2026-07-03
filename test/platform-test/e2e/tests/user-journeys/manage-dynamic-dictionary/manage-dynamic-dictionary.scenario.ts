@@ -57,7 +57,10 @@ async function gatewayBaseUrl(): Promise<string> {
 
 function headerValue(headers: Record<string, string> | undefined, name: string): string | undefined {
   if (!headers) return undefined;
-  return headers[name] ?? headers[name.toLowerCase()];
+  // HTTP headers are case-insensitive; the echo endpoint may return any casing.
+  const target = name.toLowerCase();
+  const key = Object.keys(headers).find((k) => k.toLowerCase() === target);
+  return key ? headers[key] : undefined;
 }
 
 /** GKO factory: static consumer API + the DYNAMIC dictionary applied from params. */
@@ -91,7 +94,10 @@ async function assertResolves(baseUrl: string, ctx: string, expected: string): P
   await poll(
     async () => {
       const res = await fetch(`${baseUrl}${ctx}`);
-      expect(res.status).toBe(200);
+      if (res.status !== 200) {
+        const errorBody = await res.text().catch(() => "<no body>");
+        throw new Error(`gateway returned ${res.status} for ${ctx}: ${errorBody}`);
+      }
       const body = (await res.json()) as { headers?: Record<string, string> };
       expect(headerValue(body.headers, "X-Env")).toBe(expected);
     },
@@ -111,7 +117,10 @@ async function assertStopsResolving(baseUrl: string, ctx: string, previous: stri
     async () => {
       const res = await fetch(`${baseUrl}${ctx}`);
       if (res.status === 500) return;
-      expect(res.status).toBe(200);
+      if (res.status !== 200) {
+        const errorBody = await res.text().catch(() => "<no body>");
+        throw new Error(`gateway returned ${res.status} for ${ctx}: ${errorBody}`);
+      }
       const body = (await res.json()) as { headers?: Record<string, string> };
       expect(headerValue(body.headers, "X-Env")).not.toBe(previous);
     },
