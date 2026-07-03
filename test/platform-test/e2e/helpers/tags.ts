@@ -250,6 +250,7 @@ export const XRAY = {
   DICTIONARIES: {
     // @parent: GKO-2562
     CREATE_AND_RESOLVE: "@GKO-2903",
+    MANUAL_UPDATE_PROPAGATES: "@GKO-3018",
     DELETE_DICTIONARY: "@GKO-2905",
     DYNAMIC_RESOLVE: "@GKO-2904",
     // DYNAMIC_TEMPLATE_RESOLVE is currently skipped pending GKO-2858 — templated
@@ -461,6 +462,7 @@ export const XRAY = {
     // ── GKO-2997: apim_dictionary resource (TF parity with the GKO Dictionary CRD) ──
     // @parent: GKO-2997
     DICTIONARY_MANUAL_RESOLVE: "@GKO-2998",
+    DICTIONARY_MANUAL_UPDATE: "@GKO-3019",
     // GKO-2997: DYNAMIC + lifecycle parity (manage-dynamic-dictionary journey).
     // TF arms of the GKO DYNAMIC tests @GKO-2904/2910/2911/2909.
     DICTIONARY_DYNAMIC_RESOLVE: "@GKO-3014",
