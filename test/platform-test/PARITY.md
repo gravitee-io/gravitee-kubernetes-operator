@@ -68,7 +68,8 @@ the scenario, its `gko/` + `terraform/` fixtures, and a README (the
 | consume-message-api | `apim_apiv4` (MESSAGE) | GKO-72/73 · TF new |
 | label-an-api | `apim_apiv4.labels` (inline) | GKO-1473 · TF new |
 | subscribe-and-call (api-key) | `apim_subscription` | existing |
-| api-references-dictionary-property | `apim_dictionary` | existing |
+| api-references-dictionary-property | `apim_dictionary` (MANUAL) | existing |
+| manage-dynamic-dictionary | `apim_dictionary` (DYNAMIC) | GKO-2904/2910/2911/2909 · TF new (GKO-2997) |
 | create-group-with-member | `apim_group` | existing |
 
 > **`reuse-shared-policy-group` is pending on two blockers** (both arms), so the
@@ -100,7 +101,7 @@ provisioner-agnostic (`provisioned` + `mapi`/`gateway`); each arm carries its ow
 Xray id. See the worked example + authoring guide in
 [AGENTS.md](./AGENTS.md#adding-a-cross-provisioner-parity-scenario).
 
-All nine journeys are co-located under `tests/user-journeys/` (see the catalog).
+All ten journeys are co-located under `tests/user-journeys/` (see the catalog).
 Everything else is per-driver (`tests/gko/`, `tests/terraform/`).
 
 ---
@@ -114,7 +115,8 @@ Everything else is per-driver (`tests/gko/`, `tests/terraform/`).
 | Subscriptions — api-key | subscribe-and-call (apikey) | 🟢 done via journey |
 | Plans (JWT / OAuth2 security types) | secure-api-with-plan | 🟢 done via journey |
 | Shared Policy Groups | reuse-shared-policy-group | ⛔ pending — GKO-3001 (admission) + TF crossId gap (see above) |
-| Dictionaries | api-references-dictionary-property | 🟢 done via journey |
+| Dictionaries — MANUAL | api-references-dictionary-property | 🟢 done via journey |
+| Dictionaries — DYNAMIC + lifecycle (resolve/update/undeploy/delete) | manage-dynamic-dictionary | 🟢 done via journey |
 | Message APIs (V4) | consume-message-api | 🟢 done via journey |
 | Groups + members | create-group-with-member | 🟡 TF-led; journey covers create |
 | Labels | label-an-api | 🟢 done via journey (inline `apim_apiv4.labels`) |
