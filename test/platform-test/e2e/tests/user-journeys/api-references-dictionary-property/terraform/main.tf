@@ -35,6 +35,13 @@ variable "organization_id" {
   default = "DEFAULT"
 }
 
+# Value of the dictionary's `env` property. Defaults to "test" so the resolve
+# scenario (no tfvars) is unchanged; the update scenario overrides it via tfvars.
+variable "env_value" {
+  type    = string
+  default = "test"
+}
+
 resource "apim_dictionary" "dict" {
   environment_id  = var.environment_id
   organization_id = var.organization_id
@@ -45,7 +52,7 @@ resource "apim_dictionary" "dict" {
   deployed        = true
   manual = {
     properties = {
-      env = "test"
+      env = var.env_value
     }
   }
 }

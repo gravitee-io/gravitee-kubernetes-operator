@@ -115,7 +115,7 @@ Everything else is per-driver (`tests/gko/`, `tests/terraform/`).
 | Subscriptions — api-key | subscribe-and-call (apikey) | 🟢 done via journey |
 | Plans (JWT / OAuth2 security types) | secure-api-with-plan | 🟢 done via journey |
 | Shared Policy Groups | reuse-shared-policy-group | ⛔ pending — GKO-3001 (admission) + TF crossId gap (see above) |
-| Dictionaries — MANUAL | api-references-dictionary-property | 🟢 done via journey |
+| Dictionaries — MANUAL (resolve + property update) | api-references-dictionary-property | 🟢 done via journey |
 | Dictionaries — DYNAMIC + lifecycle (resolve/update/undeploy/delete) | manage-dynamic-dictionary | 🟢 done via journey |
 | Message APIs (V4) | consume-message-api | 🟢 done via journey |
 | Groups + members | create-group-with-member | 🟡 TF-led; journey covers create |
