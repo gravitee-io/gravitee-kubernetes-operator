@@ -477,6 +477,9 @@ export const XRAY = {
     SPG_REUSE_TF: "@GKO-3005",
     MESSAGE_API_TF: "@GKO-3006",
     API_LABELS_TF: "@GKO-3007",
+    // ── GKO-3024: categories-assign parity journey (assign-categories-to-api) ──
+    // @parent: GKO-3024
+    API_CATEGORIES_TF: "@GKO-3031",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

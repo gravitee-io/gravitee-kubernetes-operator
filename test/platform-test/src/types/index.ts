@@ -23,7 +23,7 @@ export type {
   Listener, HttpListener, SubscriptionListener, TcpListener, KafkaListener,
   Entrypoint, EndpointGroupV4, EndpointV4,
   Application, NotificationSetting,
-  Group, GroupMember,
+  Group, GroupMember, Category,
 } from "./apim.js";
 
 // ── HTTP ─────────────────────────────────────────────────────

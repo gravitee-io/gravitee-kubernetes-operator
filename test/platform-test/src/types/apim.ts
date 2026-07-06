@@ -887,3 +887,25 @@ export interface GroupMember {
   displayName?: string;
   roles?: Record<string, string>;
 }
+
+// ── Category Types ────────────────────────────────────────────
+
+/**
+ * A portal category as returned by the v1 management API
+ * (`/configuration/categories`).
+ *
+ * An environment-level entity that APIs reference by `key`. There is no
+ * standalone GKO Category CRD and no `apim_category` Terraform resource, so an
+ * API can only *reference* an existing category through its inline `categories`
+ * attribute (APIM silently drops references to unknown categories). APIM derives
+ * `key` from `name` when it is not supplied.
+ */
+export interface Category {
+  id: string;
+  key: string;
+  name: string;
+  description?: string;
+  order?: number;
+  hidden?: boolean;
+  totalApis?: number;
+}
