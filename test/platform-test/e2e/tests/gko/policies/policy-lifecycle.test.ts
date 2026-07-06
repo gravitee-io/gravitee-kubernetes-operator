@@ -147,28 +147,11 @@ test.describe("Policies — Lifecycle", () => {
     await kubectl.del(updatedPolicy);
   });
 
-  // ── GKO-267: V4 API with valid category ──────────────────────
-
-  test(`Create V4 API with valid category ${XRAY.CATEGORIES.VALID_CATEGORY_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-labels-cats";
-    const fixturePath = fixture("categories/v4-with-labels/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const api = await mapi.fetchApi(status.id);
-
-    // Verify labels are applied (categories require pre-existing category in APIM)
-    expect(api.labels).toBeTruthy();
-
-    await kubectl.del(fixturePath);
-  });
-
   // ── GKO-269: Non-existing category ───────────────────────────
+  // Assigning and removing a valid category (@GKO-267 / @GKO-270) is covered by
+  // the cross-provisioner journey tests/user-journeys/assign-categories-to-api/.
+  // This case covers the GKO-only behaviour that an unknown category reference is
+  // tolerated: the API still deploys.
 
   test(`Non-existing category is ignored ${XRAY.CATEGORIES.NON_EXISTING_CATEGORY_V4} ${TAGS.REGRESSION}`, async ({
     kubectl,
@@ -181,26 +164,6 @@ test.describe("Policies — Lifecycle", () => {
     await kubectl.apply(fixturePath);
     await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
 
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    await mapi.assertApiStarted(status.id);
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-270: Remove a category ───────────────────────────────
-
-  test(`Remove a category from V4 API ${XRAY.CATEGORIES.REMOVE_CATEGORY_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-labels-cats";
-    const fixturePath = fixture("categories/v4-with-labels/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    // Re-apply without categories — they should be removed
-    // (labels-cats fixture has labels but categories are managed at APIM level)
     const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
     await mapi.assertApiStarted(status.id);
 

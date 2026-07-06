@@ -23,7 +23,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember, Category } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -507,6 +507,68 @@ export class Mapi {
     });
     if (![200, 201, 400, 409].includes(res.status)) {
       throw new Error(`Failed to create service account ${name}: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  // ── Categories ─────────────────────────────────────────────
+
+  /**
+   * List all portal categories in the environment (v1 management API).
+   *
+   * Categories are an environment-level entity with no standalone GKO CRD and no
+   * `apim_category` Terraform resource — an API can only *reference* them by key.
+   * These helpers let a journey create the referenced category as a
+   * provisioner-agnostic precondition, mirroring `createServiceAccount` for the
+   * group-member tests.
+   */
+  async listCategories(): Promise<Category[]> {
+    const path = this.http.managementV1Path("/configuration/categories");
+    const res = await this.http.get<Category[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list categories: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
+    }
+    return res.body;
+  }
+
+  /** Fetch a single category by its key. @throws if not found. */
+  async fetchCategoryByKey(key: string): Promise<Category> {
+    const categories = await this.listCategories();
+    const category = categories.find((c) => c.key === key);
+    if (!category) {
+      throw new Error(
+        `Category with key "${key}" not found. Known keys: ${categories.map((c) => c.key).join(", ")}`,
+      );
+    }
+    return category;
+  }
+
+  /**
+   * Idempotently create a portal category and return it (with its
+   * server-assigned id + key). `key` is passed explicitly so it is deterministic
+   * across runs (APIM otherwise derives it from `name`). A 400/409 is treated as
+   * "already exists" (categories persist in Mongo across runs); the existing one
+   * is then fetched by key.
+   */
+  async createCategory(input: { key: string; name: string; description?: string }): Promise<Category> {
+    const path = this.http.managementV1Path("/configuration/categories");
+    const res = await this.http.post<Category>(path, {
+      key: input.key,
+      name: input.name,
+      description: input.description,
+    });
+    if (res.status === 200 || res.status === 201) return res.body;
+    if (res.status === 400 || res.status === 409) return this.fetchCategoryByKey(input.key);
+    throw new Error(
+      `Failed to create category "${input.name}": ${res.status} ${res.statusText} - ${JSON.stringify(res.body)}`,
+    );
+  }
+
+  /** Delete a category by its id (teardown of the precondition). */
+  async deleteCategory(categoryId: string): Promise<void> {
+    const path = this.http.managementV1Path(`/configuration/categories/${categoryId}`);
+    const res = await this.http.delete(path);
+    if (res.status !== 204 && res.status !== 200) {
+      throw new Error(`Failed to delete category ${categoryId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
     }
   }
 }
