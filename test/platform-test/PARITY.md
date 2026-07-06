@@ -15,9 +15,9 @@ GKO-only or have no TF provider resource (see the buckets below).
 
 | Bucket | Approx | Detail |
 |---|--:|---|
-| ✅ Done via journey | ~9 areas | api-key subscriptions, dictionaries, groups, applications, V4 lifecycle/visibility, plans (JWT/OAuth2), message APIs, labels |
+| ✅ Done via journey | ~10 areas | api-key subscriptions, dictionaries, groups, applications, V4 lifecycle/visibility, plans (JWT/OAuth2), message APIs, labels, categories |
 | ⛔ Pending (blocked) | 1 | SPG reuse — GKO-3001 (admission) + TF `cross_id` gap |
-| 🟡 Feasible, not yet done | ~50 | subscription plan-types (JWT/OAuth2/mTLS), plan/policy lifecycle, application members, group members, API metadata / categories-assign / inline pages, more V4 lifecycle |
+| 🟡 Feasible, not yet done | ~50 | subscription plan-types (JWT/OAuth2/mTLS), plan/policy lifecycle, application members, group members, API metadata / inline pages, more V4 lifecycle |
 | 🚫 Permanently GKO-only | ~150 | K8s/operator mechanics (~100: admission, status/reconcile, mTLS CRs, templating, import/export, mgmt-context) + TF-blocked APIM areas (~50: V2 lifecycle, pages/fetchers, notifications, category CRUD) |
 
 **Achievable parity: ~25–30% covered.** The foundation and pattern are in place, so
@@ -67,6 +67,7 @@ the scenario, its `gko/` + `terraform/` fixtures, and a README (the
 | reuse-shared-policy-group | `apim_shared_policy_group` | GKO-976/980 · TF GKO-3005 — ⛔ both arms pending (blockers below) |
 | consume-message-api | `apim_apiv4` (MESSAGE) | GKO-72/73 · TF new |
 | label-an-api | `apim_apiv4.labels` (inline) | GKO-1473 · TF new |
+| assign-categories-to-api | `apim_apiv4.categories` (inline) | GKO-267/270 · TF new (GKO-2918) |
 | subscribe-and-call (api-key) | `apim_subscription` | existing |
 | api-references-dictionary-property | `apim_dictionary` (MANUAL) | existing |
 | manage-dynamic-dictionary | `apim_dictionary` (DYNAMIC) | GKO-2904/2910/2911/2909 · TF new (GKO-2997) |
@@ -120,7 +121,7 @@ Everything else is per-driver (`tests/gko/`, `tests/terraform/`).
 | Message APIs (V4) | consume-message-api | 🟢 done via journey |
 | Groups + members | create-group-with-member | 🟡 TF-led; journey covers create |
 | Labels | label-an-api | 🟢 done via journey (inline `apim_apiv4.labels`) |
-| Categories (assign to API) | — | 🟡 expressible inline (`apim_apiv4.categories`); next journey |
+| Categories (assign to API) | assign-categories-to-api | 🟢 done via journey (inline `apim_apiv4.categories`) |
 | Pages — inline markdown | — | 🟡 expressible inline (`apim_apiv4.pages[]`); next journey |
 | Pages — standalone + fetchers | — | ⛔ no standalone `apim_page` |
 | Notifications | — | ⛔ no `apim_notification` (no inline path) |
@@ -158,9 +159,10 @@ resource AND no inline `apim_apiv4` attribute), so they stay GKO-only:
 | Category CRUD (create/rename a category) | ~6 | no `apim_category`; an API can only *reference* categories inline |
 
 Partially TF-expressible at the API level (assign-to-API only, no standalone
-CRUD) and good candidates for follow-up journeys: **categories**
-(`apim_apiv4.categories`), **inline markdown pages** (`apim_apiv4.pages[]`),
-**group association** (`apim_apiv4.groups`), **metadata** (`apim_apiv4.metadata`).
+CRUD). **Categories** (`apim_apiv4.categories`) is done via the
+assign-categories-to-api journey; remaining follow-up journeys: **inline markdown
+pages** (`apim_apiv4.pages[]`), **group association** (`apim_apiv4.groups`),
+**metadata** (`apim_apiv4.metadata`).
 
 ## Intentionally Terraform-only (no GKO parity expected)
 
@@ -187,7 +189,8 @@ dictionary, groups). What remains:
 | 5 | Shared Policy Groups | ⛔ pending — journey authored (correct form), blocked by GKO-3001 (admission) + TF crossId gap |
 | 6 | Message APIs (V4) | ✅ done — consume-message-api |
 | 7 | Labels | ✅ done — label-an-api (inline `apim_apiv4.labels`) |
-| 8 | Categories (assign) · inline pages · group-assoc · metadata | ⏳ future journeys (inline `apim_apiv4` attrs, no standalone resource) |
+| 8 | Categories (assign) | ✅ done: assign-categories-to-api (inline `apim_apiv4.categories`) |
+| 8b | Inline pages · group-assoc · metadata | ⏳ future journeys (inline `apim_apiv4` attrs, no standalone resource) |
 | 9 | mTLS plans, gateway JWT/OAuth2 enforcement | ⏳ future (subscription + token orchestration) |
 | 10 | SPG reuse end-to-end | GKO-3001 (admission resolves ref before dry-run) + TF: expose `cross_id` on `apim_shared_policy_group` |
 | 11 | Notifications · standalone pages/fetchers · category CRUD · V2 lifecycle | ⛔ no TF path — stay GKO-only |
