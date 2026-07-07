@@ -4099,8 +4099,6 @@ _Appears in:_
 
 
 
-
-
 #### AutomationConsoleNotification
 
 
@@ -4605,7 +4603,6 @@ _Appears in:_
 _Appears in:_
 - [Api](#api)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
-- [AutomationApi](#automationapi)
 
 
 
@@ -4637,7 +4634,6 @@ _Appears in:_
 _Appears in:_
 - [Api](#api)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
-- [AutomationApi](#automationapi)
 - [AutomationStatus](#automationstatus)
 - [GatewayDefinitionPlan](#gatewaydefinitionplan)
 
@@ -4788,7 +4784,6 @@ _Appears in:_
 _Appears in:_
 - [Api](#api)
 - [ApiV4DefinitionSpec](#apiv4definitionspec)
-- [AutomationApi](#automationapi)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |

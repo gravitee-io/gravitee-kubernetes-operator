@@ -92,10 +92,10 @@ func (svc *APIs) GetV4ByID(apiID string) (*v4.Api, error) {
 }
 
 // GetV4ByHRID fetches a V4 API from the Automation API by HRID. For test purposes only.
-func (svc *APIs) GetV4ByHRID(hrid string) (*v4.AutomationApi, error) {
+func (svc *APIs) GetV4ByHRID(hrid string) (*model.AutomationApiDTO, error) {
 	url := svc.AutomationTarget("apis").WithPath(hrid)
 
-	resp := new(v4.AutomationApi)
+	resp := new(model.AutomationApiDTO)
 
 	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func (svc *APIs) applyV4(api *v1alpha1.ApiV4Definition, dryRun bool) (*base.Stat
 	// populateIDs only set this if it an upgraded API
 	setHridWithUUID := api.Spec.ID != ""
 
-	automation := api.Spec.ToAutomation()
+	dto := model.ToAutomation(api.Spec)
 
 	// If an ID is set, it can be:
 	// 1. export/import case (user is trying to manage an existing API)
@@ -146,12 +146,12 @@ func (svc *APIs) applyV4(api *v1alpha1.ApiV4Definition, dryRun bool) (*base.Stat
 	// To tell AutomationAPI that this it is not an HRID-managed resource
 	// UUIDs are already computed
 	if setHridWithUUID {
-		automation.HRID = api.Spec.ID
+		dto.HRID = api.Spec.ID
 		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
 	}
 
 	status := new(v4.AutomationStatus)
-	if err := svc.HTTP.Put(url.String(), automation, status); err != nil {
+	if err := svc.HTTP.Put(url.String(), dto, status); err != nil {
 		return nil, err
 	}
 
