@@ -18,8 +18,8 @@ import (
 	"context"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
-	v4Model "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"
@@ -81,7 +81,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		client := apim.NewClient(ctx)
 
 		hrid := refs.NewNamespacedNameFromObject(apiFixture.APIv4).HRID()
-		var apiFromAPIM *v4Model.AutomationApi
+		var apiFromAPIM *model.AutomationApiDTO
 		Eventually(func() error {
 			a, err := client.APIs.GetV4ByHRID(hrid)
 			apiFromAPIM = a
