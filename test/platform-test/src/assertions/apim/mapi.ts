@@ -23,7 +23,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember, Category } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember, Category, Page, PageTree } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -570,6 +570,24 @@ export class Mapi {
     if (res.status !== 204 && res.status !== 200) {
       throw new Error(`Failed to delete category ${categoryId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
     }
+  }
+
+  // ── Documentation Pages ────────────────────────────────────
+
+  /**
+   * List an API's documentation pages (v2 management API).
+   *
+   * Inline pages have no standalone resource on either driver, so a journey
+   * asserts them at the API level here. The endpoint returns a `{ pages }`
+   * envelope; the bare page list is returned.
+   */
+  async listApiPages(apiId: string): Promise<Page[]> {
+    const path = this.http.managementV2Path(`/apis/${apiId}/pages`);
+    const res = await this.http.get<PageTree>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list pages for API ${apiId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
+    }
+    return res.body.pages ?? [];
   }
 }
 

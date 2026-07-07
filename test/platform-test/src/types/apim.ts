@@ -909,3 +909,34 @@ export interface Category {
   hidden?: boolean;
   totalApis?: number;
 }
+
+// ── Documentation Page Types ──────────────────────────────────
+
+/**
+ * An API documentation page as returned by the v2 management API
+ * (`GET /apis/{apiId}/pages` → `{ pages, breadcrumb }`).
+ *
+ * Inline pages are an attribute of the API (`ApiV4Definition.spec.pages` /
+ * `apim_apiv4.pages[]`); there is no standalone `apim_page` Terraform resource,
+ * so inline is the only cross-provisioner path (standalone pages and page
+ * fetchers stay GKO-only). The `hrid` used by the provisioners is not echoed
+ * back here; APIM returns its own `id`/`crossId`.
+ */
+export interface Page {
+  id: string;
+  crossId?: string;
+  name: string;
+  type: string;
+  content?: string;
+  order?: number;
+  published?: boolean;
+  visibility?: string;
+  homepage?: boolean;
+  parentId?: string;
+}
+
+/** Envelope returned by `GET /apis/{apiId}/pages`. */
+export interface PageTree {
+  pages: Page[];
+  breadcrumb: unknown[];
+}
