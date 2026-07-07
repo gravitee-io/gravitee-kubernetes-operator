@@ -21,6 +21,7 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	submodel "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/subscription"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
@@ -114,7 +115,7 @@ func CreateOrUpdate(ctx context.Context, subscription *v1alpha1.Subscription) er
 func setApiIDAndPlan(api core.ApiDefinitionObject, sub *model.Subscription, spec v1alpha1.SubscriptionSpec) bool {
 	if api.GetID() == "" || k8s.IsAutomationAPIManaged(api) {
 		sub.ApiID = refs.NewNamespacedNameFromObject(api).HRID()
-		sub.PlanID = spec.Plan
+		sub.PlanID = hrid.NameToValidHRID(spec.Plan)
 		return false
 	}
 	sub.ApiID = api.GetID()

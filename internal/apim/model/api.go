@@ -17,6 +17,8 @@ package model
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v2 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v2"
+	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
 type ApiEntity struct {
@@ -106,4 +108,35 @@ type ApiImport struct {
 	*v2.Api                        `json:",inline"`
 	DisableMembershipNotifications bool          `json:"disable_membership_notifications,omitempty"`
 	Pages                          []*PageImport `json:"pages,omitempty"`
+}
+
+type AutomationApiDTO struct {
+	*v4.V4BaseApi `json:",inline"`
+	// that is the main change from the API model
+	Pages []*v4.Page `json:"pages"`
+	Plans []*v4.Plan `json:"plans"`
+}
+
+func ToAutomation(api v1alpha1.ApiV4DefinitionSpec) AutomationApiDTO {
+	autoAPI := AutomationApiDTO{
+		V4BaseApi: api.V4BaseApi,
+	}
+
+	// mapping plans map to list
+	if api.Plans != nil {
+		autoAPI.Plans = make([]*v4.Plan, 0, len(*api.Plans))
+		for _, plan := range *api.Plans {
+			autoAPI.Plans = append(autoAPI.Plans, plan)
+		}
+	}
+
+	// mapping pages map to list
+	if api.Pages != nil {
+		autoAPI.Pages = make([]*v4.Page, 0, len(*api.Pages))
+		for _, page := range *api.Pages {
+			autoAPI.Pages = append(autoAPI.Pages, page)
+		}
+	}
+
+	return autoAPI
 }

@@ -16,6 +16,7 @@ package refs
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -75,5 +76,5 @@ func (n *NamespacedName) String() string {
 }
 
 func (n *NamespacedName) HRID() string {
-	return n.Namespace + "-" + n.Name
+	return hrid.ToHRID(n.Namespace, n.Name)
 }

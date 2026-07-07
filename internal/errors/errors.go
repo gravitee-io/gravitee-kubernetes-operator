@@ -89,7 +89,7 @@ func (err ServerError) Error() string {
 	if message == "" {
 		message = http.StatusText(err.StatusCode)
 	}
-	return fmt.Sprintf("request [%s] %s failed with status %d (%s)", err.Method, err.URL, err.StatusCode, message)
+	return fmt.Sprintf("request [%s] %s failed with status %d (%s): %s", err.Method, err.URL, err.StatusCode, message, err.Body)
 }
 
 func NewServerError(resp *http.Response) ServerError {
