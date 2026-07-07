@@ -18,9 +18,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
-
 	nav "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/navigation"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
@@ -116,39 +115,6 @@ type Api struct {
 	// when using a management context.
 	// +kubebuilder:validation:Optional
 	Plans *map[string]*Plan `json:"plans,omitempty"`
-}
-
-type AutomationApi struct {
-	*V4BaseApi `json:",inline"`
-	// that is the main change from the API model
-	Pages []*Page `json:"pages"`
-	Plans []*Plan `json:"plans"`
-}
-
-func (api *Api) ToAutomation() AutomationApi {
-	autoAPI := AutomationApi{
-		V4BaseApi: api.V4BaseApi,
-	}
-
-	// mapping plans map to list
-	if api.Plans != nil {
-		autoAPI.Plans = make([]*Plan, 0, len(*api.Plans))
-		for hrid, plan := range *api.Plans {
-			plan.HRID = hrid
-			autoAPI.Plans = append(autoAPI.Plans, plan)
-		}
-	}
-
-	// mapping pages map to list
-	if api.Pages != nil {
-		autoAPI.Pages = make([]*Page, 0, len(*api.Pages))
-		for hrid, page := range *api.Pages {
-			page.HRID = hrid
-			autoAPI.Pages = append(autoAPI.Pages, page)
-		}
-	}
-
-	return autoAPI
 }
 
 func (api *Api) GetType() string {
@@ -305,11 +271,11 @@ func (api *Api) HasPlans() bool {
 	return api.Plans != nil && len(*api.Plans) > 0
 }
 
-func (api *Api) GetPlan(name string) core.PlanModel {
+func (api *Api) GetPlan(key string) core.PlanModel {
 	if api.Plans == nil {
 		return nil
 	}
-	return (*api.Plans)[name]
+	return (*api.Plans)[key]
 }
 
 func (api *Api) IsStopped() bool {

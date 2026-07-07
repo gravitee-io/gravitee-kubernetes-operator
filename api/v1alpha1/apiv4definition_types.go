@@ -25,6 +25,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hash"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/hrid"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -155,9 +156,9 @@ func (api *ApiV4Definition) pickPlanHRIDs() *map[string]*v4.Plan {
 	plans := make(map[string]*v4.Plan, len(*api.Spec.Plans))
 	for key, plan := range *api.Spec.Plans {
 		p := plan.DeepCopy()
-		p.HRID = key
+		p.HRID = hrid.NameToValidHRID(key)
 		if p.GeneralConditions != nil {
-			p.GeneralConditionsHRID = p.GeneralConditions
+			p.GeneralConditionsHRID = hrid.NameToValidHRIDPointer(p.GeneralConditions)
 			p.GeneralConditions = nil
 		}
 		plans[key] = p
@@ -174,8 +175,8 @@ func (api *ApiV4Definition) pickPageHRIDs() *map[string]*v4.Page {
 		p := page.DeepCopy()
 
 		p.API = &api.Spec.HRID
-		p.HRID = key
-		p.ParentHRID = page.Parent
+		p.HRID = hrid.NameToValidHRID(key)
+		p.ParentHRID = hrid.NameToValidHRIDPointer(page.Parent)
 
 		pages[p.HRID] = p
 	}
