@@ -15,10 +15,10 @@ GKO-only or have no TF provider resource (see the buckets below).
 
 | Bucket | Approx | Detail |
 |---|--:|---|
-| ✅ Done via journey | ~10 areas | api-key subscriptions, dictionaries, groups, applications, V4 lifecycle/visibility, plans (JWT/OAuth2), message APIs, labels, categories |
+| ✅ Done via journey | ~10 areas | api-key subscriptions, dictionaries, groups, applications, V4 lifecycle/visibility, plans (JWT/OAuth2), message APIs, labels, categories, inline pages |
 | ⛔ Pending (blocked) | 1 | SPG reuse — GKO-3001 (admission) + TF `cross_id` gap |
-| 🟡 Feasible, not yet done | ~50 | subscription plan-types (JWT/OAuth2/mTLS), plan/policy lifecycle, application members, group members, API metadata / inline pages, more V4 lifecycle |
-| 🚫 Permanently GKO-only | ~150 | K8s/operator mechanics (~100: admission, status/reconcile, mTLS CRs, templating, import/export, mgmt-context) + TF-blocked APIM areas (~50: V2 lifecycle, pages/fetchers, notifications, category CRUD) |
+| 🟡 Feasible, not yet done | ~50 | subscription plan-types (JWT/OAuth2/mTLS), plan/policy lifecycle, application members, group members, API metadata, more V4 lifecycle |
+| 🚫 Permanently GKO-only | ~150 | K8s/operator mechanics (~100: admission, status/reconcile, mTLS CRs, templating, import/export, mgmt-context) + TF-blocked APIM areas (~50: V2 lifecycle & V2 pages/fetchers, standalone pages, notifications, category CRUD) |
 
 **Achievable parity: ~25–30% covered.** The foundation and pattern are in place, so
 each remaining journey is incremental. Full 1:1 is a non-goal (GKO-2918).
@@ -45,11 +45,13 @@ parity-testable at the API level:
 | `categories` | assigning categories to an API (can't *create* a category) |
 | `groups` | associating existing groups with an API |
 | `metadata` | API metadata |
-| `pages[]` | inline markdown documentation (not standalone pages / fetchers) |
+| `pages[]` | inline markdown documentation **and inline fetchers** (`pages[].source`); not standalone pages |
 
 Genuinely impossible (no resource and no inline path): **V2 API lifecycle** (no
-`apim_apiv2` at all), standalone **page fetchers**, environment-level **category
-CRUD** and **notification configuration**.
+`apim_apiv2` at all, so V2 pages/fetchers too), standalone pages (no `apim_page`),
+environment-level **category CRUD** and **notification configuration**. Inline
+page **fetchers** on a V4 API are *not* in this list — `apim_apiv4.pages[].source`
+mirrors `spec.pages.<x>.source`, so they are parity-testable.
 
 ## Use-case journeys (where parity lives)
 
@@ -68,6 +70,7 @@ the scenario, its `gko/` + `terraform/` fixtures, and a README (the
 | consume-message-api | `apim_apiv4` (MESSAGE) | GKO-72/73 · TF new |
 | label-an-api | `apim_apiv4.labels` (inline) | GKO-1473 · TF new |
 | assign-categories-to-api | `apim_apiv4.categories` (inline) | GKO-267/270 · TF new (GKO-2918) |
+| add-inline-markdown-page-in-api | `apim_apiv4.pages[]` (inline) | GKO-1470 · TF GKO-3034 |
 | subscribe-and-call (api-key) | `apim_subscription` | existing |
 | api-references-dictionary-property | `apim_dictionary` (MANUAL) | existing |
 | manage-dynamic-dictionary | `apim_dictionary` (DYNAMIC) | GKO-2904/2910/2911/2909 · TF new (GKO-2997) |
@@ -122,8 +125,9 @@ Everything else is per-driver (`tests/gko/`, `tests/terraform/`).
 | Groups + members | create-group-with-member | 🟡 TF-led; journey covers create |
 | Labels | label-an-api | 🟢 done via journey (inline `apim_apiv4.labels`) |
 | Categories (assign to API) | assign-categories-to-api | 🟢 done via journey (inline `apim_apiv4.categories`) |
-| Pages — inline markdown | — | 🟡 expressible inline (`apim_apiv4.pages[]`); next journey |
-| Pages — standalone + fetchers | — | ⛔ no standalone `apim_page` |
+| Pages — inline markdown | add-inline-markdown-page-in-api | 🟢 done via journey (inline `apim_apiv4.pages[]`) |
+| Pages — inline fetchers (`pages[].source`) | — | 🟡 expressible on both drivers (TF `apim_apiv4.pages[].source`); journey pending |
+| Pages — standalone (no owning API) | — | ⛔ no standalone `apim_page` resource |
 | Notifications | — | ⛔ no `apim_notification` (no inline path) |
 | V2 API lifecycle | — | ⛔ no `apim_apiv2` (no inline path) |
 | Applications — members / OAuth | — | GKO-only (admission + member reconciliation) |
@@ -153,16 +157,20 @@ resource AND no inline `apim_apiv4` attribute), so they stay GKO-only:
 
 | Area | `tests/gko` | Why no TF path |
 |---|---:|---|
-| V2 API lifecycle | ~12 | no `apim_apiv2` resource; provider is V4-only |
+| V2 API lifecycle (incl. V2 pages/fetchers) | ~12 | no `apim_apiv2` resource; provider is V4-only |
 | Notifications | ~11 | no `apim_notification` resource, no inline attribute |
-| Standalone pages / fetchers | ~20 | only inline `apim_apiv4.pages[]`; no `apim_page`, no fetcher support |
+| Standalone pages (no owning API) | few | no `apim_page` resource; V4 pages are always inline on the API |
 | Category CRUD (create/rename a category) | ~6 | no `apim_category`; an API can only *reference* categories inline |
 
+> V4 inline page **fetchers** (`apim_apiv4.pages[].source`) are **not** GKO-only —
+> the TF provider exposes the same `source` block, so they are a feasible parity
+> follow-up (see the parity matrix).
+
 Partially TF-expressible at the API level (assign-to-API only, no standalone
-CRUD). **Categories** (`apim_apiv4.categories`) is done via the
-assign-categories-to-api journey; remaining follow-up journeys: **inline markdown
-pages** (`apim_apiv4.pages[]`), **group association** (`apim_apiv4.groups`),
-**metadata** (`apim_apiv4.metadata`).
+CRUD). **Categories** (`apim_apiv4.categories`) and **inline markdown pages**
+(`apim_apiv4.pages[]`) are done via the assign-categories-to-api and
+add-inline-markdown-page-in-api journeys; remaining follow-up journeys: **group association**
+(`apim_apiv4.groups`), **metadata** (`apim_apiv4.metadata`).
 
 ## Intentionally Terraform-only (no GKO parity expected)
 
@@ -190,10 +198,11 @@ dictionary, groups). What remains:
 | 6 | Message APIs (V4) | ✅ done — consume-message-api |
 | 7 | Labels | ✅ done — label-an-api (inline `apim_apiv4.labels`) |
 | 8 | Categories (assign) | ✅ done: assign-categories-to-api (inline `apim_apiv4.categories`) |
-| 8b | Inline pages · group-assoc · metadata | ⏳ future journeys (inline `apim_apiv4` attrs, no standalone resource) |
+| 8b | Inline markdown pages | ✅ done: add-inline-markdown-page-in-api (inline `apim_apiv4.pages[]`) |
+| 8c | Inline page fetchers (`pages[].source`) · group-assoc · metadata | ⏳ future journeys (all inline `apim_apiv4` attrs; both drivers support them) |
 | 9 | mTLS plans, gateway JWT/OAuth2 enforcement | ⏳ future (subscription + token orchestration) |
 | 10 | SPG reuse end-to-end | GKO-3001 (admission resolves ref before dry-run) + TF: expose `cross_id` on `apim_shared_policy_group` |
-| 11 | Notifications · standalone pages/fetchers · category CRUD · V2 lifecycle | ⛔ no TF path — stay GKO-only |
+| 11 | Notifications · standalone pages · category CRUD · V2 lifecycle (& V2 pages/fetchers) | ⛔ no TF path — stay GKO-only |
 | 12 | Co-locate all journeys under `tests/user-journeys/` (incl. the 3 pre-existing) | ✅ done |
 
 When picking up a row, prefer **a use-case journey** (one intent, two arms) over a

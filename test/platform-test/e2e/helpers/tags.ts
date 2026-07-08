@@ -480,6 +480,9 @@ export const XRAY = {
     // ── GKO-3024: categories-assign parity journey (assign-categories-to-api) ──
     // @parent: GKO-3024
     API_CATEGORIES_TF: "@GKO-3031",
+    // ── GKO-3025: inline-pages parity journey (add-inline-markdown-page-in-api) ──
+    // @parent: GKO-3025
+    API_INLINE_PAGES_TF: "@GKO-3034",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

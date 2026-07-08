@@ -28,6 +28,7 @@ up by `terraform destroy`.
 | [`consume-message-api`](./consume-message-api/) | Stand up a V4 MESSAGE (event) API | GKO-72/73 · TF GKO-3006 |
 | [`label-an-api`](./label-an-api/) | Label a V4 API (inline `apim_apiv4.labels`) | GKO-1473 · TF GKO-3007 |
 | [`assign-categories-to-api`](./assign-categories-to-api/) | Assign a portal category to a V4 API (inline `apim_apiv4.categories`; category pre-created via mAPI) | GKO-267/270 · TF GKO-3031 |
+| [`add-inline-markdown-page-in-api`](./add-inline-markdown-page-in-api/) | Add an inline markdown documentation page to a V4 API (inline `apim_apiv4.pages[]`; inline fetchers are a feasible follow-up, V2 pages stay GKO-only) | GKO-1470 · TF GKO-3034 |
 | [`reuse-shared-policy-group`](./reuse-shared-policy-group/) | Reuse a Shared Policy Group across an API — ⛔ pending (GKO-3001 + TF crossId gap) | GKO-976/980 · TF GKO-3005 |
 
 Run any journey by its Xray tag (both arms), or pin a driver:

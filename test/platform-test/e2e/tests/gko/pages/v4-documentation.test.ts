@@ -21,7 +21,9 @@
  *   GKO-236:  CRUD on existing V4 API operations (documentation context)
  *   GKO-280:  Documentation created by GKO is read-only when re-imported
  *   GKO-282:  Inline documentation with PUBLIC visibility
- *   GKO-1470: Documentation managed by GKO is reconciled end-to-end
+ *
+ * GKO-1470 (inline page reconciled end-to-end: lands on create, removed on strip)
+ * moved to the add-inline-markdown-page-in-api cross-provisioner journey.
  *
  * Skipped tests:
  *   GKO-283 (V4 spec.visibility PUBLIC-only) — GKO product bug
@@ -148,34 +150,4 @@ test.describe("V4 API Documentation — Extended", () => {
 
   // GKO-283 (V4 spec.visibility only accepts PUBLIC) was skipped due to a
   // GKO product bug.
-
-  // ── GKO-1470: Documentation is fully reconciled by the operator ─
-
-  test(`Documentation is reconciled end-to-end ${XRAY.PAGES.V4_DOC_RECONCILED} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-markdown-page";
-    const WITH_PAGE = fixture("pages/v4-api-with-page-markdown/crd.yaml");
-    const WITHOUT_PAGE = fixture("pages/v4-api-without-page-markdown/crd.yaml");
-
-    await kubectl.apply(WITH_PAGE);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    const apiId = (await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME)).id;
-
-    await test.step("Page present after create", async () => {
-      const crd = YAML.parse(await mapi.exportApiCrd(apiId)) as ExportedCrd;
-      expect(crd.spec?.pages?.["markdown-page"]).toBeDefined();
-    });
-
-    await kubectl.apply(WITHOUT_PAGE);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    await test.step("Page removed after without-page re-apply", async () => {
-      const crd = YAML.parse(await mapi.exportApiCrd(apiId)) as ExportedCrd;
-      expect(crd.spec?.pages?.["markdown-page"]).toBeUndefined();
-    });
-
-    await kubectl.del(WITHOUT_PAGE);
-  });
 });
