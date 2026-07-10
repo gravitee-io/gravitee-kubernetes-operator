@@ -119,6 +119,41 @@ export const survivalNonHridScenario = gkoScenario({
   },
 });
 
+/** Fixed identities for the non-HRID-names resources created on the NEW line. */
+export const SURVIVAL_NON_HRID_FRESH = {
+  apiName: "non-hrid-fresh-api",
+  appName: "non-hrid-fresh-app",
+  subName: "non-hrid-fresh-sub",
+  clientId: "non-hrid-fresh-client",
+  contextPath: "/non-hrid-fresh",
+  folderName: "non-hrid-folder",
+  pageName: "non-hrid-page",
+} as const;
+
+/**
+ * Same identifier shapes as {@link survivalNonHridScenario} but provisioned
+ * FRESH in the after-phase: proves the new line's create path handles them,
+ * not only the survival of carried-over resources. Distinct names because
+ * re-creating a just-deleted application can hit its archived state in APIM.
+ */
+export const survivalNonHridFreshScenario = gkoScenario({
+  manifests: [
+    "upgrade/jwt-secret.yaml",
+    "upgrade/api-non-hrid-fresh.yaml",
+    "upgrade/app-non-hrid-fresh.yaml",
+  ],
+  roles: {
+    api: { kind: "apiv4definition", name: SURVIVAL_NON_HRID_FRESH.apiName },
+    application: { kind: "application", name: SURVIVAL_NON_HRID_FRESH.appName },
+    subscription: { kind: "subscription", name: SURVIVAL_NON_HRID_FRESH.subName },
+  },
+  dynamicRoles: ["subscription"],
+  contextPath: SURVIVAL_NON_HRID_FRESH.contextPath,
+  applyParams: async (kubectl) => {
+    await kubectl.apply(fixture("upgrade/sub-non-hrid-fresh.yaml"));
+  },
+});
+
 /** Fixed identity for the V2 keyless survival API (GKO-1060). */
 export const SURVIVAL_V2 = {
   apiName: "legacy-v2-api",

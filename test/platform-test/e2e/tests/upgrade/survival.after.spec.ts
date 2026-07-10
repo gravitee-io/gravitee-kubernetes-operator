@@ -43,6 +43,8 @@ import {
   SURVIVAL,
   survivalNonHridScenario,
   SURVIVAL_NON_HRID,
+  survivalNonHridFreshScenario,
+  SURVIVAL_NON_HRID_FRESH,
   survivalV2Scenario,
   SURVIVAL_V2,
   survivalV2SubScenario,
@@ -68,9 +70,9 @@ function targetAtLeast(version: string): boolean {
 test.afterAll(async () => {
   const order = [
     "v2-sub", "sub-legacy-weather", "sub-mobile-legacy", "sub-mobile-weather", "sub-legacy-mtls", "sub-legacy-legacy-jwt",
-    "sub-non-hrid",
-    "v2-sub-app", "app-mobile", "app-legacy", "app-non-hrid",
-    "v2-sub-api", "api-weather", "api-legacy", "api-non-hrid",
+    "sub-non-hrid", "sub-non-hrid-fresh",
+    "v2-sub-app", "app-mobile", "app-legacy", "app-non-hrid", "app-non-hrid-fresh",
+    "v2-sub-api", "api-weather", "api-legacy", "api-non-hrid", "api-non-hrid-fresh",
     "v2-legacy-api", "jwt-secret",
   ];
   for (const f of order) {
@@ -417,4 +419,41 @@ test(`upgrade survival (non-HRID names): reconcile, update, delete on the new li
     await mapi.assertApiHttpStatus(apiId, 404);
     await gateway.assertNotResponds(ctx, { notStatus: 200, headers: bearer() });
   });
+});
+
+test(`upgrade survival (non-HRID names): fresh resources provision on the new line ${XRAY.API_LIFECYCLE.NON_HRID_FRESH_ON_NEW_LINE} @upgrade @after`, async ({
+  mapi,
+  gateway,
+}) => {
+  // Create-path counterpart of the carried-over check: a brand-new API, app and
+  // subscription using the same spaced plan/page keys and lowercase flow mode
+  // must provision through the new control plane from scratch.
+  const provisioned = await survivalNonHridFreshScenario().provision({});
+
+  const apiId = await provisioned.apiId();
+  const subId = await provisioned.subscriptionId();
+  const ctx = await provisioned.contextPath();
+  const bearer = () => ({ Authorization: `Bearer ${signJwt(SURVIVAL_NON_HRID_FRESH.clientId)}` });
+
+  await mapi.waitForApiStarted(apiId, { timeoutMs: 30_000 });
+  await mapi.assertSubscriptionAccepted(apiId, subId);
+  await gateway.assertResponds(ctx, { status: 401 });
+  await gateway.assertResponds(ctx, { status: 200, headers: bearer() });
+
+  await expect
+    .poll(
+      async () => {
+        const pages = await mapi.listApiPages(apiId);
+        return {
+          folders: pages.filter((p) => p.name === SURVIVAL_NON_HRID_FRESH.folderName).length,
+          markdowns: pages.filter((p) => p.name === SURVIVAL_NON_HRID_FRESH.pageName).length,
+        };
+      },
+      { timeout: 30_000 },
+    )
+    .toEqual({ folders: 1, markdowns: 1 });
+
+  await provisioned.destroy();
+  await kubectl.waitForDeletion("apiv4definition", SURVIVAL_NON_HRID_FRESH.apiName);
+  await mapi.assertApiHttpStatus(apiId, 404);
 });
