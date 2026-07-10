@@ -27,10 +27,16 @@
  * never collects it.
  */
 
-import { test } from "../../setup.js";
+import { test, expect } from "../../setup.js";
 import * as kubectl from "../../helpers/kubectl.js";
 import { signJwt } from "../../helpers/jwt.js";
-import { DATASTORE, survivalScenario, survivalV2Scenario } from "./survival-scenario.js";
+import {
+  DATASTORE,
+  SURVIVAL_NON_HRID,
+  survivalNonHridScenario,
+  survivalScenario,
+  survivalV2Scenario,
+} from "./survival-scenario.js";
 
 test("upgrade survival: provision and verify on the old line @upgrade @before", async ({
   mapi,
@@ -66,6 +72,47 @@ test("upgrade survival (V2): keyless V2 API reachable on the old line @upgrade @
   // provision() already waited for the V2 API CR to reconcile (Accepted); the
   // keyless plan means the gateway serves it without a token. Leave it running.
   await gateway.assertResponds(ctx, { status: 200 });
+});
+
+test("upgrade survival (non-HRID names): provision and verify on the old line @upgrade @before", async ({
+  mapi,
+  gateway,
+}) => {
+  const provisioned = await survivalNonHridScenario().provision({});
+
+  const apiId = await provisioned.apiId();
+  const subId = await provisioned.subscriptionId();
+  const ctx = await provisioned.contextPath();
+
+  // Healthy on the OLD line despite the spaced plan/page keys and the lowercase
+  // flow mode: the API is started and the subscription (which references the
+  // plan by its raw spaced key) is accepted.
+  await mapi.waitForApiStarted(apiId, { timeoutMs: 30_000 });
+  await mapi.assertSubscriptionAccepted(apiId, subId);
+
+  // Reachable through the gateway: rejected without a token, served with a
+  // valid JWT (client_id = the subscribed app's clientId).
+  await gateway.assertResponds(ctx, { status: 401 });
+  await gateway.assertResponds(ctx, {
+    status: 200,
+    headers: { Authorization: `Bearer ${signJwt(SURVIVAL_NON_HRID.clientId)}` },
+  });
+
+  // The pages declared under spaced map keys made it into APIM, once each.
+  await expect
+    .poll(
+      async () => {
+        const pages = await mapi.listApiPages(apiId);
+        return {
+          folders: pages.filter((p) => p.name === SURVIVAL_NON_HRID.folderName).length,
+          markdowns: pages.filter((p) => p.name === SURVIVAL_NON_HRID.pageName).length,
+        };
+      },
+      { timeout: 30_000 },
+    )
+    .toEqual({ folders: 1, markdowns: 1 });
+
+  // No teardown on purpose - the after-phase re-attaches to these resources.
 });
 
 test("upgrade survival: record the datastore identity before the upgrade @upgrade @before", async () => {

@@ -41,6 +41,8 @@ import { XRAY } from "../../helpers/tags.js";
 import {
   survivalScenario,
   SURVIVAL,
+  survivalNonHridScenario,
+  SURVIVAL_NON_HRID,
   survivalV2Scenario,
   SURVIVAL_V2,
   survivalV2SubScenario,
@@ -66,8 +68,10 @@ function targetAtLeast(version: string): boolean {
 test.afterAll(async () => {
   const order = [
     "v2-sub", "sub-legacy-weather", "sub-mobile-legacy", "sub-mobile-weather", "sub-legacy-mtls", "sub-legacy-legacy-jwt",
-    "v2-sub-app", "app-mobile", "app-legacy",
-    "v2-sub-api", "api-weather", "api-legacy", "v2-legacy-api", "jwt-secret",
+    "sub-non-hrid",
+    "v2-sub-app", "app-mobile", "app-legacy", "app-non-hrid",
+    "v2-sub-api", "api-weather", "api-legacy", "api-non-hrid",
+    "v2-legacy-api", "jwt-secret",
   ];
   for (const f of order) {
     await kubectl.del(fixture(`upgrade/${f}.yaml`)).catch(() => {});
@@ -317,5 +321,100 @@ test(`upgrade survival (V2): keyless V2 API survives the upgrade ${XRAY.API_LIFE
     await provisioned.destroy();
     await kubectl.waitForDeletion("apidefinition", SURVIVAL_V2.apiName);
     await gateway.assertNotResponds(ctx, { notStatus: 200 });
+  });
+});
+
+test(`upgrade survival (non-HRID names): reconcile, update, delete on the new line ${XRAY.API_LIFECYCLE.NON_HRID_SURVIVES_UPGRADE} @upgrade @after`, async ({
+  mapi,
+  gateway,
+}) => {
+  const provisioner = survivalNonHridScenario();
+  if (!provisioner.attach) {
+    throw new Error("the GKO provisioner does not implement attach(); cannot run the after-phase");
+  }
+
+  // Rebuild a handle to the resources created before the upgrade (a missing CR
+  // here means it did not survive).
+  const provisioned = await provisioner.attach({
+    api: { hrid: SURVIVAL_NON_HRID.apiName },
+    application: { hrid: SURVIVAL_NON_HRID.appName },
+    subscription: { hrid: SURVIVAL_NON_HRID.subName },
+  });
+
+  const apiId = await provisioned.apiId();
+  const appId = await provisioned.applicationId();
+  const subId = await provisioned.subscriptionId();
+  const ctx = await provisioned.contextPath();
+  const bearer = () => ({ Authorization: `Bearer ${signJwt(SURVIVAL_NON_HRID.clientId)}` });
+
+  // The core-survival teardown deletes the shared JWT templating secret; the
+  // reconciles below re-resolve the plan's public key from it, so put it back.
+  await kubectl.apply(fixture("upgrade/jwt-secret.yaml"));
+
+  await test.step("resources survived the post-upgrade resync", async () => {
+    // The upgraded operator reconciles every carried-over CR on startup. That
+    // resync must accept the spaced plan/page keys and the lowercase flow mode
+    // instead of rejecting the resources (Accepted=False, ControlPlaneError)
+    // with no retry - the condition checks make that failure mode explicit.
+    await kubectl.waitForCondition("apiv4definition", SURVIVAL_NON_HRID.apiName, "Accepted");
+    await kubectl.waitForCondition("application", SURVIVAL_NON_HRID.appName, "Accepted");
+    await kubectl.waitForCondition("subscription", SURVIVAL_NON_HRID.subName, "Accepted");
+
+    await mapi.waitForApiStarted(apiId, { timeoutMs: 30_000 });
+    await mapi.assertSubscriptionAccepted(apiId, subId);
+    await gateway.assertResponds(ctx, { status: 401 });
+    await gateway.assertResponds(ctx, { status: 200, headers: bearer() });
+
+    // The pages declared under spaced map keys are still there, once each:
+    // remapping their identifiers must not drop or duplicate them.
+    await expect
+      .poll(
+        async () => {
+          const pages = await mapi.listApiPages(apiId);
+          return {
+            folders: pages.filter((p) => p.name === SURVIVAL_NON_HRID.folderName).length,
+            markdowns: pages.filter((p) => p.name === SURVIVAL_NON_HRID.pageName).length,
+          };
+        },
+        { timeout: 30_000 },
+      )
+      .toEqual({ folders: 1, markdowns: 1 });
+  });
+
+  await test.step("the new operator updates the carried-over resources", async () => {
+    // The identifiers stay spaced/lowercase in the updated manifests: a user
+    // must not have to rewrite them for updates to keep working. Each update
+    // pushes the full definition through the new control-plane path.
+    await kubectl.apply(fixture("upgrade/api-non-hrid-updated.yaml"));
+    await mapi.waitForApiMatches(
+      apiId,
+      { description: SURVIVAL_NON_HRID.updatedDescription },
+      { timeoutMs: 30_000 },
+    );
+
+    await kubectl.apply(fixture("upgrade/app-non-hrid-updated.yaml"));
+    await mapi.waitForApplicationMatches(
+      appId,
+      { description: SURVIVAL_NON_HRID.updatedAppDescription },
+      { timeoutMs: 30_000 },
+    );
+
+    await kubectl.apply(fixture("upgrade/sub-non-hrid-updated.yaml"));
+    await expect
+      .poll(async () => (await mapi.fetchSubscription(apiId, subId)).endingAt, {
+        timeout: 30_000,
+      })
+      .toBeTruthy();
+    await mapi.assertSubscriptionAccepted(apiId, subId);
+
+    // The updates did not break the data plane.
+    await gateway.assertResponds(ctx, { status: 200, headers: bearer() });
+  });
+
+  await test.step("clean teardown", async () => {
+    await provisioned.destroy();
+    await kubectl.waitForDeletion("apiv4definition", SURVIVAL_NON_HRID.apiName);
+    await mapi.assertApiHttpStatus(apiId, 404);
+    await gateway.assertNotResponds(ctx, { notStatus: 200, headers: bearer() });
   });
 });

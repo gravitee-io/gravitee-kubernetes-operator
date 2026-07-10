@@ -77,6 +77,48 @@ export const survivalScenario = gkoScenario({
   },
 });
 
+/**
+ * Fixed identities + expectations for the non-HRID-names survival check. The
+ * API carries identifier shapes the old (4.11) Management API tolerated but the
+ * new control plane validates strictly: plan and page map keys with spaces and
+ * dots, a page parent referenced by such a key, and a lowercase
+ * flowExecution.mode. The upgraded operator must keep syncing these resources
+ * (mapping the keys to valid HRIDs, normalising the enums) instead of marking
+ * them SyncFailed on their first reconcile after the upgrade.
+ */
+export const SURVIVAL_NON_HRID = {
+  apiName: "non-hrid-api",
+  appName: "non-hrid-app",
+  subName: "non-hrid-sub",
+  clientId: "non-hrid-client",
+  contextPath: "/legacy-non-hrid",
+  folderName: "non-hrid-folder",
+  pageName: "non-hrid-page",
+  updatedDescription: "API with non-HRID plan and page names (updated after upgrade)",
+  updatedAppDescription:
+    "Application subscribed to a plan with a non-HRID name (updated after upgrade)",
+} as const;
+
+/**
+ * GKO provisioner for the non-HRID-names API + app + JWT-plan subscription
+ * (the subscription references the plan by its raw spaced map key). Shares the
+ * `jwt` templating secret with the core scenario; listing it here too keeps
+ * this scenario self-sufficient (apply is idempotent).
+ */
+export const survivalNonHridScenario = gkoScenario({
+  manifests: ["upgrade/jwt-secret.yaml", "upgrade/api-non-hrid.yaml", "upgrade/app-non-hrid.yaml"],
+  roles: {
+    api: { kind: "apiv4definition", name: SURVIVAL_NON_HRID.apiName },
+    application: { kind: "application", name: SURVIVAL_NON_HRID.appName },
+    subscription: { kind: "subscription", name: SURVIVAL_NON_HRID.subName },
+  },
+  dynamicRoles: ["subscription"],
+  contextPath: SURVIVAL_NON_HRID.contextPath,
+  applyParams: async (kubectl) => {
+    await kubectl.apply(fixture("upgrade/sub-non-hrid.yaml"));
+  },
+});
+
 /** Fixed identity for the V2 keyless survival API (GKO-1060). */
 export const SURVIVAL_V2 = {
   apiName: "legacy-v2-api",
