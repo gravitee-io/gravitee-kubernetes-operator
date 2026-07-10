@@ -67,9 +67,9 @@ func RegisterEquivalenceFunc(name string, k reflect.Kind, f EquivalenceFunc) {
 	equivalenceRegistry.registry[registryEntry{
 		kind: k,
 		name: name,
-	}] = func(crd any, remote any) Equivalence {
+	}] = func(crd any, remote any, ctx DriftContext) Equivalence {
 		assertTypes(crd, remote)
-		e := f(crd, remote)
+		e := f(crd, remote, ctx)
 		return e
 	}
 }
@@ -90,7 +90,7 @@ func assertTypes(crd any, remote any) {
 
 // defaultStructEquivalence if one of the fields is exclusively nil, the whole struct is not equivalent and elements are skipped.
 // Otherwise, it is marked as cannot compare, but fields are not skipped.
-func defaultStructEquivalence(crd any, remote any) Equivalence {
+func defaultStructEquivalence(any, any, DriftContext) Equivalence {
 	return Equivalence{
 		Equivalent: CannotCompare,
 		Skip:       false,
@@ -98,7 +98,7 @@ func defaultStructEquivalence(crd any, remote any) Equivalence {
 }
 
 // defaultSliceEquivalence the whole slice or array is marked as cannot compare but elements are not skipped.
-func defaultSliceEquivalence(any, any) Equivalence {
+func defaultSliceEquivalence(any, any, DriftContext) Equivalence {
 	return Equivalence{
 		Equivalent: CannotCompare,
 		Skip:       false,

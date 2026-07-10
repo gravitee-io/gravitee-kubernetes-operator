@@ -16,6 +16,7 @@ package apidefinition
 
 import (
 	"context"
+	"strings"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
@@ -42,10 +43,49 @@ func PrepareV4SpecForAutomation(ctx context.Context, api *v1alpha1.ApiV4Definiti
 	}
 
 	spec.DefinitionContext = v4.NewDefaultKubernetesContext().MergeWith(spec.DefinitionContext)
+	normalizeV4SpecForAutomation(spec)
 
 	if spec.Context != nil {
 		return ResolveConsoleNotificationRefs(ctx, api)
 	}
 
 	return nil
+}
+
+func normalizeV4SpecForAutomation(spec *v1alpha1.ApiV4DefinitionSpec) {
+	normalizeHTTPListenerPaths(&spec.Api)
+	normalizeEndpointWeights(&spec.Api)
+}
+
+func normalizeHTTPListenerPaths(api *v4.Api) {
+	listeners := make([]*v4.GenericListener, len(api.Listeners))
+	for i, listener := range api.Listeners {
+		if listener == nil || listener.ListenerType() != v4.HTTPListenerType {
+			listeners[i] = listener
+			continue
+		}
+		httpListener, ok := listener.ToListener().(*v4.HttpListener)
+		if !ok {
+			listeners[i] = listener
+			continue
+		}
+		for _, path := range httpListener.Paths {
+			if path.Path != "" && !strings.HasSuffix(path.Path, "/") {
+				path.Path += "/"
+			}
+		}
+		listeners[i] = v4.ToGenericListener(httpListener)
+	}
+	api.Listeners = listeners
+}
+
+func normalizeEndpointWeights(api *v4.Api) {
+	defaultWeight := int32(1)
+	for _, group := range api.EndpointGroups {
+		for _, endpoint := range group.Endpoints {
+			if endpoint.Weight == nil {
+				endpoint.Weight = &defaultWeight
+			}
+		}
+	}
 }

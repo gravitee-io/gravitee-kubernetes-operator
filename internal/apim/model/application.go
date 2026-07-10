@@ -75,11 +75,8 @@ type ApplicationCertificateRefDTO struct {
 }
 
 type ApplicationMetadataDTO struct {
-	Name         string                      `json:"name"`
-	Value        *string                     `json:"value,omitempty"`
-	DefaultValue *string                     `json:"defaultValue,omitempty"`
-	Format       *application.MetaDataFormat `json:"format,omitempty"`
-	Hidden       *bool                       `json:"hidden,omitempty"`
+	Metadata `json:",inline"`
+	Format   *application.MetaDataFormat `json:"format,omitempty"`
 }
 
 type ApplicationMemberDTO struct {

@@ -22,12 +22,12 @@ import (
 const indentSpaces = 2
 
 func format(this *Result, b *strings.Builder, indent int) {
-	if len(this.Children) > 0 {
+	if len(this.children) > 0 {
 		if this.DriftDetected() {
 			indent += indentSpaces
 		}
 		formatChildren(this, b, indent)
-	} else if len(this.Children) == 0 && this.Equivalent == Inequivalent && this.Property != "" {
+	} else if len(this.children) == 0 && this.Equivalent == Inequivalent && this.Property != "" {
 		formatValue(this, b, indent)
 	}
 }
@@ -52,8 +52,8 @@ func formatValue(this *Result, b *strings.Builder, indent int) {
 }
 
 func formatChildren(this *Result, b *strings.Builder, indent int) {
-	for _, child := range this.Children {
-		if child.DriftDetected() && len(child.Children) > 0 {
+	for _, child := range this.children {
+		if child.DriftDetected() && len(child.children) > 0 {
 			addIndent(b, indent)
 			property := child.Property
 			if child.Index != nil {

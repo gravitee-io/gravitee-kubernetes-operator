@@ -21,13 +21,14 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/drift"
 )
 
 var _ = Describe("EmptyIsNilString", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilString(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilString(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -39,7 +40,7 @@ var _ = Describe("EmptyIsNilString", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilString(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilString(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -54,7 +55,7 @@ var _ = Describe("EmptyIsNilString", func() {
 var _ = Describe("EmptyIsNilInt", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilInt(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilInt(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -67,7 +68,7 @@ var _ = Describe("EmptyIsNilInt", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilInt(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilInt(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -86,7 +87,7 @@ var _ = Describe("EmptyIsNilInt", func() {
 var _ = Describe("EmptyIsNilUint", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilUint(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilUint(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -99,7 +100,7 @@ var _ = Describe("EmptyIsNilUint", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilUint(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilUint(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -118,7 +119,7 @@ var _ = Describe("EmptyIsNilUint", func() {
 var _ = Describe("EmptyIsNilBool", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilBool(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilBool(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -131,7 +132,7 @@ var _ = Describe("EmptyIsNilBool", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilBool(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilBool(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -145,7 +146,7 @@ var _ = Describe("EmptyIsNilBool", func() {
 var _ = Describe("EmptyIsTrue", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsTrue(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsTrue(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -157,7 +158,7 @@ var _ = Describe("EmptyIsTrue", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsTrue(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsTrue(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -169,36 +170,115 @@ var _ = Describe("EmptyIsTrue", func() {
 	)
 })
 
-var _ = Describe("IgnoreRemotePrefix", func() {
-	DescribeTable("should report equivalence when remote ends with crd",
-		func(crd, remote string) {
-			Expect(drift.IgnoreRemotePrefix(crd, remote)).To(Equal(
+var _ = Describe("IgnoreNamespacePrefix", func() {
+	DescribeTable("should report equivalence when remote starts with namespace",
+		func(crd, remote any) {
+			Expect(drift.IgnoreNamespacePrefix(crd, remote, drift.DriftContext{Namespace: "foo"})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
-		Entry("remote has prefix", "api", "my-prefix-api"),
-		Entry("equal strings", "api", "api"),
-		Entry("empty crd suffix matches any remote", "", "anything"),
+		Entry("remote has ns", "api", "foo-api"),
+		Entry("local has ns", "foo-api", "api"),
+		Entry("both with ns", "foo-api", "foo-api"),
+		Entry("none with ns", "api", "api"),
 		Entry("both empty", "", ""),
+		Entry("both nil", nil, nil),
+		Entry("empty nil", "", nil),
+		Entry("nil empty", nil, ""),
 	)
 
 	DescribeTable("should report inequivalence",
-		func(crd, remote string) {
-			Expect(drift.IgnoreRemotePrefix(crd, remote)).To(Equal(
+		func(crd, remote any) {
+			Expect(drift.IgnoreNamespacePrefix(crd, remote, drift.DriftContext{Namespace: "foo"})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
-		Entry("crd is not a suffix of remote", "api", "api-prefix"),
-		Entry("crd longer than remote", "longer", "short"),
-		Entry("different strings of same length", "foo", "bar"),
-		Entry("partial overlap without suffix match", "api", "apix"),
+		Entry("not sharing anything", "x", "y"),
+		Entry("same ns different values", "foo-x", "foo-y"),
+		Entry("empty crd remote ns", "", "foo"),
+		Entry("empty ns remote empty", "foo", ""),
+		Entry("ns remote nil", "foo", nil),
+		Entry("nil vs remote ns", nil, "foo"),
 	)
+})
+
+var _ = Describe("IgnoreRemoteOnlyMetadata", func() {
+	DescribeTable("should report equivalence and skip for empty slices",
+		func(crd, remote any) {
+			Expect(drift.IgnoreRemoteOnlyMetadata(crd, remote, drift.DriftContext{})).To(Equal(
+				drift.Equivalence{Equivalent: drift.Equivalent, Skip: true},
+			))
+		},
+		Entry("nil vs nil", nil, nil),
+		Entry("nil vs empty slice", nil, []model.BaseMetadata{}),
+		Entry("empty slice vs nil", []model.BaseMetadata{}, nil),
+		Entry("empty slice vs empty slice", []model.BaseMetadata{}, []model.BaseMetadata{}),
+	)
+
+	DescribeTable("should report cannot compare without filter",
+		func(crd, remote any) {
+			e := drift.IgnoreRemoteOnlyMetadata(crd, remote, drift.DriftContext{})
+			Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+			Expect(e.RemoteItemsFilterFunc).To(BeNil())
+		},
+		Entry("same metadata names", []model.BaseMetadata{{Name: "owner"}}, []model.BaseMetadata{{Name: "owner"}}),
+		Entry("non-metadata slice items", []string{"foo"}, []string{"foo"}),
+		Entry("crd metadata missing from remote", []model.BaseMetadata{{Name: "owner"}}, []model.BaseMetadata{}),
+	)
+
+	It("provides a filter that removes remote-only metadata by name", func() {
+		crd := []model.BaseMetadata{{Name: "owner"}}
+		remote := []model.BaseMetadata{
+			{Name: "owner"},
+			{Name: "sync-id"},
+		}
+
+		e := drift.IgnoreRemoteOnlyMetadata(crd, remote, drift.DriftContext{})
+		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+		Expect(e.RemoteItemsFilterFunc).NotTo(BeNil())
+
+		filtered := e.RemoteItemsFilterFunc(remote)
+		Expect(filtered).To(ConsistOf(model.BaseMetadata{Name: "owner"}))
+	})
+
+	It("filters remote-only metadata when crd metadata is empty", func() {
+		remote := []model.BaseMetadata{{Name: "sync-id"}}
+
+		e := drift.IgnoreRemoteOnlyMetadata(nil, remote, drift.DriftContext{})
+		Expect(e.Equivalent).To(Equal(drift.CannotCompare))
+		Expect(e.RemoteItemsFilterFunc).NotTo(BeNil())
+
+		filtered := e.RemoteItemsFilterFunc(remote)
+		Expect(filtered).To(BeEmpty())
+	})
+
+	It("keeps non-metadata items when filtering remote-only metadata", func() {
+		crd := []model.BaseMetadata{{Name: "owner"}}
+		remote := []model.BaseMetadata{
+			{Name: "owner"},
+			{Name: "sync-id"},
+		}
+
+		e := drift.IgnoreRemoteOnlyMetadata(crd, remote, drift.DriftContext{})
+		Expect(e.RemoteItemsFilterFunc).NotTo(BeNil())
+
+		mixed := []any{
+			model.BaseMetadata{Name: "owner"},
+			model.BaseMetadata{Name: "sync-id"},
+			"keep-me",
+		}
+		filtered := e.RemoteItemsFilterFunc(mixed)
+		Expect(filtered).To(ConsistOf(
+			model.BaseMetadata{Name: "owner"},
+			"keep-me",
+		))
+	})
 })
 
 var _ = Describe("EmptyIsNilLen", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilLen(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilLen(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent, Skip: true},
 			))
 		},
@@ -212,7 +292,7 @@ var _ = Describe("EmptyIsNilLen", func() {
 
 	DescribeTable("should report cannot compare",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilLen(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilLen(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.CannotCompare},
 			))
 		},
@@ -225,13 +305,13 @@ var _ = Describe("EmptyIsNilLen", func() {
 	)
 
 	It("treats nil crd as empty when remote slice is populated", func() {
-		Expect(drift.EmptyIsNilLen(nil, []string{"published"})).To(Equal(
+		Expect(drift.EmptyIsNilLen(nil, []string{"published"}, drift.DriftContext{})).To(Equal(
 			drift.Equivalence{Equivalent: drift.CannotCompare},
 		))
 	})
 
 	It("treats nil crd as empty when remote map is populated", func() {
-		Expect(drift.EmptyIsNilLen(nil, map[string]string{"env": "prod"})).To(Equal(
+		Expect(drift.EmptyIsNilLen(nil, map[string]string{"env": "prod"}, drift.DriftContext{})).To(Equal(
 			drift.Equivalence{Equivalent: drift.CannotCompare},
 		))
 	})
@@ -247,10 +327,7 @@ type emptyIsNilOuterWithInner struct {
 
 var _ = Describe("EmptyIsNilLen through Detect", func() {
 	It("detects drift when nil inner struct is compared to a populated remote", func() {
-		result := drift.Detect(
-			emptyIsNilOuterWithInner{Inner: nil},
-			emptyIsNilOuterWithInner{Inner: &emptyIsNilInnerWithTags{Tags: []string{"published"}}},
-		)
+		result := drift.DetectWithNamespace(emptyIsNilOuterWithInner{Inner: nil}, emptyIsNilOuterWithInner{Inner: &emptyIsNilInnerWithTags{Tags: []string{"published"}}}, "")
 		Expect(result.DriftDetected()).To(BeTrue())
 	})
 })
@@ -263,7 +340,7 @@ type emptyIsNilStructFixture struct {
 var _ = Describe("EmptyIsNilStruct", func() {
 	DescribeTable("should report equivalence and skip",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilStruct(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilStruct(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent, Skip: true},
 			))
 		},
@@ -273,7 +350,7 @@ var _ = Describe("EmptyIsNilStruct", func() {
 
 	DescribeTable("should report cannot compare",
 		func(crd, remote any) {
-			Expect(drift.EmptyIsNilStruct(crd, remote)).To(Equal(
+			Expect(drift.EmptyIsNilStruct(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.CannotCompare},
 			))
 		},
@@ -288,7 +365,7 @@ var _ = Describe("EmptyIsNilStruct", func() {
 var _ = Describe("FromDeepEqual", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote any) {
-			Expect(drift.FromDeepEqual(crd, remote)).To(Equal(
+			Expect(drift.FromDeepEqual(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -300,7 +377,7 @@ var _ = Describe("FromDeepEqual", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote any) {
-			Expect(drift.FromDeepEqual(crd, remote)).To(Equal(
+			Expect(drift.FromDeepEqual(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -314,10 +391,10 @@ var _ = Describe("FromDeepEqual", func() {
 
 var _ = Describe("Ignore", func() {
 	It("always reports equivalence regardless of values", func() {
-		Expect(drift.Ignore("export-id", "")).To(Equal(
+		Expect(drift.Ignore("export-id", "", drift.DriftContext{})).To(Equal(
 			drift.Equivalence{Equivalent: drift.CannotCompare},
 		))
-		Expect(drift.Ignore(nil, "foo")).To(Equal(
+		Expect(drift.Ignore(nil, "foo", drift.DriftContext{})).To(Equal(
 			drift.Equivalence{Equivalent: drift.CannotCompare},
 		))
 	})
@@ -325,7 +402,7 @@ var _ = Describe("Ignore", func() {
 
 var _ = Describe("IgnoreSkip", func() {
 	It("always reports equivalence and skips children", func() {
-		Expect(drift.IgnoreSkip(struct{}{}, struct{ Name string }{Name: "foo"})).To(Equal(
+		Expect(drift.IgnoreSkip(struct{}{}, struct{ Name string }{Name: "foo"}, drift.DriftContext{})).To(Equal(
 			drift.Equivalence{Equivalent: drift.CannotCompare, Skip: true},
 		))
 	})
@@ -334,7 +411,7 @@ var _ = Describe("IgnoreSkip", func() {
 var _ = Describe("Trimmed", func() {
 	DescribeTable("should report equivalence",
 		func(crd, remote string) {
-			Expect(drift.Trimmed(crd, remote)).To(Equal(
+			Expect(drift.Trimmed(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -347,7 +424,7 @@ var _ = Describe("Trimmed", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote string) {
-			Expect(drift.Trimmed(crd, remote)).To(Equal(
+			Expect(drift.Trimmed(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -364,7 +441,7 @@ var _ = Describe("RFC3339", func() {
 
 	DescribeTable("should report equivalence",
 		func(crd, remote string) {
-			Expect(drift.RFC3339(crd, remote)).To(Equal(
+			Expect(drift.RFC3339(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Equivalent},
 			))
 		},
@@ -377,7 +454,7 @@ var _ = Describe("RFC3339", func() {
 
 	DescribeTable("should report inequivalence",
 		func(crd, remote string) {
-			Expect(drift.RFC3339(crd, remote)).To(Equal(
+			Expect(drift.RFC3339(crd, remote, drift.DriftContext{})).To(Equal(
 				drift.Equivalence{Equivalent: drift.Inequivalent},
 			))
 		},
@@ -387,13 +464,13 @@ var _ = Describe("RFC3339", func() {
 	)
 
 	It("reports a parse error for invalid crd timestamp", func() {
-		e := drift.RFC3339("not-a-date", certStartsAt)
+		e := drift.RFC3339("not-a-date", certStartsAt, drift.DriftContext{})
 		Expect(e.Equivalent).To(Equal(drift.Inequivalent))
 		Expect(e.Reason).To(BeAssignableToTypeOf(&time.ParseError{}))
 	})
 
 	It("reports a parse error for invalid remote timestamp", func() {
-		e := drift.RFC3339(certStartsAt, "not-a-date")
+		e := drift.RFC3339(certStartsAt, "not-a-date", drift.DriftContext{})
 		Expect(e.Equivalent).To(Equal(drift.Inequivalent))
 		Expect(e.Reason).To(BeAssignableToTypeOf(&time.ParseError{}))
 	})
@@ -402,7 +479,7 @@ var _ = Describe("RFC3339", func() {
 var _ = Describe("DefaultEquivalencePostPullUpObjectChildren", func() {
 	DescribeTable("delegates struct equivalence to defaultStructEquivalence",
 		func(crd, remote any, expected drift.Equivalence) {
-			e := drift.DefaultEquivalencePostPullUpObjectChildren(crd, remote)
+			e := drift.DefaultEquivalencePostPullUpObjectChildren(crd, remote, drift.DriftContext{})
 			Expect(e.Equivalent).To(Equal(expected.Equivalent))
 			Expect(e.Skip).To(Equal(expected.Skip))
 			Expect(e.PostFunc).NotTo(BeNil())
@@ -421,23 +498,16 @@ var _ = Describe("DefaultEquivalencePostPullUpObjectChildren", func() {
 	)
 
 	It("hoists object children to the root via PostFunc", func() {
-		e := drift.DefaultEquivalencePostPullUpObjectChildren(
-			unstructured.Unstructured{Object: map[string]any{"type": "HTTP"}},
-			unstructured.Unstructured{Object: map[string]any{"type": "HTTP"}},
-		)
+		e := drift.DefaultEquivalencePostPullUpObjectChildren(unstructured.Unstructured{Object: map[string]any{"type": "HTTP"}}, unstructured.Unstructured{Object: map[string]any{"type": "HTTP"}}, drift.DriftContext{})
 
-		child := &drift.Result{
-			Children: []*drift.Result{
-				{Property: "other"},
-				{Property: "object", Children: []*drift.Result{
-					{Property: "type", CRDValue: "HTTP"},
-					{Property: "path", CRDValue: "/api"},
-				}},
-			},
-		}
+		child := &drift.Result{}
+		child.AppendChild(&drift.Result{Property: "other"}, false)
+		o := child.AppendChild(&drift.Result{Property: "object"}, false)
+		o.AppendChild(&drift.Result{Property: "type", CRDValue: "HTTP"}, false)
+		o.AppendChild(&drift.Result{Property: "path", CRDValue: "/api"}, false)
 		e.PostFunc(child)
 
-		Expect(child.Children).To(ConsistOf(
+		Expect(child.Children()).To(ConsistOf(
 			&drift.Result{Property: "other"},
 			&drift.Result{Property: "path", CRDValue: "/api"},
 			&drift.Result{Property: "type", CRDValue: "HTTP"},
@@ -445,17 +515,14 @@ var _ = Describe("DefaultEquivalencePostPullUpObjectChildren", func() {
 	})
 
 	It("ignores an empty object child", func() {
-		e := drift.DefaultEquivalencePostPullUpObjectChildren(nil, nil)
+		e := drift.DefaultEquivalencePostPullUpObjectChildren(nil, nil, drift.DriftContext{})
 
-		child := &drift.Result{
-			Children: []*drift.Result{
-				{Property: "object", Children: []*drift.Result{}},
-				{Property: "remaining"},
-			},
-		}
+		child := &drift.Result{}
+		child.AppendChild(&drift.Result{Property: "object"}, false)
+		child.AppendChild(&drift.Result{Property: "remaining"}, false)
 		e.PostFunc(child)
 
-		Expect(child.Children).To(ConsistOf(
+		Expect(child.Children()).To(ConsistOf(
 			&drift.Result{Property: "remaining"},
 		))
 	})
@@ -473,7 +540,7 @@ var _ = Describe("DefaultEquivalencePostPullUpObjectChildren", func() {
 		It("reports parse error through Detect and Result.String for invalid crd timestamp", func() {
 			crd := withRFC3339Dates{StartsAt: "not-a-date", EndsAt: validDate}
 			remote := withRFC3339Dates{StartsAt: validDate, EndsAt: validDate}
-			result := drift.Detect(crd, remote)
+			result := drift.DetectWithNamespace(crd, remote, "")
 			Expect(result.DriftDetected()).To(BeTrue())
 			Expect(result.String()).To(MatchRegexp(
 				`startsAt: "not-a-date" != "` + validDate + `" \(error: parsing time`,
@@ -483,7 +550,7 @@ var _ = Describe("DefaultEquivalencePostPullUpObjectChildren", func() {
 		It("reports parse error through Detect and Result.String for invalid remote timestamp", func() {
 			crd := withRFC3339Dates{StartsAt: validDate, EndsAt: validDate}
 			remote := withRFC3339Dates{StartsAt: validDate, EndsAt: "not-a-date"}
-			result := drift.Detect(crd, remote)
+			result := drift.DetectWithNamespace(crd, remote, "")
 			Expect(result.DriftDetected()).To(BeTrue())
 			Expect(result.String()).To(MatchRegexp(
 				`endsAt: "` + validDate + `" != "not-a-date" \(error: parsing time`,
@@ -493,7 +560,7 @@ var _ = Describe("DefaultEquivalencePostPullUpObjectChildren", func() {
 		It("detects no drift for equivalent instants with different RFC3339 notations", func() {
 			crd := withRFC3339Dates{StartsAt: validDate, EndsAt: "2025-06-15T10:30:00+00:00"}
 			remote := withRFC3339Dates{StartsAt: validDate, EndsAt: "2025-06-15T10:30:00Z"}
-			expectNoDrift(drift.Detect(crd, remote))
+			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		})
 	})
 })

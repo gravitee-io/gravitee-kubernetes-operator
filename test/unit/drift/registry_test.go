@@ -62,77 +62,53 @@ var _ = Describe("Registry", func() {
 		})
 
 		It("stores a custom equivalence func retrievable via Detect", func() {
-			drift.RegisterEquivalenceFunc(registryTestAlwaysEqualName, reflect.String, func(_, _ any) drift.Equivalence {
+			drift.RegisterEquivalenceFunc(registryTestAlwaysEqualName, reflect.String, func(_, _ any, _ drift.DriftContext) drift.Equivalence {
 				return drift.Equivalence{Equivalent: drift.Equivalent}
 			})
 
-			expectNoDrift(drift.Detect(
-				registryCustomString{Name: "foo"},
-				registryCustomString{Name: "bar"},
-			))
+			expectNoDrift(drift.DetectWithNamespace(registryCustomString{Name: "foo"}, registryCustomString{Name: "bar"}, ""))
 		})
 
 		It("wraps registered funcs with assertTypes", func() {
 			drift.RegisterEquivalenceFunc(registryTestTypeCheckName, reflect.Interface, drift.FromDeepEqual)
 
 			Expect(func() {
-				drift.Detect(
-					registryTypeCheckAny{Value: 1},
-					registryTypeCheckAny{Value: "not-an-int"},
-				)
+				drift.DetectWithNamespace(registryTypeCheckAny{Value: 1}, registryTypeCheckAny{Value: "not-an-int"}, "")
 			}).To(PanicWith(MatchRegexp(`drift detection only work comparing values of same type`)))
 		})
 	})
 
 	Describe("Get", func() {
 		It("returns Init-registered empty-is-nil for bool kind", func() {
-			expectNoDrift(drift.Detect(
-				registryInitBoolField{Flag: nil},
-				registryInitBoolField{Flag: ptr(false)},
-			))
+			expectNoDrift(drift.DetectWithNamespace(registryInitBoolField{Flag: nil}, registryInitBoolField{Flag: ptr(false)}, ""))
 		})
 
 		It("falls back to defaultEquivalence when drift tag is absent", func() {
-			expectDrift(drift.Detect(
-				registryFloatFallback{Score: 1.5},
-				registryFloatFallback{Score: 2.5},
-			), "score: 1.5 != 2.5")
+			expectDrift(drift.DetectWithNamespace(registryFloatFallback{Score: 1.5}, registryFloatFallback{Score: 2.5}, ""), "score: 1.5 != 2.5")
 		})
 
 		It("panics if the drift function is unknown", func() {
 			Expect(func() {
-				drift.Detect(
-					registryUnknownSliceTag{Items: []string{"a"}},
-					registryUnknownSliceTag{Items: []string{"b"}},
-				)
+				drift.DetectWithNamespace(registryUnknownSliceTag{Items: []string{"a"}}, registryUnknownSliceTag{Items: []string{"b"}}, "")
 			}).To(PanicWith("drift function 'registry-test-unknown-slice' not found for kind 'slice'"))
 		})
 
 		It("uses a registered slice equivalence func when name is known", func() {
-			drift.RegisterEquivalenceFunc(registryTestCustomSliceName, reflect.Slice, func(_, _ any) drift.Equivalence {
+			drift.RegisterEquivalenceFunc(registryTestCustomSliceName, reflect.Slice, func(_, _ any, _ drift.DriftContext) drift.Equivalence {
 				return drift.Equivalence{Equivalent: drift.Equivalent, Skip: true}
 			})
 
-			expectNoDrift(drift.Detect(
-				registryCustomSliceTag{Items: []string{"a"}},
-				registryCustomSliceTag{Items: []string{"b"}},
-			))
+			expectNoDrift(drift.DetectWithNamespace(registryCustomSliceTag{Items: []string{"a"}}, registryCustomSliceTag{Items: []string{"b"}}, ""))
 		})
 	})
 
 	Describe("defaultEquivalence", func() {
 		It("reports equivalent values via deep equal", func() {
-			expectNoDrift(drift.Detect(
-				registryFloatFallback{Score: 3.14},
-				registryFloatFallback{Score: 3.14},
-			))
+			expectNoDrift(drift.DetectWithNamespace(registryFloatFallback{Score: 3.14}, registryFloatFallback{Score: 3.14}, ""))
 		})
 
 		It("reports inequivalent values via deep equal", func() {
-			expectDrift(drift.Detect(
-				registryFloatFallback{Score: 1},
-				registryFloatFallback{Score: 2},
-			), "score: 1 != 2")
+			expectDrift(drift.DetectWithNamespace(registryFloatFallback{Score: 1}, registryFloatFallback{Score: 2}, ""), "score: 1 != 2")
 		})
 	})
 

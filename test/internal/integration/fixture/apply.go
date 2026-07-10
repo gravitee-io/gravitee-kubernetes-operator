@@ -59,6 +59,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyApplication(cli, ctx)
 	}
 
+	if o.SharedPolicyGroup != nil {
+		o.applySharedPolicyGroup(cli, ctx)
+	}
+
 	if o.API != nil {
 		o.applyAPI(cli, ctx)
 	}
@@ -85,10 +89,6 @@ func (o *Objects) Apply() *Objects {
 
 	if o.Documentation != nil {
 		o.applyDocumentation(ctx, cli)
-	}
-
-	if o.SharedPolicyGroup != nil {
-		o.applySharedPolicyGroup(cli, ctx)
 	}
 
 	if o.Ingress != nil {

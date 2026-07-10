@@ -20,7 +20,7 @@ metadata:
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "X"
+  name: "developers"
   notifyMembers: false
   members:
   - source: memory

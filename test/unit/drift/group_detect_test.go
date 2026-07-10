@@ -24,7 +24,7 @@ var _ = Describe("Group Drift detection", func() {
 
 	DescribeTable("equivalent values",
 		func(crd, remote any) {
-			expectNoDrift(drift.Detect(crd, remote))
+			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
 			model.GroupDTO{},

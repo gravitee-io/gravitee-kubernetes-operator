@@ -25,7 +25,7 @@ var _ = Describe("Application Drift detection", func() {
 
 	DescribeTable("equivalent values",
 		func(crd, remote any) {
-			expectNoDrift(drift.Detect(crd, remote))
+			expectNoDrift(drift.DetectWithNamespace(crd, remote, ""))
 		},
 		Entry("empty struct",
 			model.ApplicationDTO{},

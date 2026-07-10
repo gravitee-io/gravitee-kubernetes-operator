@@ -18,6 +18,7 @@ import (
 	"context"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -119,10 +120,16 @@ func resolveIfSharedPolicyGroupRef(ctx context.Context, flowStep *v4.FlowStep) e
 
 	flowStep.Name = &spg.Name
 	flowStep.Policy = utils.ToReference("shared-policy-group-policy")
-	flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
-		"sharedPolicyGroupId": spg.Status.CrossID,
-		"hrid":                spg.Spec.HRID,
-	})
+
+	if k8s.IsAutomationAPIManaged(spg) {
+		flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
+			"hrid": refs.NewNamespacedNameFromObject(spg).HRID(),
+		})
+	} else {
+		flowStep.Configuration = utils.ToGenericStringMap(map[string]interface{}{
+			"sharedPolicyGroupId": spg.Status.CrossID,
+		})
+	}
 
 	return nil
 }

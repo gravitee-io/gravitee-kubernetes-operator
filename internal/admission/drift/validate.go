@@ -99,12 +99,21 @@ func ValidateDriftWithContext(
 	oldDTO := mapDTO(oldCopy)
 	newDTO := mapDTO(newCopy)
 
-	oldVsRemoteResult := drift.Detect(oldDTO, remoteObject)
-	newVsRemoteResult := drift.Detect(newDTO, remoteObject)
+	ns := getNamespace(newCopy)
+
+	oldVsRemoteResult := drift.DetectWithNamespace(oldDTO, remoteObject, ns)
+	newVsRemoteResult := drift.DetectWithNamespace(newDTO, remoteObject, ns)
 
 	if result := drift.Merge(oldVsRemoteResult, newVsRemoteResult); result.DriftDetected() {
 		errs.AddSeveref("\ndrift detected:\n%s", result.String())
 	}
 
 	return errs
+}
+
+func getNamespace(crd runtime.Object) string {
+	if c, ok := crd.(core.ContextAwareObject);ok {
+		return c.GetNamespace()
+	}
+	return ""
 }

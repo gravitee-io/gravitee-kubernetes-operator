@@ -23,7 +23,7 @@ import (
 type APIV4DTO struct {
 	ID                               string                                       `json:"id,omitempty" drift:"ignore"`
 	HRID                             string                                       `json:"hrid,omitempty"`
-	CrossID                          string                                       `json:"crossId,omitempty"`
+	CrossID                          string                                       `json:"crossId,omitempty" drift:"ignore"`
 	Name                             string                                       `json:"name"`
 	Version                          string                                       `json:"version"`
 	State                            base.ApiState                                `json:"state,omitempty"`
@@ -31,14 +31,14 @@ type APIV4DTO struct {
 	Labels                           []string                                     `json:"labels" drift:"empty-is-nil"`
 	Visibility                       base.ApiVisibility                           `json:"visibility,omitempty"`
 	Properties                       []*APIV4Property                             `json:"properties" drift:"empty-is-nil"`
-	Metadata                         []*APIV4MetadataEntry                        `json:"metadata"`
+	Metadata                         []*APIV4MetadataEntry                        `json:"metadata" drift:"ignore-remote-only-metadata"`
 	Resources                        []*APIV4Resource                             `json:"resources" drift:"empty-is-nil"`
-	Groups                           []string                                     `json:"groups" drift:"empty-is-nil"`
+	Groups                           []string                                     `json:"groups" drift:"ignore-crd-only-and-namespace-prefix"`
 	Categories                       []string                                     `json:"categories" drift:"empty-is-nil"`
-	NotifyMembers                    bool                                         `json:"notifyMembers"`
+	NotifyMembers                    bool                                         `json:"notifyMembers" drift:"empty-is-true"`
 	Description                      *string                                      `json:"description,omitempty"`
-	DefinitionVersion                base.DefinitionVersion                       `json:"definitionVersion,omitempty"`
-	DefinitionContext                *APIV4DefinitionContext                      `json:"definitionContext,omitempty"`
+	DefinitionVersion                base.DefinitionVersion                       `json:"definitionVersion,omitempty" drift:"ignore"`
+	DefinitionContext                *APIV4DefinitionContext                      `json:"definitionContext,omitempty" drift:"ignore"`
 	LifecycleState                   v4.ApiV4LifecycleState                       `json:"lifecycleState,omitempty"`
 	Type                             v4.ApiType                                   `json:"type"`
 	Listeners                        []*APIV4GenericListener                      `json:"listeners"`
@@ -62,16 +62,14 @@ type APIV4Property struct {
 	Key         *string `json:"key,omitempty"`
 	Value       *string `json:"value,omitempty"`
 	Encrypted   *bool   `json:"encrypted,omitempty"`
-	Dynamic     *bool   `json:"dynamic,omitempty"`
-	Encryptable *bool   `json:"encryptable,omitempty"`
+	Dynamic     *bool   `json:"dynamic,omitempty" drift:"empty-is-nil"`
+	Encryptable *bool   `json:"encryptable,omitempty" drift:"empty-is-nil"`
 }
 
 type APIV4MetadataEntry struct {
+	BaseMetadata `json:",inline"`
 	Key          string              `json:"key"`
-	Name         string              `json:"name"`
 	Format       base.MetadataFormat `json:"format"`
-	Value        string              `json:"value,omitempty"`
-	DefaultValue *string             `json:"defaultValue,omitempty"`
 }
 
 type APIV4Resource struct {
@@ -104,7 +102,7 @@ type APIV4Failover struct {
 
 type APIV4ConsoleNotification struct {
 	Events []string `json:"events" drift:"empty-is-nil"`
-	Groups []string `json:"groups" drift:"empty-is-nil"`
+	Groups []string `json:"groups" drift:"ignore-crd-only-and-namespace-prefix"`
 }
 
 type APIV4NavigationPath struct {
@@ -140,7 +138,7 @@ func (l *APIV4GenericListener) MarshalJSON() ([]byte, error) {
 type APIV4Endpoint struct {
 	Name           *string                 `json:"name,omitempty"`
 	Type           string                  `json:"type,omitempty"`
-	Weight         *int32                  `json:"weight,omitempty"`
+	Weight         *int32                  `json:"weight,omitempty" drift:"empty-is-nil"`
 	Inherit        bool                    `json:"inheritConfiguration"`
 	Config         *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
 	ConfigOverride *utils.GenericStringMap `json:"sharedConfigurationOverride,omitempty" drift:"unstructured"`
@@ -332,7 +330,7 @@ type APIV4ApiServices struct {
 type APIV4Plan struct {
 	ID                    string               `json:"id,omitempty" drift:"ignore"`
 	HRID                  string               `json:"hrid,omitempty"`
-	CrossID               string               `json:"crossId,omitempty"`
+	CrossID               string               `json:"crossId,omitempty" drift:"ignore"`
 	Tags                  []string             `json:"tags" drift:"empty-is-nil"`
 	Status                base.PlanStatus      `json:"status,omitempty"`
 	Characteristics       []string             `json:"characteristics"`
@@ -342,7 +340,7 @@ type APIV4Plan struct {
 	Type                  base.PlanType        `json:"type,omitempty"`
 	Name                  string               `json:"name"`
 	Description           *string              `json:"description,omitempty"`
-	DefinitionVersion     v4.DefinitionVersion `json:"definitionVersion,omitempty"`
+	DefinitionVersion     v4.DefinitionVersion `json:"definitionVersion,omitempty" drift:"ignore"`
 	Security              *APIV4PlanSecurity   `json:"security,omitempty"`
 	Mode                  v4.PlanMode          `json:"mode,omitempty"`
 	SelectionRule         *string              `json:"selectionRule,omitempty"`

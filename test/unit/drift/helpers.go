@@ -43,20 +43,20 @@ func ptr[T any](v T) *T {
 // expectedEquivalentNotHavingAnyZeroValue is a helper to check that no property is not tested.
 // It requires that no value is zero (nil, empty string, empty slice, etc.) and also no bool is false.
 func expectedEquivalentNotHavingAnyZeroValue(crd, remote any) {
-	detect := drift.Detect(crd, remote)
+	detect := drift.DetectWithNamespace(crd, remote, "")
 	expectNoDrift(detect)
 	doAssertNoResultHasZeroOrNilValue(detect, []string{})
 }
 
 func doAssertNoResultHasZeroOrNilValue(r drift.Result, ancestors []string) {
 	GinkgoHelper()
-	if r.Equivalent != drift.CannotCompare && (r.Index == nil || len(r.Children) == 0) {
+	if r.Equivalent != drift.CannotCompare && r.Property != "" && (r.Index == nil || len(r.Children()) == 0) {
 		Expect(r.CRDValue).NotTo(BeZero(),
 			"%s.%s is not tested",
 			strings.Join(ancestors, "."),
 			r.Property)
 	}
-	if r.Children != nil {
+	if r.Children() != nil {
 		if r.Property != "" {
 			// this to ensure readability of the error message
 			var index string
@@ -68,7 +68,7 @@ func doAssertNoResultHasZeroOrNilValue(r drift.Result, ancestors []string) {
 		// we need to copy the slice to have clean tree when errors are displayed
 		copyOfAncestors := make([]string, len(ancestors))
 		copy(copyOfAncestors, ancestors)
-		for _, child := range r.Children {
+		for _, child := range r.Children() {
 			doAssertNoResultHasZeroOrNilValue(*child, copyOfAncestors)
 		}
 	}

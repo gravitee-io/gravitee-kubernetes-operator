@@ -24,7 +24,7 @@ import (
 var _ = Describe("API v4 Drift detection", func() {
 	DescribeTable("equivalent values",
 		func(crd, remote any) {
-			expectNoDrift(drift.Detect(crd, remote))
+			expectNoDrift(drift.DetectWithNamespace(crd, remote, "gravitee"))
 		},
 		Entry("empty struct",
 			model.APIV4DTO{},
@@ -45,6 +45,7 @@ var _ = Describe("API v4 Drift detection", func() {
 				Labels:           []string{},
 				Properties:       []*model.APIV4Property{},
 				Resources:        []*model.APIV4Resource{},
+				Metadata:         []*model.APIV4MetadataEntry{},
 				Groups:           []string{},
 				Categories:       []string{},
 				Flows:            []*model.APIV4Flow{},
@@ -55,6 +56,37 @@ var _ = Describe("API v4 Drift detection", func() {
 				ConsoleNotification: &model.APIV4ConsoleNotification{
 					Events: []string{},
 					Groups: []string{},
+				},
+			},
+		),
+		Entry("differing collections equivalences",
+			model.APIV4DTO{
+				Groups: []string{
+					"other",
+					"developers",
+				},
+				ConsoleNotification: &model.APIV4ConsoleNotification{
+					Groups: []string{
+						"other",
+						"developers",
+					},
+				},
+			},
+			model.APIV4DTO{
+				Metadata: []*model.APIV4MetadataEntry{
+					{
+						BaseMetadata: model.BaseMetadata{Name: "foo", Value: nil, DefaultValue: ptr("bar")},
+						Key:          "foo",
+						Format:       "STRING",
+					},
+				},
+				Groups: []string{
+					"gravitee-developers",
+				},
+				ConsoleNotification: &model.APIV4ConsoleNotification{
+					Groups: []string{
+						"gravitee-developers",
+					},
 				},
 			},
 		),

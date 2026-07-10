@@ -33,9 +33,9 @@ type ApiKeySpec struct {
 }
 
 type SubscriptionDTO struct {
-	ID                    string                              `json:"id" drift:"ignore-remote-prefix"`
-	ApiID                 string                              `json:"apiId" drift:"ignore-remote-prefix"`
-	AppID                 string                              `json:"applicationId" drift:"ignore-remote-prefix"`
+	ID                    string                              `json:"id" drift:"ignore-namespace-prefix"`
+	ApiID                 string                              `json:"apiId" drift:"ignore-namespace-prefix"`
+	AppID                 string                              `json:"applicationId" drift:"ignore-namespace-prefix"`
 	PlanID                string                              `json:"planId"`
 	StartingAt            string                              `json:"startingAt" drift:"ignore"` // remote only, so need to ignore
 	EndingAt              string                              `json:"endingAt" drift:"rfc3339"`

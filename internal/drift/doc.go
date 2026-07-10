@@ -33,7 +33,7 @@
 // field name when no json tag is present). Embedded structs are flattened into their
 // parent. Pointer fields are dereferenced before the equivalence kind is resolved.
 //
-// [Detect] walks two values of the same struct type recursively and builds a
+// [DetectWithNamespace] walks two values of the same struct type recursively and builds a
 // [Result] tree. Leaf nodes that are inequivalent are formatted as pseudo-YAML by
 // [Result.String]. [Result.DriftDetected] returns true when any node in the tree is
 // inequivalent.

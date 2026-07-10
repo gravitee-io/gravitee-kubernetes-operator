@@ -61,8 +61,12 @@ func getRemoteApiV4(apimClient *apim.APIM, o runtime.Object, errs *errors.Admiss
 	api.PopulateIDs(apimClient.Context, k8s.IsAutomationAPIManaged(api))
 	hrid := apiHRID(api)
 	if !k8s.IsAutomationAPIManaged(api) && api.Spec.ID != "" {
-		errs.AddSeveref("drift detection is not supported for legacy API v4 [%s]", api.GetRef())
-		return nil
+		remote, err := apimClient.APIs.GetV4ByID(hrid)
+		if err != nil {
+			errs.AddSeveref("cannot fetch API v4 during drift detection from ID %s: %s", hrid, err.Error())
+			return nil
+		}
+		return model.ToAPIV4DTO(remote)
 	}
 	remote, err := apimClient.APIs.GetV4ByHRID(hrid)
 	if err != nil {
