@@ -208,6 +208,8 @@ func (api *ApiV4Definition) pickPlanIDs() *map[string]*v4.Plan {
 	plans := make(map[string]*v4.Plan, len(*api.Spec.Plans))
 	for key, plan := range *api.Spec.Plans {
 		p := plan.DeepCopy()
+		// comply to automation API constraints
+		p.HRID = hrid.NameToValidHRID(key)
 		if id, ok := api.Status.Plans[key]; ok {
 			p.ID = id
 		} else {
@@ -230,6 +232,8 @@ func (api *ApiV4Definition) pickPageIDs() *map[string]*v4.Page {
 
 		p.API = &api.Spec.ID
 		apiName := api.GetNamespacedName().String()
+		// comply to automation API constraints
+		p.HRID = hrid.NameToValidHRID(name)
 		if page.ID == "" {
 			p.ID = uuid.FromStrings(api.Spec.ID, separator, name)
 		}
