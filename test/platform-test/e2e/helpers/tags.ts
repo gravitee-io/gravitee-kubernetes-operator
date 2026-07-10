@@ -51,6 +51,7 @@ export const XRAY = {
     V4_RECONCILE_CYCLE_SURVIVES: "@GKO-2984",
     // Placeholder - synced to a real Jira Test by /xray-sync-tests.
     DATASTORE_SURVIVES_UPGRADE: "@GKO-TBD-datastore-survives-upgrade",
+    NON_HRID_SURVIVES_UPGRADE: "@GKO-3043",
     START_STOP_V2_V4_NATIVE: "@GKO-1464",
     POLICY_ON_API_WITHOUT_PLANS: "@GKO-1465",
     ENTRYPOINT_POLICY_MATRIX: "@GKO-1474",
