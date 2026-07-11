@@ -17,9 +17,6 @@
 /**
  * One Category test.
  *
- * Mirrors the Chainsaw test at:
- *   test/e2e/chainsaw/tests/apis/categories/oneCategory/
- *
  * Preconditions:
  *   - APIM is running
  *   - An API exists with a category assigned

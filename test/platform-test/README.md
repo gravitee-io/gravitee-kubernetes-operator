@@ -65,7 +65,7 @@ await gateway.assertNotResponds("/my-api", { notStatus: 200 });
 
 ## CLI
 
-The library ships a CLI for use in shell scripts and Chainsaw test steps.
+The library ships a CLI for use in shell scripts.
 
 ```
 platform-test <subcommand> [flags]
@@ -205,58 +205,25 @@ Environment variables override config file values:
 | `GRAVITEE_GATEWAY_URL` | `gateway.baseUrl` |
 | `GRAVITEE_GATEWAY_MTLS_URL` | `gateway.mtlsBaseUrl` |
 
-### Usage in Chainsaw Tests
+### Usage in shell scripts
 
-The CLI can be invoked from Chainsaw `script:` steps. Since the package is not
-published to a registry, invoke it directly via `node` with a relative path to the
-built CLI entry point:
+Since the package is not published to a registry, invoke the CLI directly via
+`node` with a path to the built entry point. The API id can be resolved from the
+custom resource status:
 
-```yaml
-bindings:
-  - name: platformTestCli
-    value: "../../../../../../platform-test/dist/cmd/cli.js"
+```bash
+# Path relative to the package root (test/platform-test/)
+PLATFORM_TEST_CLI=dist/cmd/cli.js
 
-steps:
-  - name: Assert gateway returns 200
-    try:
-      - script:
-          env:
-            - name: PLATFORM_TEST_CLI
-              value: ($platformTestCli)
-            - name: API_NAME
-              value: ($apiName)
-          content: |
-            node $PLATFORM_TEST_CLI assert-gateway --path $API_NAME --status 200
+# Assert the gateway serves the API
+node $PLATFORM_TEST_CLI assert-gateway --path /my-api --status 200
 
-  - name: Assert API categories via management API
-    try:
-      - script:
-          env:
-            - name: PLATFORM_TEST_CLI
-              value: ($platformTestCli)
-            - name: API_VERSION_K8S
-              value: ($apiVersionK8s)
-            - name: API_NAME
-              value: ($apiName)
-            - name: CATEGORY_NAME
-              value: ($categoryName)
-          content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n default $API_NAME -o jsonpath='{.status.id}')
-            node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match '{"categories":["'$CATEGORY_NAME'"]}'
+# Assert API properties via the management API
+API_ID=$(kubectl get apiv4definitions.gravitee.io -n default my-api -o jsonpath='{.status.id}')
+node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match '{"categories":["finance"]}'
 
-  - name: Assert API shape from YAML match file
-    try:
-      - script:
-          env:
-            - name: PLATFORM_TEST_CLI
-              value: ($platformTestCli)
-            - name: API_VERSION_K8S
-              value: ($apiVersionK8s)
-            - name: API_NAME
-              value: ($apiName)
-          content: |
-            API_ID=$(kubectl get $API_VERSION_K8S -n default $API_NAME -o jsonpath='{.status.id}')
-            node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match-file expected-api.yaml
+# Assert API shape from a YAML match file
+node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match-file expected-api.yaml
 ```
 
 ## TypeScript API

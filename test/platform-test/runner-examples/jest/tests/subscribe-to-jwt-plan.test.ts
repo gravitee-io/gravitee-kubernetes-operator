@@ -17,9 +17,6 @@
 /**
  * Subscribe to JWT Plan test.
  *
- * Mirrors the Chainsaw test at:
- *   test/e2e/chainsaw/tests/scenarios/subscribeToJwtPlan/
- *
  * Preconditions:
  *   - APIM and Gateway are running
  *   - A v4 API with a JWT plan is deployed

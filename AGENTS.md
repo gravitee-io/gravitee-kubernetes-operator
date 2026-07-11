@@ -23,8 +23,7 @@ make add-license               # Add Apache 2.0 license headers to all Go files
 # Test
 make unit                      # Run unit tests (Ginkgo) — test/unit/...
 make it                        # Run integration tests (Ginkgo, requires cluster) — test/integration/...
-make e2e                       # Run e2e tests (Chainsaw) — test/e2e/chainsaw/
-make e2e-focus                 # Run only e2e tests with label focus=true
+make e2e                       # Run e2e tests (Playwright) — test/platform-test/
 
 # Run a single unit test suite
 ./bin/ginkgo test/unit/apim/...
@@ -77,7 +76,7 @@ Initializes controller-runtime manager, registers all controllers and webhooks b
 
 - **Unit tests** (`test/unit/`): Ginkgo v2 suites. Dot-imports for `ginkgo/v2` and `gomega` are allowed.
 - **Integration tests** (`test/integration/`): Ginkgo v2 suites requiring a running cluster. Use `test/internal/integration/fixture/` for building test fixtures from YAML files in `test/internal/integration/`. Use `test/internal/integration/constants/` for shared file paths and timeouts.
-- **E2E tests** (`test/e2e/`): Declarative YAML-based tests using Chainsaw (Kyverno). Test specs are `chainsaw-test.yaml` files.
+- **E2E tests** (`test/platform-test/e2e/`): Playwright (TypeScript) suites running against a real cluster with APIM and the operator. Fixtures live in `test/platform-test/e2e/fixtures/`. Run via `make e2e` or `npm --prefix test/platform-test run e2e`.
 - **Helm tests** (`helm/gko/tests/`): helm-unittest YAML tests.
 
 Integration test fixtures are YAML manifests loaded via the fixture builder pattern:
