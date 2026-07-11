@@ -50,7 +50,7 @@ async function loadPki() {
 }
 
 test.describe("mTLS Certificates — Dates, Refs, Rotation, Templates", () => {
-  // Cleanup runs even when tests time out — mirrors Chainsaw cleanup: blocks.
+  // Cleanup runs even when tests time out.
   test.afterAll(async () => {
     const files = [
       "subscription-dates", "application-dates-step1", "api-mtls-dates", "tls-secrets-dates",

@@ -17,9 +17,6 @@
 /**
  * Start/Stop API lifecycle test.
  *
- * Mirrors the Chainsaw test at:
- *   test/e2e/chainsaw/tests/apis/state/startStopApi/
- *
  * Preconditions:
  *   - APIM and Gateway are running
  *   - A v4 API exists and is STARTED
