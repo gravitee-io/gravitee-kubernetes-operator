@@ -123,6 +123,11 @@ func ErrorToCondition(obj client.Object, err error) {
 		}
 	}
 	conditions := []metav1.Condition{*ac, *refs}
+	if ca, ok := obj.(core.ConditionAware); ok {
+		if toKeep := GetCondition(ca, AutomationAPIManaged); toKeep != nil {
+			conditions = append(conditions, *toKeep)
+		}
+	}
 	SetConditions(obj, conditions)
 }
 
