@@ -394,6 +394,67 @@ curl -s -o /dev/null -w "---\nstatus %{http_code}\n---\n" http://localhost:30082
 
 ---
 
+## Troubleshooting: "Path/Host already exists" after upgrade
+
+### Symptom
+
+After upgrading from GKO 4.11.x to 4.12.x, reconciliation of an existing `ApiV4Definition` fails with:
+
+```
+request [PUT] .../automation/.../apis?dryRun=false failed with status 400
+(Unable to import because of errors [Path [/my-path/] already exists])
+```
+
+or the equivalent `Hosts [my-host] already exists` for native APIs.
+
+The GKO log line will show `"resourceID":""` — meaning `Status.ID` is empty.
+
+### Root cause
+
+GKO 4.12 syncs V4 APIs via the Automation API using HRIDs. When the CRD has no
+`Status.ID` (e.g. the CRD was deleted and recreated, or never successfully
+synced under 4.11), GKO cannot link it to the existing API in APIM and tries to
+create a new one, which collides on path/host uniqueness.
+
+### Recovery
+
+Set `spec.id` on the CRD to the UUID of the existing API in APIM. This routes
+GKO through the legacy path with `hridContainsUUID=true`, matching the existing
+API by UUID instead of trying to create a new one.
+
+1. Find the API UUID in the APIM Console (API > General Info > API ID), or via
+   the management API:
+   ```bash
+   curl -s "$APIM_URL/management/v2/environments/DEFAULT/apis?q=<api-name>" \
+     -H "Authorization: Bearer $TOKEN" | jq '.[0].id'
+   ```
+
+2. Add `spec.id` to the CRD:
+   ```yaml
+   apiVersion: gravitee.io/v1alpha1
+   kind: ApiV4Definition
+   metadata:
+     name: my-api
+   spec:
+     id: "<UUID-from-APIM>"
+     contextRef:
+       name: my-context
+     # ... rest of spec unchanged
+   ```
+
+3. Apply the updated CRD. The next reconcile will import with `hridContainsUUID=true`
+   and update the existing API in place. Once successful, `Status.ID` is
+   repopulated and the `spec.id` field can optionally be kept for clarity.
+
+### Prevention
+
+Avoid deleting and recreating `ApiV4Definition` CRDs that were previously
+synced under GKO 4.11. A standard `kubectl apply` (without delete) preserves
+the `status` subresource, which carries the `Status.ID` needed for the upgrade
+path. Helm upgrades and operator restarts also preserve status.
+
+---
+
 ## Resource Summary
 
 | Phase | Resource | File |
