@@ -97,6 +97,10 @@ type HttpClientOptions struct {
 	// +kubebuilder:default:=HTTP_1_1
 	// HTTP Protocol Version (Possible values Http1 or Http2)
 	ProtocolVersion ProtocolVersion `json:"version,omitempty"`
+	// Maximum size of the pool wait queue. -1 means unbounded.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=-1
+	MaxWaitQueueSize *int `json:"maxWaitQueueSize,omitempty"`
 }
 
 type HttpClientSslOptions struct {
