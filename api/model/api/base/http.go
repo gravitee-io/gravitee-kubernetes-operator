@@ -103,6 +103,10 @@ type HttpClientOptions struct {
 	// Maximum size of HTTP chunks
 	// +kubebuilder:validation:Optional
 	MaxChunkSize *int `json:"maxChunkSize,omitempty"`
+	// Maximum size of the pool wait queue. -1 means unbounded.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Minimum=-1
+	MaxWaitQueueSize *int `json:"maxWaitQueueSize,omitempty"`
 }
 
 type HttpClientSslOptions struct {
