@@ -17,11 +17,11 @@
 apiVersion: "gravitee.io/v1alpha1"
 kind: "ApiDefinition"
 metadata:
-  name: "with-ldap-auth-provider"
+  name: "with-ldap-auth-provider-ref"
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "with-ldap-auth-provider"
+  name: "with-ldap-auth-provider-ref"
   version: "1"
   description: "With LDAP Auth Provider"
   visibility: "PRIVATE"
@@ -66,7 +66,7 @@ spec:
   path_mappings: []
   proxy:
     virtual_hosts:
-      - path: "/with-ldap-auth/"
+      - path: "/with-ldap-auth-ref/"
     strip_context_path: false
     preserve_host: false
     groups:
