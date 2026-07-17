@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    gravitee.io/operator.version: 4.10.24
+    gravitee.io/operator.version: 4.10.25-rc
   name: apiv4definitions.gravitee.io
 spec:
   group: gravitee.io
@@ -363,6 +363,10 @@ spec:
                             type: integer
                           maxHeaderSize:
                             description: Maximum size of HTTP headers
+                            type: integer
+                          maxWaitQueueSize:
+                            description: Maximum size of the pool wait queue. -1 means unbounded.
+                            minimum: -1
                             type: integer
                           pipelining:
                             default: false
