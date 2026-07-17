@@ -16,11 +16,11 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: with-cache-redis-resource-v4
+  name: with-cache-redis-resource-ref-v4
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "api-v4-with-cache-redis-resource"
+  name: "api-v4-with-cache-redis-resource-ref"
   description: "API v4 With Cache Redis managed by Gravitee Kubernetes Operator"
   version: "1.0"
   type: PROXY
