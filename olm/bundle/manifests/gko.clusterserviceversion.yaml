@@ -15,12 +15,12 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: gko.v4.12.5
+  name: gko.v4.12.6
   namespace: placeholder
   annotations:
     capabilities: Full Lifecycle
     categories: Integration & Delivery, Networking
-    containerImage: docker.io/graviteeio/kubernetes-operator:4.12.5
+    containerImage: docker.io/graviteeio/kubernetes-operator:4.12.6
     repository: https://github.com/gravitee-io/gravitee-kubernetes-operator
     support: Gravitee.io
     description: Manage Gravitee.io API Management resources natively in Kubernetes
@@ -433,7 +433,7 @@ spec:
 
     - A running Gravitee API Management instance (for synced resources)
   maturity: alpha
-  version: 4.12.5
+  version: 4.12.6
   minKubeVersion: 1.18.0
   keywords:
     - api
@@ -483,7 +483,7 @@ spec:
             template:
               metadata:
                 annotations:
-                  checksum/config: df5404e72e364c7b8253c048aff7f9ce433890eda20817b8c701b3015c851a27
+                  checksum/config: d83a821b1ff3987eb6856ac686369816cd1a2e8cf5611288533ec7a9b9cf7d8f
                 labels:
                   control-plane: controller-manager
               spec:
@@ -493,7 +493,7 @@ spec:
                   - args: []
                     command:
                       - /manager
-                    image: docker.io/graviteeio/kubernetes-operator:4.12.5
+                    image: docker.io/graviteeio/kubernetes-operator:4.12.6
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
                       httpGet:
@@ -1559,6 +1559,52 @@ spec:
             description: Kafka hostname for this route.
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:text
+      - name: dictionaries.gravitee.io
+        version: v1alpha1
+        kind: Dictionary
+        displayName: Dictionary
+        description: Manages Gravitee API Management dictionaries for dynamic property
+          resolution in API policies.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
+      - name: documentations.gravitee.io
+        version: v1alpha1
+        kind: Documentation
+        displayName: Documentation
+        description: Publishes documentation pages to the Gravitee Developer Portal.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
+      - name: portals.gravitee.io
+        version: v1alpha1
+        kind: Portal
+        displayName: Portal
+        description: Configures a Gravitee Developer Portal instance.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
+      - name: portallistings.gravitee.io
+        version: v1alpha1
+        kind: PortalListing
+        displayName: Portal Listing
+        description: Defines navigation and listing configuration for the Gravitee
+          Developer Portal.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
   webhookdefinitions:
     - type: ValidatingAdmissionWebhook
       deploymentName: gko-controller-manager
