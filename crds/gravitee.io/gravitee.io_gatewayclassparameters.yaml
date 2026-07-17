@@ -18,7 +18,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
     gravitee.io/extends: gateway.networking.k8s.io
-    gravitee.io/operator.version: 4.9.27
+    gravitee.io/operator.version: 4.9.28
   name: gatewayclassparameters.gravitee.io
 spec:
   group: gravitee.io
@@ -6730,6 +6730,7 @@ spec:
 
 
 
+
                                                               path is the relative
                                                               path of the file to
                                                               map the key to.
@@ -6791,6 +6792,7 @@ spec:
 
 
 
+
                                                               Optional: mode bits
                                                               used to set
                                                               permissions on this
@@ -6808,6 +6810,7 @@ spec:
                                                             description: >-
                                                               
                                                               
+
 
 
 
@@ -6873,6 +6876,7 @@ spec:
                                                             description: >-
                                                               
                                                               
+
 
 
 
