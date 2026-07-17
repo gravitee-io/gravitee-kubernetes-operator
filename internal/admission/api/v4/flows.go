@@ -15,6 +15,7 @@
 package v4
 
 import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	apiV4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 )
@@ -68,12 +69,26 @@ func validateFlow(apiType apiV4.ApiType, apiName string, flows []*apiV4.Flow) *e
 func validateApiEndpointGroups(api *apiV4.Api) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if api.Type == nativeAPI {
-		for _, eg := range api.EndpointGroups {
-			if eg.Services != nil {
-				errs.AddSeveref("EndpointGroup services is not supported in Native API [%s]", api.Name)
-			}
+	for _, eg := range api.EndpointGroups {
+		if api.Type == nativeAPI && eg.Services != nil {
+			errs.AddSeveref("EndpointGroup services is not supported in Native API [%s]", api.Name)
 		}
+		if eg.HttpClientOptions != nil {
+			errs.MergeWith(validateHttpClientOptions(eg.HttpClientOptions, eg.Name, api.Name))
+		}
+	}
+
+	return errs
+}
+
+func validateHttpClientOptions(opts *base.HttpClientOptions, groupName, apiName string) *errors.AdmissionErrors {
+	errs := errors.NewAdmissionErrors()
+
+	if opts.MaxWaitQueueSize != nil && *opts.MaxWaitQueueSize < -1 {
+		errs.AddSeveref(
+			"EndpointGroup [%s] in API [%s]: maxWaitQueueSize must be >= -1",
+			groupName, apiName,
+		)
 	}
 
 	return errs

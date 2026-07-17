@@ -1106,6 +1106,7 @@ _Appears in:_
 | `followRedirects` _boolean_ | Should HTTP redirects be followed or not ? | false |  |
 | `clearTextUpgrade` _boolean_ | Should HTTP/2 clear text upgrade be used or not ? | true | Optional: \{\} <br /> |
 | `version` _[ProtocolVersion](#protocolversion)_ | HTTP Protocol Version (Possible values Http1 or Http2) | HTTP_1_1 | Enum: [HTTP_1_1 HTTP_2] <br /> |
+| `maxWaitQueueSize` _integer_ | Maximum size of the pool wait queue. -1 means unbounded. |  | Minimum: -1 <br />Optional: \{\} <br /> |
 
 
 #### HttpClientSslOptions
