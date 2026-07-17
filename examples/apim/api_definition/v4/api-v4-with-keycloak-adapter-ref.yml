@@ -16,11 +16,11 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: with-keycloak-adapter-v4
+  name: with-keycloak-adapter-ref-v4
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "api-v4-with-keycloak-adapter"
+  name: "api-v4-with-keycloak-adapter-ref"
   description: "API v4 With Keycloak Adapter"
   version: "1.0"
   type: PROXY

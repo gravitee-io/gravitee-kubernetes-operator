@@ -16,11 +16,11 @@
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: with-generic-oauth2-resource-v4
+  name: with-generic-oauth2-resource-ref-v4
 spec:
   contextRef:
     name: "dev-ctx"
-  name: "api-v4-with-generic-oauth2-resource"
+  name: "api-v4-with-generic-oauth2-resource-ref"
   description: "API v4 With Generic OAUTH2 resource"
   version: "1.0"
   type: PROXY
