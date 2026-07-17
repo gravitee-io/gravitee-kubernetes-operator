@@ -214,16 +214,37 @@ await time(async () => {
   await fs.ensureDir(METADATA_DIR);
   await fs.ensureDir(SCORECARD_DIR);
 
-  await fs.writeFile(
-    path.join(MANIFESTS_DIR, "gko.clusterserviceversion.yaml"),
-    YAML.stringify(csv),
-  );
-
   const crdFiles = await fs.readdir(HELM.crdDir);
   for (const file of crdFiles) {
     await fs.copy(path.join(HELM.crdDir, file), path.join(MANIFESTS_DIR, file));
   }
   LOG.green(`  Copied ${crdFiles.length} CRDs to bundle/manifests/`);
+
+  const ownedNames = new Set(
+    csv.spec.customresourcedefinitions.owned.map((o) => o.name),
+  );
+  for (const file of crdFiles) {
+    const crd = YAML.parse(
+      await fs.readFile(path.join(HELM.crdDir, file), "utf8"),
+    );
+    const crdName = crd.metadata?.name;
+    if (crdName && !ownedNames.has(crdName)) {
+      const names = crd.spec?.names || {};
+      csv.spec.customresourcedefinitions.owned.push({
+        name: crdName,
+        version: "v1alpha1",
+        kind: names.kind || crdName.split(".")[0],
+        displayName: names.kind || crdName.split(".")[0],
+        description: `Manages ${names.kind || crdName} resources.`,
+      });
+      LOG.yellow(`  Auto-added missing owned CRD: ${crdName}`);
+    }
+  }
+
+  await fs.writeFile(
+    path.join(MANIFESTS_DIR, "gko.clusterserviceversion.yaml"),
+    YAML.stringify(csv),
+  );
 
   await fs.writeFile(
     path.join(METADATA_DIR, "annotations.yaml"),

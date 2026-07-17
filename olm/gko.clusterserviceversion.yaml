@@ -828,3 +828,61 @@ spec:
             description: Kafka hostname for this route.
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:text
+
+      # --- Dictionary ---
+      - name: dictionaries.gravitee.io
+        version: v1alpha1
+        kind: Dictionary
+        displayName: Dictionary
+        description: >-
+          Manages Gravitee API Management dictionaries for dynamic property
+          resolution in API policies.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
+
+      # --- Documentation ---
+      - name: documentations.gravitee.io
+        version: v1alpha1
+        kind: Documentation
+        displayName: Documentation
+        description: >-
+          Publishes documentation pages to the Gravitee Developer Portal.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
+
+      # --- Portal ---
+      - name: portals.gravitee.io
+        version: v1alpha1
+        kind: Portal
+        displayName: Portal
+        description: >-
+          Configures a Gravitee Developer Portal instance.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
+
+      # --- PortalListing ---
+      - name: portallistings.gravitee.io
+        version: v1alpha1
+        kind: PortalListing
+        displayName: Portal Listing
+        description: >-
+          Defines navigation and listing configuration for the Gravitee
+          Developer Portal.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
