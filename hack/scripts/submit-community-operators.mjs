@@ -82,9 +82,13 @@ LOG.magenta(`
 async function checkoutFork() {
   await fs.remove(WORKING_DIR);
   await $`git clone git@github.com:${FORK_REPO}.git \
-      --branch main \
       --single-branch \
       --depth 1 ${WORKING_DIR}`;
+  cd(WORKING_DIR);
+  await $`git remote add upstream https://github.com/${UPSTREAM_REPO}.git`;
+  await $`git fetch upstream main --depth 1`;
+  await $`git reset --hard upstream/main`;
+  cd(PROJECT_DIR);
 }
 
 async function copyBundle() {
