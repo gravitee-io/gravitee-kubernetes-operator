@@ -1422,6 +1422,8 @@ _Appears in:_
 | `version` _[ProtocolVersion](#protocolversion)_ | HTTP Protocol Version (Possible values Http1 or Http2) | HTTP_1_1 | Enum: [HTTP_1_1 HTTP_2] <br /> |
 | `maxHeaderSize` _integer_ | Maximum size of HTTP headers |  | Optional: \{\} <br /> |
 | `maxChunkSize` _integer_ | Maximum size of HTTP chunks |  | Optional: \{\} <br /> |
+| `maxWaitQueueSize` _integer_ | Maximum size of the pool wait queue. -1 means unbounded. |  | Minimum: -1 <br />Optional: \{\} <br /> |
+| `maxConnectionLifetime` _integer_ | Maximum lifetime of a pooled connection in milliseconds. 0 means no limit. |  | Minimum: 0 <br />Optional: \{\} <br /> |
 
 
 #### HttpClientSslOptions
