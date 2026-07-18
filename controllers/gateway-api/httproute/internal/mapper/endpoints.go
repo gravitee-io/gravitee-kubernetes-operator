@@ -33,7 +33,7 @@ var (
 	defaultEndpointWeight int32 = 1
 )
 
-func buildEndpointGroups(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.EndpointGroup, error) {
+func buildEndpointGroupsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix string) ([]*v4.EndpointGroup, error) {
 	groups := []*v4.EndpointGroup{}
 	for ruleIndex, rule := range route.Spec.Rules {
 		for matchIndex, match := range rule.Matches {
@@ -44,6 +44,7 @@ func buildEndpointGroups(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.E
 				ruleIndex,
 				match,
 				matchIndex,
+				prefix,
 			)
 			if err != nil {
 				return nil, err
@@ -61,9 +62,10 @@ func buildEndpointGroup(
 	ruleIndex int,
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
+	prefix string,
 ) (*v4.EndpointGroup, error) {
 	endpointGroup := v4.NewHttpEndpointGroup(
-		buildEndpointGroupName(ruleIndex, matchIndex),
+		buildEndpointGroupName(ruleIndex, matchIndex, prefix),
 	)
 
 	backendRefs := getActiveBackendRefs(rule.BackendRefs)
@@ -80,8 +82,8 @@ func buildEndpointGroup(
 	return endpointGroup, nil
 }
 
-func buildEndpointGroupName(ruleIndex, matchIndex int) string {
-	return fmt.Sprintf("endpoints-%d-%d", ruleIndex, matchIndex)
+func buildEndpointGroupName(ruleIndex, matchIndex int, prefix string) string {
+	return fmt.Sprintf("%sendpoints-%d-%d", prefix, ruleIndex, matchIndex)
 }
 
 func buildEndpoints(

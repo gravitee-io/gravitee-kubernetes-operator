@@ -239,6 +239,8 @@ gatewayAPI:
     enabled: false
     ## @param gatewayAPI.controller.skipAPIDefinition If true, the HTTPRoute reconciler creates a ConfigMap directly instead of an intermediate ApiV4Definition CR, freeing the CR name for user-managed API definitions.
     skipAPIDefinition: false
+    ## @param gatewayAPI.controller.matchAcrossRoutes If true, HTTPRoutes with overlapping context paths on the same Gateway are merged into a single API definition. Enables full Gateway API conformance for cross-route matching at the cost of changing API identity (IDs, names) for affected routes.
+    matchAcrossRoutes: false
 
 ## @section HTTP Client
 ## @descriptionStart
