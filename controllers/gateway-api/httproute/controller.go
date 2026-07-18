@@ -46,7 +46,6 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
-//nolint:gocognit // acceptable complexity
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	route := &gwAPIv1.HTTPRoute{}
 	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
@@ -73,43 +72,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			}
 
 			return events.Record(event.Update, route, func() error {
-				internal.Init(dc)
-
-				// Create a shared gateway cache to ensure both Resolve and Accept use the same gateway versions
-				cache := make(internal.GatewayCache)
-
-				if err := internal.ResolveWithCache(ctx, dc, cache); err != nil {
-					return err
-				}
-
-				if err := internal.AcceptWithCache(ctx, dc, cache); err != nil {
-					return err
-				}
-
-				// TODO: detect with merge conflict resolution
-				if err := internal.DetectConflicts(ctx, dc); err != nil {
-					return err
-				}
-
-				for i := range dc.Status.Parents {
-					parent := &dc.Status.Parents[i]
-					if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
-						return nil
-					}
-				}
-
-				ctx = mapper.WithGatewayCache(ctx, mapper.GatewayCache(cache))
-
-				if env.Config.GatewayAPISkipAPIDefinition {
-					if err := internal.ProgramConfigMap(ctx, dc); err != nil {
-						return err
-					}
-				} else {
-					if err := internal.Program(ctx, dc); err != nil {
-						return err
-					}
-				}
-				return nil
+				return r.reconcileRoute(ctx, dc)
 			})
 		})
 	})
@@ -141,6 +104,48 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	log.InfoEndReconcile(ctx, route)
 	return ctrl.Result{}, nil
+}
+
+func (r *Reconciler) reconcileRoute(ctx context.Context, dc *gwAPIv1.HTTPRoute) error {
+	internal.Init(dc)
+
+	cache := make(internal.GatewayCache)
+
+	if err := internal.ResolveWithCache(ctx, dc, cache); err != nil {
+		return err
+	}
+
+	if err := internal.AcceptWithCache(ctx, dc, cache); err != nil {
+		return err
+	}
+
+	ctx = mapper.WithGatewayCache(ctx, mapper.GatewayCache(cache))
+
+	switch {
+	case env.Config.GatewayAPISkipAPIDefinition && env.Config.GatewayAPIMatchAcrossRoutes:
+		return internal.ProgramMergedConfigMaps(ctx, dc)
+	case env.Config.GatewayAPISkipAPIDefinition:
+		return internal.ProgramConfigMap(ctx, dc)
+	case env.Config.GatewayAPIMatchAcrossRoutes:
+		return internal.ProgramMergedAPIs(ctx, dc)
+	default:
+		return r.reconcileDefault(ctx, dc)
+	}
+}
+
+func (r *Reconciler) reconcileDefault(ctx context.Context, dc *gwAPIv1.HTTPRoute) error {
+	if err := internal.DetectConflicts(ctx, dc); err != nil {
+		return err
+	}
+
+	for i := range dc.Status.Parents {
+		parent := &dc.Status.Parents[i]
+		if k8s.IsConflicted(gateway.WrapRouteParentStatus(parent)) {
+			return nil
+		}
+	}
+
+	return internal.Program(ctx, dc)
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

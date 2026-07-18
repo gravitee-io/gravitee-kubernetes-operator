@@ -78,11 +78,9 @@ func TestGatewayAPIConformance(t *testing.T) {
 
 	opts.SkipTests = []string{}
 
-	// We skip this test because right now we cannot accept different
-	// routes with the same host and path.
-	// For that reason the second route will get Accepted but not Programmed
-	// because of the conflict.
-	opts.SkipTests = append(opts.SkipTests, "HTTPRouteMatchingAcrossRoutes")
+	if os.Getenv(env.GatewayAPIMatchAcrossRoutes) != env.TrueString {
+		opts.SkipTests = append(opts.SkipTests, "HTTPRouteMatchingAcrossRoutes")
+	}
 
 	// We skip this test in circle ci because for some reason
 	// threads get blocked on the gatway side when
