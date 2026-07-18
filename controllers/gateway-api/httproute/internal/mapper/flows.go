@@ -49,7 +49,7 @@ type weightedFlow struct {
 	Weight int
 }
 
-func buildFlows(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.Flow, error) {
+func buildFlowsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix string) ([]*v4.Flow, error) {
 	weightedFlows := make([]weightedFlow, 0)
 
 	for ruleIndex, rule := range route.Spec.Rules {
@@ -57,7 +57,7 @@ func buildFlows(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.Flow, erro
 			conditionsExpressions := buildFlowConditionExpressions(match)
 
 			if flow, err := createRuleMatchFlow(
-				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions,
+				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix,
 			); err != nil {
 				return nil, err
 			} else {
@@ -101,6 +101,7 @@ func createRuleMatchFlow(
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
 	conditionsExpressions []el.Expression,
+	prefix string,
 ) (*v4.Flow, error) {
 	hasUnresolvedBackend, err := hasUnresolvedBackendForRule(ctx, route, rule)
 	if err != nil {
@@ -119,7 +120,7 @@ func createRuleMatchFlow(
 	case hasInvalidGrants:
 		return buildRuleErrorFlow("Invalid reference grant", match, conditionsExpressions), nil
 	default:
-		return buildRoutingFlow(ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions), nil
+		return buildRoutingFlow(ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix), nil
 	}
 }
 
@@ -131,11 +132,12 @@ func buildRoutingFlow(
 	match gwAPIv1.HTTPRouteMatch,
 	matchIndex int,
 	conditionsExpressions []el.Expression,
+	prefix string,
 ) *v4.Flow {
-	flowName := fmt.Sprintf("rule-%d-match%d", ruleIndex, matchIndex)
+	flowName := fmt.Sprintf("%srule-%d-match%d", prefix, ruleIndex, matchIndex)
 	return &v4.Flow{
 		Name:      &flowName,
-		Request:   buildRequestFlow(ctx, route, rule, ruleIndex, matchIndex),
+		Request:   buildRequestFlow(ctx, route, rule, ruleIndex, matchIndex, prefix),
 		Response:  buildResponseFlow(rule),
 		Enabled:   true,
 		Selectors: buildFlowSelectors(match, conditionsExpressions),
@@ -214,11 +216,12 @@ func buildRequestFlow(
 	route *gwAPIv1.HTTPRoute,
 	rule gwAPIv1.HTTPRouteRule,
 	ruleIndex, matchIndex int,
+	prefix string,
 ) []*v4.FlowStep {
 	steps := []*v4.FlowStep{}
 	if len(rule.BackendRefs) > 0 {
 		rewrite := extractURLRewriteFilter(rule.Filters)
-		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex, rewrite))
+		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex, rewrite, prefix))
 	}
 	return append(steps, buildRequestFilters(ctx, route, rule)...)
 }
@@ -227,27 +230,27 @@ func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 	return buildResponseFilters(rule)
 }
 
-func buildRoutingStep(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter) *v4.FlowStep {
+func buildRoutingStep(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter, prefix string) *v4.FlowStep {
 	policyName := routingPolicyName
 	return v4.NewFlowStep(base.FlowStep{
 		Policy:  &policyName,
 		Enabled: true,
 		Configuration: utils.NewGenericStringMap().
-			Put(routingRulesKey, buildRoutingRule(ruleIndex, matchIndex, rewrite)),
+			Put(routingRulesKey, buildRoutingRule(ruleIndex, matchIndex, rewrite, prefix)),
 	})
 }
 
-func buildRoutingRule(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter) []interface{} {
+func buildRoutingRule(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter, prefix string) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			routingPatternKey: routingPattern,
-			routingURLKey:     buildRoutingTarget(ruleIndex, matchIndex, rewrite),
+			routingURLKey:     buildRoutingTarget(ruleIndex, matchIndex, rewrite, prefix),
 		},
 	}
 }
 
-func buildRoutingTarget(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter) string {
-	endpointGroup := buildEndpointGroupName(ruleIndex, matchIndex)
+func buildRoutingTarget(ruleIndex, matchIndex int, rewrite *gwAPIv1.HTTPURLRewriteFilter, prefix string) string {
+	endpointGroup := buildEndpointGroupName(ruleIndex, matchIndex, prefix)
 
 	if rewrite == nil || rewrite.Path == nil {
 		return fmt.Sprintf(endpointMatcherPattern, endpointGroup)

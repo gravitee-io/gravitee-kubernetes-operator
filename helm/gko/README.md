@@ -133,11 +133,12 @@ When storing templates stored in config maps, the config map should contain a co
 Configure Kubernetes Gateway API support.
 
 
-| Name                                      | Description                                                                                                                                                         | Value   |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `gatewayAPI.applyCRDs`                    | If true, the manager will apply Gateway API CRDs on startup.                                                                                                        | `true`  |
-| `gatewayAPI.controller.enabled`           | Set to true to enable experimental gateway api support.                                                                                                             | `false` |
-| `gatewayAPI.controller.skipAPIDefinition` | If true, the HTTPRoute reconciler creates a ConfigMap directly instead of an intermediate ApiV4Definition CR, freeing the CR name for user-managed API definitions. | `false` |
+| Name                                      | Description                                                                                                                                                                                                                                          | Value   |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `gatewayAPI.applyCRDs`                    | If true, the manager will apply Gateway API CRDs on startup.                                                                                                                                                                                         | `true`  |
+| `gatewayAPI.controller.enabled`           | Set to true to enable experimental gateway api support.                                                                                                                                                                                              | `false` |
+| `gatewayAPI.controller.skipAPIDefinition` | If true, the HTTPRoute reconciler creates a ConfigMap directly instead of an intermediate ApiV4Definition CR, freeing the CR name for user-managed API definitions.                                                                                  | `false` |
+| `gatewayAPI.controller.matchAcrossRoutes` | If true, HTTPRoutes with overlapping context paths on the same Gateway are merged into a single API definition. Enables full Gateway API conformance for cross-route matching at the cost of changing API identity (IDs, names) for affected routes. | `false` |
 
 ### HTTP Client
 

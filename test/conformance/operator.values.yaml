@@ -16,6 +16,7 @@ gatewayAPI:
   controller:
     enabled: true
     skipAPIDefinition: true
+    matchAcrossRoutes: true
 
 manager:
   image:
