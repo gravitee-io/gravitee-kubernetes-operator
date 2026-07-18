@@ -30,6 +30,7 @@ parameters:
       - rollout-apim
       - release
       - freeze
+      - rebase-operatorhub
       - none
   apim-source-branch:
     type: string
@@ -990,6 +991,23 @@ jobs:
           command: |
             sonar-scanner \
               -Dsonar.projectVersion=$(npx zx hack/scripts/get-chart-version.mjs)
+
+  job-rebase-operatorhub:
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - gh/setup
+      - keeper/env-export:
+          secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
+          var-name: GITHUB_TOKEN
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      - run:
+          name: Rebase stale OperatorHub fork branches
+          command: npx zx hack/scripts/rebase-operatorhub-prs.mjs
+
 workflows:
   pre-merge:
     when:
@@ -1353,3 +1371,13 @@ workflows:
           context: cicd-orchestrator
           apim-source-branch: << pipeline.parameters.apim-source-branch >>
           apim-commit-hash: << pipeline.parameters.apim-commit-hash >>
+
+  rebase-operatorhub:
+    when:
+      equal:
+        - rebase-operatorhub
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-rebase-operatorhub:
+          name: Rebase OperatorHub PRs
+          context: cicd-orchestrator
