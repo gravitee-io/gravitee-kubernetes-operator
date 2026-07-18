@@ -94,6 +94,9 @@ rules:
 {{- if .Values.gatewayAPI.controller.enabled }}
       - create
 {{- end }}
+{{- if .Values.gatewayAPI.controller.matchAcrossRoutes }}
+      - delete
+{{- end }}
       - get
       - list
       - update

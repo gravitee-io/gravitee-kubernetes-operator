@@ -39,6 +39,7 @@ const (
 	EnableWebhook                        = "ENABLE_WEBHOOK"
 	EnableGatewayAPI                     = "ENABLE_GATEWAY_API"
 	GatewayAPISkipAPIDefinition          = "GATEWAY_API_SKIP_API_DEFINITION"
+	GatewayAPIMatchAcrossRoutes          = "GATEWAY_API_MATCH_ACROSS_ROUTES"
 	ApplyGatewayAPICRDs                  = "APPLY_GATEWAY_API_CRDS"
 	WebhookNS                            = "WEBHOOK_NAMESPACE"
 	WebhookServiceName                   = "WEBHOOK_SERVICE_NAME"
@@ -95,6 +96,7 @@ var Config = struct {
 	EnableWebhook                        bool
 	EnableGatewayAPI                     bool
 	GatewayAPISkipAPIDefinition          bool
+	GatewayAPIMatchAcrossRoutes          bool
 	ApplyGatewayAPICRDs                  bool
 	WebhookNS                            string
 	WebhookService                       string
@@ -155,6 +157,7 @@ func init() {
 	Config.EnableWebhook = os.Getenv(EnableWebhook) == TrueString
 	Config.EnableGatewayAPI = os.Getenv(EnableGatewayAPI) == TrueString
 	Config.GatewayAPISkipAPIDefinition = os.Getenv(GatewayAPISkipAPIDefinition) == TrueString
+	Config.GatewayAPIMatchAcrossRoutes = os.Getenv(GatewayAPIMatchAcrossRoutes) == TrueString
 	Config.ApplyGatewayAPICRDs = os.Getenv(ApplyGatewayAPICRDs) == TrueString
 	Config.WebhookNS = os.Getenv(WebhookNS)
 	Config.WebhookService = os.Getenv(WebhookServiceName)
