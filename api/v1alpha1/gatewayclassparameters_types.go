@@ -60,6 +60,3 @@ func (params *GatewayClassParameters) SetConditions(conditions []metav1.Conditio
 	params.Status.Conditions = conditions
 }
 
-func init() {
-	SchemeBuilder.Register(&GatewayClassParameters{}, &GatewayClassParametersList{})
-}

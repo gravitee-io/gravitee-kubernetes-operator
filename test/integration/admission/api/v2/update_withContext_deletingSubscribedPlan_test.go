@@ -56,8 +56,6 @@ var _ = Describe("Validate delete", labels.WithContext, func() {
 	It("should fail with subscription", func() {
 
 		Eventually(func() error {
-			Expect(admissionCtrl.Default(ctx, fixtures.Subscription)).ToNot(HaveOccurred())
-
 			Expect(manager.GetLatest(ctx, fixtures.API)).ToNot(HaveOccurred())
 
 			newApi := fixtures.API.DeepCopy()

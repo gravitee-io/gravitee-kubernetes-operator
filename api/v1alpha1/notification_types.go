@@ -140,6 +140,3 @@ func (s *NotificationStatus) IsFailed() bool {
 	return false
 }
 
-func init() {
-	SchemeBuilder.Register(&Notification{}, &NotificationList{})
-}

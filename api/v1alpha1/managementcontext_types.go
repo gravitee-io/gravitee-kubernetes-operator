@@ -184,9 +184,6 @@ type ManagementContextList struct {
 	Items           []ManagementContext `json:"items"`
 }
 
-func init() {
-	SchemeBuilder.Register(&ManagementContext{}, &ManagementContextList{})
-}
 
 func (ctx *ManagementContext) IsBeingDeleted() bool {
 	return !ctx.ObjectMeta.DeletionTimestamp.IsZero()

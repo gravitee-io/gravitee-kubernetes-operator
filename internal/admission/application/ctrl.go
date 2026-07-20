@@ -19,19 +19,16 @@ import (
 	"strconv"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-var _ webhook.CustomValidator = AdmissionCtrl{}
-var _ webhook.CustomDefaulter = AdmissionCtrl{}
+var _ admission.Validator[*v1alpha1.Application] = AdmissionCtrl{}
+var _ admission.Defaulter[*v1alpha1.Application] = AdmissionCtrl{}
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.Application{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Application{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
@@ -39,12 +36,7 @@ func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 
 type AdmissionCtrl struct{}
 
-// Default implements admission.CustomDefaulter.
-func (a AdmissionCtrl) Default(_ context.Context, obj runtime.Object) error {
-	app, ok := obj.(*v1alpha1.Application)
-	if !ok {
-		return nil
-	}
+func (a AdmissionCtrl) Default(_ context.Context, app *v1alpha1.Application) error {
 	defaultClientCertificates(app)
 	return nil
 }
@@ -72,26 +64,23 @@ func defaultClientCertificates(app *v1alpha1.Application) {
 	}
 }
 
-// ValidateCreate implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context,
-	obj runtime.Object,
+	obj *v1alpha1.Application,
 ) (admission.Warnings, error) {
 	return validateCreate(ctx, obj).Map()
 }
 
-// ValidateDelete implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateDelete(
-	ctx context.Context, obj runtime.Object,
+	ctx context.Context, obj *v1alpha1.Application,
 ) (admission.Warnings, error) {
 	return validateDelete(ctx, obj).Map()
 }
 
-// ValidateUpdate implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateUpdate(
 	ctx context.Context,
-	oldObj runtime.Object,
-	newObj runtime.Object,
+	oldObj *v1alpha1.Application,
+	newObj *v1alpha1.Application,
 ) (admission.Warnings, error) {
 	return validateUpdate(ctx, oldObj, newObj).Map()
 }

@@ -136,6 +136,3 @@ type ApiResourceList struct {
 	Items           []ApiResource `json:"items"`
 }
 
-func init() {
-	SchemeBuilder.Register(&ApiResource{}, &ApiResourceList{})
-}
