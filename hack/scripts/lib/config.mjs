@@ -25,7 +25,7 @@ export const CONFIG = {
   repoName,
   repo,
   branch,
-  commitHashAnnotationKey: gkoCommitHashAnnotationKey,
+  gkoCommitHashAnnotationKey,
   apimCommitHashAnnotationKey,
   gkoValues,
   apimValues,
