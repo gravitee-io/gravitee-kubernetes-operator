@@ -52,30 +52,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	events := event.NewRecorder(r.Recorder)
-
 	dc := route.DeepCopy()
 
-	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		if err := k8s.GetClient().Get(ctx, req.NamespacedName, dc); client.IgnoreNotFound(err) != nil {
-			return err
-		}
-
-		return k8s.CreateOrUpdate(ctx, route, func() error {
-			util.AddFinalizer(route, core.HTTPRouteFinalizer)
-
-			if !route.DeletionTimestamp.IsZero() {
-				return events.Record(event.Delete, route, func() error {
-					util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
-					return nil
-				})
-			}
-
-			return events.Record(event.Update, route, func() error {
-				return r.reconcileRoute(ctx, dc)
-			})
-		})
-	})
+	err := r.reconcileWithRetry(ctx, req, route, dc)
 
 	if err != nil && errors.Is(err, internal.ErrGatewayNotReady) {
 		log.Debug(ctx, "Gateway status not ready, requeuing HTTPRoute", "route", req.NamespacedName)
@@ -87,6 +66,58 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	return r.updateRouteStatus(ctx, req, route, dc)
+}
+
+func (r *Reconciler) reconcileWithRetry(
+	ctx context.Context,
+	req ctrl.Request,
+	route *gwAPIv1.HTTPRoute,
+	dc *gwAPIv1.HTTPRoute,
+) error {
+	events := event.NewRecorder(r.Recorder)
+
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		if err := k8s.GetClient().Get(ctx, req.NamespacedName, dc); client.IgnoreNotFound(err) != nil {
+			return err
+		}
+
+		return k8s.CreateOrUpdate(ctx, route, func() error {
+			util.AddFinalizer(route, core.HTTPRouteFinalizer)
+
+			if !route.DeletionTimestamp.IsZero() {
+				return r.reconcileDelete(ctx, route, events)
+			}
+
+			return events.Record(event.Update, route, func() error {
+				return r.reconcileRoute(ctx, dc)
+			})
+		})
+	})
+}
+
+func (r *Reconciler) reconcileDelete(
+	ctx context.Context,
+	route *gwAPIv1.HTTPRoute,
+	events *event.Recorder,
+) error {
+	return events.Record(event.Delete, route, func() error {
+		if env.Config.GatewayAPIMatchAcrossRoutes {
+			if err := internal.CleanupMergedResources(ctx, route); err != nil {
+				return err
+			}
+		}
+		util.RemoveFinalizer(route, core.HTTPRouteFinalizer)
+		return nil
+	})
+}
+
+func (r *Reconciler) updateRouteStatus(
+	ctx context.Context,
+	req ctrl.Request,
+	route *gwAPIv1.HTTPRoute,
+	dc *gwAPIv1.HTTPRoute,
+) (ctrl.Result, error) {
 	if err := k8s.GetClient().Get(ctx, req.NamespacedName, route); err != nil {
 		if kErrors.IsNotFound(err) {
 			log.Debug(ctx, "Looks like the HTTPRoute was deleted during reconciliation, no need to update status")
