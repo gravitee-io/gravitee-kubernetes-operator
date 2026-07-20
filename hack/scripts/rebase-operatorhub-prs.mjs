@@ -25,8 +25,7 @@ process.env.GH_TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
 
 LOG.blue("Searching for open GKO PRs on OperatorHub ...");
 
-const prsRaw =
-  await $`gh search prs --repo ${UPSTREAM_REPO} ${OPERATOR_NAME} \
+const prsRaw = await $`gh search prs --repo ${UPSTREAM_REPO} ${OPERATOR_NAME} \
     --author graviteeio --state open \
     --json number,title,headRefName --limit 20`;
 
@@ -41,8 +40,7 @@ LOG.blue(`Found ${prs.length} open PR(s). Checking CI status ...`);
 
 const stale = [];
 for (const pr of prs) {
-  const checksRaw =
-    await $`gh pr view ${pr.number} --repo ${UPSTREAM_REPO} \
+  const checksRaw = await $`gh pr view ${pr.number} --repo ${UPSTREAM_REPO} \
       --json statusCheckRollup \
       --jq ${`[.statusCheckRollup[] | select(.name == "operator-ci")] | map({conclusion}) | first`}`;
 
