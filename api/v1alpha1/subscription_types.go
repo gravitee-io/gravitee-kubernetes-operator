@@ -183,6 +183,3 @@ func (s *Subscription) StatusIsZero() bool {
 		s.Status.ProcessingStatus == ""
 }
 
-func init() {
-	SchemeBuilder.Register(&Subscription{}, &SubscriptionList{})
-}

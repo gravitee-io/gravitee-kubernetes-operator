@@ -17,7 +17,7 @@ package v4
 import (
 	"context"
 
-	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v2"
+	adm "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/constants"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/internal/integration/fixture"

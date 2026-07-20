@@ -141,6 +141,3 @@ func (p *PortalListing) SetConditions(conditions []metav1.Condition) {
 	p.Status.Conditions = conditions
 }
 
-func init() {
-	SchemeBuilder.Register(&PortalListing{}, &PortalListingList{})
-}

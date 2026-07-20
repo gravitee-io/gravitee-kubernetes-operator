@@ -175,6 +175,3 @@ func (g *Group) SetConditions(conditions []metav1.Condition) {
 	g.Status.Conditions = conditions
 }
 
-func init() {
-	SchemeBuilder.Register(&Group{}, &GroupList{})
-}

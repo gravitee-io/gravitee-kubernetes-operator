@@ -376,6 +376,3 @@ type ApiDefinitionList struct {
 	Items           []ApiDefinition `json:"items"`
 }
 
-func init() {
-	SchemeBuilder.Register(&ApiDefinition{}, &ApiDefinitionList{})
-}

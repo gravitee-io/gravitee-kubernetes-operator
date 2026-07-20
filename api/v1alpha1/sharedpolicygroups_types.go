@@ -170,6 +170,3 @@ func (s *SharedPolicyGroupSpecStatus) DeepCopyTo(obj client.Object) error {
 	}
 }
 
-func init() {
-	SchemeBuilder.Register(&SharedPolicyGroup{}, &SharedPolicyGroupList{})
-}

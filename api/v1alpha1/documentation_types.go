@@ -152,6 +152,3 @@ func (d *Documentation) SetConditions(conditions []metav1.Condition) {
 	d.Status.Conditions = conditions
 }
 
-func init() {
-	SchemeBuilder.Register(&Documentation{}, &DocumentationList{})
-}

@@ -413,6 +413,3 @@ type ApiV4DefinitionList struct {
 	Items           []ApiV4Definition `json:"items"`
 }
 
-func init() {
-	SchemeBuilder.Register(&ApiV4Definition{}, &ApiV4DefinitionList{})
-}

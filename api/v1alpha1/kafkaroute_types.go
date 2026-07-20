@@ -47,6 +47,3 @@ type KafkaRouteStatus struct {
 	gwAPIv1.RouteStatus `json:",inline"`
 }
 
-func init() {
-	SchemeBuilder.Register(&KafkaRoute{}, &KafkaRouteList{})
-}

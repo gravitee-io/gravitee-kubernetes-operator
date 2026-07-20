@@ -86,9 +86,6 @@ func (app *Application) IsBeingDeleted() bool {
 	return !app.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-func init() {
-	SchemeBuilder.Register(&Application{}, &ApplicationList{})
-}
 
 // GetSpec implements custom.Resource.
 func (app *Application) GetSpec() core.Spec {
