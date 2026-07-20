@@ -1001,6 +1001,18 @@ jobs:
       - keeper/env-export:
           secret-url: keeper://TIlcGPFq4rN5GvgnZb9hng/field/password
           var-name: GITHUB_TOKEN
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_AUTHOR_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_AUTHOR_EMAIL
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
+          var-name: GIT_COMMITTER_NAME
+      - keeper/env-export:
+          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
+          var-name: GIT_COMMITTER_EMAIL
       - add_ssh_keys:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
@@ -1381,3 +1393,9 @@ workflows:
       - job-rebase-operatorhub:
           name: Rebase OperatorHub PRs
           context: cicd-orchestrator
+          filters:
+            branches:
+              only:
+                - master
+            tags:
+              ignore: /.*/

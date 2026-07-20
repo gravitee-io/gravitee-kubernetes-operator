@@ -46,7 +46,7 @@ jobs:
       PIPELINE_BRANCH: ${{ inputs.pipeline-branch }}
       CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false
