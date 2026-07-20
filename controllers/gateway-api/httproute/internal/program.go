@@ -27,6 +27,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/httproute/internal/mapper"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/uuid"
 	v1 "k8s.io/api/core/v1"
@@ -596,7 +597,11 @@ func listRoutesForGateway(ctx context.Context, gw *gwAPIv1.Gateway) ([]gwAPIv1.H
 
 	var attached []gwAPIv1.HTTPRoute
 	for i := range list.Items {
-		if referencesGatewayByNameNs(&list.Items[i], gw) {
+		route := &list.Items[i]
+		if !route.DeletionTimestamp.IsZero() {
+			continue
+		}
+		if referencesGatewayByNameNs(route, gw) {
 			attached = append(attached, list.Items[i])
 		}
 	}
@@ -680,6 +685,34 @@ func groupRouteLabels(group []mappedRoute) map[string]string {
 		rl[routeLabelPrefix+mr.route.Name] = mr.route.Namespace
 	}
 	return rl
+}
+
+// CleanupMergedResources re-programs merged ConfigMaps or APIs for every
+// gateway referenced by the given route, effectively removing the route's
+// contribution from the merged output. It is intended to be called from the
+// deletion handler so that stale merged resources do not linger after a
+// route is removed.
+func CleanupMergedResources(ctx context.Context, route *gwAPIv1.HTTPRoute) error {
+	for _, ref := range route.Spec.ParentRefs {
+		if !k8s.IsGatewayKind(ref) {
+			continue
+		}
+		gw, err := k8s.ResolveGateway(ctx, route.ObjectMeta, ref)
+		if err != nil {
+			continue
+		}
+		switch {
+		case env.Config.GatewayAPISkipAPIDefinition:
+			if err := programGatewayMergedConfigMaps(ctx, gw); err != nil {
+				return err
+			}
+		default:
+			if err := programGatewayMergedAPIs(ctx, gw); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func getOwnerReferences(httpRoute *gwAPIv1.HTTPRoute) []metaV1.OwnerReference {
