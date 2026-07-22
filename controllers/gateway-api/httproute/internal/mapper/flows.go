@@ -57,7 +57,7 @@ func buildFlows(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.Flow, erro
 			conditionsExpressions := buildFlowConditionExpressions(match)
 
 			flow, err := createRuleMatchFlow(
-				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix,
+				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions,
 			)
 			if err != nil {
 				return nil, err
