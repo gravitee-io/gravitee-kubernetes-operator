@@ -34,7 +34,7 @@ lint-commits: ## Run commitlint and fail on error
 .PHONY: lint-licenses
 lint-licenses: ## Run addlicense linter and fail on error
 	@echo "Checking license headers ..."
-	@$(ADDLICENSE) -check -f LICENSE_TEMPLATE.txt \
+	@go tool addlicense -check -f LICENSE_TEMPLATE.txt \
 		-ignore ".circleci/**" \
 		-ignore ".mergify.yml" \
 		-ignore ".crd-ref-docs.yaml" \
@@ -48,7 +48,7 @@ lint-licenses: ## Run addlicense linter and fail on error
 .PHONY: add-license
 add-license: ## Add license headers to files
 	@echo "Adding license headers ..."
-	@$(ADDLICENSE) -f LICENSE_TEMPLATE.txt \
+	@go tool addlicense -f LICENSE_TEMPLATE.txt \
 		-ignore ".circleci/**" \
 		-ignore ".mergify.yml" \
 		-ignore ".crd-ref-docs.yaml" \
