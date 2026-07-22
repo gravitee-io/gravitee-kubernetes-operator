@@ -57,17 +57,17 @@ func Resolve(
 
 		k8s.SetCondition(status, conditionBuilder.Build())
 
-		if httpRoutesCount, err := countAttachedHTTPRoutes(ctx, gw.Object, listener); err != nil {
+		httpRoutesCount, err := countAttachedHTTPRoutes(ctx, gw.Object, listener)
+		if err != nil {
 			return err
-		} else {
-			status.Object.AttachedRoutes = httpRoutesCount
 		}
+		status.Object.AttachedRoutes = httpRoutesCount
 
-		if kafkaRoutesCount, err := countAttachedKafkaRoutes(ctx, gw.Object, listener); err != nil {
+		kafkaRoutesCount, err := countAttachedKafkaRoutes(ctx, gw.Object, listener)
+		if err != nil {
 			return err
-		} else {
-			status.Object.AttachedRoutes += kafkaRoutesCount
 		}
+		status.Object.AttachedRoutes += kafkaRoutesCount
 	}
 	return nil
 }
@@ -186,7 +186,7 @@ func resolveRouteKinds(
 	validRoutesCount := len(listener.AllowedRoutes.Kinds)
 	for _, k := range listener.AllowedRoutes.Kinds {
 		if !isValidRouteKind(status.SupportedKinds, k) {
-			validRoutesCount -= 1
+			validRoutesCount--
 
 			builder.
 				RejectInvalidRouteKinds(
@@ -223,7 +223,7 @@ func countAttachedHTTPRoutes(
 	gw *gwAPIv1.Gateway,
 	listener gwAPIv1.Listener,
 ) (int32, error) {
-	var count int32 = 0
+	var count int32
 
 	if !k8s.HasHTTPSupport(listener) {
 		return 0, nil
@@ -238,7 +238,7 @@ func countAttachedHTTPRoutes(
 		if attached, err := k8s.IsAttachedHTTPRoute(ctx, gw, listener, route); err != nil {
 			return 0, err
 		} else if attached {
-			count += 1
+			count++
 		}
 	}
 	return count, nil
@@ -249,7 +249,7 @@ func countAttachedKafkaRoutes(
 	gw *gwAPIv1.Gateway,
 	listener gwAPIv1.Listener,
 ) (int32, error) {
-	var count int32 = 0
+	var count int32
 
 	if !k8s.IsKafkaListener(listener) {
 		return 0, nil
@@ -262,7 +262,7 @@ func countAttachedKafkaRoutes(
 	}
 	for _, route := range routesList.Items {
 		if k8s.IsAttachedKafkaRoute(gw, listener, route) {
-			count += 1
+			count++
 		}
 	}
 	return count, nil

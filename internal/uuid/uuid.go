@@ -15,7 +15,7 @@
 package uuid
 
 import (
-	"crypto/md5" //nolint:gosec // it is expected in this context
+	"crypto/md5"
 	"fmt"
 	"strings"
 
@@ -36,7 +36,7 @@ func FromStrings(seeds ...string) string {
 // JavaUUIDFromBytes generates a version 3 UUID based on the MD5 hash of the provided name, same as java.util.UUID.
 func JavaUUIDFromBytes(data string) string {
 	// Calculate the MD5 hash of the input name
-	h := md5.New() //nolint:gosec // it is expected in this context
+	h := md5.New()
 	h.Reset()
 	h.Write([]byte(data))
 	md5Bytes := h.Sum(nil)

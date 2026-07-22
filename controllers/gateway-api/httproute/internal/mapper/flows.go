@@ -56,13 +56,13 @@ func buildFlows(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]*v4.Flow, erro
 		for matchIndex, match := range rule.Matches {
 			conditionsExpressions := buildFlowConditionExpressions(match)
 
-			if flow, err := createRuleMatchFlow(
-				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions,
-			); err != nil {
+			flow, err := createRuleMatchFlow(
+				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix,
+			)
+			if err != nil {
 				return nil, err
-			} else {
-				weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: len(conditionsExpressions)})
 			}
+			weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: len(conditionsExpressions)})
 		}
 	}
 	return sortFlows(weightedFlows), nil
