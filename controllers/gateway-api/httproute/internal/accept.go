@@ -36,12 +36,12 @@ func AcceptWithCache(ctx context.Context, route *gwAPIv1.HTTPRoute, cache Gatewa
 func acceptParents(ctx context.Context, route *gwAPIv1.HTTPRoute, cache GatewayCache) error {
 	for i, ref := range route.Spec.ParentRefs {
 		status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
-		if accepted, err := acceptParent(ctx, route, ref, status, cache); err != nil {
+		accepted, err := acceptParent(ctx, route, ref, status, cache)
+		if err != nil {
 			return err
-		} else {
-			k8s.SetCondition(status, accepted)
-			route.Status.Parents[i] = *status.Object
 		}
+		k8s.SetCondition(status, accepted)
+		route.Status.Parents[i] = *status.Object
 	}
 	return nil
 }
