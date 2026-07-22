@@ -2,7 +2,7 @@
 
 .PHONY: reference
 reference:
-	@bin/crd-ref-docs \
+	@go tool crd-ref-docs \
 		--max-depth=100 \
 		--source-path=${PWD}/api \
 		--config=.crd-ref-docs.yaml \

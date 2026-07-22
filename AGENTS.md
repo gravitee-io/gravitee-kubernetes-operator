@@ -28,9 +28,9 @@ make it                        # Run integration tests (Ginkgo, requires cluster
 make e2e                       # Run e2e tests (Playwright) — test/platform-test/
 
 # Run a single unit test suite
-./bin/ginkgo test/unit/apim/...
+go tool ginkgo test/unit/apim/...
 # Run a single integration test file (use --focus to filter by description)
-./bin/ginkgo --focus "should ..." test/integration/apidefinition/v2/...
+go tool ginkgo --focus "should ..." test/integration/apidefinition/v2/...
 
 # Local development
 make start-cluster             # Create local KinD cluster with APIM
@@ -112,4 +112,4 @@ a reviewed plan in `plans/` before any implementation.
 - **License headers:** Apache 2.0 on all `.go` files (enforced by `addlicense`, template in `LICENSE_TEMPLATE.txt`)
 - **Linting:** `go vet` + `revive` + `staticcheck` (run in parallel via `make -j4 lint-sources`). Config in `.revive.toml`. Max cyclomatic complexity 30. Coding standards in `docs/go-standards.md`
 - **Naming:** Lint excludes `Api/Url/Http` vs `API/URL/HTTP` casing warnings
-- **Makefile:** Modular structure in `hack/make/*.mk`; tools installed to `./bin/`
+- **Makefile:** Modular structure in `hack/make/*.mk`; Go tools managed via `go.mod` `tool` directive (invoked as `go tool <name>`)
