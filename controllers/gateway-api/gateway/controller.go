@@ -51,7 +51,6 @@ type Reconciler struct {
 	Recorder record.EventRecorder
 }
 
-//nolint:gocognit,funlen // keep
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	gw := gateway.WrapGateway(&gwAPIv1.Gateway{})
 

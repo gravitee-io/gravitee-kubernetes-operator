@@ -191,7 +191,6 @@ func IgnoreNotFound(err error) error {
 func IsRecoverable(err error) bool {
 	errs := make([]error, 0)
 
-	//nolint:errorlint // type assertion is intended here (Aggregate is an interface)
 	if agg, ok := err.(kErrors.Aggregate); ok {
 		errs = kErrors.Flatten(agg).Errors()
 	} else {
