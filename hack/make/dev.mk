@@ -46,9 +46,9 @@ run: ## Run a controller from your host
 	@APPLY_CRDS=true APPLY_GATEWAY_API_CRDS=true ENABLE_GATEWAY_API=true go run ./main.go
 
 .PHONY: cloud-provider-kind
-cloud-lb: install-go-tools ## Run a local cloud load balancer service (cloud-provider-kind)
+cloud-lb: ## Run a local cloud load balancer service (cloud-provider-kind)
 ifeq ($(shell uname),Darwin)
-	@sudo $(CLOUD_LB)
+	@sudo go tool cloud-provider-kind
 else
 	NET_MODE=host docker compose -f hack/kind/cloud-provider/compose.yaml up -d
 endif
