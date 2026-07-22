@@ -62,18 +62,11 @@ func mapNotificationSettings(
 	notif *v1alpha1.Notification,
 ) (*base.ConsoleNotificationConfiguration, error) {
 	console := notif.Spec.Console
-	groups := console.Groups
-	resolvedGroups, err := ResolveGroupRefs(ctx, api, console.GetGroupRefs())
+	settings := base.ToAPIConsoleNotificationSettings(console)
+	groups, err := ResolveGroupRefs(ctx, api, console.GetGroupRefs())
 	if err != nil {
 		return nil, err
 	}
-	groups = append(groups, resolvedGroups...)
-
-	if api.GetDefinitionVersion() == core.ApiV4 {
-		return v4.ToAutomationConsoleNotification(console, groups), nil
-	}
-
-	settings := base.ToAPIConsoleNotificationSettings(console)
-	settings.Groups = groups
+	settings.Groups = append(settings.Groups, groups...)
 	return settings, nil
 }
