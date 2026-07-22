@@ -174,4 +174,3 @@ func (g *Group) GetConditions() map[string]metav1.Condition {
 func (g *Group) SetConditions(conditions []metav1.Condition) {
 	g.Status.Conditions = conditions
 }
-

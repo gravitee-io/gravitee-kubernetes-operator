@@ -135,4 +135,3 @@ type ApiResourceList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ApiResource `json:"items"`
 }
-

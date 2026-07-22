@@ -59,4 +59,3 @@ func (params *GatewayClassParameters) GetConditions() map[string]metav1.Conditio
 func (params *GatewayClassParameters) SetConditions(conditions []metav1.Condition) {
 	params.Status.Conditions = conditions
 }
-

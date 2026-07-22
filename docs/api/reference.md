@@ -83,7 +83,7 @@ _Appears in:_
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -226,7 +226,7 @@ _Appears in:_
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -297,7 +297,7 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `id` _string_ | The ID of the Application, if a management context has been defined to sync with an APIM instance |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -362,7 +362,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Dictionary in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When dictionary has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
@@ -426,7 +426,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Documentation page in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the documentation page has been created regardless of errors, this<br />field is used to persist the error message encountered during admission |  |  |
 
 
@@ -533,7 +533,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `members` _integer_ | The number of members added to this group |  |  |
 | `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -573,10 +573,10 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `parentRefs` _[ParentReference](#parentreference) array_ | ParentRefs references the resources (usually Gateways) that a Route wants<br />to be attached to. Note that the referenced parent resource needs to<br />allow this for the attachment to be complete. For Gateways, that means<br />the Gateway needs to allow attachment from Routes of this kind and<br />namespace. For Services, that means the Service must either be in the same<br />namespace for a "producer" route, or the mesh implementation must support<br />and allow "consumer" routes for the referenced Service. ReferenceGrant is<br />not applicable for governing ParentRefs to Services - it is not possible to<br />create a "producer" route for a Service in a different namespace from the<br />Route.<br />There are two kinds of parent resources with "Core" support:<br />* Gateway (Gateway conformance profile)<br />* Service (Mesh conformance profile, ClusterIP Services only)<br />This API may be extended in the future to support additional kinds of parent<br />resources.<br />ParentRefs must be _distinct_. This means either that:<br />* They select different objects.  If this is the case, then parentRef<br />  entries are distinct. In terms of fields, this means that the<br />  multi-part key defined by `group`, `kind`, `namespace`, and `name` must<br />  be unique across all parentRef entries in the Route.<br />* They do not select different objects, but for each optional field used,<br />  each ParentRef that selects the same object must set the same set of<br />  optional fields to different values. If one ParentRef sets a<br />  combination of optional fields, all must set the same combination.<br />Some examples:<br />* If one ParentRef sets `sectionName`, all ParentRefs referencing the<br />  same object must also set `sectionName`.<br />* If one ParentRef sets `port`, all ParentRefs referencing the same<br />  object must also set `port`.<br />* If one ParentRef sets `sectionName` and `port`, all ParentRefs<br />  referencing the same object must also set `sectionName` and `port`.<br />It is possible to separately reference multiple distinct objects that may<br />be collapsed by an implementation. For example, some implementations may<br />choose to merge compatible Gateway Listeners together. If that is the<br />case, the list of routes attached to those resources should also be<br />merged.<br />Note that for ParentRefs that cross namespace boundaries, there are specific<br />rules. Cross-namespace references are only valid if they are explicitly<br />allowed by something in the namespace they are referring to. For example,<br />Gateway has the AllowedRoutes field, and ReferenceGrant provides a<br />generic way to enable other kinds of cross-namespace reference.<br /> |
 | `useDefaultGateways` _[GatewayDefaultScope](#gatewaydefaultscope)_ | UseDefaultGateways indicates the default Gateway scope to use for this<br />Route. If unset (the default) or set to None, the Route will not be<br />attached to any default Gateway; if set, it will be attached to any<br />default Gateway supporting the named scope, subject to the usual rules<br />about which Routes a Gateway is allowed to claim.<br />Think carefully before using this functionality! The set of default<br />Gateways supporting the requested scope can change over time without<br />any notice to the Route author, and in many situations it will not be<br />appropriate to request a default Gateway for a given Route -- for<br />example, a Route with specific security requirements should almost<br />certainly not use a default Gateway.<br /> |
-| `hostname` _[Hostname](#hostname)_ | Hostname is used to uniquely route clients to this API.<br />Your client must trust the certificate provided by the gateway,<br />and as there is a variable host in the proxy bootstrap server URL,<br />you likely need to request a wildcard SAN for the certificate presented by the gateway.<br />If empty, the hostname defined in the Kafka listener of the parent will be used. |  | MaxLength: 253 <br />MinLength: 1 <br />Pattern: `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` <br /> |
+| `hostname` _[Hostname](#hostname)_ | Hostname is used to uniquely route clients to this API.<br />Your client must trust the certificate provided by the gateway,<br />and as there is a variable host in the proxy bootstrap server URL,<br />you likely need to request a wildcard SAN for the certificate presented by the gateway.<br />If empty, the hostname defined in the Kafka listener of the parent will be used. |  | MaxLength: 253 <br />MinLength: 1 <br />Pattern: `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` <br />Optional: \{\} <br /> |
 | `backendRefs` _[KafkaBackendRef](#kafkabackendref) array_ | BackendRefs defines the backend(s) where matching requests should be sent. |  | MaxItems: 16 <br />MinItems: 1 <br /> |
-| `filters` _[KafkaRouteFilter](#kafkaroutefilter) array_ | Filters define the filters that are applied to Kafka trafic matching this route. |  | MaxItems: 16 <br /> |
-| `options` _object (keys:[AnnotationKey](#annotationkey), values:[AnnotationValue](#annotationvalue))_ | Options are a list of key/value pairs to enable extended configuration specific<br />to an |  | MaxProperties: 16 <br /> |
+| `filters` _[KafkaRouteFilter](#kafkaroutefilter) array_ | Filters define the filters that are applied to Kafka trafic matching this route. |  | MaxItems: 16 <br />Optional: \{\} <br /> |
+| `options` _object (keys:[AnnotationKey](#annotationkey), values:[AnnotationValue](#annotationvalue))_ | Options are a list of key/value pairs to enable extended configuration specific<br />to an |  | MaxProperties: 16 <br />Optional: \{\} <br /> |
 
 
 #### KafkaRouteStatus
@@ -640,7 +640,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 #### Notification
@@ -766,7 +766,7 @@ _Appears in:_
 | `id` _string_ | The ID of the PortalListing in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the portal listing has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
 
 
@@ -804,7 +804,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Portal in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When portal has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
@@ -860,7 +860,7 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `crossId` _string_ | The Cross ID is used to identify an SharedPolicyGroup that has been promoted from one environment to another. |  |  |
 | `id` _string_ | The ID is used to identify an SharedPolicyGroup which is unique in any environment. |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the SharedPolicyGroup.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the SharedPolicyGroup.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the SharedPolicyGroup. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `errors` _[Errors](#errors)_ | When SharedPolicyGroup has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
@@ -922,7 +922,7 @@ _Appears in:_
 | `id` _string_ | Subscription ID |  |  |
 | `startedAt` _string_ | When the subscription was started and made available |  |  |
 | `endingAt` _string_ | The expiry date for the subscription (no date means no expiry) |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Subscription.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Subscription.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | This value is `Completed` if the sync with APIM succeeded, Failed otherwise. *** DEPRECATED *** |  |  |
 
 
@@ -1160,7 +1160,7 @@ _Appears in:_
 | `organizationId` _string_ | The organization ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `id` _string_ | The ID of the Application, if a management context has been defined to sync with an APIM instance |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Application.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Application. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `subscriptions` _integer_ | The number of subscriptions that reference the application |  |  |
 | `errors` _[Errors](#errors)_ | When application has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -1284,7 +1284,7 @@ _Appears in:_
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -1930,7 +1930,7 @@ _Appears in:_
 | `id` _string_ | The ID of the API definition in the Gravitee API Management instance (if an API context has been configured). |  | Optional: \{\} <br /> |
 | `crossId` _string_ | The Cross ID is used to identify an API that has been promoted from one environment to another. |  |  |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the API definition. *** DEPRECATED *** |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the API.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `state` _[ApiState](#apistate)_ | The state of the API. Can be either STARTED or STOPPED. |  | Enum: [STARTED STOPPED] <br /> |
 | `subscriptions` _integer_ | The number of subscriptions that reference the API |  |  |
 | `errors` _[Errors](#errors)_ | When API has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -2072,7 +2072,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Dictionary in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Dictionary.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When dictionary has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
@@ -2181,7 +2181,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Documentation page in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Documentation.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the documentation page has been created regardless of errors, this<br />field is used to persist the error message encountered during admission |  |  |
 
 
@@ -2453,7 +2453,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Group in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Group.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the Group. *** DEPRECATED *** |  |  |
 | `members` _integer_ | The number of members added to this group |  |  |
 | `errors` _[Errors](#errors)_ | When group has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
@@ -2501,10 +2501,10 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `parentRefs` _[ParentReference](#parentreference) array_ | ParentRefs references the resources (usually Gateways) that a Route wants<br />to be attached to. Note that the referenced parent resource needs to<br />allow this for the attachment to be complete. For Gateways, that means<br />the Gateway needs to allow attachment from Routes of this kind and<br />namespace. For Services, that means the Service must either be in the same<br />namespace for a "producer" route, or the mesh implementation must support<br />and allow "consumer" routes for the referenced Service. ReferenceGrant is<br />not applicable for governing ParentRefs to Services - it is not possible to<br />create a "producer" route for a Service in a different namespace from the<br />Route.<br />There are two kinds of parent resources with "Core" support:<br />* Gateway (Gateway conformance profile)<br />* Service (Mesh conformance profile, ClusterIP Services only)<br />This API may be extended in the future to support additional kinds of parent<br />resources.<br />ParentRefs must be _distinct_. This means either that:<br />* They select different objects.  If this is the case, then parentRef<br />  entries are distinct. In terms of fields, this means that the<br />  multi-part key defined by `group`, `kind`, `namespace`, and `name` must<br />  be unique across all parentRef entries in the Route.<br />* They do not select different objects, but for each optional field used,<br />  each ParentRef that selects the same object must set the same set of<br />  optional fields to different values. If one ParentRef sets a<br />  combination of optional fields, all must set the same combination.<br />Some examples:<br />* If one ParentRef sets `sectionName`, all ParentRefs referencing the<br />  same object must also set `sectionName`.<br />* If one ParentRef sets `port`, all ParentRefs referencing the same<br />  object must also set `port`.<br />* If one ParentRef sets `sectionName` and `port`, all ParentRefs<br />  referencing the same object must also set `sectionName` and `port`.<br />It is possible to separately reference multiple distinct objects that may<br />be collapsed by an implementation. For example, some implementations may<br />choose to merge compatible Gateway Listeners together. If that is the<br />case, the list of routes attached to those resources should also be<br />merged.<br />Note that for ParentRefs that cross namespace boundaries, there are specific<br />rules. Cross-namespace references are only valid if they are explicitly<br />allowed by something in the namespace they are referring to. For example,<br />Gateway has the AllowedRoutes field, and ReferenceGrant provides a<br />generic way to enable other kinds of cross-namespace reference.<br /> |
 | `useDefaultGateways` _[GatewayDefaultScope](#gatewaydefaultscope)_ | UseDefaultGateways indicates the default Gateway scope to use for this<br />Route. If unset (the default) or set to None, the Route will not be<br />attached to any default Gateway; if set, it will be attached to any<br />default Gateway supporting the named scope, subject to the usual rules<br />about which Routes a Gateway is allowed to claim.<br />Think carefully before using this functionality! The set of default<br />Gateways supporting the requested scope can change over time without<br />any notice to the Route author, and in many situations it will not be<br />appropriate to request a default Gateway for a given Route -- for<br />example, a Route with specific security requirements should almost<br />certainly not use a default Gateway.<br /> |
-| `hostname` _[Hostname](#hostname)_ | Hostname is used to uniquely route clients to this API.<br />Your client must trust the certificate provided by the gateway,<br />and as there is a variable host in the proxy bootstrap server URL,<br />you likely need to request a wildcard SAN for the certificate presented by the gateway.<br />If empty, the hostname defined in the Kafka listener of the parent will be used. |  | MaxLength: 253 <br />MinLength: 1 <br />Pattern: `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` <br /> |
+| `hostname` _[Hostname](#hostname)_ | Hostname is used to uniquely route clients to this API.<br />Your client must trust the certificate provided by the gateway,<br />and as there is a variable host in the proxy bootstrap server URL,<br />you likely need to request a wildcard SAN for the certificate presented by the gateway.<br />If empty, the hostname defined in the Kafka listener of the parent will be used. |  | MaxLength: 253 <br />MinLength: 1 <br />Pattern: `^(\*\.)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` <br />Optional: \{\} <br /> |
 | `backendRefs` _[KafkaBackendRef](#kafkabackendref) array_ | BackendRefs defines the backend(s) where matching requests should be sent. |  | MaxItems: 16 <br />MinItems: 1 <br /> |
-| `filters` _[KafkaRouteFilter](#kafkaroutefilter) array_ | Filters define the filters that are applied to Kafka trafic matching this route. |  | MaxItems: 16 <br /> |
-| `options` _object (keys:[AnnotationKey](#annotationkey), values:[AnnotationValue](#annotationvalue))_ | Options are a list of key/value pairs to enable extended configuration specific<br />to an |  | MaxProperties: 16 <br /> |
+| `filters` _[KafkaRouteFilter](#kafkaroutefilter) array_ | Filters define the filters that are applied to Kafka trafic matching this route. |  | MaxItems: 16 <br />Optional: \{\} <br /> |
+| `options` _object (keys:[AnnotationKey](#annotationkey), values:[AnnotationValue](#annotationvalue))_ | Options are a list of key/value pairs to enable extended configuration specific<br />to an |  | MaxProperties: 16 <br />Optional: \{\} <br /> |
 
 
 #### KafkaACLFilter
@@ -2552,7 +2552,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `type` _[KafkaAcccessControlResourceType](#kafkaacccesscontrolresourcetype)_ |  |  | Enum: [Topic Cluster Group TransactionalIdentifier] <br /> |
 | `operations` _[KafkaAccessControlOperation](#kafkaaccesscontroloperation) array_ | Operations specifies the set of operations / verbs to allow for the resource<br />under access control. |  | Enum: [Create Read Write Delete Alter AlterConfigs Describe DescribeConfigs ClusterAction] <br /> |
-| `match` _[KafkaAccessControlMatch](#kafkaaccesscontrolmatch)_ | Match describes how to select the resource that will be subject to the access control.<br />If not specified, any resource will be matched. |  |  |
+| `match` _[KafkaAccessControlMatch](#kafkaaccesscontrolmatch)_ | Match describes how to select the resource that will be subject to the access control.<br />If not specified, any resource will be matched. |  | Optional: \{\} <br /> |
 
 
 #### KafkaAccessControlMatch
@@ -2614,7 +2614,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `resources` _[KafkaAccessControl](#kafkaaccesscontrol) array_ | A resource group together a type of matched resource and a set of operations<br />to be granted by the access control for that resource. |  | MinItems: 1 <br /> |
-| `options` _object (keys:[AnnotationKey](#annotationkey), values:[AnnotationValue](#annotationvalue))_ | Options allow to specify implementation specific behaviours<br />for a set of rules. |  | MaxProperties: 16 <br /> |
+| `options` _object (keys:[AnnotationKey](#annotationkey), values:[AnnotationValue](#annotationvalue))_ | Options allow to specify implementation specific behaviours<br />for a set of rules. |  | MaxProperties: 16 <br />Optional: \{\} <br /> |
 
 
 #### KafkaBackendRef
@@ -2632,11 +2632,11 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `group` _[Group](#group)_ | Group is the group of the referent. For example, "gateway.networking.k8s.io".<br />When unspecified or empty string, core API group is inferred. |  | MaxLength: 253 <br />Pattern: `^$\|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` <br /> |
-| `kind` _[Kind](#kind)_ | Kind is the Kubernetes resource kind of the referent. For example<br />"Service".<br />Defaults to "Service" when not specified.<br />ExternalName services can refer to CNAME DNS records that may live<br />outside of the cluster and as such are difficult to reason about in<br />terms of conformance. They also may not be safe to forward to (see<br />CVE-2021-25740 for more information). Implementations SHOULD NOT<br />support ExternalName Services.<br />Support: Core (Services with a type other than ExternalName)<br />Support: Implementation-specific (Services with type ExternalName) | Service | MaxLength: 63 <br />MinLength: 1 <br />Pattern: `^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$` <br /> |
-| `name` _[ObjectName](#objectname)_ | Name is the name of the referent. |  | MaxLength: 253 <br />MinLength: 1 <br /> |
-| `namespace` _[Namespace](#namespace)_ | Namespace is the namespace of the backend. When unspecified, the local<br />namespace is inferred.<br />Note that when a namespace different than the local namespace is specified,<br />a ReferenceGrant object is required in the referent namespace to allow that<br />namespace's owner to accept the reference. See the ReferenceGrant<br />documentation for details.<br />Support: Core |  | MaxLength: 63 <br />MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$` <br /> |
-| `port` _[PortNumber](#portnumber)_ | Port specifies the destination port number to use for this resource.<br />Port is required when the referent is a Kubernetes Service. In this<br />case, the port number is the service port number, not the target port.<br />For other resources, destination port might be derived from the referent<br />resource or this field. |  | Maximum: 65535 <br />Minimum: 1 <br /> |
+| `group` _[Group](#group)_ | Group is the group of the referent. For example, "gateway.networking.k8s.io".<br />When unspecified or empty string, core API group is inferred. |  | MaxLength: 253 <br />Pattern: `^$\|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$` <br />Optional: \{\} <br /> |
+| `kind` _[Kind](#kind)_ | Kind is the Kubernetes resource kind of the referent. For example<br />"Service".<br />Defaults to "Service" when not specified.<br />ExternalName services can refer to CNAME DNS records that may live<br />outside of the cluster and as such are difficult to reason about in<br />terms of conformance. They also may not be safe to forward to (see<br />CVE-2021-25740 for more information). Implementations SHOULD NOT<br />support ExternalName Services.<br />Support: Core (Services with a type other than ExternalName)<br />Support: Implementation-specific (Services with type ExternalName) | Service | MaxLength: 63 <br />MinLength: 1 <br />Pattern: `^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$` <br />Optional: \{\} <br /> |
+| `name` _[ObjectName](#objectname)_ | Name is the name of the referent. |  | MaxLength: 253 <br />MinLength: 1 <br />Required: \{\} <br /> |
+| `namespace` _[Namespace](#namespace)_ | Namespace is the namespace of the backend. When unspecified, the local<br />namespace is inferred.<br />Note that when a namespace different than the local namespace is specified,<br />a ReferenceGrant object is required in the referent namespace to allow that<br />namespace's owner to accept the reference. See the ReferenceGrant<br />documentation for details.<br />Support: Core |  | MaxLength: 63 <br />MinLength: 1 <br />Pattern: `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$` <br />Optional: \{\} <br /> |
+| `port` _[PortNumber](#portnumber)_ | Port specifies the destination port number to use for this resource.<br />Port is required when the referent is a Kubernetes Service. In this<br />case, the port number is the service port number, not the target port.<br />For other resources, destination port might be derived from the referent<br />resource or this field. |  | Maximum: 65535 <br />Minimum: 1 <br />Optional: \{\} <br /> |
 
 
 #### KafkaRouteFilter
@@ -2654,8 +2654,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `type` _[KafkaRouteFilterType](#kafkaroutefiltertype)_ | Type identifies the type of filter to apply. |  | Enum: [ACL ExtensionRef] <br /> |
-| `acl` _[KafkaACLFilter](#kafkaaclfilter)_ | ACL defines a schema for a filter that enforce access controls on Kafka trafic. |  |  |
-| `extensionRef` _[LocalObjectReference](#localobjectreference)_ |  |  |  |
+| `acl` _[KafkaACLFilter](#kafkaaclfilter)_ | ACL defines a schema for a filter that enforce access controls on Kafka trafic. |  | Optional: \{\} <br /> |
+| `extensionRef` _[LocalObjectReference](#localobjectreference)_ |  |  | Optional: \{\} <br /> |
 
 
 #### KafkaRouteFilterType
@@ -2763,7 +2763,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the ManagementContext.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 
 
 
@@ -2904,7 +2904,7 @@ _Appears in:_
 | `id` _string_ | The ID of the Portal in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the Portal.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When portal has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 
 
@@ -2966,7 +2966,7 @@ _Appears in:_
 | `id` _string_ | The ID of the PortalListing in the Gravitee API Management instance |  | Optional: \{\} <br /> |
 | `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
 | `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalListing.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `errors` _[Errors](#errors)_ | When the portal listing has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
 
 
@@ -3107,7 +3107,7 @@ _Appears in:_
 | `environmentId` _string_ | The environment ID, if a management context has been defined to sync with an APIM instance |  |  |
 | `crossId` _string_ | The Cross ID is used to identify an SharedPolicyGroup that has been promoted from one environment to another. |  |  |
 | `id` _string_ | The ID is used to identify an SharedPolicyGroup which is unique in any environment. |  |  |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the SharedPolicyGroup.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the SharedPolicyGroup.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
 | `processingStatus` _[ProcessingStatus](#processingstatus)_ | The processing status of the SharedPolicyGroup. *** DEPRECATED ***<br />The value is `Completed` if the sync with APIM succeeded, Failed otherwise. |  |  |
 | `errors` _[Errors](#errors)_ | When SharedPolicyGroup has been created regardless of errors, this field is<br />used to persist the error message encountered during admission |  |  |
 

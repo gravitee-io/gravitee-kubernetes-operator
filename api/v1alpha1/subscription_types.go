@@ -182,4 +182,3 @@ func (s *Subscription) StatusIsZero() bool {
 		len(s.Status.Conditions) == 0 &&
 		s.Status.ProcessingStatus == ""
 }
-

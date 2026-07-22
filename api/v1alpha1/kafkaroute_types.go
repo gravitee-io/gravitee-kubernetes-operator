@@ -46,4 +46,3 @@ type KafkaRouteSpec struct {
 type KafkaRouteStatus struct {
 	gwAPIv1.RouteStatus `json:",inline"`
 }
-

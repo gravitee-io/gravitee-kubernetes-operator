@@ -140,4 +140,3 @@ func (p *PortalListing) GetConditions() map[string]metav1.Condition {
 func (p *PortalListing) SetConditions(conditions []metav1.Condition) {
 	p.Status.Conditions = conditions
 }
-

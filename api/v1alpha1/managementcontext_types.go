@@ -184,7 +184,6 @@ type ManagementContextList struct {
 	Items           []ManagementContext `json:"items"`
 }
 
-
 func (ctx *ManagementContext) IsBeingDeleted() bool {
 	return !ctx.ObjectMeta.DeletionTimestamp.IsZero()
 }

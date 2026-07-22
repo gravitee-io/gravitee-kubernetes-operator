@@ -139,4 +139,3 @@ func (s *NotificationStatus) IsFailed() bool {
 	}
 	return false
 }
-
