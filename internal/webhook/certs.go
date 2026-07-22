@@ -63,10 +63,9 @@ func (p *Patcher) CreateSecret(ctx context.Context, secretName, namespace, host 
 		log.Global.Info("Creating a new CA secret for further usage by admission webhook")
 		newCa, newCert, newKey := GenerateCerts(ctx, host)
 		return p.saveCertsToSecret(ctx, secretName, namespace, CertName, KeyName, newCa, newCert, newKey)
-	} else {
-		log.Global.Infof("Found CA secret [%s] matching admission webhook configuration", secretName)
 	}
 
+	log.Global.Infof("Found CA secret [%s] matching admission webhook configuration", secretName)
 	return nil
 }
 
@@ -182,7 +181,7 @@ func GenerateCerts(ctx context.Context, host string) ([]byte, []byte, []byte) {
 	notBefore := time.Now().Add(time.Minute * -5)
 	notAfter := notBefore.Add(100 * 365 * 24 * time.Hour)
 
-	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128) //nolint:gomnd // LSH number
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
 		log.Global.Error(err, "Failed to generate admission webhook serial number")

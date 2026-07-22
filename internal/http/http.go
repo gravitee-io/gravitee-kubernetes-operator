@@ -196,7 +196,7 @@ func NewNoAuthClient(ctx context.Context) (*Client, error) {
 func NewClient(ctx context.Context, auth *Auth) (*Client, error) {
 	defaultTransport, _ := http.DefaultTransport.(*http.Transport)
 	transport := defaultTransport.Clone()
-	if env.Config.HttpProxy.Enabled { //nolint:nestif // normal complexity
+	if env.Config.HttpProxy.Enabled {
 		if env.Config.HttpProxy.UseSystemProxy {
 			transport.Proxy = http.ProxyFromEnvironment
 		} else {

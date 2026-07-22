@@ -42,7 +42,7 @@ const (
 	WebhookNS                            = "WEBHOOK_NAMESPACE"
 	WebhookServiceName                   = "WEBHOOK_SERVICE_NAME"
 	WebhookPort                          = "WEBHOOK_SERVICE_PORT"
-	WebhookCertSecret                    = "WEBHOOK_CERT_SECRET_NAME" //nolint:gosec // This is not a hardcoded secret
+	WebhookCertSecret                    = "WEBHOOK_CERT_SECRET_NAME"
 	WebhookValidatingConfigurationName   = "WEBHOOK_VALIDATING_CONFIGURATION_NAME"
 	WebhookMutatingConfigurationName     = "WEBHOOK_MUTATING_CONFIGURATION_NAME"
 	HttpCLientInsecureSkipCertVerify     = "HTTP_CLIENT_INSECURE_SKIP_CERT_VERIFY"
@@ -51,7 +51,7 @@ const (
 	HttpClientUseSystemProxy             = "HTTP_CLIENT_PROXY_USE_SYSTEM_PROXY"
 	HttpClientProxyURL                   = "HTTP_CLIENT_PROXY_URL"
 	HttpClientProxyUsername              = "HTTP_CLIENT_PROXY_USERNAME"
-	HttpClientProxyPassword              = "HTTP_CLIENT_PROXY_PASSWORD" //nolint:gosec // This is not a hardcoded secret
+	HttpClientProxyPassword              = "HTTP_CLIENT_PROXY_PASSWORD"
 	HttpClientTruststorePath             = "HTTP_CLIENT_TRUSTSTORE_PATH"
 	TrueString                           = "true"
 	FalseString                          = "false"

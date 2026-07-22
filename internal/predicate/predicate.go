@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint:cyclop // as the number of types increases the package bigger and bigger switches
 package predicate
 
 import (
@@ -81,8 +80,6 @@ func (LastSpecHashPredicate) Create(e event.CreateEvent) bool {
 }
 
 // Update implements default UpdateEvent filter for validating spec hash change.
-//
-//nolint:funlen // keep
 func (LastSpecHashPredicate) Update(e event.UpdateEvent) bool {
 	if e.ObjectOld == nil || e.ObjectNew == nil {
 		return false

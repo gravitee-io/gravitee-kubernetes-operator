@@ -41,13 +41,13 @@ func Resolve(ctx context.Context, route *v1alpha1.KafkaRoute) error {
 
 func resolveParents(ctx context.Context, route *v1alpha1.KafkaRoute) error {
 	for i, ref := range route.Spec.ParentRefs {
-		if resolved, err := resolveParent(ctx, route, ref); err != nil {
+		resolved, err := resolveParent(ctx, route, ref)
+		if err != nil {
 			return err
-		} else {
-			status := gateway.InitRouteParentStatus(ref)
-			k8s.SetCondition(status, resolved)
-			route.Status.Parents[i] = *status.Object
 		}
+		status := gateway.InitRouteParentStatus(ref)
+		k8s.SetCondition(status, resolved)
+		route.Status.Parents[i] = *status.Object
 	}
 	return nil
 }
