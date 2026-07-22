@@ -92,33 +92,6 @@ commands:
           var-name: GITHUB_TOKEN
 
 jobs:
-  job-install-go-tools:
-    docker:
-      - image: cimg/go:<< pipeline.parameters.go-version >>-node
-    steps:
-      - checkout
-      - run:
-          name: Generate cache keys for Go tools
-          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - go/load-mod-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - go/load-build-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - run:
-          name: Download go modules
-          command: go mod download
-      - run:
-          name: Install GO tools
-          command: make install-go-tools
-          no_output_timeout: 30m
-      - go/save-mod-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - go/save-build-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - save_cache:
-          key: gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
-          paths:
-            - /home/circleci/project/bin
 
   job-lint-sources:
     docker:
@@ -130,9 +103,8 @@ jobs:
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
       - go/load-mod-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - run:
           name: Lint sources
           command: make -j4 lint-sources
@@ -149,9 +121,6 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/load-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Lint licenses
           command: make lint-licenses
@@ -186,9 +155,6 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/load-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Check that `make generate` has been executed
           command: |
@@ -224,9 +190,6 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/load-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - run:
           name: Run unit tests
           command: |
@@ -260,12 +223,6 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/load-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
-      - run:
-          name: Install GO tools if not cached
-          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -320,7 +277,7 @@ jobs:
       - run:
           name: Run Gateway API conformance test suites
           command: |
-            bin/gotestsum --format=testname --hide-summary=skipped --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+            go tool gotestsum --format=testname --hide-summary=skipped --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
       - run:
           name: Scale down operator manager.image.repository
           command: |
@@ -363,12 +320,6 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - go/load-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
-      - run:
-          name: Install GO tools if not cached
-          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -429,12 +380,6 @@ jobs:
       - run:
           name: Generate cache keys for Go tools
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
-      - run:
-          name: Install GO tools if not cached
-          command: make install-go-tools
       - kubernetes/install_kubectl:
           kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
       - helm/install_helm_client:
@@ -651,9 +596,6 @@ jobs:
       - run:
           name: Generate cache keys for Go tools
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -883,9 +825,6 @@ jobs:
       - run:
           name: Generate cache keys for Go tools
           command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - restore_cache:
-          keys:
-            - gotools-<< pipeline.parameters.go-version >>-{{ checksum "/tmp/gomod_checksum.md5" }}
       - setup_remote_docker
       - helm/install_helm_client:
           version: "<< pipeline.parameters.helm-version >>"
@@ -1023,26 +962,16 @@ workflows:
         - none
         - << pipeline.parameters.trigger >>
     jobs:
-      - job-install-go-tools:
-          name: Install GO tools
       - job-lint-sources:
           name: Lint sources
-          requires:
-            - Install GO tools
       - job-lint-licenses:
           name: Lint licenses
-          requires:
-            - Install GO tools
       - job-lint-commits:
           name: Lint commits
       - job-lint-resources:
           name: Lint resources
-          requires:
-            - Install GO tools
       - job-unit-test:
           name: Run unit tests
-          requires:
-            - Install GO tools
       - job-integration-test:
           matrix:
             parameters:
@@ -1050,13 +979,9 @@ workflows:
                 - withContext
                 - withoutContext
           context: cicd-orchestrator
-          requires:
-            - Install GO tools
       - job-conformance-test:
           name: Run Conformance Test
           context: cicd-orchestrator
-          requires:
-            - Install GO tools
       - job-helm-lint:
           name: Lint Helm chart
       - job-helm-test:
@@ -1140,16 +1065,8 @@ workflows:
                   event: pass
                   template: basic_success_1
                   branch_pattern: ".+"
-      - job-install-go-tools:
-          name: Install GO tools (master)
-          filters:
-            branches:
-              only:
-                - master
       - job-unit-test:
           name: Run unit tests (master)
-          requires:
-            - Install GO tools (master)
           filters:
             branches:
               only:
@@ -1161,8 +1078,6 @@ workflows:
                 - withContext
                 - withoutContext
           context: cicd-orchestrator
-          requires:
-            - Install GO tools (master)
           filters:
             branches:
               only:
@@ -1170,8 +1085,6 @@ workflows:
       - job-conformance-test:
           name: Run Conformance Test (master)
           context: cicd-orchestrator
-          requires:
-            - Install GO tools (master)
           filters:
             branches:
               only:
@@ -1313,8 +1226,6 @@ workflows:
         - test
         - << pipeline.parameters.trigger >>
     jobs:
-      - job-install-go-tools:
-          name: Install GO tools
       - job-integration-test:
           matrix:
             parameters:
@@ -1322,8 +1233,6 @@ workflows:
                 - withContext
                 - withoutContext
           context: cicd-orchestrator
-          requires:
-            - Install GO tools
           pre-steps:
             - keeper/env-export:
                 secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
