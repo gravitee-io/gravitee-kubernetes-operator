@@ -14,21 +14,31 @@
 
 package model
 
-import "time"
+import (
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/sharedpolicygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
+)
 
-type SharedPolicyGroup struct {
-	ID                  string    `json:"id,omitempty"`
-	CrossID             string    `json:"crossId,omitempty"`
-	Name                string    `json:"name,omitempty"`
-	Status              string    `json:"status,omitempty"`
-	Description         string    `json:"description,omitempty"`
-	PrerequisiteMessage string    `json:"prerequisiteMessage,omitempty"`
-	Version             int       `json:"version,omitempty"`
-	AppType             string    `json:"type,omitempty"`
-	Steps               []any     `json:"steps,omitempty"` // it is not really important for us
-	Phase               string    `json:"phase,omitempty"`
-	DeployedAt          time.Time `json:"deployedAt,omitempty"`
-	CreatedAt           time.Time `json:"createdAt,omitempty"`
-	UpdatedAt           time.Time `json:"updatedAt,omitempty"`
-	LifecycleState      string    `json:"lifecycleState,omitempty"`
+type SharedPolicyGroupDTO struct {
+	HRID                string                        `json:"hrid,omitempty" drift:"ignore"`
+	CrossID             *string                       `json:"crossId,omitempty" drift:"ignore"`
+	Name                string                        `json:"name"`
+	Description         *string                       `json:"description,omitempty"`
+	PrerequisiteMessage *string                       `json:"prerequisiteMessage,omitempty"`
+	ApiType             sharedpolicygroups.ApiType    `json:"apiType"`
+	Phase               *sharedpolicygroups.FlowPhase `json:"phase"`
+	Steps               []StepDTO                     `json:"steps,omitempty" drift:"empty-is-nil"`
+}
+
+type StepDTO struct {
+	Enabled       bool                    `json:"enabled"`
+	Policy        *string                 `json:"policy,omitempty"`
+	Name          *string                 `json:"name,omitempty"`
+	Description   *string                 `json:"description,omitempty"`
+	Configuration *utils.GenericStringMap `json:"configuration,omitempty" drift:"unstructured"`
+	Condition     *string                 `json:"condition,omitempty"`
+}
+
+func ToSharePolicyGroupDTO(spg sharedpolicygroups.SharedPolicyGroup) SharedPolicyGroupDTO {
+	return mapViaJSON[SharedPolicyGroupDTO](spg)
 }

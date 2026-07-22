@@ -139,6 +139,10 @@ const (
 	ApiV4MCPProxy                      = "apim/api_definition/v4/api-v4-mcp-proxy.yml"
 	ApiV4A2AProxy                      = "apim/api_definition/v4/api-v4-a2a-proxy.yml"
 	ApiV4WithPlanPagesNonHridNames     = "apim/api_definition/v4/api-v4-with-jwt-plan-pages-non-hrid-names.yml"
+	ApiV4ProxyDriftFullFile            = "apim/api_definition/v4/api-v4-proxy-drift-full.yml"
+	ApiV4MessageDriftMinimalFile       = "apim/api_definition/v4/api-v4-message-drift-minimal.yml"
+	ApiV4MessageDriftFullFile            = "apim/api_definition/v4/api-v4-message-drift-full.yml"
+	ApiV4NativeDriftFullFile             = "apim/api_definition/v4/api-v4-native-drift-full.yml"
 
 	IngressPEMRegistry         = "ingress/ingress-pem-registry.yml"
 	Ingress404ResponseTemplate = "ingress/ingress-response-404-config-map.yml"

@@ -55,7 +55,7 @@ func (a AdmissionCtrl) ValidateDelete(
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
-	ctx context.Context, _ runtime.Object, newObj runtime.Object,
+	ctx context.Context, oldObj runtime.Object, newObj runtime.Object,
 ) (admission.Warnings, error) {
 	prtl, ok := newObj.(*v1alpha1.Portal)
 	if !ok {
@@ -65,5 +65,5 @@ func (a AdmissionCtrl) ValidateUpdate(
 		return admission.Warnings{}, nil
 	}
 
-	return validateCreate(ctx, newObj).Map()
+	return validateUpdate(ctx, oldObj, newObj).Map()
 }

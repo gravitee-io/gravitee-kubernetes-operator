@@ -42,13 +42,25 @@ func NewSharedPolicyGroup(client *client.Client) *SharedPolicyGroup {
 }
 
 // GetByID For tests purposes only.
-func (svc *SharedPolicyGroup) GetByID(id string) (*model.SharedPolicyGroup, error) {
+func (svc *SharedPolicyGroup) GetByID(id string) (*model.SharedPolicyGroupDTO, error) {
 	if id == "" {
 		return nil, errors.NewNotFoundError()
 	}
 
 	url := svc.EnvV2Target(sharedPolicyGroupsPath).WithPath(id)
-	sg := new(model.SharedPolicyGroup)
+	sg := new(model.SharedPolicyGroupDTO)
+
+	if err := svc.HTTP.Get(url.String(), sg); err != nil {
+		return nil, err
+	}
+
+	return sg, nil
+}
+
+// GetAutomationSpecByHRID fetches the automation API spec shape. For test purposes only.
+func (svc *SharedPolicyGroup) GetAutomationSpecByHRID(hrid string) (*sharedpolicygroups.SharedPolicyGroup, error) {
+	url := svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(hrid)
+	sg := new(sharedpolicygroups.SharedPolicyGroup)
 
 	if err := svc.HTTP.Get(url.String(), sg); err != nil {
 		return nil, err
@@ -58,9 +70,9 @@ func (svc *SharedPolicyGroup) GetByID(id string) (*model.SharedPolicyGroup, erro
 }
 
 // GetByHRID For test purposes only.
-func (svc *SharedPolicyGroup) GetByHRID(hrid string) (*model.SharedPolicyGroup, error) {
+func (svc *SharedPolicyGroup) GetByHRID(hrid string) (*model.SharedPolicyGroupDTO, error) {
 	url := svc.AutomationTarget(sharedPolicyGroupsPath).WithPath(hrid)
-	sg := new(model.SharedPolicyGroup)
+	sg := new(model.SharedPolicyGroupDTO)
 
 	if err := svc.HTTP.Get(url.String(), sg); err != nil {
 		return nil, err
@@ -86,18 +98,20 @@ func (svc *SharedPolicyGroup) createOrUpdate(
 	url := svc.AutomationTarget(sharedPolicyGroupsPath).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
+	dto := model.ToSharePolicyGroupDTO(*spg.Spec.SharedPolicyGroup)
+
 	setHridWithUUID := spg.GetID() != "" && !k8s.IsAutomationAPIManaged(spg)
 
 	// If we are updating and CRD was created before upgrade to AutomationAPI
 	// Then, set HRID to the ID and pass hridContainsUUID query param
 	if setHridWithUUID {
-		spg.Spec.HRID = spg.GetID()
+		dto.HRID = spg.GetID()
 		url = url.WithQueryParam("hridContainsUUID", strconv.FormatBool(true))
 	}
 
 	status := new(sharedpolicygroups.Status)
 
-	if err := svc.HTTP.Put(url.String(), spg.Spec, status); err != nil {
+	if err := svc.HTTP.Put(url.String(), dto, status); err != nil {
 		return nil, err
 	}
 

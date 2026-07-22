@@ -70,7 +70,12 @@ func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.
 	}
 
 	// validateCreate compiles templates and runs kind/dry-run validation.
-	return validateCreate(ctx, newObj)
+	errs.MergeWith(validateCreate(ctx, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
+	mergeDriftValidation(ctx, oldObj, newObj, errs)
+	return errs
 }
 
 // sameContext reports whether two management context refs point to the same object.

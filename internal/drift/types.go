@@ -50,17 +50,23 @@ type Equivalence struct {
 	Equivalent EquivalentStatus
 	// Reason is the reason why the equivalence is not true.
 	Reason any
-	// Skip is true if the children should be ignored.
+	// Skip is true anything happen after the equivalence func is skips, filter, postFunc and children.
 	Skip bool
 	// PostFunc is a function called after the equivalence is evaluated on the result that has just been processed.
 	PostFunc PostEquivalenceFunc
+	// RemoteItemsFilterFunc is a function that filters remote items
+	RemoteItemsFilterFunc ItemsFilterFunc
 }
 
 // EquivalenceFunc is a function that compares two values and returns an Equivalence.
-type EquivalenceFunc func(crd any, remote any) Equivalence
+type EquivalenceFunc func(crd any, remote any, driftContext DriftContext) Equivalence
 
 // PostEquivalenceFunc is a function called after the equivalence is evaluated on the result that has just been processed.
 type PostEquivalenceFunc func(r *Result)
+
+// ItemsFilterFunc is a function that filters the items of a slice
+// and returns the filtered slice.
+type ItemsFilterFunc func(items any) []any
 
 // Result represents the result of the drift detection.
 // It contains the equivalence status, the property name, optionally the index of the property,
@@ -69,6 +75,7 @@ type Result struct {
 	// Equivalence is the equivalence between the CRD and the API.
 	Equivalence
 	// Property is the name of the property that is compared or the key of the map entry.
+	// It is empty for containers (struct, array).
 	Property string
 	// Index is the index of the item when the property is a slice.
 	Index *int
@@ -76,8 +83,19 @@ type Result struct {
 	CRDValue any
 	// RemoteValue is actual the value of the Remote.
 	RemoteValue any
-	// Children is the list of children results (fields, slice items, map entries).
-	Children []*Result
+	// children is the list of children results (fields, slice items, map entries).
+	children []*Result
+	// context is the context of the drift detection.
+	context DriftContext
+}
+
+type DriftContext struct {
+	Namespace string
+}
+
+// NewRootResult creates a new root result with the given namespace.
+func NewRootResult(namespace string) Result {
+	return Result{children: make([]*Result, 0), context: DriftContext{Namespace: namespace}}
 }
 
 // String returns a string representation of the result as a pseudo-yaml tree.
@@ -92,8 +110,8 @@ func (r *Result) DriftDetected() bool {
 	if r.Equivalent == Inequivalent {
 		return true
 	}
-	if len(r.Children) > 0 {
-		for _, child := range r.Children {
+	if len(r.children) > 0 {
+		for _, child := range r.children {
 			if child.DriftDetected() {
 				return true
 			}
@@ -105,13 +123,18 @@ func (r *Result) DriftDetected() bool {
 // AppendChild adds a child to the result and returns it for convenience.
 // If ordered is true, the children are sorted by property name to be able to compare maps.
 func (r *Result) AppendChild(child *Result, ordered bool) *Result {
-	r.Children = append(r.Children, child)
+	child.context = r.context
+	r.children = append(r.children, child)
 	if ordered {
-		r.Children = slices.SortedFunc(slices.Values(r.Children), func(e1 *Result, e2 *Result) int {
+		r.children = slices.SortedFunc(slices.Values(r.children), func(e1 *Result, e2 *Result) int {
 			return cmp.Compare(e1.Property, e2.Property)
 		})
 	}
 	return child
+}
+
+func (r *Result) Children() []*Result {
+	return r.children
 }
 
 // Merge merges Result with one another.
@@ -155,11 +178,11 @@ func merge(or Result, nr Result, merger *Result, parentIndex *int) {
 }
 
 func childrenAlignAtIndex(or Result, nr Result) bool {
-	if len(or.Children) != len(nr.Children) {
+	if len(or.children) != len(nr.children) {
 		return false
 	}
-	for i := range or.Children {
-		if childKey(or.Children[i]) != childKey(nr.Children[i]) {
+	for i := range or.children {
+		if childKey(or.children[i]) != childKey(nr.children[i]) {
 			return false
 		}
 	}
@@ -167,24 +190,24 @@ func childrenAlignAtIndex(or Result, nr Result) bool {
 }
 
 func mergeChildrenPositionally(or Result, nr Result, merger *Result, parentIndex *int) {
-	merger.Children = make([]*Result, len(or.Children))
-	for i, orChild := range or.Children {
-		merger.Children[i] = &Result{}
+	merger.children = make([]*Result, len(or.children))
+	for i, orChild := range or.children {
+		merger.children[i] = &Result{}
 		nrChild := Result{}
-		if i < len(nr.Children) {
-			nrChild = *nr.Children[i]
+		if i < len(nr.children) {
+			nrChild = *nr.children[i]
 		}
-		merge(*orChild, nrChild, merger.Children[i], parentIndex)
+		merge(*orChild, nrChild, merger.children[i], parentIndex)
 	}
 }
 
 func mergeChildrenByKey(or Result, nr Result, merger *Result, parentIndex *int) {
-	nrChildren := make(map[string]*Result, len(nr.Children))
-	for _, child := range nr.Children {
+	nrChildren := make(map[string]*Result, len(nr.children))
+	for _, child := range nr.children {
 		nrChildren[childKey(child)] = child
 	}
 
-	for _, orChild := range or.Children {
+	for _, orChild := range or.children {
 		key := childKey(orChild)
 		mergedChild := &Result{}
 		if nrChild, ok := nrChildren[key]; ok {
@@ -193,13 +216,13 @@ func mergeChildrenByKey(or Result, nr Result, merger *Result, parentIndex *int) 
 		} else {
 			merge(*orChild, Result{}, mergedChild, parentIndex)
 		}
-		merger.Children = append(merger.Children, mergedChild)
+		merger.children = append(merger.children, mergedChild)
 	}
 
 	for _, nrChild := range nrChildren {
 		mergedChild := &Result{}
 		merge(Result{}, *nrChild, mergedChild, parentIndex)
-		merger.Children = append(merger.Children, mergedChild)
+		merger.children = append(merger.children, mergedChild)
 	}
 }
 

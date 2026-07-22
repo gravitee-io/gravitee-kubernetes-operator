@@ -81,7 +81,7 @@ var _ = Describe("Create", labels.WithContext, func() {
 		client := apim.NewClient(ctx)
 
 		hrid := refs.NewNamespacedNameFromObject(apiFixture.APIv4).HRID()
-		var apiFromAPIM *model.AutomationApiDTO
+		var apiFromAPIM *model.APIV4DTO
 		Eventually(func() error {
 			a, err := client.APIs.GetV4ByHRID(hrid)
 			apiFromAPIM = a

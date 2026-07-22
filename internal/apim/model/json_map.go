@@ -12,19 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package model
 
-import (
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
-	"k8s.io/apimachinery/pkg/types"
-)
+import "encoding/json"
 
-func getNamespacedName(ref core.ObjectRef, apiNs string) types.NamespacedName {
-	if ref.GetNamespace() == "" {
-		return types.NamespacedName{
-			Name:      ref.GetName(),
-			Namespace: apiNs,
-		}
+func mapViaJSON[T any](src any) T {
+	var dst T
+	if src == nil {
+		return dst
 	}
-	return ref.NamespacedName()
+
+	data, err := json.Marshal(src)
+	if err != nil {
+		return dst
+	}
+
+	if err := json.Unmarshal(data, &dst); err != nil {
+		return dst
+	}
+
+	return dst
 }

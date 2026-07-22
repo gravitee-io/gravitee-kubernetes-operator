@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package apidefinition
 
 import (
 	"context"
@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// ResolveGroupRefs resolves group references into group names.
 func ResolveGroupRefs(ctx context.Context, referer core.ConditionAwareObject, refs []core.ObjectRef) ([]string, error) {
 	groups := []string{}
 

@@ -16,20 +16,73 @@ package model
 
 import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 )
 
-type Application struct {
-	ID          string               `json:"id,omitempty"`
-	HRID        string               `json:"hrid,omitempty"`
-	Name        string               `json:"name,omitempty"`
-	Status      string               `json:"status,omitempty"`
-	Description string               `json:"description,omitempty"`
-	Settings    *application.Setting `json:"settings,omitempty"`
-	Background  string               `json:"background,omitempty"`
-	Domain      string               `json:"domain,omitempty"`
-	Groups      []string             `json:"groups,omitempty"`
-	Picture     string               `json:"picture,omitempty"`
-	AppType     string               `json:"type,omitempty"`
+type ApplicationDTO struct {
+	ID            string                   `json:"id,omitempty" drift:"ignore"`
+	HRID          string                   `json:"hrid,omitempty" drift:"ignore"`
+	Name          string                   `json:"name,omitempty"`
+	Status        string                   `json:"status,omitempty" drift:"ignore"`
+	Description   string                   `json:"description,omitempty" drift:"trimmed"`
+	Settings      *ApplicationSettingsDTO  `json:"settings,omitempty" drift:"empty-is-nil"`
+	Background    string                   `json:"background,omitempty"`
+	Domain        string                   `json:"domain,omitempty"`
+	Groups        []string                 `json:"groups,omitempty" drift:"empty-is-nil"`
+	Picture       string                   `json:"picture,omitempty"`
+	PictureURL    string                   `json:"pictureUrl,omitempty"`
+	NotifyMembers *bool                    `json:"notifyMembers" drift:"empty-is-nil"`
+	Metadata      []ApplicationMetadataDTO `json:"metadata" drift:"empty-is-nil"`
+	Members       []ApplicationMemberDTO   `json:"members" drift:"empty-is-nil"`
+}
+
+type ApplicationSettingsDTO struct {
+	App   *ApplicationSimpleSettingsDTO      `json:"app,omitempty"`
+	Oauth *ApplicationOAuthClientSettingsDTO `json:"oauth,omitempty"`
+	TLS   *ApplicationTLSSettingsDTO         `json:"tls,omitempty"`
+}
+
+type ApplicationSimpleSettingsDTO struct {
+	AppType  string  `json:"type"`
+	ClientID *string `json:"clientId,omitempty"`
+}
+
+type ApplicationOAuthClientSettingsDTO struct {
+	ApplicationType application.OauthType   `json:"applicationType"`
+	GrantTypes      []application.GrantType `json:"grantTypes"`
+	RedirectUris    []string                `json:"redirectUris"`
+}
+
+type ApplicationTLSSettingsDTO struct {
+	ClientCertificate  string                            `json:"clientCertificate,omitempty" drift:"trimmed"`
+	ClientCertificates []ApplicationClientCertificateDTO `json:"clientCertificates,omitempty" drift:"empty-is-nil"`
+}
+
+type ApplicationClientCertificateDTO struct {
+	Name     string                        `json:"name,omitempty"`
+	Content  string                        `json:"content,omitempty" drift:"trimmed"`
+	Ref      *ApplicationCertificateRefDTO `json:"ref,omitempty" drift:"ignore"`
+	StartsAt string                        `json:"startsAt,omitempty" drift:"rfc3339"`
+	EndsAt   string                        `json:"endsAt,omitempty" drift:"rfc3339"`
+	Encoded  bool                          `json:"encoded,omitempty"`
+}
+
+type ApplicationCertificateRefDTO struct {
+	Kind      string `json:"kind,omitempty"`
+	Name      string `json:"name"`
+	Key       string `json:"key,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+}
+
+type ApplicationMetadataDTO struct {
+	Metadata `json:",inline"`
+	Format   *application.MetaDataFormat `json:"format,omitempty"`
+}
+
+type ApplicationMemberDTO struct {
+	Source   string `json:"source"`
+	SourceID string `json:"sourceId"`
+	Role     string `json:"role,omitempty"`
 }
 
 type ApplicationMetaData struct {
@@ -40,4 +93,8 @@ type ApplicationMetaData struct {
 	Format        *application.MetaDataFormat `json:"format,omitempty"`
 	Hidden        bool                        `json:"hidden,omitempty"`
 	Key           string                      `json:"key,omitempty"`
+}
+
+func ToApplicationDTO(spec v1alpha1.ApplicationSpec) ApplicationDTO {
+	return mapViaJSON[ApplicationDTO](spec.Application)
 }

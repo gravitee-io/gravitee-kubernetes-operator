@@ -206,5 +206,9 @@ func validateUpdate(
 	}
 
 	errs.MergeWith(validateCreate(ctx, newApi))
+	if errs.IsSevere() {
+		return errs
+	}
+	mergeDriftValidation(ctx, oldApi, newApi, errs)
 	return errs
 }

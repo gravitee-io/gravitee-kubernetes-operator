@@ -19,6 +19,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/model"
 )
 
 const (
@@ -32,10 +34,13 @@ func InitRegistry() {
 	RegisterEquivalenceFunc(ignoreName, reflect.String, Ignore)
 	RegisterEquivalenceFunc("trimmed", reflect.String, Trimmed)
 	RegisterEquivalenceFunc("rfc3339", reflect.String, RFC3339)
-	RegisterEquivalenceFunc("ignore-remote-prefix", reflect.String, IgnoreRemotePrefix)
+	RegisterEquivalenceFunc("ignore-namespace-prefix", reflect.String, IgnoreNamespacePrefix)
+	RegisterEquivalenceFunc("ignore-remote-only-metadata", reflect.Slice, IgnoreRemoteOnlyMetadata)
+	RegisterEquivalenceFunc("ignore-crd-only-and-namespace-prefix", reflect.Slice, IgnoreCRDOnlyThenIgnoreNamespacePrefix)
 	RegisterEquivalenceFunc(ignoreName, reflect.Bool, Ignore)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Bool, EmptyIsNilBool)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int, EmptyIsNilInt)
+	RegisterEquivalenceFunc(emptyIsNilName, reflect.Int32, EmptyIsNilInt)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Uint, EmptyIsNilUint)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Slice, EmptyIsNilLen)
 	RegisterEquivalenceFunc(emptyIsNilName, reflect.Map, EmptyIsNilLen)
@@ -45,23 +50,23 @@ func InitRegistry() {
 	RegisterEquivalenceFunc("unstructured", reflect.Struct, DefaultEquivalencePostPullUpObjectChildren)
 }
 
-func Ignore(_ any, _ any) Equivalence {
+func Ignore(_ any, r any, c DriftContext) Equivalence {
 	return Equivalence{Equivalent: CannotCompare}
 }
 
 // EmptyIsNilString checks if the value is nil or empty string.
-func EmptyIsNilString(crd any, remote any) Equivalence {
+func EmptyIsNilString(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && remote == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && crd == "" {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return FromDeepEqual(crd, remote, ctx)
 }
 
 // Trimmed trims the value before comparing.
-func Trimmed(crd any, remote any) Equivalence {
+func Trimmed(crd any, remote any, _ DriftContext) Equivalence {
 	// the registry protects us from casting panics
 	crdString, _ := crd.(string)
 	remoteString, _ := remote.(string)
@@ -71,21 +76,18 @@ func Trimmed(crd any, remote any) Equivalence {
 	return Equivalence{Equivalent: Inequivalent}
 }
 
-// IgnoreRemotePrefix ignores the remote difference if the remote string ends with the crd string.
-func IgnoreRemotePrefix(crd any, remote any) Equivalence {
-	// the registry protects us from casting panics
+// IgnoreNamespacePrefix ignores the remote difference if the remote string ends with the crd string.
+func IgnoreNamespacePrefix(crd any, remote any, ctx DriftContext) Equivalence {
 	crdString, _ := crd.(string)
 	remoteString, _ := remote.(string)
-	if len(crdString) <= len(remoteString) {
-		if strings.HasSuffix(remoteString, crdString) {
-			return Equivalence{Equivalent: Equivalent}
-		}
-	}
-	return FromDeepEqual(crd, remote)
+	prefix := ctx.Namespace + "-"
+	crdString = strings.TrimPrefix(crdString, prefix)
+	remoteString = strings.TrimPrefix(remoteString, prefix)
+	return FromDeepEqual(crdString, remoteString, ctx)
 }
 
 // RFC3339 checks if the value is a valid RFC3339 time and if they represent the same time.
-func RFC3339(crd any, remote any) Equivalence {
+func RFC3339(crd any, remote any, _ DriftContext) Equivalence {
 	// the registry protects us from casting panics
 	crdString, _ := crd.(string)
 	remoteString, _ := remote.(string)
@@ -110,41 +112,143 @@ func RFC3339(crd any, remote any) Equivalence {
 	return Equivalence{Equivalent: Inequivalent}
 }
 
+// IgnoreRemoteOnlyMetadata ignores remote-only model.Metadata by name (unique);
+// If some are found: provides a ItemsFilterFunc function to remove those before items are compared.
+func IgnoreRemoteOnlyMetadata(crd any, remote any, _ DriftContext) Equivalence {
+	eq := EmptyIsNilLen(crd, remote, DriftContext{})
+	if eq.Equivalent == Equivalent {
+		return eq
+	}
+	crdItems := toAnySlice(crd)
+	remoteItems := toAnySlice(remote)
+
+	// get names or return to trigger item comparison
+	crdNames, ok := metadataNames(crdItems)
+	if !ok {
+		return Equivalence{Equivalent: CannotCompare}
+	}
+	remoteNames, ok := metadataNames(remoteItems)
+	if !ok {
+		return Equivalence{Equivalent: CannotCompare}
+	}
+
+	remoteOnlyNames := make([]string, 0)
+	for _, remoteName := range remoteNames {
+		if slices.Contains(crdNames, remoteName) {
+			continue
+		}
+		remoteOnlyNames = append(remoteOnlyNames, remoteName)
+	}
+	if len(remoteOnlyNames) > 0 {
+		return Equivalence{Equivalent: CannotCompare, RemoteItemsFilterFunc: metadataRemoteItemsOnlyFilterFunc(remoteOnlyNames)}
+	}
+	return Equivalence{Equivalent: CannotCompare}
+}
+
+// IgnoreCRDOnlyThenIgnoreNamespacePrefix ignores string not in remote difference then compare ignoring namespace prefix.
+func IgnoreCRDOnlyThenIgnoreNamespacePrefix(crd any, remote any, context DriftContext) Equivalence {
+	eq := EmptyIsNilLen(crd, remote, DriftContext{})
+	if eq.Equivalent == Equivalent {
+		return eq
+	}
+	crdItems := toAnySlice(crd)
+	remoteItems := toAnySlice(remote)
+	cleanCrdItems := make([]string, 0)
+	for _, crdItem := range crdItems {
+		s, ok := crdItem.(string)
+		if !ok {
+			return Equivalence{Equivalent: CannotCompare}
+		}
+		if !slices.Contains(remoteItems, crdItem) {
+			continue
+		}
+		cleanCrdItems = append(cleanCrdItems, s)
+	}
+	e := IgnoreNamespacePrefix(cleanCrdItems, remoteItems, context)
+	if e.Equivalent == Equivalent {
+		return Equivalence{Equivalent: Equivalent, Skip: true}
+	}
+	return Equivalence{Equivalent: CannotCompare}
+}
+
+func metadataRemoteItemsOnlyFilterFunc(remoteOnlyNames []string) ItemsFilterFunc {
+	return func(items any) []any {
+		filtered := make([]any, 0)
+		for _, item := range toAnySlice(items) {
+			if md, ok := item.(model.Metadata); ok {
+				// skip the remote-only items
+				if slices.Contains(remoteOnlyNames, md.GetName()) {
+					continue
+				}
+			}
+			// the rest needs to be compared
+			filtered = append(filtered, item)
+		}
+		return filtered
+	}
+}
+
+func toAnySlice(a any) []any {
+	if a != nil {
+		// ,pt check of required here we know it is a slice already
+		v := reflect.ValueOf(a)
+		result := make([]any, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			result[i] = v.Index(i).Interface()
+		}
+		return result
+	}
+	return make([]any, 0)
+
+}
+
+func metadataNames(items []any) ([]string, bool) {
+	names := make([]string, len(items))
+	for i, item := range items {
+		if md, ok := item.(model.Metadata); ok {
+			names[i] = md.GetName()
+		} else {
+			return nil, false
+		}
+	}
+	return names, true
+}
+
 // EmptyIsNilInt checks if the value is nil or equal to 0.
-func EmptyIsNilInt(crd any, remote any) Equivalence {
+func EmptyIsNilInt(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, 0) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && reflect.DeepEqual(crd, 0) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return FromDeepEqual(crd, remote, ctx)
 }
 
 // EmptyIsNilUint checks if the value is nil or equal to 0.
-func EmptyIsNilUint(crd any, remote any) Equivalence {
+func EmptyIsNilUint(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, uint(0)) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && reflect.DeepEqual(crd, uint(0)) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return FromDeepEqual(crd, remote, ctx)
 }
 
 // EmptyIsNilBool checks if the value is nil or equal to false.
-func EmptyIsNilBool(crd any, remote any) Equivalence {
+func EmptyIsNilBool(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, false) {
 		return Equivalence{Equivalent: Equivalent}
 	}
 	if remote == nil && crd != nil && reflect.DeepEqual(crd, false) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return FromDeepEqual(crd, remote, ctx)
 }
 
 // EmptyIsNilLen checks if the slice or map value is nil or len is equal to 0.
-func EmptyIsNilLen(crd any, remote any) Equivalence {
+func EmptyIsNilLen(crd any, remote any, _ DriftContext) Equivalence {
 	var crdLen int
 	var remoteLen int
 	if crd != nil {
@@ -160,10 +264,10 @@ func EmptyIsNilLen(crd any, remote any) Equivalence {
 }
 
 // EmptyIsNilStruct checks if one struct is nil and the other is an empty struct or vice versa, and reports equivalence.
-func EmptyIsNilStruct(crd any, remote any) Equivalence {
+func EmptyIsNilStruct(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil {
 		crd = toZero(remote)
-		e := FromDeepEqual(crd, remote)
+		e := FromDeepEqual(crd, remote, ctx)
 		if e.Equivalent == Equivalent {
 			// don't need to go further
 			e.Skip = true
@@ -172,7 +276,7 @@ func EmptyIsNilStruct(crd any, remote any) Equivalence {
 	}
 	if crd != nil && remote == nil {
 		remote = toZero(crd)
-		e := FromDeepEqual(crd, remote)
+		e := FromDeepEqual(crd, remote, ctx)
 		if e.Equivalent == Equivalent {
 			// don't need to go further
 			e.Skip = true
@@ -183,20 +287,20 @@ func EmptyIsNilStruct(crd any, remote any) Equivalence {
 }
 
 // IgnoreSkip ignores the comparison and skips the children.
-func IgnoreSkip(crd any, remote any) Equivalence {
-	r := Ignore(crd, remote)
+func IgnoreSkip(crd any, remote any, ctx DriftContext) Equivalence {
+	r := Ignore(crd, remote, ctx)
 	r.Skip = true
 	return r
 }
 
 // DefaultEquivalencePostPullUpObjectChildren perform s a default struct equivalence and adds a post-function moves the children of the "object" property to the root.
-func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any) Equivalence {
-	e := defaultStructEquivalence(crd, remote)
+func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any, ctx DriftContext) Equivalence {
+	e := defaultStructEquivalence(crd, remote, ctx)
 	e.PostFunc = func(r *Result) {
 		var objectChild *Result
-		r.Children = slices.DeleteFunc(r.Children, func(e *Result) bool {
+		r.children = slices.DeleteFunc(r.children, func(e *Result) bool {
 			if e.Property == "object" {
-				if len(e.Children) > 0 {
+				if len(e.children) > 0 {
 					objectChild = e
 				}
 				return true
@@ -205,7 +309,7 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any) Equivalence
 		})
 
 		if objectChild != nil {
-			for _, c := range objectChild.Children {
+			for _, c := range objectChild.children {
 				r.AppendChild(c, true)
 			}
 		}
@@ -213,14 +317,14 @@ func DefaultEquivalencePostPullUpObjectChildren(crd any, remote any) Equivalence
 	return e
 }
 
-func EmptyIsTrue(crd any, remote any) Equivalence {
+func EmptyIsTrue(crd any, remote any, ctx DriftContext) Equivalence {
 	if crd == nil && remote != nil && reflect.DeepEqual(remote, true) {
 		return Equivalence{Equivalent: Equivalent}
 	}
-	return FromDeepEqual(crd, remote)
+	return FromDeepEqual(crd, remote, ctx)
 }
 
-func FromDeepEqual(crd any, remote any) Equivalence {
+func FromDeepEqual(crd any, remote any, _ DriftContext) Equivalence {
 	eq := reflect.DeepEqual(remote, crd)
 	if eq {
 		return Equivalence{Equivalent: Equivalent}

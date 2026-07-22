@@ -94,7 +94,12 @@ func validateUpdate(ctx context.Context, oldObj, newObj runtime.Object) *errors.
 	}
 
 	// validateCreate compiles templates and runs ref/dry-run validation.
-	return validateCreate(ctx, newObj)
+	errs.MergeWith(validateCreate(ctx, newObj))
+	if errs.IsSevere() {
+		return errs
+	}
+	mergeDriftValidation(ctx, oldObj, newObj, errs)
+	return errs
 }
 
 func refString(ref *refs.NamespacedName) string {

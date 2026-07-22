@@ -92,12 +92,12 @@ func (svc *APIs) GetV4ByID(apiID string) (*v4.Api, error) {
 }
 
 // GetV4ByHRID fetches a V4 API from the Automation API by HRID. For test purposes only.
-func (svc *APIs) GetV4ByHRID(hrid string) (*model.AutomationApiDTO, error) {
+func (svc *APIs) GetV4ByHRID(hrid string) (*model.APIV4DTO, error) {
 	url := svc.AutomationTarget("apis").WithPath(hrid)
 
-	resp := new(model.AutomationApiDTO)
+	resp := new(model.APIV4DTO)
 
-	if err := svc.HTTP.Get(url.String(), &resp); err != nil {
+	if err := svc.HTTP.Get(url.String(), resp); err != nil {
 		return nil, err
 	}
 
@@ -137,7 +137,8 @@ func (svc *APIs) applyV4(api *v1alpha1.ApiV4Definition, dryRun bool) (*base.Stat
 	// populateIDs only set this if it an upgraded API
 	setHridWithUUID := api.Spec.ID != ""
 
-	dto := model.ToAutomation(api.Spec)
+	// Map v4 spec to the apim payload DTO, avoiding the v4 automation payload type.
+	dto := model.ToAPIV4DTO(&api.Spec.Api)
 
 	// If an ID is set, it can be:
 	// 1. export/import case (user is trying to manage an existing API)

@@ -1,0 +1,22 @@
+{
+  "hrid": "my-spg",
+  "crossId": "cross-id",
+  "name": "My SPG",
+  "description": "description",
+  "prerequisiteMessage": "prerequisite",
+  "apiType": "PROXY",
+  "phase": "REQUEST",
+  "steps": [
+    {
+      "enabled": true,
+      "policy": "rate-limit",
+      "name": "Rate Limit",
+      "description": "step description",
+      "configuration": {
+        "addHeaders": true,
+        "limit": 10
+      },
+      "condition": "{#request.headers['foo'] != null}"
+    }
+  ]
+}

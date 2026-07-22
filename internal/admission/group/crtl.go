@@ -65,5 +65,5 @@ func (a AdmissionCtrl) ValidateUpdate(
 		return admission.Warnings{}, nil
 	}
 
-	return validateCreate(ctx, newObj).Map()
+	return validateUpdate(ctx, oldObj, newObj).Map()
 }

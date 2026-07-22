@@ -19,11 +19,10 @@ import (
 	"encoding/pem"
 	"time"
 
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
-
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/application"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/ctxref"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	appResolve "github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/application"
@@ -94,7 +93,14 @@ func validateUpdate(
 	if errs.IsSevere() {
 		return errs
 	}
-	errs.MergeWith(validateDryRun(ctx, newApp))
+	if oldApp.GetSpec().Hash() != newApp.GetSpec().Hash() {
+		errs.MergeWith(validateDryRun(ctx, newApp))
+	}
+	if errs.IsSevere() {
+		return errs
+	}
+	mergeDriftValidation(ctx, oldApp, newApp, errs)
+
 	return errs
 }
 

@@ -69,7 +69,7 @@ func (svc *Documentations) createOrUpdate(
 	url := svc.documentationsTarget(parent).
 		WithQueryParam("dryRun", strconv.FormatBool(dryRun))
 
-	dto := toDocumentationDTO(doc)
+	dto := ToDocumentationDTO(doc)
 	importStatus := &documentation.Status{}
 
 	if err := svc.HTTP.Put(url.String(), dto, &importStatus); err != nil {
@@ -112,7 +112,7 @@ func (svc *Documentations) documentationsTarget(parent DocumentationParent) *goh
 		WithPath("documentations")
 }
 
-func toDocumentationDTO(doc *v1alpha1.Documentation) *model.DocumentationDTO {
+func ToDocumentationDTO(doc *v1alpha1.Documentation) *model.DocumentationDTO {
 	return &model.DocumentationDTO{
 		HRID:     refs.NewNamespacedNameFromObject(doc).HRID(),
 		Name:     doc.Spec.Name,

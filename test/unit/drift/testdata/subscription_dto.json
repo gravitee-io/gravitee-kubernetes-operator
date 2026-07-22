@@ -1,0 +1,43 @@
+{
+  "id": "12346",
+  "apiId": "456798",
+  "applicationId": "789123",
+  "planId": "keyless",
+  "status": "N/A",
+  "startingAt": "2023-08-25T23:43:16Z",
+  "endingAt": "2024-08-25T23:43:16Z",
+  "metadata": {
+    "baz": "puk",
+    "foo": "bar"
+  },
+  "apiKeys": [
+    {
+      "key": "key1",
+      "expireAt": "2024-08-25T23:43:16Z"
+    }
+  ],
+  "consumerConfiguration": {
+    "entrypointId": "entrypoint-id",
+    "channel": "channel",
+    "entrypointConfiguration": {
+      "callbackUrl": "https://webhook.site/bbd53b8c-e330-4881-b5ad-ddca91c52af1",
+      "headers": [
+        {
+          "name": "X-Gravitee-Custom",
+          "value": "Hello"
+        }
+      ],
+      "auth": {
+        "type": "basic",
+        "basic": {
+          "username": "admin",
+          "password": "admin"
+        }
+      },
+      "ssl": {
+        "hostnameVerifier": true,
+        "trustAll": true
+      }
+    }
+  }
+}
