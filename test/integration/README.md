@@ -111,26 +111,26 @@ test
 Running all integration tests at once
 
 ```
-./bin/ginkgo ./test/integration/...
+go tool ginkgo ./test/integration/...
 ```
 
 Running all integration tests not involving a management context (required if you run APIM in dbless mode)
 
 ```
-./bin/ginkgo --label-filter="withoutContext" ./test/integration/...
+go tool ginkgo --label-filter="withoutContext" ./test/integration/...
 ```
 
 Running all integration test involving a management context
 
 ```
-./bin/ginkgo --label-filter="withContext" ./test/integration/...
+go tool ginkgo --label-filter="withContext" ./test/integration/...
 ```
 
 
 Running only apidefinition tests involving a management context
 
 ```
-./bin/ginkgo --label-filter="withContext" ./test/integration/apidefinition/...
+go tool ginkgo --label-filter="withContext" ./test/integration/apidefinition/...
 ```
 
 ## Conventions & good practices we use when writing tests
