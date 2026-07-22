@@ -123,12 +123,12 @@ var _ = Describe("Webhook", labels.WithContext, func() {
 
 func newWebhookValidationAdmissionConfiguration() *v1.ValidatingWebhookConfiguration {
 	path := "/path"
-	port := int32(3456) //nolint:gomnd // static port
+	port := int32(3456)
 	scope := v1.AllScopes
 	failurePolicy := v1.Fail
 	matchPolicy := v1.Equivalent
 	sideEffects := v1.SideEffectClassNone
-	timeoutSeconds := int32(10) //nolint:gomnd // default timeout
+	timeoutSeconds := int32(10)
 
 	return &v1.ValidatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{
@@ -151,12 +151,12 @@ func newWebhookValidationAdmissionConfiguration() *v1.ValidatingWebhookConfigura
 }
 func newWebhookMutationAdmissionConfiguration() *v1.MutatingWebhookConfiguration {
 	path := "/path"
-	port := int32(3456) //nolint:gomnd // static port
+	port := int32(3456)
 	scope := v1.AllScopes
 	failurePolicy := v1.Fail
 	matchPolicy := v1.Equivalent
 	sideEffects := v1.SideEffectClassNone
-	timeoutSeconds := int32(10) //nolint:gomnd // default timeout
+	timeoutSeconds := int32(10)
 
 	return &v1.MutatingWebhookConfiguration{
 		ObjectMeta: metav1.ObjectMeta{

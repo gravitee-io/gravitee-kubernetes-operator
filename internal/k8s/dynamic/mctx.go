@@ -40,7 +40,7 @@ func ResolveContext(ctx context.Context, ref core.ObjectRef, parentNs string) (c
 }
 
 func InjectSecretIfAny(ctx context.Context, mCtx core.ContextObject) (*core.ContextObject, error) {
-	if mCtx.HasSecretRef() || (mCtx.HasCloud() && mCtx.GetCloud().HasSecretRef()) { //nolint:nestif // normal complexity
+	if mCtx.HasSecretRef() || (mCtx.HasCloud() && mCtx.GetCloud().HasSecretRef()) {
 		var name string
 		var namespace string
 		if mCtx.HasSecretRef() {
