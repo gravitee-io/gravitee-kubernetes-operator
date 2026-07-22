@@ -390,7 +390,7 @@ func (s *ApiV4DefinitionStatus) DeepCopyTo(api client.Object) error {
 }
 
 func (s *ApiV4DefinitionStatus) AddSubscription() {
-	s.SubscriptionCount += 1
+	s.SubscriptionCount++
 }
 
 // GetSubscriptionCount implements core.SubscribableStatus.
@@ -401,7 +401,7 @@ func (s *ApiV4DefinitionStatus) GetSubscriptionCount() uint {
 // RemoveSubscription implements core.SubscribableStatus.
 func (s *ApiV4DefinitionStatus) RemoveSubscription() {
 	if s.SubscriptionCount > 0 {
-		s.SubscriptionCount -= 1
+		s.SubscriptionCount--
 	}
 }
 

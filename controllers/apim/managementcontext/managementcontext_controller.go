@@ -95,11 +95,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			err = events.Record(event.Update, managementContext, func() error {
 				if err = internal.CreateOrUpdate(ctx, dc); err != nil {
 					return err
-				} else {
-					managementContext.Annotations[internal.LastSecretReferenceName] =
-						dc.Annotations[internal.LastSecretReferenceName]
-					return nil
 				}
+				managementContext.Annotations[internal.LastSecretReferenceName] =
+					dc.Annotations[internal.LastSecretReferenceName]
+				return nil
 			})
 		}
 

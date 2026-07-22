@@ -38,7 +38,7 @@ type DTOMapper func(any) any
 // MapDTO wraps a typed mapper as a DTOMapper.
 func MapDTO[T any, D any](mapper func(T) D) DTOMapper {
 	return func(o any) any {
-		return mapper(o.(T)) //nolint:errcheck // with the generic use we are safe
+		return mapper(o.(T))
 	}
 }
 

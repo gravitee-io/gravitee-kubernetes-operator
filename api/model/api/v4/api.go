@@ -395,7 +395,6 @@ func (api *Api) GetAllSharedPolicyGroups() []*refs.NamespacedName {
 	return results
 }
 
-//nolint:gocognit // acceptable complexity
 func getFLowSharedPolicyGroupsReferences(flows []*Flow) []*refs.NamespacedName {
 	var results []*refs.NamespacedName
 
