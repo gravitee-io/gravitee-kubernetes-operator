@@ -47,7 +47,6 @@ func resolveSharedPolicyGroups(ctx context.Context, spec *v1alpha1.ApiV4Definiti
 	return nil
 }
 
-//nolint:gocognit // acceptable complexity
 func resolveFLowSharedPolicyGroupsReferences(ctx context.Context, flows []*v4.Flow) error {
 	if len(flows) == 0 {
 		return nil

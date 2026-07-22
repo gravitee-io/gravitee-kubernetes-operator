@@ -8,7 +8,6 @@ $(LOCALBIN):
 ## Tool Binaries
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 GINKGO ?= $(LOCALBIN)/ginkgo
-GOLANGCILINT ?= $(LOCALBIN)/golangci-lint
 ADDLICENSE ?= $(LOCALBIN)/addlicense
 GOTESTSUM ?= $(LOCALBIN)/gotestsum
 CLOUD_LB ?= $(LOCALBIN)/cloud-provider-kind

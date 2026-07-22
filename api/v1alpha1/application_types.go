@@ -48,12 +48,12 @@ type ApplicationStatus struct {
 
 // AddSubscription implements core.SubscribableStatus.
 func (s *ApplicationStatus) AddSubscription() {
-	s.SubscriptionCount += 1
+	s.SubscriptionCount++
 }
 
 func (s *ApplicationStatus) RemoveSubscription() {
 	if s.SubscriptionCount > 0 {
-		s.SubscriptionCount -= 1
+		s.SubscriptionCount--
 	}
 }
 

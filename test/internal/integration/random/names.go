@@ -696,7 +696,7 @@ var (
 
 func GetName() string {
 	name := strings.ReplaceAll(
-		left[rand.Intn(len(left))]+"_"+right[rand.Intn(len(right))], "_", "-", //nolint:gosec // this is safe
+		left[rand.Intn(len(left))]+"_"+right[rand.Intn(len(right))], "_", "-",
 	)
 	if safeRandom {
 		return withSafeRandom(name)
@@ -711,7 +711,7 @@ func GetSuffix() string {
 // This is only used in CI to avoid failing tests because of conflicts on the cluster.
 func withSafeRandom(name string) string {
 	if exists(name) {
-		name = fmt.Sprintf("%s-%02d", name, rand.Intn(intRandMax)) //nolint:gosec // this is safe
+		name = fmt.Sprintf("%s-%02d", name, rand.Intn(intRandMax))
 		return withSafeRandom(name)
 	}
 	_, err := dbFile.WriteString(name + eol)

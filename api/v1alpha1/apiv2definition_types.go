@@ -355,12 +355,12 @@ func (s *ApiDefinitionStatus) DeepCopyTo(obj client.Object) error {
 }
 
 func (s *ApiDefinitionStatus) AddSubscription() {
-	s.SubscriptionCount += 1
+	s.SubscriptionCount++
 }
 
 func (s *ApiDefinitionStatus) RemoveSubscription() {
 	if s.SubscriptionCount > 0 {
-		s.SubscriptionCount -= 1
+		s.SubscriptionCount--
 	}
 }
 
