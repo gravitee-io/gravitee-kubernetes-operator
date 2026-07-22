@@ -169,4 +169,3 @@ func (s *SharedPolicyGroupSpecStatus) DeepCopyTo(obj client.Object) error {
 		return fmt.Errorf("unknown type %T", t)
 	}
 }
-

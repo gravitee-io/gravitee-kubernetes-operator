@@ -86,7 +86,6 @@ func (app *Application) IsBeingDeleted() bool {
 	return !app.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-
 // GetSpec implements custom.Resource.
 func (app *Application) GetSpec() core.Spec {
 	return &app.Spec

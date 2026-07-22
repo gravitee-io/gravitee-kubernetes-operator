@@ -158,4 +158,3 @@ func (d *Dictionary) GetConditions() map[string]metav1.Condition {
 func (d *Dictionary) SetConditions(conditions []metav1.Condition) {
 	d.Status.Conditions = conditions
 }
-
