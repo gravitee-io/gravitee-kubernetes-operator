@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.18.0
-    gravitee.io/operator.version: 4.11.18
+    gravitee.io/operator.version: 4.11.19
   name: apidefinitions.gravitee.io
 spec:
   group: gravitee.io
@@ -1008,6 +1008,10 @@ spec:
                                     maxHeaderSize:
                                       description: Maximum size of HTTP headers
                                       type: integer
+                                    maxWaitQueueSize:
+                                      description: Maximum size of the pool wait queue. -1 means unbounded.
+                                      minimum: -1
+                                      type: integer
                                     pipelining:
                                       default: false
                                       description: Should HTTP/1.1 pipelining be used for the connection or not ?
@@ -1211,6 +1215,10 @@ spec:
                                 type: integer
                               maxHeaderSize:
                                 description: Maximum size of HTTP headers
+                                type: integer
+                              maxWaitQueueSize:
+                                description: Maximum size of the pool wait queue. -1 means unbounded.
+                                minimum: -1
                                 type: integer
                               pipelining:
                                 default: false
