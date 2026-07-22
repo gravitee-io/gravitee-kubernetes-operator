@@ -67,13 +67,13 @@ func ResolveWithCache(ctx context.Context, route *gwAPIv1.HTTPRoute, cache Gatew
 
 func resolveParents(ctx context.Context, route *gwAPIv1.HTTPRoute, cache GatewayCache) error {
 	for i, ref := range route.Spec.ParentRefs {
-		if resolved, err := resolveParent(ctx, route, ref, cache); err != nil {
+		resolved, err := resolveParent(ctx, route, ref, cache)
+		if err != nil {
 			return err
-		} else {
-			status := gateway.InitRouteParentStatus(ref)
-			k8s.SetCondition(status, resolved)
-			route.Status.Parents[i] = *status.Object
 		}
+		status := gateway.InitRouteParentStatus(ref)
+		k8s.SetCondition(status, resolved)
+		route.Status.Parents[i] = *status.Object
 	}
 	return nil
 }

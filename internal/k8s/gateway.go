@@ -829,11 +829,7 @@ func getPodTemplateSpec(
 		return base, nil
 	}
 	patch := parameters.Spec.Kubernetes.Deployment.Template
-	if template, err := mergePodTemplates(base, patch); err != nil {
-		return nil, err
-	} else {
-		return template, nil
-	}
+	return mergePodTemplates(base, patch)
 }
 
 func setGraviteeConf(podTemplate *coreV1.PodTemplateSpec) {

@@ -96,7 +96,7 @@ func (in *GenericStringMap) DeepCopyInto(out *GenericStringMap) {
 	// thus we write our own DeepCopyInto function.
 	if out != nil {
 		casted := in.Unstructured
-		casted.Object = normalizeObject(casted.Object).(map[string]interface{}) //nolint:errcheck // map is expected
+		casted.Object = normalizeObject(casted.Object).(map[string]interface{})
 
 		deepCopy := casted.DeepCopy()
 		out.Object = deepCopy.Object

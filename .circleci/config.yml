@@ -107,15 +107,18 @@ jobs:
       - image: cimg/go:<< pipeline.parameters.go-version >>-node
     steps:
       - checkout
-      - go/load-mod-cache
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
       - restore_cache:
           keys:
             - gotools-<< pipeline.parameters.go-version >>-{{ checksum "go.sum" }}
       - go/load-golangci-lint-cache
       - run:
           name: Lint sources
-          command: make lint-sources
-      - go/save-golangci-lint-cache
+          command: make -j4 lint-sources
 
   job-lint-licenses:
     docker:
