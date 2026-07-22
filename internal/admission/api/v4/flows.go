@@ -43,7 +43,7 @@ func validateApiFlows(api *apiV4.Api) *errors.AdmissionErrors {
 func validateFlow(apiType apiV4.ApiType, apiName string, flows []*apiV4.Flow) *errors.AdmissionErrors {
 	errs := errors.NewAdmissionErrors()
 
-	if apiType == nativeAPI { //nolint:nestif // normal complexity
+	if apiType == nativeAPI {
 		for _, flow := range flows {
 			if len(flow.Request) > 0 {
 				errs.AddSeveref("Request Flow is not supported in Native API [%s]", apiName)

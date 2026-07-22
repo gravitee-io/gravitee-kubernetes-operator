@@ -51,7 +51,6 @@ func validateSharedPolicyGroups(ctx context.Context, coreApi core.ApiDefinitionO
 	return errs
 }
 
-//nolint:gocognit // acceptable complexity
 func validateFlowSharedPolicyGroups(ctx context.Context, flows []*v4.Flow,
 	parentNS string) *errors.AdmissionError {
 	for _, flow := range flows {
