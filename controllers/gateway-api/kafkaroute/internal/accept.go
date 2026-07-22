@@ -35,12 +35,12 @@ func Accept(ctx context.Context, route *v1alpha1.KafkaRoute) error {
 func acceptParents(ctx context.Context, route *v1alpha1.KafkaRoute) error {
 	for i := range route.Spec.ParentRefs {
 		status := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
-		if accepted, err := acceptParent(ctx, route, status); err != nil {
+		accepted, err := acceptParent(ctx, route, status)
+		if err != nil {
 			return err
-		} else {
-			k8s.SetCondition(status, accepted)
-			route.Status.Parents[i] = *status.Object
 		}
+		k8s.SetCondition(status, accepted)
+		route.Status.Parents[i] = *status.Object
 	}
 	return nil
 }

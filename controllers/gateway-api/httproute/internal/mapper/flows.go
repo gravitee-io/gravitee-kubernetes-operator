@@ -56,13 +56,13 @@ func buildFlowsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix 
 		for matchIndex, match := range rule.Matches {
 			conditionsExpressions := buildFlowConditionExpressions(match)
 
-			if flow, err := createRuleMatchFlow(
+			flow, err := createRuleMatchFlow(
 				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix,
-			); err != nil {
+			)
+			if err != nil {
 				return nil, err
-			} else {
-				weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: len(conditionsExpressions)})
 			}
+			weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: len(conditionsExpressions)})
 		}
 	}
 	return sortFlows(weightedFlows), nil

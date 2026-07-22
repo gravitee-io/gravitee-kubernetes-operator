@@ -210,13 +210,13 @@ func IsSecretRef(secret *coreV1.Secret, ref gwAPIv1.SecretObjectReference) bool 
 }
 
 func HasHTTPSupport(listener gwAPIv1.Listener) bool {
-	if kinds, ok := ProtocolToRouteKinds[listener.Protocol]; !ok {
+	kinds, ok := ProtocolToRouteKinds[listener.Protocol]
+	if !ok {
 		return false
-	} else {
-		for _, k := range kinds {
-			if k.Kind == GwAPIv1HTTPRouteKind {
-				return true
-			}
+	}
+	for _, k := range kinds {
+		if k.Kind == GwAPIv1HTTPRouteKind {
+			return true
 		}
 	}
 	return false

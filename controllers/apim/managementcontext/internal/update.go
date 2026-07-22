@@ -29,7 +29,7 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-const LastSecretReferenceName = "gravitee.io/last-secret-ref" //nolint:gosec // not a secret
+const LastSecretReferenceName = "gravitee.io/last-secret-ref"
 
 func CreateOrUpdate(
 	ctx context.Context,
@@ -40,7 +40,7 @@ func CreateOrUpdate(
 		instance.ObjectMeta.Annotations = map[string]string{}
 	}
 
-	if instance.HasSecretRef() { //nolint:nestif // normal complexity
+	if instance.HasSecretRef() {
 		secret := &v1.Secret{}
 
 		nsn := getSecretRef(instance)

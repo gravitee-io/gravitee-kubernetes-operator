@@ -40,8 +40,7 @@ const (
 
 	Extends = "gravitee.io/extends"
 
-	NotificationFinalizer = "finalizers.gravitee.io/notification"
-	//nolint:gosec // This is not an hardcoded secret
+	NotificationFinalizer            = "finalizers.gravitee.io/notification"
 	ManagementContextSecretFinalizer = "finalizers.gravitee.io/managementcontextSecret"
 	ApiDefinitionFinalizer           = "finalizers.gravitee.io/apidefinitiondeletion"
 	ApiDefinitionTemplateFinalizer   = "finalizers.gravitee.io/apidefinitiontemplate"

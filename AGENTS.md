@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+@docs/go-standards.md
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
@@ -108,6 +110,6 @@ a reviewed plan in `plans/` before any implementation.
 
 - **Commit style:** Conventional Commits (enforced by commitlint)
 - **License headers:** Apache 2.0 on all `.go` files (enforced by `addlicense`, template in `LICENSE_TEMPLATE.txt`)
-- **Linting:** Strict golangci-lint config (`.golangci.yml`) — max function length 100 lines, max cyclomatic complexity 30, strict error checking, no naked returns
+- **Linting:** `go vet` + `revive` + `staticcheck` (run in parallel via `make -j4 lint-sources`). Config in `.revive.toml`. Max cyclomatic complexity 30. Coding standards in `docs/go-standards.md`
 - **Naming:** Lint excludes `Api/Url/Http` vs `API/URL/HTTP` casing warnings
 - **Makefile:** Modular structure in `hack/make/*.mk`; tools installed to `./bin/`
