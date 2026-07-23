@@ -58,11 +58,17 @@ func getPathsWithoutHostnames(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]
 			paths.Insert(v4.NewPath("", path))
 		} else {
 			for _, parentRef := range route.Spec.ParentRefs {
-				host, err := resolveParentRefHostname(ctx, route, parentRef)
+				hostnames, err := resolveParentRefHostname(ctx, route, parentRef)
 				if err != nil {
 					return nil, err
 				}
-				paths.Insert(v4.NewPath(host, path))
+				if len(hostnames) == 0 {
+					paths.Insert(v4.NewPath("", path))
+				} else {
+					for _, host := range hostnames {
+						paths.Insert(v4.NewPath(host, path))
+					}
+				}
 			}
 		}
 	}
@@ -71,21 +77,36 @@ func getPathsWithoutHostnames(ctx context.Context, route *gwAPIv1.HTTPRoute) ([]
 }
 
 func resolveParentRefHostname(ctx context.Context, route *gwAPIv1.HTTPRoute,
-	parentRef gwAPIv1.ParentReference) (string, error) {
-	if parentRef.SectionName != nil && k8s.IsGatewayKind(parentRef) {
-		gateway, err := k8s.ResolveGateway(ctx, route.ObjectMeta, parentRef)
-		if err != nil {
-			return "", err
-		}
-
-		for _, l := range gateway.Spec.Listeners {
-			if l.Name == *parentRef.SectionName && l.Hostname != nil {
-				return string(*l.Hostname), nil
-			}
-		}
+	parentRef gwAPIv1.ParentReference) ([]string, error) {
+	if !k8s.IsGatewayKind(parentRef) {
+		return nil, nil
 	}
 
-	return "", nil
+	gateway, err := k8s.ResolveGateway(ctx, route.ObjectMeta, parentRef)
+	if err != nil {
+		return nil, err
+	}
+
+	if parentRef.SectionName != nil {
+		for _, l := range gateway.Spec.Listeners {
+			if l.Name == *parentRef.SectionName && l.Hostname != nil {
+				return []string{string(*l.Hostname)}, nil
+			}
+		}
+		return nil, nil
+	}
+
+	if parentRef.Port != nil {
+		var hostnames []string
+		for _, l := range gateway.Spec.Listeners {
+			if l.Port == *parentRef.Port && l.Hostname != nil {
+				hostnames = append(hostnames, string(*l.Hostname))
+			}
+		}
+		return hostnames, nil
+	}
+
+	return nil, nil
 }
 
 func getPathsWithHostnames(route *gwAPIv1.HTTPRoute, hostnames []string) []*v4.Path {

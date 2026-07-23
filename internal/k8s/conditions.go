@@ -215,6 +215,13 @@ func (b *ConditionBuilder) Program(msg string) *ConditionBuilder {
 		Message(msg)
 }
 
+func (b *ConditionBuilder) Pending(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.GatewayReasonPending)).
+		Status(metav1.ConditionFalse).
+		Message(msg)
+}
+
 func (b *ConditionBuilder) ResolveRefs(msg string) *ConditionBuilder {
 	return b.
 		Reason(ConditionResolvedRefs).
@@ -345,6 +352,13 @@ func (b *ConditionBuilder) RejectListenersNotValid(msg string) *ConditionBuilder
 		Message(msg)
 }
 
+func (b *ConditionBuilder) AcceptListenersNotValid(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.GatewayReasonListenersNotValid)).
+		Status(metav1.ConditionTrue).
+		Message(msg)
+}
+
 func (b *ConditionBuilder) Reason(reason string) *ConditionBuilder {
 	b.condition.Reason = reason
 	return b
@@ -385,6 +399,18 @@ func GetCondition(obj core.ConditionAware, conditionType string) *metav1.Conditi
 		return nil
 	}
 	return &condition
+}
+
+// CarryForwardConditionGenerations re-stamps ObservedGeneration on existing
+// conditions so they stay current when the object's generation advances.
+func CarryForwardConditionGenerations(obj core.ConditionAware, generation int64, types ...string) {
+	for _, condType := range types {
+		existing := GetCondition(obj, condType)
+		if existing != nil {
+			existing.ObservedGeneration = generation
+			SetCondition(obj, existing)
+		}
+	}
 }
 
 func IsConflicted(obj core.ConditionAware) bool {

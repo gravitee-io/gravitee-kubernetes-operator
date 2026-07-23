@@ -123,6 +123,8 @@ manager:
   ## of this flag is. Because helm upgrades do not update CRDs once they have been
   ## installed, it is recommended to set this flag to true.
   applyCRDs: true
+  ## @param manager.maxConcurrentReconciles Maximum number of concurrent reconcile loops per controller. Higher values improve throughput at the cost of more API server load.
+  maxConcurrentReconciles: 4
   reconcile:
     ## @param manager.reconcile.strategy The strategy used by the operator to decide wether a resource should be reconciled on not. The strategy can be either `onSpecChange` or `always`. Other values will falback to `onSpecChange`.
     ## If the strategy is `onSpecChange` (which is the default), the operator

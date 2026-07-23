@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	appV1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,6 +45,18 @@ func GetLatest[T client.Object](ctx context.Context, obj T) error {
 	}
 
 	return nil
+}
+
+func DeploymentIsReady(ctx context.Context, namespace, name string) (bool, error) {
+	dep := &appV1.Deployment{}
+	key := types.NamespacedName{Namespace: namespace, Name: name}
+	if err := GetClient().Get(ctx, key, dep); err != nil {
+		return false, client.IgnoreNotFound(err)
+	}
+	if dep.Status.ObservedGeneration < dep.Generation {
+		return false, nil
+	}
+	return dep.Status.ReadyReplicas >= 1, nil
 }
 
 func Delete[T client.Object](ctx context.Context, obj T) error {

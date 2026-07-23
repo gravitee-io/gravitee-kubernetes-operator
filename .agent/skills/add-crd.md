@@ -50,11 +50,10 @@ Implement the interfaces in `internal/core/interface.go` that apply:
 ### 4. Generate Code
 
 ```bash
-make generate    # DeepCopy methods
-make manifests   # CRD YAML in crds/gravitee.io/
+make generate manifests reference
 ```
 
-Verify the generated CRD appears in `crds/gravitee.io/`.
+Verify the generated CRD appears in `helm/gko/crds/gravitee.io/` and the API reference was updated.
 
 ### 5. Create the Controller
 

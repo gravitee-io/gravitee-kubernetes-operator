@@ -94,10 +94,20 @@ fixture.Builder().
 ## Code Generation
 
 After modifying CRD types in `api/`:
-1. `make generate` — regenerates `zz_generated.deepcopy.go` files
-2. `make manifests` — regenerates CRD YAML in `helm/gko/crds/gravitee.io/`
+```bash
+make generate manifests reference
+```
+- `generate` — DeepCopy methods (`zz_generated.deepcopy.go`)
+- `manifests` — CRD YAML in `helm/gko/crds/gravitee.io/`
+- `reference` — API docs in `docs/api/reference.md`
 
-Both steps are required when changing model or API type structs.
+After modifying Helm values (`helm/gko/values.yaml`):
+```bash
+make helm-reference
+```
+Regenerates `helm/gko/README.md`.
+
+All four targets are checked in CI.
 
 ## Workflow
 I work plan-first. I write structured prompts in `prompts/` and expect

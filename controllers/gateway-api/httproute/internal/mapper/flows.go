@@ -63,9 +63,15 @@ type weightedFlow struct {
 func buildFlowsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix string) ([]*v4.Flow, error) {
 	weightedFlows := make([]weightedFlow, 0)
 
+	isolationExclusions, err := computeIsolationExclusions(ctx, route)
+	if err != nil {
+		return nil, err
+	}
+
 	for ruleIndex, rule := range route.Spec.Rules {
 		for matchIndex, match := range rule.Matches {
 			conditionsExpressions := buildFlowConditionExpressions(match)
+			conditionsExpressions = append(conditionsExpressions, isolationExclusions...)
 
 			flow, err := createRuleMatchFlow(
 				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix,
@@ -143,6 +149,8 @@ func createRuleMatchFlow(
 		return buildRuleErrorFlow("Unresolved backend reference", match, conditionsExpressions), nil
 	case hasInvalidGrants:
 		return buildRuleErrorFlow("Invalid reference grant", match, conditionsExpressions), nil
+	case len(rule.BackendRefs) == 0 && !hasResponseFilter(rule):
+		return buildRuleErrorFlow("No backend references", match, conditionsExpressions), nil
 	default:
 		return buildRoutingFlow(ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix), nil
 	}
@@ -247,7 +255,9 @@ func buildRequestFlow(
 		rewrite := extractURLRewriteFilter(rule.Filters)
 		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex, rewrite, prefix))
 	}
-	return append(steps, buildRequestFilters(ctx, route, rule)...)
+	steps = append(steps, buildRequestFilters(ctx, route, rule)...)
+	steps = append(steps, buildBackendRequestFilters(rule)...)
+	return steps
 }
 
 func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
@@ -314,6 +324,15 @@ func buildMockErrorFlow(description string) []*v4.FlowStep {
 			Configuration: configuration,
 		}),
 	}
+}
+
+func hasResponseFilter(rule gwAPIv1.HTTPRouteRule) bool {
+	for _, f := range rule.Filters {
+		if f.RequestRedirect != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func hasInvalidBackendKindForRule(rule gwAPIv1.HTTPRouteRule) bool {
