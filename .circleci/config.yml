@@ -278,7 +278,7 @@ jobs:
       - run:
           name: Run Gateway API conformance test suites
           command: |
-            go tool gotestsum --format=testname --hide-summary=skipped --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+            make conformance
       - run:
           name: Scale down operator manager.image.repository
           command: |

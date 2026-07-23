@@ -40,6 +40,14 @@
 
 ## Generated Files
 
-- Never hand-edit `zz_generated*.go` files or CRD YAML in `crds/`
+- Never hand-edit `zz_generated*.go` files, CRD YAML in `helm/gko/crds/`, `docs/api/reference.md`, or `helm/gko/README.md`
 - Always commit regenerated output alongside the source change that caused it
-- Run `make generate && make manifests` after any change to types in `api/`
+- After any change to CRD/model types under `api/`, run:
+  ```bash
+  make generate manifests reference
+  ```
+- After any change to Helm values (`helm/gko/values.yaml` or chart value wiring), run:
+  ```bash
+  make helm-reference
+  ```
+- CI checks all four targets (`generate`, `manifests`, `reference`, `helm-reference`) — leave the tree dirty and the PR fails

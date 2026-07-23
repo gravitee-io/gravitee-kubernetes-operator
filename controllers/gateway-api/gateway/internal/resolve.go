@@ -23,6 +23,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	kErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	coreV1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,6 +41,7 @@ func Resolve(
 		return fmt.Errorf("listener status array length (%d) does not match spec listeners length (%d)", statusLen, specLen)
 	}
 
+	listenersResolved := true
 	for i, listener := range gw.Object.Spec.Listeners {
 		conditionBuilder := k8s.NewResolvedRefsConditionBuilder(gw.Object.Generation)
 
@@ -55,7 +57,15 @@ func Resolve(
 			resolveKafkaListener(params, conditionBuilder)
 		}
 
-		k8s.SetCondition(status, conditionBuilder.Build())
+		if err := resolveFrontendValidation(ctx, gw, status, conditionBuilder, listener); err != nil {
+			return err
+		}
+
+		built := conditionBuilder.Build()
+		k8s.SetCondition(status, built)
+		if built.Status == "False" {
+			listenersResolved = false
+		}
 
 		httpRoutesCount, err := countAttachedHTTPRoutes(ctx, gw.Object, listener)
 		if err != nil {
@@ -69,6 +79,105 @@ func Resolve(
 		}
 		status.Object.AttachedRoutes += kafkaRoutesCount
 	}
+
+	resolveGatewayRefs(ctx, gw, listenersResolved)
+
+	return nil
+}
+
+func resolveGatewayRefs(ctx context.Context, gw *gateway.Gateway, listenersResolved bool) {
+	gwCondBuilder := k8s.NewResolvedRefsConditionBuilder(gw.Object.Generation)
+
+	if !listenersResolved {
+		gwCondBuilder.
+			Reason(string(gwAPIv1.GatewayReasonListenersNotResolved)).
+			Status("False").
+			Message("One or more listeners have unresolved references")
+		k8s.SetCondition(gw, gwCondBuilder.Build())
+		return
+	}
+
+	if err := resolveBackendClientCert(ctx, gw, gwCondBuilder); err != nil {
+		k8s.SetCondition(gw, gwCondBuilder.Build())
+		return
+	}
+
+	gwCondBuilder.ResolveRefs("All references resolved")
+	k8s.SetCondition(gw, gwCondBuilder.Build())
+}
+
+func resolveBackendClientCert(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	builder *k8s.ConditionBuilder,
+) error {
+	if gw.Object.Spec.TLS == nil || gw.Object.Spec.TLS.Backend == nil ||
+		gw.Object.Spec.TLS.Backend.ClientCertificateRef == nil {
+		return nil
+	}
+
+	ref := *gw.Object.Spec.TLS.Backend.ClientCertificateRef
+
+	if hasInvalidSecretGroup(ref) {
+		builder.
+			Reason(string(gwAPIv1.GatewayReasonInvalidClientCertificateRef)).
+			Status("False").
+			Message(fmt.Sprintf("ClientCertificateRef group [%s] is invalid", *ref.Group))
+		return fmt.Errorf("invalid group")
+	}
+
+	if hasInvalidSecretKind(ref) {
+		builder.
+			Reason(string(gwAPIv1.GatewayReasonInvalidClientCertificateRef)).
+			Status("False").
+			Message(fmt.Sprintf("ClientCertificateRef kind [%s] is invalid", *ref.Kind))
+		return fmt.Errorf("invalid kind")
+	}
+
+	ns := ref.Namespace
+	if ns == nil {
+		gwNs := gwAPIv1.Namespace(gw.Object.Namespace)
+		ns = &gwNs
+	}
+
+	if string(*ns) != gw.Object.Namespace {
+		objectRef := gwAPIv1.ObjectReference{
+			Name:      ref.Name,
+			Group:     *ref.Group,
+			Kind:      *ref.Kind,
+			Namespace: ref.Namespace,
+		}
+		if granted, err := k8s.IsGrantedReference(ctx, gw.Object, objectRef); err != nil {
+			return err
+		} else if !granted {
+			builder.
+				Reason(string(gwAPIv1.GatewayReasonRefNotPermitted)).
+				Status("False").
+				Message("ClientCertificateRef cross-namespace reference not permitted")
+			return fmt.Errorf("ref not permitted")
+		}
+	}
+
+	key := client.ObjectKey{Namespace: string(*ns), Name: string(ref.Name)}
+	secret := &coreV1.Secret{}
+	if err := k8s.GetClient().Get(ctx, key, secret); client.IgnoreNotFound(err) != nil {
+		return err
+	} else if kErrors.IsNotFound(err) {
+		builder.
+			Reason(string(gwAPIv1.GatewayReasonInvalidClientCertificateRef)).
+			Status("False").
+			Message(fmt.Sprintf("ClientCertificateRef secret [%s] not found", key.String()))
+		return fmt.Errorf("secret not found")
+	}
+
+	if isMalformedSecret(secret) {
+		builder.
+			Reason(string(gwAPIv1.GatewayReasonInvalidClientCertificateRef)).
+			Status("False").
+			Message(fmt.Sprintf("ClientCertificateRef secret [%s] is malformed", key.String()))
+		return fmt.Errorf("secret malformed")
+	}
+
 	return nil
 }
 
@@ -323,4 +432,120 @@ func buildRouteListOptions(gw *gwAPIv1.Gateway, listener gwAPIv1.Listener) *clie
 	}
 
 	return opts
+}
+
+func resolveFrontendValidation(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	status *gateway.ListenerStatus,
+	builder *k8s.ConditionBuilder,
+	listener gwAPIv1.Listener,
+) error {
+	if listener.Protocol != gwAPIv1.HTTPSProtocolType {
+		return nil
+	}
+
+	validation := getFrontendValidationForListener(gw.Object, listener)
+	if validation == nil {
+		return nil
+	}
+
+	for _, ref := range validation.CACertificateRefs {
+		if err := resolveCACertRef(ctx, gw, status, builder, ref); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getFrontendValidationForListener(
+	gw *gwAPIv1.Gateway,
+	listener gwAPIv1.Listener,
+) *gwAPIv1.FrontendTLSValidation {
+	if gw.Spec.TLS == nil || gw.Spec.TLS.Frontend == nil {
+		return nil
+	}
+
+	frontend := gw.Spec.TLS.Frontend
+
+	for _, pp := range frontend.PerPort {
+		if pp.Port == listener.Port {
+			return pp.TLS.Validation
+		}
+	}
+
+	return frontend.Default.Validation
+}
+
+func resolveCACertRef(
+	ctx context.Context,
+	gw *gateway.Gateway,
+	status *gateway.ListenerStatus,
+	builder *k8s.ConditionBuilder,
+	ref gwAPIv1.ObjectReference,
+) error {
+	if !isValidCACertKind(ref) {
+		builder.
+			Reason(string(gwAPIv1.ListenerReasonInvalidCACertificateKind)).
+			Status(metav1.ConditionFalse).
+			Message(fmt.Sprintf("CA certificate kind [%s] is not supported, must be ConfigMap", ref.Kind))
+		setNoValidCACertificate(gw, status)
+		return nil
+	}
+
+	ns := ref.Namespace
+	if ns == nil {
+		gwNs := gwAPIv1.Namespace(gw.Object.Namespace)
+		ns = &gwNs
+	}
+
+	if string(*ns) != gw.Object.Namespace {
+		if granted, err := k8s.IsGrantedReference(ctx, gw.Object, ref); err != nil {
+			return err
+		} else if !granted {
+			builder.RejectListenerRefNotPermitted(
+				"CA certificate cross-namespace reference not permitted",
+			)
+			setNoValidCACertificate(gw, status)
+			return nil
+		}
+	}
+
+	key := client.ObjectKey{Namespace: string(*ns), Name: string(ref.Name)}
+	cm := &coreV1.ConfigMap{}
+	if err := k8s.GetClient().Get(ctx, key, cm); client.IgnoreNotFound(err) != nil {
+		return err
+	} else if kErrors.IsNotFound(err) {
+		builder.
+			Reason(string(gwAPIv1.ListenerReasonInvalidCACertificateRef)).
+			Status(metav1.ConditionFalse).
+			Message(fmt.Sprintf("CA certificate ConfigMap [%s] not found", key.String()))
+		setNoValidCACertificate(gw, status)
+		return nil
+	}
+
+	if _, ok := cm.Data["ca.crt"]; !ok {
+		builder.
+			Reason(string(gwAPIv1.ListenerReasonInvalidCACertificateRef)).
+			Status(metav1.ConditionFalse).
+			Message(fmt.Sprintf("CA certificate ConfigMap [%s] missing 'ca.crt' key", key.String()))
+		setNoValidCACertificate(gw, status)
+		return nil
+	}
+
+	return nil
+}
+
+func setNoValidCACertificate(gw *gateway.Gateway, status *gateway.ListenerStatus) {
+	condition := k8s.NewAcceptedConditionBuilder(gw.Object.Generation).
+		Reason(string(gwAPIv1.ListenerReasonNoValidCACertificate)).
+		Status(metav1.ConditionFalse).
+		Message("No valid CA certificate").
+		Build()
+	k8s.SetCondition(status, condition)
+}
+
+func isValidCACertKind(ref gwAPIv1.ObjectReference) bool {
+	return ref.Kind == "ConfigMap"
 }

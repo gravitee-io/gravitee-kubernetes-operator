@@ -47,12 +47,24 @@ type GraviteeConfig struct {
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:default={enabled: false}
 	Kafka *GraviteeKafkaConfig `json:"kafka"`
+	// Use this field to control WebSocket support on the Gateway.
+	// When enabled (default), the gateway accepts WebSocket upgrade requests
+	// and proxies them to backends with appProtocol kubernetes.io/ws.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default={enabled: true}
+	WebSocket *GraviteeWebSocketConfig `json:"websocket,omitempty"`
 	// +kubebuilder:validation:Optional
 	// Use this field to provide custom gateway configuration,
 	// giving you control over additional configuration blocks
 	// available in the gateway
 	// [settings](https://documentation.gravitee.io/apim/configure-apim/apim-components/gravitee-gateway).
 	YAML *utils.GenericStringMap `json:"yaml,omitempty"`
+}
+
+type GraviteeWebSocketConfig struct {
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:default:=true
+	Enabled bool `json:"enabled"`
 }
 
 type GraviteeKafkaConfig struct {

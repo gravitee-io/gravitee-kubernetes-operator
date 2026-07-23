@@ -1,3 +1,5 @@
+package gateway_test
+
 // Copyright (C) 2015 The Gravitee team (http://gravitee.io)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mapper
+import (
+	"testing"
 
-func addTrailingSlash(s string) string {
-	if s[len(s)-1:] == "/" {
-		return s
-	}
-	return s + "/"
-}
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
 
-func getExpectedPathInfo(matchValue string) string {
-	return ""
+func TestGateway(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Gateway unit tests suite")
 }

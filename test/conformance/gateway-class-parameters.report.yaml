@@ -29,27 +29,3 @@ spec:
           - name: gateway
             image: graviteeio/apim-gateway:4.10.2
             imagePullPolicy: IfNotPresent
-            startupProbe:
-              failureThreshold: 100
-              initialDelaySeconds: 5
-              periodSeconds: 2
-              successThreshold: 1
-              timeoutSeconds: 1
-              tcpSocket:
-                port: 18082
-            readinessProbe:
-              failureThreshold: 100
-              initialDelaySeconds: 5
-              periodSeconds: 2
-              successThreshold: 1
-              timeoutSeconds: 1
-              tcpSocket:
-                port: 18082
-            livenessProbe:
-              failureThreshold: 100
-              initialDelaySeconds: 5
-              periodSeconds: 2
-              successThreshold: 1
-              timeoutSeconds: 1
-              tcpSocket:
-                port: 18082
