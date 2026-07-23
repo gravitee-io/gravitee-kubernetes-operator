@@ -46,7 +46,11 @@ func DeployGateway(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 ) error {
-	if err := CreateOrUpdate(ctx, getServiceAccount(gw)); err != nil {
+	infraLabels, infraAnnotations := getInfrastructureMetadata(gw)
+
+	sa := getServiceAccount(gw)
+	applyInfrastructureMetadata(sa, infraLabels, infraAnnotations)
+	if err := CreateOrUpdate(ctx, sa); err != nil {
 		return err
 	}
 	if err := CreateOrUpdate(ctx, getRole(gw)); err != nil {
@@ -103,7 +107,12 @@ func DeployGateway(
 	if deployment, err := getDeployment(ctx, gw, params, portMapping, configData); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
-		return buildDeployment(ctx, gw, params, deployment, portMapping, configData)
+		if err := buildDeployment(ctx, gw, params, deployment, portMapping, configData); err != nil {
+			return err
+		}
+		applyInfrastructureMetadata(deployment, infraLabels, infraAnnotations)
+		applyInfrastructureMetadataToPodTemplate(&deployment.Spec.Template, infraLabels, infraAnnotations)
+		return nil
 	}); err != nil {
 		return err
 	}
@@ -111,6 +120,7 @@ func DeployGateway(
 	svc := getService(gw, params, portMapping)
 	if err := CreateOrUpdate(ctx, svc, func() error {
 		buildServiceSpec(gw, params, svc, portMapping)
+		applyInfrastructureMetadata(svc, infraLabels, infraAnnotations)
 		return nil
 	}); err != nil {
 		return err
@@ -1259,4 +1269,56 @@ func ensureBindableWithNoConflict(
 		return ensureBindableWithNoConflict(bindable+1, listenerPorts)
 	}
 	return bindable
+}
+
+func getInfrastructureMetadata(gw *gateway.Gateway) (map[string]string, map[string]string) {
+	labels := make(map[string]string)
+	annotations := make(map[string]string)
+	if gw.Object.Spec.Infrastructure == nil {
+		return labels, annotations
+	}
+	for k, v := range gw.Object.Spec.Infrastructure.Labels {
+		labels[string(k)] = string(v)
+	}
+	for k, v := range gw.Object.Spec.Infrastructure.Annotations {
+		annotations[string(k)] = string(v)
+	}
+	return labels, annotations
+}
+
+func applyInfrastructureMetadata(obj client.Object, labels, annotations map[string]string) {
+	if len(labels) > 0 {
+		existing := obj.GetLabels()
+		if existing == nil {
+			existing = make(map[string]string)
+		}
+		maps.Copy(existing, labels)
+		obj.SetLabels(existing)
+	}
+	if len(annotations) > 0 {
+		existing := obj.GetAnnotations()
+		if existing == nil {
+			existing = make(map[string]string)
+		}
+		maps.Copy(existing, annotations)
+		obj.SetAnnotations(existing)
+	}
+}
+
+func applyInfrastructureMetadataToPodTemplate(
+	template *coreV1.PodTemplateSpec,
+	labels, annotations map[string]string,
+) {
+	if len(labels) > 0 {
+		if template.Labels == nil {
+			template.Labels = make(map[string]string)
+		}
+		maps.Copy(template.Labels, labels)
+	}
+	if len(annotations) > 0 {
+		if template.Annotations == nil {
+			template.Annotations = make(map[string]string)
+		}
+		maps.Copy(template.Annotations, annotations)
+	}
 }

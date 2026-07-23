@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 const (
@@ -259,9 +260,10 @@ func GIOPemRegistryLabels(gwName string) map[string]string {
 
 func GwAPIv1GatewayLabels(gwName string) map[string]string {
 	labels := map[string]string{
-		ComponentLabelKey: GatewayComponentLabelValue,
-		InstanceLabelKey:  gwName,
-		NameLabelKey:      gwName,
+		ComponentLabelKey:           GatewayComponentLabelValue,
+		InstanceLabelKey:            gwName,
+		NameLabelKey:                gwName,
+		gwAPIv1.GatewayNameLabelKey: gwName,
 	}
 	maps.Copy(labels, CommonLabels)
 	return labels

@@ -33,17 +33,32 @@ func Accept(gw *gateway.Gateway) error {
 	}
 
 	accepted := k8s.NewAcceptedConditionBuilder(gw.Object.Generation).Accept("gateway is accepted")
+
+	if gw.Object.Spec.Infrastructure != nil && gw.Object.Spec.Infrastructure.ParametersRef != nil {
+		ref := gw.Object.Spec.Infrastructure.ParametersRef
+		accepted.RejectInvalidParameters(
+			fmt.Sprintf("parametersRef %s/%s %q is not supported", ref.Group, ref.Kind, ref.Name),
+		)
+		k8s.SetCondition(gw, accepted.Build())
+		return nil
+	}
+
+	hasValidListener := false
+	hasInvalidListener := false
 	for i := range gw.Object.Status.Listeners {
 		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
-		if !k8s.IsAccepted(status) {
-			accepted.RejectListenersNotValid(fmt.Sprintf("listener [%d] is not valid", i))
+		if k8s.IsAccepted(status) {
+			hasValidListener = true
+		} else {
+			hasInvalidListener = true
 		}
-		if k8s.IsConflicted(status) {
-			accepted.RejectListenersNotValid(fmt.Sprintf("listener [%d] conflicts", i))
-		}
-		if k8s.HasUnresolvedRefs(status) {
-			accepted.RejectListenersNotValid(fmt.Sprintf("listener [%d] has unresolved refs", i))
-		}
+	}
+
+	switch {
+	case !hasValidListener:
+		accepted.RejectListenersNotValid("no listener is valid")
+	case hasInvalidListener:
+		accepted.AcceptListenersNotValid("gateway is accepted but not all listeners are valid")
 	}
 
 	k8s.SetCondition(gw, accepted.Build())

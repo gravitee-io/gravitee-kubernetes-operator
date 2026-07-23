@@ -16,9 +16,16 @@ package mapper
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/base"
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
+)
+
+const (
+	trafficShadowingPolicyName = "traffic-shadowing"
 )
 
 func buildRequestFilters(ctx context.Context, route *gwAPIv1.HTTPRoute, rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
@@ -29,6 +36,9 @@ func buildRequestFilters(ctx context.Context, route *gwAPIv1.HTTPRoute, rule gwA
 		}
 		if f.RequestHeaderModifier != nil {
 			steps = append(steps, buildHeaderTransformer(*f.RequestHeaderModifier))
+		}
+		if f.RequestMirror != nil {
+			steps = append(steps, buildRequestMirror(route, *f.RequestMirror))
 		}
 	}
 	return steps
@@ -42,4 +52,28 @@ func buildResponseFilters(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 		}
 	}
 	return steps
+}
+
+func buildRequestMirror(route *gwAPIv1.HTTPRoute, mirror gwAPIv1.HTTPRequestMirrorFilter) *v4.FlowStep {
+	ns := route.Namespace
+	if mirror.BackendRef.Namespace != nil {
+		ns = string(*mirror.BackendRef.Namespace)
+	}
+
+	port := int32(80)
+	if mirror.BackendRef.Port != nil {
+		port = int32(*mirror.BackendRef.Port)
+	}
+
+	target := fmt.Sprintf(serviceURIPattern, mirror.BackendRef.Name, ns, port, "")
+
+	policyName := trafficShadowingPolicyName
+	configuration := utils.NewGenericStringMap().
+		Put("target", target)
+
+	return v4.NewFlowStep(base.FlowStep{
+		Policy:        &policyName,
+		Enabled:       true,
+		Configuration: configuration,
+	})
 }

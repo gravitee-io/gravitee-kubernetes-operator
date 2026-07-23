@@ -1,7 +1,7 @@
 apiVersion: gateway.networking.k8s.io/v1
-date: "2026-07-23T08:13:31+02:00"
+date: "2026-07-23T10:47:15+02:00"
 gatewayAPIChannel: standard
-gatewayAPIVersion: v1.4.1
+gatewayAPIVersion: v1.6.0
 implementation:
   contact:
   - team-devex@graviteesource.com
@@ -13,11 +13,13 @@ kind: ConformanceReport
 mode: default
 profiles:
 - core:
-    result: success
+    result: partial
+    skippedTests:
+    - HTTPRouteNoBackendRefs
     statistics:
       Failed: 0
-      Passed: 33
-      Skipped: 0
+      Passed: 36
+      Skipped: 1
   extended:
     result: success
     statistics:
@@ -38,9 +40,16 @@ profiles:
     - BackendTLSPolicy
     - BackendTLSPolicySANValidation
     - GatewayAddressEmpty
+    - GatewayBackendClientCertificate
+    - GatewayFrontendClientCertificateValidation
+    - GatewayFrontendClientCertificateValidationInsecureFallback
     - GatewayHTTPListenerIsolation
+    - GatewayHTTPSListenerDetectMisdirectedRequests
     - GatewayInfrastructurePropagation
     - GatewayStaticAddresses
+    - HTTPRoute303RedirectStatusCode
+    - HTTPRoute307RedirectStatusCode
+    - HTTPRoute308RedirectStatusCode
     - HTTPRouteBackendProtocolH2C
     - HTTPRouteBackendProtocolWebSocket
     - HTTPRouteBackendRequestHeaderModification
@@ -53,5 +62,9 @@ profiles:
     - HTTPRouteRequestMultipleMirrors
     - HTTPRouteRequestPercentageMirror
     - HTTPRouteRequestTimeout
+    - HTTPRouteRetry
+    - HTTPRouteRetryBackendTimeout
+    - HTTPRouteRetryConnectionError
+    - ListenerSet
   name: GATEWAY-HTTP
-  summary: Core tests succeeded. Extended tests succeeded.
+  summary: Core tests partially succeeded with 1 test skips. Extended tests succeeded.

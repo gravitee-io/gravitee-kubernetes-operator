@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	v4 "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/api/v4"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
@@ -31,6 +32,9 @@ var (
 	serviceURIPattern           = "http://%s.%s.svc.cluster.local:%d%s"
 	discardURI                  = "http://not.a.service.cluster.local"
 	defaultEndpointWeight int32 = 1
+
+	appProtocolH2C = "kubernetes.io/h2c"
+	appProtocolWS  = "kubernetes.io/ws"
 )
 
 func buildEndpointGroupsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix string) ([]*v4.EndpointGroup, error) {
@@ -74,6 +78,9 @@ func buildEndpointGroup(
 	if len(backendRefs) > 1 {
 		endpointGroup.LoadBalancer = v4.NewLoadBalancer(v4.WeightedRoundRobin)
 	}
+
+	applyBackendTimeout(endpointGroup, rule)
+
 	eps, err := buildEndpoints(ctx, route, match, matchIndex, backendRefs, rewrite)
 	if err != nil {
 		return nil, err
@@ -113,6 +120,7 @@ func buildEndpoints(
 		} else {
 			ns := k8s.GetRefNs(route, k8s.NsPtrToStr(backendRef.Namespace))
 			ep := buildEndpoint(ctx, backendRef, backendIndex, match, matchIndex, ns, rewrite)
+			applyBackendRefFilters(ep, backendRef)
 			endpoints = append(endpoints, ep)
 		}
 	}
@@ -147,7 +155,77 @@ func buildEndpoint(
 		ep.ConfigOverride.Put("http", httpConfig)
 	}
 
+	applyBackendProtocol(ctx, ep, backendRef, namespace)
+
 	return ep
+}
+
+func applyBackendRefFilters(ep *v4.Endpoint, backendRef gwAPIv1.HTTPBackendRef) {
+	for _, f := range backendRef.Filters {
+		if f.RequestHeaderModifier == nil {
+			continue
+		}
+		mod := f.RequestHeaderModifier
+		var headers []map[string]string
+
+		if existing, ok := ep.ConfigOverride.Get("headers").([]map[string]string); ok {
+			headers = existing
+		}
+
+		for _, h := range mod.Set {
+			headers = append(headers, map[string]string{"name": string(h.Name), "value": h.Value})
+		}
+		for _, h := range mod.Add {
+			headers = append(headers, map[string]string{"name": string(h.Name), "value": h.Value})
+		}
+
+		if len(headers) > 0 {
+			ep.ConfigOverride.Put("headers", headers)
+		}
+	}
+}
+
+func applyBackendProtocol(ctx context.Context, ep *v4.Endpoint, backendRef gwAPIv1.HTTPBackendRef, namespace string) {
+	if !k8s.IsServiceKind(backendRef.BackendObjectReference) || backendRef.Port == nil {
+		return
+	}
+
+	svc := &coreV1.Service{}
+	key := client.ObjectKey{Namespace: namespace, Name: string(backendRef.Name)}
+	if err := k8s.GetClient().Get(ctx, key, svc); err != nil {
+		return
+	}
+
+	servicePort := int32(*backendRef.Port)
+	for _, p := range svc.Spec.Ports {
+		if p.Port != servicePort {
+			continue
+		}
+		if p.AppProtocol == nil {
+			return
+		}
+		switch *p.AppProtocol {
+		case appProtocolH2C:
+			httpConfig := getOrCreateHTTPConfig(ep)
+			httpConfig.Put("version", "HTTP_2")
+			httpConfig.Put("clearTextUpgrade", true)
+		case appProtocolWS:
+			httpConfig := getOrCreateHTTPConfig(ep)
+			httpConfig.Put("version", "HTTP_1_1")
+			ep.ConfigOverride.Put("websocket", true)
+		}
+		return
+	}
+}
+
+func getOrCreateHTTPConfig(ep *v4.Endpoint) *utils.GenericStringMap {
+	if existing, ok := ep.ConfigOverride.Get("http").(*utils.GenericStringMap); ok {
+		return existing
+	}
+	httpConfig := utils.NewGenericStringMap()
+	httpConfig.Put("propagateClientHost", true)
+	ep.ConfigOverride.Put("http", httpConfig)
+	return httpConfig
 }
 
 func newEndpoint(backendRef gwAPIv1.HTTPBackendRef, backendIndex, matchIndex int, target string) *v4.Endpoint {
@@ -230,6 +308,28 @@ func getEndpointPath(match gwAPIv1.HTTPRouteMatch) string {
 		return ""
 	}
 	return strings.TrimSuffix(*match.Path.Value, "/")
+}
+
+func applyBackendTimeout(group *v4.EndpointGroup, rule gwAPIv1.HTTPRouteRule) {
+	if rule.Timeouts == nil || rule.Timeouts.BackendRequest == nil {
+		return
+	}
+
+	duration, err := time.ParseDuration(string(*rule.Timeouts.BackendRequest))
+	if err != nil {
+		return
+	}
+
+	if group.SharedConfig == nil {
+		group.SharedConfig = utils.NewGenericStringMap()
+	}
+	httpConfig := utils.NewGenericStringMap()
+	if duration == 0 {
+		httpConfig.Put("readTimeout", 0)
+	} else {
+		httpConfig.Put("readTimeout", duration.Milliseconds())
+	}
+	group.SharedConfig.Put("http", httpConfig)
 }
 
 // If several backends are provided, skip backends with a weight defined to 0.

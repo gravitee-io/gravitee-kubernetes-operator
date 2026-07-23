@@ -345,6 +345,13 @@ func (b *ConditionBuilder) RejectListenersNotValid(msg string) *ConditionBuilder
 		Message(msg)
 }
 
+func (b *ConditionBuilder) AcceptListenersNotValid(msg string) *ConditionBuilder {
+	return b.
+		Reason(string(gwAPIv1.GatewayReasonListenersNotValid)).
+		Status(metav1.ConditionTrue).
+		Message(msg)
+}
+
 func (b *ConditionBuilder) Reason(reason string) *ConditionBuilder {
 	b.condition.Reason = reason
 	return b
