@@ -31,7 +31,9 @@ import (
 )
 
 var lazyTimeoutConfig = config.TimeoutConfig{
-	TestIsolation:                      0 * time.Second,
+	TestIsolation:                      10 * time.Second,
+	DefaultTestTimeout:                 90 * time.Second,
+	MaxTimeToConsistency:               90 * time.Second,
 	GWCMustBeAccepted:                  300 * time.Second,
 	GatewayStatusMustHaveListeners:     300 * time.Second,
 	GatewayListenersMustHaveConditions: 300 * time.Second,
@@ -67,6 +69,10 @@ func TestGatewayAPIConformance(t *testing.T) {
 		features.SupportHTTPRouteMethodMatching,
 		features.SupportHTTPRouteQueryParamMatching,
 		features.SupportHTTPRouteHostRewrite,
+		features.SupportHTTPRouteBackendRequestHeaderModification,
+		features.SupportHTTPRouteNamedRouteRule,
+		features.SupportGatewayHTTPListenerIsolation,
+		features.SupportGatewayInfrastructurePropagation,
 	}
 
 	opts.Mode = "default"
@@ -79,10 +85,6 @@ func TestGatewayAPIConformance(t *testing.T) {
 	opts.CleanupBaseResources = false
 
 	opts.SkipTests = []string{}
-
-	// Gravitee gateway returns 502 instead of 500 for routes with no backend refs.
-	// Requires gateway-side fix.
-	opts.SkipTests = append(opts.SkipTests, "HTTPRouteNoBackendRefs")
 
 	if os.Getenv(env.GatewayAPIMatchAcrossRoutes) != env.TrueString {
 		opts.SkipTests = append(opts.SkipTests, "HTTPRouteMatchingAcrossRoutes")

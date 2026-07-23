@@ -120,7 +120,9 @@ func buildEndpoints(
 		} else {
 			ns := k8s.GetRefNs(route, k8s.NsPtrToStr(backendRef.Namespace))
 			ep := buildEndpoint(ctx, backendRef, backendIndex, match, matchIndex, ns, rewrite)
-			applyBackendRefFilters(ep, backendRef)
+			if len(backendRefs) > 1 {
+				applyBackendRefHeaders(ep, backendRef)
+			}
 			endpoints = append(endpoints, ep)
 		}
 	}
@@ -160,7 +162,7 @@ func buildEndpoint(
 	return ep
 }
 
-func applyBackendRefFilters(ep *v4.Endpoint, backendRef gwAPIv1.HTTPBackendRef) {
+func applyBackendRefHeaders(ep *v4.Endpoint, backendRef gwAPIv1.HTTPBackendRef) {
 	for _, f := range backendRef.Filters {
 		if f.RequestHeaderModifier == nil {
 			continue

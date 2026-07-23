@@ -169,7 +169,7 @@ func buildPEMRegistryValue(ns, refName string) (string, error) {
 }
 
 func getUserConfigMap(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) (*coreV1.ConfigMap, error) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	configMap := DefaultGatewayConfigMap.DeepCopy()
 	configMap.Name = getUserGatewayConfigMapName(gw.Object.Name)
 	configMap.Namespace = gw.Object.Namespace
@@ -190,7 +190,7 @@ func getOverridingGatewayConfigMap(
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) (*coreV1.ConfigMap, error) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	configMap := DefaultGatewayConfigMap.DeepCopy()
 
 	configMap.Name = getGatewayConfigMapName(gw.Object.Name)
@@ -266,7 +266,7 @@ func getDeployment(
 	portMapping map[gwAPIv1.PortNumber]int32,
 	config map[string]string,
 ) (*appV1.Deployment, error) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
 
 	deployment.Name = gw.Object.Name
@@ -290,10 +290,11 @@ func buildDeployment(
 	portMapping map[gwAPIv1.PortNumber]int32,
 	config map[string]string,
 ) error {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	selectorLabels := GwAPIv1GatewayLabels(gw.Object.Name)
+	metadataLabels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 
-	deployment.Spec.Selector.MatchLabels = maps.Clone(labels)
-	deployment.Spec.Template.Labels = labels
+	deployment.Spec.Selector.MatchLabels = maps.Clone(selectorLabels)
+	deployment.Spec.Template.Labels = metadataLabels
 
 	template, err := getPodTemplateSpec(gw, params)
 	if err != nil {
@@ -304,7 +305,7 @@ func buildDeployment(
 
 	template.Spec.Volumes = getVolumes(gw, params)
 
-	template.Labels = labels
+	template.Labels = metadataLabels
 
 	deployment.Spec.Template = *template
 
@@ -364,7 +365,7 @@ func buildDeployment(
 	}
 
 	// Prevents user defined labels from breaking pod selectors
-	for k, v := range labels {
+	for k, v := range selectorLabels {
 		deployment.Spec.Template.Labels[k] = v
 	}
 
@@ -511,7 +512,7 @@ func buildGatewayHPA(
 	autoscaling *gateway.Autoscaling,
 	hpa *autoscalingV2.HorizontalPodAutoscaler,
 ) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 
 	hpa.Labels = labels
 	setOwnerReference(gw.Object, hpa)
@@ -673,7 +674,7 @@ func setPDBConflictCondition(gw *gateway.Gateway, existing *policyV1.PodDisrupti
 }
 
 func buildGatewayPDB(gw *gateway.Gateway, cfg *gateway.PodDisruptionBudget, pdb *policyV1.PodDisruptionBudget) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	pdb.Labels = labels
 	setOwnerReference(gw.Object, pdb)
 
@@ -716,13 +717,14 @@ func getService(
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) *coreV1.Service {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	selectorLabels := GwAPIv1GatewayLabels(gw.Object.Name)
+	metadataLabels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	svc := DefaultService.DeepCopy()
 
 	svc.Name = gw.Object.Name
 	svc.Namespace = gw.Object.Namespace
-	svc.Labels = labels
-	svc.Spec.Selector = maps.Clone(labels)
+	svc.Labels = metadataLabels
+	svc.Spec.Selector = maps.Clone(selectorLabels)
 
 	buildServiceSpec(gw, params, svc, portMapping)
 

@@ -44,6 +44,19 @@ func buildRequestFilters(ctx context.Context, route *gwAPIv1.HTTPRoute, rule gwA
 	return steps
 }
 
+func buildBackendRequestFilters(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
+	if len(rule.BackendRefs) != 1 {
+		return nil
+	}
+	steps := []*v4.FlowStep{}
+	for _, f := range rule.BackendRefs[0].Filters {
+		if f.RequestHeaderModifier != nil {
+			steps = append(steps, buildHeaderTransformer(*f.RequestHeaderModifier))
+		}
+	}
+	return steps
+}
+
 func buildResponseFilters(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
 	steps := []*v4.FlowStep{}
 	for _, f := range rule.Filters {

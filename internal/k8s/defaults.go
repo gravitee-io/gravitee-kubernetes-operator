@@ -260,12 +260,17 @@ func GIOPemRegistryLabels(gwName string) map[string]string {
 
 func GwAPIv1GatewayLabels(gwName string) map[string]string {
 	labels := map[string]string{
-		ComponentLabelKey:           GatewayComponentLabelValue,
-		InstanceLabelKey:            gwName,
-		NameLabelKey:                gwName,
-		gwAPIv1.GatewayNameLabelKey: gwName,
+		ComponentLabelKey: GatewayComponentLabelValue,
+		InstanceLabelKey:  gwName,
+		NameLabelKey:      gwName,
 	}
 	maps.Copy(labels, CommonLabels)
+	return labels
+}
+
+func GwAPIv1GatewayMetadataLabels(gwName string) map[string]string {
+	labels := GwAPIv1GatewayLabels(gwName)
+	labels[gwAPIv1.GatewayNameLabelKey] = gwName
 	return labels
 }
 
