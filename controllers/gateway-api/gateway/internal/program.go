@@ -40,6 +40,22 @@ func Program(
 		return err
 	}
 
+	ready, err := k8s.DeploymentIsReady(ctx, gw.Object.Namespace, gw.Object.Name)
+	if err != nil {
+		return err
+	}
+
+	if !ready {
+		k8s.SetCondition(
+			gw,
+			k8s.NewGatewayProgrammedConditionBuilder(gw.Object.Generation).
+				Pending("waiting for gateway deployment to become ready").
+				Build(),
+		)
+		programListeners(gw)
+		return setGatewayAddresses(ctx, gw)
+	}
+
 	k8s.SetCondition(
 		gw,
 		k8s.NewGatewayProgrammedConditionBuilder(gw.Object.Generation).
@@ -56,6 +72,9 @@ func programListeners(gw *gateway.Gateway) {
 	listeners := gw.Object.Status.Listeners
 	for i := range listeners {
 		status := gateway.WrapListenerStatus(&listeners[i])
+		if !k8s.IsAccepted(status) {
+			continue
+		}
 		k8s.SetCondition(
 			status,
 			k8s.NewGatewayProgrammedConditionBuilder(gw.Object.Generation).

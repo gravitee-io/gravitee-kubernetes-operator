@@ -16,21 +16,18 @@ package portallisting
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-var _ admission.CustomValidator = AdmissionCtrl{}
-var _ admission.CustomDefaulter = AdmissionCtrl{}
+var _ admission.Validator[*v1alpha1.PortalListing] = AdmissionCtrl{}
+var _ admission.Defaulter[*v1alpha1.PortalListing] = AdmissionCtrl{}
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.PortalListing{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.PortalListing{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
@@ -38,30 +35,26 @@ func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 
 type AdmissionCtrl struct{}
 
-func (a AdmissionCtrl) Default(_ context.Context, _ runtime.Object) error {
+func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.PortalListing) error {
 	return nil
 }
 
 func (a AdmissionCtrl) ValidateCreate(
-	ctx context.Context, obj runtime.Object,
+	ctx context.Context, obj *v1alpha1.PortalListing,
 ) (admission.Warnings, error) {
 	return validateCreate(ctx, obj).Map()
 }
 
 func (a AdmissionCtrl) ValidateDelete(
-	_ context.Context, _ runtime.Object,
+	_ context.Context, _ *v1alpha1.PortalListing,
 ) (admission.Warnings, error) {
 	return admission.Warnings{}, nil
 }
 
 func (a AdmissionCtrl) ValidateUpdate(
-	ctx context.Context, oldObj runtime.Object, newObj runtime.Object,
+	ctx context.Context, oldObj *v1alpha1.PortalListing, newObj *v1alpha1.PortalListing,
 ) (admission.Warnings, error) {
-	listing, ok := newObj.(*v1alpha1.PortalListing)
-	if !ok {
-		return admission.Warnings{}, fmt.Errorf("can't cast to *v1alpha1.PortalListing")
-	}
-	if listing.IsBeingDeleted() {
+	if newObj.IsBeingDeleted() {
 		return admission.Warnings{}, nil
 	}
 

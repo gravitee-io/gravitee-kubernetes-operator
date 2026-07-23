@@ -22,6 +22,8 @@ unit:  ## Run unit tests
 e2e:  ## Run all end to end tests (Playwright)
 	npm --prefix test/platform-test run e2e
 
+CONFORMANCE_TIMEOUT ?= 30m
+
 .PHONY: conformance
 conformance: ## Run conformance tests
-	go tool gotestsum --format=testname --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+	go tool gotestsum --format=testname --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -timeout $(CONFORMANCE_TIMEOUT) -args --gateway-class=gravitee-gateway

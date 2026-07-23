@@ -14,7 +14,7 @@ orbs:
 parameters:
   go-version:
     type: string
-    default: "1.25.5"
+    default: "1.26.0"
   helm-version:
     type: string
     default: "v3.19.4"
@@ -277,7 +277,7 @@ jobs:
       - run:
           name: Run Gateway API conformance test suites
           command: |
-            go tool gotestsum --format=testname --hide-summary=skipped --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -args --gateway-class=gravitee-gateway
+            make conformance
       - run:
           name: Scale down operator manager.image.repository
           command: |

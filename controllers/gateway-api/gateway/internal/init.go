@@ -26,6 +26,12 @@ func Init(gw *gateway.Gateway) {
 		k8s.NewGatewayProgrammedConditionBuilder(gw.Object.Generation).
 			Build(),
 	)
+	k8s.CarryForwardConditionGenerations(
+		gw,
+		gw.Object.Generation,
+		k8s.ConditionAutoscalingSync,
+		k8s.ConditionPDBSync,
+	)
 	initListeners(gw)
 }
 

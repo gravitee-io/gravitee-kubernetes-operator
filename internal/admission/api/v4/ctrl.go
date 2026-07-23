@@ -19,52 +19,45 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/api/base"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-var _ webhook.CustomValidator = AdmissionCtrl{}
-var _ webhook.CustomDefaulter = AdmissionCtrl{}
+var _ admission.Validator[*v1alpha1.ApiV4Definition] = AdmissionCtrl{}
+var _ admission.Defaulter[*v1alpha1.ApiV4Definition] = AdmissionCtrl{}
 
 type AdmissionCtrl struct{}
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.ApiV4Definition{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.ApiV4Definition{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
 }
 
-// Default implements admission.CustomDefaulter.
-func (a AdmissionCtrl) Default(ctx context.Context, obj runtime.Object) error {
+func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.ApiV4Definition) error {
 	return nil
 }
 
-// ValidateCreate implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context,
-	obj runtime.Object,
+	obj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
 	return validateCreate(ctx, obj).Map()
 }
 
-// ValidateDelete implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateDelete(
 	ctx context.Context,
-	obj runtime.Object,
+	obj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
 	return base.ValidateDelete(ctx, obj).Map()
 }
 
-// ValidateUpdate implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateUpdate(
 	ctx context.Context,
-	oldObj runtime.Object,
-	newObj runtime.Object,
+	oldObj *v1alpha1.ApiV4Definition,
+	newObj *v1alpha1.ApiV4Definition,
 ) (admission.Warnings, error) {
 	return validateUpdate(ctx, oldObj, newObj).Map()
 }
