@@ -105,11 +105,18 @@ func flowWeight(flow *v4.Flow) int {
 	if flow == nil || len(flow.Selectors) < 2 {
 		return 0
 	}
-	cond := flow.Selectors[1].GetString("condition")
-	if cond == "" {
-		return 0
+
+	weight := 1 // base path condition
+
+	if methods, ok := flow.Selectors[0].Get("methods").([]base.HttpMethod); ok && len(methods) > 0 {
+		weight += methodPrecedenceBonus
 	}
-	return strings.Count(cond, " and ") + 1
+
+	cond := flow.Selectors[1].GetString("condition")
+	weight += strings.Count(cond, "#request.headers") * headerWeight
+	weight += strings.Count(cond, "#request.params") * queryParamWeight
+
+	return weight
 }
 
 func mergeTags(a, b []string) []string {

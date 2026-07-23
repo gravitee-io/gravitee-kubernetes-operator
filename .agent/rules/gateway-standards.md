@@ -58,3 +58,4 @@ Each phase sets its own condition. Do not skip phases or merge them.
 - The project targets `GatewayHTTPConformanceProfile` (core + extended)
 - Conformance reports are versioned in `test/conformance/kubernetes.io/gateway-api/report/`
 - Skipped tests must be documented with a reason (feature flag dependency or known limitation)
+- When adding or modifying Gateway API features, you MUST run `make conformance` 3 consecutive times. All 3 runs must pass before the work can be considered complete. If any run fails, investigate and fix the issue, then restart the 3-pass cycle from scratch.
