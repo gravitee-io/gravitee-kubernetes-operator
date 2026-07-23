@@ -32,8 +32,8 @@ const (
 	pathInfoMatchesCondition   = el.Expression("#request.pathInfo matches '%s'")
 	headerEqualsCondition      = el.Expression("#request.headers['%s'][0] eq '%s'")
 	headerMatchesCondition     = el.Expression("#request.headers['%s'][0] matches '%s'")
-	paramEqualsCondition       = el.Expression("#request.params['%s'] eq '%s'")
-	paramMatchesCondition      = el.Expression("#request.params['%s'] matches '%s'")
+	paramEqualsCondition       = el.Expression("#request.params['%s'][0] eq '%s'")
+	paramMatchesCondition      = el.Expression("#request.params['%s'][0] matches '%s'")
 
 	routingPolicyName = "dynamic-routing"
 	routingRulesKey   = "rules"
@@ -42,6 +42,17 @@ const (
 	routingURLKey     = "url"
 
 	endpointMatcherPattern = "%s:{#group[0]}"
+
+	// Per Gateway API spec, method match (rank 3) has higher precedence than
+	// header count (rank 4) and query param count (rank 5). This bonus ensures
+	// flows with a method match sort before flows that only match on headers/params.
+	methodPrecedenceBonus = 100
+
+	// Per Gateway API spec, header matches (rank 4) have higher precedence than
+	// query param matches (rank 5). Each header contributes more to flow weight
+	// than each query param.
+	headerWeight     = 10
+	queryParamWeight = 1
 )
 
 type weightedFlow struct {
@@ -62,10 +73,23 @@ func buildFlowsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix 
 			if err != nil {
 				return nil, err
 			}
-			weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: len(conditionsExpressions)})
+			weight := computeFlowWeight(match)
+			weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: weight})
 		}
 	}
 	return sortFlows(weightedFlows), nil
+}
+
+// computeFlowWeight implements Gateway API spec precedence:
+// path conditions (implicit) < query params < headers < method.
+func computeFlowWeight(match gwAPIv1.HTTPRouteMatch) int {
+	weight := 1 // base path condition always present
+	if match.Method != nil {
+		weight += methodPrecedenceBonus
+	}
+	weight += len(match.Headers) * headerWeight
+	weight += len(match.QueryParams) * queryParamWeight
+	return weight
 }
 
 // must appear first in the list and in the same order as defined.

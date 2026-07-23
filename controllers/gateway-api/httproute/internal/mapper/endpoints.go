@@ -136,7 +136,18 @@ func buildEndpoint(
 	rewrite *gwAPIv1.HTTPURLRewriteFilter,
 ) *v4.Endpoint {
 	target := buildEndpointTarget(ctx, match, backendRef, namespace, rewrite)
-	return newEndpoint(backendRef, backendIndex, matchIndex, target)
+	ep := newEndpoint(backendRef, backendIndex, matchIndex, target)
+
+	if rewrite != nil && rewrite.Hostname != nil {
+		ep.ConfigOverride.Put("headers", []map[string]string{
+			{"name": "Host", "value": string(*rewrite.Hostname)},
+		})
+		httpConfig := utils.NewGenericStringMap()
+		httpConfig.Put("propagateClientHost", false)
+		ep.ConfigOverride.Put("http", httpConfig)
+	}
+
+	return ep
 }
 
 func newEndpoint(backendRef gwAPIv1.HTTPBackendRef, backendIndex, matchIndex int, target string) *v4.Endpoint {

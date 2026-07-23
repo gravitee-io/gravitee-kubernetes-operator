@@ -1,5 +1,5 @@
 apiVersion: gateway.networking.k8s.io/v1
-date: "2026-01-29T13:03:55-06:00"
+date: "2026-07-23T08:13:31+02:00"
 gatewayAPIChannel: standard
 gatewayAPIVersion: v1.4.1
 implementation:
@@ -13,24 +13,25 @@ kind: ConformanceReport
 mode: default
 profiles:
 - core:
-    result: partial
-    skippedTests:
-    - HTTPRouteMatchingAcrossRoutes
+    result: success
     statistics:
       Failed: 0
-      Passed: 32
-      Skipped: 1
+      Passed: 33
+      Skipped: 0
   extended:
     result: success
     statistics:
       Failed: 0
-      Passed: 7
+      Passed: 10
       Skipped: 0
     supportedFeatures:
     - GatewayPort8080
+    - HTTPRouteHostRewrite
+    - HTTPRouteMethodMatching
     - HTTPRoutePathRedirect
     - HTTPRoutePathRewrite
     - HTTPRoutePortRedirect
+    - HTTPRouteQueryParamMatching
     - HTTPRouteResponseHeaderModification
     - HTTPRouteSchemeRedirect
     unsupportedFeatures:
@@ -46,14 +47,11 @@ profiles:
     - HTTPRouteBackendTimeout
     - HTTPRouteCORS
     - HTTPRouteDestinationPortMatching
-    - HTTPRouteHostRewrite
-    - HTTPRouteMethodMatching
     - HTTPRouteNamedRouteRule
     - HTTPRouteParentRefPort
-    - HTTPRouteQueryParamMatching
     - HTTPRouteRequestMirror
     - HTTPRouteRequestMultipleMirrors
     - HTTPRouteRequestPercentageMirror
     - HTTPRouteRequestTimeout
   name: GATEWAY-HTTP
-  summary: Core tests partially succeeded with 1 test skips. Extended tests succeeded.
+  summary: Core tests succeeded. Extended tests succeeded.

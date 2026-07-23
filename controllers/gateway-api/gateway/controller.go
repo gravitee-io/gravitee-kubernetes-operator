@@ -36,7 +36,9 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -325,7 +327,7 @@ func (r *Reconciler) validateGatewayClassParameters(
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gwAPIv1.Gateway{}).
+		For(&gwAPIv1.Gateway{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Watches(&gwAPIv1.GatewayClass{}, internal.WatchGatewayClasses()).
 		Watches(&gwAPIv1.HTTPRoute{}, internal.WatchHTTPRoutes()).
 		Watches(&v1alpha1.KafkaRoute{}, internal.WatchKafkaRoutes()).
