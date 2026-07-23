@@ -44,6 +44,7 @@ const (
 	GatewayContainerName        = "gateway"
 	DefaultGatewayImage         = "graviteeio/apim-gateway"
 	DefaultGatewayConfigPath    = "/opt/graviteeio-gateway/config/"
+	DefaultGatewayCertsPath     = "/opt/graviteeio-gateway/certs/"
 	DefaultGatewayLogConfigFile = DefaultGatewayConfigPath + DefaultLogConfigFileEntry
 	DefaultGatewayConfigFile    = DefaultGatewayConfigPath + DefaultConfigFileEntry
 	UserGatewayConfigFile       = DefaultGatewayConfigPath + "user.yml"

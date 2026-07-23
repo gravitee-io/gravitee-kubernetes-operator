@@ -881,10 +881,106 @@ func getVolumes(
 		volumes = append(volumes, *userVolume)
 	}
 
+	volumes = append(volumes, getTLSVolumes(gw)...)
+
 	return volumes
 }
 
+func getTLSVolumes(gw *gateway.Gateway) []coreV1.Volume {
+	portMapping := mapPorts(gw.Object)
+	multiTLSPorts := getMultiTLSPorts(gw, portMapping)
+	if len(multiTLSPorts) == 0 {
+		return nil
+	}
+
+	var volumes []coreV1.Volume
+	seen := make(map[string]bool)
+	for _, l := range gw.Object.Spec.Listeners {
+		if l.TLS == nil || len(l.TLS.CertificateRefs) == 0 {
+			continue
+		}
+		if !multiTLSPorts.Has(portMapping[l.Port]) {
+			continue
+		}
+		volName := tlsVolumeName(l.Name)
+		if seen[volName] {
+			continue
+		}
+		seen[volName] = true
+		secretName := string(l.TLS.CertificateRefs[0].Name)
+		volumes = append(volumes, coreV1.Volume{
+			Name: volName,
+			VolumeSource: coreV1.VolumeSource{
+				Secret: &coreV1.SecretVolumeSource{
+					SecretName:  secretName,
+					DefaultMode: &DefaultVolumeSourceMode,
+				},
+			},
+		})
+	}
+	return volumes
+}
+
+func getTLSVolumeMounts(gw *gateway.Gateway) []coreV1.VolumeMount {
+	portMapping := mapPorts(gw.Object)
+	multiTLSPorts := getMultiTLSPorts(gw, portMapping)
+	if len(multiTLSPorts) == 0 {
+		return nil
+	}
+
+	var mounts []coreV1.VolumeMount
+	seen := make(map[string]bool)
+	for _, l := range gw.Object.Spec.Listeners {
+		if l.TLS == nil || len(l.TLS.CertificateRefs) == 0 {
+			continue
+		}
+		if !multiTLSPorts.Has(portMapping[l.Port]) {
+			continue
+		}
+		volName := tlsVolumeName(l.Name)
+		if seen[volName] {
+			continue
+		}
+		seen[volName] = true
+		mounts = append(mounts, coreV1.VolumeMount{
+			Name:      volName,
+			MountPath: DefaultGatewayCertsPath + string(l.Name),
+			ReadOnly:  true,
+		})
+	}
+	return mounts
+}
+
+func getMultiTLSPorts(gw *gateway.Gateway, portMapping map[gwAPIv1.PortNumber]int32) sets.Set[int32] {
+	tlsCountByPort := make(map[int32]int)
+	for i, l := range gw.Object.Spec.Listeners {
+		if IsKafkaListener(l) || l.TLS == nil {
+			continue
+		}
+		if i >= len(gw.Object.Status.Listeners) {
+			continue
+		}
+		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
+		if !IsAccepted(status) {
+			continue
+		}
+		tlsCountByPort[portMapping[l.Port]]++
+	}
+	result := sets.New[int32]()
+	for port, count := range tlsCountByPort {
+		if count > 1 {
+			result.Insert(port)
+		}
+	}
+	return result
+}
+
+func tlsVolumeName(listenerName gwAPIv1.SectionName) string {
+	return "tls-" + string(listenerName)
+}
+
 func getVolumeMounts(
+	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 ) []coreV1.VolumeMount {
 	vm := []coreV1.VolumeMount{ConfigVolumeMount, LogConfigVolumeMount}
@@ -897,6 +993,8 @@ func getVolumeMounts(
 		vm = append(vm, UserConfigVolumeMount)
 	}
 
+	vm = append(vm, getTLSVolumeMounts(gw)...)
+
 	return vm
 }
 
@@ -907,7 +1005,7 @@ func prepareContainer(
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) {
 	container := getGatewayContainer(template.Spec.Containers)
-	container.VolumeMounts = getVolumeMounts(params)
+	container.VolumeMounts = getVolumeMounts(gw, params)
 	setContainerPorts(container, gw.Object.Spec.Listeners, portMapping)
 	for i := range template.Spec.Containers {
 		if template.Spec.Containers[i].Name == GatewayContainerName {
@@ -1078,12 +1176,69 @@ func getServers(
 
 		if listener.TLS != nil {
 			server["secured"] = true
-			server["ssl"] = buildTLS(listener)
+			server["ssl"] = buildTLSForPort(gw, listener.Port, portMapping)
 		}
 		servers = append(servers, server)
 		knownPorts.Insert(serverPort)
 	}
 	return servers, nil
+}
+
+func buildTLSForPort(
+	gw *gateway.Gateway,
+	port gwAPIv1.PortNumber,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) map[string]any {
+	tlsListeners := collectTLSListenersForPort(gw, port, portMapping)
+
+	ssl := make(map[string]any)
+	keystore := make(map[string]any)
+	keystore["type"] = "pem"
+
+	if len(tlsListeners) == 1 {
+		keystore["secret"] = buildKeystoreSecret(tlsListeners[0].TLS.CertificateRefs)
+	} else {
+		ssl["sni"] = true
+		certs := make([]map[string]string, 0, len(tlsListeners))
+		for _, l := range tlsListeners {
+			certPath := DefaultGatewayCertsPath + string(l.Name) + "/tls.crt"
+			keyPath := DefaultGatewayCertsPath + string(l.Name) + "/tls.key"
+			certs = append(certs, map[string]string{
+				"cert": certPath,
+				"key":  keyPath,
+			})
+		}
+		keystore["certificates"] = certs
+	}
+
+	ssl["keystore"] = keystore
+	return ssl
+}
+
+func collectTLSListenersForPort(
+	gw *gateway.Gateway,
+	port gwAPIv1.PortNumber,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) []gwAPIv1.Listener {
+	targetPort := portMapping[port]
+	var result []gwAPIv1.Listener
+	for i, l := range gw.Object.Spec.Listeners {
+		if IsKafkaListener(l) {
+			continue
+		}
+		if portMapping[l.Port] != targetPort {
+			continue
+		}
+		if l.TLS == nil {
+			continue
+		}
+		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
+		if !IsAccepted(status) {
+			continue
+		}
+		result = append(result, l)
+	}
+	return result
 }
 
 func getKafkaServer(
