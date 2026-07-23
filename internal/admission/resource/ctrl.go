@@ -16,22 +16,18 @@ package resource
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-var _ webhook.CustomValidator = AdmissionCtrl{}
-var _ webhook.CustomDefaulter = AdmissionCtrl{}
+var _ admission.Validator[*v1alpha1.ApiResource] = AdmissionCtrl{}
+var _ admission.Defaulter[*v1alpha1.ApiResource] = AdmissionCtrl{}
 
 func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(&v1alpha1.ApiResource{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.ApiResource{}).
 		WithValidator(a).
 		WithDefaulter(a).
 		Complete()
@@ -39,37 +35,29 @@ func (a AdmissionCtrl) SetupWithManager(mgr ctrl.Manager) error {
 
 type AdmissionCtrl struct{}
 
-// Default implements admission.CustomDefaulter.
-func (a AdmissionCtrl) Default(ctx context.Context, obj runtime.Object) error {
+func (a AdmissionCtrl) Default(_ context.Context, _ *v1alpha1.ApiResource) error {
 	return nil
 }
 
-// ValidateCreate implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateCreate(
 	ctx context.Context,
-	obj runtime.Object,
+	obj *v1alpha1.ApiResource,
 ) (admission.Warnings, error) {
 	return validateCreate(ctx, obj).Map()
 }
 
-// ValidateDelete implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateDelete(
-	ctx context.Context, obj runtime.Object,
+	_ context.Context, _ *v1alpha1.ApiResource,
 ) (admission.Warnings, error) {
 	return admission.Warnings{}, nil
 }
 
-// ValidateUpdate implements admission.CustomValidator.
 func (a AdmissionCtrl) ValidateUpdate(
 	ctx context.Context,
-	oldObj runtime.Object,
-	newObj runtime.Object,
+	_ *v1alpha1.ApiResource,
+	newObj *v1alpha1.ApiResource,
 ) (admission.Warnings, error) {
-	res, ok := newObj.(*v1alpha1.ApiResource)
-	if !ok {
-		return admission.Warnings{}, fmt.Errorf("can't cast to *v1alpha1.ApiResource")
-	}
-	if res.IsBeingDeleted() {
+	if newObj.IsBeingDeleted() {
 		return admission.Warnings{}, nil
 	}
 

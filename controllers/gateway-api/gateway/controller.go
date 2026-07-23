@@ -26,6 +26,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/event"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	appV1 "k8s.io/api/apps/v1"
 	autoscalingV2 "k8s.io/api/autoscaling/v2"
 	coreV1 "k8s.io/api/core/v1"
 	policyV1 "k8s.io/api/policy/v1"
@@ -43,7 +44,6 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 var errSkipObject = errors.New("object should be skipped and this error should not be returned to the user")
@@ -333,7 +333,9 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&v1alpha1.KafkaRoute{}, internal.WatchKafkaRoutes()).
 		Watches(&coreV1.Service{}, internal.WatchServices()).
 		Watches(&coreV1.Secret{}, internal.WatchSecrets()).
-		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
+		Watches(&coreV1.ConfigMap{}, internal.WatchConfigMaps()).
+		Watches(&gwAPIv1.ReferenceGrant{}, internal.WatchReferenceGrants()).
+		Watches(&appV1.Deployment{}, internal.WatchDeployments()).
 		Watches(&autoscalingV2.HorizontalPodAutoscaler{}, internal.WatchHPAs()).
 		Watches(&policyV1.PodDisruptionBudget{}, internal.WatchPDBs()).
 		Complete(r)

@@ -34,6 +34,7 @@ import (
 	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/backendtlspolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
 	parameters "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclassparameters"
@@ -76,7 +77,6 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/watch"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -90,6 +90,7 @@ import (
 	runtimeUtil "k8s.io/apimachinery/pkg/util/runtime"
 	cliScheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	ctrlconfig "sigs.k8s.io/controller-runtime/pkg/config"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricServer "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -145,6 +146,9 @@ func main() {
 		LeaderElection:         env.Config.EnableLeaderElection,
 		LeaderElectionID:       "24d975d3.gravitee.io",
 		Cache:                  buildCacheOptions(env.Config.NS),
+		Controller: ctrlconfig.Controller{
+			MaxConcurrentReconciles: env.Config.MaxConcurrentReconciles,
+		},
 	})
 
 	if err != nil {
@@ -365,7 +369,6 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 
 func registerGatewayAPIsControllers(mgr ctrl.Manager) {
 	runtimeUtil.Must(gwAPIv1.SchemeBuilder.AddToScheme(scheme))
-	runtimeUtil.Must(gwAPIv1beta1.SchemeBuilder.AddToScheme(scheme))
 
 	if err := (&parameters.Reconciler{
 		Scheme:   mgr.GetScheme(),
@@ -404,6 +407,14 @@ func registerGatewayAPIsControllers(mgr ctrl.Manager) {
 		Recorder: mgr.GetEventRecorderFor("kafka-route"),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for Kafka route")
+		os.Exit(1)
+	}
+
+	if err := (&backendtlspolicy.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("backend-tls-policy"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for BackendTLSPolicy")
 		os.Exit(1)
 	}
 }

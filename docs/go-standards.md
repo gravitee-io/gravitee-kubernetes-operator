@@ -21,8 +21,10 @@
 - Avoid shadowing predeclared identifiers (e.g. `error`, `len`, `new`)
 
 ## Testing
-- Use Ginkgo v2 and Gomega for unit and integration tests
+- Unit tests live under `test/unit/<area>/` (Ginkgo suite + specs), colocated with the other unit suites — never next to controller/`internal` packages
+- Use Ginkgo v2 and Gomega for unit and integration tests (not raw `testing.T` with `t.Errorf`/`t.Fatal`)
 - Dot-imports for `github.com/onsi/ginkgo/v2` and `github.com/onsi/gomega` are allowed in test files
+- Prefer testing through importable packages (`internal/...`, `api/...`); do not place `_test.go` under nested `controllers/**/internal`
 
 ## Forbidden Patterns
 - Do not use `github.com/golang/protobuf` (use `google.golang.org/protobuf`)

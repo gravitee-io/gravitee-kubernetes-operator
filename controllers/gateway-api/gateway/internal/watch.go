@@ -21,6 +21,7 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/log"
+	appV1 "k8s.io/api/apps/v1"
 	autoscalingV2 "k8s.io/api/autoscaling/v2"
 	coreV1 "k8s.io/api/core/v1"
 	policyV1 "k8s.io/api/policy/v1"
@@ -29,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 func WatchGatewayClasses() handler.EventHandler {
@@ -52,6 +52,10 @@ func WatchSecrets() handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(requestsFromSecret)
 }
 
+func WatchConfigMaps() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromConfigMap)
+}
+
 func WatchReferenceGrants() handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(requestFromReferenceGrant)
 }
@@ -62,6 +66,10 @@ func WatchHPAs() handler.EventHandler {
 
 func WatchPDBs() handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(requestsFromPDB)
+}
+
+func WatchDeployments() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromDeployment)
 }
 
 func requestsFromGatewayClass(ctx context.Context, obj client.Object) []reconcile.Request {
@@ -171,6 +179,29 @@ func requestsFromPDB(ctx context.Context, obj client.Object) []reconcile.Request
 	return reqs
 }
 
+func requestsFromDeployment(ctx context.Context, obj client.Object) []reconcile.Request {
+	dep, ok := obj.(*appV1.Deployment)
+	if !ok {
+		return nil
+	}
+	if !k8s.IsGatewayComponent(dep) {
+		return nil
+	}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, &client.ListOptions{Namespace: dep.Namespace}); err != nil {
+		log.Error(ctx, err, "failed to list gateways when watching deployment")
+		return []reconcile.Request{}
+	}
+	var reqs []reconcile.Request
+	for i := range list.Items {
+		gw := list.Items[i]
+		if k8s.IsGatewayDependent(gateway.WrapGateway(&gw), dep) {
+			reqs = append(reqs, buildRequest(gw))
+		}
+	}
+	return reqs
+}
+
 func requestsFromHTTPRoute(ctx context.Context, obj client.Object) []reconcile.Request {
 	httpRoute, ok := obj.(*gwAPIv1.HTTPRoute)
 	if !ok {
@@ -259,7 +290,7 @@ func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Requ
 }
 
 func requestFromReferenceGrant(ctx context.Context, obj client.Object) []reconcile.Request {
-	_, ok := obj.(*gwAPIv1beta1.ReferenceGrant)
+	_, ok := obj.(*gwAPIv1.ReferenceGrant)
 	if !ok {
 		return nil
 	}
@@ -321,4 +352,60 @@ func getReferencedNamespaces(routeNamespace string, parentRefs []gwAPIv1.ParentR
 		result = append(result, ns)
 	}
 	return result
+}
+
+func requestsFromConfigMap(ctx context.Context, obj client.Object) []reconcile.Request {
+	cm, ok := obj.(*coreV1.ConfigMap)
+	if !ok {
+		return nil
+	}
+	if !cm.DeletionTimestamp.IsZero() {
+		return nil
+	}
+
+	listOpts := &client.ListOptions{}
+	list := &gwAPIv1.GatewayList{}
+	if err := k8s.GetClient().List(ctx, list, listOpts); err != nil {
+		log.Error(ctx, err, "failed to list gateways when watching configmap")
+		return []reconcile.Request{}
+	}
+	var reqs []reconcile.Request
+	for _, gw := range list.Items {
+		if hasCACertRef(gw, cm) {
+			reqs = append(reqs, buildRequest(gw))
+		}
+	}
+	return reqs
+}
+
+func hasCACertRef(gw gwAPIv1.Gateway, cm *coreV1.ConfigMap) bool {
+	if gw.Spec.TLS == nil || gw.Spec.TLS.Frontend == nil {
+		return false
+	}
+	frontend := gw.Spec.TLS.Frontend
+
+	for _, ref := range getCARefs(frontend) {
+		ns := ref.Namespace
+		if ns == nil {
+			gwNs := gwAPIv1.Namespace(gw.Namespace)
+			ns = &gwNs
+		}
+		if string(*ns) == cm.Namespace && string(ref.Name) == cm.Name {
+			return true
+		}
+	}
+	return false
+}
+
+func getCARefs(frontend *gwAPIv1.FrontendTLSConfig) []gwAPIv1.ObjectReference {
+	var refs []gwAPIv1.ObjectReference
+	if frontend.Default.Validation != nil {
+		refs = append(refs, frontend.Default.Validation.CACertificateRefs...)
+	}
+	for _, pp := range frontend.PerPort {
+		if pp.TLS.Validation != nil {
+			refs = append(refs, pp.TLS.Validation.CACertificateRefs...)
+		}
+	}
+	return refs
 }

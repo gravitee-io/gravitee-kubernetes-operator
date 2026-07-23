@@ -65,12 +65,14 @@ const (
 	LogsTimestampField                   = "LOGS_TIMESTAMP_FIELD"
 	LogsTimestampFormat                  = "LOGS_TIMESTAMP_FORMAT"
 	EnableTemplating                     = "ENABLE_TEMPLATING"
+	MaxConcurrentReconcilesKey           = "MAX_CONCURRENT_RECONCILES"
 
 	// This default are applied when running the app locally.
-	defaultWebhookPort       = 9443
-	defaultMetricsPort       = 8080
-	defaultProbesPort        = 8081
-	defaultHttpClientTimeout = 5
+	defaultWebhookPort             = 9443
+	defaultMetricsPort             = 8080
+	defaultProbesPort              = 8081
+	defaultHttpClientTimeout       = 5
+	defaultMaxConcurrentReconciles = 4
 
 	ReconcileStrategy = "RECONCILE_STRATEGY"
 )
@@ -120,6 +122,7 @@ var Config = struct {
 	LogsTimestampFormat                  string
 	ReconcileStrategy                    string
 	EnableTemplating                     bool
+	MaxConcurrentReconciles              int
 }{}
 
 func init() {
@@ -178,6 +181,7 @@ func init() {
 	Config.LogsTimestampFormat = os.Getenv(LogsTimestampFormat)
 	Config.ReconcileStrategy = os.Getenv(ReconcileStrategy)
 	Config.EnableTemplating = os.Getenv(EnableTemplating) != FalseString // this will allow it to be enabled by default
+	Config.MaxConcurrentReconciles = parseInt(MaxConcurrentReconcilesKey, defaultMaxConcurrentReconciles)
 }
 
 func GetMetricsAddr() string {
