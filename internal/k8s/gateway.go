@@ -237,7 +237,12 @@ func buildOverridingGatewayConfigData(
 	yaml.Put("tags", BuildGatewayTag(gw))
 
 	if httpPort := getHTTPPort(gw.Object.Spec.Listeners, portMapping); httpPort != nil {
-		yaml.Put("http", map[string]int32{"port": *httpPort})
+		httpCfg := map[string]any{"port": *httpPort}
+		if params == nil || params.Spec.Gravitee == nil ||
+			params.Spec.Gravitee.WebSocket == nil || params.Spec.Gravitee.WebSocket.Enabled {
+			httpCfg["websocket"] = map[string]any{"enabled": true}
+		}
+		yaml.Put("http", httpCfg)
 	}
 
 	yamlData, err := yaml.MarshalYAML()

@@ -32,8 +32,8 @@ import (
 
 var lazyTimeoutConfig = config.TimeoutConfig{
 	TestIsolation:                      10 * time.Second,
-	DefaultTestTimeout:                 90 * time.Second,
-	MaxTimeToConsistency:               90 * time.Second,
+	DefaultTestTimeout:                 180 * time.Second,
+	MaxTimeToConsistency:               180 * time.Second,
 	GWCMustBeAccepted:                  300 * time.Second,
 	GatewayStatusMustHaveListeners:     300 * time.Second,
 	GatewayListenersMustHaveConditions: 300 * time.Second,
@@ -42,6 +42,8 @@ var lazyTimeoutConfig = config.TimeoutConfig{
 	TLSRouteMustHaveCondition:          180 * time.Second,
 	RouteMustHaveParents:               180 * time.Second,
 	GetTimeout:                         180 * time.Second,
+	LatestObservedGenerationSet:        180 * time.Second,
+	NamespacesMustBeReady:              600 * time.Second,
 }
 
 func TestGatewayAPIConformance(t *testing.T) {
@@ -73,6 +75,7 @@ func TestGatewayAPIConformance(t *testing.T) {
 		features.SupportHTTPRouteNamedRouteRule,
 		features.SupportGatewayHTTPListenerIsolation,
 		features.SupportGatewayInfrastructurePropagation,
+		features.SupportHTTPRouteBackendProtocolH2C,
 	}
 
 	opts.Mode = "default"

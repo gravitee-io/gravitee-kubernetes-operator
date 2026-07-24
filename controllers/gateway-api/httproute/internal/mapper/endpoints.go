@@ -119,7 +119,7 @@ func buildEndpoints(
 			endpoints = append(endpoints, buildDummyEndpoint())
 		} else {
 			ns := k8s.GetRefNs(route, k8s.NsPtrToStr(backendRef.Namespace))
-			ep := buildEndpoint(ctx, backendRef, backendIndex, match, matchIndex, ns, rewrite)
+			ep := buildEndpoint(ctx, backendRef, backendIndex, match, matchIndex, ns, rewrite, route)
 			if len(backendRefs) > 1 {
 				applyBackendRefHeaders(ep, backendRef)
 			}
@@ -144,6 +144,7 @@ func buildEndpoint(
 	matchIndex int,
 	namespace string,
 	rewrite *gwAPIv1.HTTPURLRewriteFilter,
+	route *gwAPIv1.HTTPRoute,
 ) *v4.Endpoint {
 	target := buildEndpointTarget(ctx, match, backendRef, namespace, rewrite)
 	ep := newEndpoint(backendRef, backendIndex, matchIndex, target)
@@ -157,7 +158,7 @@ func buildEndpoint(
 		ep.ConfigOverride.Put("http", httpConfig)
 	}
 
-	applyBackendProtocol(ctx, ep, backendRef, namespace)
+	applyBackendProtocol(ctx, ep, backendRef, namespace, route)
 
 	return ep
 }
@@ -187,7 +188,13 @@ func applyBackendRefHeaders(ep *v4.Endpoint, backendRef gwAPIv1.HTTPBackendRef) 
 	}
 }
 
-func applyBackendProtocol(ctx context.Context, ep *v4.Endpoint, backendRef gwAPIv1.HTTPBackendRef, namespace string) {
+func applyBackendProtocol(
+	ctx context.Context,
+	ep *v4.Endpoint,
+	backendRef gwAPIv1.HTTPBackendRef,
+	namespace string,
+	route *gwAPIv1.HTTPRoute,
+) {
 	if !k8s.IsServiceKind(backendRef.BackendObjectReference) || backendRef.Port == nil {
 		return
 	}
@@ -203,6 +210,10 @@ func applyBackendProtocol(ctx context.Context, ep *v4.Endpoint, backendRef gwAPI
 		if p.Port != servicePort {
 			continue
 		}
+
+		tlsCfg := lookupBackendTLSPolicy(ctx, string(backendRef.Name), namespace, p.Name)
+		applyBackendTLS(ctx, ep, tlsCfg, route)
+
 		if p.AppProtocol == nil {
 			return
 		}
@@ -210,7 +221,7 @@ func applyBackendProtocol(ctx context.Context, ep *v4.Endpoint, backendRef gwAPI
 		case appProtocolH2C:
 			httpConfig := getOrCreateHTTPConfig(ep)
 			httpConfig.Put("version", "HTTP_2")
-			httpConfig.Put("clearTextUpgrade", true)
+			httpConfig.Put("clearTextUpgrade", false)
 		case appProtocolWS:
 			httpConfig := getOrCreateHTTPConfig(ep)
 			httpConfig.Put("version", "HTTP_1_1")

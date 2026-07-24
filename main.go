@@ -35,6 +35,7 @@ import (
 	v1 "k8s.io/api/networking/v1"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/sharedpolicygroups"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/backendtlspolicy"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gateway"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclass"
 	parameters "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/gateway-api/gatewayclassparameters"
@@ -401,6 +402,14 @@ func registerGatewayAPIsControllers(mgr ctrl.Manager) {
 		Recorder: mgr.GetEventRecorderFor("kafka-route"),
 	}).SetupWithManager(mgr); err != nil {
 		log.Global.Error(err, "Unable to create controller for Kafka route")
+		os.Exit(1)
+	}
+
+	if err := (&backendtlspolicy.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("backend-tls-policy"),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for BackendTLSPolicy")
 		os.Exit(1)
 	}
 }

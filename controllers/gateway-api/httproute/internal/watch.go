@@ -61,6 +61,52 @@ func WatchGateways() handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(requestsFromGateway)
 }
 
+func WatchBackendTLSPolicies() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromBackendTLSPolicy)
+}
+
+func requestsFromBackendTLSPolicy(ctx context.Context, obj client.Object) []reconcile.Request {
+	policy, ok := obj.(*gwAPIv1.BackendTLSPolicy)
+	if !ok {
+		return nil
+	}
+
+	targetServices := make(map[string]bool)
+	for _, ref := range policy.Spec.TargetRefs {
+		if ref.Kind == "" || ref.Kind == "Service" {
+			targetServices[string(ref.Name)] = true
+		}
+	}
+
+	list := &gwAPIv1.HTTPRouteList{}
+	if err := k8s.GetClient().List(ctx, list, client.InNamespace(policy.Namespace)); err != nil {
+		return nil
+	}
+
+	var reqs []reconcile.Request
+	for i := range list.Items {
+		route := &list.Items[i]
+		if routeUsesServices(route, targetServices) {
+			reqs = append(reqs, buildRequest(*route))
+		}
+	}
+	return reqs
+}
+
+func routeUsesServices(route *gwAPIv1.HTTPRoute, services map[string]bool) bool {
+	for _, rule := range route.Spec.Rules {
+		for _, ref := range rule.BackendRefs {
+			if ref.Kind != nil && *ref.Kind != "Service" {
+				continue
+			}
+			if services[string(ref.Name)] {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func requestsFromGateway(ctx context.Context, obj client.Object) []reconcile.Request {
 	gw, ok := obj.(*gwAPIv1.Gateway)
 	if !ok {

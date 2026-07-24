@@ -183,5 +183,6 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&gwAPIv1.HTTPRoute{}).
 		Watches(&gwAPIv1.ReferenceGrant{}, internal.WatchReferenceGrants()).
 		Watches(&gwAPIv1.Gateway{}, internal.WatchGateways()).
+		Watches(&gwAPIv1.BackendTLSPolicy{}, internal.WatchBackendTLSPolicies()).
 		Complete(r)
 }
