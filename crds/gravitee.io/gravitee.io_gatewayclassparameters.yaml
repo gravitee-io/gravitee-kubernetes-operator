@@ -104,6 +104,15 @@ spec:
                       required:
                         - name
                       type: object
+                    websocket:
+                      default:
+                        enabled: true
+                      description: Use this field to control WebSocket support on the Gateway.
+                      properties:
+                        enabled:
+                          default: true
+                          type: boolean
+                      type: object
                     yaml:
                       description: |-
                         Use this field to provide custom gateway configuration,

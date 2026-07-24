@@ -32,8 +32,8 @@ const (
 	pathInfoMatchesCondition   = el.Expression("#request.pathInfo matches '%s'")
 	headerEqualsCondition      = el.Expression("#request.headers['%s'][0] eq '%s'")
 	headerMatchesCondition     = el.Expression("#request.headers['%s'][0] matches '%s'")
-	paramEqualsCondition       = el.Expression("#request.params['%s'] eq '%s'")
-	paramMatchesCondition      = el.Expression("#request.params['%s'] matches '%s'")
+	paramEqualsCondition       = el.Expression("#request.params['%s'][0] eq '%s'")
+	paramMatchesCondition      = el.Expression("#request.params['%s'][0] matches '%s'")
 
 	routingPolicyName = "dynamic-routing"
 	routingRulesKey   = "rules"
@@ -42,6 +42,17 @@ const (
 	routingURLKey     = "url"
 
 	endpointMatcherPattern = "%s:{#group[0]}"
+
+	// Per Gateway API spec, method match (rank 3) has higher precedence than
+	// header count (rank 4) and query param count (rank 5). This bonus ensures
+	// flows with a method match sort before flows that only match on headers/params.
+	methodPrecedenceBonus = 100
+
+	// Per Gateway API spec, header matches (rank 4) have higher precedence than
+	// query param matches (rank 5). Each header contributes more to flow weight
+	// than each query param.
+	headerWeight     = 10
+	queryParamWeight = 1
 )
 
 type weightedFlow struct {
@@ -52,9 +63,15 @@ type weightedFlow struct {
 func buildFlowsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix string) ([]*v4.Flow, error) {
 	weightedFlows := make([]weightedFlow, 0)
 
+	isolationExclusions, err := computeIsolationExclusions(ctx, route)
+	if err != nil {
+		return nil, err
+	}
+
 	for ruleIndex, rule := range route.Spec.Rules {
 		for matchIndex, match := range rule.Matches {
 			conditionsExpressions := buildFlowConditionExpressions(match)
+			conditionsExpressions = append(conditionsExpressions, isolationExclusions...)
 
 			flow, err := createRuleMatchFlow(
 				ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix,
@@ -62,10 +79,23 @@ func buildFlowsWithPrefix(ctx context.Context, route *gwAPIv1.HTTPRoute, prefix 
 			if err != nil {
 				return nil, err
 			}
-			weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: len(conditionsExpressions)})
+			weight := computeFlowWeight(match)
+			weightedFlows = append(weightedFlows, weightedFlow{Flow: flow, Weight: weight})
 		}
 	}
 	return sortFlows(weightedFlows), nil
+}
+
+// computeFlowWeight implements Gateway API spec precedence:
+// path conditions (implicit) < query params < headers < method.
+func computeFlowWeight(match gwAPIv1.HTTPRouteMatch) int {
+	weight := 1 // base path condition always present
+	if match.Method != nil {
+		weight += methodPrecedenceBonus
+	}
+	weight += len(match.Headers) * headerWeight
+	weight += len(match.QueryParams) * queryParamWeight
+	return weight
 }
 
 // must appear first in the list and in the same order as defined.
@@ -119,6 +149,8 @@ func createRuleMatchFlow(
 		return buildRuleErrorFlow("Unresolved backend reference", match, conditionsExpressions), nil
 	case hasInvalidGrants:
 		return buildRuleErrorFlow("Invalid reference grant", match, conditionsExpressions), nil
+	case len(rule.BackendRefs) == 0 && !hasResponseFilter(rule):
+		return buildRuleErrorFlow("No backend references", match, conditionsExpressions), nil
 	default:
 		return buildRoutingFlow(ctx, route, rule, ruleIndex, match, matchIndex, conditionsExpressions, prefix), nil
 	}
@@ -223,7 +255,9 @@ func buildRequestFlow(
 		rewrite := extractURLRewriteFilter(rule.Filters)
 		steps = append(steps, buildRoutingStep(ruleIndex, matchIndex, rewrite, prefix))
 	}
-	return append(steps, buildRequestFilters(ctx, route, rule)...)
+	steps = append(steps, buildRequestFilters(ctx, route, rule)...)
+	steps = append(steps, buildBackendRequestFilters(rule)...)
+	return steps
 }
 
 func buildResponseFlow(rule gwAPIv1.HTTPRouteRule) []*v4.FlowStep {
@@ -290,6 +324,15 @@ func buildMockErrorFlow(description string) []*v4.FlowStep {
 			Configuration: configuration,
 		}),
 	}
+}
+
+func hasResponseFilter(rule gwAPIv1.HTTPRouteRule) bool {
+	for _, f := range rule.Filters {
+		if f.RequestRedirect != nil {
+			return true
+		}
+	}
+	return false
 }
 
 func hasInvalidBackendKindForRule(rule gwAPIv1.HTTPRouteRule) bool {

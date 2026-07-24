@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 func WatchGatewayClasses() handler.EventHandler {
@@ -259,7 +258,7 @@ func requestsFromSecret(ctx context.Context, obj client.Object) []reconcile.Requ
 }
 
 func requestFromReferenceGrant(ctx context.Context, obj client.Object) []reconcile.Request {
-	_, ok := obj.(*gwAPIv1beta1.ReferenceGrant)
+	_, ok := obj.(*gwAPIv1.ReferenceGrant)
 	if !ok {
 		return nil
 	}

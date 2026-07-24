@@ -22,8 +22,5 @@ func addTrailingSlash(s string) string {
 }
 
 func getExpectedPathInfo(matchValue string) string {
-	if matchValue[len(matchValue)-1:] == "/" {
-		return rootPath
-	}
 	return ""
 }

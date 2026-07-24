@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 func WatchReferenceGrants() handler.EventHandler {
@@ -32,7 +31,7 @@ func WatchReferenceGrants() handler.EventHandler {
 }
 
 func requestFromReferenceGrant(ctx context.Context, obj client.Object) []reconcile.Request {
-	_, ok := obj.(*gwAPIv1beta1.ReferenceGrant)
+	_, ok := obj.(*gwAPIv1.ReferenceGrant)
 	if !ok {
 		return nil
 	}
@@ -60,6 +59,52 @@ func buildRequest(route gwAPIv1.HTTPRoute) reconcile.Request {
 
 func WatchGateways() handler.EventHandler {
 	return handler.EnqueueRequestsFromMapFunc(requestsFromGateway)
+}
+
+func WatchBackendTLSPolicies() handler.EventHandler {
+	return handler.EnqueueRequestsFromMapFunc(requestsFromBackendTLSPolicy)
+}
+
+func requestsFromBackendTLSPolicy(ctx context.Context, obj client.Object) []reconcile.Request {
+	policy, ok := obj.(*gwAPIv1.BackendTLSPolicy)
+	if !ok {
+		return nil
+	}
+
+	targetServices := make(map[string]bool)
+	for _, ref := range policy.Spec.TargetRefs {
+		if ref.Kind == "" || ref.Kind == "Service" {
+			targetServices[string(ref.Name)] = true
+		}
+	}
+
+	list := &gwAPIv1.HTTPRouteList{}
+	if err := k8s.GetClient().List(ctx, list, client.InNamespace(policy.Namespace)); err != nil {
+		return nil
+	}
+
+	var reqs []reconcile.Request
+	for i := range list.Items {
+		route := &list.Items[i]
+		if routeUsesServices(route, targetServices) {
+			reqs = append(reqs, buildRequest(*route))
+		}
+	}
+	return reqs
+}
+
+func routeUsesServices(route *gwAPIv1.HTTPRoute, services map[string]bool) bool {
+	for _, rule := range route.Spec.Rules {
+		for _, ref := range rule.BackendRefs {
+			if ref.Kind != nil && *ref.Kind != "Service" {
+				continue
+			}
+			if services[string(ref.Name)] {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func requestsFromGateway(ctx context.Context, obj client.Object) []reconcile.Request {

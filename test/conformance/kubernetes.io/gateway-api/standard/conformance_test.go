@@ -22,7 +22,6 @@ import (
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/test/conformance/kubernetes.io/gateway-api/impl"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/gateway-api/conformance"
 	"sigs.k8s.io/gateway-api/conformance/tests"
 	"sigs.k8s.io/gateway-api/conformance/utils/config"
@@ -32,7 +31,9 @@ import (
 )
 
 var lazyTimeoutConfig = config.TimeoutConfig{
-	TestIsolation:                      0 * time.Second,
+	TestIsolation:                      10 * time.Second,
+	DefaultTestTimeout:                 180 * time.Second,
+	MaxTimeToConsistency:               180 * time.Second,
 	GWCMustBeAccepted:                  300 * time.Second,
 	GatewayStatusMustHaveListeners:     300 * time.Second,
 	GatewayListenersMustHaveConditions: 300 * time.Second,
@@ -41,6 +42,8 @@ var lazyTimeoutConfig = config.TimeoutConfig{
 	TLSRouteMustHaveCondition:          180 * time.Second,
 	RouteMustHaveParents:               180 * time.Second,
 	GetTimeout:                         180 * time.Second,
+	LatestObservedGenerationSet:        180 * time.Second,
+	NamespacesMustBeReady:              600 * time.Second,
 }
 
 func TestGatewayAPIConformance(t *testing.T) {
@@ -51,11 +54,11 @@ func TestGatewayAPIConformance(t *testing.T) {
 	opts.Implementation = impl.Manifest
 	opts.ReportOutputPath = impl.GetReportOutputPath()
 
-	opts.ConformanceProfiles = sets.New(
+	opts.ConformanceProfiles = []suite.ConformanceProfileName{
 		suite.GatewayHTTPConformanceProfileName,
-	)
+	}
 
-	opts.SupportedFeatures = sets.New(
+	opts.SupportedFeatures = []features.FeatureName{
 		features.GatewayFeature.Name,
 		features.HTTPRouteFeature.Name,
 		features.ReferenceGrantFeature.Name,
@@ -65,7 +68,15 @@ func TestGatewayAPIConformance(t *testing.T) {
 		features.SupportHTTPRoutePathRedirect,
 		features.SupportHTTPRouteResponseHeaderModification,
 		features.SupportHTTPRoutePathRewrite,
-	)
+		features.SupportHTTPRouteMethodMatching,
+		features.SupportHTTPRouteQueryParamMatching,
+		features.SupportHTTPRouteHostRewrite,
+		features.SupportHTTPRouteBackendRequestHeaderModification,
+		features.SupportHTTPRouteNamedRouteRule,
+		features.SupportGatewayHTTPListenerIsolation,
+		features.SupportGatewayInfrastructurePropagation,
+		features.SupportHTTPRouteBackendProtocolH2C,
+	}
 
 	opts.Mode = "default"
 

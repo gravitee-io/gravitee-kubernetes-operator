@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 const (
@@ -94,16 +93,13 @@ func IsListenerRef(
 	if !IsGatewayRef(gw, ref) {
 		return false
 	}
-	if ref.SectionName == nil {
-		return true
-	}
-	if *ref.SectionName != listener.Name {
+	if ref.SectionName != nil && *ref.SectionName != listener.Name {
 		return false
 	}
-	if ref.Port == nil {
-		return true
+	if ref.Port != nil && *ref.Port != listener.Port {
+		return false
 	}
-	return *ref.Port == listener.Port
+	return true
 }
 
 func HasHTTPRouteOwner(ownerRefs []metaV1.OwnerReference) bool {
@@ -124,6 +120,13 @@ func IsAttachedHTTPRoute(
 	for i := range route.Status.Parents {
 		ref := route.Spec.ParentRefs[i]
 		if IsListenerRef(gw, listener, ref) {
+			parentStatus := gateway.WrapRouteParentStatus(&route.Status.Parents[i])
+			if !IsAccepted(parentStatus) {
+				continue
+			}
+			if !HasIntersectingHostNameForListener(&route, listener) {
+				continue
+			}
 			if attached, err := SupportsRouteNamespace(ctx, gw, ref, &route); err != nil {
 				return false, err
 			} else if attached {
@@ -132,6 +135,21 @@ func IsAttachedHTTPRoute(
 		}
 	}
 	return false, nil
+}
+
+func HasIntersectingHostNameForListener(route *gwAPIv1.HTTPRoute, listener gwAPIv1.Listener) bool {
+	if listener.Hostname == nil {
+		return true
+	}
+	if len(route.Spec.Hostnames) == 0 {
+		return true
+	}
+	for _, routeHostname := range route.Spec.Hostnames {
+		if intersect(string(*listener.Hostname), string(routeHostname)) {
+			return true
+		}
+	}
+	return false
 }
 
 func IsAttachedKafkaRoute(
@@ -392,6 +410,9 @@ func GetHTTPHosts(route *gwAPIv1.HTTPRoute, gw *gwAPIv1.Gateway, ref gwAPIv1.Par
 			continue
 		}
 		listener := gw.Spec.Listeners[i]
+		if ref.Port != nil && listener.Port != *ref.Port {
+			continue
+		}
 		hostnames = append(hostnames, GetHTTPHostsForListenerAndRoute(route, listener)...)
 	}
 	return hostnames
@@ -504,7 +525,7 @@ func IsGrantedReference(ctx context.Context, from client.Object, to gwAPIv1.Obje
 		return true, nil
 	}
 
-	grantList := &gwAPIv1beta1.ReferenceGrantList{}
+	grantList := &gwAPIv1.ReferenceGrantList{}
 	opts := &client.ListOptions{Namespace: grantNs}
 	if err := GetClient().List(ctx, grantList, opts); err != nil {
 		return false, err
@@ -517,7 +538,7 @@ func IsGrantedReference(ctx context.Context, from client.Object, to gwAPIv1.Obje
 	return false, nil
 }
 
-func hasGrantedTo(to gwAPIv1.ObjectReference, grant gwAPIv1beta1.ReferenceGrant) bool {
+func hasGrantedTo(to gwAPIv1.ObjectReference, grant gwAPIv1.ReferenceGrant) bool {
 	for _, grantTo := range grant.Spec.To {
 		if isGrantedTo(to, grantTo) {
 			return true
@@ -526,7 +547,7 @@ func hasGrantedTo(to gwAPIv1.ObjectReference, grant gwAPIv1beta1.ReferenceGrant)
 	return false
 }
 
-func isGrantedTo(to gwAPIv1.ObjectReference, grantTo gwAPIv1beta1.ReferenceGrantTo) bool {
+func isGrantedTo(to gwAPIv1.ObjectReference, grantTo gwAPIv1.ReferenceGrantTo) bool {
 	switch {
 	case grantTo.Name != nil && to.Name != *grantTo.Name:
 		return false
@@ -539,7 +560,7 @@ func isGrantedTo(to gwAPIv1.ObjectReference, grantTo gwAPIv1beta1.ReferenceGrant
 	}
 }
 
-func hasGrantedFrom(from client.Object, grant gwAPIv1beta1.ReferenceGrant) bool {
+func hasGrantedFrom(from client.Object, grant gwAPIv1.ReferenceGrant) bool {
 	for _, grantFrom := range grant.Spec.From {
 		if isGrantedFrom(from, grantFrom) {
 			return true
@@ -548,7 +569,7 @@ func hasGrantedFrom(from client.Object, grant gwAPIv1beta1.ReferenceGrant) bool 
 	return false
 }
 
-func isGrantedFrom(from client.Object, grantFrom gwAPIv1beta1.ReferenceGrantFrom) bool {
+func isGrantedFrom(from client.Object, grantFrom gwAPIv1.ReferenceGrantFrom) bool {
 	switch {
 	case from.GetNamespace() != string(grantFrom.Namespace):
 		return false

@@ -46,7 +46,11 @@ func DeployGateway(
 	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 ) error {
-	if err := CreateOrUpdate(ctx, getServiceAccount(gw)); err != nil {
+	infraLabels, infraAnnotations := getInfrastructureMetadata(gw)
+
+	sa := getServiceAccount(gw)
+	applyInfrastructureMetadata(sa, infraLabels, infraAnnotations)
+	if err := CreateOrUpdate(ctx, sa); err != nil {
 		return err
 	}
 	if err := CreateOrUpdate(ctx, getRole(gw)); err != nil {
@@ -103,7 +107,12 @@ func DeployGateway(
 	if deployment, err := getDeployment(ctx, gw, params, portMapping, configData); err != nil {
 		return err
 	} else if err := CreateOrUpdate(ctx, deployment, func() error {
-		return buildDeployment(ctx, gw, params, deployment, portMapping, configData)
+		if err := buildDeployment(ctx, gw, params, deployment, portMapping, configData); err != nil {
+			return err
+		}
+		applyInfrastructureMetadata(deployment, infraLabels, infraAnnotations)
+		applyInfrastructureMetadataToPodTemplate(&deployment.Spec.Template, infraLabels, infraAnnotations)
+		return nil
 	}); err != nil {
 		return err
 	}
@@ -111,6 +120,7 @@ func DeployGateway(
 	svc := getService(gw, params, portMapping)
 	if err := CreateOrUpdate(ctx, svc, func() error {
 		buildServiceSpec(gw, params, svc, portMapping)
+		applyInfrastructureMetadata(svc, infraLabels, infraAnnotations)
 		return nil
 	}); err != nil {
 		return err
@@ -159,7 +169,7 @@ func buildPEMRegistryValue(ns, refName string) (string, error) {
 }
 
 func getUserConfigMap(gw *gateway.Gateway, params *v1alpha1.GatewayClassParameters) (*coreV1.ConfigMap, error) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	configMap := DefaultGatewayConfigMap.DeepCopy()
 	configMap.Name = getUserGatewayConfigMapName(gw.Object.Name)
 	configMap.Namespace = gw.Object.Namespace
@@ -180,7 +190,7 @@ func getOverridingGatewayConfigMap(
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) (*coreV1.ConfigMap, error) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	configMap := DefaultGatewayConfigMap.DeepCopy()
 
 	configMap.Name = getGatewayConfigMapName(gw.Object.Name)
@@ -227,7 +237,12 @@ func buildOverridingGatewayConfigData(
 	yaml.Put("tags", BuildGatewayTag(gw))
 
 	if httpPort := getHTTPPort(gw.Object.Spec.Listeners, portMapping); httpPort != nil {
-		yaml.Put("http", map[string]int32{"port": *httpPort})
+		httpCfg := map[string]any{"port": *httpPort}
+		if params == nil || params.Spec.Gravitee == nil ||
+			params.Spec.Gravitee.WebSocket == nil || params.Spec.Gravitee.WebSocket.Enabled {
+			httpCfg["websocket"] = map[string]any{"enabled": true}
+		}
+		yaml.Put("http", httpCfg)
 	}
 
 	yamlData, err := yaml.MarshalYAML()
@@ -256,7 +271,7 @@ func getDeployment(
 	portMapping map[gwAPIv1.PortNumber]int32,
 	config map[string]string,
 ) (*appV1.Deployment, error) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	deployment := DefaultGatewayDeployment.DeepCopy()
 
 	deployment.Name = gw.Object.Name
@@ -280,10 +295,11 @@ func buildDeployment(
 	portMapping map[gwAPIv1.PortNumber]int32,
 	config map[string]string,
 ) error {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	selectorLabels := GwAPIv1GatewayLabels(gw.Object.Name)
+	metadataLabels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 
-	deployment.Spec.Selector.MatchLabels = maps.Clone(labels)
-	deployment.Spec.Template.Labels = labels
+	deployment.Spec.Selector.MatchLabels = maps.Clone(selectorLabels)
+	deployment.Spec.Template.Labels = metadataLabels
 
 	template, err := getPodTemplateSpec(gw, params)
 	if err != nil {
@@ -294,7 +310,7 @@ func buildDeployment(
 
 	template.Spec.Volumes = getVolumes(gw, params)
 
-	template.Labels = labels
+	template.Labels = metadataLabels
 
 	deployment.Spec.Template = *template
 
@@ -354,7 +370,7 @@ func buildDeployment(
 	}
 
 	// Prevents user defined labels from breaking pod selectors
-	for k, v := range labels {
+	for k, v := range selectorLabels {
 		deployment.Spec.Template.Labels[k] = v
 	}
 
@@ -501,7 +517,7 @@ func buildGatewayHPA(
 	autoscaling *gateway.Autoscaling,
 	hpa *autoscalingV2.HorizontalPodAutoscaler,
 ) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 
 	hpa.Labels = labels
 	setOwnerReference(gw.Object, hpa)
@@ -663,7 +679,7 @@ func setPDBConflictCondition(gw *gateway.Gateway, existing *policyV1.PodDisrupti
 }
 
 func buildGatewayPDB(gw *gateway.Gateway, cfg *gateway.PodDisruptionBudget, pdb *policyV1.PodDisruptionBudget) {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	labels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	pdb.Labels = labels
 	setOwnerReference(gw.Object, pdb)
 
@@ -706,13 +722,14 @@ func getService(
 	params *v1alpha1.GatewayClassParameters,
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) *coreV1.Service {
-	labels := GwAPIv1GatewayLabels(gw.Object.Name)
+	selectorLabels := GwAPIv1GatewayLabels(gw.Object.Name)
+	metadataLabels := GwAPIv1GatewayMetadataLabels(gw.Object.Name)
 	svc := DefaultService.DeepCopy()
 
 	svc.Name = gw.Object.Name
 	svc.Namespace = gw.Object.Namespace
-	svc.Labels = labels
-	svc.Spec.Selector = maps.Clone(labels)
+	svc.Labels = metadataLabels
+	svc.Spec.Selector = maps.Clone(selectorLabels)
 
 	buildServiceSpec(gw, params, svc, portMapping)
 
@@ -869,10 +886,106 @@ func getVolumes(
 		volumes = append(volumes, *userVolume)
 	}
 
+	volumes = append(volumes, getTLSVolumes(gw)...)
+
 	return volumes
 }
 
+func getTLSVolumes(gw *gateway.Gateway) []coreV1.Volume {
+	portMapping := mapPorts(gw.Object)
+	multiTLSPorts := getMultiTLSPorts(gw, portMapping)
+	if len(multiTLSPorts) == 0 {
+		return nil
+	}
+
+	var volumes []coreV1.Volume
+	seen := make(map[string]bool)
+	for _, l := range gw.Object.Spec.Listeners {
+		if l.TLS == nil || len(l.TLS.CertificateRefs) == 0 {
+			continue
+		}
+		if !multiTLSPorts.Has(portMapping[l.Port]) {
+			continue
+		}
+		volName := tlsVolumeName(l.Name)
+		if seen[volName] {
+			continue
+		}
+		seen[volName] = true
+		secretName := string(l.TLS.CertificateRefs[0].Name)
+		volumes = append(volumes, coreV1.Volume{
+			Name: volName,
+			VolumeSource: coreV1.VolumeSource{
+				Secret: &coreV1.SecretVolumeSource{
+					SecretName:  secretName,
+					DefaultMode: &DefaultVolumeSourceMode,
+				},
+			},
+		})
+	}
+	return volumes
+}
+
+func getTLSVolumeMounts(gw *gateway.Gateway) []coreV1.VolumeMount {
+	portMapping := mapPorts(gw.Object)
+	multiTLSPorts := getMultiTLSPorts(gw, portMapping)
+	if len(multiTLSPorts) == 0 {
+		return nil
+	}
+
+	var mounts []coreV1.VolumeMount
+	seen := make(map[string]bool)
+	for _, l := range gw.Object.Spec.Listeners {
+		if l.TLS == nil || len(l.TLS.CertificateRefs) == 0 {
+			continue
+		}
+		if !multiTLSPorts.Has(portMapping[l.Port]) {
+			continue
+		}
+		volName := tlsVolumeName(l.Name)
+		if seen[volName] {
+			continue
+		}
+		seen[volName] = true
+		mounts = append(mounts, coreV1.VolumeMount{
+			Name:      volName,
+			MountPath: DefaultGatewayCertsPath + string(l.Name),
+			ReadOnly:  true,
+		})
+	}
+	return mounts
+}
+
+func getMultiTLSPorts(gw *gateway.Gateway, portMapping map[gwAPIv1.PortNumber]int32) sets.Set[int32] {
+	tlsCountByPort := make(map[int32]int)
+	for i, l := range gw.Object.Spec.Listeners {
+		if IsKafkaListener(l) || l.TLS == nil {
+			continue
+		}
+		if i >= len(gw.Object.Status.Listeners) {
+			continue
+		}
+		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
+		if !IsAccepted(status) {
+			continue
+		}
+		tlsCountByPort[portMapping[l.Port]]++
+	}
+	result := sets.New[int32]()
+	for port, count := range tlsCountByPort {
+		if count > 1 {
+			result.Insert(port)
+		}
+	}
+	return result
+}
+
+func tlsVolumeName(listenerName gwAPIv1.SectionName) string {
+	return "tls-" + string(listenerName)
+}
+
 func getVolumeMounts(
+	gw *gateway.Gateway,
 	params *v1alpha1.GatewayClassParameters,
 ) []coreV1.VolumeMount {
 	vm := []coreV1.VolumeMount{ConfigVolumeMount, LogConfigVolumeMount}
@@ -885,6 +998,8 @@ func getVolumeMounts(
 		vm = append(vm, UserConfigVolumeMount)
 	}
 
+	vm = append(vm, getTLSVolumeMounts(gw)...)
+
 	return vm
 }
 
@@ -895,7 +1010,7 @@ func prepareContainer(
 	portMapping map[gwAPIv1.PortNumber]int32,
 ) {
 	container := getGatewayContainer(template.Spec.Containers)
-	container.VolumeMounts = getVolumeMounts(params)
+	container.VolumeMounts = getVolumeMounts(gw, params)
 	setContainerPorts(container, gw.Object.Spec.Listeners, portMapping)
 	for i := range template.Spec.Containers {
 		if template.Spec.Containers[i].Name == GatewayContainerName {
@@ -1066,12 +1181,69 @@ func getServers(
 
 		if listener.TLS != nil {
 			server["secured"] = true
-			server["ssl"] = buildTLS(listener)
+			server["ssl"] = buildTLSForPort(gw, listener.Port, portMapping)
 		}
 		servers = append(servers, server)
 		knownPorts.Insert(serverPort)
 	}
 	return servers, nil
+}
+
+func buildTLSForPort(
+	gw *gateway.Gateway,
+	port gwAPIv1.PortNumber,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) map[string]any {
+	tlsListeners := collectTLSListenersForPort(gw, port, portMapping)
+
+	ssl := make(map[string]any)
+	keystore := make(map[string]any)
+	keystore["type"] = "pem"
+
+	if len(tlsListeners) == 1 {
+		keystore["secret"] = buildKeystoreSecret(tlsListeners[0].TLS.CertificateRefs)
+	} else {
+		ssl["sni"] = true
+		certs := make([]map[string]string, 0, len(tlsListeners))
+		for _, l := range tlsListeners {
+			certPath := DefaultGatewayCertsPath + string(l.Name) + "/tls.crt"
+			keyPath := DefaultGatewayCertsPath + string(l.Name) + "/tls.key"
+			certs = append(certs, map[string]string{
+				"cert": certPath,
+				"key":  keyPath,
+			})
+		}
+		keystore["certificates"] = certs
+	}
+
+	ssl["keystore"] = keystore
+	return ssl
+}
+
+func collectTLSListenersForPort(
+	gw *gateway.Gateway,
+	port gwAPIv1.PortNumber,
+	portMapping map[gwAPIv1.PortNumber]int32,
+) []gwAPIv1.Listener {
+	targetPort := portMapping[port]
+	var result []gwAPIv1.Listener
+	for i, l := range gw.Object.Spec.Listeners {
+		if IsKafkaListener(l) {
+			continue
+		}
+		if portMapping[l.Port] != targetPort {
+			continue
+		}
+		if l.TLS == nil {
+			continue
+		}
+		status := gateway.WrapListenerStatus(&gw.Object.Status.Listeners[i])
+		if !IsAccepted(status) {
+			continue
+		}
+		result = append(result, l)
+	}
+	return result
 }
 
 func getKafkaServer(
@@ -1259,4 +1431,56 @@ func ensureBindableWithNoConflict(
 		return ensureBindableWithNoConflict(bindable+1, listenerPorts)
 	}
 	return bindable
+}
+
+func getInfrastructureMetadata(gw *gateway.Gateway) (map[string]string, map[string]string) {
+	labels := make(map[string]string)
+	annotations := make(map[string]string)
+	if gw.Object.Spec.Infrastructure == nil {
+		return labels, annotations
+	}
+	for k, v := range gw.Object.Spec.Infrastructure.Labels {
+		labels[string(k)] = string(v)
+	}
+	for k, v := range gw.Object.Spec.Infrastructure.Annotations {
+		annotations[string(k)] = string(v)
+	}
+	return labels, annotations
+}
+
+func applyInfrastructureMetadata(obj client.Object, labels, annotations map[string]string) {
+	if len(labels) > 0 {
+		existing := obj.GetLabels()
+		if existing == nil {
+			existing = make(map[string]string)
+		}
+		maps.Copy(existing, labels)
+		obj.SetLabels(existing)
+	}
+	if len(annotations) > 0 {
+		existing := obj.GetAnnotations()
+		if existing == nil {
+			existing = make(map[string]string)
+		}
+		maps.Copy(existing, annotations)
+		obj.SetAnnotations(existing)
+	}
+}
+
+func applyInfrastructureMetadataToPodTemplate(
+	template *coreV1.PodTemplateSpec,
+	labels, annotations map[string]string,
+) {
+	if len(labels) > 0 {
+		if template.Labels == nil {
+			template.Labels = make(map[string]string)
+		}
+		maps.Copy(template.Labels, labels)
+	}
+	if len(annotations) > 0 {
+		if template.Annotations == nil {
+			template.Annotations = make(map[string]string)
+		}
+		maps.Copy(template.Annotations, annotations)
+	}
 }

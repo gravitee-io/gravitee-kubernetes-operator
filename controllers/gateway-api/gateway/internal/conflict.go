@@ -72,7 +72,7 @@ func hasProtocolConflict(l1, l2 gwAPIv1.Listener) bool {
 }
 
 func hasHostnameConflict(l1, l2 gwAPIv1.Listener) bool {
-	return l1.Hostname != nil && l2.Hostname != nil && *l1.Hostname == *l2.Hostname
+	return l1.Port == l2.Port && l1.Hostname != nil && l2.Hostname != nil && *l1.Hostname == *l2.Hostname
 }
 
 func hasKafkaConflict(l1, l2 gwAPIv1.Listener) bool {

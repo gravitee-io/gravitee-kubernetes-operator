@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
 )
 
 const (
@@ -43,6 +44,7 @@ const (
 	GatewayContainerName        = "gateway"
 	DefaultGatewayImage         = "graviteeio/apim-gateway"
 	DefaultGatewayConfigPath    = "/opt/graviteeio-gateway/config/"
+	DefaultGatewayCertsPath     = "/opt/graviteeio-gateway/certs/"
 	DefaultGatewayLogConfigFile = DefaultGatewayConfigPath + DefaultLogConfigFileEntry
 	DefaultGatewayConfigFile    = DefaultGatewayConfigPath + DefaultConfigFileEntry
 	UserGatewayConfigFile       = DefaultGatewayConfigPath + "user.yml"
@@ -264,6 +266,12 @@ func GwAPIv1GatewayLabels(gwName string) map[string]string {
 		NameLabelKey:      gwName,
 	}
 	maps.Copy(labels, CommonLabels)
+	return labels
+}
+
+func GwAPIv1GatewayMetadataLabels(gwName string) map[string]string {
+	labels := GwAPIv1GatewayLabels(gwName)
+	labels[gwAPIv1.GatewayNameLabelKey] = gwName
 	return labels
 }
 

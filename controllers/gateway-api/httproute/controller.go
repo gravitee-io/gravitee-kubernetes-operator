@@ -38,7 +38,6 @@ import (
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 type Reconciler struct {
@@ -182,7 +181,8 @@ func (r *Reconciler) reconcileDefault(ctx context.Context, dc *gwAPIv1.HTTPRoute
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gwAPIv1.HTTPRoute{}).
-		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
+		Watches(&gwAPIv1.ReferenceGrant{}, internal.WatchReferenceGrants()).
 		Watches(&gwAPIv1.Gateway{}, internal.WatchGateways()).
+		Watches(&gwAPIv1.BackendTLSPolicy{}, internal.WatchBackendTLSPolicies()).
 		Complete(r)
 }

@@ -1,5 +1,5 @@
 apiVersion: gateway.networking.k8s.io/v1
-date: "2026-07-23T10:47:15+02:00"
+date: "2026-07-24T17:33:53+02:00"
 gatewayAPIChannel: standard
 gatewayAPIVersion: v1.6.0
 implementation:
@@ -8,28 +8,31 @@ implementation:
   organization: gravitee.io
   project: gravitee-kubernetes-operator
   url: https://github.com/gravitee-io/gravitee-kubernetes-operator
-  version: 4.10.3
+  version: 4.13.0
 kind: ConformanceReport
 mode: default
 profiles:
 - core:
-    result: partial
-    skippedTests:
-    - HTTPRouteNoBackendRefs
+    result: success
     statistics:
       Failed: 0
-      Passed: 36
-      Skipped: 1
+      Passed: 37
+      Skipped: 0
   extended:
     result: success
     statistics:
       Failed: 0
-      Passed: 10
+      Passed: 16
       Skipped: 0
     supportedFeatures:
+    - GatewayHTTPListenerIsolation
+    - GatewayInfrastructurePropagation
     - GatewayPort8080
+    - HTTPRouteBackendProtocolH2C
+    - HTTPRouteBackendRequestHeaderModification
     - HTTPRouteHostRewrite
     - HTTPRouteMethodMatching
+    - HTTPRouteNamedRouteRule
     - HTTPRoutePathRedirect
     - HTTPRoutePathRewrite
     - HTTPRoutePortRedirect
@@ -43,20 +46,15 @@ profiles:
     - GatewayBackendClientCertificate
     - GatewayFrontendClientCertificateValidation
     - GatewayFrontendClientCertificateValidationInsecureFallback
-    - GatewayHTTPListenerIsolation
     - GatewayHTTPSListenerDetectMisdirectedRequests
-    - GatewayInfrastructurePropagation
     - GatewayStaticAddresses
     - HTTPRoute303RedirectStatusCode
     - HTTPRoute307RedirectStatusCode
     - HTTPRoute308RedirectStatusCode
-    - HTTPRouteBackendProtocolH2C
     - HTTPRouteBackendProtocolWebSocket
-    - HTTPRouteBackendRequestHeaderModification
     - HTTPRouteBackendTimeout
     - HTTPRouteCORS
     - HTTPRouteDestinationPortMatching
-    - HTTPRouteNamedRouteRule
     - HTTPRouteParentRefPort
     - HTTPRouteRequestMirror
     - HTTPRouteRequestMultipleMirrors
@@ -67,4 +65,7 @@ profiles:
     - HTTPRouteRetryConnectionError
     - ListenerSet
   name: GATEWAY-HTTP
-  summary: Core tests partially succeeded with 1 test skips. Extended tests succeeded.
+  summary: Core tests succeeded. Extended tests succeeded.
+succeededProvisionalTests:
+- GatewayInfrastructure
+- HTTPRouteNamedRule

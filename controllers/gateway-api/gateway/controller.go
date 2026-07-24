@@ -36,12 +36,13 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	gwAPIv1 "sigs.k8s.io/gateway-api/apis/v1"
-	gwAPIv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 var errSkipObject = errors.New("object should be skipped and this error should not be returned to the user")
@@ -325,13 +326,13 @@ func (r *Reconciler) validateGatewayClassParameters(
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gwAPIv1.Gateway{}).
+		For(&gwAPIv1.Gateway{}, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		Watches(&gwAPIv1.GatewayClass{}, internal.WatchGatewayClasses()).
 		Watches(&gwAPIv1.HTTPRoute{}, internal.WatchHTTPRoutes()).
 		Watches(&v1alpha1.KafkaRoute{}, internal.WatchKafkaRoutes()).
 		Watches(&coreV1.Service{}, internal.WatchServices()).
 		Watches(&coreV1.Secret{}, internal.WatchSecrets()).
-		Watches(&gwAPIv1beta1.ReferenceGrant{}, internal.WatchReferenceGrants()).
+		Watches(&gwAPIv1.ReferenceGrant{}, internal.WatchReferenceGrants()).
 		Watches(&autoscalingV2.HorizontalPodAutoscaler{}, internal.WatchHPAs()).
 		Watches(&policyV1.PodDisruptionBudget{}, internal.WatchPDBs()).
 		Complete(r)
