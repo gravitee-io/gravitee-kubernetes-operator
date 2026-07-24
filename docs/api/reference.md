@@ -2298,6 +2298,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `licenseRef` _[SecretObjectReference](https://gateway-api.sigs.k8s.io/reference/spec/#secretobjectreference)_ | A reference to a Kubernetes Secret that contains your Gravitee license key.<br />This license is required to unlock advanced capabilities like Kafka protocol support. |  | Optional: \{\} <br /> |
 | `kafka` _[GraviteeKafkaConfig](#graviteekafkaconfig)_ | Use this field to enable Kafka support in the Gateway. | \{ enabled:false \} | Optional: \{\} <br /> |
+| `websocket` _[GraviteeWebSocketConfig](#graviteewebsocketconfig)_ | Use this field to control WebSocket support on the Gateway.<br />When enabled (default), the gateway accepts WebSocket upgrade requests<br />and proxies them to backends with appProtocol kubernetes.io/ws. | \{ enabled:true \} | Optional: \{\} <br /> |
 | `yaml` _[GenericStringMap](#genericstringmap)_ | Use this field to provide custom gateway configuration,<br />giving you control over additional configuration blocks<br />available in the gateway<br />[settings](https://documentation.gravitee.io/apim/configure-apim/apim-components/gravitee-gateway). |  | Optional: \{\} <br /> |
 
 
@@ -2333,6 +2334,22 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `brokerDomainPattern` _string_ |  | broker-\{brokerId\}-\{apiHost\} | Optional: \{\} <br /> |
 | `bootstrapDomainPattern` _string_ | You can find details about these configurations options in our<br />[documentation](https://documentation.gravitee.io/apim/kafka-gateway/configure-the-kafka-gateway-and-client). | \{apiHost\} | Optional: \{\} <br /> |
+
+
+#### GraviteeWebSocketConfig
+
+
+
+
+
+
+
+_Appears in:_
+- [GraviteeConfig](#graviteeconfig)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ |  | true | Optional: \{\} <br /> |
 
 
 #### KubernetesConfig
