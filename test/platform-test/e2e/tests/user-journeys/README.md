@@ -40,5 +40,5 @@ npm --prefix test/platform-test run e2e -- --grep @GKO-335 --provision-with terr
 
 ## Authoring a new journey
 
-See [AGENTS.md → Adding a cross-provisioner parity scenario](../../../AGENTS.md#adding-a-cross-provisioner-parity-scenario)
+See [AGENTS.md → Adding a cross-provisioner parity scenario](../../../AGENTS.md#adding-a-cross-provisioner-parity-scenario-use-case-journey)
 and the prioritised backlog + scorecard in [PARITY.md](../../../PARITY.md).
