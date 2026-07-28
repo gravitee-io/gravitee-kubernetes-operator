@@ -208,6 +208,32 @@ npm --prefix test/platform-test run e2e -- --provision-with gko --run-up-to-vers
 For a different pair (e.g. 4.12 -> 4.13), change the `imageTag` / `helmVersion` values
 on the `create` and `patch` lines and the `--run-up-to-version` arguments.
 
+### Survival checks
+
+Separate from the `--run-up-to-version` regression pass above, a dedicated
+**survival check** verifies that resources created *before* an upgrade stay
+correct *after* it — config fidelity, datastore continuity, and no-churn on
+an unchanged re-apply. It runs as two Playwright invocations in **separate
+processes**, bracketing the same `gck patch` upgrade step:
+
+```bash
+# Before the upgrade (creates the resources under test).
+npm --prefix test/platform-test run e2e:upgrade:before
+
+# ... run gck patch here, same as above ...
+
+# After the upgrade (asserts the resources survived intact).
+npm --prefix test/platform-test run e2e:upgrade:after
+```
+
+These scripts use a dedicated config,
+[`playwright.upgrade.config.ts`](playwright.upgrade.config.ts), which targets
+only [`tests/upgrade/survival.before.spec.ts`](tests/upgrade/survival.before.spec.ts)
+and [`tests/upgrade/survival.after.spec.ts`](tests/upgrade/survival.after.spec.ts)
+(kept out of the default suite's `*.test.ts` / `*.scenario.ts` match). The
+shared scenario logic lives in
+[`tests/upgrade/survival-scenario.ts`](tests/upgrade/survival-scenario.ts).
+
 ### CI: run the lanes in parallel
 
 A matrix job fans the two lanes out across runners. GitHub Actions:

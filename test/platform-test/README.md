@@ -71,7 +71,7 @@ The library ships a CLI for use in shell scripts.
 platform-test <subcommand> [flags]
 ```
 
-Exit codes: `0` assertion passed, `1` assertion failed, `2` config/network error.
+Exit codes: `0` assertion passed, `1` assertion failed, `2` config/network error or invalid usage (missing/invalid flags).
 
 ### assert-api
 
@@ -251,6 +251,12 @@ const mapi = createMapi({
 | `assertPlanPublished(apiId, planId)` | Assert plan is PUBLISHED |
 | `assertSubscriptionMatches(apiId, subId, partial)` | Assert subscription matches |
 | `assertSubscriptionAccepted(apiId, subId)` | Assert subscription is ACCEPTED |
+
+This covers the core API/Plan/Subscription assertions. `Mapi` also exposes
+`waitFor*` polling variants and Application, Group, Category, and Page
+assertion families — see
+[`src/assertions/apim/mapi.ts`](src/assertions/apim/mapi.ts) for the full
+surface.
 
 ### Gateway Assertions
 
