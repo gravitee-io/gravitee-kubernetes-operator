@@ -27,9 +27,8 @@
 import { test } from "../setup.js";
 import type { Mapi, Gateway } from "../../src/index.js";
 import type { ProvisionerId, Provisioned, Provisioner } from "../../src/provisioners/index.js";
+import { PROVISIONER_ORDER } from "../../src/provisioners/index.js";
 import { TF_WORKSPACE_TIMEOUT_MS } from "../../src/provisioners/engines/terraform-core.js";
-
-const PROVISIONER_ORDER: readonly ProvisionerId[] = ["gko", "terraform"] as const;
 
 type ProvisionerFactory<P> = () => Provisioner<P> | Promise<Provisioner<P>>;
 

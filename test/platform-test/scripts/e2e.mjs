@@ -22,8 +22,10 @@
  *
  *   npm run e2e -- --provision-with gko --run-up-to-version 4.12.0 [playwright args]
  *
- *   --provision-with <gko|terraform>  Run only one provisioner lane.
- *                                     -> E2E_PROVISIONER (case-sensitive @tag grep).
+ *   --provision-with <id>             Run only one provisioner lane (see
+ *                                     src/provisioners/registry.ts for the
+ *                                     known ids). -> E2E_PROVISIONER
+ *                                     (case-sensitive @tag grep).
  *   --run-up-to-version <semver>      Run only features available at that version,
  *                                     i.e. skip tests tagged @since-<newer>.
  *                                     -> E2E_MAX_VERSION (enforced in e2e/setup.ts).
@@ -37,10 +39,11 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { PROVISIONER_ORDER } from "../dist/provisioners/registry.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG = path.resolve(__dirname, "../e2e/playwright.config.ts");
-const PROVISIONERS = ["gko", "terraform"];
+const PROVISIONERS = PROVISIONER_ORDER;
 
 function die(message) {
   console.error(`[e2e] ${message}`);

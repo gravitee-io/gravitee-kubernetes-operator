@@ -17,31 +17,38 @@
 import { defineConfig } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { PROVISIONER_LANES } from "../src/provisioners/registry.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Optional provisioner-lane filter, set by `scripts/e2e.mjs` from
 // `--provision-with <p>` (or directly via the env var in CI).
 //
-// A lane = that provisioner's OWN tests + the matching arm of every shared
-// scenario. Legacy single-provisioner tests live under `tests/gko/` or
-// `tests/terraform/`; shared `*.scenario.ts` files emit one arm per provisioner,
-// each tagged `@gko` / `@terraform`. So we select a lane by (1) IGNORING the other
-// provisioner's folder and (2) DROPPING the other arm from shared scenarios via a
-// case-sensitive grepInvert (case-sensitive on purpose: Playwright's --grep CLI
-// flag is case-insensitive, so a bare `@gko` there would also match every
-// `@GKO-1234` Xray tag). This makes `--provision-with gko` run the FULL GKO suite,
-// not just the migrated scenarios.
+// A lane = that provisioner's OWN tests (if any) + the matching arm of every
+// shared scenario. Legacy single-provisioner tests live under `tests/<segment>/`
+// per `PROVISIONER_LANES[].testDirSegment`; shared `*.scenario.ts` files emit
+// one arm per provisioner, each tagged with `PROVISIONER_LANES[].tag`. So we
+// select a lane by (1) IGNORING every OTHER lane's legacy folder and (2)
+// DROPPING every other lane's arm from shared scenarios via a case-sensitive
+// grepInvert (case-sensitive on purpose: Playwright's --grep CLI flag is
+// case-insensitive, so a bare `@gko` there would also match every `@GKO-1234`
+// Xray tag). This makes `--provision-with gko` run the FULL GKO suite, not
+// just the migrated scenarios. A lane with no `testDirSegment` (e.g. a
+// provisioner that only ever appears via shared scenarios) simply contributes
+// no ignore pattern for its own folder.
 const provisioner = process.env["E2E_PROVISIONER"]?.trim().toLowerCase();
-let laneTestIgnore: RegExp | undefined;
-let laneGrepInvert: RegExp | undefined;
-if (provisioner === "gko") {
-  laneTestIgnore = /[/\\]tests[/\\]terraform[/\\]/;
-  laneGrepInvert = /@terraform\b/;
-} else if (provisioner === "terraform") {
-  laneTestIgnore = /[/\\]tests[/\\]gko[/\\]/;
-  laneGrepInvert = /@gko\b/;
-}
+const lane = PROVISIONER_LANES.find((l) => l.id === provisioner);
+const otherLanes = lane ? PROVISIONER_LANES.filter((l) => l.id !== lane.id) : [];
+const otherTestDirSegments = otherLanes
+  .map((l) => l.testDirSegment)
+  .filter((segment): segment is string => Boolean(segment));
+const laneTestIgnore: RegExp | undefined = otherTestDirSegments.length
+  ? new RegExp(String.raw`[/\\]tests[/\\](${otherTestDirSegments.join("|")})[/\\]`)
+  : undefined;
+const otherTags = otherLanes.map((l) => l.tag).join("|");
+const laneGrepInvert: RegExp | undefined = otherTags
+  ? new RegExp(otherTags + String.raw`\b`)
+  : undefined;
 if (provisioner) {
   console.log(`[e2e] provisioner lane: ${provisioner}`);
 }
