@@ -294,14 +294,20 @@ jobs:
               kubectl get pods -A -o wide
               echo "===== gateway pods ====="
               kubectl -n gateway-conformance-infra describe pods
+              echo "===== httproutes ====="
+              kubectl get httproutes -A -o yaml
+              echo "===== generated api definitions ====="
+              kubectl get apiv4definitions.gravitee.io -A -o yaml
+              echo "===== generated route config maps ====="
+              kubectl get cm -A -l gio-type=apidefinitions.gravitee.io -o yaml
               echo "===== operator reconcile errors ====="
               kubectl -n default logs deployment/gko-controller-manager --tail=-1 \
                 | grep "Requeuing reconcile of resource" || echo "none"
-              echo "===== operator logs ====="
-              kubectl -n default logs deployment/gko-controller-manager --tail=2000
               echo "===== gateway logs ====="
               kubectl -n gateway-conformance-infra logs -l app.kubernetes.io/component=gateway \
-                --all-containers --prefix --tail=50
+                --all-containers --prefix --tail=-1
+              echo "===== operator logs ====="
+              kubectl -n default logs deployment/gko-controller-manager --tail=-1
             } > "$DUMP" 2>&1 || true
             tail -c 100000 "$DUMP"
       - store_artifacts:
