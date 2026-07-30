@@ -23,7 +23,9 @@ e2e:  ## Run all end to end tests (Playwright)
 	npm --prefix test/platform-test run e2e
 
 CONFORMANCE_TIMEOUT ?= 30m
+CONFORMANCE_JUNIT_FILE ?= /tmp/junit/reports/conformance.xml
 
 .PHONY: conformance
 conformance: ## Run conformance tests
-	go tool gotestsum --format=testname --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -timeout $(CONFORMANCE_TIMEOUT) -args --gateway-class=gravitee-gateway
+	@mkdir -p $(dir $(CONFORMANCE_JUNIT_FILE))
+	go tool gotestsum --format=testname --junitfile $(CONFORMANCE_JUNIT_FILE) --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -timeout $(CONFORMANCE_TIMEOUT) -args --gateway-class=gravitee-gateway
