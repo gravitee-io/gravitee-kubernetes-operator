@@ -283,11 +283,32 @@ jobs:
           name: Dump cluster state
           when: on_fail
           command: |
-            kubectl get gateways,pods -A -o wide || true
-            kubectl -n gateway-conformance-infra describe pods || true
-            kubectl -n gateway-conformance-infra logs -l app.kubernetes.io/component=gateway \
-              --all-containers --prefix --tail=200 || true
-            kubectl -n default logs deployment/gko-controller-manager --tail=200 || true
+            DUMP=/tmp/cluster-dump.txt
+            {
+              echo "===== gateways ====="
+              kubectl get gateways -A -o wide
+              echo "===== gateway status conditions ====="
+              kubectl get gateways -A -o yaml
+              echo "===== gateway deployments (labels and ownerReferences) ====="
+              kubectl get deploy -A -l app.kubernetes.io/component=gateway -o yaml
+              echo "===== pods ====="
+              kubectl get pods -A -o wide
+              echo "===== gateway pods ====="
+              kubectl -n gateway-conformance-infra describe pods
+              echo "===== operator reconcile errors ====="
+              kubectl -n default logs deployment/gko-controller-manager --tail=-1 \
+                | grep "Requeuing reconcile of resource" || echo "none"
+              echo "===== operator logs ====="
+              kubectl -n default logs deployment/gko-controller-manager --tail=2000
+              echo "===== gateway logs ====="
+              kubectl -n gateway-conformance-infra logs -l app.kubernetes.io/component=gateway \
+                --all-containers --prefix --tail=50
+            } > "$DUMP" 2>&1 || true
+            tail -c 100000 "$DUMP"
+      - store_artifacts:
+          path: /tmp/cluster-dump.txt
+          destination: cluster-dump.txt
+          when: on_fail
       - store_test_results:
           path: /tmp/junit/reports
           when: always
