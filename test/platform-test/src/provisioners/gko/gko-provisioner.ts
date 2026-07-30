@@ -18,6 +18,7 @@ import * as kubectl from "../engines/kubectl.js";
 import type { Provisioned, Provisioner, Role } from "../types.js";
 import { BaseProvisioned } from "../base.js";
 import type { GkoChecks } from "./checks.js";
+import type { GkoView } from "./view.js";
 
 /** The kubectl engine surface a parameterized apply step receives. */
 export type KubectlEngine = typeof kubectl;
@@ -105,6 +106,49 @@ function resolveBinding<P>(spec: ResolvedGkoSpec<P>, role: Role): GkoRoleBinding
   return binding;
 }
 
+/**
+ * Builds the GKO `ProvisionerView`: "did MY layer land this role?", answered
+ * purely from the CR's own condition/status — never from mAPI (that's what
+ * `mapi` assertions are for). MUST throw when it cannot yet tell (no CR
+ * resource yet observed the condition type at all), rather than return an
+ * ambiguous state — see {@link ProvisionerView}.
+ */
+/** @internal exported only for unit testing; not part of the package's public surface. */
+export function buildGkoView<P>(spec: ResolvedGkoSpec<P>): GkoView {
+  return {
+    async read(role: Role) {
+      const b = resolveBinding(spec, role);
+      if (!(await kubectl.exists(b.kind, b.name, spec.namespace))) {
+        return { state: "gone", detail: { reason: "NotFound" } };
+      }
+      const conditionType = b.readyCondition ?? "Accepted";
+      const condition = await kubectl.getCondition(b.kind, b.name, conditionType, spec.namespace);
+      if (!condition) {
+        throw new Error(
+          `GKO ${b.kind}/${b.name} has no "${conditionType}" condition yet; cannot determine state`,
+        );
+      }
+      if (condition.status === "Unknown") {
+        throw new Error(
+          `GKO ${b.kind}/${b.name} condition "${conditionType}" is Unknown; cannot determine state`,
+        );
+      }
+      if (condition.status === "True") {
+        return { state: "applied", detail: { reason: condition.reason, condition } };
+      }
+      const status = await kubectl.getStatus<{ errors?: { severe?: string[] } }>(
+        b.kind,
+        b.name,
+        spec.namespace,
+      );
+      return {
+        state: "failed",
+        detail: { reason: condition.reason, condition, severeErrors: status?.errors?.severe },
+      };
+    },
+  };
+}
+
 function buildGkoChecks<P>(spec: ResolvedGkoSpec<P>): GkoChecks {
   return {
     provisionerId: "gko",
@@ -145,11 +189,13 @@ async function teardownGko<P>(spec: ResolvedGkoSpec<P>): Promise<void> {
 class GkoProvisioned<P> extends BaseProvisioned<P> {
   readonly provisionerId = "gko" as const;
   readonly checks: GkoChecks;
+  readonly view: GkoView;
   private readonly idCache = new Map<string, string>();
 
   constructor(private readonly spec: ResolvedGkoSpec<P>) {
     super();
     this.checks = buildGkoChecks(spec);
+    this.view = buildGkoView(spec);
   }
 
   protected async resolveId(role: Role): Promise<string> {

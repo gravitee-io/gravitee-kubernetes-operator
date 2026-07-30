@@ -28,6 +28,8 @@ export type {
   Provisioner,
   ProvisionerChecks,
 } from "./types.js";
+export { assertProvisioner } from "./view.js";
+export type { ProvisionerState, ProvisionerViewResult, ProvisionerView } from "./view.js";
 
 // ── GKO ───────────────────────────────────────────────────────
 export { GkoProvisioner } from "./gko/gko-provisioner.js";
@@ -39,6 +41,7 @@ export type {
 } from "./gko/gko-provisioner.js";
 export { isGko } from "./gko/checks.js";
 export type { GkoChecks } from "./gko/checks.js";
+export type { GkoView, GkoViewDetail } from "./gko/view.js";
 export { subscriptionYaml, apiKeySecretYaml } from "./gko/subscription-yaml.js";
 export type { SubscriptionYamlOptions, ApiKeyEntry } from "./gko/subscription-yaml.js";
 

@@ -15,6 +15,7 @@
  */
 
 import type { Provisioned, ProvisionerChecks, ProvisionerId, Role } from "./types.js";
+import type { ProvisionerView } from "./view.js";
 
 /** Build the internal role string from a kind + optional disambiguating label. */
 function roleFor(kind: string, label?: string): Role {
@@ -31,6 +32,7 @@ function roleFor(kind: string, label?: string): Role {
 export abstract class BaseProvisioned<P = unknown> implements Provisioned<P> {
   abstract readonly provisionerId: ProvisionerId;
   abstract readonly checks: ProvisionerChecks;
+  abstract readonly view: ProvisionerView;
 
   /** Resolve a logical role to its APIM id (UUID). Resolved once, then cached. */
   protected abstract resolveId(role: Role): Promise<string>;

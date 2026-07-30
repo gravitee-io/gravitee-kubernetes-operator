@@ -99,6 +99,33 @@ export async function getStatus<T = unknown>(
   return resource.status;
 }
 
+/** A single entry of a Kubernetes `status.conditions[]` list-map. */
+export interface K8sCondition {
+  type: string;
+  status: "True" | "False" | "Unknown";
+  reason: string;
+  message: string;
+  lastTransitionTime: string;
+  observedGeneration?: number;
+}
+
+/**
+ * Read one condition (e.g. "Accepted") off a resource's `.status.conditions[]`,
+ * or undefined if that condition hasn't been reported yet. Unlike
+ * {@link waitForCondition} (which delegates entirely to `kubectl wait` and never
+ * inspects the condition value), this returns the condition itself so a caller
+ * can distinguish True/False/Unknown and read its reason/message.
+ */
+export async function getCondition(
+  kind: string,
+  name: string,
+  type: string,
+  namespace = NAMESPACE,
+): Promise<K8sCondition | undefined> {
+  const status = await getStatus<{ conditions?: K8sCondition[] }>(kind, name, namespace);
+  return status?.conditions?.find((c) => c.type === type);
+}
+
 /** Assert that a Kubernetes event for the given resource contains a message substring. */
 export async function assertEventContains(
   kind: string,

@@ -25,6 +25,7 @@
  */
 
 import type { ProvisionerId } from "./registry.js";
+import type { ProvisionerView } from "./view.js";
 
 /** Which provisioner created a resource. Re-exported for existing importers. */
 export type { ProvisionerId };
@@ -83,6 +84,12 @@ export interface Provisioned<P = unknown> {
 
   /** Provisioner-specific assertions (narrow with `isGko`/`isTerraform`). */
   readonly checks: ProvisionerChecks;
+
+  /**
+   * Provisioner-internal, agnostic readout ("did MY layer land this role?").
+   * Usable from shared scenario bodies without narrowing, unlike `checks`.
+   */
+  readonly view: ProvisionerView;
 }
 
 /**
