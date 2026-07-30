@@ -242,20 +242,27 @@ func programGroupConfigMap(ctx context.Context, gw *gwAPIv1.Gateway, group []map
 		},
 	}
 
-	err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		existing := &v1.ConfigMap{}
-		getErr := k8s.GetClient().Get(ctx, client.ObjectKeyFromObject(cm), existing)
-		if errors.IsNotFound(getErr) {
-			return k8s.GetClient().Create(ctx, cm)
-		}
-		if getErr != nil {
-			return getErr
-		}
-		existing.Labels = cm.Labels
-		existing.Data = cm.Data
-		existing.SetOwnerReferences(cm.GetOwnerReferences())
-		return k8s.GetClient().Update(ctx, existing)
-	})
+	// Routes sharing a group share this config map, so concurrent reconciles can race to
+	// create it. The client reads from a cache, so the loser of that race sees a stale not
+	// found and its create fails with already exists. Retrying re-reads and updates instead.
+	err = retry.OnError(
+		retry.DefaultBackoff,
+		func(err error) bool { return errors.IsConflict(err) || errors.IsAlreadyExists(err) },
+		func() error {
+			existing := &v1.ConfigMap{}
+			getErr := k8s.GetClient().Get(ctx, client.ObjectKeyFromObject(cm), existing)
+			if errors.IsNotFound(getErr) {
+				return k8s.GetClient().Create(ctx, cm)
+			}
+			if getErr != nil {
+				return getErr
+			}
+			existing.Labels = cm.Labels
+			existing.Data = cm.Data
+			existing.SetOwnerReferences(cm.GetOwnerReferences())
+			return k8s.GetClient().Update(ctx, existing)
+		},
+	)
 	if err != nil {
 		return "", err
 	}
