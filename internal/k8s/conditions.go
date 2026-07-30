@@ -428,6 +428,11 @@ func IsAccepted(obj core.ConditionAware) bool {
 	return accepted != nil && accepted.Status == ConditionStatusTrue
 }
 
+func IsProgrammed(obj core.ConditionAware) bool {
+	programmed := GetCondition(obj, ConditionProgrammed)
+	return programmed != nil && programmed.Status == ConditionStatusTrue
+}
+
 func IsAutomationAPIManaged(obj core.ConditionAware) bool {
 	automationAPIManaged := GetCondition(obj, AutomationAPIManaged)
 	return automationAPIManaged != nil && automationAPIManaged.Status == ConditionStatusTrue
