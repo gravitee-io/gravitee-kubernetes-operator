@@ -24,8 +24,10 @@
  * resolves to an APIM id. Add a provisioner by implementing this interface.
  */
 
-/** Which provisioner created a resource. */
-export type ProvisionerId = "gko" | "terraform";
+import type { ProvisionerId } from "./registry.js";
+
+/** Which provisioner created a resource. Re-exported for existing importers. */
+export type { ProvisionerId };
 
 /**
  * A logical role within a scenario, mapped per-provisioner to a concrete resource.
@@ -102,9 +104,10 @@ export interface Provisioner<P = unknown> {
   cleanup?(): Promise<void>;
 
   /**
-   * Reserved seam for upgrade testing (provision -> upgrade cluster ->
-   * re-assert): rebuild a handle from stable HRIDs after the original in-memory
-   * state is gone. Not implemented yet; throws if called.
+   * Seam for upgrade testing (provision -> upgrade cluster -> re-assert):
+   * rebuild a handle from stable HRIDs after the original in-memory state is
+   * gone. Optional because not every provisioner implements it (GKO does;
+   * Terraform does not yet).
    */
   attach?(refs: Partial<Record<Role, { hrid: string }>>): Promise<Provisioned<P>>;
 }

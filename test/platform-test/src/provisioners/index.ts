@@ -16,6 +16,10 @@
 
 /** Public surface of the provisioner layer. */
 
+// ── Registry ──────────────────────────────────────────────────
+export { PROVISIONER_ORDER, PROVISIONER_LANES } from "./registry.js";
+export type { ProvisionerLane } from "./registry.js";
+
 // ── Core abstraction ──────────────────────────────────────────
 export type {
   ProvisionerId,
