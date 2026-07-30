@@ -105,11 +105,8 @@ var DefaultReadinessProbe = &coreV1.Probe{
 	},
 }
 
-// The startup probe is deliberately generous: it only gates when the liveness and
-// readiness probes take over, so a slow starting gateway is not killed and restarted
-// on a busy node. FailureThreshold x PeriodSeconds gives the gateway 10 minutes to boot.
 var DefaultStartupProbe = &coreV1.Probe{
-	FailureThreshold:    300,
+	FailureThreshold:    100,
 	InitialDelaySeconds: 5,
 	PeriodSeconds:       2,
 	SuccessThreshold:    1,

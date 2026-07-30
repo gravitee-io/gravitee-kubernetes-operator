@@ -48,6 +48,11 @@ import (
 
 var errSkipObject = errors.New("object should be skipped and this error should not be returned to the user")
 
+// The deployment watch is what normally re-triggers a reconcile once the gateway deployment
+// becomes ready. This poll is the safety net for when no such event reaches us, so that a
+// gateway can never stay stuck waiting to be programmed.
+const gatewayProgrammedRequeueInterval = 10 * time.Second
+
 type Reconciler struct {
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
@@ -173,6 +178,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	if result, shouldRequeue := checkGatewayProgrammed(ctx, gw); shouldRequeue {
+		return result, nil
+	}
+
 	log.Debug(ctx, "Looking for service address ...")
 	if result, shouldRequeue := checkLoadBalancerAddress(ctx, gw); shouldRequeue {
 		return result, nil
@@ -182,12 +191,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	return ctrl.Result{}, nil
 }
 
-func checkLoadBalancerAddress(ctx context.Context, gw *gateway.Gateway) (ctrl.Result, bool) {
-	programmed := k8s.GetCondition(gw, k8s.ConditionProgrammed)
-	if programmed == nil {
+func checkGatewayProgrammed(ctx context.Context, gw *gateway.Gateway) (ctrl.Result, bool) {
+	if k8s.IsProgrammed(gw) {
 		return ctrl.Result{}, false
 	}
-	if programmed.Status != k8s.ConditionStatusTrue {
+
+	log.Debug(ctx, "Gateway is not programmed yet, requeuing gateway")
+	return ctrl.Result{RequeueAfter: gatewayProgrammedRequeueInterval}, true
+}
+
+func checkLoadBalancerAddress(ctx context.Context, gw *gateway.Gateway) (ctrl.Result, bool) {
+	if !k8s.IsProgrammed(gw) {
 		return ctrl.Result{}, false
 	}
 	if len(gw.Object.Status.Addresses) > 0 {
@@ -225,8 +239,7 @@ func checkLoadBalancerAddress(ctx context.Context, gw *gateway.Gateway) (ctrl.Re
 }
 
 func updateGatewayAddressesIfNeeded(ctx context.Context, gw *gateway.Gateway) error {
-	programmed := k8s.GetCondition(gw, k8s.ConditionProgrammed)
-	if programmed == nil || programmed.Status != k8s.ConditionStatusTrue {
+	if !k8s.IsProgrammed(gw) {
 		return nil
 	}
 
