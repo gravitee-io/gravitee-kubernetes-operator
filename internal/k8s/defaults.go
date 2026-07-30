@@ -89,10 +89,10 @@ var DefaultLivenessProbe = &coreV1.Probe{
 }
 
 var DefaultReadinessProbe = &coreV1.Probe{
-	FailureThreshold: 2,
+	FailureThreshold: 3,
 	PeriodSeconds:    10,
 	SuccessThreshold: 1,
-	TimeoutSeconds:   2,
+	TimeoutSeconds:   5,
 	ProbeHandler: coreV1.ProbeHandler{
 		HTTPGet: &coreV1.HTTPGetAction{
 			HTTPHeaders: []coreV1.HTTPHeader{
@@ -105,8 +105,11 @@ var DefaultReadinessProbe = &coreV1.Probe{
 	},
 }
 
+// The startup probe is deliberately generous: it only gates when the liveness and
+// readiness probes take over, so a slow starting gateway is not killed and restarted
+// on a busy node. FailureThreshold x PeriodSeconds gives the gateway 10 minutes to boot.
 var DefaultStartupProbe = &coreV1.Probe{
-	FailureThreshold:    100,
+	FailureThreshold:    300,
 	InitialDelaySeconds: 5,
 	PeriodSeconds:       2,
 	SuccessThreshold:    1,
