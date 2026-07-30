@@ -19,6 +19,7 @@ import type { TfWorkspace } from "../engines/terraform-core.js";
 import type { Provisioned, Provisioner, Role } from "../types.js";
 import { BaseProvisioned } from "../base.js";
 import type { TerraformChecks } from "./checks.js";
+import type { TerraformView } from "./view.js";
 
 /** Convention mapping a role to a default `terraform output` name. */
 const DEFAULT_OUTPUT_BY_ROLE: Record<string, string> = {
@@ -36,6 +37,15 @@ export interface TfScenarioSpec<P = unknown> {
   env: Record<string, string>;
   /** role -> terraform output name. Defaults: api->api_id, subscription->sub_id, application->app_id. */
   outputs?: Partial<Record<Role, string>>;
+  /**
+   * role -> terraform resource address (e.g. "apim_apiv4.test"), for
+   * `view.read()`. No default: unlike outputs, resource LOCAL NAMES are not
+   * standardized across fixtures (confirmed: existing fixtures use "test",
+   * "app", "dict", "group", "spg" ...), so guessing one would silently point
+   * `view.read()` at the wrong resource instead of failing loudly. Declare it
+   * per scenario for any role that needs `view`/`assertProvisioner`.
+   */
+  addresses?: Partial<Record<Role, string>>;
   /** Output name for the gateway context path. Default "api_context_path". */
   contextPathOutput?: string;
   /** Map params -> tfvars written before each apply (provision + update). */
@@ -60,9 +70,53 @@ function outputNameFor<P>(spec: TfScenarioSpec<P>, role: Role): string {
   return name;
 }
 
-function buildTerraformChecks(ws: TfWorkspace): TerraformChecks {
+function addressFor<P>(spec: TfScenarioSpec<P>, role: Role): string {
+  const address = spec.addresses?.[role];
+  if (!address) {
+    throw new Error(
+      `Terraform scenario has no resource address mapped for role "${role}"; ` +
+        `cannot determine view state. Add it to the scenario's \`addresses\` map ` +
+        `(e.g. { ${role}: "apim_apiv4.test" }).`,
+    );
+  }
+  return address;
+}
+
+/**
+ * Builds the Terraform `ProvisionerView`: "did MY layer land this role?",
+ * answered purely from the workspace's OWN state (`terraform show -json`),
+ * never from mAPI. Deliberately reads STATE, not a fresh `plan` — a plan
+ * re-reads the platform via the provider, which would make this a platform
+ * check (that's `mapi`'s job). MUST throw when it cannot tell (no address
+ * declared for the role) rather than return an ambiguous state.
+ */
+/** @internal exported only for unit testing; not part of the package's public surface. */
+export function buildTerraformView<P>(ws: TfWorkspace, spec: TfScenarioSpec<P>): TerraformView {
+  return {
+    async read(role: Role) {
+      const address = addressFor(spec, role);
+      const { resources } = await tfCore.showState(ws);
+      const resource = resources.find((r) => r.address === address);
+      if (!resource) {
+        return { state: "gone", detail: { reason: "not in state", address } };
+      }
+      if (resource.tainted) {
+        return { state: "failed", detail: { reason: "tainted", address } };
+      }
+      return { state: "applied", detail: { reason: "in state, not tainted", address } };
+    },
+  };
+}
+
+function buildTerraformChecks<P>(ws: TfWorkspace, spec: TfScenarioSpec<P>): TerraformChecks {
   return {
     provisionerId: "terraform",
+    async taint(role: Role) {
+      await tfCore.taint(ws, addressFor(spec, role));
+    },
+    async untaint(role: Role) {
+      await tfCore.untaint(ws, addressFor(spec, role));
+    },
     async assertNoDrift() {
       const { hasChanges, stdout } = await tfCore.plan(ws);
       if (hasChanges) {
@@ -90,6 +144,7 @@ function buildTerraformChecks(ws: TfWorkspace): TerraformChecks {
 class TerraformProvisioned<P> extends BaseProvisioned<P> {
   readonly provisionerId = "terraform" as const;
   readonly checks: TerraformChecks;
+  readonly view: TerraformView;
   private readonly idCache = new Map<string, string>();
   private contextPathCache?: string;
 
@@ -99,7 +154,8 @@ class TerraformProvisioned<P> extends BaseProvisioned<P> {
     private lastVars: Record<string, unknown>,
   ) {
     super();
-    this.checks = buildTerraformChecks(ws);
+    this.checks = buildTerraformChecks(ws, spec);
+    this.view = buildTerraformView(ws, spec);
   }
 
   protected async resolveId(role: Role): Promise<string> {

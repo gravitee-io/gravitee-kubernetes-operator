@@ -204,6 +204,38 @@ export async function output(ws: TfWorkspace, name: string): Promise<string> {
   return stdout.trim();
 }
 
+/** One resource instance as reported by `terraform show -json`'s state representation. */
+export interface TfStateResource {
+  address: string;
+  /** Present (true) only when the resource is tainted; absent otherwise. Confirmed via `terraform show -json` against a live `terraform taint`/`untaint` cycle — not documented as a stable field name upstream, so re-verify if the pinned CLI version changes. */
+  tainted?: boolean;
+}
+
+/** Run `terraform taint <address>`, marking the resource for replacement on next apply. */
+export async function taint(ws: TfWorkspace, address: string): Promise<void> {
+  await tf(ws, ["taint", address]);
+}
+
+/** Run `terraform untaint <address>`, clearing a previous {@link taint}. */
+export async function untaint(ws: TfWorkspace, address: string): Promise<void> {
+  await tf(ws, ["untaint", address]);
+}
+
+/**
+ * Read the CURRENT STATE (no plan, no refresh) via `terraform show -json`,
+ * returning each resource's address and whether it is tainted. Deliberately
+ * state-only, not a `plan`-based signal: a plan would re-read the platform via
+ * the provider, turning a provisioner-internal check into a platform check —
+ * that's `mapi`'s job, not this one's. See {@link TfStateResource.tainted}.
+ */
+export async function showState(ws: TfWorkspace): Promise<{ resources: TfStateResource[] }> {
+  const { stdout } = await tf(ws, ["show", "-json"]);
+  const parsed = JSON.parse(stdout) as {
+    values?: { root_module?: { resources?: TfStateResource[] } };
+  };
+  return { resources: parsed.values?.root_module?.resources ?? [] };
+}
+
 /** Run `terraform destroy -auto-approve`. */
 export async function destroy(ws: TfWorkspace): Promise<void> {
   await tf(ws, ["destroy", "-auto-approve", "-no-color"]);

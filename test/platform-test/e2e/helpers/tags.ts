@@ -420,6 +420,8 @@ export const XRAY = {
     CREATE_APP_AND_SUBSCRIPTION: "@GKO-1379",
     VALID_AND_MALFORMED_HCL: "@GKO-1453",
     GENERAL_CONDITIONS_PAGE: "@GKO-1930",
+    // Awaiting a real Xray ticket — run /xray-sync-tests to file it.
+    VIEW_DETECTS_TAINTED_RESOURCE: "@GKO-TBD-tf-view-tainted",
     // error handling in TF + delete-via-TF lifecycle.
     // GKO-1381 (Role-specific access for managing Apps and subscriptions
     // via Terraform) is not covered: the test harness has no

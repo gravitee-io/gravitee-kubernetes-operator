@@ -50,3 +50,4 @@ export { TerraformProvisioner } from "./terraform/terraform-provisioner.js";
 export type { TfScenarioSpec } from "./terraform/terraform-provisioner.js";
 export { isTerraform } from "./terraform/checks.js";
 export type { TerraformChecks } from "./terraform/checks.js";
+export type { TerraformView, TerraformViewDetail } from "./terraform/view.js";
