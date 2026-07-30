@@ -279,6 +279,18 @@ jobs:
           command: |
             make conformance
       - run:
+          name: Dump cluster state
+          when: on_fail
+          command: |
+            kubectl get gateways,pods -A -o wide || true
+            kubectl -n gateway-conformance-infra describe pods || true
+            kubectl -n gateway-conformance-infra logs -l app.kubernetes.io/component=gateway \
+              --all-containers --prefix --tail=200 || true
+            kubectl -n default logs deployment/gko-controller-manager --tail=200 || true
+      - store_test_results:
+          path: /tmp/junit/reports
+          when: always
+      - run:
           name: Scale down operator manager.image.repository
           command: |
             kubectl scale deployment gko-controller-manager -n default --replicas=0
