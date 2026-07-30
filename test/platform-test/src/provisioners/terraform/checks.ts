@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { ProvisionerChecks } from "../types.js";
+import type { ProvisionerChecks, Role } from "../types.js";
 
 /**
  * Terraform-specific assertions, reachable from a provisioned handle via
@@ -37,6 +37,12 @@ export interface TerraformChecks extends ProvisionerChecks {
 
   /** Raw `terraform plan` result, for bespoke drift/idempotency assertions. */
   plan(): Promise<{ stdout: string; hasChanges: boolean }>;
+
+  /** `terraform taint` the resource address mapped to `role` (requires `addresses` in the scenario spec). */
+  taint(role: Role): Promise<void>;
+
+  /** `terraform untaint` the resource address mapped to `role` (requires `addresses` in the scenario spec). */
+  untaint(role: Role): Promise<void>;
 }
 
 /** Narrow a provisioner-checks surface to the Terraform one. */
