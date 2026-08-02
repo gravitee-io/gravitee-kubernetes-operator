@@ -59,3 +59,15 @@ spec:
           containers:
           - name: gateway
             image: gateway:latest
+            env:
+            - name: GIO_MIN_MEM
+              value: 512m
+            - name: GIO_MAX_MEM
+              value: 512m
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: "1"
+                memory: 1Gi
