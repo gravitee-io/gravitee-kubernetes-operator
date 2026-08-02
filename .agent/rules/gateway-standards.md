@@ -92,6 +92,12 @@ consecutive greens per setup and state it next to the measured bound. Never repo
 fixed without that bound: "3 runs passed" is not a result, "0 failures in 50 targeted iterations
 plus 3 clean full runs" is.
 
+`make conformance` retries failed tests by default (`CONFORMANCE_RERUN`, see `hack/make/test.mk`).
+That keeps CI usable, and it makes a green run weaker evidence, because a green may contain tests
+that only passed on a retry. **Runs used as evidence must set `CONFORMANCE_RERUN=0`.** When reading
+a CI result, check the rerun report before treating green as green — a test that needed a retry is
+a test that failed.
+
 Flakiness work must be driven by observed failures — a CI junit message, a cluster dump, an
 operator or gateway log line — not by reading the code and reasoning about what could race. Code
 reasoning generates candidates; only an observed failure justifies a change.
