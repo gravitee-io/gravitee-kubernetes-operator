@@ -38,7 +38,7 @@ manager:
       cpu: 1
       memory: 1024Mi
     requests:
-      cpu: 1
+      cpu: 200m
       memory: 512Mi
   volumes:
     - name: coverage
