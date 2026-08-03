@@ -12,26 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-173 / GKO-179 / GKO-1466: V4 API with visibility=PUBLIC, lifecycleState=PUBLISHED.
+# The journey's API with a failover retry budget of 3. Both variants share
+# one CR name so update() re-applies over the previous one and the failover block
+# has to change in place.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-public-published
+  name: failover-api
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
-    name: dev-ctx
-    namespace: default
-  name: e2e-v4-public-published
+    name: "dev-ctx"
+    namespace: "default"
+  name: "failover-api"
+  description: "V4 proxy API with a failover policy on its endpoint group"
   version: "1.0"
-  description: "E2E test: V4 API with visibility PUBLIC and lifecycleState PUBLISHED"
   type: PROXY
   state: STARTED
-  visibility: PUBLIC
-  lifecycleState: PUBLISHED
+  failover:
+    enabled: true
+    maxRetries: 3
+    slowCallDuration: 500
+    openStateDuration: 5000
+    maxFailures: 5
+    perSubscription: false
   listeners:
     - type: HTTP
       paths:
-        - path: /e2e-v4-public-published
+        - path: "/failover-api"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -49,6 +58,6 @@ spec:
     matchRequired: false
   plans:
     KeyLess:
-      name: Free plan
+      name: "Free plan"
       security:
-        type: KEY_LESS
+        type: "KEY_LESS"

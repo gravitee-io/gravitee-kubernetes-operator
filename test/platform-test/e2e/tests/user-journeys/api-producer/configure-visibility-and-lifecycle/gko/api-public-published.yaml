@@ -12,26 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-172 / GKO-1466: V4 API with visibility=PRIVATE, lifecycleState=PUBLISHED.
+# The journey's API with visibility=PUBLIC, lifecycleState=PUBLISHED. All three
+# variants share one CR name, so the journey's update() re-applies over the
+# previous one and APIM has to change the record IN PLACE.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-private-published
+  name: portal-visibility-api
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
-    name: dev-ctx
-    namespace: default
-  name: e2e-v4-private-published
+    name: "dev-ctx"
+    namespace: "default"
+  name: "portal-visibility-api"
+  description: "V4 proxy API whose portal visibility and lifecycle state the journey changes"
   version: "1.0"
-  description: "E2E test: V4 API with visibility PRIVATE and lifecycleState PUBLISHED"
   type: PROXY
   state: STARTED
-  visibility: PRIVATE
+  visibility: PUBLIC
   lifecycleState: PUBLISHED
   listeners:
     - type: HTTP
       paths:
-        - path: /e2e-v4-private-published
+        - path: "/portal-visibility-api"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -49,6 +53,6 @@ spec:
     matchRequired: false
   plans:
     KeyLess:
-      name: Free plan
+      name: "Free plan"
       security:
-        type: KEY_LESS
+        type: "KEY_LESS"
