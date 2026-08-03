@@ -8,7 +8,7 @@ require (
 	github.com/onsi/ginkgo/v2 v2.28.0
 	github.com/onsi/gomega v1.40.0
 	github.com/zeebo/xxh3 v1.0.2
-	golang.org/x/exp v0.0.0-20260718201538-764159d718ef
+	golang.org/x/exp v0.0.0-20260727155853-b88d891fe743
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/apimachinery v0.36.3
 	k8s.io/client-go v0.36.3
