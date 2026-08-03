@@ -63,32 +63,50 @@ in particular carries a rich inline surface:
 
 ## Where coverage stands
 
-Of the ~290 tests in `tests/gko/`:
+Of the ~241 tests left in `tests/gko/`:
 
 | Bucket | Approx | Notes |
 |---|--:|---|
-| Covered by a shared journey | ~35 | the 13 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
-| **Migratable, not yet migrated** | **~100** | see the backlog below |
-| Genuinely GKO-only | ~155 | Kubernetes/operator mechanics + V2 |
+| Covered by a shared journey | ~75 | the 20 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
+| **Migratable, not yet migrated** | **~30** | see the backlog below |
+| Genuinely GKO-only | ~210 | Kubernetes/operator mechanics + V2 |
+
+### Migrated
+
+Each row is a journey now running against **both** provisioners. The GKO ids are
+carried on the journey's GKO arm and the source tests are deleted; the split rule
+(admission/rejection cases move to the matching `tests/gko/` domain folder rather
+than into the journey) applied throughout.
+
+| Area | Journey [persona] | Notes |
+|---|---|---|
+| V4 API visibility / lifecycle / delete | `configure-visibility-and-lifecycle` [producer] | the three portal combinations, in place, then retire |
+| V4 API failover | `configure-endpoint-failover` [producer] | every field of the nested block, then a retry-budget change |
+| Message-API entrypoints | variants inside `publish-a-message-api` [producer] | http-get / http-post / sse / websocket, each with its own version + description |
+| V4 API members | `manage-api-members` [admin] | whole member set per stage, so a duplicated entry fails |
+| API ↔ group association | `associate-groups-with-an-api` [admin] | group provisioned first; APIM drops unknown refs silently |
+| Group members | folded into `create-group-with-member` [admin] | the member is now a resolvable service account and is asserted |
+| Application members | `manage-application-members` [consumer] | as above, on `apim_application.members` |
+| Application settings + metadata | folded into `register-and-retire-application` [consumer] | metadata read from its own endpoint; the detail response omits it |
+| API notifications (V4) | `configure-api-notifications` [producer] | GKO's Notification CR vs TF's inline block, same PORTAL setting |
+| Pages — V4 inline | `document-an-api` [producer] | ship, revise (rename + rewrite + visibility), remove |
+| Policies on a flow | `apply-policies-to-a-flow` [producer] | asserted at the **gateway**, not only in the definition |
+| Subscriptions — JWT / OAuth2 | `subscribe-to-a-secured-plan` [consumer] | auto-validated despite `MANUAL` plans |
 
 ### Migratable, not yet migrated
 
-Each row is a journey to author (persona folder in brackets). Confirm the
-attribute on `origin/main` before writing the Terraform arm.
+| Area | Tests | Terraform path | Journey [persona] | Why not yet |
+|---|--:|---|---|---|
+| mTLS certs — inline content only | subset of 29 | `apim_application.settings.tls.client_certificate` | `authenticate-with-client-certificate` [consumer] | the suite's mTLS tests build certs and CRs inline in TypeScript rather than from fixtures, so migrating them is a rewrite rather than a move; the heavy mTLS suite also has its own load-related instability |
+| Plan lifecycle (publish/close via CR) | 2 | `apim_apiv4.plans` | `manage-plan-lifecycle` [producer] | small, and entangled with `Subscription` immutability which is GKO-only |
+| API metadata | 0 | `apim_apiv4.metadata` | `manage-api-metadata` [admin] | there is nothing to migrate — no test covers V4 API metadata today. This is **new coverage**, not a migration |
 
-| Area | Tests | Terraform path | Journey [persona] |
-|---|--:|---|---|
-| V4 API lifecycle / visibility | ~32 | `state` `visibility` `lifecycle_state` `failover` | `configure-visibility-and-lifecycle` [producer] |
-| V4 API members | ~25 | `apim_apiv4.members` `notify_members` | `manage-api-members` [admin] |
-| Subscriptions — JWT / OAuth2 / mTLS / manual | ~15 | `apim_subscription` | `subscribe-with-*`, `request-manual-approval` [consumer] |
-| Application members + OAuth/app settings | ~12 | `apim_application.members` `settings.oauth` | `manage-application-members`, `configure-application-oauth-settings` [consumer/admin] |
-| API notifications (V4) | ~11 | `apim_apiv4.console_notification` | `configure-api-notifications` [producer] |
-| Pages — V4 inline + standalone | ~10 | `apim_apiv4.pages` + `apim_documentation_api` | `document-an-api` [producer] |
-| Message-API entrypoints | ~8 | `apim_apiv4.listeners` | variants inside `publish-a-message-api` [producer] |
-| Plans / policies lifecycle | ~8 | `apim_apiv4.plans` `flows` | `apply-policies-to-a-flow`, `manage-plan-lifecycle` [producer] |
-| mTLS certs — inline content only | subset of 28 | `apim_application.settings.tls.client_certificate` | `authenticate-with-client-certificate` [consumer] |
-| API metadata / group association | few | `apim_apiv4.metadata` `groups` | `manage-api-metadata`, `associate-groups-with-an-api` [admin] |
-| Group members | ~8 | `apim_group.members` | fold into `create-group-with-member` [admin] |
+### Not expressible through Terraform (found while migrating)
+
+| Case | Why |
+|---|---|
+| A member declared with **no role** (API or application) | the Automation API's `Member` schema marks `role` non-nullable, so the generated provider rejects omitting it. GKO can omit it and APIM defaults to `USER` — kept as a GKO-only test |
+| Turning a console notification **off** | GKO-3085: the Automation API answers HTTP 500 (`organizationId must not be empty`) to an empty `events` list, and `console_notification = null` is a Terraform no-op. GKO removes the reference; kept as `@GKO-1238` |
 
 Blocked: **`reuse-shared-policy-group`** — GKO-3001 (admission rejects the
 documented `sharedPolicyGroupRef` flow form because it does not resolve the ref
@@ -103,7 +121,7 @@ for a second provisioner to do. They live in `tests/gko/`.
 
 | Area | Tests | Why |
 |---|--:|---|
-| Admission webhooks | 27 | CRD schema / dry-run validation at the Kubernetes admission layer |
+| Admission webhooks | 28 | CRD schema / dry-run validation at the Kubernetes admission layer |
 | mTLS certificates via Secret refs | subset of 29 | resolved from cluster Secrets, not inline content |
 | Deployment & reconciliation | 15 | CR `.status` conditions, observedGeneration, operator restart |
 | Import / export | 10 | YAML CRD round-trips |
