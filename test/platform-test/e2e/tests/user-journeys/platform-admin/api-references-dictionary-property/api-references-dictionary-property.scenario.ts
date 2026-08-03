@@ -32,11 +32,11 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test, expect } from "../../../setup.js";
-import { loadGraviteeConfig, poll } from "../../../../src/index.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
-import { forEachProvisioner } from "../../../helpers/for-each-provisioner.js";
-import { gkoScenario, tfScenario } from "../../../helpers/provisioner-env.js";
+import { test, expect } from "../../../../setup.js";
+import { loadGraviteeConfig, poll } from "../../../../../src/index.js";
+import { XRAY, TAGS } from "../../../../helpers/tags.js";
+import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
+import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
 import {
   manualDictionaryYaml,
   tfManualDictVars,
@@ -47,7 +47,7 @@ import {
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 async function gatewayBaseUrl(): Promise<string> {
-  const config = await loadGraviteeConfig(path.resolve(here, "../../../../config.yaml"));
+  const config = await loadGraviteeConfig(path.resolve(here, "../../../../../config.yaml"));
   return config.gateway?.baseUrl ?? "http://localhost:30082";
 }
 

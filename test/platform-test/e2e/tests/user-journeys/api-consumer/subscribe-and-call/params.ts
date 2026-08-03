@@ -28,7 +28,7 @@ import {
   subscriptionYaml,
   type ApiKeyEntry,
   type KubectlEngine,
-} from "../../../../src/provisioners/index.js";
+} from "../../../../../src/provisioners/index.js";
 
 /** This journey folder — fixtures are co-located under gko/ and terraform/. */
 const here = path.dirname(fileURLToPath(import.meta.url));

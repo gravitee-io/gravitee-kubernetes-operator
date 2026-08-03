@@ -22,17 +22,17 @@
  * of the shared matrix.
  */
 
-import { test, expect } from "../../../setup.js";
-import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
-import * as kubectl from "../../../helpers/kubectl.js";
-import { gkoScenario } from "../../../helpers/provisioner-env.js";
+import { test, expect } from "../../../../setup.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../../helpers/tags.js";
+import * as kubectl from "../../../../helpers/kubectl.js";
+import { gkoScenario } from "../../../../helpers/provisioner-env.js";
 import {
   isGko,
   subscriptionYaml,
   apiKeySecretYaml,
   type Provisioner,
   type Provisioned,
-} from "../../../../src/provisioners/index.js";
+} from "../../../../../src/provisioners/index.js";
 import { APIKEY_GKO, gkoApplyApiKeys, uniqueKey, RUN_ID, type ApiKeyParams } from "./params.js";
 
 /** Full GKO provisioner (API + app + an api-key subscription named `subName`). */

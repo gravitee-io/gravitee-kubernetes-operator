@@ -1,6 +1,6 @@
-# Journey: stand up a message (event) API
+# Journey: publish a message (event) API
 
-**As an event API producer, I stand up a MESSAGE (event) API.**
+**As an event API producer, I publish a MESSAGE (event) API.**
 
 Provision a V4 MESSAGE API (HTTP-GET + webhook subscription entrypoints over a
 mock message endpoint). The same journey runs against both provisioners.

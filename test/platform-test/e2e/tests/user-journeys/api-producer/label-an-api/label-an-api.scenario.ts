@@ -29,10 +29,10 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
-import { forEachProvisioner } from "../../../helpers/for-each-provisioner.js";
-import { gkoScenario, tfScenario } from "../../../helpers/provisioner-env.js";
+import { test, expect } from "../../../../setup.js";
+import { XRAY, TAGS } from "../../../../helpers/tags.js";
+import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
+import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const LABELS = ["internal", "partner"];

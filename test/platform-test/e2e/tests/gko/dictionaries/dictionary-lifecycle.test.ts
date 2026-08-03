@@ -23,7 +23,7 @@
  *
  * GKO-2903 (manual resolve) and the DYNAMIC resolve + lifecycle tests
  * (GKO-2904/2909/2910/2911) are now cross-provisioner journeys under
- * tests/user-journeys/ (api-references-dictionary-property and
+ * tests/user-journeys/platform-admin/ (api-references-dictionary-property and
  * manage-dynamic-dictionary), so they are intentionally not duplicated here.
  * What remains here is GKO-specific and has no Terraform counterpart: plain CR
  * deletion (finalizer release) and the K8s admission webhook.

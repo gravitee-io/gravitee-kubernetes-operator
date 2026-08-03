@@ -149,7 +149,7 @@ test.describe(`Policies — Lifecycle ${PROVISIONER.GKO}`, () => {
 
   // ── GKO-269: Non-existing category ───────────────────────────
   // Assigning and removing a valid category (@GKO-267 / @GKO-270) is covered by
-  // the cross-provisioner journey tests/user-journeys/assign-categories-to-api/.
+  // the cross-provisioner journey tests/user-journeys/api-producer/assign-categories-to-api/.
   // This case covers the GKO-only behaviour that an unknown category reference is
   // tolerated: the API still deploys.
 

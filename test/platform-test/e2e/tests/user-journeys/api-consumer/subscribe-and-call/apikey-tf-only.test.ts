@@ -25,11 +25,11 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test, expect } from "../../../setup.js";
-import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
-import * as terraform from "../../../helpers/terraform.js";
-import { tfScenario } from "../../../helpers/provisioner-env.js";
-import { isTerraform, type Provisioned } from "../../../../src/provisioners/index.js";
+import { test, expect } from "../../../../setup.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../../helpers/tags.js";
+import * as terraform from "../../../../helpers/terraform.js";
+import { tfScenario } from "../../../../helpers/provisioner-env.js";
+import { isTerraform, type Provisioned } from "../../../../../src/provisioners/index.js";
 import { tfApiKeyVars, uniqueKey, RUN_ID, type ApiKeyParams } from "./params.js";
 
 /** Co-located terraform fixture for the custom-key subscription. */
