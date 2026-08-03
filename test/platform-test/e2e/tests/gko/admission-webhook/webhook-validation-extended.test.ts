@@ -22,12 +22,14 @@
  *   GKO-77:  V4 API with non-OAS errors (e.g. invalid endpoint URL)
  *   GKO-78:  Create V4 API with invalid credentials in management context
  *   GKO-153: V2 API page with invalid parentPath
+ *   GKO-165: Create V4 proxy API with missing required fields
  *   GKO-166: Create V4 message API with missing required fields
  *   GKO-281: V4 API page with invalid parentPath
  *   GKO-1477: Cross-version confirmation for parentPath validation (piggybacks GKO-281)
  *   GKO-414: Create V4 API with non-existing ManagementContext
  *   GKO-465: Using non-existing management context
- *   GKO-502: V4 API has no plans and state=STARTED (also in lifecycle tests)
+ *   GKO-502: V4 API has no plans and state=STARTED
+ *   GKO-503: V4 API has no plans and state=STOPPED (accepted)
  *   GKO-520: V4 API with invalid cron expression in page fetcher
  *   GKO-590: V2 API with duplicate context path
  *   GKO-591: V2-V4 context path conflict
@@ -52,6 +54,7 @@ test.describe(`Webhook Validation — Extended ${PROVISIONER.GKO}`, () => {
       "crds/api-v4-definitions/v4-proxy-api-started.yaml",
       "crds/invalid/v4-api-non-oas-errors.yaml",
       "crds/invalid/v2-api-context-path-local-false.yaml",
+      "api-lifecycle/v4-no-plans-stopped/crd.yaml",
     ]) {
       await kubectl.del(fixture(f)).catch(() => {});
     }
@@ -59,7 +62,7 @@ test.describe(`Webhook Validation — Extended ${PROVISIONER.GKO}`, () => {
 
   // ── GKO-76: Non-OAS-compliant CRD ───────────────────────────
 
-  test(`Deploy CRD not compliant with OAS ${XRAY.WEBHOOKS.NON_OAS_COMPLIANT_V4} ${TAGS.REGRESSION}`, async ({
+  test(`Deploy CRD not compliant with OAS ${XRAY.WEBHOOKS.NON_OAS_COMPLIANT_V4} ${XRAY.API_LIFECYCLE.MISSING_REQUIRED_FIELDS_V4_PROXY} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     // The existing v4-proxy-api-invalid.yaml is missing listeners (required field)
@@ -71,7 +74,7 @@ test.describe(`Webhook Validation — Extended ${PROVISIONER.GKO}`, () => {
 
   // ── GKO-166: V4 message API missing required fields ──────────
 
-  test(`Create V4 message API with missing required fields ${XRAY.WEBHOOKS.MISSING_FIELDS_V4_MESSAGE} ${TAGS.REGRESSION}`, async ({
+  test(`Create V4 message API with missing required fields ${XRAY.WEBHOOKS.MISSING_FIELDS_V4_MESSAGE} ${XRAY.API_LIFECYCLE.UPDATE_V4_MESSAGE_MISSING_FIELDS} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     // Message APIs also require listeners — reuse the invalid fixture which omits them
@@ -101,6 +104,24 @@ test.describe(`Webhook Validation — Extended ${PROVISIONER.GKO}`, () => {
       fixture("api-lifecycle/v4-no-plans-started/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toContain("plan");
+  });
+
+  // ── GKO-503: No plans + STOPPED (accepted) ──────────────────
+
+  test(`V4 API with no plans and STOPPED is accepted ${XRAY.API_LIFECYCLE.NO_PLANS_STOPPED_V4} ${TAGS.REGRESSION}`, async ({
+    kubectl,
+    mapi,
+  }) => {
+    const API_NAME = "e2e-v4-no-plans-stopped";
+    const fixturePath = fixture("api-lifecycle/v4-no-plans-stopped/crd.yaml");
+
+    await kubectl.apply(fixturePath);
+    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
+
+    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
+    await mapi.assertApiStopped(status.id);
+
+    await kubectl.del(fixturePath);
   });
 
   // ── GKO-78/474: Invalid credentials in ManagementContext ─────

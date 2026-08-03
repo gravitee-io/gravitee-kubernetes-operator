@@ -44,9 +44,9 @@ test.describe(`V4 API Validation & Reconciliation — Extended ${PROVISIONER.GKO
     }
   });
 
-  // ── GKO-1476: Context path conflict ─────────────────────────
+  // ── GKO-1476/469: Context path conflict ─────────────────────
 
-  test(`Context path conflict between two V4 APIs ${XRAY.VALIDATION.V4_CONTEXT_PATH_CONFLICT} ${TAGS.REGRESSION}`, async ({
+  test(`Context path conflict between two V4 APIs ${XRAY.VALIDATION.V4_CONTEXT_PATH_CONFLICT} ${XRAY.API_LIFECYCLE.CONTEXT_PATH_CONFLICT_V4} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {
     const firstFixture = fixture("api-lifecycle/v4-started/crd.yaml");

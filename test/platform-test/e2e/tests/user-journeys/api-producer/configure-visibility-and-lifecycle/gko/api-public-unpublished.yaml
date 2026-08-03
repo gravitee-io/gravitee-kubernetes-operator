@@ -12,33 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The journey's API with visibility=PUBLIC, lifecycleState=UNPUBLISHED. All three
+# variants share one CR name, so the journey's update() re-applies over the
+# previous one and APIM has to change the record IN PLACE.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-failover
+  name: portal-visibility-api
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-failover"
-  description: "E2E test: V4 Proxy API with failover configuration"
-  version: "1.0.0"
+  name: "portal-visibility-api"
+  description: "V4 proxy API whose portal visibility and lifecycle state the journey changes"
+  version: "1.0"
   type: PROXY
   state: STARTED
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
-  failover:
-    enabled: true
-    maxRetries: 3
-    slowCallDuration: 500
-    openStateDuration: 5000
-    maxFailures: 5
-    perSubscription: false
+  visibility: PUBLIC
+  lifecycleState: UNPUBLISHED
   listeners:
     - type: HTTP
       paths:
-        - path: "/e2e-v4-failover"
+        - path: "/portal-visibility-api"
       entrypoints:
         - type: http-proxy
           qos: AUTO

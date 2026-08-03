@@ -60,7 +60,10 @@ forEachProvisioner<LabelParams>(
       }),
     },
     xray: {
-      gko: XRAY.CATEGORIES.V4_LABELS_LIFECYCLE,
+      gko: [
+        XRAY.CATEGORIES.V4_LABELS_LIFECYCLE,
+        XRAY.API_LIFECYCLE.DEPLOY_V4_WITH_LABELS_CATEGORIES,
+      ],
       terraform: XRAY.TERRAFORM.API_LABELS_TF,
     },
     tags: [TAGS.REGRESSION],

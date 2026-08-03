@@ -15,18 +15,19 @@
  */
 
 /**
- * V4 Proxy API Lifecycle tests.
+ * V4 Proxy API deployment & reconciliation, through the operator.
  *
  * Xray tests:
  *   GKO-71:  Deploy V4 Proxy API with syncFrom Management
- *   GKO-140: Delete a V4 API
- *   GKO-165: Create V4 proxy API with missing required fields
  *   GKO-176: Should not deploy when no changes are made to V4 CRD
  *   GKO-212: API is re-deployed when applying the same CRD after a delete
- *   GKO-469: Context path already exists
- *   GKO-502: No plans + STARTED → error
- *   GKO-503: No plans + STOPPED → OK
- *   GKO-859: Add Failover to V4 Proxy API
+ *
+ * What a customer reaches through Terraform too moved to shared journeys:
+ * deleting an API and the visibility/lifecycle matrix (GKO-140) to
+ * configure-visibility-and-lifecycle, failover (GKO-859) to
+ * configure-endpoint-failover, labels (GKO-83) to label-an-api, the message-API
+ * update (GKO-141) to publish-a-message-api. The admission rejections
+ * (GKO-165/469/502/503/142) moved to tests/gko/admission-webhook.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -37,23 +38,13 @@ import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
-test.describe(`V4 Proxy API — Lifecycle ${PROVISIONER.GKO}`, () => {
+test.describe(`V4 Proxy API — Deployment & reconciliation ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
-  // cleanup. Each del() ignores errors (the resource may already be gone).
-  // These names are shared across test files, so a leak here cascades into
-  // unrelated suites — always remove them.
+  // cleanup. The del() ignores errors (the resource may already be gone).
+  // This name is shared across test files, so a leak here cascades into
+  // unrelated suites — always remove it.
   test.afterEach(async () => {
-    for (const f of [
-      "crds/api-v4-definitions/v4-proxy-api-sync-from-mgmt.yaml",
-      "crds/api-v4-definitions/v4-proxy-api-conflict-path.yaml",
-      "crds/api-v4-definitions/v4-proxy-api-no-plans-started.yaml",
-      "crds/api-v4-definitions/v4-proxy-api-no-plans-stopped.yaml",
-      "crds/api-v4-definitions/v4-proxy-api-with-failover.yaml",
-      "crds/api-v4-definitions/v4-proxy-api-with-labels-categories.yaml",
-      "crds/api-v4-definitions/v4-message-api-mock.yaml",
-    ]) {
-      await kubectl.del(fixture(f)).catch(() => {});
-    }
+    await kubectl.del(fixture("api-v4-definitions/sync-from-mgmt/crd.yaml")).catch(() => {});
   });
 
   // ── GKO-71: Deploy with syncFrom Management ──────────────────
@@ -80,55 +71,6 @@ test.describe(`V4 Proxy API — Lifecycle ${PROVISIONER.GKO}`, () => {
     });
 
     await kubectl.del(fixture("api-v4-definitions/sync-from-mgmt/crd.yaml"));
-  });
-
-  // ── GKO-140: Delete a V4 API ─────────────────────────────────
-
-  test(`Delete a V4 API ${XRAY.API_LIFECYCLE.DELETE_V4_API} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-    gateway,
-  }) => {
-    const API_NAME = "e2e-v4-sync-mgmt";
-    const API_PATH = "/e2e-v4-sync-mgmt";
-    const fixturePath = fixture("api-v4-definitions/sync-from-mgmt/crd.yaml");
-
-    await test.step("Deploy API", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("Verify API exists and is reachable", async () => {
-      await mapi.assertApiStarted(apiId);
-      await gateway.assertResponds(API_PATH, { status: 200 });
-    });
-
-    await test.step("Delete the CRD", async () => {
-      await kubectl.del(fixturePath);
-      await kubectl.waitForDeletion("apiv4definition", API_NAME);
-    });
-
-    await test.step("API is gone from APIM", async () => {
-      await mapi.assertApiHttpStatus(apiId, 404);
-    });
-
-    await test.step("Gateway no longer responds for the path", async () => {
-      await gateway.assertResponds(API_PATH, { status: 404 });
-    });
-  });
-
-  // ── GKO-165: Missing required fields ─────────────────────────
-
-  test(`Create V4 proxy API with missing required fields ${XRAY.API_LIFECYCLE.MISSING_REQUIRED_FIELDS_V4_PROXY} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const stderr = await kubectl.applyExpectFailure(
-      fixture("admission-webhook/v4-invalid-spec/crd.yaml"),
-    );
-    expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
   });
 
   // ── GKO-212: Re-deploy after delete ──────────────────────────
@@ -164,174 +106,6 @@ test.describe(`V4 Proxy API — Lifecycle ${PROVISIONER.GKO}`, () => {
     });
 
     await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-469: Context path already exists ─────────────────────
-
-  test(`Context path conflict is rejected ${XRAY.API_LIFECYCLE.CONTEXT_PATH_CONFLICT_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const fixturePath1 = fixture("api-v4-definitions/sync-from-mgmt/crd.yaml");
-    const fixturePath2 = fixture("admission-webhook/v4-conflict-path/crd.yaml");
-
-    await test.step("Deploy first API", async () => {
-      await kubectl.apply(fixturePath1);
-      await kubectl.waitForCondition("apiv4definition", "e2e-v4-sync-mgmt", "Accepted");
-    });
-
-    await test.step("Second API with same path is rejected", async () => {
-      const stderr = await kubectl.applyExpectFailure(fixturePath2);
-      expect(stderr.toLowerCase()).toContain("context path");
-    });
-
-    await kubectl.del(fixturePath1);
-    // Clean up the failed one too in case it was partially created
-    await kubectl.del(fixturePath2);
-  });
-
-  // ── GKO-502: No plans + STARTED → error ─────────────────────
-
-  test(`V4 API with no plans and STARTED state fails ${XRAY.API_LIFECYCLE.NO_PLANS_STARTED_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const stderr = await kubectl.applyExpectFailure(
-      fixture("api-lifecycle/v4-no-plans-started/crd.yaml"),
-    );
-    expect(stderr.toLowerCase()).toContain("plan");
-  });
-
-  // ── GKO-503: No plans + STOPPED → OK ────────────────────────
-
-  test(`V4 API with no plans and STOPPED state succeeds ${XRAY.API_LIFECYCLE.NO_PLANS_STOPPED_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-no-plans-stopped";
-    const fixturePath = fixture("api-lifecycle/v4-no-plans-stopped/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    await mapi.assertApiStopped(status.id);
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-859: Failover configuration ─────────────────────────
-
-  test(`V4 Proxy API with failover configuration ${XRAY.API_LIFECYCLE.FAILOVER_V4_PROXY} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-    gateway,
-  }) => {
-    const API_NAME = "e2e-v4-failover";
-    const API_PATH = "/e2e-v4-failover";
-    const fixturePath = fixture("api-lifecycle/v4-failover/crd.yaml");
-
-    await test.step("Deploy API with failover", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API has failover config in APIM", async () => {
-      await mapi.assertApiMatches(apiId, {
-        name: API_NAME,
-        state: "STARTED",
-        failover: {
-          enabled: true,
-          maxRetries: 3,
-        },
-      });
-    });
-
-    await test.step("API is reachable on gateway", async () => {
-      await gateway.assertResponds(API_PATH, { status: 200 });
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-83: Deploy V4 API with labels ────────────────────────
-
-  test(`Deploy V4 API with labels and categories ${XRAY.API_LIFECYCLE.DEPLOY_V4_WITH_LABELS_CATEGORIES} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-labels-cats";
-    const fixturePath = fixture("categories/v4-with-labels/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const api = await mapi.fetchApi(status.id);
-
-    expect(api.labels).toBeTruthy();
-    expect(api.labels!.length).toBeGreaterThanOrEqual(2);
-    expect(api.labels).toContain("e2e-label-1");
-    expect(api.labels).toContain("e2e-label-2");
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-141: Update a V4 message API ─────────────────────────
-
-  test(`Update a V4 message API ${XRAY.API_LIFECYCLE.UPDATE_V4_MESSAGE_API} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-message-mock";
-    const createFixture = fixture("message-apis/mock/crd.yaml");
-    const updateFixture = fixture("message-apis/mock-updated/crd.yaml");
-
-    await test.step("Deploy message API", async () => {
-      await kubectl.apply(createFixture);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("Update message API", async () => {
-      await kubectl.apply(updateFixture);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("Changes are reflected in APIM", async () => {
-      await mapi.waitForApiMatches(apiId, {
-        description: "E2E test: V4 Message API updated description",
-        apiVersion: "2.0.0",
-      });
-    });
-
-    await kubectl.del(updateFixture);
-  });
-
-  // ── GKO-142: Update V4 message API with missing fields ───────
-
-  test(`Update V4 message API with missing fields is rejected ${XRAY.API_LIFECYCLE.UPDATE_V4_MESSAGE_MISSING_FIELDS} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const API_NAME = "e2e-v4-message-mock";
-    const createFixture = fixture("message-apis/mock/crd.yaml");
-
-    await test.step("Deploy valid message API", async () => {
-      await kubectl.apply(createFixture);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("Update with invalid CRD (missing listeners) is rejected", async () => {
-      const stderr = await kubectl.applyExpectFailure(
-        fixture("admission-webhook/v4-invalid-spec/crd.yaml"),
-      );
-      expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
-    });
-
-    await kubectl.del(createFixture);
   });
 
   // ── GKO-176: No-op when CRD unchanged ───────────────────────
