@@ -63,100 +63,12 @@ test.describe(`Terraform — Groups · Resource lifecycle @since-4.12 ${PROVISIO
     if (ws) await terraform.destroyWorkspace(ws);
   });
 
-  // Moved to the terraform arm of the shared tests/user-journeys/create-group-with-member/create-group-with-member.scenario.ts
+  // Moved to the terraform arm of the shared tests/user-journeys/platform-admin/create-group-with-member/create-group-with-member.scenario.ts
   // (create group -> lands in APIM with origin KUBERNETES), tagged @GKO-2865.
-
-  test(`notify_members is propagated to APIM ${XRAY.TERRAFORM.GROUP_NOTIFY_MEMBERS} ${TAGS.REGRESSION}`, async ({
-    mapi,
-  }) => {
-    // notify_members (TF) is the inverse of disable_membership_notifications
-    // (APIM wire). The fixture default is notify_members = true.
-    await mapi.waitForGroupMatches(groupHrid, { disable_membership_notifications: false });
-  });
 
   test(`terraform plan shows no changes ${XRAY.TERRAFORM.GROUP_IDEMPOTENT} ${TAGS.REGRESSION}`, async () => {
     const result = await terraform.plan(ws);
     expect(result.hasChanges).toBe(false);
-  });
-});
-
-// ── In-place update ─────────────────────────────────────────────────
-
-test.describe(`Terraform — Groups · Update @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
-  test(`terraform apply updates a group in place ${XRAY.TERRAFORM.GROUP_UPDATE} ${TAGS.REGRESSION}`, async ({
-    mapi,
-  }) => {
-    // Three sequential applies plus init/destroy — size the timeout above the
-    // per-process TF_TIMEOUT_MS ceiling for that many calls.
-    test.setTimeout(terraform.TF_TIMEOUT_MS * 9);
-
-    const HRID = "e2e-tf-group-update";
-    const ws = await terraform.initWorkspace("groups/lifecycle");
-    try {
-      let groupId: string;
-
-      await test.step("Create the baseline group", async () => {
-        await terraform.writeVars(ws, {
-          hrid_suffix: "update",
-          group_name: "e2e-tf-group-update",
-          notify_members: true,
-        });
-        await terraform.apply(ws);
-        groupId = await terraform.output(ws, "group_id");
-        await mapi.waitForGroupMatches(HRID, { name: "e2e-tf-group-update" });
-      });
-
-      await test.step("Rename the group — same id, no replacement", async () => {
-        await terraform.writeVars(ws, {
-          hrid_suffix: "update",
-          group_name: "e2e-tf-group-update-renamed",
-          notify_members: true,
-        });
-        await terraform.apply(ws);
-        // hrid is unchanged, so the deterministic group id must be stable —
-        // the update is in-place, not a destroy + recreate.
-        const idAfter = await terraform.output(ws, "group_id");
-        expect(idAfter).toBe(groupId);
-        await mapi.waitForGroupMatches(HRID, { name: "e2e-tf-group-update-renamed" });
-      });
-
-      await test.step("Flip notify_members to false", async () => {
-        await terraform.writeVars(ws, {
-          hrid_suffix: "update",
-          group_name: "e2e-tf-group-update-renamed",
-          notify_members: false,
-        });
-        await terraform.apply(ws);
-        await mapi.waitForGroupMatches(HRID, { disable_membership_notifications: true });
-      });
-    } finally {
-      await terraform.destroyWorkspace(ws);
-    }
-  });
-});
-
-// ── Destroy ─────────────────────────────────────────────────────────
-
-test.describe(`Terraform — Groups · Destroy @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
-  test(`terraform destroy removes the group from APIM ${XRAY.TERRAFORM.GROUP_DESTROY} ${TAGS.REGRESSION}`, async ({
-    mapi,
-  }) => {
-    test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
-
-    const HRID = "e2e-tf-group-destroy";
-    const ws = await terraform.initWorkspace("groups/lifecycle");
-    try {
-      await terraform.writeVars(ws, { hrid_suffix: "destroy", group_name: HRID });
-      await terraform.apply(ws);
-      await mapi.waitForGroupMatches(HRID, { name: HRID });
-
-      await terraform.destroy(ws);
-      await mapi.waitForGroupAbsent(HRID);
-    } finally {
-      // destroy already ran; destroyWorkspace re-runs it as a no-op and
-      // removes the temp dir.
-      await terraform.destroyWorkspace(ws);
-    }
   });
 });
 

@@ -34,14 +34,27 @@ variable "organization_id" {
   default = "DEFAULT"
 }
 
+variable "group_name" {
+  type    = string
+  default = "simple-group-tf"
+}
+
+# Gates the resource so the journey's remove("group") can drop it from the
+# desired state and re-apply, the way a user deletes a resource block.
+variable "create_group" {
+  type    = bool
+  default = true
+}
+
 resource "apim_group" "group" {
+  count           = var.create_group ? 1 : 0
   environment_id  = var.environment_id
   organization_id = var.organization_id
   hrid            = "simple-group-tf"
-  name            = "simple-group-tf"
-  notify_members  = true
+  name            = var.group_name
+  notify_members  = false
 }
 
 output "group_id" {
-  value = apim_group.group.id
+  value = var.create_group ? apim_group.group[0].id : ""
 }
