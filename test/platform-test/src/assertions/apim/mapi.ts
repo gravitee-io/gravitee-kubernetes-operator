@@ -23,7 +23,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember, Category, Page, PageTree } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember, ApiMember, ApplicationMember, ApplicationMetadataEntry, Category, Page, PageTree } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -127,6 +127,18 @@ export class Mapi {
         operator: "assertApiStatus",
       });
     }
+  }
+
+  /**
+   * Wait until the management API no longer knows the API (404). Deletion is
+   * eventually consistent on both write paths, so a single-shot 404 check right
+   * after a delete is a race.
+   */
+  async waitForApiAbsent(apiId: string, options: PollOptions = {}): Promise<void> {
+    await poll(
+      () => this.assertApiHttpStatus(apiId, 404),
+      { description: `API ${apiId} is absent`, ...options },
+    );
   }
 
   // ── Plan Assertions ─────────────────────────────────────────
@@ -604,6 +616,48 @@ export class Mapi {
    * asserts them at the API level here. The endpoint returns a `{ pages }`
    * envelope; the bare page list is returned.
    */
+  /**
+   * List the members of an API (v2 management API), primary owner included.
+   *
+   * Members are an inline attribute on both drivers (`spec.members` /
+   * `apim_apiv4.members`) with no standalone resource, so a journey asserts them
+   * at the API level here. The endpoint returns a paginated envelope; one page of
+   * 100 covers any realistic test fixture.
+   */
+  /** List the members of an application (v1 management API), primary owner included. */
+  async listApplicationMembers(appId: string): Promise<ApplicationMember[]> {
+    const path = this.http.managementV1Path(`/applications/${appId}/members`);
+    const res = await this.http.get<ApplicationMember[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list members for application ${appId}: ${res.status} ${res.statusText}`);
+    }
+    return res.body;
+  }
+
+  /**
+   * List an application's metadata entries (v1 management API).
+   *
+   * The application DETAIL endpoint omits metadata entirely, so an assertion on
+   * it has to come from here.
+   */
+  async listApplicationMetadata(appId: string): Promise<ApplicationMetadataEntry[]> {
+    const path = this.http.managementV1Path(`/applications/${appId}/metadata`);
+    const res = await this.http.get<ApplicationMetadataEntry[]>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list metadata for application ${appId}: ${res.status} ${res.statusText}`);
+    }
+    return res.body;
+  }
+
+  async listApiMembers(apiId: string): Promise<ApiMember[]> {
+    const path = this.http.managementV2Path(`/apis/${apiId}/members?page=1&perPage=100`);
+    const res = await this.http.get<{ data?: ApiMember[] }>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to list members for API ${apiId}: ${res.status} ${res.statusText}`);
+    }
+    return res.body.data ?? [];
+  }
+
   async listApiPages(apiId: string): Promise<Page[]> {
     const path = this.http.managementV2Path(`/apis/${apiId}/pages`);
     const res = await this.http.get<PageTree>(path);

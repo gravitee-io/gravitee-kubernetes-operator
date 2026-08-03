@@ -143,6 +143,56 @@ export class Gateway {
     );
   }
 
+  /**
+   * Assert that GET <path> comes back with the expected response headers,
+   * retrying until it does or the timeout expires.
+   *
+   * A policy that rewrites the response is only really proven at the gateway:
+   * the API definition can carry a flow that APIM records happily while the
+   * gateway never applies it. Header names are matched case-insensitively, the
+   * way HTTP defines them; a `null` expectation asserts the header is ABSENT,
+   * which is how "the policy stopped adding it" is checked.
+   */
+  async assertRespondsWithHeaders(
+    path: string,
+    expectedHeaders: Record<string, string | null>,
+    options: GatewayRespondOptions,
+    description?: string,
+  ): Promise<void> {
+    const url = this.buildUrl(path);
+    const { status: expected, headers = {} } = options;
+    const label = description ?? `GET ${url} → ${expected} + headers`;
+
+    await poll(
+      async () => {
+        const response = await this.fetchImpl(url, { method: "GET", headers });
+        const actual: Record<string, string | null> = {};
+        for (const name of Object.keys(expectedHeaders)) {
+          actual[name] = response.headers.get(name);
+        }
+        if (response.status !== expected) {
+          throw new AssertionError({
+            message: `${label}: actual status ${response.status} !== expected ${expected}`,
+            actual: response.status,
+            expected,
+            operator: "assertGatewayRespondsWithHeaders",
+          });
+        }
+        for (const [name, value] of Object.entries(expectedHeaders)) {
+          if (actual[name] !== value) {
+            throw new AssertionError({
+              message: `${label}: response header "${name}" was ${JSON.stringify(actual[name])}, expected ${JSON.stringify(value)}`,
+              actual: actual[name],
+              expected: value,
+              operator: "assertGatewayRespondsWithHeaders",
+            });
+          }
+        }
+      },
+      { ...this.pollOpts, description: label },
+    );
+  }
+
   private buildUrl(path: string): string {
     return `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
   }
