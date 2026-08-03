@@ -30,14 +30,14 @@
  */
 
 import { test, expect } from "../../setup.js";
-import { XRAY, TAGS } from "../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../helpers/tags.js";
 import * as terraform from "../../helpers/terraform.js";
 import type { TfWorkspace } from "../../helpers/terraform.js";
 
 let ws: TfWorkspace;
 let apiId: string;
 
-test.describe("Terraform — Extended Validation", () => {
+test.describe(`Terraform — Extended Validation ${PROVISIONER.TERRAFORM}`, () => {
   test.beforeAll(async () => {
     // initWorkspace (terraform init) + apply + output are sequential terraform
     // invocations, each capped at terraform.TF_TIMEOUT_MS. The hook timeout

@@ -37,9 +37,9 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 
-test.describe("V2 API Documentation — Fetchers", () => {
+test.describe(`V2 API Documentation — Fetchers ${PROVISIONER.GKO}`, () => {
   // ── GKO-620: Web fetcher requires URL ───────────────────────
 
   test(`V2 web fetcher without URL is rejected ${XRAY.PAGES.V2_WEB_FETCHER_NO_URL} ${TAGS.REGRESSION}`, async ({

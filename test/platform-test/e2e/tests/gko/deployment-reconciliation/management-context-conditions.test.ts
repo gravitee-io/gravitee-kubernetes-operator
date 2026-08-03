@@ -30,7 +30,7 @@
  */
 
 import { test, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 
 interface Condition {
   type?: string;
@@ -50,7 +50,7 @@ function conditionKeys(conditions: Condition[] | undefined): string[] {
   return Object.keys(first ?? {}).sort();
 }
 
-test.describe("Reconciliation — ManagementContext Conditions", () => {
+test.describe(`Reconciliation — ManagementContext Conditions ${PROVISIONER.GKO}`, () => {
   // ── GKO-1282: Standardised vocabulary ───────────────────────
 
   test(`ManagementContext status uses standardised condition vocabulary ${XRAY.DEPLOYMENT_RECONCILIATION.MGMT_CTX_CONDITION_VOCABULARY} ${TAGS.REGRESSION}`, async ({

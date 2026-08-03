@@ -30,7 +30,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const FIXTURE_505 = "applications/application-readonly/crd.yaml";
@@ -44,7 +44,7 @@ interface StatusWithId {
   conditions?: Array<{ type: string; status: string }>;
 }
 
-test.describe("Applications — admission & lifecycle", () => {
+test.describe(`Applications — admission & lifecycle ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(FIXTURE_505)).catch(() => {});
     await kubectlSafe.del(fixture(FIXTURE_1383)).catch(() => {});

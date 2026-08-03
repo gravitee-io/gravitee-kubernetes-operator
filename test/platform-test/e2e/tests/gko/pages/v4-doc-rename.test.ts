@@ -30,7 +30,7 @@
 
 import YAML from "yaml";
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const ORIGINAL = "pages/v4-api-with-page-markdown/crd.yaml";
@@ -51,7 +51,7 @@ interface ExportedCrd {
   };
 }
 
-test.describe("V4 Documentation — Rename & cross-version visibility", () => {
+test.describe(`V4 Documentation — Rename & cross-version visibility ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(RENAMED)).catch(() => {});
     await kubectlSafe.del(fixture(ORIGINAL)).catch(() => {});

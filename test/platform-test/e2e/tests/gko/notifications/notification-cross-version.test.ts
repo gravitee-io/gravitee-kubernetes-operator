@@ -27,14 +27,14 @@
  */
 
 import { test, fixture } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const NOTIFICATION = "notifications/notification-shared/crd.yaml";
 const V4_API = "notifications/v4-api-using-shared-notification/crd.yaml";
 const V2_API = "notifications/v2-api-using-shared-notification/crd.yaml";
 
-test.describe("Notification CR — Cross Version", () => {
+test.describe(`Notification CR — Cross Version ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V2_API)).catch(() => {});
     await kubectlSafe.del(fixture(V4_API)).catch(() => {});

@@ -29,10 +29,10 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
-test.describe("ManagementContext — Lifecycle", () => {
+test.describe(`ManagementContext — Lifecycle ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. Each del() ignores errors (the resource may already be gone).
   // NB: never delete dev-ctx — it is a shared precondition for the whole suite.

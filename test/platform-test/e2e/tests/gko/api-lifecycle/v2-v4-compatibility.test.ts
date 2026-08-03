@@ -27,13 +27,13 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const V2_MIN = "api-definitions/min/crd.yaml";
 const V4_MIN = "api-v4-definitions/min/crd.yaml";
 
-test.describe("API version compatibility — V2 & V4", () => {
+test.describe(`API version compatibility — V2 & V4 ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V2_MIN)).catch(() => {});
     await kubectlSafe.del(fixture(V4_MIN)).catch(() => {});

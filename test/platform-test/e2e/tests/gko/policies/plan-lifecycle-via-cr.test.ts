@@ -24,14 +24,14 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const TWO_PLANS = "plans/v4-two-plans/crd.yaml";
 const ONE_PLAN = "plans/v4-one-plan-remaining/crd.yaml";
 const API_NAME = "e2e-v4-two-plans";
 
-test.describe("Plan lifecycle — via CR", () => {
+test.describe(`Plan lifecycle — via CR ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(ONE_PLAN)).catch(() => {});
     await kubectlSafe.del(fixture(TWO_PLANS)).catch(() => {});

@@ -30,11 +30,11 @@
  */
 
 import { test, expect, fixture } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 
 const INVALID_FIXTURE = fixture("admission-webhook/v4-invalid-spec/crd.yaml");
 
-test.describe("Webhooks — Admission validation", () => {
+test.describe(`Webhooks — Admission validation ${PROVISIONER.GKO}`, () => {
   test.afterAll(async ({ kubectl }) => {
     // Guard: clean up in case the webhook failed to reject and the resource was created
     await kubectl.del(INVALID_FIXTURE);

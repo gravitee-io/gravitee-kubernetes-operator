@@ -35,7 +35,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
@@ -47,7 +47,7 @@ function acceptedStatus(status: StatusWithConditions): string | undefined {
   return status.conditions?.find((c) => c.type === "Accepted")?.status;
 }
 
-test.describe("V2 API Lifecycle & Mgmt Context — Extended", () => {
+test.describe(`V2 API Lifecycle & Mgmt Context — Extended ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe
       .del(fixture("management-context/v2-bad-update/crd.yaml"))

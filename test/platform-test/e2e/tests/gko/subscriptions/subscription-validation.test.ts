@@ -40,9 +40,9 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 
-test.describe("Subscriptions — Validation", () => {
+test.describe(`Subscriptions — Validation ${PROVISIONER.GKO}`, () => {
   // ── GKO-807: endingAt before start ───────────────────────────
 
   test(`Error when endingAt is before start ${XRAY.SUBSCRIPTIONS.ENDING_BEFORE_START} ${TAGS.REGRESSION}`, async ({

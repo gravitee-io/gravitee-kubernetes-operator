@@ -30,12 +30,16 @@ describe("provisioner registry", () => {
     expect(new Set(tags).size).toBe(tags.length);
   });
 
-  it("does not require testDirSegment (a lane may only appear via shared scenarios)", () => {
-    // Structural check, not a behavioral one: absence must be a valid, typed
-    // state (undefined), not an empty string or another falsy sentinel that
-    // would silently match every path.
+  it("gives no lane a tag that collides with the Xray tag namespace", () => {
+    // Lane selection greps titles for these tags, and titles also carry Xray ids
+    // like "@GKO-1234". A lane tag that is a case-insensitive prefix of that
+    // namespace (e.g. "@gko") only stays selective because playwright.config.ts
+    // greps case-SENSITIVELY with a trailing \b. Guard the assumption: a tag that
+    // matched "@GKO-1234" case-insensitively AND at a word boundary would silently
+    // select the entire suite for every lane.
     for (const lane of PROVISIONER_LANES) {
-      expect(lane.testDirSegment === undefined || lane.testDirSegment.length > 0).toBe(true);
+      const laneOnly = new RegExp(lane.tag + String.raw`\b`);
+      expect(laneOnly.test("Some test @GKO-1234")).toBe(false);
     }
   });
 });

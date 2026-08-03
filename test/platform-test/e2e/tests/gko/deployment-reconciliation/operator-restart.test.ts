@@ -26,7 +26,7 @@
 
 import { readFileSync } from "node:fs";
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 // Use a dedicated fixture (separate API name) so the slow post-restart
@@ -37,7 +37,7 @@ const ORIGINAL = "api-lifecycle/v4-restart/crd.yaml";
 const API_NAME = "e2e-v4-restart";
 const OPERATOR_DEPLOY = "gko-controller-manager";
 
-test.describe("Operator restart — recovery", () => {
+test.describe(`Operator restart — recovery ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(ORIGINAL)).catch(() => {});
   });

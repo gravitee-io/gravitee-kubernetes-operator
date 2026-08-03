@@ -29,7 +29,7 @@
  */
 
 import { test, expect, fixture } from "../../../setup.js";
-import { XRAY } from "../../../helpers/tags.js";
+import { XRAY, PROVISIONER } from "../../../helpers/tags.js";
 
 /** Create a service account in APIM (needed for group members). */
 async function createServiceAccount(mapi: { http: { managementV1Path(r: string): string; post<T>(p: string, b: unknown): Promise<{ status: number; body: T }> } }, name: string): Promise<void> {
@@ -48,7 +48,7 @@ async function createServiceAccount(mapi: { http: { managementV1Path(r: string):
 }
 
 
-test.describe("Notification Lifecycle @since-4.12", () => {
+test.describe(`Notification Lifecycle @since-4.12 ${PROVISIONER.GKO}`, () => {
   test(`Remove notification from API ${XRAY.NOTIFICATIONS.REMOVE_NOTIFICATION}`, async ({
     kubectl,
     mapi,

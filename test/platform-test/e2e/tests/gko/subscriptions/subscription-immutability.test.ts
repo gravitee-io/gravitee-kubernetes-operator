@@ -24,7 +24,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const V4_API = "plans/v4-jwt-oauth2/crd.yaml";
@@ -36,7 +36,7 @@ const API_NAME = "e2e-v4-sub-immutability";
 const APP_NAME = "e2e-app-simple";
 const SUB_NAME = "e2e-sub-plan-change";
 
-test.describe("Subscription — immutability", () => {
+test.describe(`Subscription — immutability ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(SUB_B)).catch(() => {});
     await kubectlSafe.del(fixture(SUB_A)).catch(() => {});

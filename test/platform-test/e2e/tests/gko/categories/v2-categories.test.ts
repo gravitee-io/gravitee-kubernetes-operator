@@ -35,7 +35,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
@@ -50,7 +50,7 @@ function acceptedTrue(status: StatusWithConditions): boolean {
   return status.conditions?.find((c) => c.type === "Accepted")?.status === "True";
 }
 
-test.describe("V2 API Categories — Extended", () => {
+test.describe(`V2 API Categories — Extended ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe
       .del(fixture("categories/v2-with/crd.yaml"))

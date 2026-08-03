@@ -31,7 +31,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const V4_API = "api-lifecycle/v4-started/crd.yaml";
@@ -39,7 +39,7 @@ const APP = "applications/application-simple/crd.yaml";
 const NOTIFICATION = "notifications/notification-shared/crd.yaml";
 const V4_API_WITH_NOTIF = "notifications/v4-api-using-shared-notification/crd.yaml";
 
-test.describe("CR-managed resources are read-only in APIM", () => {
+test.describe(`CR-managed resources are read-only in APIM ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V4_API)).catch(() => {});
     await kubectlSafe.del(fixture(APP)).catch(() => {});

@@ -37,13 +37,13 @@
  */
 
 import { test, expect } from "../../setup.js";
-import { XRAY, TAGS } from "../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../helpers/tags.js";
 import * as terraform from "../../helpers/terraform.js";
 import type { TfWorkspace } from "../../helpers/terraform.js";
 
 // ── Resource lifecycle (shared workspace, read-only assertions) ──────
 
-test.describe("Terraform — Groups · Resource lifecycle @since-4.12", () => {
+test.describe(`Terraform — Groups · Resource lifecycle @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
   let ws: TfWorkspace;
   let groupHrid: string;
 
@@ -82,7 +82,7 @@ test.describe("Terraform — Groups · Resource lifecycle @since-4.12", () => {
 
 // ── In-place update ─────────────────────────────────────────────────
 
-test.describe("Terraform — Groups · Update @since-4.12", () => {
+test.describe(`Terraform — Groups · Update @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
   test(`terraform apply updates a group in place ${XRAY.TERRAFORM.GROUP_UPDATE} ${TAGS.REGRESSION}`, async ({
     mapi,
   }) => {
@@ -137,7 +137,7 @@ test.describe("Terraform — Groups · Update @since-4.12", () => {
 
 // ── Destroy ─────────────────────────────────────────────────────────
 
-test.describe("Terraform — Groups · Destroy @since-4.12", () => {
+test.describe(`Terraform — Groups · Destroy @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
   test(`terraform destroy removes the group from APIM ${XRAY.TERRAFORM.GROUP_DESTROY} ${TAGS.REGRESSION}`, async ({
     mapi,
   }) => {
@@ -162,7 +162,7 @@ test.describe("Terraform — Groups · Destroy @since-4.12", () => {
 
 // ── Members ─────────────────────────────────────────────────────────
 
-test.describe("Terraform — Groups · Members @since-4.12", () => {
+test.describe(`Terraform — Groups · Members @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
   test(`member lifecycle — add and remove members ${XRAY.TERRAFORM.GROUP_MEMBER_LIFECYCLE} ${TAGS.REGRESSION}`, async ({
     mapi,
   }) => {
@@ -279,7 +279,7 @@ test.describe("Terraform — Groups · Members @since-4.12", () => {
 
 // ── Replacement, drift & import ──────────────────────────────────────
 
-test.describe("Terraform — Groups · Replacement, drift & import @since-4.12", () => {
+test.describe(`Terraform — Groups · Replacement, drift & import @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
   test(`changing the hrid replaces the group ${XRAY.TERRAFORM.GROUP_HRID_REPLACEMENT} ${TAGS.REGRESSION}`, async ({
     mapi,
   }) => {
@@ -361,7 +361,7 @@ test.describe("Terraform — Groups · Replacement, drift & import @since-4.12",
 
 // ── Schema validation (negative) ─────────────────────────────────────
 
-test.describe("Terraform — Groups · Validation @since-4.12", () => {
+test.describe(`Terraform — Groups · Validation @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
   test(`an invalid hrid is rejected by the provider ${XRAY.TERRAFORM.GROUP_INVALID_HRID} ${TAGS.REGRESSION}`, async () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 
@@ -397,7 +397,7 @@ test.describe("Terraform — Groups · Validation @since-4.12", () => {
 
 // ── Data source ─────────────────────────────────────────────────────
 
-test.describe("Terraform — Groups · Data source @since-4.12", () => {
+test.describe(`Terraform — Groups · Data source @since-4.12 ${PROVISIONER.TERRAFORM}`, () => {
   test(`data "apim_group" reads a group back by hrid ${XRAY.TERRAFORM.GROUP_DATA_SOURCE} ${TAGS.REGRESSION}`, async () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
 

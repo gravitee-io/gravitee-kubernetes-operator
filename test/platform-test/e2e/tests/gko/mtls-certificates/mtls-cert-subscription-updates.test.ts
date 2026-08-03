@@ -43,14 +43,14 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const APP_NO_CERTS = "mtls-certificates/app-no-certs/crd.yaml";
 const APP_VALID_CERT = "mtls-certificates/app-valid-cert/crd.yaml";
 const APP_PAST_END = "mtls-certificates/app-past-end/crd.yaml";
 
-test.describe("mTLS — clientCertificates visibility via mAPI", () => {
+test.describe(`mTLS — clientCertificates visibility via mAPI ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(APP_NO_CERTS)).catch(() => {});
     await kubectlSafe.del(fixture(APP_VALID_CERT)).catch(() => {});

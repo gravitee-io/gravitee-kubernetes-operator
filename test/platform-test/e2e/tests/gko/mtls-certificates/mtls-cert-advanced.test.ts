@@ -32,7 +32,7 @@
 
 import { readFile } from "node:fs/promises";
 import { test, expect, fixture } from "../../../setup.js";
-import { XRAY } from "../../../helpers/tags.js";
+import { XRAY, PROVISIONER } from "../../../helpers/tags.js";
 import { createTlsFetch } from "../../../../src/utils/http/tls.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
@@ -49,7 +49,7 @@ async function loadPki() {
   return { cert1, key1, cert2, key2, ca };
 }
 
-test.describe("mTLS Certificates — Dates, Refs, Rotation, Templates", () => {
+test.describe(`mTLS Certificates — Dates, Refs, Rotation, Templates ${PROVISIONER.GKO}`, () => {
   // Cleanup runs even when tests time out.
   test.afterAll(async () => {
     const files = [

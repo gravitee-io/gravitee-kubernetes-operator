@@ -41,7 +41,7 @@
  */
 
 import { test, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
 const V4_NAME = "e2e-gko2934-v4-edge";
@@ -125,7 +125,7 @@ spec:
 `;
 }
 
-test.describe("Admission — Enum value rejection", () => {
+test.describe(`Admission — Enum value rejection ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: schema-rejected resources are never persisted, but if a
   // regression makes admission accept one, remove it so it can't leak into
   // downstream tests. Each delete ignores errors (the resource is usually gone).

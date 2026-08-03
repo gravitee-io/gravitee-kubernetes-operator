@@ -39,7 +39,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 import type { ApiLifecycleState, ApiVisibility } from "../../../../src/types/apim.js";
 
@@ -52,7 +52,7 @@ interface StatusWithId {
   conditions?: Array<{ type: string; status: string }>;
 }
 
-test.describe("V4 API — Visibility & lifecycleState", () => {
+test.describe(`V4 API — Visibility & lifecycleState ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(PRIVATE_PUBLISHED)).catch(() => {});
     await kubectlSafe.del(fixture(PUBLIC_PUBLISHED)).catch(() => {});

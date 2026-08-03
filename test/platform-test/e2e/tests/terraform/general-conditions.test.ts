@@ -26,7 +26,7 @@
  */
 
 import { test, expect } from "../../setup.js";
-import { XRAY, TAGS } from "../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../helpers/tags.js";
 import * as terraform from "../../helpers/terraform.js";
 import type { TfWorkspace } from "../../helpers/terraform.js";
 
@@ -38,7 +38,7 @@ interface PlanWithGeneralConditions {
   generalConditions?: string;
 }
 
-test.describe("Terraform — Plan General Conditions", () => {
+test.describe(`Terraform — Plan General Conditions ${PROVISIONER.TERRAFORM}`, () => {
   test.beforeAll(async () => {
     // terraform init + apply + output on a fresh workspace blows past
     // Playwright's 30s default hook timeout. Use the shared workspace timeout,

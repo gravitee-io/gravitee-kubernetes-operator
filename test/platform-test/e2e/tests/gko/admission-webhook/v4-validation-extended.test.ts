@@ -28,10 +28,10 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
-test.describe("V4 API Validation & Reconciliation — Extended", () => {
+test.describe(`V4 API Validation & Reconciliation — Extended ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. Each del() ignores errors (the resource may already be gone).
   // Reverse dependency order: subscriptions → applications → APIs.

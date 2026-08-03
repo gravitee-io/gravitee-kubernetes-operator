@@ -58,7 +58,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const F = (name: string) => fixture(`mtls-certificates/invalid/${name}/crd.yaml`);
@@ -68,7 +68,7 @@ const F = (name: string) => fixture(`mtls-certificates/invalid/${name}/crd.yaml`
 // "invalid" or "denied" are intentionally excluded — they appear in almost
 // every admission/webhook error and would turn a real regression (e.g. the
 // admission path erroring for an unrelated reason) into a false pass.
-test.describe("mTLS — Application cert admission rejections", () => {
+test.describe(`mTLS — Application cert admission rejections ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     // Admission-rejected applies don't persist state, but be defensive in
     // case a scenario ever slips past admission — the safety net matches the

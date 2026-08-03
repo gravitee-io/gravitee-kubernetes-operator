@@ -32,17 +32,16 @@ export type ProvisionerId = (typeof PROVISIONER_ORDER)[number];
 export interface ProvisionerLane {
   readonly id: ProvisionerId;
   /**
-   * Legacy single-provisioner test folder (`e2e/tests/<segment>/`) to ignore
-   * when running a DIFFERENT provisioner's lane. Absent when the provisioner
-   * has no such legacy folder (e.g. a provisioner that only ever appears via
-   * shared `*.scenario.ts` files).
+   * Case-sensitive title tag identifying every test that runs through this
+   * provisioner — appended by `forEachProvisioner` to each generated arm, and
+   * written into the title of every provisioner-specific test. Lane selection
+   * is tag-only: no test's lane depends on which folder it sits in, so the tree
+   * can be reorganised without touching lane logic.
    */
-  readonly testDirSegment?: string;
-  /** Case-sensitive title tag appended to generated test titles, e.g. "@gko". */
   readonly tag: string;
 }
 
 export const PROVISIONER_LANES: readonly ProvisionerLane[] = [
-  { id: "gko", testDirSegment: "gko", tag: "@gko" },
-  { id: "terraform", testDirSegment: "terraform", tag: "@terraform" },
+  { id: "gko", tag: "@gko" },
+  { id: "terraform", tag: "@terraform" },
 ];

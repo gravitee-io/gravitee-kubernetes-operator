@@ -34,12 +34,12 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
 const DICT_NAME = "e2e-dict-manual";
 
-test.describe("Dictionaries — Lifecycle @since-4.12", () => {
+test.describe(`Dictionaries — Lifecycle @since-4.12 ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. The manual dictionary is the only resource these tests create
   // (the admission test's CR is rejected at apply). del() ignores errors.

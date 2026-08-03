@@ -36,14 +36,14 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
 const CONFIGMAP_FIXTURE = fixture("templating/configmap-e2e-tpl/crd.yaml");
 const SECRET_FIXTURE = fixture("templating/secret-e2e-tpl/crd.yaml");
 const BEARER_SECRET_FIXTURE = fixture("templating/secret-e2e-bearer/crd.yaml");
 
-test.describe("Templating — ConfigMap & Secret References", () => {
+test.describe(`Templating — ConfigMap & Secret References ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. Each del() ignores errors (the resource may already be gone).
   test.afterEach(async () => {

@@ -32,7 +32,7 @@
 import { readFile } from "node:fs/promises";
 import YAML from "yaml";
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const APP_SIMPLE = "applications/application-simple/crd.yaml";
@@ -43,7 +43,7 @@ const OAUTH2_API_PLAN_REMOVED = "plans/v4-oauth2-removed/crd.yaml";
 const SUB_JWT = "subscriptions/subscription-jwt-v4/crd.yaml";
 const SUB_OAUTH2 = "subscriptions/subscription-oauth2-v4/crd.yaml";
 
-test.describe("V4 Plans & Subscriptions — Advanced", () => {
+test.describe(`V4 Plans & Subscriptions — Advanced ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     // Safety-net cleanup: subscriptions → applications → APIs
     await kubectlSafe.del(fixture(SUB_JWT)).catch(() => {});

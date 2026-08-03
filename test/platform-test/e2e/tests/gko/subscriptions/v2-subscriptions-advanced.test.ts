@@ -30,7 +30,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const APP_SIMPLE = "applications/application-simple/crd.yaml";
@@ -44,7 +44,7 @@ const CROSS_CTX_APP = "subscriptions/cross-ctx-app/crd.yaml";
 const CROSS_CTX_SUB = "subscriptions/cross-ctx-subscription/crd.yaml";
 const TEMP_CTX = "management-context/temporary-ctx/crd.yaml";
 
-test.describe("V2 Subscriptions — Advanced", () => {
+test.describe(`V2 Subscriptions — Advanced ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     // Cleanup in reverse dependency order: subscriptions → apps → APIs.
     await kubectlSafe.del(fixture(SUB_JWT_V2)).catch(() => {});

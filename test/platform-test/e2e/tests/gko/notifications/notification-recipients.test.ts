@@ -36,7 +36,7 @@
  */
 
 import { test, expect, fixture } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 // Members referenced by the Group CRs (source=gravitee, sourceId=e2e-sa-…)
@@ -54,7 +54,7 @@ const NOTIF_1239 = "notifications/notification-group-members/crd.yaml";
 const GROUP_1239 = "notifications/group-group-members/crd.yaml";
 const API_1239 = "notifications/v4-api-with-group-members/crd.yaml";
 
-test.describe("Notifications — recipients & visibility", () => {
+test.describe(`Notifications — recipients & visibility ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     // Reverse dependency order: API → Notification → Group
     await kubectlSafe.del(fixture(API_1239)).catch(() => {});

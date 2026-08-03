@@ -28,7 +28,7 @@
 
 import YAML from "yaml";
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const NOTIFICATION = "notifications/notification-shared/crd.yaml";
@@ -44,7 +44,7 @@ interface ExportedCrd {
   };
 }
 
-test.describe("Notifications — export & validation", () => {
+test.describe(`Notifications — export & validation ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V4_API_WITH_NOTIF)).catch(() => {});
     await kubectlSafe.del(fixture(DUPLICATE_API)).catch(() => {});

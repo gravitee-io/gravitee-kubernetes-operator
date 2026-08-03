@@ -34,7 +34,7 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 interface StatusWithConditions {
@@ -49,7 +49,7 @@ function acceptedTrue(status: StatusWithConditions): boolean {
 const GROUP_A = "members/group-for-v2-members/crd.yaml";
 const GROUP_B = "members/group-b-for-v2-members/crd.yaml";
 
-test.describe("V2 API Groups, Members & PO — Extended", () => {
+test.describe(`V2 API Groups, Members & PO — Extended ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe
       .del(fixture("members/v2-api-with-group-hrid/crd.yaml"))
