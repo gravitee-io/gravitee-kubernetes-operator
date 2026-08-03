@@ -34,9 +34,9 @@
  * factories and run the body below. The fixtures already use the correct forms.
  */
 
-import { expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
-import { forEachProvisioner } from "../../../helpers/for-each-provisioner.js";
+import { expect } from "../../../../setup.js";
+import { XRAY, TAGS } from "../../../../helpers/tags.js";
+import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 
 /** Does the API have a request flow that invokes a shared-policy-group step? */
 interface ApiWithFlows {

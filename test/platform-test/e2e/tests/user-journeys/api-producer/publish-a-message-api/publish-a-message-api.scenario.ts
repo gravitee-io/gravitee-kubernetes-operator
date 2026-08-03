@@ -15,9 +15,9 @@
  */
 
 /**
- * Journey: stand up a message (event) API.
+ * Journey: publish a message (event) API.
  *
- * As an event API producer, I stand up a MESSAGE (event) API. A V4 MESSAGE API
+ * As an event API producer, I publish a MESSAGE (event) API. A V4 MESSAGE API
  * created through either provisioner is recorded in APIM as type MESSAGE and
  * reaches STARTED. The entrypoint-type matrix (SSE/webhook/websocket consumption)
  * and policy variants stay GKO-only under tests/gko/message-apis.
@@ -27,17 +27,17 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect } from "../../../setup.js";
-import type { ApiV4 } from "../../../../src/types/apim.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
-import { forEachProvisioner } from "../../../helpers/for-each-provisioner.js";
-import { gkoScenario, tfScenario } from "../../../helpers/provisioner-env.js";
+import { expect } from "../../../../setup.js";
+import type { ApiV4 } from "../../../../../src/types/apim.js";
+import { XRAY, TAGS } from "../../../../helpers/tags.js";
+import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
+import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 forEachProvisioner(
   {
-    title: "Stand up a message (event) API",
+    title: "Publish a message (event) API",
     provisioners: {
       gko: gkoScenario<void>({
         manifests: [path.join(here, "gko/message-api.yaml")],

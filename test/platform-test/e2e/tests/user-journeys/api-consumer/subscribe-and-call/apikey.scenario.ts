@@ -29,11 +29,11 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test, expect } from "../../../setup.js";
-import { XRAY, TAGS, since } from "../../../helpers/tags.js";
-import { forEachProvisioner } from "../../../helpers/for-each-provisioner.js";
-import { gkoScenario, tfScenario } from "../../../helpers/provisioner-env.js";
-import { subscriptionYaml } from "../../../../src/provisioners/index.js";
+import { test, expect } from "../../../../setup.js";
+import { XRAY, TAGS, since } from "../../../../helpers/tags.js";
+import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
+import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
+import { subscriptionYaml } from "../../../../../src/provisioners/index.js";
 import {
   APIKEY_GKO,
   gkoApplyApiKeys,
