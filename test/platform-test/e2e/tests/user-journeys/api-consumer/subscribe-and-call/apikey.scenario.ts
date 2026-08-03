@@ -33,7 +33,7 @@ import { test, expect } from "../../../../setup.js";
 import { XRAY, TAGS, since } from "../../../../helpers/tags.js";
 import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
-import { subscriptionYaml } from "../../../../../src/provisioners/index.js";
+import { assertProvisioner, subscriptionYaml } from "../../../../../src/provisioners/index.js";
 import {
   APIKEY_GKO,
   gkoApplyApiKeys,
@@ -69,6 +69,9 @@ function apikeyTfCustom(hridSuffix: string) {
     // Lets provisioned.remove("subscription") drop the subscription from the
     // desired state and re-apply (the count-gated resource in apikey-custom).
     removeVars: { subscription: { create_subscription: false } },
+    // The `[0]` is the count index: a `count`-gated resource is addressed by
+    // index in Terraform state, and `view.read()` matches the address exactly.
+    addresses: { subscription: "apim_subscription.test[0]" },
   });
 }
 
@@ -542,6 +545,7 @@ forEachProvisioner<ApiKeyParams>(
 
       await test.step("Remove only the subscription; the key stops working, the API stays up", async () => {
         await provisioned.remove("subscription");
+        await assertProvisioner(provisioned, "subscription", "gone");
         await gateway.assertNotResponds(ctx, { notStatus: 200, headers: { "X-Gravitee-Api-Key": CUSTOM_KEY } });
       });
     },

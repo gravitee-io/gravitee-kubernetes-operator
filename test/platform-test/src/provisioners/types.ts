@@ -38,9 +38,15 @@ export type { ProvisionerId };
 export type Role = "api" | "application" | "subscription" | "plan" | (string & {});
 
 /**
- * Provisioner-specific assertion surface, reached via {@link Provisioned.checks}
- * and narrowed by the `isGko`/`isTerraform` type guards. The base only carries
- * the discriminant; concrete shapes (`GkoChecks`, `TerraformChecks`) extend it.
+ * Escape hatch for assertions a provisioner alone can make, reached via
+ * {@link Provisioned.checks} and narrowed by a type guard (`isTerraform`). The base only
+ * carries the discriminant; a concrete shape (`TerraformChecks`) extends it.
+ *
+ * Deliberately rare. Anything expressible as "did MY layer land this role?" belongs in
+ * {@link ProvisionerView}, which shared scenario bodies can call without narrowing. GKO
+ * declares no checks: its control-plane readouts are exactly that question, and the
+ * remaining Kubernetes primitives (admission rejection, events) are reached through the
+ * kubectl engine in tests where nothing is provisioned.
  */
 export interface ProvisionerChecks {
   readonly provisionerId: ProvisionerId;
@@ -82,14 +88,17 @@ export interface Provisioned<P = unknown> {
   /** Tear down. MUST be idempotent and safe in finally/afterAll (never throws). */
   destroy(): Promise<void>;
 
-  /** Provisioner-specific assertions (narrow with `isGko`/`isTerraform`). */
-  readonly checks: ProvisionerChecks;
-
   /**
    * Provisioner-internal, agnostic readout ("did MY layer land this role?").
    * Usable from shared scenario bodies without narrowing, unlike `checks`.
    */
   readonly view: ProvisionerView;
+
+  /**
+   * Assertions only this provisioner can make (narrow with `isTerraform`). Absent on
+   * provisioners that have none, so shared bodies cannot reach for it by habit.
+   */
+  readonly checks?: ProvisionerChecks;
 }
 
 /**

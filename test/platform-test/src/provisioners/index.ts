@@ -39,8 +39,6 @@ export type {
   GkoRoleBinding,
   KubectlEngine,
 } from "./gko/gko-provisioner.js";
-export { isGko } from "./gko/checks.js";
-export type { GkoChecks } from "./gko/checks.js";
 export type { GkoView, GkoViewDetail } from "./gko/view.js";
 export { subscriptionYaml, apiKeySecretYaml } from "./gko/subscription-yaml.js";
 export type { SubscriptionYamlOptions, ApiKeyEntry } from "./gko/subscription-yaml.js";

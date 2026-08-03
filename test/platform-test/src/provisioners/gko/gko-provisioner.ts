@@ -17,7 +17,6 @@
 import * as kubectl from "../engines/kubectl.js";
 import type { Provisioned, Provisioner, Role } from "../types.js";
 import { BaseProvisioned } from "../base.js";
-import type { GkoChecks } from "./checks.js";
 import type { GkoView } from "./view.js";
 
 /** The kubectl engine surface a parameterized apply step receives. */
@@ -149,27 +148,6 @@ export function buildGkoView<P>(spec: ResolvedGkoSpec<P>): GkoView {
   };
 }
 
-function buildGkoChecks<P>(spec: ResolvedGkoSpec<P>): GkoChecks {
-  return {
-    provisionerId: "gko",
-    async waitForCondition(role: Role, condition = "Accepted", timeoutSeconds?: number) {
-      const b = resolveBinding(spec, role);
-      await kubectl.waitForCondition(b.kind, b.name, condition, timeoutSeconds, spec.namespace);
-    },
-    async assertEventContains(role: Role, message: string) {
-      const b = resolveBinding(spec, role);
-      await kubectl.assertEventContains(b.kind, b.name, message, spec.namespace);
-    },
-    async status<T = unknown>(role: Role): Promise<T> {
-      const b = resolveBinding(spec, role);
-      return kubectl.getStatus<T>(b.kind, b.name, spec.namespace);
-    },
-    async applyExpectFailure(yaml: string): Promise<string> {
-      return kubectl.applyStringExpectFailure(yaml, spec.namespace);
-    },
-  };
-}
-
 /**
  * Tear down a GKO scenario's resources in reverse dependency order: dynamic
  * roles (subscriptions) first so GKO finalizers release, then the static
@@ -188,13 +166,11 @@ async function teardownGko<P>(spec: ResolvedGkoSpec<P>): Promise<void> {
 
 class GkoProvisioned<P> extends BaseProvisioned<P> {
   readonly provisionerId = "gko" as const;
-  readonly checks: GkoChecks;
   readonly view: GkoView;
   private readonly idCache = new Map<string, string>();
 
   constructor(private readonly spec: ResolvedGkoSpec<P>) {
     super();
-    this.checks = buildGkoChecks(spec);
     this.view = buildGkoView(spec);
   }
 

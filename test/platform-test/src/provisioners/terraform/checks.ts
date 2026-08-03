@@ -45,7 +45,10 @@ export interface TerraformChecks extends ProvisionerChecks {
   untaint(role: Role): Promise<void>;
 }
 
-/** Narrow a provisioner-checks surface to the Terraform one. */
-export function isTerraform(checks: ProvisionerChecks): checks is TerraformChecks {
-  return checks.provisionerId === "terraform";
+/**
+ * Narrow a provisioner-checks surface to the Terraform one. Accepts `undefined` because
+ * `Provisioned.checks` is absent on provisioners that declare no unique assertions.
+ */
+export function isTerraform(checks: ProvisionerChecks | undefined): checks is TerraformChecks {
+  return checks?.provisionerId === "terraform";
 }
