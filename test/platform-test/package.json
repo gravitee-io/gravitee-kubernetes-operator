@@ -46,6 +46,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "typecheck:e2e": "tsc --noEmit -p e2e/tsconfig.json",
+    "typecheck:examples": "tsc --noEmit -p runner-examples/playwright",
     "e2e": "node scripts/e2e.mjs",
     "e2e:regression": "node scripts/e2e.mjs --grep @regression",
     "e2e:gko": "node scripts/e2e.mjs --provision-with gko",
