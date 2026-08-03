@@ -26,8 +26,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * These run in two phases across SEPARATE processes (before and after an in-place
  * GKO + APIM upgrade) and are intentionally kept out of the normal suite: the
  * default config's testMatch is `*.test.ts` / `*.scenario.ts`, so these `*.spec.ts`
- * files are never collected there. The two phases are selected by the
- * `e2e:upgrade:before` / `e2e:upgrade:after` npm scripts via a filename filter.
+ * files are never collected there.
+ *
+ * Selected through the one entry point, like every other suite:
+ * `npm run e2e -- --suite upgrade --phase before|after` (the `e2e:upgrade:*`
+ * scripts are aliases for exactly that).
  *
  * globalSetup is the same as the normal suite (infra checks + the shared dev-ctx).
  * The timeout is larger because a survival step waits on the operator to reconcile
