@@ -21,16 +21,19 @@
  * and auto-validation behavior.
  *
  * Xray tests:
- *   GKO-800: V4 JWT subscription
  *   GKO-799: V2 JWT subscription
- *   GKO-819: V4 OAuth2 subscription
  *   GKO-818: V2 OAuth2 subscription
- *   GKO-815: Auto-validate V4 subscription despite manual approval
  *   GKO-797: Auto-validate V2 subscription despite manual approval
  *   GKO-817: Call V4 gateway with JWT token
  *   GKO-808: Call V2 gateway with JWT token
  *   GKO-854: Delete API despite active subscription when another plan exists
  *   GKO-869: mTLS plan V4 subscription
+ *
+ * The V4 JWT/OAuth2 subscriptions and their auto-validation (GKO-800/819/815)
+ * are the shared journey
+ * tests/user-journeys/api-consumer/subscribe-to-a-secured-plan. GKO-817 stays
+ * here because its API carries ONLY a JWT plan: an OAuth2 plan with no
+ * `oauthResource` makes the gateway answer 500, not 401 (GKO-3086).
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -69,39 +72,6 @@ test.describe(`Subscriptions — Security Plans ${PROVISIONER.GKO}`, () => {
     }
   });
 
-  // ── GKO-800: V4 JWT subscription ───────────────────────────────
-
-  test(`V4 JWT subscription ${XRAY.SUBSCRIPTIONS.V4_JWT_SUBSCRIPTION} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const apiFixture = fixture("plans/v4-jwt/crd.yaml");
-    const appFixture = fixture("applications/application-simple/crd.yaml");
-    const subFixture = fixture("subscriptions/subscription-jwt-v4/crd.yaml");
-
-    await test.step("Deploy API and application", async () => {
-      await kubectl.apply(apiFixture);
-      await kubectl.apply(appFixture);
-      await kubectl.waitForCondition("apiv4definition", "e2e-v4-jwt-api", "Accepted");
-      await kubectl.waitForCondition("application", "e2e-app-simple", "Accepted");
-    });
-
-    await test.step("Create subscription", async () => {
-      await kubectl.apply(subFixture);
-      await kubectl.waitForCondition("subscription", "e2e-sub-jwt-v4", "Accepted");
-    });
-
-    await test.step("Subscription is accepted in APIM", async () => {
-      const status = await kubectl.getStatus<{ id: string }>("subscription", "e2e-sub-jwt-v4");
-      expect(status.id).toBeTruthy();
-    });
-
-    // Cleanup: subscription first, then app, then API
-    await kubectl.del(subFixture);
-    await kubectl.del(appFixture);
-    await kubectl.del(apiFixture);
-  });
-
   // ── GKO-799: V2 JWT subscription ───────────────────────────────
 
   test(`V2 JWT subscription ${XRAY.SUBSCRIPTIONS.V2_JWT_SUBSCRIPTION} ${TAGS.REGRESSION} @since-4.12`, async ({
@@ -135,38 +105,6 @@ test.describe(`Subscriptions — Security Plans ${PROVISIONER.GKO}`, () => {
     await kubectl.del(apiFixture);
   });
 
-  // ── GKO-819: V4 OAuth2 subscription ────────────────────────────
-
-  test(`V4 OAuth2 subscription ${XRAY.SUBSCRIPTIONS.V4_OAUTH2_SUBSCRIPTION} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const apiFixture = fixture("plans/v4-oauth2/crd.yaml");
-    const appFixture = fixture("applications/application-simple/crd.yaml");
-    const subFixture = fixture("subscriptions/subscription-oauth2-v4/crd.yaml");
-
-    await test.step("Deploy API and application", async () => {
-      await kubectl.apply(apiFixture);
-      await kubectl.apply(appFixture);
-      await kubectl.waitForCondition("apiv4definition", "e2e-v4-oauth2-api", "Accepted");
-      await kubectl.waitForCondition("application", "e2e-app-simple", "Accepted");
-    });
-
-    await test.step("Create subscription", async () => {
-      await kubectl.apply(subFixture);
-      await kubectl.waitForCondition("subscription", "e2e-sub-oauth2-v4", "Accepted");
-    });
-
-    await test.step("Subscription is accepted in APIM", async () => {
-      const status = await kubectl.getStatus<{ id: string }>("subscription", "e2e-sub-oauth2-v4");
-      expect(status.id).toBeTruthy();
-    });
-
-    await kubectl.del(subFixture);
-    await kubectl.del(appFixture);
-    await kubectl.del(apiFixture);
-  });
-
   // ── GKO-818: V2 OAuth2 subscription ────────────────────────────
 
   test(`V2 OAuth2 subscription ${XRAY.SUBSCRIPTIONS.V2_OAUTH2_SUBSCRIPTION} ${TAGS.REGRESSION} @since-4.12`, async ({
@@ -192,38 +130,6 @@ test.describe(`Subscriptions — Security Plans ${PROVISIONER.GKO}`, () => {
 
     await test.step("Subscription is accepted in APIM", async () => {
       const status = await kubectl.getStatus<{ id: string }>("subscription", "e2e-sub-oauth2-v2");
-      expect(status.id).toBeTruthy();
-    });
-
-    await kubectl.del(subFixture);
-    await kubectl.del(appFixture);
-    await kubectl.del(apiFixture);
-  });
-
-  // ── GKO-815: Auto-validate V4 subscription despite manual approval ──
-
-  test(`Auto-validate V4 subscription despite manual approval ${XRAY.SUBSCRIPTIONS.AUTO_VALIDATE_V4} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const apiFixture = fixture("plans/v4-manual-approval/crd.yaml");
-    const appFixture = fixture("applications/application-simple/crd.yaml");
-    const subFixture = fixture("subscriptions/subscription-manual-v4/crd.yaml");
-
-    await test.step("Deploy API with manual approval plan and application", async () => {
-      await kubectl.apply(apiFixture);
-      await kubectl.apply(appFixture);
-      await kubectl.waitForCondition("apiv4definition", "e2e-v4-manual-approval", "Accepted");
-      await kubectl.waitForCondition("application", "e2e-app-simple", "Accepted");
-    });
-
-    await test.step("Create subscription — GKO auto-validates", async () => {
-      await kubectl.apply(subFixture);
-      await kubectl.waitForCondition("subscription", "e2e-sub-manual-v4", "Accepted");
-    });
-
-    await test.step("Subscription is ACCEPTED despite manual validation on the plan", async () => {
-      const status = await kubectl.getStatus<{ id: string }>("subscription", "e2e-sub-manual-v4");
       expect(status.id).toBeTruthy();
     });
 
