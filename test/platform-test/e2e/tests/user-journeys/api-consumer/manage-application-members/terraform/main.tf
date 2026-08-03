@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Register an application through the Terraform APIM provider. `description` is
-# re-applied to exercise the update; `create_application = false` drops the
-# resource so a re-apply retires (archives) it.
+# An application whose membership is driven by variables, so the journey can
+# grant, re-role and revoke it with re-applies. Members are inline on
+# apim_application; there is no standalone membership resource.
 terraform {
   required_providers {
     apim = {
@@ -35,38 +35,50 @@ variable "organization_id" {
   default = "DEFAULT"
 }
 
-variable "description" {
+variable "member_source_id" {
   type    = string
-  default = "Application registered via the register/update/retire journey"
+  default = "e2e-sa-app-member"
 }
 
-variable "create_application" {
+variable "with_member" {
   type    = bool
   default = true
 }
 
+variable "member_role" {
+  type    = string
+  default = "USER"
+}
+
+variable "notify_members" {
+  type    = bool
+  default = false
+}
+
 resource "apim_application" "app" {
-  count           = var.create_application ? 1 : 0
   environment_id  = var.environment_id
   organization_id = var.organization_id
-  hrid            = "lifecycle-application-tf"
-  name            = "lifecycle-application-tf"
-  description     = var.description
-  metadata = [
+  hrid            = "shared-application-tf"
+  name            = "shared-application-tf"
+  description     = "Application whose membership the journey grants, changes and revokes"
+  notify_members  = var.notify_members
+
+  members = var.with_member ? [
     {
-      name   = "owner-team"
-      value  = "payments"
-      format = "STRING"
+      source    = "gravitee"
+      source_id = var.member_source_id
+      role      = var.member_role
     }
-  ]
+  ] : []
+
   settings = {
     app = {
       type      = "SIMPLE"
-      client_id = "lifecycle-application-tf-client"
+      client_id = "shared-application-tf-client"
     }
   }
 }
 
 output "app_id" {
-  value = one(apim_application.app[*].id)
+  value = apim_application.app.id
 }

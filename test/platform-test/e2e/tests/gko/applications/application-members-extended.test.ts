@@ -19,9 +19,10 @@
  *
  * Xray tests:
  *   GKO-531: Add member with non-existing role (default role applied)
- *   GKO-534: Remove member from an application on re-apply
- *   GKO-538: Add member with a role name
- *   GKO-539: Change member role on an application
+ *
+ * Granting, re-roling and revoking an application member (GKO-534/538/539) is
+ * the shared journey
+ * tests/user-journeys/api-consumer/manage-application-members.
  *
  * Skipped: GKO-537 (remove member from APIM env) requires console UI.
  *
@@ -48,15 +49,6 @@ test.describe(`Applications — Members Extended ${PROVISIONER.GKO}`, () => {
     await kubectlSafe
       .del(fixture("applications/application-member-non-existing-role/crd.yaml"))
       .catch(() => {});
-    await kubectlSafe
-      .del(fixture("applications/application-with-member/crd.yaml"))
-      .catch(() => {});
-    await kubectlSafe
-      .del(fixture("applications/application-with-member-removed/crd.yaml"))
-      .catch(() => {});
-    await kubectlSafe
-      .del(fixture("applications/application-with-member-reviewer/crd.yaml"))
-      .catch(() => {});
   });
 
   // ── GKO-531: Non-existing role ──────────────────────────────
@@ -79,69 +71,4 @@ test.describe(`Applications — Members Extended ${PROVISIONER.GKO}`, () => {
     await kubectl.del(fixturePath);
   });
 
-  // ── GKO-534: Remove member ──────────────────────────────────
-
-  test(`Remove member from Application on re-apply ${XRAY.APPLICATIONS_MEMBERS.APP_REMOVE_MEMBER} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-with-member";
-    const withMember = fixture("applications/application-with-member/crd.yaml");
-    const removed = fixture("applications/application-with-member-removed/crd.yaml");
-
-    await kubectl.apply(withMember);
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    const appId = (await kubectl.getStatus<{ id: string }>("application", APP_NAME)).id;
-
-    await kubectl.apply(removed);
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-
-    await mapi.waitForApplicationMatches(appId, {
-      description: "E2E test: application with member removed",
-    });
-
-    await kubectl.del(removed);
-  });
-
-  // ── GKO-538: Add member with role name ──────────────────────
-
-  test(`Application with member by role name is created ${XRAY.APPLICATIONS_MEMBERS.APP_ADD_MEMBER_ROLE_NAME} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-with-member";
-    const fixturePath = fixture("applications/application-with-member/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-
-    const appId = (await kubectl.getStatus<{ id: string }>("application", APP_NAME)).id;
-    await mapi.waitForApplicationMatches(appId, { name: APP_NAME });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-539: Change member role ─────────────────────────────
-
-  test(`Change Application member role ${XRAY.APPLICATIONS_MEMBERS.APP_CHANGE_MEMBER_ROLE} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-with-member";
-    const withMember = fixture("applications/application-with-member/crd.yaml");
-    const reviewer = fixture("applications/application-with-member-reviewer/crd.yaml");
-
-    await kubectl.apply(withMember);
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    const appId = (await kubectl.getStatus<{ id: string }>("application", APP_NAME)).id;
-
-    await kubectl.apply(reviewer);
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-
-    await mapi.waitForApplicationMatches(appId, {
-      description: "E2E test: application with member role changed",
-    });
-
-    await kubectl.del(reviewer);
-  });
 });

@@ -46,6 +46,11 @@ variable "create_group" {
   default = true
 }
 
+variable "member_source_id" {
+  type    = string
+  default = "e2e-sa-group-member"
+}
+
 resource "apim_group" "group" {
   count           = var.create_group ? 1 : 0
   environment_id  = var.environment_id
@@ -53,6 +58,14 @@ resource "apim_group" "group" {
   hrid            = "simple-group-tf"
   name            = var.group_name
   notify_members  = false
+
+  members = [
+    {
+      source    = "gravitee"
+      source_id = var.member_source_id
+      roles     = { API = "USER" }
+    }
+  ]
 }
 
 output "group_id" {

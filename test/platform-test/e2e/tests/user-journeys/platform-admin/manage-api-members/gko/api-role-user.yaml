@@ -12,30 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-259: Changing an existing member role on re-apply — in APIM this can
-# surface as a duplicate-key exception if the member was already present with
-# a different role. Fixture is based on v4-api-with-members.yaml but uses
-# role REVIEWER instead of USER.
+# The journey's API, granting a member the USER role. All variants share one CR
+# name so update() re-applies over the previous one and the membership has to
+# change in place.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-with-members
+  name: api-with-members
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-with-members"
-  description: "E2E test: V4 API with member role changed"
-  version: "1.0.0"
+  name: "api-with-members"
+  description: "V4 proxy API whose membership the journey grants, changes and revokes"
+  version: "1.0"
   type: PROXY
   state: STARTED
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
+  notifyMembers: false
   listeners:
     - type: HTTP
       paths:
-        - path: "/e2e-v4-with-members"
+        - path: "/api-with-members"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -58,5 +57,5 @@ spec:
         type: "KEY_LESS"
   members:
     - source: gravitee
-      sourceId: "admin"
-      role: "REVIEWER"
+      sourceId: "e2e-sa-api-member"
+      role: "USER"

@@ -18,19 +18,15 @@
  * V4 API Members — Extended scenarios.
  *
  * Xray tests:
- *   GKO-213:  Remove member from a V4 API (variant)
  *   GKO-244:  PrimaryOwner explicitly defined in CRD
- *   GKO-247:  Add member with role name
- *   GKO-249:  Add member with no role (defaults applied)
  *   GKO-256:  Create V4 API with non-existing group
- *   GKO-257:  Create V4 API with existing group
- *   GKO-259:  Duplicate-key exception on member role change via CRD re-apply
  *   GKO-306:  Primary owner via management-context user
  *   GKO-307:  Transfer primary owner
- *   GKO-314:  Add groupRefs to V4 API
- *   GKO-402:  Notify members if notifyMembers enabled
  *   GKO-658:  Take over primary owner via management-context user
- *   GKO-1004: Add groupRefs variant
+ *
+ * Granting, re-roling and revoking a member (GKO-213/247/253/259/402) is the
+ * shared journey tests/user-journeys/platform-admin/manage-api-members, and
+ * associating groups (GKO-257/314/1004) is associate-groups-with-an-api.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -52,14 +48,8 @@ interface StatusWithConditions {
   }>;
 }
 
-const WITH_MEMBERS = "members/v4-api-with-members/crd.yaml";
-const MEMBER_REMOVED = "members/v4-api-member-removed/crd.yaml";
 const NON_EXISTING_GROUP = "members/v4-api-non-existing-group/crd.yaml";
-const WITH_GROUPS = "members/v4-api-with-groups/crd.yaml";
-const CHANGED_ROLE = "members/v4-api-member-changed-role/crd.yaml";
-const NOTIFY_MEMBERS = "members/v4-api-notify-members/crd.yaml";
 const EXTRA_PO = "members/v4-api-extra-po/crd.yaml";
-const MEMBER_NO_ROLE = "members/v4-api-member-no-role/crd.yaml";
 
 function acceptedTrue(status: StatusWithConditions): boolean {
   return status.conditions?.find((c) => c.type === "Accepted")?.status === "True";
@@ -72,37 +62,9 @@ test.describe(`V4 API Members — Extended ${PROVISIONER.GKO}`, () => {
   // cleanup. Each del() ignores errors (the resource may already be gone).
   // e2e-v4-sync-mgmt is shared with other files, so a leak here cascades.
   test.afterEach(async () => {
-    for (const f of [
-      WITH_MEMBERS,
-      MEMBER_REMOVED,
-      NON_EXISTING_GROUP,
-      WITH_GROUPS,
-      CHANGED_ROLE,
-      NOTIFY_MEMBERS,
-      EXTRA_PO,
-      MEMBER_NO_ROLE,
-      SYNC_FROM_MGMT,
-    ]) {
+    for (const f of [NON_EXISTING_GROUP, EXTRA_PO, SYNC_FROM_MGMT]) {
       await kubectl.del(fixture(f)).catch(() => {});
     }
-  });
-
-  // ── GKO-213: Remove member (variant) ─────────────────────────
-
-  test(`Remove member from V4 API (variant) ${XRAY.MEMBERS.V4_REMOVE_MEMBER_VARIANT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const API_NAME = "e2e-v4-with-members";
-
-    await kubectl.apply(fixture(WITH_MEMBERS));
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    await kubectl.apply(fixture(MEMBER_REMOVED));
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<StatusWithConditions>("apiv4definition", API_NAME);
-    expect(acceptedTrue(status)).toBe(true);
-
-    await kubectl.del(fixture(MEMBER_REMOVED));
   });
 
   // ── GKO-244: PrimaryOwner defined in CRD ─────────────────────
@@ -126,43 +88,6 @@ test.describe(`V4 API Members — Extended ${PROVISIONER.GKO}`, () => {
     await kubectl.del(fixturePath);
   });
 
-  // ── GKO-247: Add member with role name ───────────────────────
-
-  test(`Add member with role name ${XRAY.MEMBERS.V4_ADD_MEMBER_WITH_ROLE_NAME} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-with-members";
-    const fixturePath = fixture(WITH_MEMBERS);
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    await mapi.waitForApiMatches(status.id, { name: API_NAME, state: "STARTED" });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-249: Add member without role ─────────────────────────
-  // When role is omitted, GKO applies the default role. The CRD should
-  // reconcile successfully — same contract as GKO-254.
-
-  test(`Add member without role field ${XRAY.MEMBERS.V4_ADD_MEMBER_NO_ROLE} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const API_NAME = "e2e-v4-member-no-role";
-    const fixturePath = fixture(MEMBER_NO_ROLE);
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<StatusWithConditions>("apiv4definition", API_NAME);
-    expect(acceptedTrue(status)).toBe(true);
-
-    await kubectl.del(fixturePath);
-  });
-
   // ── GKO-256: Create with non-existing group ──────────────────
   // Group validation happens during reconciliation; CRD should still be
   // Accepted (operator ignores unknown groups).
@@ -180,45 +105,6 @@ test.describe(`V4 API Members — Extended ${PROVISIONER.GKO}`, () => {
     expect(acceptedTrue(status)).toBe(true);
 
     await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-257: Create with existing group ──────────────────────
-
-  test(`Create V4 API with existing group ${XRAY.MEMBERS.V4_CREATE_EXISTING_GROUP} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-with-groups";
-    const fixturePath = fixture(WITH_GROUPS);
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    await mapi.waitForApiMatches(status.id, { name: API_NAME });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-259: Duplicate-key exception on role change ─────────
-  // Re-applying with a changed role for an already-bound member can surface
-  // as a duplicate-key exception in older APIM builds. Operator should still
-  // reach Accepted=True once the reconcile retries.
-
-  test(`Role change via re-apply does not leave CRD stuck ${XRAY.MEMBERS.V4_DUPLICATE_KEY_ON_ROLE_CHANGE} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const API_NAME = "e2e-v4-with-members";
-
-    await kubectl.apply(fixture(WITH_MEMBERS));
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    await kubectl.apply(fixture(CHANGED_ROLE));
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<StatusWithConditions>("apiv4definition", API_NAME);
-    expect(acceptedTrue(status)).toBe(true);
-
-    await kubectl.del(fixture(CHANGED_ROLE));
   });
 
   // ── GKO-306: Primary owner via management-context user ──────
@@ -277,43 +163,6 @@ test.describe(`V4 API Members — Extended ${PROVISIONER.GKO}`, () => {
     await kubectl.del(fixturePath);
   });
 
-  // ── GKO-314: Add groupRefs to V4 API ────────────────────────
-
-  test(`Add groupRefs to V4 API ${XRAY.MEMBERS.V4_ADD_GROUP_REFS} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const API_NAME = "e2e-v4-with-groups";
-    const fixturePath = fixture(WITH_GROUPS);
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<StatusWithConditions>("apiv4definition", API_NAME);
-    expect(acceptedTrue(status)).toBe(true);
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-402: Notify members if notifyMembers enabled ────────
-
-  test(`Notify members when notifyMembers=true ${XRAY.MEMBERS.V4_NOTIFY_MEMBERS_ENABLED} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-notify-members";
-    const fixturePath = fixture(NOTIFY_MEMBERS);
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    // APIM persists notifyMembers back on the API (or its disableMembershipNotifications flag).
-    const api = await mapi.fetchApi(status.id);
-    expect(api.disableMembershipNotifications).toBe(false);
-
-    await kubectl.del(fixturePath);
-  });
-
   // ── GKO-658: Take over PO via management-context user ──────
   // Variant of GKO-306 — re-applying the CRD must not reset or remove the
   // primary owner even after an intervening delete + re-create cycle.
@@ -340,21 +189,4 @@ test.describe(`V4 API Members — Extended ${PROVISIONER.GKO}`, () => {
     await kubectl.del(fixturePath);
   });
 
-  // ── GKO-1004: Add groupRefs variant ─────────────────────────
-
-  test(`groupRefs variant deploys successfully ${XRAY.MEMBERS.V4_ADD_GROUP_REFS_VARIANT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-with-groups";
-    const fixturePath = fixture(WITH_GROUPS);
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    await mapi.waitForApiMatches(status.id, { name: API_NAME });
-
-    await kubectl.del(fixturePath);
-  });
 });

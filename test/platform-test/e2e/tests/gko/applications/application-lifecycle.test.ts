@@ -21,10 +21,11 @@
  *   GKO-526: Application error if ManagementContext doesn't exist
  *   GKO-550: Error when both app and oauth specified in settings
  *
- * GKO-335/336/337 (create/update/delete an application) moved to the shared
- * cross-provisioner journey tests/user-journeys/api-consumer/register-and-retire-application —
- * the create/update/archive lifecycle is now proven against both GKO and
- * Terraform. The admission/settings/members tests below stay GKO-only.
+ * The create/update/archive lifecycle (GKO-335/336/337) plus the app settings
+ * and metadata a registration declares (GKO-552/194) are the shared
+ * cross-provisioner journey
+ * tests/user-journeys/api-consumer/register-and-retire-application. The
+ * admission and primary-owner tests below stay GKO-only.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -42,7 +43,6 @@ test.describe(`Applications — Lifecycle ${PROVISIONER.GKO}`, () => {
     for (const f of [
       "crds/applications/application-simple.yaml",
       "crds/applications/application-updated.yaml",
-      "crds/applications/application-with-metadata.yaml",
       "crds/applications/application-with-app-settings.yaml",
       "crds/applications/application-po-member.yaml",
       "crds/applications/application-no-client-id.yaml",
@@ -74,49 +74,6 @@ test.describe(`Applications — Lifecycle ${PROVISIONER.GKO}`, () => {
       fixture("applications/application-both-settings/crd.yaml"),
     );
     expect(stderr.toLowerCase()).toMatch(/denied|rejected|invalid|error/);
-  });
-
-  // ── GKO-194: Application with metadata ───────────────────────
-
-  test(`Application CRD with metadata fields ${XRAY.APPLICATIONS.APP_WITH_METADATA} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-metadata";
-    const fixturePath = fixture("applications/application-with-metadata/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
-    const appId = status.id;
-
-    await mapi.waitForApplicationMatches(appId, {
-      name: APP_NAME,
-      description: "E2E test: application with metadata",
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-552: Configure app settings ──────────────────────────
-
-  test(`Configure app settings ${XRAY.APPLICATIONS.APP_CONFIGURE_SETTINGS} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const APP_NAME = "e2e-app-settings";
-    const fixturePath = fixture("applications/application-with-app-settings/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-
-    const status = await kubectl.getStatus<{ id: string }>("application", APP_NAME);
-    const app = await mapi.fetchApplication(status.id);
-
-    expect(app.name).toBe(APP_NAME);
-
-    await kubectl.del(fixturePath);
   });
 
   // ── GKO-558: PO in members section ─────────────────────────

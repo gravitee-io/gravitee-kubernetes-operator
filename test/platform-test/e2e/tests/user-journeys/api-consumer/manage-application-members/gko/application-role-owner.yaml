@@ -12,20 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The journey's application, granting a member the OWNER role. All variants share one CR name so
+# update() re-applies over the previous one and the membership has to change in
+# place.
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
-  name: e2e-app-metadata
+  name: shared-application
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-app-metadata"
-  description: "E2E test: application with metadata"
-  metadata:
-    - name: "test-key"
-      value: "test-value"
-      format: "STRING"
+  name: "shared-application"
+  description: "Application whose membership the journey grants, changes and revokes"
+  notifyMembers: true
   settings:
     app:
       type: "SIMPLE"
+      clientId: "shared-application-client"
+  members:
+    - source: "gravitee"
+      sourceId: "e2e-sa-app-member"
+      role: "OWNER"
