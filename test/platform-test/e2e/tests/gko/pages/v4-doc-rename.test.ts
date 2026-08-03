@@ -61,7 +61,7 @@ test.describe(`V4 Documentation — Rename & cross-version visibility ${PROVISIO
 
   // ── GKO-1469: Folder + page rename reconciles ────────────────
 
-  test(`V4 folder and page rename reconciles without duplicates ${XRAY.PAGES.V4_DOC_RENAME} ${XRAY.PAGES.V4_DOC_FOLDER_RENAME} ${TAGS.REGRESSION}`, async ({
+  test(`V4 folder and page rename reconciles without duplicates ${XRAY.PAGES.V4_DOC_FOLDER_RENAME} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {

@@ -1,0 +1,34 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# The console notification the API subscribes to, on the API's start/stop events plus expiring api-keys. GKO models this
+# as a standalone Notification CR the API references; Terraform inlines the same
+# thing as apim_apiv4.console_notification. Both variants share one CR name so
+# the journey's update() re-applies over the previous one.
+apiVersion: gravitee.io/v1alpha1
+kind: Notification
+metadata:
+  name: api-console-notification
+  labels:
+    gravitee.io/e2e: "true"
+spec:
+  target: console
+  eventType: api
+  console:
+    apiEvents:
+      - API_STARTED
+      - API_STOPPED
+      - APIKEY_EXPIRED
+    groupRefs:
+      - name: notified-group
