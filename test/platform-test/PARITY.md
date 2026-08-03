@@ -1,226 +1,150 @@
-# GKO ↔ Terraform e2e test parity
+# Coverage parity: GKO ↔ Terraform
 
-Status of e2e coverage across the two provisioners the suite drives: the **GKO**
-operator (Kubernetes CRs) and the **Terraform** APIM provider (`gravitee-io/apim`).
-This is the analysis deliverable for GKO-2907 and the living backlog for GKO-2918.
+**What this document is for:** the *status* view of the e2e suite — what the
+Terraform provider can express, which areas are covered by a shared user journey,
+and what is left to migrate. It answers "where do we stand?".
 
-> Counts are regenerated from the tree, not hand-maintained. Re-count with the
-> snippet at the bottom.
+It is **not** the authoring guide. How to write a test (persona folders, the
+variant-matrix rule, cleanup patterns, `view` vs `checks`) lives in
+[AGENTS.md](./AGENTS.md); the journey list lives in the
+[catalog](./e2e/tests/user-journeys/README.md). Keep those boundaries — this file
+drifted before precisely because nothing said what it was for.
 
-## Parity scorecard
+> Regenerate the provider tables below from source rather than editing by hand;
+> see [Regenerating this document](#regenerating-this-document).
 
-Measured against the **~80 customer-facing scenarios** GKO-2918 scopes as
-achievable — NOT the full ~300 GKO tests, roughly half of which are intentionally
-GKO-only or have no TF provider resource (see the buckets below).
+---
 
-| Bucket | Approx | Detail |
-|---|--:|---|
-| ✅ Done via journey | ~10 areas | api-key subscriptions, dictionaries, groups, applications, V4 lifecycle/visibility, plans (JWT/OAuth2), message APIs, labels, categories, inline pages |
-| ⛔ Pending (blocked) | 1 | SPG reuse — GKO-3001 (admission) + TF `cross_id` gap |
-| 🟡 Feasible, not yet done | ~50 | subscription plan-types (JWT/OAuth2/mTLS), plan/policy lifecycle, application members, group members, API metadata, more V4 lifecycle |
-| 🚫 Permanently GKO-only | ~150 | K8s/operator mechanics (~100: admission, status/reconcile, mTLS CRs, templating, import/export, mgmt-context) + TF-blocked APIM areas (~50: V2 lifecycle & V2 pages/fetchers, standalone pages, notifications, category CRUD) |
+## What the Terraform provider can express
 
-**Achievable parity: ~25–30% covered.** The foundation and pattern are in place, so
-each remaining journey is incremental. Full 1:1 is a non-goal (GKO-2918).
+The provider (`gravitee-io/apim`) is **Speakeasy-generated** from
+`automation-api-oas.yaml` — APIM's Automation API OpenAPI spec — see
+`.speakeasy/gen.yaml` in the provider repo. Its resources map **1:1 onto the
+Automation API paths**: 10 resources, 10 paths.
 
-## Provider-resource reality (GKO-2918)
+That has a consequence worth stating plainly, because it was previously
+misread as a hard limit:
 
-The Terraform provider `gravitee-io/apim` registers exactly **6 standalone
-resource types** (verified in the provider source `internal/provider/provider.go`
-→ `Resources()`, not just the docs): `apim_apiv4`, `apim_application`,
-`apim_subscription`, `apim_group`, `apim_dictionary`, `apim_shared_policy_group`.
-A provider can only manage resource types it implements, so there is genuinely no
-`apim_apiv2`, `apim_category`, `apim_notification`, or standalone `apim_page`.
+> **"No Terraform resource" means "the Automation API has no path for it yet."**
+> GKO writes through the *same* Automation API, so a gap is a Gravitee backlog
+> item (add the path → regenerate the provider), not an external constraint. File
+> it rather than recording the area as permanently GKO-only.
+>
+> The one genuinely permanent exclusion is **V2**: the Automation API is V4-only
+> by design and V2 is legacy.
 
-**But standalone-resource ≠ no parity.** `apim_apiv4` carries rich **inline
-attributes**, so several areas with no standalone resource are still fully
-parity-testable at the API level:
+### Resources (verified on `origin/main`)
 
-| Inline attribute on `apim_apiv4` | Enables parity for |
+`apim_apiv4` · `apim_application` · `apim_subscription` · `apim_group` ·
+`apim_dictionary` · `apim_shared_policy_group` · `apim_documentation_api` ·
+`apim_documentation_portal` · `apim_portal` · `apim_portal_listing`
+
+Each also has a matching data source.
+
+### Inline attributes (where most parity actually lives)
+
+A missing standalone resource does not mean a missing capability — `apim_apiv4`
+in particular carries a rich inline surface:
+
+| Resource | Attributes |
 |---|---|
-| `type` (incl. MESSAGE), `state`, `visibility`, `lifecycle_state` | API lifecycle, message APIs |
-| `plans[]` (with `security.type`) | plans (keyless/JWT/OAuth2/api-key) |
-| `flows[]` | policies, SPG reuse |
-| `labels` | API labels ✅ (see `label-an-api` journey) |
-| `categories` | assigning categories to an API (can't *create* a category) |
-| `groups` | associating existing groups with an API |
-| `metadata` | API metadata |
-| `pages[]` | inline markdown documentation **and inline fetchers** (`pages[].source`); not standalone pages |
-
-Genuinely impossible (no resource and no inline path): **V2 API lifecycle** (no
-`apim_apiv2` at all, so V2 pages/fetchers too), standalone pages (no `apim_page`),
-environment-level **category CRUD** and **notification configuration**. Inline
-page **fetchers** on a V4 API are *not* in this list — `apim_apiv4.pages[].source`
-mirrors `spec.pages.<x>.source`, so they are parity-testable.
-
-## Use-case journeys (where parity lives)
-
-Parity is organised as **customer-journey** scenarios, authored once and run
-against both provisioners. Each journey is a **self-contained, co-located folder**
-under [`e2e/tests/user-journeys/<journey>/`](./e2e/tests/user-journeys/) holding
-the scenario, its `gko/` + `terraform/` fixtures, and a README (the
-[catalog](./e2e/tests/user-journeys/) lists them all).
-
-| Journey | Resources | GKO / TF Xray |
-|---|---|---|
-| register-and-retire-application | `apim_application` | GKO-335/336/337 · TF GKO-1383 + new |
-| publish-api-and-serve-traffic | `apim_apiv4` | GKO-69/1464 · TF new |
-| secure-api-with-plan | `apim_apiv4.plans[]` | GKO-162/163 · TF new |
-| reuse-shared-policy-group | `apim_shared_policy_group` | GKO-976/980 · TF GKO-3005 — ⛔ both arms pending (blockers below) |
-| consume-message-api | `apim_apiv4` (MESSAGE) | GKO-72/73 · TF new |
-| label-an-api | `apim_apiv4.labels` (inline) | GKO-1473 · TF new |
-| assign-categories-to-api | `apim_apiv4.categories` (inline) | GKO-267/270 · TF new (GKO-2918) |
-| add-inline-markdown-page-in-api | `apim_apiv4.pages[]` (inline) | GKO-1470 · TF GKO-3034 |
-| subscribe-and-call (api-key) | `apim_subscription` | existing |
-| api-references-dictionary-property | `apim_dictionary` (MANUAL) | existing |
-| manage-dynamic-dictionary | `apim_dictionary` (DYNAMIC) | GKO-2904/2910/2911/2909 · TF new (GKO-2997) |
-| create-group-with-member | `apim_group` | existing |
-
-> **`reuse-shared-policy-group` is pending on two blockers** (both arms), so the
-> journey documents the correct form without green-washing:
-> - **GKO — GKO-3001:** the documented `sharedPolicyGroupRef` flow form is rejected
->   by the admission webhook. The reconciler resolves the ref to the SPG crossId
->   (`api_shared_policy_groups.go`), but the admission `validateDryRun` does not, so
->   APIM's dry-run sees a flow step with no policy → 400. The SPG runs at the gateway
->   fine when given the crossId (verified); the old GKO-976/980 only passed because
->   their fixture used a bogus `{#sharedPolicyGroup['<hrid>']}` EL that no-ops.
-> - **Terraform:** `apim_shared_policy_group` exposes only `id`, not the crossId, and
->   only the crossId executes the SPG at the gateway — so TF can't wire it either.
-
-We do **not** want full parity. A large share of GKO coverage exercises
-Kubernetes-only mechanics (admission, status conditions, templating, operator
-restart) that have no Terraform equivalent, and Terraform has its own surface
-(drift, redaction, plan exit codes). Parity means: **the APIM resources every
-customer touches should be exercised through both drivers**, preferably once, as a
-shared scenario in the provisioner layer (`tests/user-journeys/`).
+| `apim_apiv4` | `type` `state` `visibility` `lifecycle_state` `version` `description` `listeners` `endpoint_groups` `plans` `flows` `flow_execution` `labels` `categories` `groups` `members` `notify_members` `metadata` `pages` `properties` `resources` `response_templates` `services` `tags` `analytics` `failover` `console_notification` `portal_navigation` `allow_multi_jwt_oauth2_subscriptions` `allowed_in_api_products` |
+| `apim_application` | `settings{app, oauth, tls.client_certificate}` `members` `notify_members` `groups` `metadata` `name` `description` `domain` `picture_url` `background` |
+| `apim_subscription` | `api_hrid` `application_hrid` `plan_hrid` `api_keys` `consumer_configuration` `starting_at` `ending_at` `metadata` |
+| `apim_group` | `name` `members` `notify_members` |
+| `apim_dictionary` | `type` `dynamic` `manual` `deployed` `description` |
+| `apim_shared_policy_group` | `api_type` `phase` `steps` `prerequisite_message` `description` |
+| `apim_documentation_api` | `api_hrid` `name` `type` `content` `location` `order` |
+| `apim_portal` / `apim_portal_listing` | `name` `navigation` / `apis` |
 
 ---
 
-## The provisioner layer (where parity lives)
+## Where coverage stands
 
-A shared scenario is authored once and run against every provisioner via
-`forEachProvisioner` (`e2e/helpers/for-each-provisioner.ts`) with
-`gkoScenario()` / `tfScenario()` (`e2e/helpers/provisioner-env.ts`). The body is
-provisioner-agnostic (`provisioned` + `mapi`/`gateway`); each arm carries its own
-Xray id. See the worked example + authoring guide in
-[AGENTS.md](./AGENTS.md#adding-a-cross-provisioner-parity-scenario).
+Of the ~290 tests in `tests/gko/`:
 
-All ten journeys are co-located under `tests/user-journeys/` (see the catalog).
-Everything else is per-driver (`tests/gko/`, `tests/terraform/`).
+| Bucket | Approx | Notes |
+|---|--:|---|
+| Covered by a shared journey | ~35 | the 13 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
+| **Migratable, not yet migrated** | **~100** | see the backlog below |
+| Genuinely GKO-only | ~155 | Kubernetes/operator mechanics + V2 |
 
----
+### Migratable, not yet migrated
 
-## Parity matrix (APIM resources — parity candidates)
+Each row is a journey to author (persona folder in brackets). Confirm the
+attribute on `origin/main` before writing the Terraform arm.
 
-| Feature area | Journey | Status |
-|---|---|---|
-| V4 API lifecycle (start/stop, visibility, lifecycle) | publish-api-and-serve-traffic | 🟢 done via journey |
-| Applications (CRUD) | register-and-retire-application | 🟢 done via journey |
-| Subscriptions — api-key | subscribe-and-call (apikey) | 🟢 done via journey |
-| Plans (JWT / OAuth2 security types) | secure-api-with-plan | 🟢 done via journey |
-| Shared Policy Groups | reuse-shared-policy-group | ⛔ pending — GKO-3001 (admission) + TF crossId gap (see above) |
-| Dictionaries — MANUAL (resolve + property update) | api-references-dictionary-property | 🟢 done via journey |
-| Dictionaries — DYNAMIC + lifecycle (resolve/update/undeploy/delete) | manage-dynamic-dictionary | 🟢 done via journey |
-| Message APIs (V4) | consume-message-api | 🟢 done via journey |
-| Groups + members | create-group-with-member | 🟡 TF-led; journey covers create |
-| Labels | label-an-api | 🟢 done via journey (inline `apim_apiv4.labels`) |
-| Categories (assign to API) | assign-categories-to-api | 🟢 done via journey (inline `apim_apiv4.categories`) |
-| Pages — inline markdown | add-inline-markdown-page-in-api | 🟢 done via journey (inline `apim_apiv4.pages[]`) |
-| Pages — inline fetchers (`pages[].source`) | — | 🟡 expressible on both drivers (TF `apim_apiv4.pages[].source`); journey pending |
-| Pages — standalone (no owning API) | — | ⛔ no standalone `apim_page` resource |
-| Notifications | — | ⛔ no `apim_notification` (no inline path) |
-| V2 API lifecycle | — | ⛔ no `apim_apiv2` (no inline path) |
-| Applications — members / OAuth | — | GKO-only (admission + member reconciliation) |
+| Area | Tests | Terraform path | Journey [persona] |
+|---|--:|---|---|
+| V4 API lifecycle / visibility | ~32 | `state` `visibility` `lifecycle_state` `failover` | `configure-visibility-and-lifecycle` [producer] |
+| V4 API members | ~25 | `apim_apiv4.members` `notify_members` | `manage-api-members` [admin] |
+| Subscriptions — JWT / OAuth2 / mTLS / manual | ~15 | `apim_subscription` | `subscribe-with-*`, `request-manual-approval` [consumer] |
+| Application members + OAuth/app settings | ~12 | `apim_application.members` `settings.oauth` | `manage-application-members`, `configure-application-oauth-settings` [consumer/admin] |
+| API notifications (V4) | ~11 | `apim_apiv4.console_notification` | `configure-api-notifications` [producer] |
+| Pages — V4 inline + standalone | ~10 | `apim_apiv4.pages` + `apim_documentation_api` | `document-an-api` [producer] |
+| Message-API entrypoints | ~8 | `apim_apiv4.listeners` | variants inside `publish-a-message-api` [producer] |
+| Plans / policies lifecycle | ~8 | `apim_apiv4.plans` `flows` | `apply-policies-to-a-flow`, `manage-plan-lifecycle` [producer] |
+| mTLS certs — inline content only | subset of 28 | `apim_application.settings.tls.client_certificate` | `authenticate-with-client-certificate` [consumer] |
+| API metadata / group association | few | `apim_apiv4.metadata` `groups` | `manage-api-metadata`, `associate-groups-with-an-api` [admin] |
+| Group members | ~8 | `apim_group.members` | fold into `create-group-with-member` [admin] |
 
-Legend: 🟢 parity met via journey · 🟡 expressible, journey pending · ⛔ no TF path (stays GKO-only).
+Blocked: **`reuse-shared-policy-group`** — GKO-3001 (admission rejects the
+documented `sharedPolicyGroupRef` flow form because it does not resolve the ref
+before APIM's dry-run) *and* Terraform (`apim_shared_policy_group` exposes no
+`cross_id`, and only the crossId executes the SPG at the gateway). The journey
+documents the correct form as a `pending` fixme rather than being green-washed.
 
----
+### Genuinely GKO-only
 
-## Intentionally GKO-only (no Terraform parity expected)
+These have the **operator itself** as the system under test, so there is nothing
+for a second provisioner to do. They live in `tests/gko/`.
 
-These exercise Kubernetes/operator mechanics the Terraform provider has no concept
-of. They stay in `tests/gko/` and are **out of scope** for parity.
-
-| Area | `tests/gko` | Why GKO-only |
-|---|---:|---|
-| Admission webhooks | 27 | CRD schema/dry-run validation at the K8s admission layer |
+| Area | Tests | Why |
+|---|--:|---|
+| Admission webhooks | 27 | CRD schema / dry-run validation at the Kubernetes admission layer |
+| mTLS certificates via Secret refs | subset of 29 | resolved from cluster Secrets, not inline content |
 | Deployment & reconciliation | 15 | CR `.status` conditions, observedGeneration, operator restart |
-| mTLS certificates (Application CRs) | 29 | Secret-backed Application TLS settings resolved from the cluster |
-| Import / export | 10 | YAML CRD export/import round-trips |
-| ConfigMap/Secret templating | 8 | `{{ … }}` resolution from cluster ConfigMaps/Secrets |
-| ManagementContext CRD | 5 | Kubernetes custom resource lifecycle |
-| CRD defaults | 4 | CRD spec field defaulting |
-| Local ConfigMap | 2 | In-cluster ConfigMap locality/cleanup |
+| Import / export | 10 | YAML CRD round-trips |
+| ConfigMap/Secret templating | 8 | `[[ … ]]` resolution from cluster ConfigMaps/Secrets |
+| ManagementContext CRD | 5 | Kubernetes custom-resource lifecycle |
+| CRD defaults | 4 | CRD field defaulting |
+| Local ConfigMap | 2 | in-cluster ConfigMap locality |
 
-These exercise APIM behaviour with no Terraform path at all (no standalone
-resource AND no inline `apim_apiv4` attribute), so they stay GKO-only:
+And these have **no Automation API path at all**:
 
-| Area | `tests/gko` | Why no TF path |
-|---|---:|---|
-| V2 API lifecycle (incl. V2 pages/fetchers) | ~12 | no `apim_apiv2` resource; provider is V4-only |
-| Notifications | ~11 | no `apim_notification` resource, no inline attribute |
-| Standalone pages (no owning API) | few | no `apim_page` resource; V4 pages are always inline on the API |
-| Category CRUD (create/rename a category) | ~6 | no `apim_category`; an API can only *reference* categories inline |
+| Area | Tests | Why |
+|---|--:|---|
+| V2 API lifecycle, V2 pages/fetchers, V2 members, V2 subscriptions | ~39 | the Automation API is V4-only; V2 is legacy |
+| Category CRUD (create/rename a category) | ~6 | no `/categories` path; an API can only *reference* categories inline |
 
-> V4 inline page **fetchers** (`apim_apiv4.pages[].source`) are **not** GKO-only —
-> the TF provider exposes the same `source` block, so they are a feasible parity
-> follow-up (see the parity matrix).
+### Terraform-only
 
-Partially TF-expressible at the API level (assign-to-API only, no standalone
-CRUD). **Categories** (`apim_apiv4.categories`) and **inline markdown pages**
-(`apim_apiv4.pages[]`) are done via the assign-categories-to-api and
-add-inline-markdown-page-in-api journeys; remaining follow-up journeys: **group association**
-(`apim_apiv4.groups`), **metadata** (`apim_apiv4.metadata`).
-
-## Intentionally Terraform-only (no GKO parity expected)
-
-| Behaviour | Where | Why TF-only |
+| Behaviour | Where | Why |
 |---|---|---|
-| Drift detection | `terraform plan` / group drift | HCL desired-state vs server reconciliation |
-| Sensitive redaction | apikey sensitive-in-plan | provider `Sensitive` attribute handling |
-| Plan exit codes / idempotency | post-apply, group import | `terraform plan -detailed-exitcode` semantics |
+| Drift detection, import, data sources, plan exit codes | `tests/terraform/groups.test.ts` | HCL desired-state vs server reconciliation; `terraform plan -detailed-exitcode` and `terraform import` semantics |
+| Provider-side schema validation | `tests/terraform/groups.test.ts` | rejected before any API call |
+| Sensitive redaction | `subscribe-and-call/apikey-tf-only.test.ts` | provider `Sensitive` attribute handling |
+| Portal management | *not yet covered* | `apim_portal`, `apim_portal_listing`, `apim_documentation_portal` have no GKO CRD — the first TF-only *product* surface |
 
 ---
 
-## Parity backlog (GKO-2918)
+## Regenerating this document
 
-This batch (GKO-2918) delivered five new journeys (applications, V4 lifecycle,
-plans, SPGs, message APIs) on top of the three existing scenarios (apikey,
-dictionary, groups). What remains:
-
-| # | Area | Status |
-|---|---|---|
-| 1 | Dictionaries / apikey / groups | ✅ done (pre-existing scenarios) |
-| 2 | Applications (CRUD) | ✅ done — register-and-retire-application |
-| 3 | V4 API lifecycle / visibility | ✅ done — publish-api-and-serve-traffic |
-| 4 | Plans (JWT / OAuth2) | ✅ done — secure-api-with-plan |
-| 5 | Shared Policy Groups | ⛔ pending — journey authored (correct form), blocked by GKO-3001 (admission) + TF crossId gap |
-| 6 | Message APIs (V4) | ✅ done — consume-message-api |
-| 7 | Labels | ✅ done — label-an-api (inline `apim_apiv4.labels`) |
-| 8 | Categories (assign) | ✅ done: assign-categories-to-api (inline `apim_apiv4.categories`) |
-| 8b | Inline markdown pages | ✅ done: add-inline-markdown-page-in-api (inline `apim_apiv4.pages[]`) |
-| 8c | Inline page fetchers (`pages[].source`) · group-assoc · metadata | ⏳ future journeys (all inline `apim_apiv4` attrs; both drivers support them) |
-| 9 | mTLS plans, gateway JWT/OAuth2 enforcement | ⏳ future (subscription + token orchestration) |
-| 10 | SPG reuse end-to-end | GKO-3001 (admission resolves ref before dry-run) + TF: expose `cross_id` on `apim_shared_policy_group` |
-| 11 | Notifications · standalone pages · category CRUD · V2 lifecycle (& V2 pages/fetchers) | ⛔ no TF path — stay GKO-only |
-| 12 | Co-locate all journeys under `tests/user-journeys/` (incl. the 3 pre-existing) | ✅ done |
-
-When picking up a row, prefer **a use-case journey** (one intent, two arms) over a
-standalone TF test, and follow the de-dup rule (remove the now-shared assertion
-from the GKO-only file). Confirm the provider exposes the resource first — the 6
-resources are `apim_apiv4`, `apim_application`, `apim_subscription`, `apim_group`,
-`apim_dictionary`, `apim_shared_policy_group`.
-
----
-
-## Re-generating the counts
+The resource and attribute tables come from the provider source. The local
+checkout drifts, so always read `origin/main`:
 
 ```sh
-cd test/platform-test/e2e/tests
-# per-area GKO counts
-for d in gko/*/; do printf "%-32s %s\n" "$d" \
-  "$(grep -rhoE '\btest(\.(skip|fixme|only))?\(' "$d" --include='*.ts' | wc -l)"; done
-# TF + scenario totals
-grep -rhoE '\btest(\.(skip|fixme|only))?\(' terraform --include='*.ts' | wc -l
-grep -rhoE 'forEachProvisioner(<[^>]*>)?\(' scenarios --include='*.ts' | wc -l   # ×2 drivers
+cd ~/dev/src/terraform-provider-apim && git fetch origin
+
+# Resources + data sources
+git show origin/main:internal/provider/provider.go | sed -n '/func.*Resources(ctx/,/^}/p'
+
+# Top-level attributes of one resource
+git show origin/main:internal/provider/apiv4_resource.go |
+  grep -oE '^\t\t\t"[a-z_0-9]+": ' | tr -d '\t":' | sort
+
+# The Automation API paths the provider is generated from
+git show origin/main:automation-api-oas.yaml | grep -E "^  /"
 ```
+
+Equivalently, against an initialised workspace: `terraform providers schema -json`.

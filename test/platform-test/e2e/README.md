@@ -157,9 +157,12 @@ npm run e2e:terraform                        # shortcut for --provision-with ter
 The flags are parsed by [`scripts/e2e.mjs`](../scripts/e2e.mjs), which sets
 `E2E_PROVISIONER` and forwards everything else (e.g. `--grep`, `--headed`) to
 Playwright. The env var works directly too, which is what the CI matrix uses:
-`E2E_PROVISIONER=gko npm run e2e`. Under the hood the config ignores the other
-provisioner's `tests/` folder and drops its arm from shared scenarios via a
-case-sensitive `grepInvert`.
+`E2E_PROVISIONER=gko npm run e2e`. Under the hood a lane is selected purely by
+**title tag** — every provisioner-specific test carries `@gko` / `@terraform` in
+its describe title and `forEachProvisioner` tags each generated arm — so the
+config just drops the other lane's tag with a case-sensitive `grepInvert`.
+Nothing keys off the folder a test lives in. `npm run check:lanes` asserts the
+lanes still partition the suite exactly; run it after adding or moving tests.
 
 > Do **not** select a lane with `--grep @gko`: Playwright's CLI `--grep` is
 > case-insensitive, so `@gko` also matches every `@GKO-NNNN` Xray tag and runs
@@ -226,7 +229,9 @@ npm --prefix test/platform-test run e2e:upgrade:before
 npm --prefix test/platform-test run e2e:upgrade:after
 ```
 
-These scripts use a dedicated config,
+These scripts are aliases for `npm run e2e -- --suite upgrade --phase
+before|after`, so they go through the same entry point (and the same
+`globalSetup`) as everything else. They select a dedicated config,
 [`playwright.upgrade.config.ts`](playwright.upgrade.config.ts), which targets
 only [`tests/upgrade/survival.before.spec.ts`](tests/upgrade/survival.before.spec.ts)
 and [`tests/upgrade/survival.after.spec.ts`](tests/upgrade/survival.after.spec.ts)
@@ -305,20 +310,32 @@ e2e/
     categories/
     ...
   tests/
-    gko/                 # GKO-only operator tests
-    terraform/           # Terraform-only provider tests
-    scenarios/           # *.scenario.ts: one shared intent run across every provisioner via forEachProvisioner
+    user-journeys/       # *.scenario.ts: one shared intent, run across every provisioner
+      api-producer/      #   grouped by persona; fixtures co-located per journey
+      api-consumer/
+      platform-admin/
+    gko/                 # the OPERATOR under test (admission, .status, templating, V2)
+    terraform/           # the PROVIDER under test (drift, plan exit codes, redaction)
+    upgrade/             # survival across an in-place version change
 ```
+
+Journeys co-locate their own `gko/` + `terraform/` fixtures; the central
+`fixtures/` tree below serves the remaining `tests/gko/` tests.
 
 ## Fixture convention
 
-Every fixture lives under `fixtures/<domain>/<scenario>/`. A scenario directory contains:
-- `crd.yaml` — Kubernetes CRD manifest(s) for the GKO-driven test (multi-doc YAML when multiple resources are part of the starting state)
-- `main.tf` — Terraform configuration for the TF-provider-driven test
+**A user journey co-locates its own fixtures** in its folder (`gko/*.yaml`,
+`terraform/main.tf`), so the whole story — intent, both drivers' manifests, and
+the README — is readable in one place. New tests should follow that; see
+[AGENTS.md](../AGENTS.md#adding-a-user-journey).
 
-A scenario with both files is **paired** (same APIM behaviour exercised through both drivers). A scenario with only one file is single-driver — and the gap is visible at `ls` time.
+The central `fixtures/<domain>/<scenario>/` tree below serves the remaining
+`tests/gko/` tests, which are being migrated into journeys area by area (status in
+[PARITY.md](../PARITY.md)). A scenario directory there contains:
+- `crd.yaml` — Kubernetes CRD manifest(s) (multi-doc YAML when several resources form the starting state)
+- `main.tf` — Terraform configuration, for the few scenarios still driven from `tests/terraform/`
 
-**Terraform output contract**: so the provisioner layer (`tfScenario`, see [AGENTS.md](../AGENTS.md)) can resolve logical roles to APIM ids by convention, every paired `main.tf` exposes `output "api_id"`, `output "sub_id"`, and `output "api_context_path"` (add `output "<role>_id"` for any extra role). A scenario that needs different output names passes an `outputs` map instead.
+**Terraform output contract**: so the provisioner layer (`tfScenario`, see [AGENTS.md](../AGENTS.md)) can resolve logical roles to APIM ids by convention, every `main.tf` exposes `output "api_id"`, `output "sub_id"`, and `output "api_context_path"` (add `output "<role>_id"` for any extra role). A scenario that needs different output names passes an `outputs` map instead.
 
 **Naming**: domain folders mirror test folders under `tests/gko/` (e.g. `admission-webhook/`, `api-lifecycle/`, `categories/`, `policies/`). Scenario folder names describe *what's being tested*, not *what kind of CR sits at the top of the manifest* — e.g. a V4 API with a JWT plan goes under `plans/v4-jwt/`, not `api-v4-definitions/`. Inside domains that hold both V2 and V4 variants (`plans/`, `categories/`, `policies/`, `api-lifecycle/`, `admission-webhook/`), prefix scenario names with `v2-` / `v4-` to disambiguate.
 

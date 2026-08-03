@@ -33,7 +33,7 @@ const mapi = createMapi({
 });
 
 // Or load connection details from config.yaml:
-// import { loadGraviteeConfig, createMapiFromConfig } from "@gravitee/platform-test/cmd";
+// import { loadGraviteeConfig, createMapiFromConfig } from "@gravitee/platform-test/config";
 // const config = await loadGraviteeConfig();
 // const mapi = createMapiFromConfig(config);
 
@@ -63,123 +63,10 @@ await gateway.assertResponds("/my-api", { status: 200 });
 await gateway.assertNotResponds("/my-api", { notStatus: 200 });
 ```
 
-## CLI
+## Configuration
 
-The library ships a CLI for use in shell scripts.
-
-```
-platform-test <subcommand> [flags]
-```
-
-Exit codes: `0` assertion passed, `1` assertion failed, `2` config/network error or invalid usage (missing/invalid flags).
-
-### assert-api
-
-Assert that an APIM API matches an expected partial shape.
-
-```bash
-# Assert API state
-platform-test assert-api --api-id <id> --state STARTED
-
-# Assert API listener path
-platform-test assert-api --api-id <id> --path /petstore
-
-# Assert HTTP status (useful for deletion checks — skips property matching)
-platform-test assert-api --api-id <id> --status 404
-
-# Assert arbitrary fields with --match (JSON partial)
-platform-test assert-api --api-id <id> --match '{"categories":["finance"]}'
-platform-test assert-api --api-id <id> --match '{"visibility":"PUBLIC","tags":["internal"]}'
-
-# Assert from a YAML match file (same shape as the API object)
-platform-test assert-api --api-id <id> --match-file expected-api.yaml
-
-# Combine --match-file with flag overrides (flags take precedence)
-platform-test assert-api --api-id <id> --match-file expected-api.yaml --state STARTED
-
-# Combine --match-file with --match (--match overrides --match-file, flags override both)
-platform-test assert-api --api-id <id> --match-file expected-api.yaml --match '{"visibility":"PUBLIC"}'
-
-# Combine specific flags with --match
-platform-test assert-api --api-id <id> --state STARTED --match '{"categories":["finance"]}'
-```
-
-| Flag | Description |
-|------|-------------|
-| `--api-id <id>` | API ID to assert (required) |
-| `--status <code>` | Expected HTTP status code (e.g. 404); skips property checks |
-| `--state <state>` | Expected lifecycle state (e.g. STARTED, STOPPED) |
-| `--path <path>` | Expected listener path (e.g. /petstore) |
-| `--match <json>` | Arbitrary JSON partial merged into the assertion |
-| `--match-file <file>` | YAML file with expected partial API shape (merged before `--match`/`--state`/`--path`) |
-| `--config <file>` | Path to `config.yaml` (default: CWD) |
-
-**How `--match` works:** The JSON value is parsed and merged into the partial object
-passed to `assertApiMatches()`. You can assert any field on the API object — categories,
-tags, labels, properties, visibility, etc. Explicit flags (`--state`, `--path`) take
-precedence over overlapping keys in `--match`.
-
-**How `--match-file` works:** The YAML file is parsed as a plain object with the same shape
-as the API (i.e. `DeepPartial<Api>`). This provides a file-based alternative to `--match`
-for complex assertions. The merge order is: `--match-file` (base) → `--match` JSON
-(overrides) → individual flags (`--state`, `--path`) (highest precedence).
-
-Example `expected-api.yaml`:
-
-```yaml
-state: STARTED
-categories:
-  - finance
-listeners:
-  - type: HTTP
-    paths:
-      - path: /petstore
-```
-
-### assert-gateway
-
-Assert that the APIM gateway responds with an expected HTTP status. Retries
-automatically (500ms interval, 30s timeout by default) to handle eventual
-consistency from operator reconciliation and gateway sync.
-
-```bash
-# Assert gateway returns 200
-platform-test assert-gateway --path /petstore --status 200
-
-# Assert gateway does NOT return 200 (e.g. after API stopped)
-platform-test assert-gateway --path /petstore --not-status 200
-
-# With authorization header
-platform-test assert-gateway --path /jwt-demo --status 200 --authorization "Bearer <token>"
-
-# Custom gateway URL and timeouts
-platform-test assert-gateway --path /petstore --status 200 \
-  --gateway http://localhost:9082 \
-  --timeout 60000 --retry-interval 1000
-
-# mTLS
-platform-test assert-gateway --path /secure --status 200 \
-  --cert client.crt --key client.key --cacert ca.crt
-```
-
-| Flag | Description |
-|------|-------------|
-| `--path <path>` | Gateway path to call, e.g. /petstore (required) |
-| `--status <code>` | Expected HTTP status code (mutually exclusive with `--not-status`) |
-| `--not-status <code>` | Status code that must NOT appear |
-| `--gateway <url>` | Gateway base URL (default: `http://localhost:30082`) |
-| `--authorization <value>` | Authorization header value |
-| `--cert <file>` | Client certificate PEM (mTLS) |
-| `--key <file>` | Client private key PEM (mTLS) |
-| `--cacert <file>` | CA certificate PEM |
-| `--timeout <ms>` | Total retry timeout in ms (default: 30000) |
-| `--retry-interval <ms>` | Interval between retries in ms (default: 500) |
-| `--config <file>` | Path to `config.yaml` (default: CWD) |
-
-### Configuration File
-
-Both subcommands accept a `--config` flag pointing to a `config.yaml` file.
-If not provided, the CLI looks for one in the current working directory.
+`loadGraviteeConfig(path)` reads a `config.yaml`; with no path it looks in the
+current working directory. The e2e suite loads the one at the package root.
 
 ```yaml
 apim:
@@ -204,27 +91,6 @@ Environment variables override config file values:
 | `GRAVITEE_PASSWORD` | `apim.auth.password` |
 | `GRAVITEE_GATEWAY_URL` | `gateway.baseUrl` |
 | `GRAVITEE_GATEWAY_MTLS_URL` | `gateway.mtlsBaseUrl` |
-
-### Usage in shell scripts
-
-Since the package is not published to a registry, invoke the CLI directly via
-`node` with a path to the built entry point. The API id can be resolved from the
-custom resource status:
-
-```bash
-# Path relative to the package root (test/platform-test/)
-PLATFORM_TEST_CLI=dist/cmd/cli.js
-
-# Assert the gateway serves the API
-node $PLATFORM_TEST_CLI assert-gateway --path /my-api --status 200
-
-# Assert API properties via the management API
-API_ID=$(kubectl get apiv4definitions.gravitee.io -n default my-api -o jsonpath='{.status.id}')
-node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match '{"categories":["finance"]}'
-
-# Assert API shape from a YAML match file
-node $PLATFORM_TEST_CLI assert-api --api-id "$API_ID" --match-file expected-api.yaml
-```
 
 ## TypeScript API
 
@@ -337,11 +203,15 @@ AssertionError: Assertion failed (2 mismatches):
 ├── assertions/
 │   ├── apim/     mAPI (Management API) & gateway assertions
 │   └── am/       Access Management (placeholder)
+├── provisioners/ Pluggable creation paths (GKO, Terraform) behind one interface
+│   ├── engines/  kubectl + terraform CLI wrappers
+│   ├── gko/      GkoProvisioner + its ProvisionerView
+│   └── terraform/ TerraformProvisioner + its ProvisionerView and checks
 ├── utils/
 │   ├── http/     HTTP client (native fetch, swappable for undici/mTLS)
 │   └── match/    Deep partial matching engine, poll utility
 ├── types/        TypeScript type definitions for APIM entities
-└── cmd/          CLI entry point and subcommands
+└── config/       config.yaml loading + env-var overrides
 ```
 
 ### Design Principles
@@ -360,16 +230,21 @@ AssertionError: Assertion failed (2 mismatches):
 import { Mapi } from "@gravitee/platform-test/assertions/apim";
 import { deepPartialMatch, poll } from "@gravitee/platform-test/utils/match";
 import { HttpClient } from "@gravitee/platform-test/utils/http";
+import { GkoProvisioner, assertProvisioner } from "@gravitee/platform-test/provisioners";
 ```
 
 ## Development
 
 ```bash
 npm install
-npm run build      # TypeScript compilation
-npm test           # Run tests (vitest)
-npm run typecheck  # Type check without emitting
+npm run build               # TypeScript compilation
+npm test                    # Unit tests (vitest)
+npm run typecheck           # src/ — also typecheck:e2e, typecheck:examples
+npm run check:lanes         # assert the provisioner lanes partition the suite
 ```
+
+For the e2e suite itself see [e2e/README.md](e2e/README.md) (bootstrap) and
+[AGENTS.md](AGENTS.md) (how to write a test).
 
 ## License
 
