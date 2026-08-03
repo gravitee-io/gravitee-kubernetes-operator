@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Stand up a V4 MESSAGE (event) API through the Terraform APIM provider. HTTP-GET +
-# webhook subscription entrypoints over a mock message endpoint.
+# Stand up a V4 MESSAGE (event) API through the Terraform APIM provider. The HTTP
+# entrypoint type, description and version are variables so the journey can walk
+# the API through its entrypoint variants with re-applies; the webhook
+# subscription entrypoint and the mock message endpoint stay constant.
 terraform {
   required_providers {
     apim = {
@@ -34,13 +36,23 @@ variable "organization_id" {
   default = "DEFAULT"
 }
 
+variable "http_entrypoint" {
+  type    = string
+  default = "http-get"
+}
+
+variable "api_version" {
+  type    = string
+  default = "1.0.0"
+}
+
 resource "apim_apiv4" "api" {
   environment_id  = var.environment_id
   organization_id = var.organization_id
   hrid            = "message-api-tf"
   name            = "message-api-tf"
-  description     = "V4 MESSAGE (event) API exposing HTTP-GET and webhook entrypoints"
-  version         = "1"
+  description     = "V4 MESSAGE (event) API exposing a ${var.http_entrypoint} entrypoint"
+  version         = var.api_version
   type            = "MESSAGE"
   state           = "STARTED"
   lifecycle_state = "PUBLISHED"
@@ -54,7 +66,7 @@ resource "apim_apiv4" "api" {
           { path = "/message-api-tf/" }
         ]
         entrypoints = [
-          { type = "http-get" }
+          { type = var.http_entrypoint }
         ]
       }
     },

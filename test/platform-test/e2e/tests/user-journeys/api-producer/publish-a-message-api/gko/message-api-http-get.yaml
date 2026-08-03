@@ -12,26 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The journey's MESSAGE API exposing a http-get HTTP entrypoint alongside the constant
+# webhook subscription entrypoint, over a mock message endpoint. One CR name
+# across every variant, so update() re-applies over the previous one and the
+# listener set, description and version all have to change in place.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-msg-sync-mgmt
+  name: message-api
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-msg-sync-mgmt"
-  description: "E2E test: V4 Message API with syncFrom Management"
+  name: "message-api"
+  description: "V4 MESSAGE (event) API exposing a http-get entrypoint"
   version: "1.0.0"
   type: MESSAGE
   state: STARTED
   definitionContext:
     origin: KUBERNETES
-    syncFrom: MANAGEMENT
+    syncFrom: KUBERNETES
   listeners:
     - type: HTTP
       paths:
-        - path: "/e2e-v4-msg-sync-mgmt"
+        - path: "/message-api"
       entrypoints:
         - type: http-get
           qos: AUTO

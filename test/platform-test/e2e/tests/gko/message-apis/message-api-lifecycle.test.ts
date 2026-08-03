@@ -18,17 +18,11 @@
  * Message APIs — Lifecycle tests.
  *
  * Xray tests:
- *   GKO-129: Deploy V4 message API with HTTP GET entrypoint
- *   GKO-130: Deploy V4 message API with HTTP POST entrypoint
- *   GKO-132: Deploy V4 message API with SSE entrypoint
- *   GKO-133: Deploy V4 message API with Webhooks entrypoint
- *   GKO-134: Deploy V4 message API with Websockets entrypoint
- *   GKO-136: Deploy V4 message API with Mock endpoint
  *   GKO-164: Deploy V4 message API with policy
  *
- * GKO-72/73 (deploy a MESSAGE API, type MESSAGE + STARTED) moved to the shared
- * cross-provisioner journey tests/user-journeys/api-producer/publish-a-message-api. The
- * entrypoint-type matrix below stays GKO-only.
+ * Deploying a MESSAGE API and exposing it over each consumer entrypoint
+ * (GKO-72/73/129/130/132/133/134/136) is the shared cross-provisioner journey
+ * tests/user-journeys/api-producer/publish-a-message-api.
  *
  * Removed:
  *   GKO-135: Kafka endpoint — APIM schema bug
@@ -47,177 +41,7 @@ test.describe(`Message APIs — Lifecycle ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. Each del() ignores errors (the resource may already be gone).
   test.afterEach(async () => {
-    for (const f of [
-      "crds/message-apis/v4-message-api-sync-mgmt.yaml",
-      "crds/message-apis/v4-message-api-sync-k8s.yaml",
-      "crds/message-apis/v4-message-api-http-get.yaml",
-      "crds/message-apis/v4-message-api-http-post.yaml",
-      "crds/message-apis/v4-message-api-sse.yaml",
-      "crds/message-apis/v4-message-api-webhook.yaml",
-      "crds/message-apis/v4-message-api-websocket.yaml",
-      "crds/message-apis/v4-message-api-with-policy.yaml",
-    ]) {
-      await kubectl.del(fixture(f)).catch(() => {});
-    }
-  });
-  // GKO-72 (syncFrom Management) and GKO-73 (syncFrom Kubernetes) — deploy a
-  // MESSAGE API and assert type MESSAGE + STARTED — are now covered by the
-  // cross-provisioner journey tests/user-journeys/api-producer/publish-a-message-api.
-
-  // ── GKO-129: Deploy V4 message API with HTTP GET entrypoint ─
-
-  test(`Deploy V4 message API with HTTP GET entrypoint ${XRAY.MESSAGE_APIS.HTTP_GET_ENTRYPOINT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-http-get";
-    const fixturePath = fixture("message-apis/v4-message-api-http-get/crd.yaml");
-
-    await test.step("Apply CRD with HTTP GET entrypoint", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = (await mapi.fetchApi(apiId)) as ApiV4;
-      expect(api).toBeTruthy();
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-130: Deploy V4 message API with HTTP POST entrypoint ─
-
-  test(`Deploy V4 message API with HTTP POST entrypoint ${XRAY.MESSAGE_APIS.HTTP_POST_ENTRYPOINT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-http-post";
-    const fixturePath = fixture("message-apis/v4-message-api-http-post/crd.yaml");
-
-    await test.step("Apply CRD with HTTP POST entrypoint", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = (await mapi.fetchApi(apiId)) as ApiV4;
-      expect(api).toBeTruthy();
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-132: Deploy V4 message API with SSE entrypoint ──────
-
-  test(`Deploy V4 message API with SSE entrypoint ${XRAY.MESSAGE_APIS.SSE_ENTRYPOINT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-sse";
-    const fixturePath = fixture("message-apis/v4-message-api-sse/crd.yaml");
-
-    await test.step("Apply CRD with SSE entrypoint", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = (await mapi.fetchApi(apiId)) as ApiV4;
-      expect(api).toBeTruthy();
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-133: Deploy V4 message API with Webhooks entrypoint ─
-
-  test(`Deploy V4 message API with Webhooks entrypoint ${XRAY.MESSAGE_APIS.WEBHOOK_ENTRYPOINT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-webhook";
-    const fixturePath = fixture("message-apis/v4-message-api-webhook/crd.yaml");
-
-    await test.step("Apply CRD with Webhook entrypoint", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = (await mapi.fetchApi(apiId)) as ApiV4;
-      expect(api).toBeTruthy();
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-134: Deploy V4 message API with Websockets entrypoint
-
-  test(`Deploy V4 message API with Websockets entrypoint ${XRAY.MESSAGE_APIS.WEBSOCKET_ENTRYPOINT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-websocket";
-    const fixturePath = fixture("message-apis/v4-message-api-websocket/crd.yaml");
-
-    await test.step("Apply CRD with Websocket entrypoint", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API exists in APIM with type MESSAGE", async () => {
-      const api = (await mapi.fetchApi(apiId)) as ApiV4;
-      expect(api).toBeTruthy();
-      expect(api.type).toBe("MESSAGE");
-    });
-
-    await kubectl.del(fixturePath);
-  });
-
-  // GKO-135 (Kafka endpoint) was removed from the suite — APIM schema bug.
-
-  // ── GKO-136: Deploy V4 message API with Mock endpoint ───────
-
-  test(`Deploy V4 message API with Mock endpoint ${XRAY.MESSAGE_APIS.MOCK_ENDPOINT} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-msg-http-get";
-    const fixturePath = fixture("message-apis/v4-message-api-http-get/crd.yaml");
-
-    await test.step("Apply CRD with Mock endpoint", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("API is STARTED in APIM", async () => {
-      await mapi.assertApiStarted(apiId);
-    });
-
-    await kubectl.del(fixturePath);
+    await kubectl.del(fixture("message-apis/v4-message-api-with-policy/crd.yaml")).catch(() => {});
   });
 
   // ── GKO-164: Deploy V4 message API with policy ──────────────
