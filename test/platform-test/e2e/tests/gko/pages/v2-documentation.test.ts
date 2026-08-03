@@ -43,7 +43,7 @@
 
 import YAML from "yaml";
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 import type { Mapi } from "../../../../src/index.js";
 
@@ -70,7 +70,7 @@ async function fetchV1Pages(mapi: Mapi, apiId: string): Promise<ApimPage[]> {
 
 const GROUP_A = "members/group-for-v2-members/crd.yaml";
 
-test.describe("V2 API Documentation — Extended", () => {
+test.describe(`V2 API Documentation — Extended ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe
       .del(fixture("pages/v2-api-without-page-markdown/crd.yaml"))

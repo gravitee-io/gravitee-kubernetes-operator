@@ -37,7 +37,7 @@
  */
 
 import { test } from "../../setup.js";
-import { XRAY, TAGS } from "../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../helpers/tags.js";
 import { fixture } from "../../setup.js";
 import { terraformEnv } from "../../helpers/terraform.js";
 import {
@@ -50,7 +50,7 @@ import * as terraform from "../../helpers/terraform.js";
 
 let provisioned: Provisioned<void>;
 
-test.describe("Terraform — ProvisionerView", () => {
+test.describe(`Terraform — ProvisionerView ${PROVISIONER.TERRAFORM}`, () => {
   test.beforeAll(async () => {
     test.setTimeout(terraform.TF_WORKSPACE_TIMEOUT_MS);
     const provisioner = new TerraformProvisioner<void>({

@@ -31,9 +31,9 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 
-test.describe("Plans — Security Types", () => {
+test.describe(`Plans — Security Types ${PROVISIONER.GKO}`, () => {
   // GKO-162 (OAuth2 plan) and GKO-163 (JWT plan) are now covered by the
   // cross-provisioner journey tests/user-journeys/secure-api-with-plan.
 

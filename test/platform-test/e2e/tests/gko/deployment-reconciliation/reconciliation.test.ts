@@ -30,7 +30,7 @@
  */
 
 import { test, expect, fixture } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
 const API_NAME = "e2e-v4-reconcile";
@@ -47,7 +47,7 @@ test.afterEach(async () => {
   }
 });
 
-test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API_CONFIG} ${TAGS.REGRESSION}`, async ({
+test(`Deployment & Reconciliation ${XRAY.DEPLOYMENT_RECONCILIATION.RECONCILE_API_CONFIG} ${PROVISIONER.GKO} ${TAGS.REGRESSION}`, async ({
   kubectl,
   mapi,
   gateway,

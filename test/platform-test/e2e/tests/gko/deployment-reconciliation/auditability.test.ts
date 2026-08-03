@@ -31,7 +31,7 @@
 import { execFile as execFileCb } from "node:child_process";
 import { promisify } from "node:util";
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const execFile = promisify(execFileCb);
@@ -86,7 +86,7 @@ async function totalSucceededEventCount(name: string): Promise<number> {
     .reduce((sum, e) => sum + (e.count ?? 1), 0);
 }
 
-test.describe("Auditability — changes traced via events and updatedAt", () => {
+test.describe(`Auditability — changes traced via events and updatedAt ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(V4_UPDATED)).catch(() => {});
     await kubectlSafe.del(fixture(V4_ORIGINAL)).catch(() => {});

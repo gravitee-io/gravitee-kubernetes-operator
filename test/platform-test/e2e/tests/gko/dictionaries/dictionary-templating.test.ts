@@ -30,7 +30,7 @@
 
 import { test, fixture, expect } from "../../../setup.js";
 import { poll, loadGraviteeConfig } from "../../../../src/index.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -45,7 +45,7 @@ async function gatewayBaseUrl(): Promise<string> {
   return config.gateway?.baseUrl ?? "http://localhost:30082";
 }
 
-test.describe("Dictionaries — Templating @since-4.12", () => {
+test.describe(`Dictionaries — Templating @since-4.12 ${PROVISIONER.GKO}`, () => {
   test(`Dynamic dictionary with secret templates resolves in API header ${XRAY.DICTIONARIES.DYNAMIC_TEMPLATE_RESOLVE} ${TAGS.REGRESSION}`, async ({
     kubectl,
   }) => {

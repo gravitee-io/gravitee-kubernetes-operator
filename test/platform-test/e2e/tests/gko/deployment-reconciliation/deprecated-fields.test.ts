@@ -35,7 +35,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { test, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -64,7 +64,7 @@ async function getProcessingStatusDescription(crd: string): Promise<string | und
     ?.processingStatus?.description;
 }
 
-test.describe("CRD field deprecation", () => {
+test.describe(`CRD field deprecation ${PROVISIONER.GKO}`, () => {
   // ── GKO-1391: processingStatus marked deprecated ────────────
 
   test(`processingStatus is documented as deprecated ${XRAY.DEPLOYMENT_RECONCILIATION.PROCESSING_STATUS_DEPRECATED} ${TAGS.REGRESSION}`, async () => {

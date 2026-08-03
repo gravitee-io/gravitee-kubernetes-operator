@@ -29,7 +29,7 @@
 
 import { readFile } from "node:fs/promises";
 import { test, fixture } from "../../../setup.js";
-import { XRAY } from "../../../helpers/tags.js";
+import { XRAY, PROVISIONER } from "../../../helpers/tags.js";
 import { createTlsFetch } from "../../../../src/utils/http/tls.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
@@ -46,7 +46,7 @@ async function loadPki() {
   return { cert1, key1, cert2, key2, ca };
 }
 
-test.describe("mTLS Certificates — Inline, Encoded, Backward-compat", () => {
+test.describe(`mTLS Certificates — Inline, Encoded, Backward-compat ${PROVISIONER.GKO}`, () => {
   test.afterAll(async () => {
     const files = [
       "subscription-inline", "application-inline", "api-mtls-inline", "tls-secrets-inline",

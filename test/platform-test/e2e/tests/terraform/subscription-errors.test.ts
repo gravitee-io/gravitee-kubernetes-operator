@@ -34,11 +34,11 @@
  */
 
 import { test, expect } from "../../setup.js";
-import { XRAY, TAGS } from "../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../helpers/tags.js";
 import * as terraform from "../../helpers/terraform.js";
 import type { TfWorkspace } from "../../helpers/terraform.js";
 
-test.describe("Terraform — subscription errors & app delete", () => {
+test.describe(`Terraform — subscription errors & app delete ${PROVISIONER.TERRAFORM}`, () => {
   // ── GKO-1380: invalid subscription is rejected by apply ──────
 
   test(`Invalid subscription config produces a clear apply error ${XRAY.TERRAFORM.INVALID_SUBSCRIPTION_CONFIG} ${TAGS.REGRESSION}`, async () => {

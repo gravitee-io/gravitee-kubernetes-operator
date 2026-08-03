@@ -30,10 +30,10 @@
 
 import YAML from "yaml";
 import { test, expect, fixture } from "../../../setup.js";
-import { XRAY } from "../../../helpers/tags.js";
+import { XRAY, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
 
-test.describe("Page Lifecycle", () => {
+test.describe(`Page Lifecycle ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. Each del() ignores errors (the resource may already be gone).
   test.afterEach(async () => {

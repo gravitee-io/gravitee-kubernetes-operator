@@ -32,9 +32,9 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 
-test.describe("V4 API Documentation — Fetchers", () => {
+test.describe(`V4 API Documentation — Fetchers ${PROVISIONER.GKO}`, () => {
   // ── GKO-629 / GKO-1475: V4 web fetcher without URL ──────────
 
   test(`V4 web fetcher without URL is rejected ${XRAY.PAGES.V4_WEB_FETCHER_NO_URL} ${XRAY.WEBHOOKS.CROSS_VERSION_SCHEDULERS_FETCHERS} ${TAGS.REGRESSION}`, async ({

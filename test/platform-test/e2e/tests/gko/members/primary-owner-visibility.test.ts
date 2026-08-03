@@ -24,13 +24,13 @@
  */
 
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 
 const FIXTURE = "members/v4-api-po-user-private/crd.yaml";
 const API_NAME = "e2e-v4-po-private";
 
-test.describe("Primary owner & visibility", () => {
+test.describe(`Primary owner & visibility ${PROVISIONER.GKO}`, () => {
   test.afterEach(async () => {
     await kubectlSafe.del(fixture(FIXTURE)).catch(() => {});
   });

@@ -47,7 +47,7 @@
 
 import { readFile } from "node:fs/promises";
 import { test, fixture, expect } from "../../../setup.js";
-import { XRAY, TAGS } from "../../../helpers/tags.js";
+import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectlSafe from "../../../helpers/kubectl.js";
 import type { Application } from "../../../../src/types/apim.js";
 
@@ -100,7 +100,7 @@ async function applyAndAssertCertVisible(
     .toBe(1);
 }
 
-test.describe("mTLS — Application cert lifecycle", () => {
+test.describe(`mTLS — Application cert lifecycle ${PROVISIONER.GKO}`, () => {
   let pem1: string;
   let pem2: string;
 
@@ -439,7 +439,7 @@ const STATUS_APPS = [
   "e2e-mtls-2149",
 ];
 
-test.describe("mTLS — cert date acceptance @since-4.12", () => {
+test.describe(`mTLS — cert date acceptance @since-4.12 ${PROVISIONER.GKO}`, () => {
   let pem: string;
 
   test.beforeAll(async () => {
