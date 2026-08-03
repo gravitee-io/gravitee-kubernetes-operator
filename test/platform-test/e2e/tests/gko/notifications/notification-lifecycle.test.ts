@@ -18,10 +18,14 @@
  * Notification lifecycle tests (V4 only).
  *
  * Xray tests:
- *   GKO-1231: CRD includes: notifications to activate and groups
- *   GKO-1232: API CRD can reference a notification resource
  *   GKO-1238: Removing the notification reference in an API removes related notifications in UI
- *   GKO-1461: Verify notifications can be configured via CRs
+ *
+ * Configuring the console notification (GKO-1231/1232/1461/1194/1195/1219/1239)
+ * is the shared journey
+ * tests/user-journeys/api-producer/configure-api-notifications. Removal stays
+ * here: the Automation API answers HTTP 500 to a console notification with an
+ * empty `events` list (GKO-3085), so the Terraform arm cannot express turning it
+ * off.
  *
  * Preconditions:
  *   - APIM, Gateway, and GKO operator are running
@@ -92,100 +96,5 @@ test.describe(`Notification Lifecycle @since-4.12 ${PROVISIONER.GKO}`, () => {
     await kubectl.del(fixture("notifications/v4-api-with-removed-notification/crd.yaml"));
     await kubectl.del(fixture("notifications/notification-for-remove/crd.yaml"));
     await kubectl.del(fixture("notifications/group-for-remove-notification/crd.yaml"));
-  });
-
-  test(`Update notification events ${XRAY.NOTIFICATIONS.NOTIFICATION_HOOKS_GROUPS}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-update-notification-events";
-    const GROUP_NAME = "e2e-group-update-events";
-
-    await test.step("Create service account for group member", async () => {
-      await createServiceAccount(mapi, "e2e-sa-update-events");
-    });
-
-    await test.step("Create Group and Notification resources", async () => {
-      await kubectl.apply(fixture("notifications/group-for-update-events/crd.yaml"));
-      await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-      await kubectl.apply(fixture("notifications/notification-for-update-events/crd.yaml"));
-    });
-
-    await test.step("Deploy API with notification reference", async () => {
-      await kubectl.apply(fixture("notifications/v4-api-with-notification-update-events/crd.yaml"));
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-    const groupId = (await kubectl.getStatus<{ id: string }>("group", GROUP_NAME)).id;
-
-    await test.step("Update Notification resource with added event", async () => {
-      await kubectl.apply(fixture("notifications/notification-for-update-events-added/crd.yaml"));
-      // Wait for reconciliation
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("PORTAL notification contains updated hooks and group", async () => {
-      await expect.poll(async () => {
-        const settings = await mapi.fetchApiNotificationSettings(apiId);
-        return settings.find((s) => s.config_type === "PORTAL");
-      }, { timeout: 10_000 }).toMatchObject({
-        hooks: expect.arrayContaining(["API_STARTED", "API_STOPPED", "APIKEY_EXPIRED"]),
-        groups: expect.arrayContaining([groupId]),
-      });
-    });
-
-    // Cleanup
-    await kubectl.del(fixture("notifications/v4-api-with-notification-update-events/crd.yaml"));
-    await kubectl.del(fixture("notifications/notification-for-update-events-added/crd.yaml"));
-    await kubectl.del(fixture("notifications/group-for-update-events/crd.yaml"));
-  });
-
-  test(`Update notification group refs ${XRAY.NOTIFICATIONS.API_REF_NOTIFICATION} ${XRAY.NOTIFICATIONS.NOTIFICATIONS_VIA_CRS}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-update-notification-grouprefs";
-    const GROUP_NAME = "e2e-group-update-grouprefs";
-
-    await test.step("Create service account for group member", async () => {
-      await createServiceAccount(mapi, "e2e-sa-update-grouprefs");
-    });
-
-    await test.step("Create Group and Notification resources", async () => {
-      await kubectl.apply(fixture("notifications/group-for-update-grouprefs/crd.yaml"));
-      await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-      await kubectl.apply(fixture("notifications/notification-for-update-grouprefs/crd.yaml"));
-    });
-
-    await test.step("Deploy API with notification reference", async () => {
-      await kubectl.apply(fixture("notifications/v4-api-with-notification-update-grouprefs/crd.yaml"));
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("Update Notification resource removing groups", async () => {
-      await kubectl.apply(fixture("notifications/notification-for-update-grouprefs-removed/crd.yaml"));
-      // Wait for reconciliation
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("PORTAL notification has hooks but empty groups", async () => {
-      await expect.poll(async () => {
-        const settings = await mapi.fetchApiNotificationSettings(apiId);
-        return settings.find((s) => s.config_type === "PORTAL");
-      }, { timeout: 10_000 }).toMatchObject({
-        hooks: expect.arrayContaining(["API_STARTED", "API_STOPPED", "APIKEY_EXPIRED"]),
-        groups: [],
-      });
-    });
-
-    // Cleanup
-    await kubectl.del(fixture("notifications/v4-api-with-notification-update-grouprefs/crd.yaml"));
-    await kubectl.del(fixture("notifications/notification-for-update-grouprefs-removed/crd.yaml"));
-    await kubectl.del(fixture("notifications/group-for-update-grouprefs/crd.yaml"));
   });
 });

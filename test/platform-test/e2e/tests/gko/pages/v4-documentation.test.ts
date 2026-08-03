@@ -18,12 +18,10 @@
  * V4 API Documentation — Extended scenarios.
  *
  * Xray tests:
- *   GKO-236:  CRUD on existing V4 API operations (documentation context)
  *   GKO-280:  Documentation created by GKO is read-only when re-imported
- *   GKO-282:  Inline documentation with PUBLIC visibility
  *
- * GKO-1470 (inline page reconciled end-to-end: lands on create, removed on strip)
- * moved to the add-inline-markdown-page-in-api cross-provisioner journey.
+ * Shipping, revising and removing an inline page (GKO-1470/277/278/236/1469/282)
+ * is the shared journey tests/user-journeys/api-producer/document-an-api.
  *
  * Skipped tests:
  *   GKO-283 (V4 spec.visibility PUBLIC-only) — GKO product bug
@@ -55,44 +53,7 @@ test.describe(`V4 API Documentation — Extended ${PROVISIONER.GKO}`, () => {
   // Safety-net cleanup: runs even if a test times out before its inline
   // cleanup. Each del() ignores errors (the resource may already be gone).
   test.afterEach(async () => {
-    for (const f of [
-      "crds/pages/v4-api-with-page-markdown.yaml",
-      "crds/pages/v4-api-public-page.yaml",
-    ]) {
-      await kubectl.del(fixture(f)).catch(() => {});
-    }
-  });
-
-  // ── GKO-236: Documentation CRUD on existing V4 operations ───
-
-  test(`Documentation CRUD on existing V4 operations ${XRAY.PAGES.V4_DOC_OPERATIONS} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-markdown-page";
-    const WITH_PAGE = fixture("pages/v4-api-with-page-markdown/crd.yaml");
-    const UPDATED = fixture("pages/v4-api-with-updated-page-markdown/crd.yaml");
-
-    await test.step("Create API with markdown page", async () => {
-      await kubectl.apply(WITH_PAGE);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("Update markdown page content", async () => {
-      await kubectl.apply(UPDATED);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("Exported CRD reflects update", async () => {
-      const crdYaml = await mapi.exportApiCrd(apiId);
-      const crd = YAML.parse(crdYaml) as ExportedCrd;
-      expect(crd.spec?.pages?.["markdown-page"]?.content).toContain("update");
-    });
-
-    await kubectl.del(UPDATED);
+    await kubectl.del(fixture("pages/v4-api-with-page-markdown/crd.yaml")).catch(() => {});
   });
 
   // ── GKO-280: GKO-created documentation is read-only ─────────
@@ -128,26 +89,4 @@ test.describe(`V4 API Documentation — Extended ${PROVISIONER.GKO}`, () => {
 
     await kubectl.del(WITH_PAGE);
   });
-
-  // ── GKO-282: Inline documentation with PUBLIC visibility ────
-
-  test(`Inline page with PUBLIC visibility is exposed ${XRAY.PAGES.V4_DOC_VISIBILITY_PUBLIC} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-    mapi,
-  }) => {
-    const API_NAME = "e2e-v4-public-page";
-    const fixturePath = fixture("pages/v4-api-public-page/crd.yaml");
-
-    await kubectl.apply(fixturePath);
-    await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    const apiId = (await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME)).id;
-
-    const crd = YAML.parse(await mapi.exportApiCrd(apiId)) as ExportedCrd;
-    expect(crd.spec?.pages?.["public-page"]?.visibility).toBe("PUBLIC");
-
-    await kubectl.del(fixturePath);
-  });
-
-  // GKO-283 (V4 spec.visibility only accepts PUBLIC) was skipped due to a
-  // GKO product bug.
 });
