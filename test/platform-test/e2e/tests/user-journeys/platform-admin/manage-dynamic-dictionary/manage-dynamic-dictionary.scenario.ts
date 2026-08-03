@@ -40,6 +40,7 @@ import { loadGraviteeConfig, poll } from "../../../../../src/index.js";
 import { XRAY, TAGS } from "../../../../helpers/tags.js";
 import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
+import { assertProvisioner } from "../../../../../src/provisioners/index.js";
 import {
   dictionaryYaml,
   tfDynamicDictVars,
@@ -86,6 +87,9 @@ function dynDictTf() {
     toVars: tfDynamicDictVars,
     // remove("dictionary") drops the count-gated dictionary from desired state.
     removeVars: { dictionary: { create_dictionary: false } },
+    // The `[0]` is the count index: a `count`-gated resource is addressed by
+    // index in Terraform state, and `view.read()` matches the address exactly.
+    addresses: { dictionary: "apim_dictionary.dyn[0]" },
   });
 }
 
@@ -223,6 +227,7 @@ forEachProvisioner<DynamicDictParams>(
 
     await test.step("Remove only the dictionary; the gateway stops resolving, the API stays up", async () => {
       await provisioned.remove("dictionary");
+      await assertProvisioner(provisioned, "dictionary", "gone");
       await assertStopsResolving(baseUrl, ctx, "ABCDEF");
     });
   },

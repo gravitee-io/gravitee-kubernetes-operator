@@ -31,8 +31,10 @@ function roleFor(kind: string, label?: string): Role {
  */
 export abstract class BaseProvisioned<P = unknown> implements Provisioned<P> {
   abstract readonly provisionerId: ProvisionerId;
-  abstract readonly checks: ProvisionerChecks;
   abstract readonly view: ProvisionerView;
+
+  /** Only provisioners with genuinely unique assertions declare this; see {@link Provisioned.checks}. */
+  readonly checks?: ProvisionerChecks;
 
   /** Resolve a logical role to its APIM id (UUID). Resolved once, then cached. */
   protected abstract resolveId(role: Role): Promise<string>;

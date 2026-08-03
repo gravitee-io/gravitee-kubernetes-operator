@@ -31,6 +31,7 @@ import { test } from "../../../../setup.js";
 import { XRAY, TAGS } from "../../../../helpers/tags.js";
 import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
+import { assertProvisioner } from "../../../../../src/provisioners/index.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const REGISTERED_DESCRIPTION = "Application registered via the register/update/retire journey";
@@ -62,6 +63,7 @@ forEachProvisioner<AppLifecycleParams>(
         // remove("application") drops the resource from the desired state and
         // re-applies, which APIM treats as a soft-delete (ARCHIVED).
         removeVars: { application: { create_application: false } },
+        addresses: { application: "apim_application.app" },
       }),
     },
     xray: {
@@ -94,6 +96,7 @@ forEachProvisioner<AppLifecycleParams>(
 
     await test.step("Retiring the application archives it in APIM", async () => {
       await provisioned.remove("application");
+      await assertProvisioner(provisioned, "application", "gone");
       await mapi.waitForApplicationMatches(appId, { status: "ARCHIVED" }, { timeoutMs: 30_000 });
     });
   },

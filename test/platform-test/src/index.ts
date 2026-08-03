@@ -54,7 +54,6 @@ export type {
   Provisioned,
   Provisioner,
   ProvisionerChecks,
-  GkoChecks,
   GkoScenarioSpec,
   GkoRoles,
   GkoRoleBinding,
@@ -63,7 +62,6 @@ export type {
 } from "./provisioners/index.js";
 export {
   GkoProvisioner,
-  isGko,
   subscriptionYaml,
   apiKeySecretYaml,
   TerraformProvisioner,

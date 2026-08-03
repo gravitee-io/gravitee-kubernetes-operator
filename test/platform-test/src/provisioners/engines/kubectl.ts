@@ -126,32 +126,6 @@ export async function getCondition(
   return status?.conditions?.find((c) => c.type === type);
 }
 
-/** Assert that a Kubernetes event for the given resource contains a message substring. */
-export async function assertEventContains(
-  kind: string,
-  name: string,
-  message: string,
-  namespace = NAMESPACE,
-): Promise<void> {
-  const { stdout } = await run([
-    "get",
-    "events",
-    `--field-selector=involvedObject.name=${name}`,
-    "-n",
-    namespace,
-    "-o",
-    "json",
-  ]);
-  const events = JSON.parse(stdout) as { items: Array<{ message: string }> };
-  const found = events.items.some((e) => e.message.includes(message));
-  if (!found) {
-    throw new Error(
-      `No event for ${kind}/${name} contains "${message}". ` +
-        `Events: ${events.items.map((e) => e.message).join("; ")}`,
-    );
-  }
-}
-
 /** Extract a specific field using jsonpath. */
 export async function getField<T = string>(
   kind: string,

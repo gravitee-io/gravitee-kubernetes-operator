@@ -18,8 +18,8 @@
  * GKO-only api-key behaviour: things whose *assertion* is Kubernetes-specific
  * (admission acceptance/rejection, Secret templating, push-based idempotent
  * reconcile, and Subscription-only deletion) and so have no Terraform analog.
- * These use the GKO provisioner handle and its `checks` surface, but stay out
- * of the shared matrix.
+ * These provision through the GKO provisioner like any journey, but their
+ * assertions have no shared-layer home, so they stay out of the matrix.
  */
 
 import { test, expect } from "../../../../setup.js";
@@ -27,7 +27,7 @@ import { XRAY, TAGS, PROVISIONER } from "../../../../helpers/tags.js";
 import * as kubectl from "../../../../helpers/kubectl.js";
 import { gkoScenario } from "../../../../helpers/provisioner-env.js";
 import {
-  isGko,
+  assertProvisioner,
   subscriptionYaml,
   apiKeySecretYaml,
   type Provisioner,
@@ -90,11 +90,8 @@ test.describe(`GKO-only: api-key admission, templating, idempotency ${PROVISIONE
     // Subscription reaching its Accepted condition during provision() IS the
     // assertion (provision waits for it).
     const h = await provisionTracked(fullGko("e2e-sub-apikey-webhook"), {});
-    expect(isGko(h.checks)).toBe(true);
-    if (isGko(h.checks)) {
-      const status = await h.checks.status<{ id?: string }>("subscription");
-      expect(status.id).toBeTruthy();
-    }
+    await assertProvisioner(h, "subscription", "applied");
+    expect(await h.subscriptionId()).toBeTruthy();
   });
 
   // ── CRD schema rejects api-keys outside 32-256 char bounds (admission) ──
