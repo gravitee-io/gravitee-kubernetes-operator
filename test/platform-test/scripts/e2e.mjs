@@ -15,10 +15,10 @@
  */
 
 /**
- * Thin e2e entry point. Translates the suite's custom selection flags into env
- * vars that e2e/playwright.config.ts reads, then runs `playwright test` with the
- * config (so globalSetup always runs) and forwards every other argument
- * untouched. The custom flags are orthogonal and combine freely:
+ * The single entry point for running the suite. Translates the suite's custom
+ * selection flags into the env vars / config that Playwright reads, then runs
+ * `playwright test` (so globalSetup always runs) and forwards every other
+ * argument untouched. The custom flags are orthogonal and combine freely:
  *
  *   npm run e2e -- --provision-with gko --run-up-to-version 4.12.0 [playwright args]
  *
@@ -29,6 +29,13 @@
  *   --run-up-to-version <semver>      Run only features available at that version,
  *                                     i.e. skip tests tagged @since-<newer>.
  *                                     -> E2E_MAX_VERSION (enforced in e2e/setup.ts).
+ *   --suite <name>                    Which suite to run (default "e2e"). "upgrade"
+ *                                     selects the survival specs, which run in two
+ *                                     phases across SEPARATE processes either side
+ *                                     of an in-place GKO + APIM upgrade, and so use
+ *                                     their own config + longer timeout.
+ *   --phase <before|after>            Required by --suite upgrade: which side of the
+ *                                     upgrade to run.
  *   <anything else>                   Forwarded verbatim to `playwright test`
  *                                     (e.g. --grep @GKO-2828, --headed, a file path).
  *
@@ -42,17 +49,30 @@ import { fileURLToPath } from "node:url";
 import { PROVISIONER_ORDER } from "../dist/provisioners/registry.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG = path.resolve(__dirname, "../e2e/playwright.config.ts");
 const PROVISIONERS = PROVISIONER_ORDER;
+
+/**
+ * Suites differ only in which Playwright config they use and whether they take a
+ * phase. Everything else (lane selection, version capping, passthrough) is shared,
+ * so there is one way to launch the suite regardless of which one you want.
+ */
+const SUITES = {
+  e2e: { config: "../e2e/playwright.config.ts" },
+  upgrade: { config: "../e2e/playwright.upgrade.config.ts", phases: ["before", "after"] },
+};
 
 function die(message) {
   console.error(`[e2e] ${message}`);
   process.exit(2);
 }
 
+const VALUE_FLAGS = ["--provision-with", "--run-up-to-version", "--suite", "--phase"];
+
 const args = process.argv.slice(2);
 const env = {};
 const passthrough = [];
+let suiteName = "e2e";
+let phase;
 
 for (let i = 0; i < args.length; i++) {
   const arg = args[i];
@@ -64,25 +84,54 @@ for (let i = 0; i < args.length; i++) {
     inlineValue = arg.slice(eq + 1);
   }
 
-  if (name === "--provision-with" || name === "--run-up-to-version") {
-    let value = inlineValue;
-    if (value === undefined) {
-      value = args[i + 1];
-      if (value === undefined || value.startsWith("-")) die(`${name} requires a value`);
-      i++; // consume the separate value token
-    }
-    if (name === "--provision-with") {
+  if (!VALUE_FLAGS.includes(name)) {
+    passthrough.push(arg);
+    continue;
+  }
+
+  let value = inlineValue;
+  if (value === undefined) {
+    value = args[i + 1];
+    if (value === undefined || value.startsWith("-")) die(`${name} requires a value`);
+    i++; // consume the separate value token
+  }
+
+  switch (name) {
+    case "--provision-with": {
       const provisioner = value.toLowerCase();
       if (!PROVISIONERS.includes(provisioner)) {
         die(`unknown provisioner "${value}". Known: ${PROVISIONERS.join(", ")}`);
       }
       env.E2E_PROVISIONER = provisioner;
-    } else {
-      env.E2E_MAX_VERSION = value;
+      break;
     }
-  } else {
-    passthrough.push(arg);
+    case "--run-up-to-version":
+      env.E2E_MAX_VERSION = value;
+      break;
+    case "--suite":
+      suiteName = value.toLowerCase();
+      if (!SUITES[suiteName]) {
+        die(`unknown suite "${value}". Known: ${Object.keys(SUITES).join(", ")}`);
+      }
+      break;
+    case "--phase":
+      phase = value.toLowerCase();
+      break;
   }
+}
+
+const suite = SUITES[suiteName];
+
+if (suite.phases) {
+  if (!phase) die(`--suite ${suiteName} requires --phase <${suite.phases.join("|")}>`);
+  if (!suite.phases.includes(phase)) {
+    die(`unknown phase "${phase}" for suite "${suiteName}". Known: ${suite.phases.join(", ")}`);
+  }
+  // The phases are separate spec files, selected by filename.
+  passthrough.push(`survival.${phase}`);
+} else if (phase) {
+  const phased = Object.keys(SUITES).filter((n) => SUITES[n].phases);
+  die(`--phase is only meaningful with a phased suite (${phased.join(", ")})`);
 }
 
 if (env.E2E_MAX_VERSION) {
@@ -90,8 +139,12 @@ if (env.E2E_MAX_VERSION) {
     `[e2e] capping at APIM version ${env.E2E_MAX_VERSION}: skipping tests tagged @since-<newer>`,
   );
 }
+if (suiteName !== "e2e") {
+  console.log(`[e2e] suite: ${suiteName}${phase ? ` (${phase} phase)` : ""}`);
+}
 
-const child = spawn("npx", ["playwright", "test", "--config", CONFIG, ...passthrough], {
+const config = path.resolve(__dirname, suite.config);
+const child = spawn("npx", ["playwright", "test", "--config", config, ...passthrough], {
   stdio: "inherit",
   env: { ...process.env, ...env },
 });

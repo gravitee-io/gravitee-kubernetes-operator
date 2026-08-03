@@ -52,8 +52,8 @@
     "e2e:regression": "node scripts/e2e.mjs --grep @regression",
     "e2e:gko": "node scripts/e2e.mjs --provision-with gko",
     "e2e:terraform": "node scripts/e2e.mjs --provision-with terraform",
-    "e2e:upgrade:before": "playwright test --config e2e/playwright.upgrade.config.ts survival.before",
-    "e2e:upgrade:after": "playwright test --config e2e/playwright.upgrade.config.ts survival.after"
+    "e2e:upgrade:before": "node scripts/e2e.mjs --suite upgrade --phase before",
+    "e2e:upgrade:after": "node scripts/e2e.mjs --suite upgrade --phase after"
   },
   "dependencies": {
     "yaml": "^2"
