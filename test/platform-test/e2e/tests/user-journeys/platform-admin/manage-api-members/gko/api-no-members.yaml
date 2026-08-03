@@ -12,26 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The journey's API, with the membership revoked. All variants share one CR
+# name so update() re-applies over the previous one and the membership has to
+# change in place.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-with-members
+  name: api-with-members
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-with-members"
-  description: "E2E test: V4 API with members removed"
-  version: "1.0.0"
+  name: "api-with-members"
+  description: "V4 proxy API whose membership the journey grants, changes and revokes"
+  version: "1.0"
   type: PROXY
   state: STARTED
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
+  notifyMembers: false
   listeners:
     - type: HTTP
       paths:
-        - path: "/e2e-v4-with-members"
+        - path: "/api-with-members"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -52,4 +55,3 @@ spec:
       name: "Free plan"
       security:
         type: "KEY_LESS"
-  members: []

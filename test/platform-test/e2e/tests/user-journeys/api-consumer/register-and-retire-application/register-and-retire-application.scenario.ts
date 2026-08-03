@@ -17,17 +17,26 @@
 /**
  * Journey: register, update, and retire an application.
  *
- * As an application developer, I register an application, edit it, then retire it.
- * The shared invariant is provisioner-agnostic: whichever driver creates the
- * application, APIM records it via the Automation API (origin KUBERNETES),
- * reflects a description update, and ARCHIVES it on retire.
+ * As an application developer, I register an application with its client
+ * settings and the metadata my organisation tags it with, edit it, then retire
+ * it. The shared invariant is provisioner-agnostic: whichever driver creates the
+ * application, APIM records it via the Automation API (origin KUBERNETES) with
+ * the declared settings and metadata, reflects a description update, and
+ * ARCHIVES it on retire.
+ *
+ * Metadata has to be read from its OWN endpoint: the application detail
+ * response omits it entirely, which is why declaring metadata used to pass
+ * without ever being checked.
  *
  * Fixtures are co-located in this folder (gko/ + terraform/ + README.md).
+ * Application admission rules (both `app` and `oauth` settings at once, a
+ * missing/duplicate client id, invalid redirect URIs or grant types) stay in
+ * tests/gko/applications.
  */
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { test } from "../../../../setup.js";
+import { test, expect } from "../../../../setup.js";
 import { XRAY, TAGS } from "../../../../helpers/tags.js";
 import { forEachProvisioner } from "../../../../helpers/for-each-provisioner.js";
 import { gkoScenario, tfScenario } from "../../../../helpers/provisioner-env.js";
@@ -67,7 +76,13 @@ forEachProvisioner<AppLifecycleParams>(
       }),
     },
     xray: {
-      gko: [XRAY.APPLICATIONS.CREATE_APP, XRAY.APPLICATIONS.UPDATE_APP, XRAY.APPLICATIONS.DELETE_APP],
+      gko: [
+        XRAY.APPLICATIONS.CREATE_APP,
+        XRAY.APPLICATIONS.UPDATE_APP,
+        XRAY.APPLICATIONS.DELETE_APP,
+        XRAY.APPLICATIONS.APP_WITH_METADATA,
+        XRAY.APPLICATIONS.APP_CONFIGURE_SETTINGS,
+      ],
       terraform: [XRAY.TERRAFORM.DELETE_APPLICATION_TF, XRAY.TERRAFORM.APPLICATION_LIFECYCLE_TF],
     },
     tags: [TAGS.REGRESSION],
@@ -80,9 +95,27 @@ forEachProvisioner<AppLifecycleParams>(
     await test.step("Registered application lands in APIM (origin KUBERNETES)", async () => {
       await mapi.waitForApplicationMatches(
         appId,
-        { description: REGISTERED_DESCRIPTION, origin: "KUBERNETES" },
+        {
+          description: REGISTERED_DESCRIPTION,
+          origin: "KUBERNETES",
+          settings: { app: { type: "SIMPLE" } },
+        },
         { timeoutMs: 30_000 },
       );
+    });
+
+    await test.step("Declared metadata is recorded against the application", async () => {
+      await expect
+        .poll(
+          async () =>
+            (await mapi.listApplicationMetadata(appId)).map((m) => ({
+              name: m.name,
+              value: m.value,
+              format: m.format,
+            })),
+          { timeout: 30_000, message: "application metadata reaches APIM" },
+        )
+        .toEqual([{ name: "owner-team", value: "payments", format: "STRING" }]);
     });
 
     await test.step("Description update propagates to APIM", async () => {

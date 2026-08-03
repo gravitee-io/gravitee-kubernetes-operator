@@ -15,18 +15,23 @@
  */
 
 /**
- * Journey: create, rename, and delete a group.
+ * Journey: create a group with a member, rename it, and delete it.
  *
- * As a platform admin, I create a group so I can organise API members, rename it
- * as the team it represents changes, and delete it when the team is dissolved.
- * A group created through any provisioner lands in APIM via the Automation API
- * (origin KUBERNETES), and a rename must update it IN PLACE rather than
- * replacing it — the id is what API memberships point at.
+ * As a platform admin, I create a group with a member so I can organise API
+ * access, rename it as the team it represents changes, and delete it when the
+ * team is dissolved. A group created through any provisioner lands in APIM via
+ * the Automation API (origin KUBERNETES), and a rename must update it IN PLACE
+ * rather than replacing it — the id is what API memberships point at.
+ *
+ * The member has to be a REAL user: a member naming a user that does not exist
+ * is silently dropped and the group comes back empty, so the journey creates a
+ * `gravitee`-source service account as a provisioner-agnostic precondition.
  *
  * Fixtures are co-located in this folder. Provisioner-specific group behaviour
- * (GKO member reconciliation / admission; Terraform drift, import, data source,
- * hrid replacement, provider-side validation) stays in the per-provisioner
- * suites under tests/gko/groups and tests/terraform/groups.test.ts.
+ * (GKO member resolution against a non-existing user, CRD role defaulting,
+ * admission; Terraform drift, import, data source, hrid replacement,
+ * provider-side validation) stays in the per-provisioner suites under
+ * tests/gko/groups and tests/terraform/groups.test.ts.
  */
 
 import path from "node:path";
@@ -46,6 +51,16 @@ interface GroupParams {
 
 /** Matches the name in gko/group-renamed.yaml; the assertion only checks the suffix. */
 const RENAMED_TF = "simple-group-tf-renamed";
+
+/** Named by both fixtures; group members are identified by display name. */
+const MEMBER_SOURCE_ID = "e2e-sa-group-member";
+const MEMBER_DISPLAY_NAME = `${MEMBER_SOURCE_ID} Service`;
+
+// Created once per test in beforeEach (mapi is a test-scoped fixture, so it is
+// unreachable from beforeAll). Idempotent, so repeat runs are safe.
+test.beforeEach(async ({ mapi }) => {
+  await mapi.createServiceAccount(MEMBER_SOURCE_ID);
+});
 
 forEachProvisioner<GroupParams>(
   {
@@ -76,6 +91,8 @@ forEachProvisioner<GroupParams>(
         XRAY.TERRAFORM.GROUP_UPDATE,
         XRAY.TERRAFORM.GROUP_DESTROY,
         XRAY.TERRAFORM.GROUP_NOTIFY_MEMBERS,
+        XRAY.TERRAFORM.GROUP_WITH_MEMBER,
+        XRAY.TERRAFORM.GROUP_MEMBER_LIFECYCLE,
       ],
     },
     tags: [TAGS.REGRESSION],
@@ -93,6 +110,21 @@ forEachProvisioner<GroupParams>(
         origin: "KUBERNETES",
         disable_membership_notifications: true,
       });
+    });
+
+    await test.step("The declared member is resolved onto the group", async () => {
+      await expect
+        .poll(
+          async () =>
+            Object.fromEntries(
+              (await mapi.fetchGroupMembers(groupId)).map((m) => [
+                m.displayName ?? m.id,
+                m.roles?.API,
+              ]),
+            ),
+          { timeout: 30_000, message: "group member is resolved in APIM" },
+        )
+        .toEqual({ [MEMBER_DISPLAY_NAME]: "USER" });
     });
 
     await test.step("Rename updates the group in place, keeping its id", async () => {

@@ -27,6 +27,10 @@ spec:
     namespace: "default"
   name: "lifecycle-application"
   description: "Application registered via the register/update/retire journey"
+  metadata:
+    - name: "owner-team"
+      value: "payments"
+      format: "STRING"
   settings:
     app:
       type: "SIMPLE"

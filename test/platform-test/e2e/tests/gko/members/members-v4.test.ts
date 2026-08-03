@@ -17,14 +17,15 @@
 /**
  * Members — V4 API tests.
  *
- * Tests member management on V4 API CRDs including validation of
- * non-existing members/groups, member removal, and PRIMARY_OWNER restrictions.
+ * Tests the member cases only the operator can produce: validation of
+ * non-existing members/groups, CRD-level member defaulting, and PRIMARY_OWNER
+ * restrictions. Granting, re-roling and revoking a member is the shared journey
+ * tests/user-journeys/platform-admin/manage-api-members.
  *
  * Xray tests:
  *   GKO-251: Non-existing member
  *   GKO-252: Non-existing group
- *   GKO-253: Remove member from API
- *   GKO-254: Member with no role
+ *   GKO-254: Member with no role (GKO-249 is the same contract)
  *   GKO-255: Member with no source
  *   GKO-470: Non-existing members in CRD
  *   GKO-569: Adding PRIMARY_OWNER not allowed
@@ -38,6 +39,10 @@
 import { test, fixture, expect } from "../../../setup.js";
 import { XRAY, TAGS, PROVISIONER } from "../../../helpers/tags.js";
 import * as kubectl from "../../../helpers/kubectl.js";
+
+/** The member both the fixture and the assertion name; see createServiceAccount. */
+const MEMBER_SOURCE_ID = "e2e-sa-api-member";
+const MEMBER_DISPLAY_NAME = `${MEMBER_SOURCE_ID} Service`;
 
 interface StatusWithConditions {
   id?: string;
@@ -54,12 +59,11 @@ test.describe(`Members — V4 API ${PROVISIONER.GKO}`, () => {
   // cleanup. Each del() ignores errors (the resource may already be gone).
   test.afterEach(async () => {
     for (const f of [
-      "crds/members/v4-api-non-existing-member.yaml",
-      "crds/members/v4-api-non-existing-group.yaml",
-      "crds/members/v4-api-member-removed.yaml",
-      "crds/members/v4-api-with-members.yaml",
-      "crds/members/v4-api-member-no-role.yaml",
-      "crds/members/v4-api-extra-po.yaml",
+      "members/v4-api-non-existing-member/crd.yaml",
+      "members/v4-api-non-existing-group/crd.yaml",
+      "members/v4-api-member-no-role/crd.yaml",
+      "members/v4-api-extra-po/crd.yaml",
+      "members/v4-api-with-members/crd.yaml",
     ]) {
       await kubectl.del(fixture(f)).catch(() => {});
     }
@@ -130,61 +134,40 @@ test.describe(`Members — V4 API ${PROVISIONER.GKO}`, () => {
     await kubectl.del(fixturePath);
   });
 
-  // ── GKO-253: Remove member from API ─────────────────────────────
+  // ── GKO-254/249: Member with no role ────────────────────────────
+  // GKO-only: the Automation API's member schema marks `role` non-nullable, so
+  // the Terraform provider rejects omitting it — only the operator can leave the
+  // role out and let APIM default it. That default is the assertion here; the
+  // rest of the membership lifecycle is the shared manage-api-members journey.
 
-  test(`Remove member from V4 API ${XRAY.MEMBERS.V4_REMOVE_MEMBER} ${TAGS.REGRESSION}`, async ({
+  test(`Member with no role gets the default USER role ${XRAY.MEMBERS.V4_MEMBER_NO_ROLE} ${XRAY.MEMBERS.V4_ADD_MEMBER_NO_ROLE} ${TAGS.REGRESSION}`, async ({
     kubectl,
     mapi,
   }) => {
-    const API_NAME = "e2e-v4-with-members";
-    const withMembersFixture = fixture("members/v4-api-with-members/crd.yaml");
-    const removedFixture = fixture("members/v4-api-member-removed/crd.yaml");
-
-    await test.step("Deploy API with member", async () => {
-      await kubectl.apply(withMembersFixture);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
-    const apiId = status.id;
-
-    await test.step("Verify member exists in APIM", async () => {
-      await mapi.assertApiMatches(apiId, { name: API_NAME, state: "STARTED" });
-    });
-
-    await test.step("Apply CRD with members removed", async () => {
-      await kubectl.apply(removedFixture);
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-    });
-
-    await test.step("Member is removed from the API", async () => {
-      // After removing members, only the PRIMARY_OWNER should remain
-      await mapi.assertApiMatches(apiId, { name: API_NAME });
-    });
-
-    await kubectl.del(removedFixture);
-  });
-
-  // ── GKO-254: Member with no role ────────────────────────────────
-  // A member without a role gets a default role — this is NOT a rejection.
-  // The CRD should be accepted and the API deployed successfully.
-
-  test(`Member with no role gets default role ${XRAY.MEMBERS.V4_MEMBER_NO_ROLE} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
     const API_NAME = "e2e-v4-member-no-role";
     const fixturePath = fixture("members/v4-api-member-no-role/crd.yaml");
+
+    // A member naming a user that does not exist is silently dropped, which
+    // would make the role assertion below vacuous.
+    await mapi.createServiceAccount(MEMBER_SOURCE_ID);
 
     await test.step("Apply CRD with member missing role field", async () => {
       await kubectl.apply(fixturePath);
       await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
     });
 
-    await test.step("API is accepted and deployed", async () => {
-      const status = await kubectl.getStatus<StatusWithConditions>("apiv4definition", API_NAME);
-      const accepted = status.conditions?.find((c) => c.type === "Accepted");
-      expect(accepted).toBeTruthy();
-      expect(accepted!.status).toBe("True");
+    const status = await kubectl.getStatus<{ id: string }>("apiv4definition", API_NAME);
+
+    await test.step("APIM records the member with its default role", async () => {
+      await expect
+        .poll(
+          async () => {
+            const members = await mapi.listApiMembers(status.id);
+            return members.find((m) => m.displayName === MEMBER_DISPLAY_NAME)?.roles?.[0]?.name;
+          },
+          { timeout: 30_000, message: "member is recorded with the default role" },
+        )
+        .toBe("USER");
     });
 
     await kubectl.del(fixturePath);

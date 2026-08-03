@@ -27,7 +27,10 @@ spec:
   name: "simple-group"
   notifyMembers: false
   members:
+    # A gravitee-source service account, created by the journey. `admin` is a
+    # memory-source user, so naming it here would resolve to nothing and the
+    # group would silently come back with no members at all.
     - source: gravitee
-      sourceId: admin
+      sourceId: e2e-sa-group-member
       roles:
         API: USER

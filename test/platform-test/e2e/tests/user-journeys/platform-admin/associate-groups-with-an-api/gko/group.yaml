@@ -12,25 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The "updated" state of the register/update/retire journey: same application as
-# application.yaml with a changed description, re-applied to exercise the update.
+# The group the journey associates with its API. Applied and reconciled BEFORE
+# the API: APIM silently drops a reference to a group that does not exist yet.
 apiVersion: gravitee.io/v1alpha1
-kind: Application
+kind: Group
 metadata:
-  name: lifecycle-application
+  name: api-owning-group
   labels:
     gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "lifecycle-application"
-  description: "Application updated via the register/update/retire journey"
-  metadata:
-    - name: "owner-team"
-      value: "payments"
-      format: "STRING"
-  settings:
-    app:
-      type: "SIMPLE"
-      clientId: "lifecycle-application-client"
+  name: "api-owning-group"
+  notifyMembers: false
+  # Required by the Group CRD even when the group has no members; the journey is
+  # about the API<->group association, not membership.
+  members: []

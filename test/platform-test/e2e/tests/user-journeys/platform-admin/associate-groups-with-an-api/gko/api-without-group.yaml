@@ -12,28 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-402: V4 API with notifyMembers enabled and a member declared.
+# The journey's API, detached from the group. Both variants share one CR name so
+# update() re-applies over the previous one and the association has to change in
+# place.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-notify-members
+  name: api-in-a-group
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-notify-members"
-  description: "E2E test: V4 API with notifyMembers enabled"
-  version: "1.0.0"
+  name: "api-in-a-group"
+  description: "V4 proxy API the journey associates with a group and then detaches"
+  version: "1.0"
   type: PROXY
   state: STARTED
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
-  notifyMembers: true
   listeners:
     - type: HTTP
       paths:
-        - path: "/e2e-v4-notify-members"
+        - path: "/api-in-a-group"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -54,7 +54,3 @@ spec:
       name: "Free plan"
       security:
         type: "KEY_LESS"
-  members:
-    - source: gravitee
-      sourceId: "admin"
-      role: "USER"
