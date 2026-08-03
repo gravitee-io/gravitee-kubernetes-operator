@@ -473,6 +473,29 @@ export class Mapi {
   }
 
   /**
+   * Assert no group with the given APIM id exists. The id variant is what a
+   * provisioner-agnostic scenario can use: an hrid is derived differently per
+   * provisioner (GKO composes `<namespace>-<name>`, Terraform uses the literal
+   * `hrid` attribute), whereas the id comes back from the provisioned handle.
+   */
+  async assertGroupAbsentById(id: string): Promise<void> {
+    const groups = await this.listGroups();
+    const found = groups.find((g) => g.id === id);
+    if (found) {
+      throw new AssertionError({
+        message: `Expected no group with id "${id}", but found one (hrid ${found.hrid})`,
+      });
+    }
+  }
+
+  async waitForGroupAbsentById(id: string, options: PollOptions = {}): Promise<void> {
+    await poll(
+      () => this.assertGroupAbsentById(id),
+      { description: `group with id "${id}" is absent`, ...options },
+    );
+  }
+
+  /**
    * Delete a group directly from APIM by its id.
    *
    * Used to simulate an out-of-band change so a subsequent `terraform plan`

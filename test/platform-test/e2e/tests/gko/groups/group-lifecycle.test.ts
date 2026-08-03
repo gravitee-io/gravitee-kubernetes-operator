@@ -48,10 +48,11 @@ test.describe(`Groups — Lifecycle @since-4.12 ${PROVISIONER.GKO}`, () => {
     }
   });
 
-  // ── GKO-983: Create Group with existing user ────────────────
-
-  // Moved to the gko arm of the shared tests/user-journeys/create-group-with-member/create-group-with-member.scenario.ts
-  // (create group -> lands in APIM with origin KUBERNETES), tagged @GKO-983.
+  // Create (@GKO-983), modify (@GKO-986) and delete (@GKO-985) a group are the
+  // gko arm of tests/user-journeys/platform-admin/create-group-with-member,
+  // which runs the same intent through Terraform too. What stays here is
+  // GKO-only: member resolution against a non-existing user, CRD defaulting
+  // when roles are omitted, and the primary-owner admission rule.
 
   // ── GKO-984: Create Group with non-existing user ────────────
 
@@ -80,58 +81,6 @@ test.describe(`Groups — Lifecycle @since-4.12 ${PROVISIONER.GKO}`, () => {
     });
 
     await kubectl.del(fixturePath);
-  });
-
-  // ── GKO-985: Delete a Group ─────────────────────────────────
-
-  test(`Delete a Group ${XRAY.GROUPS.DELETE_GROUP} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const GROUP_NAME = "e2e-group-simple";
-    const fixturePath = fixture("groups/lifecycle/crd.yaml");
-
-    await test.step("Create group", async () => {
-      await kubectl.apply(fixturePath);
-      await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("group", GROUP_NAME);
-    expect(status.id).toBeTruthy();
-
-    await test.step("Delete the group CRD", async () => {
-      await kubectl.del(fixturePath);
-      await kubectl.waitForDeletion("group", GROUP_NAME);
-    });
-  });
-
-  // ── GKO-986: Modify a Group ─────────────────────────────────
-
-  test(`Modify a Group ${XRAY.GROUPS.MODIFY_GROUP} ${TAGS.REGRESSION}`, async ({
-    kubectl,
-  }) => {
-    const GROUP_NAME = "e2e-group-simple";
-    const createFixture = fixture("groups/lifecycle/crd.yaml");
-    const updateFixture = fixture("groups/lifecycle/crd-updated.yaml");
-
-    await test.step("Create group", async () => {
-      await kubectl.apply(createFixture);
-      await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-    });
-
-    const status = await kubectl.getStatus<{ id: string }>("group", GROUP_NAME);
-    expect(status.id).toBeTruthy();
-
-    await test.step("Update group with new roles and notifyMembers", async () => {
-      await kubectl.apply(updateFixture);
-      await kubectl.waitForCondition("group", GROUP_NAME, "Accepted");
-    });
-
-    await test.step("Group ID remains the same after update", async () => {
-      const updatedStatus = await kubectl.getStatus<{ id: string }>("group", GROUP_NAME);
-      expect(updatedStatus.id).toBe(status.id);
-    });
-
-    await kubectl.del(updateFixture);
   });
 
   // ── GKO-987: Create Group without roles ─────────────────────
