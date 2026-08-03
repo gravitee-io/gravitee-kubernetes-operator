@@ -28,7 +28,7 @@
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadGraviteeConfig } from "../../src/cmd/config.js";
+import { loadGraviteeConfig } from "../../src/config/index.js";
 import { fixture } from "../setup.js";
 import {
   initWorkspace as initWorkspaceCore,

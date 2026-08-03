@@ -20,9 +20,8 @@
 #   Management API      http://localhost:30083
 #   Console             http://localhost:30080
 #
-# Copy this file to the working directory where you run platform-test,
-# or pass its path via the --config flag:
-#   platform-test assert-api --config /path/to/config.yaml
+# The e2e suite loads this file from the package root; a library consumer can
+# point `loadGraviteeConfig(path)` at a copy elsewhere.
 #
 # Environment variable overrides:
 #   GRAVITEE_BASE_URL          apim.baseUrl
