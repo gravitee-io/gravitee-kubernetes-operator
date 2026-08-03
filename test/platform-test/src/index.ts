@@ -45,7 +45,7 @@ export { deepPartialMatch, throwIfFailed, poll } from "./utils/match/index.js";
 export { HttpClient, createTlsFetch } from "./utils/http/index.js";
 
 // ── Config / CLI helpers ──────────────────────────────────────
-export { loadGraviteeConfig, createMapiFromConfig, applyEnvVars } from "./cmd/config.js";
+export { loadGraviteeConfig, createMapiFromConfig, applyEnvVars } from "./config/index.js";
 
 // ── Provisioners ──────────────────────────────────────────────
 export type {

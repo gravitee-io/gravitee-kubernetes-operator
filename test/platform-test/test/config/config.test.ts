@@ -19,7 +19,7 @@ import {
   validateConfig,
   applyEnvVars,
   createMapiFromConfig,
-} from "../../src/cmd/config.js";
+} from "../../src/config/index.js";
 import { Mapi } from "../../src/assertions/apim/index.js";
 
 // ── validateConfig ────────────────────────────────────────────

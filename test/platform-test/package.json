@@ -6,9 +6,6 @@
   "engines": {
     "node": ">=18"
   },
-  "bin": {
-    "platform-test": "./dist/cmd/cli.js"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -38,9 +35,9 @@
       "types": "./dist/types/apim.d.ts",
       "default": "./dist/types/apim.js"
     },
-    "./cmd": {
-      "types": "./dist/cmd/index.d.ts",
-      "default": "./dist/cmd/index.js"
+    "./config": {
+      "types": "./dist/config/index.d.ts",
+      "default": "./dist/config/index.js"
     }
   },
   "scripts": {

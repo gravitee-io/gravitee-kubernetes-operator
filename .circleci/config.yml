@@ -462,7 +462,7 @@ jobs:
                 --set manager.image.tag=latest \
                 -f ./test/e2e/operator.values.yaml
       - run:
-          name: Build platform-test CLI
+          name: Build platform-test library
           command: npm --prefix test/platform-test install && npm --prefix test/platform-test run build
       - run:
           name: Install Terraform
@@ -568,7 +568,7 @@ jobs:
             go install github.com/gravitee-io-labs/gck@v1.1.1
             echo 'export PATH="$HOME/go/bin:$PATH"' >> "$BASH_ENV"
       - run:
-          name: Build platform-test CLI
+          name: Build platform-test library
           command: npm --prefix test/platform-test install && npm --prefix test/platform-test run build
       # Export Xray Cloud creds before the run (keeper/env-export runs on_success), so
       # the `when: always` push step below has them even if the survival run fails.
