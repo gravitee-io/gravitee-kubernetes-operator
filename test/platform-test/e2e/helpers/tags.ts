@@ -420,8 +420,7 @@ export const XRAY = {
     CREATE_APP_AND_SUBSCRIPTION: "@GKO-1379",
     VALID_AND_MALFORMED_HCL: "@GKO-1453",
     GENERAL_CONDITIONS_PAGE: "@GKO-1930",
-    // Awaiting a real Xray ticket — run /xray-sync-tests to file it.
-    VIEW_DETECTS_TAINTED_RESOURCE: "@GKO-TBD-tf-view-tainted",
+    VIEW_DETECTS_TAINTED_RESOURCE: "@GKO-3095",
     // error handling in TF + delete-via-TF lifecycle.
     // GKO-1381 (Role-specific access for managing Apps and subscriptions
     // via Terraform) is not covered: the test harness has no
@@ -486,6 +485,16 @@ export const XRAY = {
     // ── GKO-3025: inline-pages parity journey (add-inline-markdown-page-in-api) ──
     // @parent: GKO-3025
     API_INLINE_PAGES_TF: "@GKO-3034",
+    // ── GKO-3084: journeys migrated out of tests/gko ───────────────
+    // @parent: GKO-3084
+    API_VISIBILITY_LIFECYCLE_TF: "@GKO-3087",
+    API_FAILOVER_TF: "@GKO-3088",
+    API_MEMBERS_TF: "@GKO-3089",
+    API_GROUPS_TF: "@GKO-3090",
+    APPLICATION_MEMBERS_TF: "@GKO-3091",
+    API_NOTIFICATIONS_TF: "@GKO-3092",
+    API_POLICY_FLOW_TF: "@GKO-3093",
+    SUBSCRIBE_SECURED_PLAN_TF: "@GKO-3094",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

@@ -526,6 +526,30 @@ export interface ApplicationOAuthSettings {
   redirectUris?: string[];
 }
 
+/**
+ * A member of an application as returned by the v1 management API
+ * (`/applications/{appId}/members`). Note the single `role` string, unlike
+ * {@link ApiMember}'s `roles` list.
+ */
+export interface ApplicationMember {
+  id: string;
+  displayName?: string;
+  role?: string;
+}
+
+/**
+ * An application metadata entry as returned by the v1 management API
+ * (`/applications/{appId}/metadata`). The application detail endpoint does NOT
+ * include metadata, so it has to be read from here.
+ */
+export interface ApplicationMetadataEntry {
+  key?: string;
+  name?: string;
+  value?: string;
+  format?: string;
+  defaultValue?: string;
+}
+
 export interface ApplicationMetadataValue {
   name?: string;
   value?: string;
@@ -886,6 +910,20 @@ export interface GroupMember {
   id: string;
   displayName?: string;
   roles?: Record<string, string>;
+}
+
+/**
+ * A member of an API as returned by the v2 management API
+ * (`/apis/{apiId}/members`).
+ *
+ * Unlike {@link GroupMember} the response carries no `source`/`sourceId`: a
+ * member is identified by `displayName`, which for a service account created via
+ * `createServiceAccount` is `"<name> Service"`.
+ */
+export interface ApiMember {
+  id: string;
+  displayName?: string;
+  roles?: Array<{ name: string; scope?: string }>;
 }
 
 // ── Category Types ────────────────────────────────────────────
