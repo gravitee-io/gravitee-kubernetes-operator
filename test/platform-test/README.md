@@ -246,6 +246,11 @@ npm run check:lanes         # assert the provisioner lanes partition the suite
 For the e2e suite itself see [e2e/README.md](e2e/README.md) (bootstrap) and
 [AGENTS.md](AGENTS.md) (how to write a test).
 
+AI agents contributing here have two rule sets in [`.agent/rules/`](.agent/rules/)
+(writing tests · extending the framework) and four skills in
+[`.claude/skills/`](.claude/skills/): `write-e2e-test`,
+`investigate-e2e-failure`, `add-provisioner`, `extend-platform-assertions`.
+
 ## License
 
 Apache-2.0
