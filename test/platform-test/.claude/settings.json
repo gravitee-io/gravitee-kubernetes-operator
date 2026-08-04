@@ -2,5 +2,24 @@
   "attribution": {
     "commit": "",
     "pr": ""
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm test)",
+      "Bash(npm run test:*)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run check:lanes)",
+      "Bash(npm run e2e)",
+      "Bash(npm run e2e:*)",
+      "Bash(npm run e2e -- *)",
+      "Bash(npm --prefix test/platform-test run *)",
+      "Bash(kubectl get:*)",
+      "Bash(kubectl describe:*)",
+      "Bash(kubectl logs:*)",
+      "Bash(kubectl cluster-info:*)",
+      "Bash(terraform providers schema:*)"
+    ]
   }
 }
