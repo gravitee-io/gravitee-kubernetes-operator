@@ -1,40 +1,30 @@
 # AGENTS.md: platform-test (E2E suite)
 
+@.agent/rules/e2e-test-authoring.md
+@.agent/rules/e2e-framework-development.md
+
 Guidance for AI coding agents working under `test/platform-test/`. This is the
 Playwright (TypeScript) end-to-end suite that drives a **real** local Kubernetes
 cluster running APIM + Gateway + the GKO operator, plus the Terraform APIM
 provider. There are **no mocks**: every test mutates live cluster + APIM state.
 
-> Read this before editing or adding tests. For environment bootstrap (`gck`,
-> Helm, pre-flight checks) read [`e2e/README.md`](e2e/README.md); for the
-> assertion library API read [`README.md`](README.md); for coverage status and
-> what is left to migrate read [`PARITY.md`](PARITY.md). Do not duplicate those
-> here.
+## Start here
 
----
+| You are… | Read | Then invoke |
+|---|---|---|
+| adding or changing a **test** | [`.agent/rules/e2e-test-authoring.md`](.agent/rules/e2e-test-authoring.md) | `write-e2e-test` |
+| chasing a **failing test** | same | `investigate-e2e-failure` |
+| adding a **provisioner** or engine | [`.agent/rules/e2e-framework-development.md`](.agent/rules/e2e-framework-development.md) | `add-provisioner` |
+| extending the **assertion library** | same | `extend-platform-assertions` |
 
-## Golden rules
+The two rules files are the invariants and are imported above, so they load with
+this file. The four skills live in [`.claude/skills/`](.claude/skills/) and carry
+the step-by-step procedures.
 
-> **Critical: these are the mistakes that have actually broken CI.**
-
-1. **Every test cleans up everything it creates, with a safety net.** Inline
-   cleanup does **not** run if the test times out, and a leaked APIM resource
-   poisons every later test that reuses the same name. `forEachProvisioner` gives
-   you this for free; a hand-rolled test needs its own `afterEach`/`afterAll`.
-2. **Never fix a failure by raising a timeout or skipping the test.** A 30s
-   timeout that needs 31s is hiding a real reconcile, apply, or consistency
-   problem.
-3. **Run the test you changed before reporting done.** `npm run e2e -- --grep
-   @GKO-xxxx`. Don't claim green without a run.
-4. **Use `npm run e2e`, never bare `npx playwright test`.** The bare command
-   skips `globalSetup` (the infra pre-flight checks) and gives misleading
-   failures.
-5. **Clean up in reverse dependency order:** subscriptions → applications →
-   APIs. The GKO admission webhook blocks deleting an application that still has
-   subscriptions. Never delete shared preconditions: the `dev-ctx`
-   ManagementContext, or the APIM org/environment Terraform authenticates against.
-6. **Every test carries its provisioner tag.** Lane selection is by title tag
-   alone (below). `npm run check:lanes` enforces it.
+For environment bootstrap (`gck`, Helm, pre-flight checks) read
+[`e2e/README.md`](e2e/README.md); for the assertion library API read
+[`README.md`](README.md); for coverage status and what is left to migrate read
+[`PARITY.md`](PARITY.md). Do not duplicate those here.
 
 ---
 
@@ -48,6 +38,8 @@ provisioner.
 
 ```
 test/platform-test/
+  .agent/rules/                 # the invariants, per audience
+  .claude/skills/               # the procedures, per audience
   src/                          # @gravitee/platform-test (runner-agnostic; `npm run typecheck`)
     assertions/apim/            # mapi, gateway — shared, provisioner-agnostic assertions
     config/                     # config.yaml loading
@@ -88,27 +80,23 @@ customer could also do through Terraform belongs in a journey.
 
 ## Adding a user journey
 
-1. **Pick the persona folder** — who performs this journey? `api-producer`,
+Full procedure: the [`write-e2e-test`](.claude/skills/write-e2e-test/SKILL.md)
+skill. Two rules decide placement, and they are the ones most often got wrong:
+
+1. **Persona picks the folder** — who performs this journey? `api-producer`,
    `api-consumer`, `platform-admin`. See the
    [catalog](./e2e/tests/user-journeys/README.md).
 2. **A new folder only when the _story_ differs, not when the config does.**
    Variants of one story (message-API entrypoints, plan security types, api-key
    modes) are a **named variant table + loop** inside the journey's own
    `*.scenario.ts`, sharing one assertion body.
-3. **Confirm the Terraform path first.** Read the provider schema on
-   `origin/main` (the local checkout drifts) — see
-   [PARITY.md → Regenerating](./PARITY.md#regenerating-this-document). A missing
-   attribute is an Automation-API backlog item: file it and mark the arm
-   `pending`, do not silently drop the journey.
-4. **Author one shared intent**, not two tests. The body must not branch on
-   `provisionerId`. Assert the fields that carry regression value
-   (`visibility`, `lifecycleState`, `security.type`) so the use-case framing does
-   not lose granularity.
-5. **De-dup.** Once the journey covers what a standalone GKO/TF test did, **delete
-   that test** and carry its Xray id onto the journey arm.
-6. **Tag & sync.** Each arm carries its own Xray id; add a `@GKO-TBD-*`
-   placeholder for a new arm in `helpers/tags.ts`, then run `/xray-sync-tests`.
-   Update the catalog and PARITY.md.
+
+Then: confirm the Terraform path against the provider schema on `origin/main`
+(a missing attribute is an Automation-API backlog item to file, not a reason to
+drop the arm), author **one shared intent** whose body never branches on
+`provisionerId`, delete any `tests/gko/` test the journey supersedes and carry
+its Xray id onto the GKO arm, tag both arms, and update the catalog and
+PARITY.md.
 
 ```ts
 forEachProvisioner<MyParams>(
@@ -154,33 +142,6 @@ Parameterization that differs structurally per provisioner lives in a co-located
 `params.ts` exposing one shared param type plus the per-provisioner closures (GKO
 `applyParams`, TF `toVars`). See `api-consumer/subscribe-and-call/`.
 
-### `view` vs `checks`
-
-- **`provisioned.view`** — the agnostic readout: *"did MY layer land this role?"*,
-  answered from the provisioner's own record (GKO's CR status, Terraform's state),
-  never from APIM. Callable from shared bodies with no narrowing, via
-  `assertProvisioner(provisioned, role, "applied" | "failed" | "gone")`.
-
-  Use it **after `remove()`** (expect `"gone"`) and on **failure paths**.
-  Do **not** use it as a convergence wait after `update()`: GKO's condition
-  `observedGeneration` can lag indefinitely after a re-apply (GKO-2940), so a
-  post-update read can return the *pre*-update `Accepted=True` and pass without
-  asserting anything. `mapi` is the convergence signal after an update.
-
-  Terraform's `read()` needs `addresses: { role: "apim_x.name" }` in the scenario
-  spec (`[0]`-suffixed for a `count`-gated resource) and throws without it.
-
-- **`provisioned.checks`** — the escape hatch for assertions only one provisioner
-  can make, narrowed with `isTerraform()`. Terraform-only today: drift,
-  redaction, plan exit codes, taint. **GKO declares none** — its control-plane
-  readouts *are* the `view` question, and the remaining Kubernetes primitives
-  (admission rejection, events) are reached through the kubectl engine in tests
-  where nothing is provisioned.
-
-- **Gaps without noise:** a planned-but-unimplemented provisioner goes in
-  `pending: { terraform: "<reason>" }` and renders as a visible `test.fixme`,
-  never a silent skip. A provisioner absent from both is N/A by design.
-
 ## Selecting what to run
 
 `npm run e2e` is the single entry point for every suite; the other scripts are
@@ -209,93 +170,5 @@ Do **not** use `--grep @gko`: Playwright's CLI `--grep` is case-insensitive, so
 config's own `grepInvert` is case-sensitive for exactly this reason.
 
 The flags are orthogonal and combine: `--provision-with gko --run-up-to-version 4.11`.
-
-## Polling & eventual consistency
-
-Both `kubectl apply` and `terraform apply` return before APIM/Gateway have
-converged. Never assert immediately after an apply.
-
-- Use `mapi.waitForApiMatches()` / `expect.poll()` / the `poll()` util, not a
-  single-shot assertion. This is the convergence check that matters for **both**
-  drivers, since both write to APIM via the Automation API.
-- **Combine polled checks atomically:** `expect.poll(() => fetch…).toMatchObject({…})`
-  rather than polling one field then re-fetching for the rest.
-- **To trigger a GKO reconcile, re-`kubectl apply -f` a modified CR file.** Not
-  `kubectl patch`/`annotate`. For Terraform, edit the vars and re-apply.
-
-## Resource isolation
-
-The suite runs **serially with a single worker** against **one shared APIM**:
-
-- **API/App names are a shared global namespace.** If one test leaks a name, the
-  next file's apply collides with stuck state and times out, so one root failure
-  cascades. Prefer a unique, test-scoped name over reusing an existing fixture's.
-- **APIM/MongoDB state persists across cluster restarts.** Only `kind delete
-  cluster` or a full Helm uninstall + PV delete wipes it.
-
-### Safety-net cleanup (hand-rolled tests only)
-
-`forEachProvisioner` handles this for you. A test that provisions directly needs:
-
-```ts
-import * as kubectl from "../../../helpers/kubectl.js";
-
-test.describe(`… ${PROVISIONER.GKO}`, () => {
-  test.afterEach(async () => {
-    for (const f of ["<sub>/crd.yaml", "<app>/crd.yaml", "<api>/crd.yaml"]) {
-      await kubectl.del(fixture(f)).catch(() => {});   // reverse dependency order
-    }
-  });
-});
-```
-
-For Terraform, track the workspace and `destroyWorkspace(ws)` in `afterAll`; it
-re-runs `destroy` as a no-op if a test already destroyed inline, so it is always
-safe to call.
-
-## APIM behaviours worth knowing
-
-Quirks of the **APIM backend / Automation API**, not the operator:
-
-- **Origin labels:** `origin: MANAGEMENT` = written via mAPI; `origin: KUBERNETES`
-  = written via the Automation API — the write path for **both** GKO and
-  Terraform, so origin alone does not tell you which driver created a resource.
-- **API-key listing returns revoked/expired keys:** no server-side filter. Filter
-  client-side on `revoked`/`expired`.
-- **API-key values are unique per API**, including already-revoked entries. Custom-key
-  tests must generate a per-run unique value.
-- **`syncFrom: MANAGEMENT`** is the default for almost all V4 fixtures; not a
-  discriminator when triaging.
-
-GKO-specific: **HRID → ID** is `namespace + "-" + name`, from which APIM derives a
-deterministic UUIDv3. Use it to correlate CR ↔ APIM API.
-
-## When a test fails
-
-1. **Leaked resource / cascade?** A wave of generic 30s timeouts across unrelated
-   suites usually means one earlier test leaked a shared-named resource. Find the
-   *first* failure and the missing safety-net cleanup.
-2. **Eventual consistency?** Convert a flaky single-shot assertion to
-   `poll()` / `expect.poll()`. Don't bump the timeout.
-3. **APIM image too old?** Some tests need a fix not yet in the pinned APIM (the
-   version comes from the `gravitee-io/gravitee` CircleCI orb, not this repo).
-
-Always consider that the root cause is a **bug in the component under test**, not
-the test. Flag it explicitly rather than working around it.
-
-## Committing
-
-> **Critical: no AI attribution on commits or PRs.** Whatever agent you are, do
-> **not** add an AI co-author or attribution trailer: no `Co-Authored-By: …`, no
-> "Generated with …" footer. Match the repo's style: a `test:` / `docs:` / `fix:`
-> prefixed subject and a plain body.
-
-This is **enforced by committed config**, but verify your trailers if your tool
-ignores it: [`.claude/settings.json`](.claude/settings.json) sets
-`attribution.commit`/`attribution.pr` to empty strings;
-[`.cursor/cli-config.json`](.cursor/cli-config.json) sets
-`attributeCommitsToAgent`/`attributePRsToAgent` to `false`. Adding a new agent?
-Drop its equivalent config under `test/platform-test/` (this suite is
-self-contained and may move to its own repo) rather than relying on this prose.
 
 Reports: `playwright-results/` (JUnit XML), `playwright-report/` (HTML).
