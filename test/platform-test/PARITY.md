@@ -6,9 +6,11 @@ and what is left to migrate. It answers "where do we stand?".
 
 It is **not** the authoring guide. How to write a test (persona folders, the
 variant-matrix rule, cleanup patterns, `view` vs `checks`) lives in
-[AGENTS.md](./AGENTS.md); the journey list lives in the
-[catalog](./e2e/tests/user-journeys/README.md). Keep those boundaries — this file
-drifted before precisely because nothing said what it was for.
+[AGENTS.md](./AGENTS.md) and the
+[`write-e2e-test`](./.claude/skills/write-e2e-test/SKILL.md) skill; the journey
+list lives in the [catalog](./e2e/tests/user-journeys/README.md). Keep those
+boundaries — this file drifted before precisely because nothing said what it was
+for.
 
 > Regenerate the provider tables below from source rather than editing by hand;
 > see [Regenerating this document](#regenerating-this-document).
