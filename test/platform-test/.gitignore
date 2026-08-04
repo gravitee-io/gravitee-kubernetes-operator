@@ -6,3 +6,13 @@ test-results/
 playwright-report/
 playwright-results/
 e2e/playwright-results/
+
+# The shared agent config and skills are part of the suite and must be
+# committed. Many contributors ignore .claude/ globally, which would silently
+# drop them. This is an allowlist rather than a negation of the whole tree, so
+# whatever else an agent writes here (local settings, session state) stays
+# ignored by default.
+!.claude/
+.claude/*
+!.claude/settings.json
+!.claude/skills/
