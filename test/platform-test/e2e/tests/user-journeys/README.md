@@ -66,8 +66,9 @@ npm --prefix test/platform-test run e2e -- --grep @GKO-335 --provision-with terr
 
 ## Authoring a new journey
 
-See [AGENTS.md → Adding a user journey](../../../AGENTS.md#adding-a-user-journey).
-Two rules decide where a test goes:
+See [AGENTS.md → Adding a user journey](../../../AGENTS.md#adding-a-user-journey),
+or invoke the [`write-e2e-test`](../../../.claude/skills/write-e2e-test/SKILL.md)
+skill for the full procedure. Two rules decide where a test goes:
 
 1. **Persona** picks the folder — who performs this journey?
 2. **A new folder only when the _story_ differs**, not when the configuration
