@@ -12,25 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The journey's API. Its only plan is mTLS-secured, so every call has to present a
+# client certificate the subscribed application owns.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-mtls-inline
+  name: mtls-legacy-cert
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   definitionContext:
     syncFrom: MANAGEMENT
   contextRef:
-    name: dev-ctx
-    namespace: default
-  name: e2e-mtls-inline
+    name: "dev-ctx"
+    namespace: "default"
+  name: "mtls-legacy-cert"
+  description: "V4 proxy API used by the deprecated-field variant"
   version: "1"
   type: PROXY
   state: STARTED
-  description: "E2E test: mTLS with inline certificates"
   listeners:
     - type: HTTP
       paths:
-        - path: /e2e-mtls-inline
+        - path: /mtls-legacy-cert
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -40,9 +44,9 @@ spec:
       endpoints:
         - name: Default HTTP proxy
           type: http-proxy
+          inheritConfiguration: false
           configuration:
             target: https://api.gravitee.io/echo
-          inheritConfiguration: false
   analytics:
     enabled: true
   plans:

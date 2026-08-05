@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GKO-2219: Application with no clientCertificates list (mAPI returns empty).
+# Subscribes the journey's application to the API's mTLS plan. Without it the
+# gateway has no link between the presented certificate and the application.
 apiVersion: gravitee.io/v1alpha1
-kind: Application
+kind: Subscription
 metadata:
-  name: e2e-app-2219
+  name: mtls-client-cert-sub
+  labels:
+    gravitee.io/e2e: "true"
 spec:
-  contextRef:
-    name: dev-ctx
-    namespace: default
-  name: e2e-app-2219
-  description: "E2E test no active clientCertificates"
-  settings:
-    app:
-      type: SIMPLE
-      clientId: e2e-2219-client
+  api:
+    name: mtls-client-cert
+  application:
+    name: mtls-client-cert-app
+  plan: MTLS

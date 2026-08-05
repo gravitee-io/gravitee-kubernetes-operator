@@ -12,21 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The same application moved off the deprecated field onto the list, swapping in client2.
+# Every stage of this journey shares one CR name, so update() re-applies over the
+# previous stage and the certificate set has to change in place.
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
-  name: e2e-mtls-compat-app
+  name: mtls-legacy-cert-app
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
-    namespace: default
-  name: "e2e-mtls-compat-app"
-  description: "Application with 1 inline client2 certificates as list"
+    namespace: "default"
+  name: "mtls-legacy-cert-app"
+  description: "Application authenticating to an mTLS plan with a client certificate"
   settings:
     app:
-      type: WEB
+      type: SIMPLE
+      clientId: mtls-legacy-cert-app-client
     tls:
-      clientCertificate: "" # kubectl apply will patch, and consider two fields are set... so we need to remove it.
       clientCertificates:
         - name: client2
           content: |

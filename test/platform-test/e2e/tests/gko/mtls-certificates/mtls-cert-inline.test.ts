@@ -15,12 +15,17 @@
  */
 
 /**
- * mTLS certificate tests: inline, encoded, and backward-compat variants.
+ * mTLS certificate content encodings the CRD accepts.
  *
  * Xray tests:
- *   GKO-2243: Add Multiple Certificates to Application
  *   GKO-2212: Add Single Certificate to Application
- *   GKO-2244: Deprecated Field Functionality (backward-compat)
+ *
+ * Base64-encoded certificate content is a CRD input convenience: the operator
+ * decodes it before writing to APIM. The Terraform provider's `content` attribute
+ * is documented as PEM only, so there is nothing to compare a second driver
+ * against and this stays GKO-only. Presenting a certificate at the gateway,
+ * rotating it and revoking it are covered for BOTH drivers by the
+ * `authenticate-with-client-certificate` journey.
  *
  * Preconditions:
  *   - APIM, Gateway (HTTP + mTLS), and GKO operator are running
@@ -46,62 +51,14 @@ async function loadPki() {
   return { cert1, key1, cert2, key2, ca };
 }
 
-test.describe(`mTLS Certificates — Inline, Encoded, Backward-compat ${PROVISIONER.GKO}`, () => {
+test.describe(`mTLS Certificates — encoded content ${PROVISIONER.GKO}`, () => {
   test.afterAll(async () => {
     const files = [
-      "subscription-inline", "application-inline", "api-mtls-inline", "tls-secrets-inline",
       "subscription-encoded", "application-encoded", "api-mtls-encoded", "tls-secrets-encoded",
-      "subscription-backward-compat", "application-compat-cert2-list", "api-mtls-backward-compat", "tls-secrets-backward-compat",
     ];
     for (const f of files) {
       await kubectl.del(fixture(`mtls-certificates/${f}/crd.yaml`)).catch(() => {});
     }
-  });
-
-  test(`Inline certs: both grant access ${XRAY.MTLS_CERTIFICATES.ADD_MULTIPLE_CERTS}`, async ({
-    kubectl,
-    mapi,
-    mtlsGatewayBaseUrl,
-  }) => {
-    const API_NAME = "e2e-mtls-inline";
-    const API_PATH = "/e2e-mtls-inline";
-
-    await test.step("Deploy API, Application, and Subscription", async () => {
-      await kubectl.apply(fixture("mtls-certificates/api-mtls-inline/crd.yaml"));
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("mtls-certificates/application-inline/crd.yaml"));
-      await kubectl.waitForCondition("application", "e2e-mtls-inline-app", "Accepted");
-      await kubectl.apply(fixture("mtls-certificates/subscription-inline/crd.yaml"));
-      await kubectl.waitForCondition("subscription", "e2e-mtls-inline-sub", "Accepted");
-    });
-
-    const pki = await loadPki();
-
-    await test.step("Gateway rejects request without cert (401)", async () => {
-      const gw = mapi.gateway({ baseUrl: mtlsGatewayBaseUrl }, createTlsFetch({ ca: pki.ca }));
-      await gw.assertResponds(API_PATH, { status: 401 });
-    });
-
-    await test.step("Gateway accepts client1 cert (200)", async () => {
-      const gw = mapi.gateway(
-        { baseUrl: mtlsGatewayBaseUrl },
-        createTlsFetch({ cert: pki.cert1, key: pki.key1, ca: pki.ca }),
-      );
-      await gw.assertResponds(API_PATH, { status: 200 });
-    });
-
-    await test.step("Gateway accepts client2 cert (200)", async () => {
-      const gw = mapi.gateway(
-        { baseUrl: mtlsGatewayBaseUrl },
-        createTlsFetch({ cert: pki.cert2, key: pki.key2, ca: pki.ca }),
-      );
-      await gw.assertResponds(API_PATH, { status: 200 });
-    });
-
-    // Cleanup
-    await kubectl.del(fixture("mtls-certificates/subscription-inline/crd.yaml"));
-    await kubectl.del(fixture("mtls-certificates/application-inline/crd.yaml"));
-    await kubectl.del(fixture("mtls-certificates/api-mtls-inline/crd.yaml"));
   });
 
   test(`Base64-encoded cert ${XRAY.MTLS_CERTIFICATES.ADD_SINGLE_CERT}`, async ({
@@ -137,57 +94,4 @@ test.describe(`mTLS Certificates — Inline, Encoded, Backward-compat ${PROVISIO
     await kubectl.del(fixture("mtls-certificates/api-mtls-encoded/crd.yaml"));
   });
 
-  test(`Backward compat: deprecated clientCertificate field ${XRAY.MTLS_CERTIFICATES.DEPRECATED_FIELD}`, async ({
-    kubectl,
-    mapi,
-    mtlsGatewayBaseUrl,
-  }) => {
-    const API_NAME = "e2e-mtls-backward-compat";
-    const API_PATH = "/e2e-mtls-backward-compat";
-
-    await test.step("Deploy API, Application (deprecated field), and Subscription", async () => {
-      await kubectl.apply(fixture("mtls-certificates/api-mtls-backward-compat/crd.yaml"));
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("mtls-certificates/application-backward-compat/crd.yaml"));
-      await kubectl.waitForCondition("application", "e2e-mtls-compat-app", "Accepted");
-      await kubectl.apply(fixture("mtls-certificates/subscription-backward-compat/crd.yaml"));
-      await kubectl.waitForCondition("subscription", "e2e-mtls-compat-sub", "Accepted");
-    });
-
-    const pki = await loadPki();
-
-    await test.step("Gateway accepts client1 cert with deprecated field (200)", async () => {
-      const gw = mapi.gateway(
-        { baseUrl: mtlsGatewayBaseUrl },
-        createTlsFetch({ cert: pki.cert1, key: pki.key1, ca: pki.ca }),
-      );
-      await gw.assertResponds(API_PATH, { status: 200 });
-    });
-
-    await test.step("Upgrade to clientCertificates list with client2 only", async () => {
-      await kubectl.apply(fixture("mtls-certificates/application-compat-cert2-list/crd.yaml"));
-      await kubectl.waitForCondition("application", "e2e-mtls-compat-app", "Accepted");
-    });
-
-    await test.step("Gateway rejects client1 after upgrade", async () => {
-      const gw = mapi.gateway(
-        { baseUrl: mtlsGatewayBaseUrl },
-        createTlsFetch({ cert: pki.cert1, key: pki.key1, ca: pki.ca }),
-      );
-      await gw.assertNotResponds(API_PATH, { notStatus: 200 });
-    });
-
-    await test.step("Gateway accepts client2 after upgrade (200)", async () => {
-      const gw = mapi.gateway(
-        { baseUrl: mtlsGatewayBaseUrl },
-        createTlsFetch({ cert: pki.cert2, key: pki.key2, ca: pki.ca }),
-      );
-      await gw.assertResponds(API_PATH, { status: 200 });
-    });
-
-    // Cleanup
-    await kubectl.del(fixture("mtls-certificates/subscription-backward-compat/crd.yaml"));
-    await kubectl.del(fixture("mtls-certificates/application-compat-cert2-list/crd.yaml"));
-    await kubectl.del(fixture("mtls-certificates/api-mtls-backward-compat/crd.yaml"));
-  });
 });
