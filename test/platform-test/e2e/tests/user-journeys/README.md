@@ -52,6 +52,7 @@ up by `terraform destroy`.
 | [`manage-application-members`](./api-consumer/manage-application-members/) | Share an application, re-role and revoke the member | GKO-538/539/534 · TF TBD |
 | [`subscribe-to-a-secured-plan`](./api-consumer/subscribe-to-a-secured-plan/) | Subscribe to a JWT plan and an OAuth2 plan (auto-validated) | GKO-800/819/815 · TF TBD |
 | [`subscribe-and-call`](./api-consumer/subscribe-and-call/) | Subscribe to an api-key plan and call it (auto/custom/expiry/rotation) | GKO-2825… · TF GKO-2879… |
+| [`authenticate-with-client-certificate`](./api-consumer/authenticate-with-client-certificate/) | Call an mTLS plan with a client certificate, rotate it, revoke it | GKO-2243/2231/2247/2246/2219/2244 · TF GKO-3103/3104 |
 
 ### platform-admin
 

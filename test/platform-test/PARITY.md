@@ -63,12 +63,12 @@ in particular carries a rich inline surface:
 
 ## Where coverage stands
 
-Of the ~241 tests left in `tests/gko/`:
+Of the ~236 tests left in `tests/gko/`:
 
 | Bucket | Approx | Notes |
 |---|--:|---|
-| Covered by a shared journey | ~75 | the 20 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
-| **Migratable, not yet migrated** | **~30** | see the backlog below |
+| Covered by a shared journey | ~80 | the 21 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
+| **Migratable, not yet migrated** | **~25** | see the backlog below |
 | Genuinely GKO-only | ~210 | Kubernetes/operator mechanics + V2 |
 
 ### Migrated
@@ -92,12 +92,12 @@ than into the journey) applied throughout.
 | Pages — V4 inline | `document-an-api` [producer] | ship, revise (rename + rewrite + visibility), remove |
 | Policies on a flow | `apply-policies-to-a-flow` [producer] | asserted at the **gateway**, not only in the definition |
 | Subscriptions — JWT / OAuth2 | `subscribe-to-a-secured-plan` [consumer] | auto-validated despite `MANUAL` plans |
+| mTLS plan + client certificates | `authenticate-with-client-certificate` [consumer] | issue, rotate, retire, revoke — asserted at the **gateway**; also covers the deprecated single-certificate field |
 
 ### Migratable, not yet migrated
 
 | Area | Tests | Terraform path | Journey [persona] | Why not yet |
 |---|--:|---|---|---|
-| mTLS certs — inline content only | subset of 29 | `apim_application.settings.tls.client_certificate` | `authenticate-with-client-certificate` [consumer] | the suite's mTLS tests build certs and CRs inline in TypeScript rather than from fixtures, so migrating them is a rewrite rather than a move; the heavy mTLS suite also has its own load-related instability |
 | Plan lifecycle (publish/close via CR) | 2 | `apim_apiv4.plans` | `manage-plan-lifecycle` [producer] | small, and entangled with `Subscription` immutability which is GKO-only |
 | API metadata | 0 | `apim_apiv4.metadata` | `manage-api-metadata` [admin] | there is nothing to migrate — no test covers V4 API metadata today. This is **new coverage**, not a migration |
 
@@ -122,7 +122,7 @@ for a second provisioner to do. They live in `tests/gko/`.
 | Area | Tests | Why |
 |---|--:|---|
 | Admission webhooks | 28 | CRD schema / dry-run validation at the Kubernetes admission layer |
-| mTLS certificates via Secret refs | subset of 29 | resolved from cluster Secrets, not inline content |
+| mTLS certificates — the operator's own concerns | 24 | admission rejections; certificates resolved from cluster Secrets/ConfigMaps and `[[ … ]]` templating; base64-encoded content (the provider's `content` is PEM-only); certificate date-window and fingerprint-reuse semantics |
 | Deployment & reconciliation | 15 | CR `.status` conditions, observedGeneration, operator restart |
 | Import / export | 10 | YAML CRD round-trips |
 | ConfigMap/Secret templating | 8 | `[[ … ]]` resolution from cluster ConfigMaps/Secrets |
