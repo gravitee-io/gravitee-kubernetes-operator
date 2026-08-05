@@ -12,13 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Stage 4: every certificate is revoked.
+# Every stage of this journey shares one CR name, so update() re-applies over the
+# previous stage and the certificate set has to change in place.
 apiVersion: gravitee.io/v1alpha1
-kind: Subscription
+kind: Application
 metadata:
-  name: e2e-mtls-inline-sub
+  name: mtls-client-cert-app
+  labels:
+    gravitee.io/e2e: "true"
 spec:
-  api:
-    name: e2e-mtls-inline
-  application:
-    name: e2e-mtls-inline-app
-  plan: MTLS
+  contextRef:
+    name: "dev-ctx"
+    namespace: "default"
+  name: "mtls-client-cert-app"
+  description: "Application authenticating to an mTLS plan with a client certificate"
+  settings:
+    app:
+      type: SIMPLE
+      clientId: mtls-client-cert-app-client
+    tls:
+      clientCertificates: []

@@ -12,19 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The legacy singular `clientCertificate` field, which predates the
+# `clientCertificates` list. The provider carries the same deprecated attribute,
+# so this stage is expressible on both arms.
 apiVersion: gravitee.io/v1alpha1
 kind: Application
 metadata:
-  name: e2e-mtls-compat-app
+  name: mtls-legacy-cert-app
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
-    namespace: default
-  name: "e2e-mtls-compat-app"
-  description: "Application using deprecated single clientCertificate field"
+    namespace: "default"
+  name: "mtls-legacy-cert-app"
+  description: "Application authenticating through the deprecated single-certificate field"
   settings:
     app:
-      type: WEB
+      type: SIMPLE
+      clientId: mtls-legacy-cert-app-client
     tls:
       clientCertificate: |
         -----BEGIN CERTIFICATE-----

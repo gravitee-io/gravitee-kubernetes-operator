@@ -495,6 +495,10 @@ export const XRAY = {
     API_NOTIFICATIONS_TF: "@GKO-3092",
     API_POLICY_FLOW_TF: "@GKO-3093",
     SUBSCRIBE_SECURED_PLAN_TF: "@GKO-3094",
+    // ── GKO-3028: mTLS client-certificate parity journey ───────────
+    // @parent: GKO-3028
+    CLIENT_CERTIFICATE_ROTATION_TF: "@GKO-3103",
+    CLIENT_CERTIFICATE_DEPRECATED_TF: "@GKO-3104",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

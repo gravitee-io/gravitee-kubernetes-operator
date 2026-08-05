@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Subscribes the journey's application to the API's mTLS plan. Without it the
+# gateway has no link between the presented certificate and the application.
 apiVersion: gravitee.io/v1alpha1
 kind: Subscription
 metadata:
-  name: e2e-mtls-rotation-sub
+  name: mtls-legacy-cert-sub
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   api:
-    name: e2e-mtls-rotation
+    name: mtls-legacy-cert
   application:
-    name: e2e-mtls-rotation-app
+    name: mtls-legacy-cert-app
   plan: MTLS

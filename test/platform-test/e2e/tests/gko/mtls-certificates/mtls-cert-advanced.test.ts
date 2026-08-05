@@ -49,13 +49,12 @@ async function loadPki() {
   return { cert1, key1, cert2, key2, ca };
 }
 
-test.describe(`mTLS Certificates — Dates, Refs, Rotation, Templates ${PROVISIONER.GKO}`, () => {
+test.describe(`mTLS Certificates — Dates, Refs, Templates ${PROVISIONER.GKO}`, () => {
   // Cleanup runs even when tests time out.
   test.afterAll(async () => {
     const files = [
       "subscription-dates", "application-dates-step1", "api-mtls-dates", "tls-secrets-dates",
       "subscription-refs", "application-refs", "api-mtls-refs", "tls-secrets-refs",
-      "subscription-rotation", "application-rotation-step3", "api-mtls-rotation", "tls-secrets-rotation",
       "subscription-templates", "application-templates", "api-mtls-templates", "tls-secrets-templates",
     ];
     for (const f of files) {
@@ -272,68 +271,6 @@ spec:
     await kubectl.del(fixture("mtls-certificates/application-refs/crd.yaml"));
     await kubectl.del(fixture("mtls-certificates/api-mtls-refs/crd.yaml"));
     await kubectl.del(fixture("mtls-certificates/tls-secrets-refs/crd.yaml"));
-  });
-
-  test(`Certificate rotation ${XRAY.MTLS_CERTIFICATES.CERT_ROTATION} ${XRAY.MTLS_CERTIFICATES.REMOVE_CERT}`, async ({
-    kubectl,
-    mapi,
-    mtlsGatewayBaseUrl,
-  }) => {
-    const API_NAME = "e2e-mtls-rotation";
-    const API_PATH = "/e2e-mtls-rotation";
-    const APP_NAME = "e2e-mtls-rotation-app";
-
-    await test.step("Deploy API, Application (client1 only), Subscription", async () => {
-      await kubectl.apply(fixture("mtls-certificates/api-mtls-rotation/crd.yaml"));
-      await kubectl.waitForCondition("apiv4definition", API_NAME, "Accepted");
-      await kubectl.apply(fixture("mtls-certificates/application-rotation-step1/crd.yaml"));
-      await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-      await kubectl.apply(fixture("mtls-certificates/subscription-rotation/crd.yaml"));
-      await kubectl.waitForCondition("subscription", "e2e-mtls-rotation-sub", "Accepted");
-    });
-
-    const pki = await loadPki();
-
-    await test.step("Gateway accepts client1 (200)", async () => {
-      const gw = mapi.gateway(
-        { baseUrl: mtlsGatewayBaseUrl },
-        createTlsFetch({ cert: pki.cert1, key: pki.key1, ca: pki.ca }),
-      );
-      await gw.assertResponds(API_PATH, { status: 200 });
-    });
-
-    await test.step("Add client2 (step2) — both certs registered", async () => {
-      await kubectl.apply(fixture("mtls-certificates/application-rotation-step2/crd.yaml"));
-      await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    });
-
-    await test.step("Gateway accepts client2 after adding (200)", async () => {
-      const gw = mapi.gateway(
-        { baseUrl: mtlsGatewayBaseUrl },
-        createTlsFetch({ cert: pki.cert2, key: pki.key2, ca: pki.ca }),
-      );
-      await gw.assertResponds(API_PATH, { status: 200 });
-    });
-
-    await test.step("Remove client1 (step3) — only client2 remains", async () => {
-      await kubectl.apply(fixture("mtls-certificates/application-rotation-step3/crd.yaml"));
-      await kubectl.waitForCondition("application", APP_NAME, "Accepted");
-    });
-
-    await test.step("Application accepted after rotation", async () => {
-      const status = await kubectl.getStatus<{ conditions?: Array<{ type: string; status: string }> }>(
-        "application",
-        APP_NAME,
-      );
-      const accepted = status.conditions?.find((c) => c.type === "Accepted");
-      expect(accepted).toBeDefined();
-      expect(accepted!.status).toBe("True");
-    });
-
-    // Cleanup
-    await kubectl.del(fixture("mtls-certificates/subscription-rotation/crd.yaml"));
-    await kubectl.del(fixture("mtls-certificates/application-rotation-step3/crd.yaml"));
-    await kubectl.del(fixture("mtls-certificates/api-mtls-rotation/crd.yaml"));
   });
 
   test(`Certificate templates from ConfigMap ${XRAY.MTLS_CERTIFICATES.MTLS_SUBSCRIPTION}`, async ({
