@@ -65,6 +65,13 @@ export interface ScenarioBodyArgs<P> {
   provisioned: Provisioned<P>;
   mapi: Mapi;
   gateway: Gateway;
+  /**
+   * Base URL of the gateway's mTLS listener. The shared `gateway` fixture targets
+   * the plain HTTP listener, which cannot carry a client certificate, so journeys
+   * that authenticate with one build their own client via
+   * `mapi.gateway({ baseUrl: mtlsGatewayBaseUrl }, createTlsFetch({ … }))`.
+   */
+  mtlsGatewayBaseUrl: string;
 }
 
 export type ScenarioBody<P> = (args: ScenarioBodyArgs<P>) => Promise<void>;
@@ -153,7 +160,7 @@ export function forEachProvisioner<P>(
       continue;
     }
 
-    test(title, async ({ mapi, gateway }) => {
+    test(title, async ({ mapi, gateway, mtlsGatewayBaseUrl }) => {
       const defaultTimeout = provisionerId === "terraform" ? TF_WORKSPACE_TIMEOUT_MS : undefined;
       const timeout = scenario.timeoutMs?.[provisionerId] ?? defaultTimeout;
       if (timeout) test.setTimeout(timeout);
@@ -164,7 +171,7 @@ export function forEachProvisioner<P>(
       try {
         const provisioned = (await provisioner.provision(initialParams)) as Provisioned<P>;
         tracked.provisioned = provisioned;
-        await body({ provisioned, mapi, gateway });
+        await body({ provisioned, mapi, gateway, mtlsGatewayBaseUrl });
       } finally {
         await teardownActive();
       }
