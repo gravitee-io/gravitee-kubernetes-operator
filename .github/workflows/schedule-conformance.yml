@@ -1,0 +1,63 @@
+# Copyright (C) 2015 The Gravitee team (http://gravitee.io)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# The Gateway API conformance suite no longer runs on every pull request: it was
+# the flakiest job we had and blocking merges on it cost more than it caught.
+# It runs here instead, weekly on a box big enough to run the whole suite, and
+# on demand against any branch.
+name: Schedule Conformance Test Suite
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Which branch should we run the conformance suite against ?"
+        required: true
+        default: master
+        type: string
+      notify:
+        description: "Should the result be posted to Slack ?"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Mondays, early enough that a failure is waiting when the week starts.
+    - cron: 00 05 * * 1
+jobs:
+  trigger-conformance-suite:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH: ${{ matrix.branch }}
+      # Scheduled runs always report; a manual run says whether it wants to.
+      NOTIFY: ${{ github.event_name == 'schedule' || inputs.notify }}
+      CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The weekly sweep covers master and the branches we still patch. A
+        # manual run targets the single branch that was asked for. Update the
+        # scheduled list when a release branch stops being maintained — each
+        # entry is a full suite run on an xlarge box, so they are not free.
+        branch: >-
+          ${{ fromJSON(github.event_name == 'schedule'
+          && '["master", "4.12.x", "4.11.x"]'
+          || format('["{0}"]', inputs.branch)) }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Trigger conformance pipeline and notify on failure
+        run: |
+          echo "🧪 Triggering conformance pipeline for ${BRANCH}"
+          npx zx hack/scripts/trigger-conformance.mjs --notify ${NOTIFY} --branch ${BRANCH}
