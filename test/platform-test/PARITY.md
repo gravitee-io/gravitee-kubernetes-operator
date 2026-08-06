@@ -63,11 +63,11 @@ in particular carries a rich inline surface:
 
 ## Where coverage stands
 
-Of the ~236 tests left in `tests/gko/`:
+Of the ~235 tests left in `tests/gko/`:
 
 | Bucket | Approx | Notes |
 |---|--:|---|
-| Covered by a shared journey | ~80 | the 21 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
+| Covered by a shared journey | ~81 | the 22 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
 | **Migratable, not yet migrated** | **~25** | see the backlog below |
 | Genuinely GKO-only | ~210 | Kubernetes/operator mechanics + V2 |
 
@@ -90,6 +90,7 @@ than into the journey) applied throughout.
 | Application settings + metadata | folded into `register-and-retire-application` [consumer] | metadata read from its own endpoint; the detail response omits it |
 | API notifications (V4) | `configure-api-notifications` [producer] | GKO's Notification CR vs TF's inline block, same PORTAL setting |
 | Pages — V4 inline | `document-an-api` [producer] | ship, revise (rename + rewrite + visibility), remove |
+| Pages — V4 inline fetchers | `sync-documentation-from-a-url` [producer] | `pages[].source`: the declared `http-fetcher` **and** the content APIM pulls from the URL, which a rename must not discard. `github-fetcher` stays GKO-only — admission pre-fetches the repository at apply time and the cluster has no GitHub credentials |
 | Policies on a flow | `apply-policies-to-a-flow` [producer] | asserted at the **gateway**, not only in the definition |
 | Subscriptions — JWT / OAuth2 | `subscribe-to-a-secured-plan` [consumer] | auto-validated despite `MANUAL` plans |
 | mTLS plan + client certificates | `authenticate-with-client-certificate` [consumer] | issue, rotate, retire, revoke — asserted at the **gateway**; also covers the deprecated single-certificate field |
