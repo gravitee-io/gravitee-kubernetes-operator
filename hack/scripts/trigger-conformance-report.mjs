@@ -22,7 +22,22 @@ import { Version } from "./lib/version.mjs";
 
 const VERSION = argv.version;
 const VERBOSE = argv.verbose;
-const DRY_RUN = argv["dry-run"] !== false && argv["dry-run"] !== "false";
+const DRY_RUN = argv["dry-run"] === "true" || argv["dry-run"] === true;
+
+// The suite runs from the release branch, not the tag: the pipeline needs the
+// conformance tooling from that branch to run at all, and impl.yaml on the
+// branch is what stamps the version into the report. The job cross checks that
+// impl.yaml really does declare the requested version before anything lands.
+let PIPELINE_BRANCH = argv["pipeline-branch"];
+
+if (isEmptyString(PIPELINE_BRANCH)) {
+  const pipelineBranch = new Version(VERSION).branch();
+  if (await isGitBranch(pipelineBranch)) {
+    PIPELINE_BRANCH = pipelineBranch;
+  } else {
+    PIPELINE_BRANCH = "master";
+  }
+}
 
 toggleVerbosity(VERBOSE);
 
@@ -31,11 +46,9 @@ if (isEmptyString(VERSION)) {
   process.exit(1);
 }
 
-// The suite runs from the release branch, not the tag: the pipeline needs the
-// conformance tooling from that branch to run at all, and impl.yaml on the
-// branch is what stamps the version into the report. The job cross checks that
-// impl.yaml really does declare the requested version before anything lands.
-const branch = new Version(VERSION).branch();
+LOG.blue(
+  `Triggering conformance report for version ${VERSION} using ${PIPELINE_BRANCH} branch pipeline`,
+);
 
 const parameters = {
   trigger: "conformance-report",
@@ -43,13 +56,15 @@ const parameters = {
   "dry-run": DRY_RUN,
 };
 
-LOG.blue(`
-  Triggering conformance report pipeline
-    Version    | ${VERSION}
-    Branch     | ${branch}
-    Dry run    | ${DRY_RUN}
-`);
+LOG.blue(`Parameters: ${JSON.stringify(parameters)}`);
 
-const pipelineURL = await triggerPipeline(parameters, branch);
+const pipelineURL = await triggerPipeline(parameters, PIPELINE_BRANCH);
 
 LOG.blue(`Pipeline is running at ${pipelineURL}`);
+
+async function isGitBranch(pipelineBranch) {
+  return (
+    (await $`git ls-remote --heads -q  | awk -F '/' '{print $3}' | grep '${pipelineBranch}$'`
+      .exitCode) === 0
+  );
+}
