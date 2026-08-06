@@ -1,0 +1,44 @@
+# Metadata used to render the conformance report README and the upstream
+# implementations list entry. Everything that can be derived from a generated
+# report (versions, mode, channel, pass/fail/skip counts) is derived and must
+# NOT be repeated here.
+#
+# See hack/scripts/lib/conformance.mjs
+
+# The upstream directory our reports live in, under conformance/reports/<gatewayAPIVersion>/
+directory: gravitee
+
+# Heading used for our section in the upstream implementations list.
+name: Gravitee Kubernetes Operator
+
+# Repository releases are tagged from, used to link the implementation version.
+releasesURL: https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag
+
+# Lead paragraph of our section in the upstream implementations list.
+description: >-
+  The [Gravitee Kubernetes Operator](https://documentation.gravitee.io/gravitee-kubernetes-operator-gko)
+  (GKO) lets you manage [Gravitee](https://www.gravitee.io/) APIs, applications, and other assets
+  in a Kubernetes-native and declarative way.
+
+# Closing paragraph of our section in the upstream implementations list.
+support: >-
+  For support, feedback, or to engage in a discussion about the Gravitee Kubernetes Operator,
+  please feel free to submit an [issue](https://github.com/gravitee-io/issues/issues) or visit
+  our community [forum](https://community.gravitee.io/c/support/gravitee-kubernetes-operator-gko/26).
+
+# Human readable names for the conformance profiles we claim.
+profiles:
+  GATEWAY-HTTP: Gateway - HTTP
+
+# Every test we skip must have an entry here, phrased so that it reads inside
+# "It does not support <phrase>, <phrase> and <phrase>.". A skipped test with no
+# entry fails the render rather than silently producing a vague report.
+#
+# Keep this in sync with opts.SkipTests in
+# test/conformance/kubernetes.io/gateway-api/standard/conformance_test.go
+skips:
+  HTTPRouteMatchingAcrossRoutes: matching rules across routes
+  HTTPRouteServiceTypes: defining services of a type other than Kubernetes Core v1 services
+  HTTPRouteNoBackendRefs: rules declared without any backend reference
+  HTTPRouteWeight: weighted traffic splitting across backends
+  HTTPRouteRedirectPortAndScheme: combined port and scheme redirects

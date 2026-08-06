@@ -56,7 +56,15 @@ Each phase sets its own condition. Do not skip phases or merge them.
 
 - Changes to Gateway API controllers must pass `make conformance`
 - The project targets `GatewayHTTPConformanceProfile` (core + extended)
-- Conformance reports are versioned in `test/conformance/kubernetes.io/gateway-api/report/`
+- Conformance reports in `test/conformance/kubernetes.io/gateway-api/report/` are written **only
+  by CI**, by the `Trigger Conformance Report` GitHub Action, and only when a run passes with
+  zero failures and zero skips. Do not commit a locally generated report: the directory is the
+  set of reports we have published or can publish, not a scratch area. A local run overwrites
+  the file, so leave it out of your commits.
+- `report/submission.yaml` holds the prose for the report README and the upstream
+  implementations list. Everything else — versions, mode, channel, conformance verdict — is
+  derived from the report itself and must not be duplicated there. Every skipped test needs a
+  `skips:` entry or the render fails.
 - Skipped tests must be documented with a reason (feature flag dependency or known limitation)
 - When adding or modifying Gateway API features, you MUST run `make conformance` 3 consecutive times. All 3 runs must pass before the work can be considered complete. If any run fails, investigate and fix the issue, then restart the 3-pass cycle from scratch.
 - A build passing, a linter passing and unit tests passing are **not** evidence about Gateway API behaviour. None of them executes a reconcile. Work that has not been through the suite is unverified and must be reported as unverified.

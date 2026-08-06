@@ -32,7 +32,16 @@ parameters:
       - release
       - freeze
       - rebase-operatorhub
+      - conformance
+      - conformance-report
       - none
+  conformance-version:
+    type: string
+    default: ""
+    description: |
+      The version to report Gateway API conformance for when the
+      conformance-report trigger is used. The suite runs from the matching
+      release branch and the job checks that impl.yaml declares this version.
   apim-source-branch:
     type: string
     default: ""
@@ -71,6 +80,115 @@ executors:
     resource_class: small
 
 commands:
+  # Everything both conformance jobs need before the suite can run: toolchain,
+  # kind cluster, gateway image, load balancer, operator and GatewayClass.
+  # The two jobs differ only in the box they run on and what they do with the
+  # report afterwards, so the setup lives here rather than being duplicated.
+  cmd-bootstrap-conformance:
+    steps:
+      - checkout
+      - go/install:
+          version: "<< pipeline.parameters.go-version >>"
+      - run:
+          name: Generate cache keys for Go tools
+          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
+      - go/load-mod-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - go/load-build-cache:
+          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+      - kubernetes/install_kubectl:
+          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
+      - helm/install_helm_client:
+          version: "<< pipeline.parameters.helm-version >>"
+      - run:
+          name: Install kind
+          command: |
+            curl -Lo /tmp/kind https://github.com/kubernetes-sigs/kind/releases/download/v0.29.0/kind-linux-amd64
+            chmod +x /tmp/kind
+            sudo mv /tmp/kind /usr/local/bin/
+      - gravitee/docker-login:
+          registry: graviteeio.azurecr.io
+          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
+          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
+      - run:
+          name: Start cluster
+          command: |
+            make start-conformance-cluster
+      - run:
+          name: Prepare coverage storage
+          command: |
+            sudo chmod -R 777 /tmp/coverage
+      - run:
+          name: Create coverage persistent volume
+          command:  kubectl apply -f ./test/conformance/coverage.yaml
+      - run:
+          name: Load gateway image
+          command: |
+            make kind-load-gateway
+      - run:
+          name: Install MetalLB
+          command: |
+            npx zx ./hack/scripts/install-metallb.mjs
+      - run:
+          name: Build and install the operator
+          command: |
+            IMG=gko TAG=latest make docker-build-cover \
+              && kind load docker-image gko:latest --name gravitee \
+              && helm upgrade --install gko helm/gko -n default \
+                --set manager.image.repository=gko \
+                --set manager.image.tag=latest \
+                -f ./test/conformance/operator.values.yaml
+      - run:
+          name: Wait for operator to be ready
+          command: |
+            kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
+      - run:
+          name: Apply GatewayClassParameters and GatewayClass custom resources
+          command: |
+            kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
+            kubectl apply -f ./test/conformance/gateway-class.yaml
+
+  # Everything needed to tell a flaky run from a broken one, captured on failure
+  # only. Shared so both conformance jobs fail with the same evidence.
+  cmd-dump-cluster-state:
+    steps:
+      - run:
+          name: Dump cluster state
+          when: on_fail
+          command: |
+            DUMP=/tmp/cluster-dump.txt
+            {
+              echo "===== gateways ====="
+              kubectl get gateways -A -o wide
+              echo "===== gateway status conditions ====="
+              kubectl get gateways -A -o yaml
+              echo "===== gateway deployments (labels and ownerReferences) ====="
+              kubectl get deploy -A -l app.kubernetes.io/component=gateway -o yaml
+              echo "===== pods ====="
+              kubectl get pods -A -o wide
+              echo "===== gateway pods ====="
+              kubectl -n gateway-conformance-infra describe pods
+              echo "===== httproutes ====="
+              kubectl get httproutes -A -o yaml
+              echo "===== generated api definitions ====="
+              kubectl get apiv4definitions.gravitee.io -A -o yaml
+              echo "===== generated route config maps ====="
+              kubectl get cm -A -l gio-type=apidefinitions.gravitee.io -o yaml
+              echo "===== operator reconcile errors ====="
+              kubectl -n default logs deployment/gko-controller-manager --tail=-1 \
+                | grep "Requeuing reconcile of resource" || echo "none"
+              echo "===== gateway logs ====="
+              kubectl -n gateway-conformance-infra logs -l app.kubernetes.io/component=gateway \
+                --all-containers --prefix --tail=-1
+              echo "===== operator logs ====="
+              kubectl -n default logs deployment/gko-controller-manager --tail=-1
+            } > "$DUMP" 2>&1 || true
+            tail -c 100000 "$DUMP"
+      - store_artifacts:
+          path: /tmp/cluster-dump.txt
+          destination: cluster-dump.txt
+          when: on_fail
+
   cmd-setup-aqua-scan:
     steps:
       - keeper/env-export:
@@ -209,114 +327,40 @@ jobs:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
 
   job-conformance-test:
+    parameters:
+      resource-class:
+        type: string
+        default: large
+        description: |
+          `large` (4 vCPU) is what the post-merge coverage run uses. It cannot
+          carry the whole suite, hence skip-starved-tests. The scheduled run
+          asks for a bigger box so it can run everything.
+      skip-starved-tests:
+        type: string
+        default: "true"
+        description: |
+          Skips HTTPRouteWeight and HTTPRouteRedirectPortAndScheme, which starve
+          on a small runner. Set to "false" on anything larger than `large`, and
+          never true for a run whose result is meant as evidence.
     machine:
       image: ubuntu-2204:2024.01.2
       docker_layer_caching: false
-    resource_class: large
+    resource_class: << parameters.resource-class >>
+    environment:
+      CONFORMANCE_SKIP_STARVED_TESTS: << parameters.skip-starved-tests >>
     steps:
-      - checkout
-      - go/install:
-          version: "<< pipeline.parameters.go-version >>"
-      - run:
-          name: Generate cache keys for Go tools
-          command: find . -name go.mod -exec md5sum {} \; | sort -k 2 > /tmp/gomod_checksum.md5
-      - go/load-mod-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - go/load-build-cache:
-          checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
-      - kubernetes/install_kubectl:
-          kubectl_version: "<< pipeline.parameters.kubernetes-version >>"
-      - helm/install_helm_client:
-          version: "<< pipeline.parameters.helm-version >>"
-      - run:
-          name: Install kind
-          command: |
-            curl -Lo /tmp/kind https://github.com/kubernetes-sigs/kind/releases/download/v0.29.0/kind-linux-amd64
-            chmod +x /tmp/kind
-            sudo mv /tmp/kind /usr/local/bin/
-      - gravitee/docker-login:
-          registry: graviteeio.azurecr.io
-          username: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/login
-          password: keeper://Q721P2LSOPJ9qiXLuf5AHQ/field/password
-      - run:
-          name: Start cluster
-          command: |
-            make start-conformance-cluster
-      - run:
-          name: Prepare coverage storage
-          command: |
-            sudo chmod -R 777 /tmp/coverage
-      - run:
-          name: Create coverage persistent volume
-          command:  kubectl apply -f ./test/conformance/coverage.yaml
-      - run:
-          name: Load gateway image
-          command: |
-            make kind-load-gateway
-      - run:
-          name: Install MetalLB
-          command: |
-            npx zx ./hack/scripts/install-metallb.mjs
-      - run:
-          name: Build and install the operator
-          command: |
-            IMG=gko TAG=latest make docker-build-cover \
-              && kind load docker-image gko:latest --name gravitee \
-              && helm upgrade --install gko helm/gko -n default \
-                --set manager.image.repository=gko \
-                --set manager.image.tag=latest \
-                -f ./test/conformance/operator.values.yaml
-      - run:
-          name: Wait for operator to be ready
-          command: |
-            kubectl rollout status deployment/gko-controller-manager -n default --timeout=120s
-      - run:
-          name: Apply GatewayClassParameters and GatewayClass custom resources
-          command: |
-            kubectl apply -f ./test/conformance/gateway-class-parameters.yaml
-            kubectl apply -f ./test/conformance/gateway-class.yaml
+      - cmd-bootstrap-conformance
       - run:
           name: Run Gateway API conformance test suites
           command: |
             make conformance
-      - run:
-          name: Dump cluster state
-          when: on_fail
-          command: |
-            DUMP=/tmp/cluster-dump.txt
-            {
-              echo "===== gateways ====="
-              kubectl get gateways -A -o wide
-              echo "===== gateway status conditions ====="
-              kubectl get gateways -A -o yaml
-              echo "===== gateway deployments (labels and ownerReferences) ====="
-              kubectl get deploy -A -l app.kubernetes.io/component=gateway -o yaml
-              echo "===== pods ====="
-              kubectl get pods -A -o wide
-              echo "===== gateway pods ====="
-              kubectl -n gateway-conformance-infra describe pods
-              echo "===== httproutes ====="
-              kubectl get httproutes -A -o yaml
-              echo "===== generated api definitions ====="
-              kubectl get apiv4definitions.gravitee.io -A -o yaml
-              echo "===== generated route config maps ====="
-              kubectl get cm -A -l gio-type=apidefinitions.gravitee.io -o yaml
-              echo "===== operator reconcile errors ====="
-              kubectl -n default logs deployment/gko-controller-manager --tail=-1 \
-                | grep "Requeuing reconcile of resource" || echo "none"
-              echo "===== gateway logs ====="
-              kubectl -n gateway-conformance-infra logs -l app.kubernetes.io/component=gateway \
-                --all-containers --prefix --tail=-1
-              echo "===== operator logs ====="
-              kubectl -n default logs deployment/gko-controller-manager --tail=-1
-            } > "$DUMP" 2>&1 || true
-            tail -c 100000 "$DUMP"
-      - store_artifacts:
-          path: /tmp/cluster-dump.txt
-          destination: cluster-dump.txt
-          when: on_fail
+      - cmd-dump-cluster-state
       - store_test_results:
           path: /tmp/junit/reports
+          when: always
+      - store_artifacts:
+          path: /tmp/junit/reports/conformance-reruns.txt
+          destination: conformance-reruns.txt
           when: always
       - run:
           name: Scale down operator manager.image.repository
@@ -337,6 +381,86 @@ jobs:
           destination: cover-conformance.out
       - go/save-build-cache:
           checksum: '{{ checksum "/tmp/gomod_checksum.md5" }}'
+
+  # Produces the conformance report we publish upstream. Unlike
+  # job-conformance-test this must run the complete suite: a skipped test makes
+  # the report understate what GKO supports, and that is hard to walk back once
+  # merged into kubernetes-sigs/gateway-api.
+  #
+  # The report is attached as an artifact whether the run passes or fails. It is
+  # only committed, and only pushed to the fork, when nothing failed and nothing
+  # was skipped.
+  job-conformance-report:
+    machine:
+      image: ubuntu-2204:2024.01.2
+      docker_layer_caching: false
+    # The suite starves on `large`, which is what forced the two CIRCLECI-only
+    # skips this job exists to remove. Do not lower this without re-checking
+    # that HTTPRouteWeight and HTTPRouteRedirectPortAndScheme still pass.
+    resource_class: xlarge
+    environment:
+      # Read by the *test binary* to decide whether HTTPRouteMatchingAcrossRoutes
+      # runs. This is NOT the value operator.values.yaml sets on the operator
+      # pod: same name, different process, and setting one does nothing for the
+      # other. Leaving it unset here is what produced the stale partial reports.
+      GATEWAY_API_MATCH_ACROSS_ROUTES: "true"
+      # A test that only passed on a retry did fail. A published report may not
+      # contain one.
+      CONFORMANCE_RERUN: "0"
+    steps:
+      - cmd-bootstrap-conformance
+      - add_ssh_keys:
+          fingerprints:
+            - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c
+      # Fail in seconds rather than after a 30 minute suite run if the branch
+      # does not declare the version that was asked for.
+      - run:
+          name: Check impl.yaml declares the requested version
+          command: |
+            REQUESTED="<< pipeline.parameters.conformance-version >>"
+            DECLARED=$(awk '/^version:/{print $2}' \
+              test/conformance/kubernetes.io/gateway-api/impl/impl.yaml)
+            echo "Requested: ${REQUESTED} | declared by impl.yaml: ${DECLARED}"
+            if [ "${REQUESTED}" != "${DECLARED}" ]; then
+              echo "Refusing to run: this branch reports as ${DECLARED}, not ${REQUESTED}."
+              exit 1
+            fi
+      - run:
+          name: Run Gateway API conformance test suites
+          command: |
+            make conformance
+      - cmd-dump-cluster-state
+      # Always, so a failed run is still diagnosable from the report itself.
+      - store_artifacts:
+          path: test/conformance/kubernetes.io/gateway-api/report
+          destination: report
+          when: always
+      - store_test_results:
+          path: /tmp/junit/reports
+          when: always
+      - store_artifacts:
+          path: /tmp/junit/reports/conformance.xml
+          destination: conformance.xml
+          when: always
+      # Everything past here is skipped when the suite failed, which is the
+      # "commit only on success" half of the contract. The zero-skips half is
+      # enforced inside the script.
+      - run:
+          name: Commit conformance report
+          command: |
+            npx zx hack/scripts/commit-conformance-report.mjs \
+              --version << pipeline.parameters.conformance-version >> \
+              --dry-run << pipeline.parameters.dry-run >>
+      - run:
+          name: Prepare upstream submission branch
+          command: |
+            npx zx hack/scripts/submit-conformance-report.mjs \
+              --version << pipeline.parameters.conformance-version >> \
+              --dry-run << pipeline.parameters.dry-run >> \
+              --output /tmp/submission.json
+      - store_artifacts:
+          path: /tmp/submission.json
+          destination: submission.json
 
   job-integration-test:
     machine:
@@ -1131,9 +1255,11 @@ workflows:
                 - withContext
                 - withoutContext
           context: cicd-orchestrator
-      - job-conformance-test:
-          name: Run Conformance Test
-          context: cicd-orchestrator
+      # No conformance job here on purpose. It is the flakiest thing we run and
+      # blocking every PR on it cost more than it caught. It still runs
+      # post-merge on master (for coverage) and every Monday on a box big enough
+      # to run the whole suite. To check a branch before merging, trigger the
+      # Schedule Conformance Test Suite action against it.
       - job-helm-lint:
           name: Lint Helm chart
       - job-helm-test:
@@ -1405,6 +1531,49 @@ workflows:
                       branch_pattern: ".+"
 
   
+  # Weekly and on demand, from the Schedule Conformance Test Suite action.
+  # Runs the complete suite on a bigger box: the point of this run is to know
+  # whether we are conformant, which a run with skips cannot answer.
+  conformance:
+    when:
+      equal:
+        - conformance
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-conformance-test:
+          name: Run Conformance Test
+          resource-class: xlarge
+          skip-starved-tests: "false"
+          context: cicd-orchestrator
+          pre-steps:
+            - keeper/env-export:
+                secret-url: keeper://ZOz4db245GNaETVwmPBk8w/field/password
+                var-name: SLACK_ACCESS_TOKEN
+          post-steps:
+            - when:
+                condition: << pipeline.parameters.notify >>
+                steps:
+                  - slack/notify:
+                      channel: C0BLQ42FY9Z
+                      event: fail
+                      template: basic_fail_1
+                      branch_pattern: ".+"
+                  - slack/notify:
+                      channel: C0BLQ42FY9Z
+                      event: pass
+                      template: basic_success_1
+                      branch_pattern: ".+"
+
+  conformance-report:
+    when:
+      equal:
+        - conformance-report
+        - << pipeline.parameters.trigger >>
+    jobs:
+      - job-conformance-report:
+          name: Report conformance for << pipeline.parameters.conformance-version >>
+          context: cicd-orchestrator
+
   e2e-test:
     when:
       equal:
