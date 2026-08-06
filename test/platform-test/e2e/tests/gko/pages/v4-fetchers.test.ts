@@ -25,6 +25,11 @@
  *   GKO-1475: Cross-version validation coverage for schedulers/fetchers
  *             (URL + cron) — piggybacks on the V4 no-URL case.
  *
+ * The accepted path — an http-fetcher page whose content APIM pulls from a URL
+ * (GKO-279/1933) — is the shared journey
+ * tests/user-journeys/api-producer/sync-documentation-from-a-url. Only the
+ * rejections below are the operator under test.
+ *
  * Dropped:
  *   GKO-638 — V4 github fetcher default URL (positive path needs real
  *             credentials; same blocker that killed GKO-626/675).

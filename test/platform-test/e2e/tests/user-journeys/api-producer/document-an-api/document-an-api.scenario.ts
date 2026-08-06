@@ -26,10 +26,11 @@
  * resource. The page keeps its hrid across the revision, so a rename has to
  * update the existing page rather than replace it.
  *
- * Fixtures are co-located in this folder. Page fetchers (pages[].source) are
- * expressible on both drivers and are a feasible follow-up; their rejection
- * cases (a web fetcher with no URL, an invalid cron) and all V2 documentation
- * (no apim_apiv2) stay GKO-only under tests/gko/pages.
+ * Fixtures are co-located in this folder. Documentation pulled from a URL
+ * instead of authored inline (pages[].source) is the journey
+ * sync-documentation-from-a-url; fetcher rejection cases (a web fetcher with no
+ * URL, an invalid cron) and all V2 documentation (no apim_apiv2) stay GKO-only
+ * under tests/gko/pages.
  */
 
 import path from "node:path";

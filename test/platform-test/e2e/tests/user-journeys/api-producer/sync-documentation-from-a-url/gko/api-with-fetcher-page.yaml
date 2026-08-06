@@ -12,23 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Document a V4 API with a page whose content is fetched from a URL, through GKO.
+# The page carries no content of its own: spec.pages.<hrid>.source declares the
+# fetcher and APIM pulls the spec in. (metadata.labels carries the e2e sweep
+# marker; spec.pages is the documentation under test.)
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-swagger-http-fetcher
+  name: fetched-docs-api
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
-    name: dev-ctx
-    namespace: default
-  name: e2e-v4-swagger-http-fetcher
-  version: "1.0"
-  description: "E2E test: API v4 with swagger page fetched over HTTP"
+    name: "dev-ctx"
+    namespace: "default"
+  name: "fetched-docs-api"
+  description: "V4 proxy API documented with a spec fetched over HTTP"
+  version: "1.0.0"
   type: PROXY
   state: STARTED
+  definitionContext:
+    origin: KUBERNETES
+    syncFrom: MANAGEMENT
   listeners:
     - type: HTTP
       paths:
-        - path: /e2e-v4-swagger-http-fetcher
+        - path: "/fetched-docs-api"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -46,20 +55,14 @@ spec:
     matchRequired: false
   plans:
     KeyLess:
-      name: Free plan
-      description: This plan does not require any authentication
+      name: "Free plan"
       security:
-        type: KEY_LESS
-  lifecycleState: PUBLISHED
+        type: "KEY_LESS"
   pages:
-    docs-folder:
-      name: specifications
-      type: FOLDER
-      published: true
-    swagger:
-      name: pet-store
+    petstore-spec:
+      name: "API reference"
       type: SWAGGER
-      parent: docs-folder
+      published: true
       source:
         type: http-fetcher
         configuration:
@@ -67,4 +70,3 @@ spec:
           autoFetch: true
           fetchCron: "*/10 * * * * *"
           useSystemProxy: false
-      published: true
