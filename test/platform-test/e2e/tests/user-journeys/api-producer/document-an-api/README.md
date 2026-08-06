@@ -18,12 +18,12 @@ rewrite, narrow the visibility — updates the **existing** page rather than add
 a second one, because it keeps its hrid across the revision; and stripping it
 removes it.
 
-**Adjacent, not covered here:** inline page **fetchers** (`pages[].source`, e.g.
-an `http-fetcher` pulling a Swagger spec) are also expressible on **both** drivers
-(the TF `apim_apiv4.pages[].source` block mirrors `spec.pages.<x>.source`), so a
-fetcher-parity journey is a feasible follow-up. Fetcher rejection cases, folder
-renames and all **V2** documentation (there is no `apim_apiv2` resource) stay
-GKO-only under [`tests/gko/pages/`](../../gko/pages/).
+**Adjacent, not covered here:** documentation whose content is pulled from a URL
+rather than authored inline (`pages[].source`) is
+[`sync-documentation-from-a-url`](../sync-documentation-from-a-url/). Fetcher
+rejection cases, folder renames and all **V2** documentation (there is no
+`apim_apiv2` resource) stay GKO-only under
+[`tests/gko/pages/`](../../gko/pages/).
 
 Run it:
 

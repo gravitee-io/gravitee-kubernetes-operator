@@ -499,6 +499,9 @@ export const XRAY = {
     // @parent: GKO-3028
     CLIENT_CERTIFICATE_ROTATION_TF: "@GKO-3103",
     CLIENT_CERTIFICATE_DEPRECATED_TF: "@GKO-3104",
+    // ── GKO-3037: inline page fetcher parity journey ───────────────
+    // @parent: GKO-3037
+    API_PAGE_FETCHER_TF: "@GKO-3109",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",

@@ -956,9 +956,9 @@ export interface Category {
  *
  * Inline pages are an attribute of the API (`ApiV4Definition.spec.pages` /
  * `apim_apiv4.pages[]`); there is no standalone `apim_page` Terraform resource,
- * so inline is the only cross-provisioner path (standalone pages and page
- * fetchers stay GKO-only). The `hrid` used by the provisioners is not echoed
- * back here; APIM returns its own `id`/`crossId`.
+ * so inline is the only cross-provisioner path (standalone pages stay
+ * GKO-only). The `hrid` used by the provisioners is not echoed back here; APIM
+ * returns its own `id`/`crossId`.
  */
 export interface Page {
   id: string;
@@ -971,6 +971,18 @@ export interface Page {
   visibility?: string;
   homepage?: boolean;
   parentId?: string;
+  source?: PageSource;
+}
+
+/**
+ * Where a page's content comes from, when it is not authored inline: a fetcher
+ * plugin id plus its plugin-specific configuration (for `http-fetcher`: `url`,
+ * `autoFetch`, `fetchCron`, `useSystemProxy`). APIM overwrites the page content
+ * with what the fetcher returns.
+ */
+export interface PageSource {
+  type?: string;
+  configuration?: Record<string, unknown>;
 }
 
 /** Envelope returned by `GET /apis/{apiId}/pages`. */
