@@ -38,6 +38,7 @@ up by `terraform destroy`.
 | [`label-an-api`](./api-producer/label-an-api/) | Label a V4 API (inline `apim_apiv4.labels`) | GKO-1473/83 · TF GKO-3007 |
 | [`assign-categories-to-api`](./api-producer/assign-categories-to-api/) | Assign a portal category to a V4 API | GKO-267/270 · TF GKO-3031 |
 | [`document-an-api`](./api-producer/document-an-api/) | Ship, revise and remove an inline markdown documentation page | GKO-1470/277/278/236/1469/282 · TF GKO-3034 |
+| [`sync-documentation-from-a-url`](./api-producer/sync-documentation-from-a-url/) | Pull an OpenAPI spec into the documentation with an http-fetcher, rename the page, remove it | GKO-279/1933 · TF GKO-3109 |
 | [`configure-visibility-and-lifecycle`](./api-producer/configure-visibility-and-lifecycle/) | Control portal visibility & lifecycle state, then retire the API | GKO-172/173/179/180/1466/140 · TF TBD |
 | [`configure-endpoint-failover`](./api-producer/configure-endpoint-failover/) | Give an API a failover policy and tighten its retry budget | GKO-859 · TF TBD |
 | [`configure-api-notifications`](./api-producer/configure-api-notifications/) | Notify a group about the API's events (CR ref vs inline block) | GKO-1231/1232/1461/1194/1195 · TF TBD |
