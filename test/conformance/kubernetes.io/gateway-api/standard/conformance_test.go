@@ -30,6 +30,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Set to "true" to skip the tests that need more CPU than a small runner has.
+// See the comment next to its only use below.
+const skipStarvedTests = "CONFORMANCE_SKIP_STARVED_TESTS"
+
 var lazyTimeoutConfig = config.TimeoutConfig{
 	TestIsolation:                      100 * time.Millisecond,
 	DefaultTestTimeout:                 180 * time.Second,
@@ -94,17 +98,15 @@ func TestGatewayAPIConformance(t *testing.T) {
 		opts.SkipTests = append(opts.SkipTests, "HTTPRouteMatchingAcrossRoutes")
 	}
 
-	// We skip this test in circle ci because for some reason
-	// threads get blocked on the gatway side when
-	// running it. Needs to investigate (possibly how java Atomic are handled by the underlying system)
-	if os.Getenv("CIRCLECI") == env.TrueString {
-		opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight")
-	}
-
-	// This test is failing on circle ci for some reason
-	// Needs to investigate
-	if os.Getenv("CIRCLECI") == env.TrueString {
-		opts.SkipTests = append(opts.SkipTests, "HTTPRouteRedirectPortAndScheme")
+	// These two starve on an under-provisioned runner: HTTPRouteWeight blocks
+	// threads on the gateway side, HTTPRouteRedirectPortAndScheme just fails.
+	// They were gated on CIRCLECI, which made every CI report partial and so
+	// unsubmittable. The gate is now explicit, so a job that runs on a big
+	// enough box simply does not set it and gets the full suite.
+	//
+	// A run whose report is meant for submission must never set this.
+	if os.Getenv(skipStarvedTests) == env.TrueString {
+		opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight", "HTTPRouteRedirectPortAndScheme")
 	}
 
 	cSuite, err := suite.NewConformanceTestSuite(opts)
