@@ -23,7 +23,7 @@ import type { FetchFn } from "../../types/http.js";
 import type { DeepPartial, AssertionReport, PollOptions } from "../../types/match.js";
 import type { MapiConfig } from "../../types/mapi.js";
 import type { GatewayConfig } from "../../types/gateway.js";
-import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember, ApiMember, ApplicationMember, ApplicationMetadataEntry, Category, Page, PageTree } from "../../types/apim.js";
+import type { Api, Application, Plan, PaginatedResult, Subscription, SubscriptionApiKey, NotificationSetting, Group, GroupMember, ApiMember, ApplicationMember, ApplicationMetadataEntry, Category, Page, PageTree, SharedPolicyGroup } from "../../types/apim.js";
 import { Gateway } from "./gateway.js";
 
 /**
@@ -665,6 +665,45 @@ export class Mapi {
       throw new Error(`Failed to list pages for API ${apiId}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
     }
     return res.body.pages ?? [];
+  }
+
+  // ── Shared Policy Groups ───────────────────────────────────
+
+  /**
+   * Fetch a shared policy group by its APIM id (v2 management API).
+   *
+   * By id rather than by hrid, for the reason spelled out on
+   * {@link assertGroupAbsentById}: an hrid is derived differently per
+   * provisioner, whereas the id comes back from the provisioned handle. The
+   * response carries the group's whole definition, so a scenario can assert the
+   * steps that actually landed instead of only that the resource survived.
+   */
+  async fetchSharedPolicyGroup(id: string): Promise<SharedPolicyGroup> {
+    const path = this.http.managementV2Path(`/shared-policy-groups/${id}`);
+    const res = await this.http.get<SharedPolicyGroup>(path);
+    if (res.status !== 200) {
+      throw new Error(`Failed to fetch shared policy group ${id}: ${res.status} ${res.statusText}\n${JSON.stringify(res.body, null, 2)}`);
+    }
+    return res.body;
+  }
+
+  async assertSharedPolicyGroupMatches(
+    id: string,
+    expected: DeepPartial<SharedPolicyGroup>,
+  ): Promise<void> {
+    const spg = await this.fetchSharedPolicyGroup(id);
+    throwIfFailed(deepPartialMatch(spg, expected));
+  }
+
+  async waitForSharedPolicyGroupMatches(
+    id: string,
+    expected: DeepPartial<SharedPolicyGroup>,
+    options: PollOptions = {},
+  ): Promise<void> {
+    await poll(
+      () => this.assertSharedPolicyGroupMatches(id, expected),
+      { description: `shared policy group ${id} matches expected shape`, ...options },
+    );
   }
 }
 
