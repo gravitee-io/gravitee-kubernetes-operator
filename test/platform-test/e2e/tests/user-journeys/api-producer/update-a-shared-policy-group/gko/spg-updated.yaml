@@ -12,23 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The same shared policy group after its update: the step is renamed and injects
+# a different header value, and the description changed. Same metadata.name as
+# spg-initial.yaml, so applying this file updates the SPG in place.
 apiVersion: gravitee.io/v1alpha1
 kind: SharedPolicyGroup
 metadata:
-  name: e2e-spg-proxy
+  name: update-spg
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-spg-proxy"
-  description: "E2E test SPG"
+  name: "update-spg"
+  description: "Shared policy group after its update"
   apiType: PROXY
   phase: REQUEST
   steps:
-    - name: "Transform Headers"
+    - name: "Inject the updated tracking header"
       enabled: true
       policy: transform-headers
       configuration:
         addHeaders:
           - name: "X-SPG-Test"
-            value: "spg-header"
+            value: "spg-header-updated"
