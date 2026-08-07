@@ -12,31 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# A native Kafka API with the connection-metrics reporter turned off. Both
+# variants share one CR name so update() re-applies over the previous one.
+#
+# The listener host and the plan's broker port range are unique to this arm:
+# APIM admission enforces global uniqueness on both, so a native fixture that
+# borrows another's identity makes the suite order-dependent.
+#
+# STOPPED on purpose. Starting a native API makes the gateway bind the broker
+# port range, which the test cluster is not set up for, and the reporter flag is
+# control-plane configuration that is readable either way.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-native-kafka-reporter-disabled
+  name: observability-native-api
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  # Unique identity (name + Kafka host + broker port range). This fixture used
-  # to share spec.name/host/ports with v4-native-kafka-ports-valid.yaml, which
-  # mapped both to the same APIM API and made the suite order-dependent.
-  name: "e2e-v4-native-kafka-reporter-disabled"
-  description: "E2E test: Native Kafka API with reporter metrics disabled"
-  version: "1.0.0"
+  name: "observability-native-api"
+  description: "Native Kafka API whose connection-metrics reporter is toggled"
+  version: "1.0"
   type: NATIVE
   state: STOPPED
   analytics:
     enabled: true
     reporterMetricsEnabled: false
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
   listeners:
     - type: KAFKA
-      host: "kafka-reporter.example.local"
+      host: "kafka-observability-gko.example.local"
       port: 9092
       entrypoints:
         - type: native-kafka
@@ -49,18 +55,15 @@ spec:
           type: native-kafka
           inheritConfiguration: false
           configuration:
-            bootstrapServers: "kafka-reporter.example.local:9092"
-          secondary: false
+            bootstrapServers: "kafka-observability-gko.example.local:9092"
           sharedConfigurationOverride:
             security:
               protocol: PLAINTEXT
-
   plans:
     KeyLess:
       name: "Free plan"
       security:
         type: "KEY_LESS"
-      bootstrapPort: 9292
-      brokerRangeStart: 9300
-      brokerRangeEnd: 9302
-
+      bootstrapPort: 9392
+      brokerRangeStart: 9400
+      brokerRangeEnd: 9402

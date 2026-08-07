@@ -12,19 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The journey's API with verbose tracing enabled. Both variants share one
+# CR name so update() re-applies over the previous one and the analytics block
+# has to change in place.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: e2e-v4-analytics-otel
+  name: observability-api
+  labels:
+    gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "e2e-v4-analytics-otel"
-  description: "E2E test: V4 API analytics otelLogs/reporterMetricsEnabled"
-  version: "1.0.0"
+  name: "observability-api"
+  description: "V4 proxy API reporting analytics, OTel logs and traces"
+  version: "1.0"
   type: PROXY
-  state: STOPPED
+  state: STARTED
   analytics:
     enabled: true
     otelLogs:
@@ -32,27 +37,10 @@ spec:
     tracing:
       enabled: true
       verbose: true
-    logging:
-      condition: "{#request.method == 'GET'}"
-      mode:
-        entrypoint: true
-        endpoint: false
-      phase:
-        request: true
-        response: false
-      content:
-        headers: true
-        messageHeaders: false
-        payload: false
-        messagePayload: false
-        messageMetadata: false
-  definitionContext:
-    origin: KUBERNETES
-    syncFrom: MANAGEMENT
   listeners:
     - type: HTTP
       paths:
-        - path: "/e2e-v4-analytics-otel"
+        - path: "/observability-api"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -65,10 +53,11 @@ spec:
           inheritConfiguration: false
           configuration:
             target: https://api.gravitee.io/echo
-          secondary: false
+  flowExecution:
+    mode: DEFAULT
+    matchRequired: false
   plans:
     KeyLess:
       name: "Free plan"
       security:
         type: "KEY_LESS"
-
