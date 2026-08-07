@@ -4,9 +4,8 @@
 
 | API channel  | Implementation version                    | Mode    | Report                                                 |
 |--------------|-------------------------------------------|---------|--------------------------------------------------------|
-| standard     | [version-4.10.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/4.10.3) | default | [version-4.10.3 report](./standard-4.10.3-default-report.yaml) |
+| standard     | [version-4.10.3](https://github.com/gravitee-io/gravitee-kubernetes-operator/releases/tag/4.12.10) | default | [version-4.10.3 report](./standard-4.12.10-default-report.yaml) |
 
-> The Gravitee Kubernetes Operator provides partial conformance for Gateway - HTTP features in version 4.10.3. It does not support matching rules across routes. These feature will be introduced in a future release.
 
 ## Prerequisites
 
