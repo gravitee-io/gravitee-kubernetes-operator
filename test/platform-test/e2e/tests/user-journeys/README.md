@@ -41,6 +41,7 @@ up by `terraform destroy`.
 | [`sync-documentation-from-a-url`](./api-producer/sync-documentation-from-a-url/) | Pull an OpenAPI spec into the documentation with an http-fetcher, rename the page, remove it | GKO-279/1933 · TF GKO-3109 |
 | [`configure-visibility-and-lifecycle`](./api-producer/configure-visibility-and-lifecycle/) | Control portal visibility & lifecycle state, then retire the API | GKO-172/173/179/180/1466/140 · TF TBD |
 | [`configure-endpoint-failover`](./api-producer/configure-endpoint-failover/) | Give an API a failover policy and tighten its retry budget | GKO-859 · TF TBD |
+| [`configure-api-observability`](./api-producer/configure-api-observability/) | Report traffic with analytics, OTel logs and tracing; disable the native connection-metrics reporter | GKO-3117/3119 · TF GKO-3118/3120 |
 | [`configure-api-notifications`](./api-producer/configure-api-notifications/) | Notify a group about the API's events (CR ref vs inline block) | GKO-1231/1232/1461/1194/1195 · TF TBD |
 | [`apply-policies-to-a-flow`](./api-producer/apply-policies-to-a-flow/) | Add, rewrite and remove a policy — asserted at the gateway | GKO-94/95/96 · TF TBD |
 | [`reuse-shared-policy-group`](./api-producer/reuse-shared-policy-group/) | Reuse a Shared Policy Group — ⛔ pending (GKO-3001 + TF crossId gap) | GKO-976/980 · TF GKO-3005 |
