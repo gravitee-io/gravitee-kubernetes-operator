@@ -24,6 +24,7 @@ export type {
   Entrypoint, EndpointGroupV4, EndpointV4,
   Application, NotificationSetting,
   Group, GroupMember, Category,
+  SharedPolicyGroup, SharedPolicyGroupPhase, SharedPolicyGroupLifecycleState,
 } from "./apim.js";
 
 // ── HTTP ─────────────────────────────────────────────────────

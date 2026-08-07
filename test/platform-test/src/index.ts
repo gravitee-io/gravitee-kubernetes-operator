@@ -21,6 +21,7 @@ export type {
   ApiState, ApiType,
   Plan, PlanV4, PlanV2, PlanFederated, PlanStatus, PlanSecurity, PlanMode, PlanType,
   Subscription, SubscriptionStatus, SubscriptionConsumerStatus, ConsumerStatus,
+  SharedPolicyGroup,
   // mAPI / Gateway configuration
   MapiConfig,
   GatewayConfig, GatewayRespondOptions, GatewayNotRespondOptions,
