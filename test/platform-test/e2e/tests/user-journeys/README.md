@@ -44,6 +44,7 @@ up by `terraform destroy`.
 | [`configure-api-observability`](./api-producer/configure-api-observability/) | Report traffic with analytics, OTel logs and tracing; disable the native connection-metrics reporter | GKO-3117/3119 · TF GKO-3118/3120 |
 | [`configure-api-notifications`](./api-producer/configure-api-notifications/) | Notify a group about the API's events (CR ref vs inline block) | GKO-1231/1232/1461/1194/1195 · TF TBD |
 | [`apply-policies-to-a-flow`](./api-producer/apply-policies-to-a-flow/) | Add, rewrite and remove a policy — asserted at the gateway | GKO-94/95/96 · TF TBD |
+| [`update-a-shared-policy-group`](./api-producer/update-a-shared-policy-group/) | Create a Shared Policy Group, then rewrite its policy step and description in place | GKO-981 · TF GKO-3121 |
 | [`reuse-shared-policy-group`](./api-producer/reuse-shared-policy-group/) | Reuse a Shared Policy Group — ⛔ pending (GKO-3001 + TF crossId gap) | GKO-976/980 · TF GKO-3005 |
 
 ### api-consumer
