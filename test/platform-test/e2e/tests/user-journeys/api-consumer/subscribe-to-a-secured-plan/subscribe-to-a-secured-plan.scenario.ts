@@ -100,6 +100,16 @@ forEachProvisioner(
   async ({ provisioned, mapi }) => {
     const apiId = await provisioned.apiId();
 
+    await test.step("The API permits multiple token subscriptions per application", async () => {
+      // The flag is what makes the rest of this journey legal: without it APIM
+      // rejects the second subscription for the same application. Asserting it
+      // here pins the permission the two subscriptions below depend on.
+      await mapi.waitForApiMatches(apiId, {
+        allowMultiJwtOauth2Subscriptions: true,
+        allowedInApiProducts: true,
+      });
+    });
+
     for (const plan of PLANS) {
       await test.step(`The ${plan.title} subscription is accepted despite manual validation`, async () => {
         const subscriptionId = await provisioned.subscriptionId(plan.label);
