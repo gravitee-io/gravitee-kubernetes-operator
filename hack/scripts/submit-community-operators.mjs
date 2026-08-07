@@ -24,10 +24,7 @@ import {
 
 const VERSION = argv.version;
 const VERBOSE = argv.verbose;
-// zx hands flags over as strings, so a bare argv["dry-run"] made the string
-// "false" truthy and turned a real submission into a silent no-op. Absent still
-// means "not a dry run", which is how the release pipeline invokes this.
-const DRY_RUN = argv["dry-run"] === true || argv["dry-run"] === "true";
+const DRY_RUN = argv["dry-run"];
 const OUTPUT_FILE = argv.output;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 

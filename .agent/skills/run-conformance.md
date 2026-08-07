@@ -182,23 +182,12 @@ Full suite, matching what CI runs:
 make conformance
 ```
 
-`GATEWAY_API_MATCH_ACROSS_ROUTES=true` decides whether `HTTPRouteMatchingAcrossRoutes` runs.
-`conformance_test.go` reads it from the **test binary's** environment. It is *also* set on the
-operator pod via `operator.values.yaml` — same name, different process, and setting one does
-nothing for the other. Forgetting it on the test binary is what produced the stale partial
-reports that used to sit in `report/`: the operator supported the feature, the test never ran,
-and the report said "partial" anyway.
-
-Which value to use depends on what the run is for:
-
-| Goal | Command |
-|---|---|
-| Reproduce `Run Conformance Test` (pre-merge) | `CONFORMANCE_SKIP_STARVED_TESTS=true make conformance` |
-| Reproduce a report run, or produce evidence | `GATEWAY_API_MATCH_ACROSS_ROUTES=true CONFORMANCE_RERUN=0 make conformance` |
-
-Say which one you ran. `CONFORMANCE_SKIP_STARVED_TESTS` skips `HTTPRouteWeight` and
-`HTTPRouteRedirectPortAndScheme`, which starve on a small runner; the pre-merge job sets it and
-`job-conformance-report` deliberately does not.
+Do not add `GATEWAY_API_MATCH_ACROSS_ROUTES=true` if the goal is to reproduce CI. CI does not
+set it, and `conformance_test.go` reads it from the **test binary's** environment to decide
+whether to skip `HTTPRouteMatchingAcrossRoutes` — so setting it locally runs a different set of
+tests than CI does. It is set on the operator pod via `operator.values.yaml`, which is a
+different process; the two are unrelated despite the shared name. Set it deliberately, and say
+you did, or leave it alone.
 
 To iterate on one test, set `opts.RunTest` in `conformance_test.go` temporarily. Two tests
 share the HTTPRoute name `request-header-modifier` and are the known reproducer for
