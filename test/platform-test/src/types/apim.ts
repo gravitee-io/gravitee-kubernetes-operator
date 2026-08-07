@@ -990,3 +990,38 @@ export interface PageTree {
   pages: Page[];
   breadcrumb: unknown[];
 }
+
+// ── Shared Policy Group Types ─────────────────────────────────
+
+/**
+ * A shared policy group as returned by the v2 management API
+ * (`GET /environments/{envId}/shared-policy-groups/{id}`).
+ *
+ * `id` is the APIM UUID both provisioners resolve to; `crossId` is the separate
+ * identifier a flow needs to actually *execute* the group at the gateway, which
+ * the Terraform provider does not expose (see the `reuse-shared-policy-group`
+ * journey). `version` increments and `deployedAt` moves on every accepted
+ * update, so `lifecycleState` staying `DEPLOYED` is what distinguishes a
+ * deployed revision from a draft.
+ */
+export interface SharedPolicyGroup {
+  id: string;
+  crossId?: string;
+  name: string;
+  description?: string;
+  prerequisiteMessage?: string;
+  version?: number;
+  apiType?: ApiType;
+  phase?: SharedPolicyGroupPhase;
+  steps?: StepV4[];
+  lifecycleState?: SharedPolicyGroupLifecycleState;
+  originContext?: OriginContext;
+  deployedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Execution phase a shared policy group hooks into. */
+export type SharedPolicyGroupPhase = "REQUEST" | "RESPONSE" | "PUBLISH" | "SUBSCRIBE";
+
+export type SharedPolicyGroupLifecycleState = "DEPLOYED" | "UNDEPLOYED" | "PENDING";

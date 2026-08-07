@@ -56,4 +56,7 @@ export abstract class BaseProvisioned<P = unknown> implements Provisioned<P> {
   groupId(label?: string): Promise<string> {
     return this.resolveId(roleFor("group", label));
   }
+  sharedPolicyGroupId(label?: string): Promise<string> {
+    return this.resolveId(roleFor("sharedPolicyGroup", label));
+  }
 }

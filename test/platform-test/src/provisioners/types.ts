@@ -69,6 +69,7 @@ export interface Provisioned<P = unknown> {
   subscriptionId(label?: string): Promise<string>;
   applicationId(label?: string): Promise<string>;
   groupId(label?: string): Promise<string>;
+  sharedPolicyGroupId(label?: string): Promise<string>;
 
   /** The API gateway context path (e.g. "/e2e-...") for data-plane assertions. */
   contextPath(): Promise<string>;

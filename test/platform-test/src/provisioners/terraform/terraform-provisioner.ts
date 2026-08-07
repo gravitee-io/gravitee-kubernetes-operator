@@ -27,6 +27,7 @@ const DEFAULT_OUTPUT_BY_ROLE: Record<string, string> = {
   subscription: "sub_id",
   application: "app_id",
   group: "group_id",
+  sharedPolicyGroup: "spg_id",
 };
 const DEFAULT_CONTEXT_PATH_OUTPUT = "api_context_path";
 

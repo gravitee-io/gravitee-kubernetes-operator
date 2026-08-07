@@ -63,16 +63,16 @@ in particular carries a rich inline surface:
 
 ## Where coverage stands
 
-`tests/gko/` holds **232** tests, and the buckets below partition exactly that
-number. The 23 journeys in the [catalog](./e2e/tests/user-journeys/README.md) are
+`tests/gko/` holds **230** tests, and the buckets below partition exactly that
+number. The 24 journeys in the [catalog](./e2e/tests/user-journeys/README.md) are
 a *separate* population: their GKO arms carry the ids already migrated out of
 this folder, so they are not counted here.
 
 | Bucket | Tests | Notes |
 |---|--:|---|
-| **Migratable, not yet migrated** | **28** | the backlog below, area by area |
+| **Migratable, not yet migrated** | **27** | the backlog below, area by area |
 | Blocked on a framework gap | ~12 | APIM-side rejections — see [Rejection tests](#rejection-tests-a-framework-gap-not-a-provider-gap) |
-| Genuinely GKO-only | 192 | operator mechanics; 64 of them V2 |
+| Genuinely GKO-only | 191 | operator mechanics; 64 of them V2 |
 
 ### How to read these numbers
 
@@ -120,6 +120,7 @@ than into the journey) applied throughout.
 | mTLS plan + client certificates | `authenticate-with-client-certificate` [consumer] | issue, rotate, retire, revoke — asserted at the **gateway**; also covers the deprecated single-certificate field |
 | Analytics: OTel logs + tracing, and the native reporter | `configure-api-observability` [producer] | two scenarios, because `tracing` is not for native APIs and `reporterMetricsEnabled` is native-only. The reporter is asserted **off** first: the provider defaults it to `true`, so `false` is what proves the declaration was transmitted |
 | API consumption flags (`allowMultiJwtOauth2Subscriptions`, `allowedInApiProducts`) | folded into `subscribe-to-a-secured-plan` [consumer] | both arms already declared the first flag to make the journey legal and never asserted it. `allowedInApiProducts` can only be asserted as a round-trip: APIM exposes no product surface through either driver |
+| Shared Policy Group create + update | `update-a-shared-policy-group` [producer] | the whole group per stage — step configuration, description, `lifecycleState` — where the source test read only the surviving `.status.id`. Id stability falls out of polling the original id for the new content |
 
 Eight of these journeys run a Terraform arm but still show **TF TBD** in the
 catalog. The coverage exists; only the Jira Test ids are missing, so Xray
@@ -129,36 +130,35 @@ under-reports Terraform. Fix with `/xray-sync-tests`.
 
 Every Terraform path below was verified against `origin/main` of the provider —
 see [Regenerating this document](#regenerating-this-document). Ordered by batch:
-rows 1, 2 and 10 need a new journey folder each, rows 3-9 are variant-table
-additions to journeys that already exist, 11-12 are the residue.
+rows 1 and 9 need a new journey folder each, rows 2-8 are variant-table additions
+to journeys that already exist, 10-11 are the residue.
 
 | # | Area | Tests | Terraform path | Journey [persona] |
 |--:|---|--:|---|---|
-| 1 | Shared Policy Group **update** (rewrite a step, change the description) | 1 | `apim_shared_policy_group.steps` | **new** `evolve-a-shared-policy-group` [producer] — GKO-3115 |
-| 2 | Export an API definition whatever created it | 1 | none needed — `mapi.exportApiCrd(id)` takes any APIM id | **new** `export-an-api-definition` [producer] — GKO-3116 |
-| 3 | Category *references*: many at once, changed set redeploys with a stable id, unknown ref dropped, none declared → none in APIM | 6 | `apim_apiv4.categories` | variants in `assign-categories-to-api` |
-| 4 | Application platform semantics: long name preserved, optional `client_id`, ARCHIVED on removal, `client_id` uniqueness | 4 | `apim_application.settings.app` | variants in `register-and-retire-application` |
-| 5 | Message-API MQTT endpoint, entrypoint × policy matrix, message API with a policy | 3 | `endpoint_groups`, `flows` | variants in `publish-a-message-api` / `apply-policies-to-a-flow` |
-| 6 | Unknown group reference is tolerated and dropped | 2 | `apim_apiv4.groups` | variant in `associate-groups-with-an-api` |
-| 7 | Re-create an API after deleting it — previously closed plan reopens | 1 | `destroy` then re-apply | variant in `publish-api-and-serve-traffic` |
-| 8 | Documentation **folder** + page rename, no duplicates left behind | 1 | `pages[].type = "FOLDER"` | variant in `document-an-api` |
-| 9 | Primary owner is the identity the automation authenticated as | 2 | implicit (provider credentials) | fold into `manage-api-members` |
-| 10 | `origin: KUBERNETES` marks a resource read-only in the console (API, application, notification settings) | 3 | any resource | **new** `automation-managed-resources-are-read-only` [admin] |
-| 11 | Plan lifecycle (publish/close) | 1 | `apim_apiv4.plans` | `manage-plan-lifecycle` [producer] |
-| 12 | Subscription slices that duplicate a journey (V4 JWT gateway call, mTLS plan) or never assert their premise (delete API with another plan) | 3 | — | retire against `subscribe-to-a-secured-plan` / `authenticate-with-client-certificate` rather than migrate |
+| 1 | Export an API definition whatever created it | 1 | none needed — `mapi.exportApiCrd(id)` takes any APIM id | **new** `export-an-api-definition` [producer] — GKO-3116 |
+| 2 | Category *references*: many at once, changed set redeploys with a stable id, unknown ref dropped, none declared → none in APIM | 6 | `apim_apiv4.categories` | variants in `assign-categories-to-api` |
+| 3 | Application platform semantics: long name preserved, optional `client_id`, ARCHIVED on removal, `client_id` uniqueness | 4 | `apim_application.settings.app` | variants in `register-and-retire-application` |
+| 4 | Message-API MQTT endpoint, entrypoint × policy matrix, message API with a policy | 3 | `endpoint_groups`, `flows` | variants in `publish-a-message-api` / `apply-policies-to-a-flow` |
+| 5 | Unknown group reference is tolerated and dropped | 2 | `apim_apiv4.groups` | variant in `associate-groups-with-an-api` |
+| 6 | Re-create an API after deleting it — previously closed plan reopens | 1 | `destroy` then re-apply | variant in `publish-api-and-serve-traffic` |
+| 7 | Documentation **folder** + page rename, no duplicates left behind | 1 | `pages[].type = "FOLDER"` | variant in `document-an-api` |
+| 8 | Primary owner is the identity the automation authenticated as | 2 | implicit (provider credentials) | fold into `manage-api-members` |
+| 9 | `origin: KUBERNETES` marks a resource read-only in the console (API, application, notification settings) | 3 | any resource | **new** `automation-managed-resources-are-read-only` [admin] |
+| 10 | Plan lifecycle (publish/close) | 1 | `apim_apiv4.plans` | `manage-plan-lifecycle` [producer] |
+| 11 | Subscription slices that duplicate a journey (V4 JWT gateway call, mTLS plan) or never assert their premise (delete API with another plan) | 3 | — | retire against `subscribe-to-a-secured-plan` / `authenticate-with-client-certificate` rather than migrate |
 | — | API metadata | 0 | `apim_apiv4.metadata` | `manage-api-metadata` [admin] — **new coverage**, not a migration: nothing covers V4 API metadata today |
 
 Two readings of this document produced the old, much shorter backlog. Both were
 wrong:
 
 - **"Category CRUD has no Automation API path."** True for *creating* a category,
-  which is why that row stays GKO-only. Every test in row 3 only *references* an
+  which is why that row stays GKO-only. Every test in row 2 only *references* an
   existing one, and `apim_apiv4.categories` expresses that.
 - **"Shared Policy Groups are blocked."** Only *reuse at the gateway* is (the
-  `crossId` gap below). Creating and updating an SPG is untouched by it, and has
-  no Terraform coverage at all today.
+  `crossId` gap below). Creating and updating an SPG was untouched by it, and is
+  now migrated as `update-a-shared-policy-group`.
 
-Row 10 is confirmed, not assumed: a Terraform-created `apim_apiv4` reports
+Row 9 is confirmed, not assumed: a Terraform-created `apim_apiv4` reports
 `originContext.origin: "KUBERNETES"`, measured on the cluster while building
 `configure-api-observability`. Both drivers write through the Automation API, so
 the marker is about automation rather than about Kubernetes.
@@ -191,7 +191,7 @@ the journey.
 |---|---|
 | `DELETE_API_WITH_OTHER_PLAN` | never creates the subscription — the "despite an active subscription" premise is untested |
 | `APP_CLIENT_ID_UNIQUE` | never applies a second application, so uniqueness is untested. Two `apim_application` resources express it directly |
-| `SPG_LIFECYCLE`, `GROUPS.CREATE_NON_EXISTING_USER` | `try/catch` both outcomes, so they cannot fail |
+| `GROUPS.CREATE_NON_EXISTING_USER` | `try/catch` both outcomes, so it cannot fail. `SPG_LIFECYCLE` was the same and has been deleted rather than ported |
 | `PREVENT_PO_GROUP_AS_MEMBER` | asserts only that a group exists |
 | ~10 others | stop at `Accepted=True` and never read APIM |
 
@@ -207,8 +207,8 @@ documented `sharedPolicyGroupRef` flow form because it does not resolve the ref
 before APIM's dry-run) *and* Terraform (`apim_shared_policy_group` exposes no
 `cross_id`, and only the crossId executes the SPG at the gateway). The journey
 documents the correct form as a `pending` fixme rather than being green-washed.
-This blocks **reuse only** — creating and updating an SPG is row 2 of the
-backlog.
+This blocks **reuse only** — creating and updating an SPG runs against both
+drivers in `update-a-shared-policy-group`.
 
 ### Genuinely GKO-only
 
@@ -234,7 +234,7 @@ exactly; V2 is a cross-cutting dimension, counted separately below.
 | `defaults/` | 4 | CRD field defaulting |
 | `dictionaries/`, `groups/` | 6 | admission rejections and CRD defaulting |
 | `local-configmap/` | 2 | in-cluster ConfigMap locality |
-| `policies/`, `shared-policy-groups/` | 2 | admission rejections |
+| `policies/` | 4 | plan security types and plan lifecycle driven from the CR |
 
 Two things have **no Automation API path at all**, so they stay here permanently
 rather than becoming backlog items:
@@ -242,7 +242,7 @@ rather than becoming backlog items:
 | Area | Tests | Why |
 |---|--:|---|
 | V2 — spread across the folders above | 64 | the Automation API is V4-only; V2 is legacy |
-| Category CRUD (create/rename a category) | ~6 | no `/categories` path; an API can only *reference* categories inline (referencing is backlog row 4) |
+| Category CRUD (create/rename a category) | ~6 | no `/categories` path; an API can only *reference* categories inline (referencing is backlog row 2) |
 
 ### Terraform-only
 

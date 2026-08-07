@@ -38,6 +38,7 @@ const DEFAULT_KIND_BY_ROLE: Record<string, string> = {
   application: "application",
   subscription: "subscription",
   group: "group",
+  sharedPolicyGroup: "sharedpolicygroup",
 };
 
 /**

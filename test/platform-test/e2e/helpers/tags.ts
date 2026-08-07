@@ -274,7 +274,6 @@ export const XRAY = {
     ADD_SPG_TO_API: "@GKO-976",
     REMOVE_SPG_FROM_API: "@GKO-980",
     UPDATE_SPG: "@GKO-981",
-    SPG_LIFECYCLE: "@GKO-1462",
   },
   DEPLOYMENT_RECONCILIATION: {
     RECONCILE_API_CONFIG: "@GKO-1444",
@@ -512,6 +511,9 @@ export const XRAY = {
     // @parent: GKO-3114
     API_OBSERVABILITY_TF: "@GKO-3118",
     NATIVE_REPORTER_METRICS_TF: "@GKO-3120",
+    // ── GKO-3115: shared policy group create/update journey ────────
+    // @parent: GKO-3115
+    SPG_UPDATE_TF: "@GKO-3121",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",
