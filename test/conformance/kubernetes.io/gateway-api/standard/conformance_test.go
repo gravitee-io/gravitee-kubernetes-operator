@@ -98,13 +98,6 @@ func TestGatewayAPIConformance(t *testing.T) {
 		opts.SkipTests = append(opts.SkipTests, "HTTPRouteMatchingAcrossRoutes")
 	}
 
-	// These two starve on an under-provisioned runner: HTTPRouteWeight blocks
-	// threads on the gateway side, HTTPRouteRedirectPortAndScheme just fails.
-	// They were gated on CIRCLECI, which made every CI report partial and so
-	// unsubmittable. The gate is now explicit, so a job that runs on a big
-	// enough box simply does not set it and gets the full suite.
-	//
-	// A run whose report is meant for submission must never set this.
 	if os.Getenv(skipStarvedTests) == env.TrueString {
 		opts.SkipTests = append(opts.SkipTests, "HTTPRouteWeight", "HTTPRouteRedirectPortAndScheme")
 	}
