@@ -13,7 +13,7 @@ require (
 	k8s.io/apimachinery v0.36.3
 	k8s.io/client-go v0.36.3
 	sigs.k8s.io/controller-runtime v0.24.1
-	sigs.k8s.io/gateway-api/conformance v1.6.0
+	sigs.k8s.io/gateway-api/conformance v1.6.1
 )
 
 require (
@@ -22,7 +22,7 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
-	sigs.k8s.io/gateway-api v1.6.0
+	sigs.k8s.io/gateway-api v1.6.1
 )
 
 require (
