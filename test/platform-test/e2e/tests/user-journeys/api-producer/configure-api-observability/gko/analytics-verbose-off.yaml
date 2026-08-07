@@ -12,35 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The API the journey subscribes to: one JWT plan and one OAuth2 plan, both set
-# to MANUAL validation on purpose. A subscription written through the Automation
-# API is auto-validated regardless, which is what the journey asserts.
+# The journey's API with tracing on but not yet verbose. Both variants share one
+# CR name so update() re-applies over the previous one and the analytics block
+# has to change in place.
 apiVersion: gravitee.io/v1alpha1
 kind: ApiV4Definition
 metadata:
-  name: secured-plans-api
+  name: observability-api
   labels:
     gravitee.io/e2e: "true"
 spec:
   contextRef:
     name: "dev-ctx"
     namespace: "default"
-  name: "secured-plans-api"
-  description: "V4 proxy API exposing a JWT plan and an OAuth2 plan, both manually validated"
+  name: "observability-api"
+  description: "V4 proxy API reporting analytics, OTel logs and traces"
   version: "1.0"
   type: PROXY
   state: STARTED
-  # APIM otherwise rejects the second subscription with
-  # "An other OAuth2 or JWT plan is already subscribed by the same application".
-  allowMultiJwtOauth2Subscriptions: true
-  # Declared alongside it because both govern how this API may be consumed. APIM
-  # exposes no product surface through either driver, so the journey can only
-  # assert that the flag round-trips.
-  allowedInApiProducts: true
+  analytics:
+    enabled: true
+    otelLogs:
+      enabled: true
+    tracing:
+      enabled: true
+      verbose: false
   listeners:
     - type: HTTP
       paths:
-        - path: "/secured-plans-api"
+        - path: "/observability-api"
       entrypoints:
         - type: http-proxy
           qos: AUTO
@@ -57,17 +57,7 @@ spec:
     mode: DEFAULT
     matchRequired: false
   plans:
-    JWTPlan:
-      name: "JWT plan"
-      type: "API"
-      status: "PUBLISHED"
-      validation: MANUAL
+    KeyLess:
+      name: "Free plan"
       security:
-        type: "JWT"
-    OAuth2Plan:
-      name: "OAuth2 plan"
-      type: "API"
-      status: "PUBLISHED"
-      validation: MANUAL
-      security:
-        type: "OAUTH2"
+        type: "KEY_LESS"

@@ -152,8 +152,8 @@ Automation API, and a successful apply/reconcile with broken runtime behaviour.
 
 - Issue type **Private Bug** in project GKO, `Team` = **DevEx**
   (`customfield_10001`).
-- **No** `Quality Management` / `GKO-Quality-Management` labels: those are for
-  Stories about the e2e framework, not for bugs.
+- **No** `Quality-Management` / `GKO-Quality-Management` labels: those are for
+  the e2e-framework work tasks, not for bugs.
 - Link the failing test to the bug as **"is tested by"**.
 - Show the full ticket draft and wait for approval before creating it.
 
