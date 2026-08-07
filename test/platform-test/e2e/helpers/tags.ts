@@ -407,6 +407,12 @@ export const XRAY = {
   // TCP_FAILOVER group removed — tcp-failover.test.ts was never committed
   // (GKO-79 depended on TCP proxy setup that the test cluster does not
   // provide).
+  // ── GKO-3114: API analytics & observability ────────────────────
+  // @parent: GKO-3114
+  OBSERVABILITY: {
+    ANALYTICS_TRACING: "@GKO-3117",
+    NATIVE_REPORTER_METRICS: "@GKO-3119",
+  },
   TERRAFORM: {
     APPLY_COMPLEX_CONFIG: "@GKO-1926",
     APIM_CONTAINS_ALL_ENTITIES: "@GKO-1929",
@@ -471,8 +477,8 @@ export const XRAY = {
     DICTIONARY_DYNAMIC_UPDATE: "@GKO-3015",
     DICTIONARY_DYNAMIC_DEPLOYED_FALSE_STOPS: "@GKO-3016",
     DICTIONARY_DYNAMIC_DELETE_STOPS: "@GKO-3017",
-    // ── GKO-2918: use-case parity journeys (TF arms) ───────────────
-    // @parent: GKO-2918
+    // ── Use-case parity journeys (TF arms) ─────────────────────────
+    // Filed under the [Parity] task series (GKO-3024..GKO-3030, GKO-3037).
     APPLICATION_LIFECYCLE_TF: "@GKO-3002",
     API_PUBLISH_SERVE_TRAFFIC_TF: "@GKO-3003",
     API_SECURE_WITH_PLAN_TF: "@GKO-3004",
@@ -502,6 +508,10 @@ export const XRAY = {
     // ── GKO-3037: inline page fetcher parity journey ───────────────
     // @parent: GKO-3037
     API_PAGE_FETCHER_TF: "@GKO-3109",
+    // ── GKO-3114: API analytics & observability journeys ───────────
+    // @parent: GKO-3114
+    API_OBSERVABILITY_TF: "@GKO-3118",
+    NATIVE_REPORTER_METRICS_TF: "@GKO-3120",
   },
   PAGES: {
     MARKDOWN_PAGE_CRUD_V4: "@GKO-277",
