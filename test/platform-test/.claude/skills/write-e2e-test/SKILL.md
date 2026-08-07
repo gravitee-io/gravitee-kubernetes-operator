@@ -144,7 +144,7 @@ Ids live only in [`e2e/helpers/tags.ts`](../../../e2e/helpers/tags.ts).
 - Reusing an existing Xray test: use its constant, and delete the test it
   supersedes (Step 7).
 - New coverage: add a `@GKO-TBD-<slug>` placeholder per arm under the right
-  category, with the `// ── GKO-NNNN: <parent story>` comment convention.
+  category, with the `// ── GKO-NNNN: <parent task>` comment convention.
 - GKO and Terraform are **different tickets**, so each arm gets its own id. A
   list is allowed per arm when one provisioner splits into several tickets what
   the other does in one.

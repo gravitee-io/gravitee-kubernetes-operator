@@ -1,8 +1,8 @@
 # test/platform-test/scripts/xray/
 
 Wiring for **pushing CircleCI e2e results into Xray Cloud** so the
-"Test Coverage" panel on each linked Jira Test (and on the parent Story it
-`is tested by`) reflects the latest run instead of staying at `TO DO`.
+"Test Coverage" panel on each Jira Test reflects the latest run instead of
+staying at `TO DO`.
 
 This is the **write** counterpart to the read-side `xray-export` Claude Code
 skill — they don't overlap.
