@@ -43,4 +43,4 @@ endif
 .PHONY: conformance
 conformance: ## Run conformance tests
 	@mkdir -p $(dir $(CONFORMANCE_JUNIT_FILE))
-	go tool gotestsum --format=testname --junitfile $(CONFORMANCE_JUNIT_FILE) $(CONFORMANCE_RERUN_FLAGS) --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -timeout $(CONFORMANCE_TIMEOUT) -args --gateway-class=gravitee-gateway
+	GATEWAY_API_MATCH_ACROSS_ROUTES=true go tool gotestsum --format=testname --junitfile $(CONFORMANCE_JUNIT_FILE) $(CONFORMANCE_RERUN_FLAGS) --packages="./test/conformance/kubernetes.io/gateway-api/standard/..." -- -timeout $(CONFORMANCE_TIMEOUT) -args --gateway-class=gravitee-gateway

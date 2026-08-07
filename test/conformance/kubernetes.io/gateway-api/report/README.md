@@ -24,7 +24,7 @@ The reproducer has been tested on macOS and Linux only.
 1. Clone the Gravitee Kubernetes Operator repository
 
 ```bash
-git clone --depth 1 --branch 4.10.3 https://github.com/gravitee-io/gravitee-kubernetes-operator.git
+git clone --depth 1 --branch 4.12.10 https://github.com/gravitee-io/gravitee-kubernetes-operator.git
 ```
 
 2. Start the Kubernetes cluster
@@ -56,12 +56,12 @@ kubectl apply -f ./test/conformance/gateway-class-parameters.report.yaml -f ./te
 6. Run the conformance tests
 
 ```bash
-make conformance
+GATEWAY_API_MATCH_ACROSS_ROUTES=true make conformance
 ```
 
 7. Print report
 
 ```bash
-cat test/conformance/kubernetes.io/gateway-api/report/standard-4.10.3-default-report.yaml
+cat test/conformance/kubernetes.io/gateway-api/report/standard-4.12.10-default-report.yaml
 ```
 
