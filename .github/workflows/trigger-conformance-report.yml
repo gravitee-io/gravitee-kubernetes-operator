@@ -26,18 +26,12 @@ on:
         required: true
         default: true
         type: boolean
-      pipeline-branch:
-        description: "CircleCI conformance report pipeline branch override (computed by default)"
-        required: false
-        default: ""
-        type: string
 jobs:
   trigger-conformance-report:
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ inputs.version }}
       DRY_RUN: ${{ inputs.dry-run }}
-      PIPELINE_BRANCH: ${{ inputs.pipeline-branch }}
       CIRCLECI_TOKEN: ${{ secrets.CIRCLECI_TOKEN }}
     steps:
       - uses: actions/checkout@v5
@@ -50,5 +44,4 @@ jobs:
           echo "    Dry run: ${DRY_RUN}"
           npx zx hack/scripts/trigger-conformance-report.mjs \
            --version ${VERSION} \
-           --dry-run ${DRY_RUN} \
-           --pipeline-branch ${PIPELINE_BRANCH}
+           --dry-run ${DRY_RUN}

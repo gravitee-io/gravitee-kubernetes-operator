@@ -409,21 +409,6 @@ jobs:
       CONFORMANCE_RERUN: "0"
     steps:
       - cmd-bootstrap-conformance
-      # This job commits twice — the report onto the release branch, and the
-      # submission onto the fork — so it needs the same identity and key as
-      # job-release. git reads the GIT_* variables directly, no git config step.
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
-          var-name: GIT_AUTHOR_NAME
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
-          var-name: GIT_AUTHOR_EMAIL
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/field/login
-          var-name: GIT_COMMITTER_NAME
-      - keeper/env-export:
-          secret-url: keeper://q9AKrHbbTqSGDoUl-Lg85g/custom_field/email
-          var-name: GIT_COMMITTER_EMAIL
       - add_ssh_keys:
           fingerprints:
             - ac:88:23:8f:c6:0f:7d:f0:fc:df:73:20:34:56:02:6c

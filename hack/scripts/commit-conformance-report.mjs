@@ -34,7 +34,7 @@ import { Version } from "./lib/version.mjs";
 
 const VERSION = argv.version;
 const VERBOSE = argv.verbose;
-const DRY_RUN = argv["dry-run"] === "true" || argv["dry-run"] === true;
+const DRY_RUN = argv["dry-run"] !== false && argv["dry-run"] !== "false";
 
 toggleVerbosity(VERBOSE);
 
