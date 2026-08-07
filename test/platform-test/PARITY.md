@@ -63,13 +63,37 @@ in particular carries a rich inline surface:
 
 ## Where coverage stands
 
-Of the ~235 tests left in `tests/gko/`:
+`tests/gko/` holds **232** tests, and the buckets below partition exactly that
+number. The 23 journeys in the [catalog](./e2e/tests/user-journeys/README.md) are
+a *separate* population: their GKO arms carry the ids already migrated out of
+this folder, so they are not counted here.
 
-| Bucket | Approx | Notes |
+| Bucket | Tests | Notes |
 |---|--:|---|
-| Covered by a shared journey | ~81 | the 22 journeys in the [catalog](./e2e/tests/user-journeys/README.md) |
-| **Migratable, not yet migrated** | **~25** | see the backlog below |
-| Genuinely GKO-only | ~210 | Kubernetes/operator mechanics + V2 |
+| **Migratable, not yet migrated** | **28** | the backlog below, area by area |
+| Blocked on a framework gap | ~12 | APIM-side rejections — see [Rejection tests](#rejection-tests-a-framework-gap-not-a-provider-gap) |
+| Genuinely GKO-only | 192 | operator mechanics; 64 of them V2 |
+
+### How to read these numbers
+
+**A falling test count is this work succeeding, not regressing.** Migration
+merges duplicates: two single-driver tests of one behaviour become one journey
+run against both drivers, so the count drops while the evidence grows. Before
+consolidation the suite held copies that asserted *different* things about the
+same behaviour (group rename checked the id on GKO and the name on Terraform),
+which counted as two and covered neither properly.
+
+Four numbers that move the right way while the count falls:
+
+| Metric | Why it survives dedup |
+|---|---|
+| Behaviours covered (journeys × stages) | merging two copies leaves the behaviour count unchanged, not halved |
+| Driver coverage (arms per journey) | the number that makes a missing Terraform arm visible |
+| Assertion depth (fields asserted per test) | catches the `Accepted=True`-only tests listed [below](#migrate-these-ones-carefully--they-do-not-assert-their-premise), which inflate the count while proving nothing |
+| Xray Test count | the external repository; it only grows |
+
+So do not read `tests/gko` shrinking as lost coverage. Read it against the
+[catalog](./e2e/tests/user-journeys/README.md) growing.
 
 ### Migrated
 
@@ -94,13 +118,82 @@ than into the journey) applied throughout.
 | Policies on a flow | `apply-policies-to-a-flow` [producer] | asserted at the **gateway**, not only in the definition |
 | Subscriptions — JWT / OAuth2 | `subscribe-to-a-secured-plan` [consumer] | auto-validated despite `MANUAL` plans |
 | mTLS plan + client certificates | `authenticate-with-client-certificate` [consumer] | issue, rotate, retire, revoke — asserted at the **gateway**; also covers the deprecated single-certificate field |
+| Analytics: OTel logs + tracing, and the native reporter | `configure-api-observability` [producer] | two scenarios, because `tracing` is not for native APIs and `reporterMetricsEnabled` is native-only. The reporter is asserted **off** first: the provider defaults it to `true`, so `false` is what proves the declaration was transmitted |
+| API consumption flags (`allowMultiJwtOauth2Subscriptions`, `allowedInApiProducts`) | folded into `subscribe-to-a-secured-plan` [consumer] | both arms already declared the first flag to make the journey legal and never asserted it. `allowedInApiProducts` can only be asserted as a round-trip: APIM exposes no product surface through either driver |
+
+Eight of these journeys run a Terraform arm but still show **TF TBD** in the
+catalog. The coverage exists; only the Jira Test ids are missing, so Xray
+under-reports Terraform. Fix with `/xray-sync-tests`.
 
 ### Migratable, not yet migrated
 
-| Area | Tests | Terraform path | Journey [persona] | Why not yet |
-|---|--:|---|---|---|
-| Plan lifecycle (publish/close via CR) | 2 | `apim_apiv4.plans` | `manage-plan-lifecycle` [producer] | small, and entangled with `Subscription` immutability which is GKO-only |
-| API metadata | 0 | `apim_apiv4.metadata` | `manage-api-metadata` [admin] | there is nothing to migrate — no test covers V4 API metadata today. This is **new coverage**, not a migration |
+Every Terraform path below was verified against `origin/main` of the provider —
+see [Regenerating this document](#regenerating-this-document). Ordered by batch:
+rows 1, 2 and 10 need a new journey folder each, rows 3-9 are variant-table
+additions to journeys that already exist, 11-12 are the residue.
+
+| # | Area | Tests | Terraform path | Journey [persona] |
+|--:|---|--:|---|---|
+| 1 | Shared Policy Group **update** (rewrite a step, change the description) | 1 | `apim_shared_policy_group.steps` | **new** `evolve-a-shared-policy-group` [producer] — GKO-3115 |
+| 2 | Export an API definition whatever created it | 1 | none needed — `mapi.exportApiCrd(id)` takes any APIM id | **new** `export-an-api-definition` [producer] — GKO-3116 |
+| 3 | Category *references*: many at once, changed set redeploys with a stable id, unknown ref dropped, none declared → none in APIM | 6 | `apim_apiv4.categories` | variants in `assign-categories-to-api` |
+| 4 | Application platform semantics: long name preserved, optional `client_id`, ARCHIVED on removal, `client_id` uniqueness | 4 | `apim_application.settings.app` | variants in `register-and-retire-application` |
+| 5 | Message-API MQTT endpoint, entrypoint × policy matrix, message API with a policy | 3 | `endpoint_groups`, `flows` | variants in `publish-a-message-api` / `apply-policies-to-a-flow` |
+| 6 | Unknown group reference is tolerated and dropped | 2 | `apim_apiv4.groups` | variant in `associate-groups-with-an-api` |
+| 7 | Re-create an API after deleting it — previously closed plan reopens | 1 | `destroy` then re-apply | variant in `publish-api-and-serve-traffic` |
+| 8 | Documentation **folder** + page rename, no duplicates left behind | 1 | `pages[].type = "FOLDER"` | variant in `document-an-api` |
+| 9 | Primary owner is the identity the automation authenticated as | 2 | implicit (provider credentials) | fold into `manage-api-members` |
+| 10 | `origin: KUBERNETES` marks a resource read-only in the console (API, application, notification settings) | 3 | any resource | **new** `automation-managed-resources-are-read-only` [admin] |
+| 11 | Plan lifecycle (publish/close) | 1 | `apim_apiv4.plans` | `manage-plan-lifecycle` [producer] |
+| 12 | Subscription slices that duplicate a journey (V4 JWT gateway call, mTLS plan) or never assert their premise (delete API with another plan) | 3 | — | retire against `subscribe-to-a-secured-plan` / `authenticate-with-client-certificate` rather than migrate |
+| — | API metadata | 0 | `apim_apiv4.metadata` | `manage-api-metadata` [admin] — **new coverage**, not a migration: nothing covers V4 API metadata today |
+
+Two readings of this document produced the old, much shorter backlog. Both were
+wrong:
+
+- **"Category CRUD has no Automation API path."** True for *creating* a category,
+  which is why that row stays GKO-only. Every test in row 3 only *references* an
+  existing one, and `apim_apiv4.categories` expresses that.
+- **"Shared Policy Groups are blocked."** Only *reuse at the gateway* is (the
+  `crossId` gap below). Creating and updating an SPG is untouched by it, and has
+  no Terraform coverage at all today.
+
+Row 10 is confirmed, not assumed: a Terraform-created `apim_apiv4` reports
+`originContext.origin: "KUBERNETES"`, measured on the cluster while building
+`configure-api-observability`. Both drivers write through the Automation API, so
+the marker is about automation rather than about Kubernetes.
+
+### Rejection tests: a framework gap, not a provider gap
+
+[`forEachProvisioner`](./e2e/helpers/for-each-provisioner.ts) always expects
+`provision()` to succeed, so every negative test is GKO-only *by construction*
+rather than by analysis. They are not all alike:
+
+| Rejected by | Verdict |
+|---|---|
+| the CRD schema or GKO's own webhook logic | genuinely GKO-only |
+| APIM's dry-run through the Automation API | `terraform apply` gets the identical error — shared behaviour, zero Terraform coverage today |
+
+The second row is ~12 tests: a plan whose general conditions reference a missing
+page, native-Kafka port ranges, duplicate certificate fingerprints, application
+OAuth grant rules. Unlocking them needs an `expectFailure` scenario shape
+(provision expected to throw, with a per-arm message matcher). That is worth more
+than the tests it unblocks: it is the only thing that would prove the provider
+*surfaces* APIM's validation instead of swallowing it.
+
+### Migrate these ones carefully — they do not assert their premise
+
+Found while auditing the backlog above. Each is inside a migratable area, so the
+migration is also the fix; porting the assertion as-is would carry the hole into
+the journey.
+
+| Test | What it actually does |
+|---|---|
+| `DELETE_API_WITH_OTHER_PLAN` | never creates the subscription — the "despite an active subscription" premise is untested |
+| `APP_CLIENT_ID_UNIQUE` | never applies a second application, so uniqueness is untested. Two `apim_application` resources express it directly |
+| `SPG_LIFECYCLE`, `GROUPS.CREATE_NON_EXISTING_USER` | `try/catch` both outcomes, so they cannot fail |
+| `PREVENT_PO_GROUP_AS_MEMBER` | asserts only that a group exists |
+| ~10 others | stop at `Accepted=True` and never read APIM |
 
 ### Not expressible through Terraform (found while migrating)
 
@@ -114,29 +207,42 @@ documented `sharedPolicyGroupRef` flow form because it does not resolve the ref
 before APIM's dry-run) *and* Terraform (`apim_shared_policy_group` exposes no
 `cross_id`, and only the crossId executes the SPG at the gateway). The journey
 documents the correct form as a `pending` fixme rather than being green-washed.
+This blocks **reuse only** — creating and updating an SPG is row 2 of the
+backlog.
 
 ### Genuinely GKO-only
 
 These have the **operator itself** as the system under test, so there is nothing
-for a second provisioner to do. They live in `tests/gko/`.
+for a second provisioner to do. Counted by folder, so the rows partition the 192
+exactly; V2 is a cross-cutting dimension, counted separately below.
+
+| Folder | Tests | Why |
+|---|--:|---|
+| `admission-webhook/` | 28 | CRD schema / dry-run validation at the Kubernetes admission layer |
+| `members/` | 27 | member and group resolution failures surfaced as reconciliation errors, plus V2 |
+| `mtls-certificates/` | 24 | admission rejections; certificates resolved from cluster Secrets/ConfigMaps and `[[ … ]]` templating; base64-encoded content (the provider's `content` is PEM-only); certificate date-window and fingerprint-reuse semantics |
+| `pages/` | 19 | V2 documentation and both versions' fetcher validation |
+| `subscriptions/` | 19 | admission rules (immutability, plan matching, `syncFrom`) and V2 |
+| `deployment-reconciliation/` | 13 | CR `.status` conditions, observedGeneration, operator restart, audit events |
+| `api-lifecycle/` | 13 | V2 lifecycle, DB-less mode, reconcile-cycle identity |
+| `applications/` | 13 | admission rejections and settings the test cluster cannot exercise (DCR is off) |
+| `import-export/` | 9 | YAML CRD round-trips |
+| `templating/` | 8 | `[[ … ]]` resolution from cluster ConfigMaps/Secrets |
+| `categories/` | 7 | category CRUD and V2 |
+| `management-context/` | 5 | Kubernetes custom-resource lifecycle |
+| `notifications/` | 5 | Notification CR wiring and export |
+| `defaults/` | 4 | CRD field defaulting |
+| `dictionaries/`, `groups/` | 6 | admission rejections and CRD defaulting |
+| `local-configmap/` | 2 | in-cluster ConfigMap locality |
+| `policies/`, `shared-policy-groups/` | 2 | admission rejections |
+
+Two things have **no Automation API path at all**, so they stay here permanently
+rather than becoming backlog items:
 
 | Area | Tests | Why |
 |---|--:|---|
-| Admission webhooks | 28 | CRD schema / dry-run validation at the Kubernetes admission layer |
-| mTLS certificates — the operator's own concerns | 24 | admission rejections; certificates resolved from cluster Secrets/ConfigMaps and `[[ … ]]` templating; base64-encoded content (the provider's `content` is PEM-only); certificate date-window and fingerprint-reuse semantics |
-| Deployment & reconciliation | 15 | CR `.status` conditions, observedGeneration, operator restart |
-| Import / export | 10 | YAML CRD round-trips |
-| ConfigMap/Secret templating | 8 | `[[ … ]]` resolution from cluster ConfigMaps/Secrets |
-| ManagementContext CRD | 5 | Kubernetes custom-resource lifecycle |
-| CRD defaults | 4 | CRD field defaulting |
-| Local ConfigMap | 2 | in-cluster ConfigMap locality |
-
-And these have **no Automation API path at all**:
-
-| Area | Tests | Why |
-|---|--:|---|
-| V2 API lifecycle, V2 pages/fetchers, V2 members, V2 subscriptions | ~39 | the Automation API is V4-only; V2 is legacy |
-| Category CRUD (create/rename a category) | ~6 | no `/categories` path; an API can only *reference* categories inline |
+| V2 — spread across the folders above | 64 | the Automation API is V4-only; V2 is legacy |
+| Category CRUD (create/rename a category) | ~6 | no `/categories` path; an API can only *reference* categories inline (referencing is backlog row 4) |
 
 ### Terraform-only
 
