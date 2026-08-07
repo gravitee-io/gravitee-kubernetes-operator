@@ -51,6 +51,10 @@ resource "apim_apiv4" "api" {
   # APIM otherwise rejects the second subscription with
   # "An other OAuth2 or JWT plan is already subscribed by the same application".
   allow_multi_jwt_oauth2_subscriptions = true
+  # Declared alongside it because both govern how this API may be consumed. APIM
+  # exposes no product surface through either driver, so the journey can only
+  # assert that the flag round-trips.
+  allowed_in_api_products = true
 
   listeners = [
     {
