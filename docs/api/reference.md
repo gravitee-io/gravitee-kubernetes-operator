@@ -406,6 +406,7 @@ _Appears in:_
 | `content` _string_ | The content of the documentation page. |  | Required: \{\} <br /> |
 | `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
+| `area` _[PageArea](#pagearea)_ | The area of the portal where this page is displayed. Defaults to<br />TOP_NAVBAR when left empty. Setting HOMEPAGE makes this page the portal<br />homepage, replacing any homepage previously defined for that portal. |  | Enum: [TOP_NAVBAR HOMEPAGE] <br />Optional: \{\} <br /> |
 | `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 | `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 
@@ -2145,6 +2146,25 @@ Package docs holds the domain model for the Documentation CRD.
 
 
 
+#### PageArea
+
+_Underlying type:_ _string_
+
+PageArea is the area of the portal where a Documentation page is displayed.
+
+_Validation:_
+- Enum: [TOP_NAVBAR HOMEPAGE]
+
+_Appears in:_
+- [DocumentationSpec](#documentationspec)
+- [Type](#type)
+
+| Field | Description |
+| --- | --- |
+| `TOP_NAVBAR` |  |
+| `HOMEPAGE` |  |
+
+
 #### PageType
 
 _Underlying type:_ _string_
@@ -2206,6 +2226,7 @@ _Appears in:_
 | `content` _string_ | The content of the documentation page. |  | Required: \{\} <br /> |
 | `location` _string_ | The path in the owning resource's navigation hierarchy where this page<br />should appear. The page is only visible if this matches a path defined<br />in the Portal's or API's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
 | `order` _integer_ | Optional display order of this page relative to its siblings at the same<br />location. |  | Optional: \{\} <br /> |
+| `area` _[PageArea](#pagearea)_ | The area of the portal where this page is displayed. Defaults to<br />TOP_NAVBAR when left empty. Setting HOMEPAGE makes this page the portal<br />homepage, replacing any homepage previously defined for that portal. |  | Enum: [TOP_NAVBAR HOMEPAGE] <br />Optional: \{\} <br /> |
 | `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this documentation page is attached to.<br />Mutually exclusive with apiRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 | `apiRef` _[NamespacedName](#namespacedname)_ | Reference to the API this documentation page is attached to. Only v4 APIs<br />(ApiV4Definition) are supported by the next-gen portal; the referenced<br />kind defaults to ApiV4Definition when left empty.<br />Mutually exclusive with portalRef; exactly one of the two must be set. |  | Optional: \{\} <br /> |
 

@@ -17,6 +17,7 @@ package docs
 import (
 	"context"
 
+	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
 	. "github.com/onsi/ginkgo/v2"
@@ -60,7 +61,77 @@ var _ = Describe("Create", labels.WithContext, func() {
 			if docErr != nil {
 				return docErr
 			}
-			return assert.NotEmptyString("id", doc.ID)
+			if err := assert.NotEmptyString("id", doc.ID); err != nil {
+				return err
+			}
+			// No spec.area in the fixture: GKO omits the field, APIM falls back to TOP_NAVBAR.
+			return assert.Equals("Documentation area", documentation.TopNavbar, doc.Area)
+		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
+	})
+
+	It("should create a top navbar page when the area is TOP_NAVBAR", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalFile).
+			WithDocumentation(constants.DocumentationPortalTopNavbarFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
+
+		By("expecting documentation status to be completed")
+
+		Expect(assert.DocumentationAccepted(fixtures.Documentation)).To(Succeed())
+		Expect(assert.ManagedByAutomationAPI(fixtures.Documentation)).To(Succeed())
+
+		By("calling rest API, expecting the page to be placed in the top navbar")
+
+		apimClient := apim.NewClient(ctx)
+		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
+
+		Eventually(func() error {
+			doc, docErr := apimClient.Documentations.GetByHRID(
+				service.DocumentationParent{Portal: fixtures.Portal}, docHrid,
+			)
+			if docErr != nil {
+				return docErr
+			}
+			if err := assert.NotEmptyString("id", doc.ID); err != nil {
+				return err
+			}
+			return assert.Equals("Documentation area", documentation.TopNavbar, doc.Area)
+		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
+	})
+
+	It("should create a portal homepage when the area is HOMEPAGE", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalFile).
+			WithDocumentation(constants.DocumentationPortalHomepageFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
+
+		By("expecting documentation status to be completed")
+
+		Expect(assert.DocumentationAccepted(fixtures.Documentation)).To(Succeed())
+		Expect(assert.ManagedByAutomationAPI(fixtures.Documentation)).To(Succeed())
+
+		By("calling rest API, expecting the page to be flagged as the portal homepage")
+
+		apimClient := apim.NewClient(ctx)
+		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
+
+		Eventually(func() error {
+			doc, docErr := apimClient.Documentations.GetByHRID(
+				service.DocumentationParent{Portal: fixtures.Portal}, docHrid,
+			)
+			if docErr != nil {
+				return docErr
+			}
+			if err := assert.NotEmptyString("id", doc.ID); err != nil {
+				return err
+			}
+			return assert.Equals("Documentation area", documentation.Homepage, doc.Area)
 		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
 	})
 

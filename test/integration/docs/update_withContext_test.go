@@ -17,6 +17,7 @@ package docs
 import (
 	"context"
 
+	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/api/model/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/refs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/model/utils"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim/service"
@@ -76,6 +77,54 @@ var _ = Describe("Update", labels.WithContext, func() {
 				return docErr
 			}
 			return assert.Equals("Documentation location", fixtures.GetNavigationRoot()+"/projects/beta", doc.Location)
+		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
+	})
+
+	It("should update documentation area in APIM", func() {
+		fixtures := fixture.Builder().
+			AddSecret(constants.ContextSecretFile).
+			WithPortal(constants.PortalFile).
+			WithDocumentation(constants.DocumentationPortalFile).
+			WithContext(constants.ContextWithSecretFile).
+			Build().
+			Apply()
+
+		By("expecting documentation status to be completed")
+
+		Expect(assert.DocumentationAccepted(fixtures.Documentation)).To(Succeed())
+
+		apimClient := apim.NewClient(ctx)
+		docHrid := refs.NewNamespacedNameFromObject(fixtures.Documentation).HRID()
+		parent := service.DocumentationParent{Portal: fixtures.Portal}
+
+		By("waiting for the documentation page to reach APIM")
+
+		Eventually(func() error {
+			doc, docErr := apimClient.Documentations.GetByHRID(parent, docHrid)
+			if docErr != nil {
+				return docErr
+			}
+			return assert.NotEmptyString("id", doc.ID)
+		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
+
+		By("promoting the documentation page to the portal homepage")
+
+		// A homepage is not part of the navigation, so the location goes away
+		// along with the area change.
+		updated := fixtures.Documentation.DeepCopy()
+		updated.Spec.Area = utils.ToReference(documentation.Homepage)
+		updated.Spec.Location = nil
+
+		Expect(manager.UpdateSafely(ctx, updated)).To(Succeed())
+
+		By("calling rest API, expecting documentation area to be up to date")
+
+		Eventually(func() error {
+			doc, docErr := apimClient.Documentations.GetByHRID(parent, docHrid)
+			if docErr != nil {
+				return docErr
+			}
+			return assert.Equals("Documentation area", documentation.Homepage, doc.Area)
 		}, timeout, interval).Should(Succeed(), fixtures.Documentation.Name)
 	})
 })
