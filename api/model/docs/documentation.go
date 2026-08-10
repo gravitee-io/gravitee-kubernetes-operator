@@ -29,6 +29,15 @@ const (
 	AsyncAPI         PageType = "ASYNCAPI"
 )
 
+// PageArea is the area of the portal where a Documentation page is displayed.
+// +kubebuilder:validation:Enum=TOP_NAVBAR;HOMEPAGE
+type PageArea string
+
+const (
+	TopNavbar PageArea = "TOP_NAVBAR"
+	Homepage  PageArea = "HOMEPAGE"
+)
+
 // Type defines the specification of a Documentation resource.
 // A Documentation page is attached to exactly one of a Portal (portalRef) or
 // an API (apiRef) and is placed at a chosen location in the owning resource's
@@ -53,6 +62,11 @@ type Type struct {
 	// location.
 	// +kubebuilder:validation:Optional
 	Order *int32 `json:"order,omitempty"`
+	// The area of the portal where this page is displayed. Defaults to
+	// TOP_NAVBAR when left empty. Setting HOMEPAGE makes this page the portal
+	// homepage, replacing any homepage previously defined for that portal.
+	// +kubebuilder:validation:Optional
+	Area *PageArea `json:"area,omitempty"`
 	// Reference to the Portal this documentation page is attached to.
 	// Mutually exclusive with apiRef; exactly one of the two must be set.
 	// +kubebuilder:validation:Optional
@@ -63,6 +77,13 @@ type Type struct {
 	// Mutually exclusive with portalRef; exactly one of the two must be set.
 	// +kubebuilder:validation:Optional
 	API *refs.NamespacedName `json:"apiRef,omitempty"`
+}
+
+func (t *Type) GetArea() PageArea {
+	if t.Area == nil {
+		return ""
+	}
+	return *t.Area
 }
 
 func (t *Type) IsPortalDoc() bool {

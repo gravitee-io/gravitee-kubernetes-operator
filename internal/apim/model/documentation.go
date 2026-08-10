@@ -28,6 +28,8 @@ type DocumentationDTO struct {
 	Content  string                 `json:"content,omitempty"`
 	Location string                 `json:"location,omitempty"`
 	Order    *int32                 `json:"order,omitempty"`
+	// Unset is omitted so that APIM applies its own TOP_NAVBAR default.
+	Area documentation.PageArea `json:"area,omitempty"`
 }
 
 type DocumentationState struct {

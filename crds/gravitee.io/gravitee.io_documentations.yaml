@@ -71,6 +71,16 @@ spec:
                   required:
                     - name
                   type: object
+                area:
+                  description: >-
+                    The area of the portal where this page is displayed.
+                    Defaults to
+
+                    TOP_NAVBAR when left empty.
+                  enum:
+                    - TOP_NAVBAR
+                    - HOMEPAGE
+                  type: string
                 content:
                   description: The content of the documentation page.
                   type: string

@@ -120,5 +120,6 @@ func toDocumentationDTO(doc *v1alpha1.Documentation) *model.DocumentationDTO {
 		Content:  doc.Spec.Content,
 		Location: utils.ToStringValue(doc.Spec.Location),
 		Order:    doc.Spec.Order,
+		Area:     doc.Spec.GetArea(),
 	}
 }

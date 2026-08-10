@@ -61,6 +61,11 @@ func (in *Type) DeepCopyInto(out *Type) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.Area != nil {
+		in, out := &in.Area, &out.Area
+		*out = new(PageArea)
+		**out = **in
+	}
 	if in.Portal != nil {
 		in, out := &in.Portal, &out.Portal
 		*out = new(refs.NamespacedName)

@@ -169,8 +169,10 @@ const (
 
 	PortalListingFile = "apim/portal/portal-listing.yml"
 
-	DocumentationPortalFile = "apim/portal/documentation-portal.yml"
-	DocumentationApiFile    = "apim/portal/documentation-api.yml"
+	DocumentationPortalFile          = "apim/portal/documentation-portal.yml"
+	DocumentationPortalHomepageFile  = "apim/portal/documentation-portal-homepage.yml"
+	DocumentationPortalTopNavbarFile = "apim/portal/documentation-portal-top-navbar.yml"
+	DocumentationApiFile             = "apim/portal/documentation-api.yml"
 
 	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"
