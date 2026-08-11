@@ -175,6 +175,8 @@ const (
 	DocumentationPortalTopNavbarFile = "apim/portal/documentation-portal-top-navbar.yml"
 	DocumentationApiFile             = "apim/portal/documentation-api.yml"
 
+    PortalLinkFile                   = "apim/portal/portal-link.yml"
+
 	NotificationNoGroupFile   = "apim/notification/notification-no-group.yml"
 	NotificationWithGroupFile = "apim/notification/notification-with-groups.yml"
 

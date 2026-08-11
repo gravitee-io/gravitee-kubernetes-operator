@@ -40,6 +40,7 @@ type Objects struct {
 	Dictionary        *v1alpha1.Dictionary
 	Portal            *v1alpha1.Portal
 	PortalListing     *v1alpha1.PortalListing
+	PortalLink        *v1alpha1.PortalLink
 	Documentation     *v1alpha1.Documentation
 
 	randomSuffix   string

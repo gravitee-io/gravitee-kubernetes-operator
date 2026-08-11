@@ -13,6 +13,7 @@
 - [gravitee.io/v1alpha1/navigation](#graviteeiov1alpha1navigation)
 - [gravitee.io/v1alpha1/notification](#graviteeiov1alpha1notification)
 - [gravitee.io/v1alpha1/portal](#graviteeiov1alpha1portal)
+- [gravitee.io/v1alpha1/portallink](#graviteeiov1alpha1portallink)
 - [gravitee.io/v1alpha1/portallisting](#graviteeiov1alpha1portallisting)
 - [gravitee.io/v1alpha1/refs](#graviteeiov1alpha1refs)
 - [gravitee.io/v1alpha1/sharedpolicygroups](#graviteeiov1alpha1sharedpolicygroups)
@@ -40,6 +41,7 @@ Package v1alpha1 contains API Schema definitions for the  v1alpha1 API group
 - [ManagementContext](#managementcontext)
 - [Notification](#notification)
 - [Portal](#portal)
+- [PortalLink](#portallink)
 - [PortalListing](#portallisting)
 - [SharedPolicyGroup](#sharedpolicygroup)
 - [Subscription](#subscription)
@@ -711,6 +713,67 @@ A Portal is an environment-level object carrying its own navigation hierarchy.
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
 | `spec` _[PortalSpec](#portalspec)_ |  |  |  |
 | `status` _[PortalStatus](#portalstatus)_ |  |  |  |
+
+
+#### PortalLink
+
+
+
+PortalLink attaches an external navigation link to a Portal at a chosen
+location in the portal's navigation hierarchy. The APIM management
+context is derived from the referenced Portal.
+
+
+
+
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `apiVersion` _string_ | `gravitee.io/v1alpha1` | | |
+| `kind` _string_ | `PortalLink` | | |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
+| `spec` _[PortalLinkSpec](#portallinkspec)_ |  |  |  |
+| `status` _[PortalLinkStatus](#portallinkstatus)_ |  |  |  |
+
+
+#### PortalLinkSpec
+
+
+
+PortalLinkSpec defines the desired state of a PortalLink.
+
+
+
+_Appears in:_
+- [PortalLink](#portallink)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this link is attached to. |  | Required: \{\} <br /> |
+| `name` _string_ | Display name of the link. |  | Required: \{\} <br /> |
+| `href` _string_ | The URL this link points to. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the portal's navigation hierarchy where this link should<br />appear. The link is only visible on the portal if this matches a path<br />defined in the Portal's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `order` _integer_ | Optional display order of this link relative to its siblings at the<br />same location. |  | Optional: \{\} <br /> |
+
+
+#### PortalLinkStatus
+
+
+
+PortalLinkStatus defines the observed state of a PortalLink.
+
+
+
+_Appears in:_
+- [PortalLink](#portallink)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalLink in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalLink.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the portal link has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
 
 
 #### PortalListing
@@ -3001,6 +3064,54 @@ _Appears in:_
 
 
 
+## gravitee.io/v1alpha1/portallink
+
+
+
+
+#### Status
+
+
+
+
+
+
+
+_Appears in:_
+- [PortalLinkStatus](#portallinkstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `id` _string_ | The ID of the PortalLink in the Gravitee API Management instance |  | Optional: \{\} <br /> |
+| `organizationId` _string_ | The organization ID defined in the management context |  | Optional: \{\} <br /> |
+| `environmentId` _string_ | The environment ID defined in the management context |  | Optional: \{\} <br /> |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#condition-v1-meta) array_ | Conditions describe the current conditions of the PortalLink.<br />Known condition types are:<br />* "Accepted"<br />* "ResolvedRefs" | \{  \} | MaxItems: 8 <br />Optional: \{\} <br /> |
+| `errors` _[Errors](#errors)_ | When the portal link has been created regardless of errors, this field<br />is used to persist the error message encountered during admission |  |  |
+
+
+#### Type
+
+
+
+Type defines the specification of a PortalLink resource.
+It attaches an external navigation link to a portal at a chosen location
+in the portal's navigation hierarchy.
+
+
+
+_Appears in:_
+- [PortalLinkSpec](#portallinkspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `portalRef` _[NamespacedName](#namespacedname)_ | Reference to the Portal this link is attached to. |  | Required: \{\} <br /> |
+| `name` _string_ | Display name of the link. |  | Required: \{\} <br /> |
+| `href` _string_ | The URL this link points to. |  | Required: \{\} <br /> |
+| `location` _string_ | The path in the portal's navigation hierarchy where this link should<br />appear. The link is only visible on the portal if this matches a path<br />defined in the Portal's navigation. |  | Optional: \{\} <br />Pattern: `^/` <br /> |
+| `order` _integer_ | Optional display order of this link relative to its siblings at the<br />same location. |  | Optional: \{\} <br /> |
+
+
+
 ## gravitee.io/v1alpha1/portallisting
 
 
@@ -3092,11 +3203,13 @@ _Appears in:_
 - [DocumentationSpec](#documentationspec)
 - [FlowStep](#flowstep)
 - [GroupSpec](#groupspec)
+- [PortalLinkSpec](#portallinkspec)
 - [PortalListingSpec](#portallistingspec)
 - [PortalSpec](#portalspec)
 - [ResourceOrRef](#resourceorref)
 - [SharedPolicyGroupSpec](#sharedpolicygroupspec)
 - [SubscriptionSpec](#subscriptionspec)
+- [Type](#type)
 - [Type](#type)
 - [Type](#type)
 - [Type](#type)
@@ -3231,9 +3344,11 @@ _Appears in:_
 - [DictionaryStatus](#dictionarystatus)
 - [DocumentationStatus](#documentationstatus)
 - [GroupStatus](#groupstatus)
+- [PortalLinkStatus](#portallinkstatus)
 - [PortalListingStatus](#portallistingstatus)
 - [PortalStatus](#portalstatus)
 - [SharedPolicyGroupSpecStatus](#sharedpolicygroupspecstatus)
+- [Status](#status)
 - [Status](#status)
 - [Status](#status)
 - [Status](#status)

@@ -886,3 +886,18 @@ spec:
             description: Latest observed conditions.
             x-descriptors:
               - urn:alm:descriptor:io.kubernetes.conditions
+
+      # --- PortalLink ---
+      - name: portallinks.gravitee.io
+        version: v1alpha1
+        kind: PortalLink
+        displayName: Portal Link
+        description: >-
+          Defines an external navigation link attached to a portal in the
+          Gravitee Developer Portal.
+        statusDescriptors:
+          - path: conditions
+            displayName: Conditions
+            description: Latest observed conditions.
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions

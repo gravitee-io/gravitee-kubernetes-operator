@@ -45,6 +45,7 @@ var (
 	dictionaryKind         = v1alpha1.GroupVersion.WithKind("Dictionary")
 	portalKind             = v1alpha1.GroupVersion.WithKind("Portal")
 	portalListingKind      = v1alpha1.GroupVersion.WithKind("PortalListing")
+	portalLinkKind         = v1alpha1.GroupVersion.WithKind("PortalLink")
 	documentationKind      = v1alpha1.GroupVersion.WithKind("Documentation")
 )
 

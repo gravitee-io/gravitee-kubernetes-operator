@@ -21,25 +21,24 @@ import (
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func Delete(ctx context.Context, prtl *v1alpha1.Portal) error {
-	if !util.ContainsFinalizer(prtl, core.PortalFinalizer) {
+func Delete(ctx context.Context, link *v1alpha1.PortalLink) error {
+	if !util.ContainsFinalizer(link, core.PortalLinkFinalizer) {
 		return nil
 	}
 
-	if err := search.AssertNoPortalListingRef(ctx, prtl); err != nil {
-		return err
-	}
+	ns := link.Namespace
 
-	if err := search.AssertNoPortalLinkRef(ctx, prtl); err != nil {
-		return err
-	}
-
-	if err := search.AssertNoPortalDocumentationRef(ctx, prtl); err != nil {
+	prtl, err := dynamic.ResolvePortal(ctx, link.GetPortalRef(), ns)
+	if err != nil {
+		// Parent Portal already gone: nothing left to sync against, let the finalizer be removed.
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -57,7 +56,7 @@ func Delete(ctx context.Context, prtl *v1alpha1.Portal) error {
 		return err
 	}
 
-	if err := gerrors.IgnoreNotFound(apimClient.Portals.Delete(prtl)); err != nil {
+	if err := gerrors.IgnoreNotFound(apimClient.Links.Delete(link, prtl)); err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
 

@@ -16,50 +16,42 @@ package internal
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gravitee-io/gravitee-kubernetes-operator/api/v1alpha1"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/apim"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/core"
 	gerrors "github.com/gravitee-io/gravitee-kubernetes-operator/internal/errors"
-	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/search"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/k8s/dynamic"
 )
 
-func Delete(ctx context.Context, prtl *v1alpha1.Portal) error {
-	if !util.ContainsFinalizer(prtl, core.PortalFinalizer) {
-		return nil
-	}
+func CreateOrUpdate(ctx context.Context, link *v1alpha1.PortalLink) error {
+	ns := link.Namespace
 
-	if err := search.AssertNoPortalListingRef(ctx, prtl); err != nil {
-		return err
-	}
-
-	if err := search.AssertNoPortalLinkRef(ctx, prtl); err != nil {
-		return err
-	}
-
-	if err := search.AssertNoPortalDocumentationRef(ctx, prtl); err != nil {
+	prtl, err := dynamic.ResolvePortal(ctx, link.GetPortalRef(), ns)
+	if err != nil {
 		return err
 	}
 
 	if !prtl.HasContext() {
-		// Nothing was ever synced to APIM without a context; let the finalizer be removed.
-		return nil
+		return gerrors.NewIllegalStateError(
+			fmt.Errorf("portal [%s] has no management context", prtl.GetName()),
+		)
 	}
 
 	apimClient, err := apim.FromContextRef(ctx, prtl.ContextRef(), prtl.GetNamespace())
 	if err != nil {
-		// ManagementContext already gone: APIM is unreachable, let the finalizer be removed.
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
 		return err
 	}
 
-	if err := gerrors.IgnoreNotFound(apimClient.Portals.Delete(prtl)); err != nil {
+	status, err := apimClient.Links.CreateOrUpdate(link, prtl)
+	if err != nil {
 		return gerrors.NewControlPlaneError(err)
 	}
+
+	// Setting fields by fields to keep the rest intact
+	link.Status.ID = status.ID
+	link.Status.OrgID = status.OrgID
+	link.Status.EnvID = status.EnvID
 
 	return nil
 }

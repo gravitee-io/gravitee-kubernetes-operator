@@ -35,7 +35,7 @@ var disabled []Predicate
 
 func InitEnableCheck() {
 	unsupported = append(unsupported, isLegacyGroup)
-	disabled = append(disabled, portal, documentation, portalListing)
+	disabled = append(disabled, portal, documentation, portalListing, portalLink)
 }
 
 func IsDriftEnabled(crd runtime.Object) bool {
@@ -88,5 +88,10 @@ func documentation(obj runtime.Object) bool {
 
 func portalListing(obj runtime.Object) bool {
 	_, ok := obj.(*v1alpha1.PortalListing)
+	return ok
+}
+
+func portalLink(obj runtime.Object) bool {
+	_, ok := obj.(*v1alpha1.PortalLink)
 	return ok
 }

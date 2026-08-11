@@ -110,6 +110,11 @@ func PortalListingAccepted(listing *v1alpha1.PortalListing) error {
 		k8s.MapConditions(listing.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
 }
 
+func PortalLinkAccepted(link *v1alpha1.PortalLink) error {
+	return Equals(reconcileCondition, true,
+		k8s.MapConditions(link.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
+}
+
 func DocumentationAccepted(doc *v1alpha1.Documentation) error {
 	return Equals(reconcileCondition, true,
 		k8s.MapConditions(doc.Status.Conditions)[k8s.ConditionAccepted].Status == metav1.ConditionTrue)
@@ -306,6 +311,26 @@ func NotNil(field string, value any) error {
 		return fmt.Errorf("expected %s not to be nil", field)
 	}
 	return nil
+}
+
+// SevereError asserts that the given error is the expected severe admission error.
+// Prefer it over NotNil when a spec targets one specific validation branch, since
+// NotNil is satisfied by any failure, including one coming from another branch.
+func SevereError(expected *errors.AdmissionError, given error) error {
+	if given == nil {
+		return fmt.Errorf("expected severe admission error [%s], got nil", expected.Error())
+	}
+
+	admissionErr, ok := given.(*errors.AdmissionError)
+	if !ok {
+		return newAssertEqualError("admission error type", expected, given)
+	}
+
+	if admissionErr.Severity != errors.Severe {
+		return newAssertEqualError("admission error severity", errors.Severe, admissionErr.Severity)
+	}
+
+	return Equals("admission error", expected.Error(), admissionErr.Message)
 }
 
 func MapContaining[K comparable, V any](m map[K]V, key K, value V) error {

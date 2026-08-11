@@ -246,6 +246,34 @@ func AssertNoPortalListingRef(ctx context.Context, prtl *v1alpha1.Portal) error 
 	return nil
 }
 
+// AssertNoPortalLinkRef blocks deletion of a Portal while any PortalLink
+// still references it.
+func AssertNoPortalLinkRef(ctx context.Context, prtl *v1alpha1.Portal) error {
+	nsn := refs.NewNamespacedName(prtl.Namespace, prtl.Name)
+
+	links := &v1alpha1.PortalLinkList{}
+	if err := FindByFieldReferencing(
+		ctx,
+		PortalLinkPortalField,
+		nsn,
+		links,
+	); err != nil {
+		return err
+	}
+
+	if len(links.Items) > 0 {
+		return fmt.Errorf(
+			"[%s] cannot be deleted because %d portal links are relying on this portal. "+
+				reviewMessage+
+				"kubectl get portallinks.gravitee.io "+
+				"-A -o jsonpath='{.items[?(@.spec.portalRef.name==\"%s\")].metadata.name}'",
+			prtl.Name, len(links.Items), prtl.Name,
+		)
+	}
+
+	return nil
+}
+
 // AssertNoApiPortalListingRef blocks deletion of an API while any PortalListing
 // still publishes it.
 func AssertNoApiPortalListingRef(ctx context.Context, api core.ApiDefinitionObject) error {

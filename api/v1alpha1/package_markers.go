@@ -50,6 +50,7 @@ func addKnownTypes(s *runtime.Scheme) error {
 		&ManagementContext{}, &ManagementContextList{},
 		&Notification{}, &NotificationList{},
 		&Portal{}, &PortalList{},
+		&PortalLink{}, &PortalLinkList{},
 		&PortalListing{}, &PortalListingList{},
 		&SharedPolicyGroup{}, &SharedPolicyGroupList{},
 		&Subscription{}, &SubscriptionList{},

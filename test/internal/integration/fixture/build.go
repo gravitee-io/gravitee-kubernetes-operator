@@ -45,6 +45,7 @@ type Files struct {
 	Dictionary         string
 	Portal             string
 	PortalListing      string
+	PortalLink         string
 	Documentation      string
 }
 
@@ -116,6 +117,12 @@ func (b *FSBuilder) Build() *Objects {
 		f.PortalListing, &v1alpha1.PortalListing{}, portalListingKind,
 	); listing != nil {
 		setupPortalListing(obj, listing, suffix)
+	}
+
+	if link := decodeIfDefined(
+		f.PortalLink, &v1alpha1.PortalLink{}, portalLinkKind,
+	); link != nil {
+		setupPortalLink(obj, link, suffix)
 	}
 
 	if doc := decodeIfDefined(
@@ -339,6 +346,16 @@ func setupPortalListing(obj *Objects, listing **v1alpha1.PortalListing, suffix s
 	}
 }
 
+func setupPortalLink(obj *Objects, link **v1alpha1.PortalLink, suffix string) {
+	obj.PortalLink = *link
+	obj.PortalLink.Name += suffix
+	obj.PortalLink.Namespace = constants.Namespace
+	obj.PortalLink.Spec.Portal.Name += suffix
+	if obj.PortalLink.Spec.Location != nil {
+		obj.PortalLink.Spec.Location = new(obj.navigationRoot + *obj.PortalLink.Spec.Location)
+	}
+}
+
 func setupDocumentation(obj *Objects, doc **v1alpha1.Documentation, suffix string) {
 	obj.Documentation = *doc
 	obj.Documentation.Name += suffix
@@ -473,6 +490,11 @@ func (b *FSBuilder) WithPortal(file string) *FSBuilder {
 
 func (b *FSBuilder) WithPortalListing(file string) *FSBuilder {
 	b.files.PortalListing = file
+	return b
+}
+
+func (b *FSBuilder) WithPortalLink(file string) *FSBuilder {
+	b.files.PortalLink = file
 	return b
 }
 

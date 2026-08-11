@@ -53,6 +53,7 @@ const (
 	PortalContextField           IndexField = "portal-context"
 	PortalListingPortalField     IndexField = "portallisting-portal"
 	PortalListingApiField        IndexField = "portallisting-api"
+	PortalLinkPortalField        IndexField = "portallink-portal"
 	DocumentationPortalField     IndexField = "documentation-portal"
 	DocumentationApiField        IndexField = "documentation-api"
 )
@@ -103,6 +104,8 @@ func InitCache(ctx context.Context, cache cache.Cache) error {
 		indexPortalListingPortal))
 	collect(newIndexer(ctx, cache, &v1alpha1.PortalListing{}, PortalListingApiField,
 		indexPortalListingApis))
+	collect(newIndexer(ctx, cache, &v1alpha1.PortalLink{}, PortalLinkPortalField,
+		indexPortalLinkPortal))
 	collect(newIndexer(ctx, cache, &v1alpha1.Documentation{}, DocumentationPortalField,
 		indexDocumentationPortal))
 	collect(newIndexer(ctx, cache, &v1alpha1.Documentation{}, DocumentationApiField,
@@ -354,6 +357,10 @@ func indexPortalListingApis(listing *v1alpha1.PortalListing, fields *[]string) {
 	for _, apiRef := range listing.GetApiRefs() {
 		*fields = append(*fields, ensureNamespacedRef(listing, apiRef))
 	}
+}
+
+func indexPortalLinkPortal(link *v1alpha1.PortalLink, fields *[]string) {
+	*fields = append(*fields, ensureNamespacedRef(link, link.GetPortalRef()))
 }
 
 func indexDocumentationPortal(doc *v1alpha1.Documentation, fields *[]string) {
