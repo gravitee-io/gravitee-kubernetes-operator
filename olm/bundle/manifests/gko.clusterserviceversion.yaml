@@ -15,12 +15,12 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: gko.v4.12.10
+  name: gko.v4.12.11
   namespace: placeholder
   annotations:
     capabilities: Full Lifecycle
     categories: Integration & Delivery, Networking
-    containerImage: docker.io/graviteeio/kubernetes-operator:4.12.10
+    containerImage: docker.io/graviteeio/kubernetes-operator:4.12.11
     repository: https://github.com/gravitee-io/gravitee-kubernetes-operator
     support: Gravitee.io
     description: Manage Gravitee.io API Management resources natively in Kubernetes
@@ -433,7 +433,7 @@ spec:
 
     - A running Gravitee API Management instance (for synced resources)
   maturity: alpha
-  version: 4.12.10
+  version: 4.12.11
   minKubeVersion: 1.18.0
   keywords:
     - api
@@ -483,7 +483,7 @@ spec:
             template:
               metadata:
                 annotations:
-                  checksum/config: 192e13eef0a6287558b23edf4245057b789918c41cb5874840e4a52eaddf97f3
+                  checksum/config: 100d749c558501864d078922de553bbb6218ebb2bfe1856d8f1eb1c6c14f50d3
                 labels:
                   control-plane: controller-manager
               spec:
@@ -493,7 +493,7 @@ spec:
                   - args: []
                     command:
                       - /manager
-                    image: docker.io/graviteeio/kubernetes-operator:4.12.10
+                    image: docker.io/graviteeio/kubernetes-operator:4.12.11
                     imagePullPolicy: IfNotPresent
                     livenessProbe:
                       httpGet:
@@ -567,6 +567,8 @@ spec:
                         value: "true"
                       - name: WEBHOOK_SERVICE_PORT
                         value: "9443"
+                      - name: MAX_CONCURRENT_RECONCILES
+                        value: "4"
                       - name: ENABLE_TEMPLATING
                         value: "true"
                       - name: NAMESPACE

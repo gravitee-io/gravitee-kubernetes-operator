@@ -16,9 +16,9 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
+    controller-gen.kubebuilder.io/version: v0.19.0
     gravitee.io/extends: gateway.networking.k8s.io
-    gravitee.io/operator.version: 4.12.10
+    gravitee.io/operator.version: 4.12.11
   name: gatewayclassparameters.gravitee.io
 spec:
   group: gravitee.io
@@ -103,6 +103,15 @@ spec:
                           type: string
                       required:
                         - name
+                      type: object
+                    websocket:
+                      default:
+                        enabled: true
+                      description: Use this field to control WebSocket support on the Gateway.
+                      properties:
+                        enabled:
+                          default: true
+                          type: boolean
                       type: object
                     yaml:
                       description: |-
@@ -5687,6 +5696,21 @@ spec:
                                   x-kubernetes-list-map-keys:
                                     - name
                                   x-kubernetes-list-type: map
+                                schedulingGroup:
+                                  description: >-
+                                    SchedulingGroup provides a reference to the
+                                    immediate scheduling runtime
+
+                                    grouping object that this...
+                                  properties:
+                                    podGroupName:
+                                      description: >-
+                                        PodGroupName specifies the name of the
+                                        standalone PodGroup object
+
+                                        that represents the runtime...
+                                      type: string
+                                  type: object
                                 securityContext:
                                   description: SecurityContext holds pod-level security attributes and common
                                     container settings.
@@ -7478,31 +7502,6 @@ spec:
                                   x-kubernetes-list-map-keys:
                                     - name
                                   x-kubernetes-list-type: map
-                                workloadRef:
-                                  description: WorkloadRef provides a reference to the Workload object that this
-                                    Pod belongs to.
-                                  properties:
-                                    name:
-                                      description: Name defines the name of the Workload object this Pod belongs to.
-                                      type: string
-                                    podGroup:
-                                      description: >-
-                                        PodGroup is the name of the PodGroup
-                                        within the Workload that this Pod
-
-                                        belongs to.
-                                      type: string
-                                    podGroupReplicaKey:
-                                      description: >-
-                                        PodGroupReplicaKey specifies the replica
-                                        key of the PodGroup to which this
-
-                                        Pod belongs.
-                                      type: string
-                                  required:
-                                    - name
-                                    - podGroup
-                                  type: object
                               required:
                                 - containers
                               type: object
