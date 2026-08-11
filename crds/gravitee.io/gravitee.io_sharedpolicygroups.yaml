@@ -17,7 +17,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    gravitee.io/operator.version: 4.10.26
+    gravitee.io/operator.version: 4.10.27-rc
   name: sharedpolicygroups.gravitee.io
 spec:
   group: gravitee.io
