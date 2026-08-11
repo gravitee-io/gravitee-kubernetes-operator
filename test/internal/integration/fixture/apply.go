@@ -83,6 +83,10 @@ func (o *Objects) Apply() *Objects {
 		o.applyPortalListing(ctx, cli)
 	}
 
+	if o.PortalLink != nil {
+		o.applyPortalLink(ctx, cli)
+	}
+
 	if o.Documentation != nil {
 		o.applyDocumentation(ctx, cli)
 	}
@@ -252,6 +256,17 @@ func (o *Objects) applyPortalListing(ctx context.Context, cli client.Client) {
 		}
 		return assert.PortalListingAccepted(o.PortalListing)
 	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.PortalListing.Name)
+}
+
+func (o *Objects) applyPortalLink(ctx context.Context, cli client.Client) {
+	Expect(cli.Create(ctx, o.PortalLink)).ToNot(HaveOccurred())
+	Eventually(ctx, func() error {
+		err := manager.GetLatest(ctx, o.PortalLink)
+		if err != nil {
+			return err
+		}
+		return assert.PortalLinkAccepted(o.PortalLink)
+	}, constants.EventualTimeout, constants.Interval).Should(Succeed(), o.PortalLink.Name)
 }
 
 func (o *Objects) applyDocumentation(ctx context.Context, cli client.Client) {

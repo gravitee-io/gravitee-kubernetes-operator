@@ -54,6 +54,7 @@ const (
 	DictionaryFinalizer              = "finalizers.gravitee.io/dictionaries"
 	PortalFinalizer                  = "finalizers.gravitee.io/portals"
 	PortalListingFinalizer           = "finalizers.gravitee.io/portallistings"
+	PortalLinkFinalizer              = "finalizers.gravitee.io/portallinks"
 	DocumentationFinalizer           = "finalizers.gravitee.io/documentations"
 	TemplatingFinalizer              = "finalizers.gravitee.io/templating"
 	SharedPolicyGroupFinalizer       = "finalizers.gravitee.io/sharedpolicygroups"

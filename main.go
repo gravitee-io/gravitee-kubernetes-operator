@@ -51,6 +51,7 @@ import (
 	mctxAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/mctx"
 	spgAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/policygroups"
 	portalAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portal"
+	portalLinkAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallink"
 	portalListingAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/portallisting"
 	resourceAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/resource"
 	subAdmission "github.com/gravitee-io/gravitee-kubernetes-operator/internal/admission/subscription"
@@ -72,6 +73,7 @@ import (
 	documentation "github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/docs"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/group"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portal"
+	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallink"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/portallisting"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/controllers/apim/subscription"
 	"github.com/gravitee-io/gravitee-kubernetes-operator/internal/env"
@@ -355,6 +357,16 @@ func registerAutomationAPIControllers(mgr manager.Manager) {
 		os.Exit(1)
 	}
 
+	if err := (&portallink.Reconciler{
+		Scheme:   mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Recorder: mgr.GetEventRecorderFor("portallink-controller"),
+		Watcher:  watch.New(context.Background(), k8s.GetClient(), &v1alpha1.PortalLinkList{}),
+	}).SetupWithManager(mgr); err != nil {
+		log.Global.Error(err, "Unable to create controller for portal links")
+		os.Exit(1)
+	}
+
 	if err := (&documentation.Reconciler{
 		Scheme:   mgr.GetScheme(),
 		Client:   mgr.GetClient(),
@@ -566,6 +578,9 @@ func setupAdmissionWebhooks(mgr manager.Manager) error {
 		return err
 	}
 	if err := (portalListingAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+	if err := (portalLinkAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 	if err := (documentationAdmission.AdmissionCtrl{}).SetupWithManager(mgr); err != nil {

@@ -347,6 +347,28 @@ rules:
   - apiGroups:
       - gravitee.io
     resources:
+      - portallinks
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portallinks/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
+      - portallinks/status
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - gravitee.io
+    resources:
       - documentations
     verbs:
       - get
